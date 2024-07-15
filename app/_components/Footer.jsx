@@ -17,13 +17,22 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap justify-between">
           <div className="w-full lg:w-1/3 mb-6">
-            <Image
-              src="/logo.png"
-              width={64}
-              height={64}
-              alt="logo"
-              className="mb-4"
-            />
+            <div className="flex">
+              <Image
+                src="/sanduka.png"
+                width={170}
+                height={170}
+                alt="logo"
+                className="mb-4"
+              />
+              <Image
+                src="/logo.png"
+                width={64}
+                height={64}
+                alt="logo"
+                className="mb-4 ml-3"
+              />
+            </div>
             <h2 className="text-lg font-bold text-yellow-400">SANDUKA</h2>
             <p>
               Persatuan Guru Repubik Indonesia ( PGRI ) <br /> Kabupaten Jepara
