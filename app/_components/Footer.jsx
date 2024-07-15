@@ -5,8 +5,10 @@ import {
   faFacebook,
   faTwitter,
   faYoutube,
+  faInstagram,
   faApple,
 } from "@fortawesome/free-brands-svg-icons";
+import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import Link from "next/link";
 
 const Footer = () => {
@@ -41,53 +43,71 @@ const Footer = () => {
               <p>Email: sanduka@gmail.com</p>
               <p>Email: pgrijepara@gmail.com</p>
             </div>
-            <p className="mt-4">Kunjungi Media Sosial Kami:</p>
-            <div className="flex space-x-2 mt-2">
-              <Link href="#" aria-label="Facebook">
-                <FontAwesomeIcon icon={faFacebook} className="h-6" />
-              </Link>
-              <Link href="#" aria-label="Twitter">
-                <FontAwesomeIcon icon={faTwitter} className="h-6" />
-              </Link>
-              <Link href="#" aria-label="Youtube">
-                <FontAwesomeIcon icon={faYoutube} className="h-6" />
-              </Link>
-            </div>
           </div>
           <div className="w-full lg:w-2/3 flex flex-wrap justify-between md:mt-20">
             <div className="w-1/2 lg:w-1/4 mb-6">
               <h3 className="font-bold mb-2 text-yellow-400">
-                Jaminan Kesehatan
+                KTADIGITAL PGRI
               </h3>
-              <ul>
-                <li className="mb-1">Peserta</li>
-                <li className="mb-1">Manfaat</li>
-                <li className="mb-1">Iuran</li>
-                <li className="mb-1">Prosedur Pendaftaran</li>
-              </ul>
+              <Link href="https://www.ktadigitalpgri.org/" legacyBehavior>
+                <a target="_blank" rel="noopener noreferrer">
+                  <h4>www.ktadigitalpgri.org</h4>
+                </a>
+              </Link>
             </div>
             <div className="w-1/2 lg:w-1/4 mb-6">
-              <h3 className="font-bold mb-2 text-yellow-400">Layanan</h3>
-              <ul>
-                <li className="mb-1">Alamat BPJS Kesehatan</li>
-                <li className="mb-1">Autodebit</li>
-                <li className="mb-1">Program Rehab</li>
-                <li className="mb-1">Program Pesiar</li>
-              </ul>
+              <h3 className="font-bold mb-2 text-yellow-400">
+                Dana Pensiun PGRI Jawa Tengah
+              </h3>
+              <Link href="https://www.dansetjateng.org/" legacyBehavior>
+                <a target="_blank" rel="noopener noreferrer">
+                  <h4>www.dansetjateng.org</h4>
+                </a>
+              </Link>
             </div>
             <div className="w-1/2 lg:w-1/4 mb-6">
-              <h3 className="font-bold mb-2 text-yellow-400">Informasi</h3>
-              <ul>
-                <li className="mb-1">Kalender Kegiatan</li>
-                <li className="mb-1">Laporan Keuangan</li>
-                <li className="mb-1">Laporan PPID</li>
-                <li className="mb-1">Rencana Kerja dan Anggaran Tahunan</li>
-                <li className="mb-1">Good Governance</li>
-              </ul>
+              <h3 className="font-bold mb-2 text-yellow-400">Media</h3>
+              <div className="flex space-x-2 mt-2">
+                <Link href="#" aria-label="Facebook" legacyBehavior>
+                  <a className="p-2 border rounded-full shadow hover:shadow-lg transition duration-300 ease-in-out bg-black">
+                    <FontAwesomeIcon icon={faFacebook} className="h-6" />
+                  </a>
+                </Link>
+                <Link href="#" aria-label="Twitter" legacyBehavior>
+                  <a className="p-2 border rounded-full shadow hover:shadow-lg transition duration-300 ease-in-out bg-black">
+                    <FontAwesomeIcon icon={faTwitter} className="h-6" />
+                  </a>
+                </Link>
+                <Link href="#" aria-label="Youtube" legacyBehavior>
+                  <a className="p-2 border rounded-full shadow hover:shadow-lg transition duration-300 ease-in-out bg-black">
+                    <FontAwesomeIcon icon={faYoutube} className="h-6" />
+                  </a>
+                </Link>
+                <Link href="#" aria-label="Instagram" legacyBehavior>
+                  <a className="p-2 border rounded-full shadow hover:shadow-lg transition duration-300 ease-in-out bg-black">
+                    <FontAwesomeIcon icon={faInstagram} className="h-6" />
+                  </a>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
         <div className="mt-6 flex justify-center space-x-4">
+          <div className="bg-black p-2 rounded-full flex items-center">
+            <FontAwesomeIcon
+              icon={faWhatsapp}
+              className="text-white h-8 mr-2"
+            />
+            <Link href="https://wa.me/+6281325552982" legacyBehavior>
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white"
+              >
+                Konsultasi via WhatsApp
+              </a>
+            </Link>
+          </div>
           <div className="bg-black p-2 rounded-full flex items-center">
             <FontAwesomeIcon icon={faApple} className="text-white h-8 mr-2" />
             <Link href="#" aria-label="App Store">

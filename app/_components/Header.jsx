@@ -22,21 +22,14 @@ const Header = () => {
                 href="#"
                 className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
               >
-                Jaminan Kesehatan
+                Pencarian Anggota Sanduka
               </Link>
 
               <Link
                 href="#"
                 className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
               >
-                Layanan
-              </Link>
-
-              <Link
-                href="#"
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Informasi Publik
+                Syarat dan Ketentuan
               </Link>
 
               <Link
@@ -84,21 +77,14 @@ const Header = () => {
             href="#"
             className="text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
           >
-            Jaminan Kesehatan
+            Pencarian Anggota Sanduka
           </Link>
 
           <Link
             href="#"
             className="text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
           >
-            Layanan
-          </Link>
-
-          <Link
-            href="#"
-            className="text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
-          >
-            Informasi Publik
+            Syarat dan Ketentuan
           </Link>
 
           <Link
@@ -108,11 +94,9 @@ const Header = () => {
             Kontak
           </Link>
 
-          <Link
-            href="#"
-            className="text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
-          >
-            Profil
+          <Link href={"/sign-in"} className="text-blue-500">
+            {" "}
+            <Button>Login</Button>
           </Link>
         </div>
       </div>
