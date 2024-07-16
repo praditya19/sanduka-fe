@@ -1,49 +1,42 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isOpenDropdown, setIsOpenDropdown] = useState(null);
+
+  const toggleDropdown = (menu) => {
+    setIsOpenDropdown((prevState) => (prevState === menu ? null : menu));
+  };
+
+  const handleClick = () => {
+    setIsOpen(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest(".dropdown")) {
+        setIsOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
-    <nav className="bg-white shadow-md">
+    <nav className="bg-white shadow-md relative z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link href={"/"}>
+            <Link href="/">
               <Image src="/sanduka.png" width={170} height={170} alt="logo" />
             </Link>
-          </div>
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
-              <Link
-                href="#"
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Pencarian Anggota Sanduka
-              </Link>
-
-              <Link
-                href="#"
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Syarat dan Ketentuan
-              </Link>
-
-              <Link
-                href="#"
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Kontak
-              </Link>
-
-              <Link href={"/sign-in"} className="text-blue-500">
-                {" "}
-                <Button>Login</Button>
-              </Link>
-            </div>
           </div>
           <div className="-mr-2 flex md:hidden">
             <button
@@ -68,36 +61,177 @@ const Header = () => {
               </svg>
             </button>
           </div>
+          <div className="hidden md:block">
+            <ul className="flex space-x-4">
+              <li className="relative dropdown">
+                <button
+                  onClick={() => toggleDropdown("anggota")}
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Anggota
+                </button>
+                {isOpenDropdown === "anggota" && (
+                  <ul className="absolute left-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50">
+                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                      <Link href="/data-anggota">Cari Anggota</Link>
+                    </li>
+                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                      <Link href="/data-anggota">Data Anggota</Link>
+                    </li>
+                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                      <Link href="/rekap-anggota">Rekap Anggota</Link>
+                    </li>
+                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                      <Link href="/status-anggota">Status Anggota</Link>
+                    </li>
+                  </ul>
+                )}
+              </li>
+              <li className="relative dropdown">
+                <button
+                  onClick={() => toggleDropdown("laporan")}
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Laporan
+                </button>
+                {isOpenDropdown === "laporan" && (
+                  <ul className="absolute left-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50">
+                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                      <Link href="/statistik">Statistik</Link>
+                    </li>
+                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                      <Link href="/rekap-meninggal">Rekap Meninggal</Link>
+                    </li>
+                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                      <Link href="/history-data">History Data</Link>
+                    </li>
+                  </ul>
+                )}
+              </li>
+              <li className="relative dropdown">
+                <button
+                  onClick={() => toggleDropdown("lainnya")}
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Lainnya
+                </button>
+                {isOpenDropdown === "lainnya" && (
+                  <ul className="absolute left-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50">
+                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                      <Link href="/bantuan">Bantuan</Link>
+                    </li>
+                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                      <Link href="/ketentuan">Ketentuan</Link>
+                    </li>
+                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                      <Link href="/keuangan">Keuangan</Link>
+                    </li>
+                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                      <Link href="/pensiun">Pensiun</Link>
+                    </li>
+                  </ul>
+                )}
+              </li>
+              <li className="relative text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                <Link href="/kontak">Kontak</Link>
+              </li>
+              <li className="relative">
+                <Link href="/sign-in" className="text-blue-500">
+                  <Button>Login</Button>
+                </Link>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 
       <div className={`${isOpen ? "block" : "hidden"} md:hidden`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          <Link
-            href="#"
-            className="text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
-          >
-            Pencarian Anggota Sanduka
-          </Link>
-
-          <Link
-            href="#"
-            className="text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
-          >
-            Syarat dan Ketentuan
-          </Link>
-
-          <Link
-            href="#"
-            className="text-gray-700 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
-          >
-            Kontak
-          </Link>
-
-          <Link href={"/sign-in"} className="text-blue-500">
-            {" "}
-            <Button>Login</Button>
-          </Link>
+          <ul className="flex flex-col space-y-1">
+            <li className="relative dropdown">
+              <button
+                onClick={() => toggleDropdown("anggota")}
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Anggota
+              </button>
+              {isOpenDropdown === "anggota" && (
+                <ul className="relative mt-2 w-full bg-white border rounded-md shadow-lg z-50">
+                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <Link href="/data-anggota">Cari Anggota</Link>
+                  </li>
+                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <Link href="/data-anggota">Data Anggota</Link>
+                  </li>
+                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <Link href="/rekap-anggota">Rekap Anggota</Link>
+                  </li>
+                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <Link href="/status-anggota">Status Anggota</Link>
+                  </li>
+                </ul>
+              )}
+            </li>
+            <li className="relative dropdown">
+              <button
+                onClick={() => toggleDropdown("laporan")}
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Laporan
+              </button>
+              {isOpenDropdown === "laporan" && (
+                <ul className="relative mt-2 w-full bg-white border rounded-md shadow-lg z-50">
+                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <Link href="/statistik">Statistik</Link>
+                  </li>
+                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <Link href="/rekap-meninggal">Rekap Meninggal</Link>
+                  </li>
+                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <Link href="/history-data">History Data</Link>
+                  </li>
+                </ul>
+              )}
+            </li>
+            <li className="relative dropdown">
+              <button
+                onClick={() => toggleDropdown("lainnya")}
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Lainnya
+              </button>
+              {isOpenDropdown === "lainnya" && (
+                <ul className="relative mt-2 w-full bg-white border rounded-md shadow-lg z-50">
+                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <Link href="/bantuan">Bantuan</Link>
+                  </li>
+                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <Link href="/ketentuan">Ketentuan</Link>
+                  </li>
+                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <Link href="/keuangan">Keuangan</Link>
+                  </li>
+                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    <Link href="/pensiun">Pensiun</Link>
+                  </li>
+                </ul>
+              )}
+            </li>
+            <li className="relative text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+              <Link href="/kontak" onClick={handleClick}>
+                Kontak
+              </Link>
+            </li>
+            <li className="relative">
+              <Link
+                href={"/sign-in"}
+                className="text-blue-500"
+                onClick={handleClick}
+              >
+                <Button>Login</Button>
+              </Link>
+            </li>
+          </ul>
         </div>
       </div>
     </nav>
