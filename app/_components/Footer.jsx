@@ -101,7 +101,7 @@ const Footer = () => {
             </div>
           </div>
         </div>
-        <div className="mt-6 flex justify-center space-x-4">
+        <div className="mt-6 flex flex-col md:flex-row justify-center md:space-x-4">
           <div className="bg-black p-2 rounded-full flex items-center">
             <FontAwesomeIcon
               icon={faWhatsapp}
@@ -117,23 +117,29 @@ const Footer = () => {
               </a>
             </Link>
           </div>
-          <div className="bg-black p-2 rounded-full flex items-center">
-            <FontAwesomeIcon icon={faApple} className="text-white h-8 mr-2" />
-            <Link href="#" aria-label="App Store">
-              <span className="text-white">Download di App Store</span>
-            </Link>
-          </div>
-          <div className="bg-black p-2 rounded-full flex items-center">
-            <Image
-              src="/playstore.svg"
-              alt="Logo Icon"
-              width={30}
-              height={30}
-              className="mr-0"
-            />
-            <Link href="#" aria-label="Google Play" className="text-white">
-              <span className="ml-2">Dapatkan di Google Play</span>
-            </Link>
+          <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mt-3">
+            <div className="bg-black p-2 rounded-full flex items-center">
+              <FontAwesomeIcon icon={faApple} className="text-white h-8 mr-2" />
+              <Link href="#" aria-label="App Store" className="text-white">
+                <span className="hidden md:inline">Download di App Store</span>
+                <span className="md:hidden">App Store</span>
+              </Link>
+            </div>
+            <div className="bg-black p-2 rounded-full flex items-center">
+              <Image
+                src="/playstore.svg"
+                alt="Logo Icon"
+                width={30}
+                height={30}
+                className="mr-2"
+              />
+              <Link href="#" aria-label="Google Play" className="text-white">
+                <span className="hidden md:inline">
+                  Dapatkan di Google Play
+                </span>
+                <span className="md:hidden">Google Play</span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

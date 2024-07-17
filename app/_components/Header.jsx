@@ -124,7 +124,7 @@ const Header = () => {
                       <Link href="/ketentuan">Ketentuan</Link>
                     </li>
                     <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                      <Link href="/keuangan">Keuangan</Link>
+                      <Link href="/keuangan/home">Keuangan</Link>
                     </li>
                     <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                       <Link href="/pensiun">Pensiun</Link>
@@ -206,7 +206,7 @@ const Header = () => {
                     <Link href="/ketentuan">Ketentuan</Link>
                   </li>
                   <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    <Link href="/keuangan">Keuangan</Link>
+                    <Link href="/keuangan/home">Keuangan</Link>
                   </li>
                   <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                     <Link href="/pensiun">Pensiun</Link>
