@@ -1,9 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 
-const Page = () => {
+const HelpPage = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -33,29 +32,29 @@ const Page = () => {
   const contacts = [
     {
       name: "Hartono, M.Pd.",
-      phone: "621325754589",
+      phone: "+621325754589",
       image: "/profile.png",
     },
     {
       name: "Habib Nor Haqiqi, S.I.Pust.",
-      phone: "621325552982",
+      phone: "+621325552982",
       image: "/profile.png",
     },
     {
       name: "Sudiharto, S.Pd.",
-      phone: "621325386311",
+      phone: "+621325386311",
       image: "/profile.png",
     },
     {
       name: "Harmanto, M.Pd.",
-      phone: "625227227011",
+      phone: "+625227227011",
       image: "/profile.png",
     },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
-      <div className="w-full max-w-4xl p-8 bg-white rounded-lg shadow-lg">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-6xl p-8 bg-white rounded-lg shadow-md transition-transform transform hover:scale-105">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-gray-800">Kontak Bantuan</h1>
           <p className="mt-4 text-gray-600">
@@ -70,35 +69,34 @@ const Page = () => {
             </h2>
             <ul className="mt-4 space-y-4">
               {contacts.map((contact, index) => (
-                <li key={index} className="flex items-center space-x-6">
+                <li
+                  key={index}
+                  className="flex items-center space-x-4 transition-transform transform hover:scale-105"
+                >
                   <div className="relative w-16 h-16">
                     <Image
                       src={contact.image}
                       alt={contact.name}
                       layout="fill"
-                      className="rounded-full"
+                      className="rounded-full object-cover shadow-md"
                     />
                   </div>
                   <div>
-                    <h3 className="text-lg font-medium">{contact.name}</h3>
-                    <Link
-                      href={`https://wa.me/+${contact.phone}`}
-                      legacyBehavior
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {contact.name}
+                    </h3>
+                    <a
+                      href={`https://wa.me/${contact.phone}`}
+                      className="block text-blue-500 hover:underline"
                     >
-                      <a
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block text-blue-500"
-                      >
-                        {contact.phone}
-                      </a>
-                    </Link>
+                      {contact.phone}
+                    </a>
                   </div>
                 </li>
               ))}
             </ul>
           </div>
-          <div className="p-4">
+          <div className="p-4 bg-gray-50 rounded-lg shadow-inner">
             <h2 className="text-2xl font-semibold text-gray-800">
               Formulir Kontak
             </h2>
@@ -114,7 +112,7 @@ const Page = () => {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 mt-1 border rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
@@ -128,7 +126,7 @@ const Page = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 mt-1 border rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
@@ -142,7 +140,7 @@ const Page = () => {
                   value={formData.subject}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 mt-1 border rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
@@ -156,13 +154,13 @@ const Page = () => {
                   onChange={handleChange}
                   rows={4}
                   required
-                  className="w-full px-3 py-2 mt-1 border rounded-md resize-none focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:bg-blue-600"
+                  className="w-full px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:bg-blue-600"
                 >
                   Kirim Pesan
                 </button>
@@ -175,4 +173,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default HelpPage;

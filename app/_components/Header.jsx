@@ -132,9 +132,6 @@ const Header = () => {
                   </ul>
                 )}
               </li>
-              <li className="relative text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                <Link href="/kontak">Kontak</Link>
-              </li>
               <li className="relative">
                 <Link href="/sign-in" className="text-blue-500">
                   <Button>Login</Button>
@@ -216,11 +213,6 @@ const Header = () => {
                   </li>
                 </ul>
               )}
-            </li>
-            <li className="relative text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-              <Link href="/kontak" onClick={handleClick}>
-                Kontak
-              </Link>
             </li>
             <li className="relative">
               <Link
