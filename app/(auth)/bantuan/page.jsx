@@ -54,7 +54,7 @@ const HelpPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-6xl p-8 bg-white rounded-lg shadow-md transition-transform transform hover:scale-105">
+      <div className="w-full max-w-6xl p-8 bg-white rounded-lg shadow-md">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-gray-800">Kontak Bantuan</h1>
           <p className="mt-4 text-gray-600">
@@ -69,16 +69,13 @@ const HelpPage = () => {
             </h2>
             <ul className="mt-4 space-y-4">
               {contacts.map((contact, index) => (
-                <li
-                  key={index}
-                  className="flex items-center space-x-4 transition-transform transform hover:scale-105"
-                >
+                <li key={index} className="flex items-center space-x-4">
                   <div className="relative w-16 h-16">
                     <Image
                       src={contact.image}
                       alt={contact.name}
                       layout="fill"
-                      className="rounded-full object-cover shadow-md"
+                      className="rounded-full object-cover"
                     />
                   </div>
                   <div>
@@ -96,7 +93,7 @@ const HelpPage = () => {
               ))}
             </ul>
           </div>
-          <div className="p-4 bg-gray-50 rounded-lg shadow-inner">
+          <div className="p-4">
             <h2 className="text-2xl font-semibold text-gray-800">
               Formulir Kontak
             </h2>
@@ -167,6 +164,19 @@ const HelpPage = () => {
               </div>
             </form>
           </div>
+        </div>
+        <div className="mt-8">
+          <h2 className="text-2xl font-semibold text-gray-800">Lokasi Kami</h2>
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d990.8447546193194!2d110.66220847221372!3d-6.5997301999999936!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e711effed10630d%3A0x33031084684218b0!2sGedung%20PGRI%20Kabupaten%20Jepara!5e0!3m2!1sen!2sid!4v1721217712802!5m2!1sen!2sid"
+            width="100%"
+            height="450"
+            style={{ border: 0 }}
+            allowFullScreen=""
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className="rounded-md shadow-md mt-4"
+          ></iframe>
         </div>
       </div>
     </div>
