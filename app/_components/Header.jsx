@@ -73,7 +73,7 @@ const Header = () => {
                 {isOpenDropdown === "anggota" && (
                   <ul className="absolute left-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50">
                     <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                      <Link href="/data-anggota">Cari Anggota</Link>
+                      <Link href="/cari-anggota">Cari Anggota</Link>
                     </li>
                     <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                       <Link href="/data-anggota">Data Anggota</Link>
@@ -158,7 +158,7 @@ const Header = () => {
               {isOpenDropdown === "anggota" && (
                 <ul className="relative mt-2 w-full bg-white border rounded-md shadow-lg z-50">
                   <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    <Link href="/data-anggota">Cari Anggota</Link>
+                    <Link href="/cari-anggota">Cari Anggota</Link>
                   </li>
                   <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                     <Link href="/data-anggota">Data Anggota</Link>
