@@ -1,6 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 const HelpPage = () => {
   const [formData, setFormData] = useState({
@@ -99,10 +102,10 @@ const HelpPage = () => {
             </h2>
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
               <div>
-                <label htmlFor="name" className="block text-gray-800">
+                <Label htmlFor="name" className="block text-gray-800">
                   Nama
-                </label>
-                <input
+                </Label>
+                <Input
                   type="text"
                   id="name"
                   name="name"
@@ -113,10 +116,10 @@ const HelpPage = () => {
                 />
               </div>
               <div>
-                <label htmlFor="email" className="block text-gray-800">
+                <Label htmlFor="email" className="block text-gray-800">
                   Email
-                </label>
-                <input
+                </Label>
+                <Input
                   type="email"
                   id="email"
                   name="email"
@@ -127,10 +130,10 @@ const HelpPage = () => {
                 />
               </div>
               <div>
-                <label htmlFor="subject" className="block text-gray-800">
+                <Label htmlFor="subject" className="block text-gray-800">
                   Subjek
-                </label>
-                <input
+                </Label>
+                <Input
                   type="text"
                   id="subject"
                   name="subject"
@@ -141,9 +144,9 @@ const HelpPage = () => {
                 />
               </div>
               <div>
-                <label htmlFor="message" className="block text-gray-800">
+                <Label htmlFor="message" className="block text-gray-800">
                   Pesan
-                </label>
+                </Label>
                 <textarea
                   id="message"
                   name="message"
@@ -155,12 +158,12 @@ const HelpPage = () => {
                 />
               </div>
               <div>
-                <button
+                <Button
                   type="submit"
                   className="w-full px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:bg-blue-600"
                 >
                   Kirim Pesan
-                </button>
+                </Button>
               </div>
             </form>
           </div>

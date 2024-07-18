@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import Link from "next/link";
 import IuranPgri from "../data-utama/iuran-pgri/page";
 import Daspen from "../data-utama/daspen/page";
 import Derap from "../data-utama/derap/page";
@@ -33,28 +32,24 @@ export default function DataUtama() {
       <nav className="container mt-4">
         <ul className="flex flex-wrap space-x-4 md:space-x-6">
           <NavItem
-            href="/keuangan/data-utama/iuran-pgri"
             isActive={activeTab === "iuran-pgri"}
             onClick={() => handleTabChange("iuran-pgri")}
           >
             Iuran PGRI
           </NavItem>
           <NavItem
-            href="/keuangan/data-utama/daspen"
             isActive={activeTab === "daspen"}
             onClick={() => handleTabChange("daspen")}
           >
             Daspen
           </NavItem>
           <NavItem
-            href="/keuangan/data-utama/derap"
             isActive={activeTab === "derap"}
             onClick={() => handleTabChange("derap")}
           >
             Derap
           </NavItem>
           <NavItem
-            href="/keuangan/data-utama/kalender"
             isActive={activeTab === "kalender"}
             onClick={() => handleTabChange("kalender")}
           >
@@ -71,12 +66,12 @@ export default function DataUtama() {
   );
 }
 
-function NavItem({ href, children, isActive, onClick }) {
+function NavItem({ children, isActive, onClick }) {
   const activeClass = isActive ? "text-green-700 font-bold" : "";
 
   return (
     <li className={`cursor-pointer ${activeClass}`} onClick={onClick}>
-      <Link href={href}>{children}</Link>
+      {children}
     </li>
   );
 }
