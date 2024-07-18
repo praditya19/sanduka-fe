@@ -13,7 +13,7 @@ import { LoaderIcon, Search, AlertCircle } from "lucide-react";
 const members = [
   { npa: "12345", dob: "01/01/1980", name: "John Doe" },
   { npa: "67890", dob: "15/07/1975", name: "Jane Smith" },
-  { npa: "01070", dob: "01/07/2004", name: "Nanda DK" },
+  { npa: "01070", dob: "01/07/2004", name: "Nanda DK", lahir: "Kendal", cabang: "KEMBANG", kerja: "SDN BALONG 2" },
   // Add more members as needed
 ];
 
@@ -43,8 +43,8 @@ function CariAnggota() {
 
   return (
     <div className="flex items-baseline justify-center my-20">
-      <div className="flex flex-col items-center justify-center p-24 border border-gray-200 rounded-lg shadow-md">
-        <h2 className="font-bold text-2xl mt-2">CARI KEANGGOTAAN SANDUKA</h2>
+      <div className="flex flex-col items-center justify-center p-12 border border-gray-200 rounded-lg shadow-md">
+        <h2 className="font-bold text-center text-2xl mt-2">CARI KEANGGOTAAN SANDUKA</h2>
         <h2 className="text-gray-500 mt-2">
           Masukkan NPA PGRI dan Tanggal Lahir
         </h2>
@@ -82,10 +82,13 @@ function CariAnggota() {
           )}
           {memberData && (
             <div className="p-4 border border-green-200 rounded-lg shadow-md">
-              <h3 className="font-bold text-lg">Data Anggota:</h3>
-              <p><strong>Nama:</strong> {memberData.name}</p>
-              <p><strong>NPA PGRI:</strong> {memberData.npa}</p>
-              <p><strong>Tanggal Lahir:</strong> {memberData.dob}</p>
+              <h3 className="font-bold text-center text-lg mb-2">HASIL PENCARIAN DATA</h3>
+              <p><strong>Nama :</strong> {memberData.name}</p>
+              <p><strong>Tempat Lahir :</strong> {memberData.lahir} </p>
+              <p><strong>Tanggal Lahir :</strong> {memberData.dob}</p>
+              <p><strong>NPA PGRI :</strong> {memberData.npa}</p>
+              <p><strong>Cabang :</strong> {memberData.cabang} </p>
+              <p><strong>Alamat Kerja :</strong> {memberData.kerja} </p>
             </div>
           )}
         </div>
