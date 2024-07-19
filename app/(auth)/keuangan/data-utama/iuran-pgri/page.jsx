@@ -603,7 +603,7 @@ export default function Iuran() {
 
       <div className="overflow-x-auto">
         <table className="w-full text-left table-auto border-collapse border border-gray-300 bg-white rounded-lg shadow-lg">
-          <thead className="bg-teal-600 text-white">
+          <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
             <tr>
               <th className="border px-6 py-3">No</th>
               <th className="border px-6 py-3">Cabang/Khusus</th>
@@ -621,7 +621,7 @@ export default function Iuran() {
             {filteredData.map((item) => (
               <tr
                 key={`${item.No}`}
-                className={`hover:bg-gray-100 transition duration-200 ease-in-out ${
+                className={`bg-white transition duration-200 ease-in-out ${
                   item.CabangKhusus === "JUMLAH" ? "font-bold" : ""
                 }`}
               >

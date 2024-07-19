@@ -101,7 +101,7 @@ const Footer = () => {
             </div>
           </div>
         </div>
-        <div className="mt-6 flex flex-col md:flex-row justify-center md:space-x-4">
+        <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 justify-center">
           <div className="bg-black p-2 rounded-full flex items-center">
             <FontAwesomeIcon
               icon={faWhatsapp}

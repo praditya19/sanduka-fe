@@ -4,6 +4,7 @@ import IuranPgri from "../data-utama/iuran-pgri/page";
 import Daspen from "../data-utama/daspen/page";
 import Derap from "../data-utama/derap/page";
 import Kalender from "../data-utama/kalender/page";
+import Link from "next/link";
 
 export default function DataUtama() {
   const [activeTab, setActiveTab] = useState("iuran-pgri");
@@ -66,8 +67,18 @@ export default function DataUtama() {
   );
 }
 
-function NavItem({ children, isActive, onClick }) {
+function NavItem({ children, isActive, onClick, href }) {
   const activeClass = isActive ? "text-green-700 font-bold" : "";
+
+  if (href) {
+    return (
+      <li>
+        <Link href={href} className={`cursor-pointer ${activeClass}`}>
+          {children}
+        </Link>
+      </li>
+    );
+  }
 
   return (
     <li className={`cursor-pointer ${activeClass}`} onClick={onClick}>
