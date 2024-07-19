@@ -23,6 +23,32 @@ export default function Daspen() {
   const [perolehanCabang, setPerolehanCabang] = useState(0);
   const [perolehanKabupaten, setPerolehanKabupaten] = useState(0);
   const [perolehanProvinsi, setPerolehanProvinsi] = useState(0);
+  const [tableData, setTableData] = useState([
+    {
+      No: 1,
+      CabangKhusus: "",
+      KatagoriI: { Anggota: 0, Sumbangan: 0 },
+      KatagoriII: { Anggota: 0, Sumbangan: 0 },
+      KatagoriIII: { Anggota: 0, Sumbangan: 0 },
+      Total: { Anggota: 0, Sumbangan: 0 },
+    },
+    {
+      No: 2,
+      CabangKhusus: "BANGSRI",
+      KatagoriI: { Anggota: 10, Sumbangan: 105000 },
+      KatagoriII: { Anggota: 0, Sumbangan: 0 },
+      KatagoriIII: { Anggota: 0, Sumbangan: 0 },
+      Total: { Anggota: 10, Sumbangan: 105000 },
+    },
+    {
+      No: 3,
+      CabangKhusus: "BATEALIT",
+      KatagoriI: { Anggota: 0, Sumbangan: 0 },
+      KatagoriII: { Anggota: 0, Sumbangan: 0 },
+      KatagoriIII: { Anggota: 0, Sumbangan: 0 },
+      Total: { Anggota: 0, Sumbangan: 0 },
+    },
+  ]);
 
   useEffect(() => {
     setKatagori1(kuota * katagori1Lainnya);
@@ -62,7 +88,7 @@ export default function Daspen() {
     setPerolehanKabupaten(0);
     setPerolehanProvinsi(0);
   };
-  console.log(katagori1);
+
   return (
     <div className="container mx-auto p-6 bg-gray-50 rounded-lg shadow-lg">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -353,6 +379,222 @@ export default function Daspen() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
+        <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
+          <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
+            <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+              <option>Tampil Semua</option>
+            </select>
+            <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+              <option>Juli</option>
+              <option>Agustus</option>
+              <option>September</option>
+            </select>
+            <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+              <option>2023</option>
+              <option>2024</option>
+              <option>2025</option>
+            </select>
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
+            Transaksi Juli 2024
+          </h1>
+          <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out mt-3 mr-6 w-24">
+            Cetak
+          </Button>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
+          <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
+            <tr>
+              <th
+                scope="col"
+                className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+              >
+                No
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+              >
+                Cabang/Khusus
+              </th>
+              <th
+                scope="col"
+                colSpan={2}
+                className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-center"
+              >
+                Katagori I
+              </th>
+              <th
+                scope="col"
+                colSpan={2}
+                className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-center"
+              >
+                Katagori II
+              </th>
+              <th
+                scope="col"
+                colSpan={2}
+                className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-center"
+              >
+                Katagori III
+              </th>
+              <th
+                scope="col"
+                colSpan={2}
+                className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-center"
+              >
+                Total
+              </th>
+            </tr>
+            <tr>
+              <th
+                scope="col"
+                className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+              ></th>
+              <th
+                scope="col"
+                className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+              ></th>
+              <th
+                scope="col"
+                className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+              >
+                Anggota
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+              >
+                Sumbangan
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+              >
+                Anggota
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+              >
+                Sumbangan
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+              >
+                Anggota
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+              >
+                Sumbangan
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+              >
+                Anggota
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+              >
+                Sumbangan
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {tableData.map((row) => (
+              <tr
+                key={row.No}
+                className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
+              >
+                <td className="px-6 py-4">{row.No}</td>
+                <td className="px-6 py-4">{row.CabangKhusus}</td>
+                <td className="px-6 py-4">
+                  {row.KatagoriI.Anggota.toLocaleString("en-US")}
+                </td>
+                <td className="px-6 py-4">
+                  {row.KatagoriI.Sumbangan.toLocaleString("en-US")}
+                </td>
+                <td className="px-6 py-4">
+                  {row.KatagoriII.Anggota.toLocaleString("en-US")}
+                </td>
+                <td className="px-6 py-4">
+                  {row.KatagoriII.Sumbangan.toLocaleString("en-US")}
+                </td>
+                <td className="px-6 py-4">
+                  {row.KatagoriIII.Anggota.toLocaleString("en-US")}
+                </td>
+                <td className="px-6 py-4">
+                  {row.KatagoriIII.Sumbangan.toLocaleString("en-US")}
+                </td>
+                <td className="px-6 py-4">
+                  {row.Total.Anggota.toLocaleString("en-US")}
+                </td>
+                <td className="px-6 py-4">
+                  {row.Total.Sumbangan.toLocaleString("en-US")}
+                </td>
+              </tr>
+            ))}
+            <tr className="bg-gray-100 border-t dark:bg-gray-800 dark:border-gray-700">
+              <td
+                colSpan={2}
+                className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700"
+              >
+                Jumlah
+              </td>
+              <td className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700">
+                {tableData
+                  .reduce((acc, row) => acc + row.KatagoriI.Anggota, 0)
+                  .toLocaleString("en-US")}
+              </td>
+              <td className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700">
+                {tableData
+                  .reduce((acc, row) => acc + row.KatagoriI.Sumbangan, 0)
+                  .toLocaleString("en-US")}
+              </td>
+              <td className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700">
+                {tableData
+                  .reduce((acc, row) => acc + row.KatagoriII.Anggota, 0)
+                  .toLocaleString("en-US")}
+              </td>
+              <td className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700">
+                {tableData
+                  .reduce((acc, row) => acc + row.KatagoriII.Sumbangan, 0)
+                  .toLocaleString("en-US")}
+              </td>
+              <td className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700">
+                {tableData
+                  .reduce((acc, row) => acc + row.KatagoriIII.Anggota, 0)
+                  .toLocaleString("en-US")}
+              </td>
+              <td className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700">
+                {tableData
+                  .reduce((acc, row) => acc + row.KatagoriIII.Sumbangan, 0)
+                  .toLocaleString("en-US")}
+              </td>
+              <td className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700">
+                {tableData
+                  .reduce((acc, row) => acc + row.Total.Anggota, 0)
+                  .toLocaleString("en-US")}
+              </td>
+              <td className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700">
+                {tableData
+                  .reduce((acc, row) => acc + row.Total.Sumbangan, 0)
+                  .toLocaleString("en-US")}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   );
