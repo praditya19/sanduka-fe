@@ -29,43 +29,44 @@ function DataAnggota() {
                 </div>
             </header>
             <div className="mb-4">
-                <div className="flex items-start mt-2 justify-between">
-                    <div className="flex items-center space-x-2">
-                        <select className="shadow appearance-none border rounded w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <div className="flex flex-wrap items-start mt-2 justify-between">
+                    <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
+                        <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0">
                             <option>-- Cabang --</option>
                         </select>
-                        <select className="shadow appearance-none border rounded w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0">
                             <option>-- Unit Kerja --</option>
                         </select>
-                        <select className="shadow appearance-none border rounded w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0">
                             <option>Semua</option>
                         </select>
-                        <p className="text-center py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
                             Jumlah Anggota : {jumlahAnggota}
                         </p>
                     </div>
-                    <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
                         Data Anggota
                     </p>
-                    <div className="flex items-end">
-                        <div className="mb-4 space-x-2">
+                    <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
+                        <div className="space-x-2 w-full flex md:block">
                             <label htmlFor="maxItems" className="mr-2">Tampilkan:</label>
                             <select
                                 id="maxItems"
                                 value={maxItems}
                                 onChange={(e) => setMaxItems(parseInt(e.target.value))}
-                                className="shadow appearance-none border rounded w-20 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                className="shadow appearance-none border rounded w-full md:w-20 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                             >
                                 <option value={5}>5</option>
                                 <option value={10}>10</option>
                                 <option value={15}>15</option>
                                 <option value={20}>20</option>
                             </select>
-                            <Button className="px-8" variant="outline">Cetak</Button>
+                            <Button className="px-8 mt-2 md:mt-0" variant="outline">Cetak</Button>
                         </div>
                     </div>
                 </div>
             </div>
+
             <div className="overflow-x-auto">
                 <table className="container w-full table-auto mb-8">
                     <thead>
