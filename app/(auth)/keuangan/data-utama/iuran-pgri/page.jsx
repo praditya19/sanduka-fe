@@ -618,12 +618,12 @@ export default function Iuran() {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((item) => (
+            {filteredData.map((item, index) => (
               <tr
                 key={`${item.No}`}
-                className={`bg-white transition duration-200 ease-in-out ${
-                  item.CabangKhusus === "JUMLAH" ? "font-bold" : ""
-                }`}
+                className={`transition duration-200 ease-in-out ${
+                  index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                } ${item.CabangKhusus === "JUMLAH" ? "font-bold" : ""}`}
               >
                 <td className="border px-6 py-4">{item.No}</td>
                 <td className="border px-6 py-4">{item.CabangKhusus}</td>
