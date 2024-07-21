@@ -1,13 +1,13 @@
 "use client";
 import React, { useState } from "react";
-import IuranPgri from "../data-utama/iuran-pgri/page";
 import Daspen from "../data-utama/daspen/page";
 import Derap from "../data-utama/derap/page";
 import Kalender from "../data-utama/kalender/page";
 import Link from "next/link";
+import Pemasukan from "../sanduka/pemasukan/page";
 
-export default function DataUtama() {
-  const [activeTab, setActiveTab] = useState("iuran-pgri");
+export default function Sanduka() {
+  const [activeTab, setActiveTab] = useState("pemasukan");
 
   const handleTabChange = (tabName) => {
     setActiveTab(tabName);
@@ -33,16 +33,16 @@ export default function DataUtama() {
       <nav className="container mt-4">
         <ul className="flex flex-wrap space-x-4 md:space-x-6">
           <NavItem
-            isActive={activeTab === "iuran-pgri"}
-            onClick={() => handleTabChange("iuran-pgri")}
+            isActive={activeTab === "pemasukan"}
+            onClick={() => handleTabChange("pemasukan")}
           >
-            Iuran PGRI
+            Pemasukan
           </NavItem>
           <NavItem
-            isActive={activeTab === "daspen"}
-            onClick={() => handleTabChange("daspen")}
+            isActive={activeTab === "pengeluaran"}
+            onClick={() => handleTabChange("pengeluaran")}
           >
-            Daspen
+            Pengeluaran
           </NavItem>
           <NavItem
             isActive={activeTab === "derap"}
@@ -59,10 +59,10 @@ export default function DataUtama() {
         </ul>
       </nav>
 
-      {activeTab === "iuran-pgri" && <IuranPgri />}
-      {activeTab === "daspen" && <Daspen />}
-      {activeTab === "derap" && <Derap />}
-      {activeTab === "kalender" && <Kalender />}
+      {activeTab === "pemasukan" && <Pemasukan />}
+      {activeTab === "pengeluaran" && <Daspen />}
+      {activeTab === "lapor" && <Derap />}
+      {activeTab === "laporan" && <Kalender />}
     </div>
   );
 }
