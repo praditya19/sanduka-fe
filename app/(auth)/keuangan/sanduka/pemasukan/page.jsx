@@ -213,7 +213,7 @@ function Pemasukan() {
             <Input
               className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               id="tanggalTransaksi"
-              type="text"
+              type="date"
               name="tanggalTransaksi"
               value={formValues.tanggalTransaksi}
               readOnly
