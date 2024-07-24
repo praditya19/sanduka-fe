@@ -1,10 +1,10 @@
 "use client";
 import React, { useState } from "react";
-import Daspen from "../data-utama/daspen/page";
 import Derap from "../data-utama/derap/page";
 import Kalender from "../data-utama/kalender/page";
 import Link from "next/link";
 import Pemasukan from "../sanduka/pemasukan/page";
+import Pengeluaran from "./pengeluaran/page";
 
 export default function Sanduka() {
   const [activeTab, setActiveTab] = useState("pemasukan");
@@ -60,7 +60,7 @@ export default function Sanduka() {
       </nav>
 
       {activeTab === "pemasukan" && <Pemasukan />}
-      {activeTab === "pengeluaran" && <Daspen />}
+      {activeTab === "pengeluaran" && <Pengeluaran />}
       {activeTab === "lapor" && <Derap />}
       {activeTab === "laporan" && <Kalender />}
     </div>
