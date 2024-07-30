@@ -30,7 +30,7 @@ export default function Sanduka() {
               <NavItem href="/keuangan/home">Home</NavItem>
               <NavItem href="/keuangan/data-utama">Data Utama</NavItem>
               <NavItem href="/keuangan/sanduka">Sanduka</NavItem>
-              <NavItem href="#">Organisasi</NavItem>
+              <NavItem href="/keuangan/organisasi">Organisasi</NavItem>
             </ul>
           </nav>
         </div>

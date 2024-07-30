@@ -42,7 +42,7 @@ export default function Home() {
                 <Link href="/keuangan/sanduka">Sanduka</Link>
               </li>
               <li className="cursor-pointer">
-                <Link href="#">Organisasi</Link>
+                <Link href="/keuangan/organisasi">Organisasi</Link>
               </li>
             </ul>
           </nav>
