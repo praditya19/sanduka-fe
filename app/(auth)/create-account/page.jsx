@@ -63,6 +63,25 @@ const Page = () => {
                 <Input type="password" id="password" placeholder="contoh:Kat45and!" />
               </div>
               <div className="w-full items-center gap-1.5"> 
+                <Label
+                  className="block text-sm font-medium mb-3">
+                  KPT
+                </Label>
+                <Input type="email" id="email" placeholder="KPT" />
+              </div>
+              <div className="w-full items-center gap-1.5">
+                <Label className="flex flex-col sm:flex-row sm:items-center mb-2">
+                  NIP
+                </Label>
+                <Input type="number" placeholder="Nomor Induk Pendidik ( NIP )" />
+              </div>
+              <div className="w-full items-center gap-1.5">
+                <Label className="flex flex-col sm:flex-row sm:items-center mb-2">
+                  NIP Lama
+                </Label>
+                <Input type="number" placeholder="Nomor Induk Pendidik ( NIP ) Lama" />
+              </div>
+              <div className="w-full items-center gap-1.5"> 
               <Label className="block text-sm font-medium mb-3">Unit Kerja</Label>
                 <Select>
                   <SelectTrigger >
@@ -107,6 +126,10 @@ const Page = () => {
               </div>
               <div className="w-full items-center gap-1.5"> 
                 <Label className="block text-sm font-medium mb-3">Tanggal Lahir</Label>
+                <Input type="date" placeholder="dd/mm/yyyy" />
+              </div>
+              <div className="w-full items-center gap-1.5"> 
+                <Label className="block text-sm font-medium mb-3">Tamat Pendidikan</Label>
                 <Input type="date" placeholder="dd/mm/yyyy" />
               </div>
               <div className="w-full items-center gap-1.5"> 
@@ -166,10 +189,42 @@ const Page = () => {
                 <Input type="number" placeholder="Tuliskan Kode Pos" />
               </div>
               <div className="w-full items-center gap-1.5"> 
+                <Label className="block text-sm font-medium mb-3">Nomor Telphone</Label>
+                <Input type="number" placeholder="Tuliskan Nomor Handphone Aktif" />
+              </div>
+              <div className="w-full items-center gap-1.5"> 
                 <Label className="block text-sm font-medium mb-3">Nomor Handphone  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
                   *Tertaut Akun Whatsapp
                 </span></Label>
                 <Input type="number" placeholder="Tuliskan Nomor Handphone Aktif" />
+              </div>
+              <div className="w-full items-center gap-1.5"> 
+                <Label className="block text-sm font-medium mb-3">Peserta Sanduka</Label>
+                <Select>
+                  <SelectTrigger >
+                    <SelectValue placeholder="Pilih " />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="islam">Ya</SelectItem>
+                      <SelectItem value="kristen">Tidak</SelectItem>
+                    </SelectGroup>  
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-full items-center gap-1.5"> 
+                <Label className="block text-sm font-medium mb-3">Peserta Daspen</Label>
+                <Select>
+                  <SelectTrigger >
+                    <SelectValue placeholder="Pilih " />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="islam">Ya</SelectItem>
+                      <SelectItem value="kristen">Tidak</SelectItem>
+                    </SelectGroup>  
+                  </SelectContent>
+                </Select>
               </div>
               <div className="col-span-1 sm:col-span-2">
                 <button
@@ -220,7 +275,8 @@ const Page = () => {
     </Select> 
         {/* <Label>Nama Kantor</Label>
         <Input type="text" placeholder="Tuliskan Nama Kantor" className="w-full" /> */}
-      </div>
+              </div>
+              {/* dibuat read only KAB. JEPARA */}
       <div className="w-full items-center gap-1.5">
   <Label className="flex flex-col sm:flex-row sm:items-center mb-2">
     Kabupaten/Kota/Kota Administrasi
@@ -234,10 +290,7 @@ const Page = () => {
     </SelectTrigger>
     <SelectContent>
       <SelectGroup>
-        <SelectItem value="Aceh">Aceh</SelectItem>
-        <SelectItem value="Bali">Bali</SelectItem>
-        <SelectItem value="Banten">Banten</SelectItem>
-        <SelectItem value="Jambi">Jambi</SelectItem>
+        <SelectItem value="Aceh">KAB. JEPARA</SelectItem>
       </SelectGroup>
     </SelectContent>
   </Select>
@@ -297,6 +350,22 @@ const Page = () => {
           <SelectItem value="tenagaAdmin">Tenaga Administrasi</SelectItem>
           <SelectItem value="dosen">Dosen</SelectItem>
           <SelectItem value="pengawas">Pengawas</SelectItem>
+        </SelectGroup>  
+      </SelectContent>
+    </Select> 
+      </div>
+      <div className="w-full items-center gap-1.5">
+      <Label className="block text-sm font-medium mb-3">
+              Status Sekolah
+                </Label>
+                <Select>
+      <SelectTrigger >
+        <SelectValue placeholder="Pilih Status Sekolah" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectItem value="guru">Swasta</SelectItem>
+          <SelectItem value="tenagaAdmin">Negri</SelectItem>
         </SelectGroup>  
       </SelectContent>
     </Select> 
@@ -372,6 +441,38 @@ const Page = () => {
       </SelectContent>
     </Select> 
               </div>
+      <div className="w-full items-center gap-1.5">
+      <Label className="block text-sm font-medium mb-3">
+              Jabatan
+                </Label>
+                <Select>
+      <SelectTrigger >
+        <SelectValue placeholder="Pilih Pendidikan" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectItem value="pns">Kepala Sekolah</SelectItem>
+          <SelectItem value="pppk">Guru</SelectItem>
+        </SelectGroup>  
+      </SelectContent>
+    </Select> 
+              </div>
+      <div className="w-full items-center gap-1.5">
+      <Label className="block text-sm font-medium mb-3">
+              Tugas
+                </Label>
+                <Select>
+      <SelectTrigger >
+        <SelectValue placeholder="Pilih Pendidikan" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectItem value="pns">Kepala Sekolah</SelectItem>
+          <SelectItem value="pppk">Guru</SelectItem>
+        </SelectGroup>  
+      </SelectContent>
+    </Select> 
+              </div>
               <div className="w-full items-center gap-1.5">
       <Label className="block text-sm font-medium mb-3">
               Sertifikat Pendidik
@@ -390,7 +491,7 @@ const Page = () => {
       </div>
       <div className="w-full items-center gap-1.5">
       <Label className="block text-sm font-medium mb-3">
-              Jenjang Mengajar
+              Mengajar
                 </Label>
                 <Select>
       <SelectTrigger >
@@ -400,6 +501,22 @@ const Page = () => {
         <SelectGroup>
           <SelectItem value="pns">PAUD</SelectItem>
           <SelectItem value="pppk">TK</SelectItem>
+        </SelectGroup>  
+      </SelectContent>
+    </Select> 
+      </div>
+      <div className="w-full items-center gap-1.5">
+      <Label className="block text-sm font-medium mb-3">
+              Tingkat Sekolah
+                </Label>
+                <Select>
+      <SelectTrigger >
+        <SelectValue placeholder="Pilih Jenjang Mengajar" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectItem value="pns">SD/MI</SelectItem>
+          <SelectItem value="pppk">TK/RA</SelectItem>
         </SelectGroup>  
       </SelectContent>
     </Select> 

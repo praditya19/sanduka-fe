@@ -1,13 +1,13 @@
 "use client";
 import React, { useState } from "react";
-import IuranPgri from "../data-utama/iuran-pgri/page";
-import Daspen from "../data-utama/daspen/page";
-import Derap from "../data-utama/derap/page";
-import Kalender from "../data-utama/kalender/page";
 import Link from "next/link";
+import Pemasukan from "../organisasi/pemasukan/page";
+import Pengeluaran from "./pengeluaran/page";
+import Lapor from "../organisasi/lapor/page";
+import Kwitansi from "../organisasi/kwitansi/page";
 
-export default function DataUtama() {
-  const [activeTab, setActiveTab] = useState("iuran-pgri");
+export default function Sanduka() {
+  const [activeTab, setActiveTab] = useState("pemasukan");
 
   const handleTabChange = (tabName) => {
     setActiveTab(tabName);
@@ -18,7 +18,7 @@ export default function DataUtama() {
       <header className="bg-green-700 text-white p-4 md:p-6 rounded-lg shadow-md">
         <div className="container mx-auto">
           <h1 className="text-2xl md:text-3xl font-extrabold">
-            Keuangan Data Utama
+            Keuangan Organisasi
           </h1>
           <nav className="mt-4">
             <ul className="flex flex-wrap space-x-4 md:space-x-6">
@@ -33,36 +33,36 @@ export default function DataUtama() {
       <nav className="container mt-4">
         <ul className="flex flex-wrap space-x-4 md:space-x-6">
           <NavItem
-            isActive={activeTab === "iuran-pgri"}
-            onClick={() => handleTabChange("iuran-pgri")}
+            isActive={activeTab === "pemasukan"}
+            onClick={() => handleTabChange("pemasukan")}
           >
-            Iuran PGRI
+            Pemasukan
           </NavItem>
           <NavItem
-            isActive={activeTab === "daspen"}
-            onClick={() => handleTabChange("daspen")}
+            isActive={activeTab === "pengeluaran"}
+            onClick={() => handleTabChange("pengeluaran")}
           >
-            Daspen
+            Pengeluaran
           </NavItem>
           <NavItem
-            isActive={activeTab === "derap"}
-            onClick={() => handleTabChange("derap")}
+            isActive={activeTab === "lapor"}
+            onClick={() => handleTabChange("lapor")}
           >
-            Derap
+            Laporan
           </NavItem>
           <NavItem
-            isActive={activeTab === "kalender"}
-            onClick={() => handleTabChange("kalender")}
+            isActive={activeTab === "kwitansi"}
+            onClick={() => handleTabChange("kwitansi")}
           >
-            Kalender
+            Kwitansi
           </NavItem>
         </ul>
       </nav>
 
-      {activeTab === "iuran-pgri" && <IuranPgri />}
-      {activeTab === "daspen" && <Daspen />}
-      {activeTab === "derap" && <Derap />}
-      {activeTab === "kalender" && <Kalender />}
+      {activeTab === "pemasukan" && <Pemasukan />}
+      {activeTab === "pengeluaran" && <Pengeluaran />}
+      {activeTab === "lapor" && <Lapor />}
+      {activeTab === "kwitansi" && <Kwitansi />}
     </div>
   );
 }
