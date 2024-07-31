@@ -18,43 +18,43 @@ const Page = () => {
         </h2>
 
         <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
-          <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
-            <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-              <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                <option>-- Cabang --</option>
-                <option>Bangsri</option>
-                <option>Welahan</option>
-              </select>
-              <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                <option>Januari</option>
-                <option>Agustus</option>
-                <option>September</option>
-              </select>
-              <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                <option>2023</option>
-                <option>2024</option>
-                <option>2025</option>
-              </select>
-            </div>
-            <div className="flex-1 flex justify-center">
-              <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-                Transaksi Juli 2024
-              </h1>
-            </div>
-            <div className="flex justify-center space-x-4 mt-5 mr-10">
-            <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                <option>Tampil Semua</option>
-                <option>Iuaran/Sanduka</option>
-                <option>DASPEN</option>
-              </select>
-              <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300">
-                Cetak
-              </Button>
-            </div>
-          </div>
+      <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
+        <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5 w-full sm:w-auto">
+          <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+            <option>-- Cabang --</option>
+            <option>Bangsri</option>
+            <option>Welahan</option>
+          </select>
+          <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+            <option>Januari</option>
+            <option>Agustus</option>
+            <option>September</option>
+          </select>
+          <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+            <option>2023</option>
+            <option>2024</option>
+            <option>2025</option>
+          </select>
+        </div>
+        <div className="flex-1 flex justify-center items-center mt-4 sm:mt-3">
+          <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 text-center">
+            Transaksi Juli 2024
+          </h1>
+        </div>
+        <div className="flex flex-wrap justify-center space-x-4 mt-4 sm:mt-3 mr-0 sm:mr-10 w-full sm:w-auto">
+          <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+            <option>Tampil Semua</option>
+            <option>Iuran/Sanduka</option>
+            <option>DASPEN</option>
+          </select>
+          <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 sm:mt-0 mt-3 px-4 rounded transition duration-300">
+            Cetak
+          </Button>
         </div>
       </div>
     </div>
+  </div>
+</div>
   );
 };
 

@@ -526,15 +526,15 @@ export default function Iuran() {
           </div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-md">
-          <h3 className="text-lg font-bold mb-2">Jumlah Anggota : 6938</h3>
+          <h3 className="text-lg font-bold mb-2">Jumlah Anggota: 6938</h3>
           <h3 className="text-lg font-bold mb-2">
-            Setor Provinsi : Rp. 8.325.600
+            Setor Provinsi: Rp. 8.325.600
           </h3>
           <div className="mb-4">
             <p className="bg-teal-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
               Jumlah Anggota Selisih laporan Cabang
             </p>
-            <div className="flex items-center mt-2">
+            <div className="flex flex-col sm:flex-row items-center mt-2 space-y-2 sm:space-y-0 sm:space-x-2">
               <select className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 <option>-- Cabang --</option>
               </select>
@@ -552,12 +552,12 @@ export default function Iuran() {
             </div>
           </div>
           <div className="mb-4">
-            <Label
+            <label
               htmlFor="keterangaSilisih"
               className="block text-gray-700 text-sm font-bold mb-2"
             >
               Keterangan Selisih data
-            </Label>
+            </label>
             <textarea
               id="keterangaSilisih"
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -565,9 +565,9 @@ export default function Iuran() {
             ></textarea>
           </div>
           <div className="flex justify-center">
-            <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
               Simpan
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -575,15 +575,15 @@ export default function Iuran() {
       <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
         <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
           <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-            <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+            <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
               <option>Tampil Semua</option>
             </select>
-            <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+            <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
               <option>Juli</option>
               <option>Agustus</option>
               <option>September</option>
             </select>
-            <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+            <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
               <option>2023</option>
               <option>2024</option>
               <option>2025</option>

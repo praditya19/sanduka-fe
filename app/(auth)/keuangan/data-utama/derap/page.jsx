@@ -137,16 +137,16 @@ function DerapForm() {
               </div>
             ))}
 
-            <div className="flex items-center mb-4">
-              <Label
+            <div className="flex flex-col lg:flex-row items-center mb-4">
+              <label
                 htmlFor="jumlahPesanan"
-                className="block text-gray-800 text-lg font-semibold mb-2 lg:mb-0 w-full"
+                className="block text-gray-800 text-lg font-semibold mb-2 lg:mb-0 w-full lg:w-auto"
               >
                 Jumlah Pesanan
-              </Label>
+              </label>
               <select
                 id="jenisCabang"
-                className="w-2/4 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out ml-14"
+                className="w-full lg:w-1/3 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out mt-2 lg:mt-0 lg:ml-4"
                 value={jenisCabang}
                 onChange={handleJenisCabangChange}
               >
@@ -157,10 +157,10 @@ function DerapForm() {
                 <option value="4">Cabang 4</option>
                 <option value="5">Cabang 5</option>
               </select>
-              <Input
+              <input
                 type="number"
                 id="jumlahPesananInput"
-                className="w-2/4 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out ml-4"
+                className="w-full lg:w-1/3 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out mt-2 lg:mt-0 lg:ml-4"
                 value={jumlahPesanan}
                 onChange={handleJumlahPesananChange}
                 onKeyPress={handleKeyPress}
@@ -228,15 +228,15 @@ function DerapForm() {
       <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
         <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
           <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-            <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+            <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
               <option>Tampil Semua</option>
             </select>
-            <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+            <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
               <option>Juli</option>
               <option>Agustus</option>
               <option>September</option>
             </select>
-            <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+            <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
               <option>2023</option>
               <option>2024</option>
               <option>2025</option>
