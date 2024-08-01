@@ -3,6 +3,8 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { faBell } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -62,78 +64,14 @@ const Header = () => {
             </button>
           </div>
           <div className="hidden md:block">
-            <ul className="flex space-x-4">
-              <li className="relative dropdown">
-                <button
-                  onClick={() => toggleDropdown("anggota")}
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Anggota
-                </button>
-                {isOpenDropdown === "anggota" && (
-                  <ul className="absolute left-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50">
-                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                      <Link href="/anggota/cari-anggota">Cari Anggota</Link>
-                    </li>
-                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                      <Link href="/anggota/data-anggota">Data Anggota</Link>
-                    </li>
-                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                      <Link href="/anggota/rekap-anggota">Rekap Anggota</Link>
-                    </li>
-                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                      <Link href="/anggota/status-anggota">Status Anggota</Link>
-                    </li>
-                  </ul>
-                )}
-              </li>
-              <li className="relative dropdown">
-                <button
-                  onClick={() => toggleDropdown("laporan")}
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Laporan
-                </button>
-                {isOpenDropdown === "laporan" && (
-                  <ul className="absolute left-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50">
-                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                      <Link href="/lapor">Lapor Anggota Meninggal</Link>
-                    </li>
-                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                      <Link href="/statistik">Statistik</Link>
-                    </li>
-                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                      <Link href="/rekap-meninggal">Rekap Meninggal</Link>
-                    </li>
-                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                      <Link href="/history-data">History Data</Link>
-                    </li>
-                  </ul>
-                )}
-              </li>
-              <li className="relative dropdown">
-                <button
-                  onClick={() => toggleDropdown("lainnya")}
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Lainnya
-                </button>
-                {isOpenDropdown === "lainnya" && (
-                  <ul className="absolute left-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50">
-                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                      <Link href="/bantuan">Bantuan</Link>
-                    </li>
-                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                      <Link href="/ketentuan">Ketentuan</Link>
-                    </li>
-                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                      <Link href="/keuangan/home">Keuangan</Link>
-                    </li>
-                    <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                      <Link href="/pensiun">Pensiun</Link>
-                    </li>
-                  </ul>
-                )}
+            <ul className="flex space-x-4 items-center">
+              <li className="relative">
+                <Link href="/notifications" className="text-gray-700">
+                  <FontAwesomeIcon
+                    icon={faBell}
+                    className="w-6 h-6 text-gray-700"
+                  />{" "}
+                </Link>
               </li>
               <li className="relative">
                 <Link href="/sign-in" className="text-blue-500">
@@ -182,8 +120,8 @@ const Header = () => {
               {isOpenDropdown === "laporan" && (
                 <ul className="relative mt-2 w-full bg-white border rounded-md shadow-lg z-50">
                   <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                      <Link href="/statistik">Lapor Anggota Meninggal</Link>
-                    </li>
+                    <Link href="/statistik">Lapor Anggota Meninggal</Link>
+                  </li>
                   <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                     <Link href="/statistik">Statistik</Link>
                   </li>
