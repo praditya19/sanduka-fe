@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Pemasukan from "../sanduka/pemasukan/page";
 import Pengeluaran from "./pengeluaran/page";
@@ -8,15 +8,31 @@ import Kalender from "../data-utama/kalender/page";
 
 export default function Sanduka() {
   const [activeTab, setActiveTab] = useState("pemasukan");
-  const [isOpenDropdown, setIsOpenDropdown] = useState(false);
+  const [isOpenDropdown, setIsOpenDropdown] = useState(null);
 
-  const toggleDropdown = () => {
-    setIsOpenDropdown(!isOpenDropdown);
+  const toggleDropdown = (menu) => {
+    setIsOpenDropdown((prevState) => (prevState === menu ? null : menu));
   };
 
   const handleTabChange = (tabName) => {
     setActiveTab(tabName);
+    if (tabName !== "lapor") {
+      setIsOpenDropdown(null);
+    }
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest(".dropdown-menu")) {
+        setIsOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 md:px-6 py-6">
@@ -49,23 +65,30 @@ export default function Sanduka() {
           >
             Pengeluaran
           </NavItem>
-          <li
-            className={`relative ${
-              activeTab === "lapor" ? "text-green-700 font-bold" : ""
-            }`}
-            onMouseEnter={toggleDropdown}
-            onMouseLeave={toggleDropdown}
-          >
-            <span className="cursor-pointer">Lapor</span>
-            {isOpenDropdown && (
-              <ul className="absolute left-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50">
+          <li className="relative">
+            <button
+              onClick={() => toggleDropdown("lapor")}
+              className={`text-gray-700 hover:text-gray-900 rounded-md text-base font-medium ${
+                activeTab === "lapor" || isOpenDropdown === "lapor"
+                  ? "text-green-700 font-bold"
+                  : ""
+              }`}
+              aria-haspopup="true"
+              aria-expanded={isOpenDropdown === "lapor"}
+            >
+              Lapor
+            </button>
+            {isOpenDropdown === "lapor" && (
+              <ul className="dropdown-menu absolute left-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50">
                 <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                   <Link href="/keuangan/sanduka/lapor/lapor-cabang">
                     Lapor dari cabang
                   </Link>
                 </li>
                 <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                  <Link href="/rekap-lapor">Rekap lapor</Link>
+                  <Link href="/keuangan/sanduka/lapor/rekap-lapor">
+                    Rekap lapor
+                  </Link>
                 </li>
               </ul>
             )}
@@ -81,7 +104,6 @@ export default function Sanduka() {
 
       {activeTab === "pemasukan" && <Pemasukan />}
       {activeTab === "pengeluaran" && <Pengeluaran />}
-      {activeTab === "lapor" && <Derap />}
       {activeTab === "kalender" && <Kalender />}
     </div>
   );
