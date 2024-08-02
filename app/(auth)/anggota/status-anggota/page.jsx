@@ -13,8 +13,13 @@ function formatRupiah(angka) {
 
 function StatusAnggota() {
     const [maxItems, setMaxItems] = useState(10);
+    const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
 
     const jumlahAnggota = membersData.length;
+
+    const countMembersByLevel = (level) => {
+        return membersData.filter(member => member.tingkat === level).length;
+    };
 
     const aggregateData = () => {
         const aggregated = {
@@ -69,6 +74,102 @@ function StatusAnggota() {
         { title: "PPPK", count: JumlahPPPK, items: ["SMP/MTs", "SLB"] }
     ];
 
+    const handlePrint = () => {
+        const filteredDataForPrint = filteredMembersData.slice(0, maxItems);
+        const printWindow = window.open("", "_blank", "width=800,height=600");
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Status Anggota</title>
+              <style>
+                body {
+                  font-family: Arial, sans-serif;
+                  margin: 20px;
+                }
+                .title, .subtitle {
+                  text-align: center;
+                  margin-bottom: 10px;
+                }
+                .title {
+                  font-size: 28px;
+                  font-weight: bold;
+                  color: #00796b;
+                }
+                .subtitle {
+                  font-size: 20px;
+                  font-weight: normal;
+                  color: #555;
+                }
+                table {
+                  width: 100%;
+                  border-collapse: collapse;
+                  border: 1px solid #ccc;
+                }
+                th, td {
+                  text-align: center;
+                  padding: 8px;
+                  border: 1px solid #ccc;
+                }
+                .header-row th[colspan="2"] {
+                  text-align: center;
+                }
+                .total-row {
+                  font-weight: bold;
+                  background-color: #e0f2f1;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="title">Status Anggota</div>
+              <table>
+                <thead>
+                  <tr class="header-row">
+                    <th>No</th>
+                    <th>Foto</th>
+                    <th>Data Anggota</th>
+                    <th>Tingkat Sekolah</th>
+                    <th>Cabang</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filteredDataForPrint
+                .map(
+                    (item, index) => `
+                        <tr>
+                          <td>${index + 1}</td>
+                          <td></td>
+                          <td>
+                            <div class="font-bold">${item.nama}</div>
+                            <div>${item.npa}</div>
+                            <div>${item.lahir}, ${item.tanggal}</div>
+                            <div>Usia ${item.usia} Tahun</div>
+                            <div>${item.kerja}</div>
+                            <div>${item.tugas}</div>
+                            <div>${item.hp}</div>
+                          </td>
+                          <td>${item.tingkat}</td>
+                          <td>${item.cabang}</td>
+                          <td>${item.status}</td>
+                        </tr>
+                      `
+                )
+                .join("")}
+                </tbody>
+              </table>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    };
+
+    const filteredMembersData = selectedCabang === "-- Cabang --"
+        ? membersData
+        : membersData.filter(member => member.cabang === selectedCabang);
+
     return (
         <div className="min-h-screen bg-gray-50 p-2 md:p-6">
             <header className="bg-green-700 text-white p-4 md:p-6 rounded-lg shadow-md">
@@ -98,9 +199,9 @@ function StatusAnggota() {
                             {category.items.map((item, idx) => (
                                 <div key={idx} className="bg-white border rounded-lg shadow-md p-4 mb-2 w-full sm:w-60 mx-2 text-center">
                                     <img src={`/images/${item.toLowerCase().replace(/\//g, '-')}.png`} alt={item} className="mb-2 w-40 mx-auto" />
-                                    <Link href="#">
-                                        <Button className="bg-blue-500 w-full">Lihat Data</Button>
-                                    </Link>
+                                    <Button className="bg-blue-500 w-full">
+                                        {countMembersByLevel(item)} Anggota
+                                    </Button>
                                 </div>
                             ))}
                         </div>
@@ -110,8 +211,14 @@ function StatusAnggota() {
             <div className="mb-4 mx-4">
                 <div className="flex flex-wrap items-start mt-2 justify-between">
                     <div className="flex flex-wrap items-center space-x-2">
-                        <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0">
+                        <select
+                            className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                            value={selectedCabang}
+                            onChange={(e) => setSelectedCabang(e.target.value)}
+                        >
                             <option>-- Cabang --</option>
+                            <option>BANGSRI</option>
+                            <option>JEPARA</option>
                         </select>
                         <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0">
                             <option>-- Status --</option>
@@ -137,7 +244,7 @@ function StatusAnggota() {
                                 <option value={15}>15</option>
                                 <option value={20}>20</option>
                             </select>
-                            <Button className="px-8" variant="outline">Cetak</Button>
+                            <Button className="px-8" variant="outline" onClick={handlePrint}>Cetak</Button>
                         </div>
                     </div>
                 </div>
@@ -147,17 +254,17 @@ function StatusAnggota() {
                 <table className="container w-full table-auto mb-8">
                     <thead>
                         <tr>
-                            <th className="p-2 md:p-3 border bg-green-200">No</th>
-                            <th className="p-2 md:p-3 border bg-green-200">Foto</th>
-                            <th className="p-2 md:p-3 border bg-green-200">Data Anggota</th>
-                            <th className="p-2 md:p-3 border bg-green-200">Tingkat Sekolah</th>
-                            <th className="p-2 md:p-3 border bg-green-200">Cabang</th>
-                            <th className="p-2 md:p-3 border bg-green-200">Status</th>
-                            <th className="p-2 md:p-3 border bg-green-200">Action</th>
+                            <th className="p-2 md:p-3 border text-white bg-green-700">No</th>
+                            <th className="p-2 md:p-3 border text-white bg-green-700">Foto</th>
+                            <th className="p-2 md:p-3 border text-white bg-green-700">Data Anggota</th>
+                            <th className="p-2 md:p-3 border text-white bg-green-700">Tingkat Sekolah</th>
+                            <th className="p-2 md:p-3 border text-white bg-green-700">Cabang</th>
+                            <th className="p-2 md:p-3 border text-white bg-green-700">Status</th>
+                            <th className="p-2 md:p-3 border text-white bg-green-700">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {membersData.slice(0, maxItems).map((item, index) => (
+                        {filteredMembersData.slice(0, maxItems).map((item, index) => (
                             <tr
                                 key={index}
                                 className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
@@ -173,7 +280,7 @@ function StatusAnggota() {
                                     <div>{item.tugas}</div>
                                     <div>{item.hp}</div>
                                 </td>
-                                <td className="p-2 md:p-3 border text-center">SMK</td>
+                                <td className="p-2 md:p-3 border text-center">{item.tingkat}</td>
                                 <td className="p-2 md:p-3 border text-center">{item.cabang}</td>
                                 <td className="p-2 md:p-3 border text-center">
                                     {item.status}

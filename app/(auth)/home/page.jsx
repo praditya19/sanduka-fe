@@ -11,6 +11,7 @@ import {
   faUserGraduate,
   faWallet,
   faSyncAlt,
+  faUserTag,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
@@ -51,6 +52,12 @@ const icons = [
     icon: faUsers,
     label: "Data Anggota",
     href: "/anggota/data-anggota",
+    color: "text-orange-500",
+  },
+  {
+    icon: faUserTag,
+    label: "Anggota By Name",
+    href: "/anggota/by-name",
     color: "text-orange-500",
   },
   {
