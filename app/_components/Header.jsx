@@ -1,6 +1,6 @@
 "use client";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { faBell } from "@fortawesome/free-solid-svg-icons";
@@ -8,28 +8,57 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isOpenDropdown, setIsOpenDropdown] = useState(null);
-
-  const toggleDropdown = (menu) => {
-    setIsOpenDropdown((prevState) => (prevState === menu ? null : menu));
-  };
+  const [notificationCount, setNotificationCount] = useState(2);
+  const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] =
+    useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const audioRef = useRef(null);
 
   const handleClick = () => {
     setIsOpen(false);
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest(".dropdown")) {
-        setIsOpenDropdown(null);
-      }
-    };
+  const handleNotificationClick = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsNotificationSoundPlaying(false);
+    }
+    setNotificationCount(0);
+  };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  useEffect(() => {
+    setHasUserInteracted(true);
+    console.log("notificationCount:", notificationCount);
+    console.log("isNotificationSoundPlaying:", isNotificationSoundPlaying);
+
+    if (
+      notificationCount > 0 &&
+      !isNotificationSoundPlaying &&
+      hasUserInteracted
+    ) {
+      const playNotificationSound = () => {
+        console.log("Playing notification sound");
+        const audio = new Audio("/sound-notification.wav");
+        audioRef.current = audio;
+
+        audio
+          .play()
+          .then(() => {
+            setIsNotificationSoundPlaying(true);
+          })
+          .catch((error) => {
+            console.error("Error playing sound:", error);
+          });
+
+        audio.onended = () => {
+          setIsNotificationSoundPlaying(false);
+        };
+      };
+
+      playNotificationSound();
+    }
+  }, [notificationCount, isNotificationSoundPlaying, hasUserInteracted]);
 
   return (
     <nav className="bg-white shadow-md relative z-50">
@@ -66,11 +95,20 @@ const Header = () => {
           <div className="hidden md:block">
             <ul className="flex space-x-4 items-center">
               <li className="relative">
-                <Link href="/notifications" className="text-gray-700">
+                <Link
+                  href="/"
+                  className="text-gray-700 relative"
+                  onClick={handleNotificationClick}
+                >
                   <FontAwesomeIcon
                     icon={faBell}
                     className="w-6 h-6 text-gray-700"
-                  />{" "}
+                  />
+                  {notificationCount > 0 && (
+                    <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+                      {notificationCount}
+                    </span>
+                  )}
                 </Link>
               </li>
               <li className="relative">
@@ -86,77 +124,22 @@ const Header = () => {
       <div className={`${isOpen ? "block" : "hidden"} md:hidden`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <ul className="flex flex-col space-y-1">
-            <li className="relative dropdown">
-              <button
-                onClick={() => toggleDropdown("anggota")}
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+            <li className="relative">
+              <Link
+                href="/notifications"
+                className="text-gray-700 relative"
+                onClick={handleNotificationClick}
               >
-                Anggota
-              </button>
-              {isOpenDropdown === "anggota" && (
-                <ul className="relative mt-2 w-full bg-white border rounded-md shadow-lg z-50">
-                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    <Link href="/anggota/cari-anggota">Cari Anggota</Link>
-                  </li>
-                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    <Link href="/anggota/data-anggota">Data Anggota</Link>
-                  </li>
-                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    <Link href="/anggota/rekap-anggota">Rekap Anggota</Link>
-                  </li>
-                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    <Link href="/anggota/status-anggota">Status Anggota</Link>
-                  </li>
-                </ul>
-              )}
-            </li>
-            <li className="relative dropdown">
-              <button
-                onClick={() => toggleDropdown("laporan")}
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Laporan
-              </button>
-              {isOpenDropdown === "laporan" && (
-                <ul className="relative mt-2 w-full bg-white border rounded-md shadow-lg z-50">
-                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    <Link href="/statistik">Lapor Anggota Meninggal</Link>
-                  </li>
-                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    <Link href="/statistik">Statistik</Link>
-                  </li>
-                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    <Link href="/rekap-meninggal">Rekap Meninggal</Link>
-                  </li>
-                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    <Link href="/history-data">History Data</Link>
-                  </li>
-                </ul>
-              )}
-            </li>
-            <li className="relative dropdown">
-              <button
-                onClick={() => toggleDropdown("lainnya")}
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Lainnya
-              </button>
-              {isOpenDropdown === "lainnya" && (
-                <ul className="relative mt-2 w-full bg-white border rounded-md shadow-lg z-50">
-                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    <Link href="/bantuan">Bantuan</Link>
-                  </li>
-                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    <Link href="/ketentuan">Ketentuan</Link>
-                  </li>
-                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    <Link href="/keuangan/home">Keuangan</Link>
-                  </li>
-                  <li className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                    <Link href="/pensiun">Pensiun</Link>
-                  </li>
-                </ul>
-              )}
+                <FontAwesomeIcon
+                  icon={faBell}
+                  className="w-6 h-6 text-gray-700"
+                />
+                {notificationCount > 0 && (
+                  <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+                    {notificationCount}
+                  </span>
+                )}
+              </Link>
             </li>
             <li className="relative">
               <Link
