@@ -27,7 +27,7 @@ function Kwitansi() {
             </select>
           </div>
           <div className="flex flex-col items-center">
-            <img src="path_to_logo.png" alt="Logo" className="w-24 h-24 mb-4" />
+            <img src="/logo.png" alt="Logo" className="w-24 h-24 mb-4" />
             <div className="text-center">
               <p>Persatuan Guru Republik Indonesia (PGRI)</p>
               <p>Kabupaten Jepara</p>

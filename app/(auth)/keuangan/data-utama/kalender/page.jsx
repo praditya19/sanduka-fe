@@ -82,7 +82,7 @@ function KalenderForm() {
     <div className="container mx-auto p-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="p-8 rounded-lg shadow-lg border border-gray-200 bg-white">
-          <h2 className="bg-blue-500 text-2xl text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-5 text-center">
+          <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-5 text-center">
             Besaran Inputan Kalender
           </h2>
           <div className="space-y-6">

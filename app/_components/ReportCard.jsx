@@ -1,7 +1,12 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBullhorn } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBullhorn,
+  faCancel,
+  faCheck,
+  faLocation,
+} from "@fortawesome/free-solid-svg-icons";
 import React from "react";
 
 export default function ReportCard() {
@@ -35,12 +40,14 @@ export default function ReportCard() {
         <p className="text-center text-gray-700">Catatan :</p>
         <div className="flex justify-around my-4">
           <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-xl">
+            <FontAwesomeIcon icon={faLocation} className="mr-2 w-5 h-5" />{" "}
             Lokasi
           </Button>
           <Button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-xl">
-            Batal
+            <FontAwesomeIcon icon={faCancel} className="mr-2 w-5 h-5" /> Batal
           </Button>
           <Button className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-xl">
+            <FontAwesomeIcon icon={faCheck} className="mr-2 w-5 h-5" />
             Verifikasi
           </Button>
         </div>
