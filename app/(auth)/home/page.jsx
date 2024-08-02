@@ -11,7 +11,8 @@ import {
   faUserGraduate,
   faWallet,
   faSyncAlt,
-  faUserTag,
+  faUser,
+  faMoneyBill,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
@@ -55,12 +56,6 @@ const icons = [
     color: "text-orange-500",
   },
   {
-    icon: faUserTag,
-    label: "Anggota By Name",
-    href: "/anggota/by-name",
-    color: "text-orange-500",
-  },
-  {
     icon: faClipboardCheck,
     label: "Ketentuan",
     href: "/ketentuan",
@@ -94,16 +89,56 @@ const icons = [
 
 export default function IconGrid() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 p-8 max-w-screen-lg mx-auto">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 py-8">
+      <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+          <div className="text-center">
+            <FontAwesomeIcon
+              icon={faBullhorn}
+              size="2x"
+              className="text-red-500"
+            />
+            <p className="text-2xl font-bold text-gray-700">
+              Laporan Meninggal Bulan Ini
+            </p>
+            <p className="text-gray-600 font-bold">0 Orang</p>
+          </div>
+          <div className="text-center">
+            <FontAwesomeIcon
+              icon={faUser}
+              size="2x"
+              className="text-orange-500"
+            />
+            <p className="text-2xl font-bold text-gray-700">
+              Sanduka Telah Diberikan
+            </p>
+            <p className="text-gray-600 font-bold">173 Orang</p>
+          </div>
+          <div className="text-center">
+            <FontAwesomeIcon
+              icon={faMoneyBill}
+              size="2x"
+              className="text-green-500"
+            />
+            <p className="text-2xl font-bold text-gray-700">
+              Total Santunan Diberikan
+            </p>
+            <p className="text-gray-600 font-bold">Rp.432.500.000</p>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8 p-8 max-w-screen-lg mx-auto">
         {icons.map((item, index) => (
           <Link key={index} href={item.href}>
             <div className="flex flex-col items-center bg-white p-6 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer h-32">
               <FontAwesomeIcon
                 icon={item.icon}
-                className={`text-4xl mb-4 ${item.color}`}
+                size="3x"
+                className={`mb-4 ${item.color}`}
               />
-              <span className="text-lg font-semibold">{item.label}</span>
+              <span className="text-lg font-semibold text-gray-700">
+                {item.label}
+              </span>
             </div>
           </Link>
         ))}
