@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFilter } from "@fortawesome/free-solid-svg-icons";
+import Link from "next/link";
 
 const data = [
   {
@@ -66,8 +67,31 @@ const Page = () => {
   });
 
   return (
-    <div>
-      <div className="bg-teal-700 p-4 flex flex-col sm:flex-row items-center justify-between">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+      <header className="bg-green-700 text-white p-4 md:p-6 rounded-lg shadow-md">
+        <div className="container mx-auto">
+          <h1 className="text-2xl md:text-3xl font-extrabold">
+            Keuangan Data Utama
+          </h1>
+          <nav className="mt-4">
+            <ul className="flex flex-wrap space-x-4 md:space-x-6">
+              <li className="cursor-pointer">
+                <Link href="/keuangan/home">Home</Link>
+              </li>
+              <li className="cursor-pointer">
+                <Link href="/keuangan/data-utama">Data Utama</Link>
+              </li>
+              <li className="cursor-pointer">
+                <Link href="/keuangan/sanduka">Sanduka</Link>
+              </li>
+              <li className="cursor-pointer">
+                <Link href="/keuangan/organisasi">Organisasi</Link>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </header>
+      <div className="bg-teal-700 p-4 flex flex-col sm:flex-row items-center justify-between mt-5">
         <h1 className="text-white font-bold mb-4 sm:mb-0">
           REKAP LAPOR SANDUKA
         </h1>

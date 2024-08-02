@@ -104,11 +104,11 @@ export default function Home() {
         <div className="overflow-x-auto">
           <table className="container w-full table-auto mb-8">
             <thead>
-              <tr>
-                <th className="p-2 md:p-3 border bg-green-200">No</th>
-                <th className="p-2 md:p-3 border bg-green-200">Cabang</th>
-                <th className="p-2 md:p-3 border bg-green-200">Kurang Setor</th>
-                <th className="p-2 md:p-3 border bg-green-200">Detail</th>
+              <tr className="bg-teal-700 text-white">
+                <th className="p-2 md:p-3 border">No</th>
+                <th className="p-2 md:p-3 border">Cabang</th>
+                <th className="p-2 md:p-3 border">Kurang Setor</th>
+                <th className="p-2 md:p-3 border">Detail</th>
               </tr>
             </thead>
             <tbody>
