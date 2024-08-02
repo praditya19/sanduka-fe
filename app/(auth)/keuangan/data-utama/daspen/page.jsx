@@ -382,22 +382,22 @@ export default function Daspen() {
       </div>
 
       <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
-        <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
-          <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-            <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-              <option>Tampil Semua</option>
-            </select>
-            <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-              <option>Juli</option>
-              <option>Agustus</option>
-              <option>September</option>
-            </select>
-            <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-              <option>2023</option>
-              <option>2024</option>
-              <option>2025</option>
-            </select>
-          </div>
+  <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
+    <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
+      <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+        <option>Tampil Semua</option>
+      </select>
+      <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+        <option>Juli</option>
+        <option>Agustus</option>
+        <option>September</option>
+      </select>
+      <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+        <option>2023</option>
+        <option>2024</option>
+        <option>2025</option>
+      </select>
+    </div>
           <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
             Transaksi Juli 2024
           </h1>
