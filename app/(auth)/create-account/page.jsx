@@ -1,24 +1,77 @@
 "use client";
 
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import React, { useState, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ExclamationTriangleIcon } from "@radix-ui/react-icons"
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
 const Page = () => {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => setPreview(e.target.result);
+      reader.readAsDataURL(file);
+    } else {
+      setSelectedFile(null);
+      setPreview(null);
+    }
+  };
+
+  const [namesanak, setNamesanak] = useState([""]);
+
+  const handleChange = (index, event) => {
+    const newNamesanak = [...namesanak];
+    newNamesanak[index] = event.target.value;
+    setNamesanak(newNamesanak);
+  };
+
+  const handleAddInput = () => {
+    setNamesanak([...namesanak, ""]);
+  };
+
+  const handleRemoveInput = (index) => {
+    const newNamesanak = namesanak.filter((_, i) => i !== index);
+    setNamesanak(newNamesanak);
+  };
+
   const [step, setStep] = useState(1);
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+    setValue,
+    watch,
+    control,
+    clearErrors,
+  } = useForm({
+    defaultValues: {
+      jenisKelamin: "",
+    },
+  });
 
   const onSubmit = (data) => {
-    console.log(data);
+    const finalData = {
+      ...data,
+      namesanak: namesanak.filter((name) => name.trim() !== ""),
+    };
+    console.log(finalData);
+    // Send finalData to the database
   };
 
   const nextStep = () => {
@@ -40,605 +93,919 @@ const Page = () => {
             <hr className="mb-6 border-t-2 border-gray-300 mt-4" />
             <form
               onSubmit={handleSubmit(nextStep)}
-              className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white p-4 sm:p-8 rounded-lg shadow-lg"
+              className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-4 sm:p-8 rounded-lg shadow-lg"
             >
-              <div className="w-full items-center gap-1.5"> 
-                <Label
-                  className="block text-sm font-medium mb-3">
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
                   Email
                   <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                  *Harap Diingat
-                </span>
+                    *Harap Diingat
+                  </span>
                 </Label>
-                <Input type="email" id="email" placeholder="Email" />
+                <Input
+                  type="email"
+                  id="email"
+                  placeholder="Email"
+                  {...register("email", { required: true })}
+                />
+                {errors.email && (
+                  <span className="text-red-500 text-sm">
+                    Email is required
+                  </span>
+                )}
               </div>
-              <div className="w-full items-center gap-1.5"> 
-                <Label
-                  className="block text-sm font-medium mb-3">
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
                   Password Login
                   <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                  *Harap Diingat
-                </span>
+                    *Harap Diingat
+                  </span>
                 </Label>
-                <Input type="password" id="password" placeholder="contoh:Kat45and!" />
+                <Input
+                  type="password"
+                  id="password"
+                  placeholder="contoh:Kat45and!"
+                  {...register("password", { required: true })}
+                />
+                {errors.password && (
+                  <span className="text-red-500 text-sm">
+                    Password is required
+                  </span>
+                )}
               </div>
-              <div className="w-full items-center gap-1.5"> 
-                <Label
-                  className="block text-sm font-medium mb-3">
-                  KPT
-                </Label>
-                <Input type="email" id="email" placeholder="KPT" />
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">NIP</Label>
+                <Input
+                  type="number"
+                  id="nip"
+                  placeholder="Nomor Induk Pendidik ( NIP )"
+                  {...register("nip", { required: true })}
+                />
+                {errors.nip && (
+                  <span className="text-red-500 text-sm">NIP is required</span>
+                )}
               </div>
-              <div className="w-full items-center gap-1.5">
-                <Label className="flex flex-col sm:flex-row sm:items-center mb-2">
-                  NIP
-                </Label>
-                <Input type="number" placeholder="Nomor Induk Pendidik ( NIP )" />
-              </div>
-              <div className="w-full items-center gap-1.5">
-                <Label className="flex flex-col sm:flex-row sm:items-center mb-2">
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
                   NIP Lama
                 </Label>
-                <Input type="number" placeholder="Nomor Induk Pendidik ( NIP ) Lama" />
+                <Input
+                  type="number"
+                  id="nipLama"
+                  placeholder="Nomor Induk Pendidik ( NIP ) Lama"
+                  {...register("nipLama", { required: true })}
+                />
+                {errors.nipLama && (
+                  <span className="text-red-500 text-sm">
+                    NIP Lama is required
+                  </span>
+                )}
               </div>
-              <div className="w-full items-center gap-1.5"> 
-              <Label className="block text-sm font-medium mb-3">Unit Kerja</Label>
-                <Select>
-                  <SelectTrigger >
-                    <SelectValue placeholder="Pilih Unit Kerja" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="Aceh">Aceh</SelectItem>
-                      <SelectItem value="Bali">Bali</SelectItem>
-                      <SelectItem value="banten">Banten</SelectItem>
-                      <SelectItem value="jambi">Jambi</SelectItem>
-                    </SelectGroup>  
-                  </SelectContent>
-                </Select> 
-              </div>
-              <div className="w-full items-center gap-1.5">
-                <Label className="flex flex-col sm:flex-row sm:items-center mb-2">
-                  NPA Lama
-                  <span className=" sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
-                  *Tidak Wajib (Hanya Yang Sudah Memilik KTA)
-                </span>
+              <div className="w-full">
+                <Label className="flex flex-col sm:flex-row items-start sm:items-center">
+                  NPA PGRI
+                  <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
+                    *Tidak Wajib (Hanya Yang Sudah Memilik KTA)
+                  </span>
                 </Label>
-                <Input type="number" placeholder="Tuliskan NPA Lama" />
+                <Input
+                  className="mt-2 sm:mt-2"
+                  type="number"
+                  id="npa"
+                  placeholder="Tuliskan NPA Lama"
+                  {...register("npa")}
+                />
+                {errors.npa && (
+                  <span className="text-red-500 text-sm">NPA is required</span>
+                )}
               </div>
-              <div className="w-full items-center gap-1.5"> 
-                <Label className="block text-sm font-medium mb-3">NIK
-                <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                  *16 Digit
-                </span>
-              </Label>
-              <Input type="number" placeholder="16 Digit" />
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  NIK
+                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                    *16 Digit
+                  </span>
+                </Label>
+                <Input
+                  type="number"
+                  id="nik"
+                  placeholder="16 Digit"
+                  {...register("nik", { required: true })}
+                />
+                {errors.nik && (
+                  <span className="text-red-500 text-sm">NIK is required</span>
+                )}
               </div>
-              <div className="w-full items-center gap-1.5"> 
-                <Label className="block text-sm font-medium mb-3">Nama Lengkap  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                  *Bisa Ditambahkan Gelar
-                </span></Label>
-              <Input type="text" placeholder="Bisa Ditambahkan Gelar" />
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Nama Lengkap
+                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                    *Bisa Ditambahkan Gelar
+                  </span>
+                </Label>
+                <Input
+                  type="text"
+                  id="nama"
+                  placeholder="Bisa Ditambahkan Gelar"
+                  {...register("nama", { required: true })}
+                />
+                {errors.nama && (
+                  <span className="text-red-500 text-sm">
+                    Nama Lengkap is required
+                  </span>
+                )}
               </div>
-              <div className="w-full items-center gap-1.5"> 
-                <Label className="block text-sm font-medium mb-3">Tempat Lahir</Label>
-              <Input type="text" placeholder="Tuliskan Tempat Kelahiran" />
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Tempat Lahir
+                </Label>
+                <Input
+                  type="text"
+                  id="tempatLahir"
+                  placeholder="Tempat Kelahiran"
+                  {...register("tempatLahir", { required: true })}
+                />
+                {errors.tempatLahir && (
+                  <span className="text-red-500 text-sm">
+                    Tempat Lahir is required
+                  </span>
+                )}
               </div>
-              <div className="w-full items-center gap-1.5"> 
-                <Label className="block text-sm font-medium mb-3">Tanggal Lahir</Label>
-                <Input type="date" placeholder="dd/mm/yyyy" />
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Tanggal Lahir
+                </Label>
+                <Input
+                  type="date"
+                  id="tglLahir"
+                  placeholder="dd/mm/yyyy"
+                  {...register("tglLahir", { required: true })}
+                />
+                {errors.tglLahir && (
+                  <span className="text-red-500 text-sm">
+                    Tanggal Lahir is required
+                  </span>
+                )}
               </div>
-              <div className="w-full items-center gap-1.5"> 
-                <Label className="block text-sm font-medium mb-3">Tamat Pendidikan</Label>
-                <Input type="date" placeholder="dd/mm/yyyy" />
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Jenis Kelamin
+                </Label>
+                <Controller
+                  name="jenisKelamin"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Jenis Kelamin" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="laki-laki">Laki - Laki</SelectItem>
+                          <SelectItem value="perempuan">Perempuan</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.jenisKelamin && (
+                  <span className="text-red-500 text-sm">
+                    Jenis Kelamin is required
+                  </span>
+                )}
               </div>
-              <div className="w-full items-center gap-1.5"> 
-                <Label className="block text-sm font-medium mb-3">Jenis Kelamin</Label>
-                <Select>
-                  <SelectTrigger >
-                    <SelectValue placeholder="Pilih Jenis Kelamin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="laki-laki">Laki - Laki</SelectItem>
-                      <SelectItem value="perempuan">Perempuan</SelectItem>
-                    </SelectGroup>  
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="w-full items-center gap-1.5"> 
+              <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">Agama</Label>
-                <Select>
-                  <SelectTrigger >
-                    <SelectValue placeholder="Pilih Agama" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="islam">Islam</SelectItem>
-                      <SelectItem value="kristen">Kristen</SelectItem>
-                    </SelectGroup>  
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="agama"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Agama" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="islam">Islam</SelectItem>
+                          <SelectItem value="kristen">Kristen</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.agama && (
+                  <span className="text-red-500 text-sm">
+                    Agama is required
+                  </span>
+                )}
               </div>
-              <div className="w-full items-center gap-1.5"> 
-                <Label className="block text-sm font-medium mb-3">Golongan Darah</Label>
-                <Select>
-                  <SelectTrigger >
-                    <SelectValue placeholder="Pilih Golongan Darah" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="A">A</SelectItem>
-                      <SelectItem value="B">B</SelectItem>
-                      <SelectItem value="AB">AB</SelectItem>
-                      <SelectItem value="O">O</SelectItem>
-                    </SelectGroup>  
-                  </SelectContent>
-                </Select>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Golongan Darah
+                </Label>
+                <Controller
+                  name="darah"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Golongan Darah" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="A">A</SelectItem>
+                          <SelectItem value="B">B</SelectItem>
+                          <SelectItem value="AB">AB</SelectItem>
+                          <SelectItem value="O">O</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.darah && (
+                  <span className="text-red-500 text-sm">
+                    Golongan Darah is required
+                  </span>
+                )}
               </div>
-              <div className="col-span-1 sm:col-span-2">
-                <Label className="block text-sm font-medium mb-3">Alamat  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                  *Sesuai KTP
-                </span></Label>
-                <Textarea placeholder="Tuliskan Alamat Sesuai KTP" />
+              <div className="w-full md:col-span-2">
+                <Label className="block text-sm font-medium mb-3">
+                  Alamat
+                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                    *Sesuai KTP
+                  </span>
+                </Label>
+                <Controller
+                  name="alamat"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Textarea
+                      placeholder="Tuliskan Alamat Sesuai KTP"
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+                {errors.alamat && (
+                  <span className="text-red-500 text-sm">
+                    Alamat is required
+                  </span>
+                )}
               </div>
-              <div className="w-full items-center gap-1.5"> 
-                <Label className="block text-sm font-medium mb-3">Kode Pos  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                  *Sesuai KTP
-                </span></Label>
-                <Input type="number" placeholder="Tuliskan Kode Pos" />
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Kode Pos
+                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                    *Sesuai KTP
+                  </span>
+                </Label>
+                <Input
+                  type="number"
+                  id="kodePos"
+                  placeholder="Tuliskan Kode Pos"
+                  {...register("kodePos", { required: true })}
+                />
+                {errors.kodePos && (
+                  <span className="text-red-500 text-sm">
+                    Kode Pos is required
+                  </span>
+                )}
               </div>
-              <div className="w-full items-center gap-1.5"> 
-                <Label className="block text-sm font-medium mb-3">Nomor Telphone</Label>
-                <Input type="number" placeholder="Tuliskan Nomor Handphone Aktif" />
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Nomor Handphone
+                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                    *Tertaut Akun Whatsapp
+                  </span>
+                </Label>
+                <Input
+                  type="number"
+                  id="noHP"
+                  placeholder=" Nomor Handphone Aktif"
+                  {...register("noHP", { required: true })}
+                />
+                {errors.noHP && (
+                  <span className="text-red-500 text-sm">
+                    Nomor Handphone is required
+                  </span>
+                )}
               </div>
-              <div className="w-full items-center gap-1.5"> 
-                <Label className="block text-sm font-medium mb-3">Nomor Handphone  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                  *Tertaut Akun Whatsapp
-                </span></Label>
-                <Input type="number" placeholder="Tuliskan Nomor Handphone Aktif" />
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Nama Suami/Istri
+                </Label>
+                <Input
+                  type="text"
+                  id="namaSuami"
+                  placeholder=" Nama Suami/Istri"
+                  {...register("namaSuami")}
+                />
+                {errors.namaSuami && (
+                  <span className="text-red-500 text-sm">
+                    Nama Suami is required
+                  </span>
+                )}
               </div>
-              <div className="w-full items-center gap-1.5"> 
-                <Label className="block text-sm font-medium mb-3">Peserta Sanduka</Label>
-                <Select>
-                  <SelectTrigger >
-                    <SelectValue placeholder="Pilih " />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="islam">Ya</SelectItem>
-                      <SelectItem value="kristen">Tidak</SelectItem>
-                    </SelectGroup>  
-                  </SelectContent>
-                </Select>
+              <div className="w-full p-4 rounded-lg">
+                {namesanak.map((name, index) => (
+                  <div key={index} className="mb-3 flex items-center">
+                    <div className="flex-1">
+                      <Label className="block text-sm font-medium mb-1">
+                        Nama Anak {index + 1}
+                      </Label>
+                      <Input
+                        className="block w-full text-sm p-2 mb-2 border rounded"
+                        type="text"
+                        placeholder={`Tuliskan Nama Anak ${index + 1}`}
+                        value={name}
+                        onChange={(e) => handleChange(index, e)}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={() => handleRemoveInput(index)}
+                      className="ml-2 p-2 bg-red-500 text-white rounded mt-4 hover:bg-red-500"
+                    >
+                      Hapus
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  onClick={handleAddInput}
+                  className="mt-3 p-2 bg-teal-500 text-white rounded hover:bg-teal-500"
+                >
+                  + Tambah Anak
+                </Button>
               </div>
-              <div className="w-full items-center gap-1.5"> 
-                <Label className="block text-sm font-medium mb-3">Peserta Daspen</Label>
-                <Select>
-                  <SelectTrigger >
-                    <SelectValue placeholder="Pilih " />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="islam">Ya</SelectItem>
-                      <SelectItem value="kristen">Tidak</SelectItem>
-                    </SelectGroup>  
-                  </SelectContent>
-                </Select>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Peserta Sanduka
+                </Label>
+                <Controller
+                  name="sanduka"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih " />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="islam">Ya</SelectItem>
+                          <SelectItem value="kristen">Tidak</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.sanduka && (
+                  <span className="text-red-500 text-sm">
+                    Peserta Sanduka is required
+                  </span>
+                )}
               </div>
-              <div className="col-span-1 sm:col-span-2">
-                <button
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Peserta Daspen
+                </Label>
+                <Controller
+                  name="daspen"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih " />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="islam">Ya</SelectItem>
+                          <SelectItem value="kristen">Tidak</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.daspen && (
+                  <span className="text-red-500 text-sm">
+                    Peserta Daspen is required
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-col items-center space-y-4 mt-4">
+                <Image
+                  width={150}
+                  height={150}
+                  className="border border-gray-300"
+                  src={preview || "https://via.placeholder.com/100"}
+                  alt="Photo Preview"
+                />
+                <Input
+                  type="file"
+                  id="photo-upload"
+                  accept=".jpg,.jpeg,.png"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <Label
+                  htmlFor="photo-upload"
+                  className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md bg-white"
+                >
+                  Choose Files
+                </Label>
+                <p className="text-teal-600">*Wajib Menggunakan Batik PGRI</p>
+                <p>{selectedFile ? selectedFile.name : "No file chosen"}</p>
+                <p className="text-red-600 text-center">
+                  *Maksimal ukuran file unggah 250kb format file (jpg, jpeg,
+                  png)
+                </p>
+              </div>
+              <div className="col-span-1 md:col-span-2 flex justify-between mt-4">
+                <Button
+                  type="button"
+                  onClick={prevStep}
+                  className="text-white bg-gray-400 hover:bg-gray-500 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
+                  disabled={step === 1}
+                >
+                  Kembali
+                </Button>
+                <Button
                   type="submit"
-                  className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded"
+                  className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
                 >
                   Selanjutnya
-                </button>
-              </div>
-              <div className="col-span-1 sm:col-span-2">
-                <Alert variant="destructive" className="w-full">
-                  <ExclamationTriangleIcon className="h-4 w-4" />
-                  <AlertDescription>Pastikan anda mengisi semua form, jika terdapat form isian pendaftaran yang terlewatkan maka anda tidak dapat menekan tombol simpan!</AlertDescription>
-                </Alert>
+                </Button>
               </div>
             </form>
           </div>
         )}
         {step === 2 && (
-  <div>
-    <h2 className="font-semibold text-xl text-gray-600">
-      II. DATA PEKERJAAN
-    </h2>
-    <hr className="mb-6 border-t-2 border-gray-300 mt-4" />
-    <form
-      onSubmit={handleSubmit(nextStep)}
-      className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white p-4 sm:p-8 rounded-lg shadow-lg"
-    >
-              <div className="w-full items-center gap-1.5">
-              <Label className="block text-sm font-medium mb-3">
-                  Provinsi/DI
-                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                  *Isi Sesuai Tempat Tugas
-                </span>
-                </Label>
-                <Select>
-      <SelectTrigger >
-        <SelectValue placeholder="Pilih Provinsi" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectItem value="Aceh">Aceh</SelectItem>
-          <SelectItem value="Bali">Bali</SelectItem>
-          <SelectItem value="banten">Banten</SelectItem>
-          <SelectItem value="jambi">Jambi</SelectItem>
-        </SelectGroup>  
-      </SelectContent>
-    </Select> 
-        {/* <Label>Nama Kantor</Label>
-        <Input type="text" placeholder="Tuliskan Nama Kantor" className="w-full" /> */}
-              </div>
-              {/* dibuat read only KAB. JEPARA */}
-      <div className="w-full items-center gap-1.5">
-  <Label className="flex flex-col sm:flex-row sm:items-center mb-2">
-    Kabupaten/Kota/Kota Administrasi
-    <span className="sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
-      *Isi Sesuai Tempat Tugas
-    </span>
-  </Label>
-  <Select>
-    <SelectTrigger>
-      <SelectValue placeholder="Pilih Kabupaten/Kota" />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectGroup>
-        <SelectItem value="Aceh">KAB. JEPARA</SelectItem>
-      </SelectGroup>
-    </SelectContent>
-  </Select>
-</div>
-
-      <div className="w-full items-center gap-1.5">
-      <Label className="block text-sm font-medium mb-3">
-      Kecamatan/Cabang<span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                  *Isi Sesuai Tempat Tugas
-                </span>
-                </Label>
-                <Select>
-      <SelectTrigger >
-        <SelectValue placeholder="Pilih Provinsi" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectItem value="Aceh">Aceh</SelectItem>
-          <SelectItem value="Bali">Bali</SelectItem>
-          <SelectItem value="banten">Banten</SelectItem>
-          <SelectItem value="jambi">Jambi</SelectItem>
-        </SelectGroup>  
-      </SelectContent>
-    </Select> 
-      </div>
-      <div className="w-full items-center gap-1.5">
-      <Label className="block text-sm font-medium mb-3">
-      Desa/kelurahan<span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                  *Isi Sesuai Tempat Tugas
-                </span>
-                </Label>
-                <Select>
-      <SelectTrigger >
-        <SelectValue placeholder="Pilih Provinsi" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectItem value="Aceh">Aceh</SelectItem>
-          <SelectItem value="Bali">Bali</SelectItem>
-          <SelectItem value="banten">Banten</SelectItem>
-          <SelectItem value="jambi">Jambi</SelectItem>
-        </SelectGroup>  
-      </SelectContent>
-    </Select> 
-      </div>
-      <div className="w-full items-center gap-1.5">
-      <Label className="block text-sm font-medium mb-3">
-              Pekerjaan
-                </Label>
-                <Select>
-      <SelectTrigger >
-        <SelectValue placeholder="Pilih Pekerjaan" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectItem value="guru">Guru</SelectItem>
-          <SelectItem value="tenagaAdmin">Tenaga Administrasi</SelectItem>
-          <SelectItem value="dosen">Dosen</SelectItem>
-          <SelectItem value="pengawas">Pengawas</SelectItem>
-        </SelectGroup>  
-      </SelectContent>
-    </Select> 
-      </div>
-      <div className="w-full items-center gap-1.5">
-      <Label className="block text-sm font-medium mb-3">
-              Status Sekolah
-                </Label>
-                <Select>
-      <SelectTrigger >
-        <SelectValue placeholder="Pilih Status Sekolah" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectItem value="guru">Swasta</SelectItem>
-          <SelectItem value="tenagaAdmin">Negri</SelectItem>
-        </SelectGroup>  
-      </SelectContent>
-    </Select> 
-      </div>
-      <div className="w-full items-center gap-1.5">
-      <Label className="block text-sm font-medium mb-3">
-              Status Pegawai
-                </Label>
-                <Select>
-      <SelectTrigger >
-        <SelectValue placeholder="Pilih Status Pegawai" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectItem value="pns">ASN PNS</SelectItem>
-          <SelectItem value="pppk">ASN PPPK</SelectItem>
-        </SelectGroup>  
-      </SelectContent>
-    </Select> 
-      </div>
-      
-      <div className="w-full items-center gap-1.5">
-      <Label className="block text-sm font-medium mb-3">
-              Pendidikan/Ijazah Terakhir
-              
-                </Label>
-                <Select>
-      <SelectTrigger >
-        <SelectValue placeholder="Pilih Pendidikan" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectItem value="pns">S1</SelectItem>
-          <SelectItem value="pppk">S2</SelectItem>
-          <SelectItem value="pppk">D3</SelectItem>
-        </SelectGroup>  
-      </SelectContent>
-    </Select> 
-      </div>
-      <div className="w-full items-center gap-1.5">
-      <Label className="block text-sm font-medium mb-3">
-      Pangkat/Golongan<span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-      *Bila Tidak Ada, Isi Tanda (-)
-                </span>
-                </Label>
-                <Input
-                  type="text"
-                  placeholder="Tuliskan Pangkat/Golongan"
-                />
-      </div>
-      <div className="w-full items-center gap-1.5">
-      <Label className="block text-sm font-medium mb-3">
-              Mata Pelajaran
-                </Label>
-                <Input
-                  type="text"
-                  placeholder="Tuliskan Mata Pelajaran"
-                />
-      </div>
-      <div className="w-full items-center gap-1.5">
-      <Label className="block text-sm font-medium mb-3">
-              kelompok Jabatan
-                </Label>
-                <Select>
-      <SelectTrigger >
-        <SelectValue placeholder="Pilih Pendidikan" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectItem value="pns">Pendidik</SelectItem>
-          <SelectItem value="pppk">Tenaga Kependidikan</SelectItem>
-        </SelectGroup>  
-      </SelectContent>
-    </Select> 
-              </div>
-      <div className="w-full items-center gap-1.5">
-      <Label className="block text-sm font-medium mb-3">
-              Jabatan
-                </Label>
-                <Select>
-      <SelectTrigger >
-        <SelectValue placeholder="Pilih Pendidikan" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectItem value="pns">Kepala Sekolah</SelectItem>
-          <SelectItem value="pppk">Guru</SelectItem>
-        </SelectGroup>  
-      </SelectContent>
-    </Select> 
-              </div>
-      <div className="w-full items-center gap-1.5">
-      <Label className="block text-sm font-medium mb-3">
-              Tugas
-                </Label>
-                <Select>
-      <SelectTrigger >
-        <SelectValue placeholder="Pilih Pendidikan" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectItem value="pns">Kepala Sekolah</SelectItem>
-          <SelectItem value="pppk">Guru</SelectItem>
-        </SelectGroup>  
-      </SelectContent>
-    </Select> 
-              </div>
-              <div className="w-full items-center gap-1.5">
-      <Label className="block text-sm font-medium mb-3">
-              Sertifikat Pendidik
-                </Label>
-                <Select>
-      <SelectTrigger >
-        <SelectValue placeholder="Pilih Status Pegawai" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectItem value="pns">Sudah</SelectItem>
-          <SelectItem value="pppk">Bleum</SelectItem>
-        </SelectGroup>  
-      </SelectContent>
-    </Select> 
-      </div>
-      <div className="w-full items-center gap-1.5">
-      <Label className="block text-sm font-medium mb-3">
-              Mengajar
-                </Label>
-                <Select>
-      <SelectTrigger >
-        <SelectValue placeholder="Pilih Jenjang Mengajar" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectItem value="pns">PAUD</SelectItem>
-          <SelectItem value="pppk">TK</SelectItem>
-        </SelectGroup>  
-      </SelectContent>
-    </Select> 
-      </div>
-      <div className="w-full items-center gap-1.5">
-      <Label className="block text-sm font-medium mb-3">
-              Tingkat Sekolah
-                </Label>
-                <Select>
-      <SelectTrigger >
-        <SelectValue placeholder="Pilih Jenjang Mengajar" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          <SelectItem value="pns">SD/MI</SelectItem>
-          <SelectItem value="pppk">TK/RA</SelectItem>
-        </SelectGroup>  
-      </SelectContent>
-    </Select> 
-      </div>
-      <div className="w-full items-center gap-1.5">
-      <Label className="block text-sm font-medium mb-3">
-                  Nama Instansi <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                  *Tempat Tugas
-                </span>
-                </Label>
-                <Input
-                  type="text"
-                  placeholder="Tuliskan Nama Tempat Tugas"
-                />
-      </div>
-      <div className="w-full items-center gap-1.5">
-      <Label className="block text-sm font-medium mb-3">
-                  Alamat<span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                  *Isi Sesuai Tempat Tugas
-                </span>
-                </Label>
-                <Textarea placeholder="Tuliskan Alamat Tempat Tugas" />
-      </div>
-      <div className="col-span-1 sm:col-span-2">
-        <button
-          type="submit"
-          className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded"
-        >
-          Selanjutnya
-        </button>
-      </div>
-      <div className="col-span-1 sm:col-span-2">
-        <button
-          type="button"
-          onClick={prevStep}
-          className="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
-        >
-          Kembali
-        </button>
-      </div>
-      <div className="col-span-1 sm:col-span-2">
-        <Alert variant="destructive" className="w-full">
-          <ExclamationTriangleIcon className="h-4 w-4" />
-          <AlertDescription>Pastikan anda mengisi semua form, jika terdapat form isian pendaftaran yang terlewatkan maka anda tidak dapat menekan tombol simpan!</AlertDescription>
-        </Alert>
-      </div>
-    </form>
-  </div>
-)}
-
-        {step === 3 && (
-          <div>
-            <h2 className="font-semibold text-xl text-gray-600">
-              III. UPLOAD FILE
+          <div className="max-w-screen-lg mx-auto px-4 py-6">
+            <h2 className="font-semibold text-xl text-gray-600 mb-4">
+              II. DATA PEKERJAAN
             </h2>
-            <hr className="mb-6 border-t-2 border-gray-300 mt-4" />
+            <hr className="mb-6 border-t-2 border-gray-300" />
             <form
               onSubmit={handleSubmit(onSubmit)}
               className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white p-4 sm:p-8 rounded-lg shadow-lg"
             >
-              <div className="w-full items-center gap-1.5">
-              <Label className="block text-sm font-medium mb-3">
-              Nama Suami/Istri
+              <div className="w-full">
+                <Label className="flex flex-col sm:flex-row items-start sm:items-center">
+                  Pangkat/Golongan
+                  <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
+                    *Bila Tidak Ada, Isi Tanda (-)
+                  </span>
+                </Label>
+                <Input
+                  className="mt-2 sm:mt-2"
+                  type="text"
+                  id="golongan"
+                  placeholder="Tuliskan Pangkat/Golongan"
+                  {...register("golongan", { required: true })}
+                />
+                {errors.golongan && (
+                  <span className="text-red-500 text-sm">
+                    Pangkat/Golongan is required
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="flex flex-col sm:flex-row items-start sm:items-center">
+                  Kecamatan/Cabang
+                  <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0 mb-2 sm:mb-2">
+                    *Isi Sesuai Tempat Tugas
+                  </span>
+                </Label>
+                <Controller
+                  name="cabang"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Provinsi" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="Aceh">Aceh</SelectItem>
+                          <SelectItem value="Bali">Bali</SelectItem>
+                          <SelectItem value="banten">Banten</SelectItem>
+                          <SelectItem value="jambi">Jambi</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.cabang && (
+                  <span className="text-red-500 text-sm">
+                    Kecamatan/Cabang is required
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Pekerjaan
+                </Label>
+                <Controller
+                  name="pekerjaan"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Pekerjaan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="guru">Guru</SelectItem>
+                          <SelectItem value="tenagaAdmin">
+                            Tenaga Administrasi
+                          </SelectItem>
+                          <SelectItem value="dosen">Dosen</SelectItem>
+                          <SelectItem value="pengawas">Pengawas</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.pekerjaan && (
+                  <span className="text-red-500 text-sm">
+                    Pekerjaan is required
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Unit Kerja
+                </Label>
+                <Controller
+                  name="unitKerja"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Unit Kerja" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="Aceh">-- Unit Kerja --</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.unitKerja && (
+                  <span className="text-red-500 text-sm">
+                    Unit Kerja is required
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Status Sekolah
+                </Label>
+                <Controller
+                  name="statusSekolah"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Status Sekolah" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="swasta">Swasta</SelectItem>
+                          <SelectItem value="negeri">Negeri</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.statusSekolah && (
+                  <span className="text-red-500 text-sm">
+                    Status Sekolah is required
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">TMT</Label>
+                <Input
+                  type="date"
+                  id="tmt"
+                  placeholder="dd/mm/yyyy"
+                  {...register("tmt", { required: true })}
+                />
+                {errors.tmt && (
+                  <span className="text-red-500 text-sm">TMT is required</span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Status Pegawai
+                </Label>
+                <Controller
+                  name="statusPegawai"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Status Pegawai" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="pns">ASN PNS</SelectItem>
+                          <SelectItem value="pppk">ASN PPPK</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.statusPegawai && (
+                  <span className="text-red-500 text-sm">
+                    Status Pegawai is required
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Pendidikan/Ijazah Terakhir
+                </Label>
+                <Controller
+                  name="ijazah"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Pendidikan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="s1">S1</SelectItem>
+                          <SelectItem value="s2">S2</SelectItem>
+                          <SelectItem value="d3">D3</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.ijazah && (
+                  <span className="text-red-500 text-sm">
+                    Ijazah is required
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="flex flex-col sm:flex-row items-start sm:items-center">
+                  Pangkat/Golongan
+                  <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
+                    *Bila Tidak Ada, Isi Tanda (-)
+                  </span>
+                </Label>
+                <Input
+                  className="mt-2 sm:mt-2"
+                  type="text"
+                  id="golongan"
+                  placeholder="Tuliskan Pangkat/Golongan"
+                  {...register("golongan", { required: true })}
+                />
+                {errors.golongan && (
+                  <span className="text-red-500 text-sm">
+                    Pangkat/Golongan is required
+                  </span>
+                )}
+              </div>
 
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Mata Pelajaran
                 </Label>
                 <Input
                   type="text"
-                  placeholder="Tuliskan Nama Suami/Istri"
+                  id="mapel"
+                  placeholder="Tuliskan Mata Pelajaran"
+                  {...register("mapel", { required: true })}
                 />
+                {errors.mapel && (
+                  <span className="text-red-500 text-sm">
+                    Mata Pelajaran is required
+                  </span>
+                )}
               </div>
-              <div className="w-full items-center gap-1.5">
-              <Label className="block text-sm font-medium mb-3">
-              Nama Anak
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Kelompok Jabatan
+                </Label>
+                <Controller
+                  name="kelJabatan"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Kelompok Jabatan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="pendidik">Pendidik</SelectItem>
+                          <SelectItem value="tenagaKependidikan">
+                            Tenaga Kependidikan
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.kelJabatan && (
+                  <span className="text-red-500 text-sm">
+                    Kelompok Jabatan is required
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Jabatan
+                </Label>
+                <Controller
+                  name="jabatan"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Jabatan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="kepalaSekolah">
+                            Kepala Sekolah
+                          </SelectItem>
+                          <SelectItem value="guru">Guru</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.jabatan && (
+                  <span className="text-red-500 text-sm">
+                    Jabatan is required
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">Tugas</Label>
+                <Controller
+                  name="tugas"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Tugas" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="kepalaSekolah">
+                            Kepala Sekolah
+                          </SelectItem>
+                          <SelectItem value="guru">Guru</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.tugas && (
+                  <span className="text-red-500 text-sm">
+                    Tugas is required
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Sertifikat Pendidik
+                </Label>
+                <Controller
+                  name="sertifikat"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Sertifikat" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="sudah">Sudah</SelectItem>
+                          <SelectItem value="belum">Belum</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.sertifikat && (
+                  <span className="text-red-500 text-sm">
+                    Sertifikat Pendidik is required
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Mengajar
+                </Label>
+                <Controller
+                  name="mengajar"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Jenjang Mengajar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="paud">PAUD</SelectItem>
+                          <SelectItem value="tk">TK</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.mengajar && (
+                  <span className="text-red-500 text-sm">
+                    Mengajar is required
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Tingkat Sekolah
+                </Label>
+                <Controller
+                  name="tingkatSekolah"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Jenjang Sekolah" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="sd">SD/MI</SelectItem>
+                          <SelectItem value="tk">TK/RA</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.tingkatSekolah && (
+                  <span className="text-red-500 text-sm">
+                    Tingkat Sekolah is required
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Nama Instansi
+                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                    *Tempat Tugas
+                  </span>
                 </Label>
                 <Input
-                  className="block text-sm font-medium mb-3"
                   type="text"
-                  placeholder="Tuliskan Nama Anak 1"
+                  id="namaInstansi"
+                  placeholder="Tuliskan Nama Tempat Tugas"
+                  {...register("namaInstansi", { required: true })}
                 />
-                <Input
-                  className="block text-sm font-medium mb-3"
-                  type="text"
-                  placeholder="Tuliskan Nama Anak 2"
-                />
-                <Input
-                  className="block text-sm font-medium mb-3"
-                  type="text"
-                  placeholder="Tuliskan Nama Anak 3"
-                />
-                <Input
-                  className="block text-sm font-medium mb-3"
-                  type="text"
-                  placeholder="Tuliskan Nama Anak 4"
-                />
-                <Input
-                  className="block text-sm font-medium mb-3"
-                  type="text"
-                  placeholder="Tuliskan Nama Anak 5"
-                />
+                {errors.namaInstansi && (
+                  <span className="text-red-500 text-sm">
+                    Nama Instansi is required
+                  </span>
+                )}
               </div>
-              <div className="col-span-1 sm:col-span-2">
-                <button
-                  type="submit"
-                  className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded"
-                >
-                  Submit
-                </button>
-              </div>
-              <div className="col-span-1 sm:col-span-2">
-                <button
+              <div className="col-span-1 sm:col-span-2 flex justify-between mt-4">
+                <Button
                   type="button"
                   onClick={prevStep}
-                  className="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
+                  className="text-white bg-gray-400 hover:bg-gray-500 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
                 >
                   Kembali
-                </button>
-              </div>
-              <div className="col-span-1 sm:col-span-2">
-                <Alert variant="destructive" className="w-full">
-                  <ExclamationTriangleIcon className="h-4 w-4" />
-                  <AlertDescription>Pastikan anda mengisi semua form, jika terdapat form isian pendaftaran yang terlewatkan maka anda tidak dapat menekan tombol simpan!</AlertDescription>
-                </Alert>
+                </Button>
+                <Button
+                  type="submit"
+                  className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
+                >
+                  Submit
+                </Button>
               </div>
             </form>
           </div>
