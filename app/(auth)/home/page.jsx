@@ -12,6 +12,7 @@ import {
   faWallet,
   faSyncAlt,
   faUser,
+  faUsersGear,
   faMoneyBill,
   faCheckCircle,
 } from "@fortawesome/free-solid-svg-icons";
@@ -85,6 +86,12 @@ const icons = [
     label: "Verifikasi Anggota dan Mutasi",
     href: "/verifikasi-anggota-mutasi",
     color: "text-blue-500",
+  },
+  {
+    icon: faUsersGear,
+    label: "Anggota by Name",
+    href: "/anggota/by-name",
+    color: "text-yellow-500",
   },
 ];
 
