@@ -33,12 +33,6 @@ const icons = [
     color: "text-green-500",
   },
   {
-    icon: faUserPlus,
-    label: "Regestrasi",
-    href: "/create-account",
-    color: "text-yellow-500",
-  },
-  {
     icon: faHandsHelping,
     label: "Bantuan",
     href: "/bantuan",
