@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,8 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 const Page = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -34,7 +34,6 @@ const Page = () => {
   };
 
   const [namesanak, setNamesanak] = useState([""]);
-
   const handleChange = (index, event) => {
     const newNamesanak = [...namesanak];
     newNamesanak[index] = event.target.value;
@@ -143,22 +142,6 @@ const Page = () => {
                 />
                 {errors.nip && (
                   <span className="text-red-500 text-sm">NIP is required</span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  NIP Lama
-                </Label>
-                <Input
-                  type="number"
-                  id="nipLama"
-                  placeholder="Nomor Induk Pendidik ( NIP ) Lama"
-                  {...register("nipLama", { required: true })}
-                />
-                {errors.nipLama && (
-                  <span className="text-red-500 text-sm">
-                    NIP Lama is required
-                  </span>
                 )}
               </div>
               <div className="w-full">
@@ -442,62 +425,7 @@ const Page = () => {
                   + Tambah Anak
                 </Button>
               </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Peserta Sanduka
-                </Label>
-                <Controller
-                  name="sanduka"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih " />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="islam">Ya</SelectItem>
-                          <SelectItem value="kristen">Tidak</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.sanduka && (
-                  <span className="text-red-500 text-sm">
-                    Peserta Sanduka is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Peserta Daspen
-                </Label>
-                <Controller
-                  name="daspen"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih " />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="islam">Ya</SelectItem>
-                          <SelectItem value="kristen">Tidak</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.daspen && (
-                  <span className="text-red-500 text-sm">
-                    Peserta Daspen is required
-                  </span>
-                )}
-              </div>
+
               <div className="flex flex-col items-center space-y-4 mt-4">
                 <Image
                   width={150}
@@ -513,12 +441,12 @@ const Page = () => {
                   onChange={handleFileChange}
                   className="hidden"
                 />
-                <Label
+                <label
                   htmlFor="photo-upload"
                   className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md bg-white"
                 >
                   Choose Files
-                </Label>
+                </label>
                 <p className="text-teal-600">*Wajib Menggunakan Batik PGRI</p>
                 <p>{selectedFile ? selectedFile.name : "No file chosen"}</p>
                 <p className="text-red-600 text-center">
