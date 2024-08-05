@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -9,8 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 
 const anggota = [
   {
@@ -151,16 +151,19 @@ const DataTable = () => {
   const [detailFilter, setDetailFilter] = useState("");
   const [cabangFilter, setCabangFilter] = useState("");
 
-  const filteredData = anggota.filter(item => 
-    (detailFilter === "" || item.detail === detailFilter) &&
-    (cabangFilter === "" || item.cabang === cabangFilter)
+  const filteredData = anggota.filter(
+    (item) =>
+      (detailFilter === "" || item.detail === detailFilter) &&
+      (cabangFilter === "" || item.cabang === cabangFilter)
   );
 
-  return (  
+  return (
     <div className="w-full p-4 container shadow-lg rounded-lg">
       <div className="rounded-md flex flex-col py-4">
         <div className="container px-2">
-          <h2 className="text-lg md:text-xl font-bold mb-4 text-center">DATA ANGGOTA</h2>
+          <h2 className="text-lg md:text-xl font-bold mb-4 text-center">
+            DATA ANGGOTA
+          </h2>
           <div className="w-full flex mb-4 space-x-4">
             <select
               value={detailFilter}
@@ -181,7 +184,9 @@ const DataTable = () => {
               <option value="">Select Cabang Filter</option>
               <option value="BANGSRI">BANGSRI</option>
               <option value="BATEALIT">BATEALIT</option>
-              <option value="CABSUS DINAS PENDIDIKAN">CABSUS DINAS PENDIDIKAN</option>
+              <option value="CABSUS DINAS PENDIDIKAN">
+                CABSUS DINAS PENDIDIKAN
+              </option>
               <option value="CABSUS IGTKI">CABSUS IGTKI</option>
               <option value="DONOROJO">DONOROJO</option>
               <option value="JEPARA">JEPARA</option>
@@ -200,23 +205,57 @@ const DataTable = () => {
             </select>
           </div>
           <Table className="w-full table-auto mb-8">
-            <TableHeader className="p-2 md:p-3 border bg-green-300">
+            <TableHeader className="p-2 md:p-3 border bg-teal-700 ">
               <TableRow>
-                <TableHead className="text-center font-bold text-gray-800 border text-lg">No</TableHead>
-                <TableHead className="text-center font-bold text-gray-800 border text-lg">Date</TableHead>
-                <TableHead className="text-center font-bold text-gray-800 border text-lg">Data</TableHead>
-                <TableHead className="text-center font-bold text-gray-800 border text-lg">Cabang</TableHead>
-                <TableHead className="text-center font-bold text-gray-800 border text-lg">Detail</TableHead>
+                <TableHead
+                  rowspan="2"
+                  className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                >
+                  No
+                </TableHead>
+                <TableHead
+                  rowspan="2"
+                  className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                >
+                  Date
+                </TableHead>
+                <TableHead
+                  rowspan="2"
+                  className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                >
+                  Data
+                </TableHead>
+                <TableHead
+                  rowspan="2"
+                  className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                >
+                  Cabang
+                </TableHead>
+                <TableHead
+                  rowspan="2"
+                  className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                >
+                  Detail
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredData.map((item, index) => (
-                <TableRow key={index} className={index % 2 === 0 ? "bg-gray-200" : "bg-white"}>
-                  <TableCell className="text-center border">{index + 1}</TableCell>
+                <TableRow
+                  key={index}
+                  className={index % 2 === 0 ? "bg-gray-200" : "bg-white"}
+                >
+                  <TableCell className="text-center border">
+                    {index + 1}
+                  </TableCell>
                   <TableCell className="border">{item.date}</TableCell>
                   <TableCell className="border">{item.data}</TableCell>
-                  <TableCell className="border text-center">{item.cabang}</TableCell>
-                  <TableCell className="border text-center">{item.detail}</TableCell>
+                  <TableCell className="border text-center">
+                    {item.cabang}
+                  </TableCell>
+                  <TableCell className="border text-center">
+                    {item.detail}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

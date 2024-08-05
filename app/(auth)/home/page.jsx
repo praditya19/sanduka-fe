@@ -3,7 +3,6 @@ import {
   faBullhorn,
   faFileAlt,
   faDatabase,
-  faUserPlus,
   faHandsHelping,
   faFileInvoice,
   faUsers,
@@ -15,6 +14,8 @@ import {
   faUsersGear,
   faMoneyBill,
   faCheckCircle,
+  faCog,
+  faBuilding, // Icon for "Unit Kerja"
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
@@ -93,11 +94,29 @@ const icons = [
     href: "/anggota/by-name",
     color: "text-yellow-500",
   },
+  {
+    icon: faCog,
+    label: "Pengaturan",
+    href: "/pengaturan",
+    color: "text-gray-700",
+  },
+  {
+    icon: faSyncAlt,
+    label: "Singkron Data",
+    href: "/singkron-data",
+    color: "text-teal-700",
+  },
+  {
+    icon: faBuilding,
+    label: "Unit Kerja",
+    href: "/unit-kerja",
+    color: "text-blue-700",
+  },
 ];
 
 export default function IconGrid() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 py-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 py-8 px-4">
       <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
           <div className="text-center">
@@ -135,10 +154,10 @@ export default function IconGrid() {
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8 p-8 max-w-screen-lg mx-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 p-8 max-w-screen-lg mx-auto">
         {icons.map((item, index) => (
           <Link key={index} href={item.href}>
-            <div className="flex flex-col items-center bg-white p-6 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer h-32">
+            <div className="flex flex-col items-center bg-white p-6 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer h-40">
               <FontAwesomeIcon
                 icon={item.icon}
                 size="3x"
