@@ -107,10 +107,10 @@ const icons = [
     color: "text-teal-700",
   },
   {
-    icon: faBuilding,
-    label: "Unit Kerja",
-    href: "/unit-kerja",
-    color: "text-blue-700",
+    icon: faUsers,
+    label: "Teman dalam Unit Kerja",
+    href: "/teman-unit-kerja",
+    color: "text-green-700",
   },
 ];
 
