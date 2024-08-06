@@ -9,15 +9,15 @@ const AddUnitForm = () => {
         <div className="container mx-auto">
           <h1 className="text-2xl md:text-3xl font-extrabold">Master Data</h1>
           <nav className="mt-4">
-            <ul className="flex flex-wrap space-x-4 md:space-x-6">
+          <ul className="flex flex-wrap space-x-4 md:space-x-6">
               <li className="cursor-pointer">
-                <Link href="/user">User</Link>
+                <Link href="/pengaturan">User</Link>
               </li>
               <li className="cursor-pointer">
-                <Link href="/tambah">Tambah Cabang</Link>
+                <Link href="/pengaturan/tambah">Tambah Cabang</Link>
               </li>
               <li className="cursor-pointer">
-                <Link href="/unit-kerja">Tambah Unit Kerja</Link>
+                <Link href="/pengaturan/unit-kerja">Tambah Unit Kerja</Link>
               </li>
             </ul>
           </nav>
