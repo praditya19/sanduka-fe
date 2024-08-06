@@ -342,13 +342,13 @@ const Page = () => {
           <nav className="mt-4">
             <ul className="flex flex-wrap space-x-4 md:space-x-6">
               <li className="cursor-pointer">
-                <Link href="/pengaturan">Data Pribadi</Link>
-              </li>
-              <li className="cursor-pointer">
                 <Link href="/user">User</Link>
               </li>
               <li className="cursor-pointer">
-                <Link href="/tambah">Tambah</Link>
+                <Link href="/tambah">Tambah Cabang</Link>
+              </li>
+              <li className="cursor-pointer">
+                <Link href="/unit-kerja">Tambah Unit Kerja</Link>
               </li>
             </ul>
           </nav>
@@ -399,10 +399,12 @@ const Page = () => {
           <thead>
             <tr className="bg-teal-700 text-white">
               <th className="p-2 md:p-3 border">No.</th>
-              <th className="p-2 md:p-3 border">Time</th>
-              <th className="p-2 md:p-3 border">Kabupaten/Cabang</th>
-              <th className="p-2 md:p-3 border">Nama/NIP</th>
-              <th className="p-2 md:p-3 border">Email/HP</th>
+              <th className="p-2 md:p-3 border">Email</th>
+              <th className="p-2 md:p-3 border">Kabupaten</th>
+              <th className="p-2 md:p-3 border">Cabang</th>
+              <th className="p-2 md:p-3 border">Nama</th>
+              <th className="p-2 md:p-3 border">NIP</th>
+              <th className="p-2 md:p-3 border">HP</th>
               <th className="p-2 md:p-3 border">ID User & Password</th>
               <th className="p-2 md:p-3 border">Aksi</th>
             </tr>
@@ -413,10 +415,14 @@ const Page = () => {
                 <td className="p-2 md:p-3 border text-center">
                   {startIndex + index + 1}
                 </td>
-                <td className="p-2 md:p-3 border">{item.time}</td>
+                <td className="p-2 md:p-3 border text-center">{item.email}</td>
                 <td className="p-2 md:p-3 border">
-                  {item.kabupaten} <br /> {item.cabang}
+                  {item.kabupaten} 
                 </td>
+                <td className="p-2 md:p-3 border">
+                   {item.cabang}
+                </td>
+                <td className="p-2 md:p-3 border">{item.nama}</td>
                 <td className="p-2 md:p-3 border">{item.nama}</td>
                 <td className="p-2 md:p-3 border text-center">{item.email}</td>
                 <td className="p-2 md:p-3 border">
