@@ -55,7 +55,7 @@ const TemanUnitKerja = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-blue-200 via-green-200 to-yellow-200 py-8 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 py-8 px-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5">
         {cardsData.map((data, index) => (
           <div
