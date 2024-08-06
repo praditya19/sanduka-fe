@@ -1,106 +1,140 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faIdCard,
   faCalendarAlt,
-  faHospital,
-  faTooth,
-  faUser,
+  faDatabase,
 } from "@fortawesome/free-solid-svg-icons";
+import Image from "next/image";
 
-const Card = () => {
+const TemanUnitKerja = () => {
   const cardsData = [
     {
+      foto: "/sanduka.png",
       name: "HABIB NOR HAQIQI",
-      status: "AKTIF",
-      id: "0001146804614",
-      relation: "Peserta (PEGAWAI SWASTA)",
-      birthdate: "10-03-1982",
-      doctor: "dr. Putri Mulyaningtyas",
-      dentist: "drg. Muntaha Anggiasari",
-      classType: "Kelas 2",
+      npaNip: "0001146804614",
+      cabang: "BANGSRI",
+      unit: "SMAN 1 Jepara",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
     },
     {
+      foto: "/sanduka.png",
       name: "MUHAMMAD ALFARIZA HAQIQI",
-      status: "AKTIF",
-      id: "0001190472939",
-      relation: "Anak (PEGAWAI SWASTA)",
-      birthdate: "16-09-2010",
-      doctor: "dr. Putri Mulyaningtyas",
-      dentist: "drg. Muntaha Anggiasari",
-      classType: "Kelas 2",
+      npaNip: "0001190472939",
+      cabang: "BANGSRI",
+      unit: "SMAN 2 Jepara",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
     },
     {
+      foto: "/sanduka.png",
       name: "SHAKILA NAHDA HAQIQI",
-      status: "AKTIF",
-      id: "0001908279055",
-      relation: "Anak (PEGAWAI SWASTA)",
-      birthdate: "30-05-2015",
-      doctor: "dr. Putri Mulyaningtyas",
-      dentist: "drg. Muntaha Anggiasari",
-      classType: "Kelas 2",
+      npaNip: "0001908279055",
+      cabang: "BANGSRI",
+      unit: "SMAN 3 Jepara",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
     },
     {
+      foto: "/sanduka.png",
       name: "GHANIA DINARA HAQIQI",
-      status: "AKTIF",
-      id: "0003067113159",
-      relation: "Anak (PEGAWAI SWASTA)",
-      birthdate: "16-09-2020",
-      doctor: "dr. Putri Mulyaningtyas",
-      dentist: "drg. Muntaha Anggiasari",
-      classType: "Kelas 2",
+      npaNip: "0003067113159",
+      cabang: "BANGSRI",
+      unit: "SMAN 4 Jepara",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
     },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 py-8 px-4">
-      {cardsData.map((data, index) => (
-        <div
-          key={index}
-          className="bg-white rounded-xl shadow-lg p-6 mb-6 flex flex-col items-center w-full max-w-md"
-        >
-          <div className="w-16 h-16 rounded-full bg-indigo-200 flex items-center justify-center mb-4">
-            <FontAwesomeIcon
-              icon={faUser}
-              size="2x"
-              className="text-indigo-600"
-            />
-          </div>
-          <div className="w-full">
-            <div className="flex justify-between items-center mb-2">
-              <div>
-                <h2 className="text-xl font-bold text-gray-800">{data.name}</h2>
-                <span className="text-green-600 font-semibold">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-blue-200 via-green-200 to-yellow-200 py-8 px-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5">
+        {cardsData.map((data, index) => (
+          <div
+            key={index}
+            className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-start transition-transform transform hover:scale-105 hover:shadow-2xl border border-gray-200"
+          >
+            <div className="w-full flex flex-col items-center sm:flex-row mb-4">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 flex items-center justify-center border-4 border-blue-500 overflow-hidden">
+                <Image
+                  src={data.foto}
+                  width={60}
+                  height={60}
+                  alt="Anggota Foto"
+                  className="rounded-full mx-auto"
+                />
+              </div>
+              <div className="mt-4 sm:mt-0 sm:ml-4 flex-grow text-center sm:text-left">
+                <h2 className="text-xl font-semibold text-gray-800 truncate">
+                  {data.name}
+                </h2>
+                <p className="text-gray-600 text-sm truncate">{data.npaNip}</p>
+                <p className="text-gray-600 text-sm truncate">{data.unit}</p>
+                <p
+                  className={`text-sm mt-2 font-medium ${
+                    data.status === "Aktif" ? "text-green-500" : "text-red-500"
+                  }`}
+                >
                   {data.status}
-                </span>
-              </div>
-              <div className="bg-blue-600 text-white rounded-full px-3 py-1 text-sm">
-                {data.classType}
+                </p>
               </div>
             </div>
-            <p className="text-gray-600 mb-1">{data.id}</p>
-            <p className="text-gray-600 mb-3">{data.relation}</p>
-            <div className="flex items-center mb-2 text-gray-700">
-              <FontAwesomeIcon
-                icon={faCalendarAlt}
-                className="text-gray-500 mr-2"
-              />
-              <span>{data.birthdate}</span>
-            </div>
-            <div className="flex items-center mb-2 text-gray-700">
-              <FontAwesomeIcon
-                icon={faHospital}
-                className="text-gray-500 mr-2"
-              />
-              <span>{data.doctor}</span>
-            </div>
-            <div className="flex items-center text-gray-700">
-              <FontAwesomeIcon icon={faTooth} className="text-gray-500 mr-2" />
-              <span>{data.dentist}</span>
+            <div className="bg-blue-50 rounded-lg p-4 mt-4 w-full border border-blue-200">
+              <h3 className="text-lg font-medium text-blue-800 mb-2">
+                Detail Anggota
+              </h3>
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center text-gray-800 text-sm">
+                  <FontAwesomeIcon
+                    icon={faCalendarAlt}
+                    className="text-gray-600 mr-2"
+                  />
+                  <span className="font-medium text-gray-700">Cabang:</span>
+                  <span className="ml-2">{data.cabang}</span>
+                </div>
+                <div className="flex items-center text-gray-800 text-sm">
+                  <FontAwesomeIcon
+                    icon={faDatabase}
+                    className="text-gray-600 mr-2"
+                  />
+                  <span className="font-medium text-gray-700">
+                    Sanduka Data:
+                  </span>
+                  <span className="ml-2">{data.sandukaData}</span>
+                </div>
+                <div className="flex items-center text-gray-800 text-sm">
+                  <FontAwesomeIcon
+                    icon={faIdCard}
+                    className="text-gray-600 mr-2"
+                  />
+                  <span className="font-medium text-gray-700">
+                    KTA Digital:
+                  </span>
+                  <span className="ml-2">{data.ktaDigitalData}</span>
+                </div>
+                <div className="flex items-center text-gray-800 text-sm">
+                  <FontAwesomeIcon
+                    icon={faDatabase}
+                    className="text-gray-600 mr-2"
+                  />
+                  <span className="font-medium text-gray-700">Daspen:</span>
+                  <span className="ml-2">{data.daspenData}</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };
 
-export default Card;
+export default TemanUnitKerja;
