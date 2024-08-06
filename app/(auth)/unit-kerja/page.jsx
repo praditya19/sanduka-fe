@@ -1,9 +1,31 @@
 import React from "react";
+import Link from "next/link";
 
 const AddUnitForm = () => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-md">
+    
+      <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+      <header className="bg-green-700 text-white p-4 md:p-6 rounded-lg shadow-md">
+        <div className="container mx-auto">
+          <h1 className="text-2xl md:text-3xl font-extrabold">Master Data</h1>
+          <nav className="mt-4">
+            <ul className="flex flex-wrap space-x-4 md:space-x-6">
+              <li className="cursor-pointer">
+                <Link href="/user">User</Link>
+              </li>
+              <li className="cursor-pointer">
+                <Link href="/tambah">Tambah Cabang</Link>
+              </li>
+              <li className="cursor-pointer">
+                <Link href="/unit-kerja">Tambah Unit Kerja</Link>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </header>
+      <div className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-6">
+
+      
         <h2 className="text-xl font-bold mb-4 text-center text-teal-600">
           TAMBAH UNIT KERJA
         </h2>
@@ -44,8 +66,9 @@ const AddUnitForm = () => {
             TAMBAH UNIT KERJA
           </button>
         </div>
+        </div>
       </div>
-    </div>
+
   );
 };
 
