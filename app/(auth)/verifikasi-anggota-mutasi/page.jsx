@@ -49,26 +49,8 @@ const VerifikasiAnggotaMutasi = () => {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">
-        VERIFIKASI ANGGOTA DAN MUTASI
+        VERIFIKASI ANGGOTA
       </h1>
-      <div className="flex flex-wrap justify-center space-y-4 md:space-y-0 md:space-x-4 mb-8">
-        {[
-          "Anggota Baru",
-          "Mutasi Cabang",
-          "Mutasi Kabupaten",
-          "Mutasi Unit",
-        ].map((label, index) => (
-          <Button
-            key={index}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full flex items-center w-full md:w-auto"
-          >
-            {label}
-            <span className="bg-green-600 rounded-full px-2 py-1 ml-2 text-sm">
-              4
-            </span>
-          </Button>
-        ))}
-      </div>
       <div className="flex flex-wrap -mx-2 mb-6">
         <div className="w-full md:w-1/3 px-2 mb-4">
           <label className="block mb-2 font-medium text-gray-700">
