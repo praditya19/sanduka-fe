@@ -1,20 +1,26 @@
 'use client';
 import React, { useState } from "react";
+import Modal from 'react-modal';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { FaEdit, FaExchangeAlt, FaExclamationTriangle, FaWhatsapp, FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
 import { membersData } from "../data.js";
 
 function DataAnggota() {
   const [maxItems, setMaxItems] = useState(10);
   const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("-- Unit Kerja --");
+  const [selectedStatus, setSelectedStatus] = useState("Semua");
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null);
 
   const calculateRetirementDate = (birthDate) => {
     const [day, month, year] = birthDate.split(" ");
     const birthYear = parseInt(year);
-    const birthMonth = new Date(`${month} 1, ${year}`).getMonth() + 1; // Get month index (0-11) and convert to 1-12
+    const birthMonth = new Date(`${month} 1, ${year}`).getMonth() + 1;
     const retirementYear = birthYear + 60;
-    return `${birthMonth.toString().padStart(2, '0')}-${retirementYear}`; // Pad month with leading zero if needed
+    return `${birthMonth.toString().padStart(2, '0')}-${retirementYear}`;
   };
 
   const formatCurrency = (amount) => {
@@ -22,9 +28,7 @@ function DataAnggota() {
   };
 
   const handlePrint = () => {
-    const filteredDataForPrint = selectedCabang === "-- Cabang --"
-      ? membersData
-      : membersData.filter(item => item.cabang === selectedCabang);
+    const filteredDataForPrint = filteredData;
     const printWindow = window.open("", "_blank", "width=800,height=600");
     printWindow.document.write(`
       <html>
@@ -82,8 +86,8 @@ function DataAnggota() {
             </thead>
             <tbody>
               ${filteredDataForPrint
-                .map(
-                  (item, index) => `
+        .map(
+          (item, index) => `
                     <tr>
                       <td>${index + 1}</td>
                       <td></td>
@@ -105,8 +109,8 @@ function DataAnggota() {
                       <td></td>
                     </tr>
                   `
-                )
-                .join("")}
+        )
+        .join("")}
             </tbody>
           </table>
         </body>
@@ -118,11 +122,59 @@ function DataAnggota() {
     printWindow.close();
   };
 
-  const filteredData = selectedCabang === "-- Cabang --"
-    ? membersData
-    : membersData.filter(item => item.cabang === selectedCabang);
+  const sortedData = React.useMemo(() => {
+    let sortableItems = [...membersData];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [membersData, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'ascending';
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === 'ascending'
+    ) {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortDirection = (key) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return <FaSort />;
+    }
+    return sortConfig.direction === 'ascending' ? <FaSortUp /> : <FaSortDown />;
+  };
+
+  const filteredData = sortedData.filter(item => {
+    const statusFilter = selectedStatus === "Semua" || item.anggota === selectedStatus;
+    const cabangFilter = selectedCabang === "-- Cabang --" || item.cabang === selectedCabang;
+    const unitKerjaFilter = selectedUnitKerja === "-- Unit Kerja --" || item.unitKerja === selectedUnitKerja;
+    return statusFilter && cabangFilter && unitKerjaFilter;
+  });
 
   const jumlahAnggota = filteredData.length;
+
+  const openModal = (item) => {
+    setCurrentItem(item);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setCurrentItem(null);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
@@ -156,10 +208,18 @@ function DataAnggota() {
               <option>SDN 3 Jepara</option>
               {/* Add other options as needed */}
             </select>
-            <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0">
+            <select
+              className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+            >
               <option>Semua</option>
-              {/* Add other options as needed */}
+              <option>Aktif</option>
+              <option>Tidak Aktif</option>
+              <option>Meninggal</option>
+              <option>Keluar</option>
             </select>
+
             <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
               Jumlah Anggota : {jumlahAnggota}
             </p>
@@ -191,12 +251,47 @@ function DataAnggota() {
         <table className="container w-full table-auto mb-8">
           <thead>
             <tr>
-              <th className="p-2 md:p-3 border text-white bg-green-700">No</th>
+              <th className="p-2 md:p-3 border text-white bg-green-700">
+                <div className="flex justify-between items-center">
+                  <span>No</span>
+                  <span className="ml-1 cursor-pointer" onClick={() => requestSort('index')}>
+                    {getSortDirection('index')}
+                  </span>
+                </div>
+              </th>
               <th className="p-2 md:p-3 border text-white bg-green-700">Foto</th>
-              <th className="p-2 md:p-3 border text-white bg-green-700">Nama</th>
-              <th className="p-2 md:p-3 border text-white bg-green-700">Tanggal Lahir</th>
-              <th className="p-2 md:p-3 border text-white bg-green-700">Unit Kerja</th>
-              <th className="p-2 md:p-3 border text-white bg-green-700">Keterangan</th>
+              <th className="p-2 md:p-3 border text-white bg-green-700">
+                <div className="flex justify-between items-center">
+                  <span>Nama</span>
+                  <span className="ml-1 cursor-pointer" onClick={() => requestSort('nama')}>
+                    {getSortDirection('nama')}
+                  </span>
+                </div>
+              </th>
+              <th className="p-2 md:p-3 border text-white bg-green-700">
+                <div className="flex justify-between items-center">
+                  <span>Tanggal Lahir</span>
+                  <span className="ml-1 cursor-pointer" onClick={() => requestSort('tanggal')}>
+                    {getSortDirection('tanggal')}
+                  </span>
+                </div>
+              </th>
+              <th className="p-2 md:p-3 border text-white bg-green-700">
+                <div className="flex justify-between items-center">
+                  <span>Unit Kerja</span>
+                  <span className="ml-1 cursor-pointer" onClick={() => requestSort('kerja')}>
+                    {getSortDirection('kerja')}
+                  </span>
+                </div>
+              </th>
+              <th className="p-2 md:p-3 border text-white bg-green-700">
+                <div className="flex justify-between items-center">
+                  <span>Keterangan</span>
+                  <span className="ml-1 cursor-pointer" onClick={() => requestSort('keterangan')}>
+                    {getSortDirection('keterangan')}
+                  </span>
+                </div>
+              </th>
               <th className="p-2 md:p-3 border text-white bg-green-700">Aksi</th>
             </tr>
           </thead>
@@ -223,20 +318,64 @@ function DataAnggota() {
                   <div>anggota: {item.gabung}</div>
                   <div>{item.golongan}/{formatCurrency(item.iuran)}</div>
                 </td>
-                <td className="p-2 md:p-3 border"></td>
+                <td className="p-2 text-center md:p-3 border">
+                  {item.anggota}
+                </td>
                 <td className="p-2 md:p-3 border">
-                  <Link href="#" className="text-blue-500">
-                    <div className="flex flex-col space-y-2 items-center">
-                      <Button className="w-24 bg-blue-500">Edit Data</Button>
-                      <Button className="w-24 bg-red-600">Lapor</Button>
-                    </div>
-                  </Link>
+                  <div className="flex justify-center space-x-2">
+                    <Link href="#" className="text-white bg-blue-500 p-2 border rounded-md">
+                      <FaEdit className="w-4 h-4" title="Edit Data" />
+                    </Link>
+                    <Button
+                      className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                      title="Mutasi"
+                      onClick={() => openModal(item)}
+                    >
+                      <FaExchangeAlt className="w-4 h-4" />
+                    </Button>
+                    <Link href="#" className="text-white bg-red-500 p-2 border rounded-md">
+                      <FaExclamationTriangle className="w-4 h-4" title="Lapor" />
+                    </Link>
+                    <Link href="#" className="text-white bg-green-500 p-2 border rounded-md">
+                      <FaWhatsapp className="w-4 h-4" title="WA" />
+                    </Link>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Modal for Mutation Actions */}
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={closeModal}
+        contentLabel="Mutation Actions"
+        className="fixed inset-0 flex items-center justify-center p-4"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+      >
+        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+          <h2 className="text-xl font-bold mb-4">Mutasi Anggota</h2>
+          <div className="space-y-2">
+            <Button className="w-full" onClick={() => alert('Pindah Cabang')}>
+              Pindah Cabang
+            </Button>
+            <Button className="w-full" onClick={() => alert('Unit Kerja')}>
+              Unit Kerja
+            </Button>
+            <Button className="w-full" onClick={() => alert('Keluar Anggota')}>
+              Keluar Anggota
+            </Button>
+            <Button className="w-full" onClick={() => alert('Tidak Jelas')}>
+              Tidak Jelas
+            </Button>
+          </div>
+          <Button className="mt-4 w-full bg-red-300 hover:bg-red-500" onClick={closeModal}>
+            Keluar
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }
