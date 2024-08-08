@@ -84,7 +84,7 @@ const icons = [
   },
   {
     icon: faCheckCircle,
-    label: "Verifikasi Anggota dan Mutasi",
+    label: "Verifikasi Anggota Baru",
     href: "/verifikasi-anggota-mutasi",
     color: "text-blue-500",
   },

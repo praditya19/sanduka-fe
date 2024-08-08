@@ -1,8 +1,14 @@
+"use client";
+import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faIdCard,
   faCalendarAlt,
+  faUserTie,
+  faHome,
   faDatabase,
+  faArrowLeft,
+  faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
 
@@ -14,6 +20,9 @@ const TemanUnitKerja = () => {
       npaNip: "0001146804614",
       cabang: "BANGSRI",
       unit: "SMAN 1 Jepara",
+      tanggalLahir: "01-01-2000",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Mawar No. 1",
       sandukaData: "Yes",
       ktaDigitalData: "Yes",
       daspenData: "Yes",
@@ -25,6 +34,9 @@ const TemanUnitKerja = () => {
       npaNip: "0001190472939",
       cabang: "BANGSRI",
       unit: "SMAN 2 Jepara",
+      tanggalLahir: "02-02-2001",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Melati No. 2",
       sandukaData: "Yes",
       ktaDigitalData: "Yes",
       daspenData: "Yes",
@@ -36,6 +48,9 @@ const TemanUnitKerja = () => {
       npaNip: "0001908279055",
       cabang: "BANGSRI",
       unit: "SMAN 3 Jepara",
+      tanggalLahir: "03-03-2002",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Kenanga No. 3",
       sandukaData: "Yes",
       ktaDigitalData: "Yes",
       daspenData: "Yes",
@@ -47,6 +62,107 @@ const TemanUnitKerja = () => {
       npaNip: "0003067113159",
       cabang: "BANGSRI",
       unit: "SMAN 4 Jepara",
+      tanggalLahir: "04-04-2003",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Dahlia No. 4",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
+    },
+    {
+      foto: "/sanduka.png",
+      name: "GHANIA DINARA HAQIQI",
+      npaNip: "0003067113159",
+      cabang: "BANGSRI",
+      unit: "SMAN 4 Jepara",
+      tanggalLahir: "04-04-2003",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Dahlia No. 4",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
+    },
+    {
+      foto: "/sanduka.png",
+      name: "GHANIA DINARA HAQIQI",
+      npaNip: "0003067113159",
+      cabang: "BANGSRI",
+      unit: "SMAN 4 Jepara",
+      tanggalLahir: "04-04-2003",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Dahlia No. 4",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
+    },
+    {
+      foto: "/sanduka.png",
+      name: "GHANIA DINARA HAQIQI",
+      npaNip: "0003067113159",
+      cabang: "BANGSRI",
+      unit: "SMAN 4 Jepara",
+      tanggalLahir: "04-04-2003",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Dahlia No. 4",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
+    },
+    {
+      foto: "/sanduka.png",
+      name: "GHANIA DINARA HAQIQI",
+      npaNip: "0003067113159",
+      cabang: "BANGSRI",
+      unit: "SMAN 4 Jepara",
+      tanggalLahir: "04-04-2003",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Dahlia No. 4",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
+    },
+    {
+      foto: "/sanduka.png",
+      name: "GHANIA DINARA HAQIQI",
+      npaNip: "0003067113159",
+      cabang: "BANGSRI",
+      unit: "SMAN 4 Jepara",
+      tanggalLahir: "04-04-2003",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Dahlia No. 4",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
+    },
+    {
+      foto: "/sanduka.png",
+      name: "GHANIA DINARA HAQIQI",
+      npaNip: "0003067113159",
+      cabang: "BANGSRI",
+      unit: "SMAN 4 Jepara",
+      tanggalLahir: "04-04-2003",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Dahlia No. 4",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
+    },
+    {
+      foto: "/sanduka.png",
+      name: "GHANIA DINARA HAQIQI",
+      npaNip: "0003067113159",
+      cabang: "BANGSRI",
+      unit: "SMAN 4 Jepara",
+      tanggalLahir: "04-04-2003",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Dahlia No. 4",
       sandukaData: "Yes",
       ktaDigitalData: "Yes",
       daspenData: "Yes",
@@ -54,25 +170,59 @@ const TemanUnitKerja = () => {
     },
   ];
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  const handleClick = (event, pageNumber) => {
+    event.preventDefault();
+    setCurrentPage(pageNumber);
+  };
+
+  const renderPageNumbers = () => {
+    const pageNumbers = [];
+    for (let i = 1; i <= Math.ceil(cardsData.length / itemsPerPage); i++) {
+      pageNumbers.push(
+        <li key={i}>
+          <a
+            href="#"
+            onClick={(event) => handleClick(event, i)}
+            className={`px-3 py-1 rounded-full shadow-md ${
+              currentPage === i
+                ? "bg-blue-600 text-white"
+                : "bg-white text-blue-600 hover:bg-blue-600 hover:text-white transition duration-300"
+            }`}
+          >
+            {i}
+          </a>
+        </li>
+      );
+    }
+    return pageNumbers;
+  };
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = cardsData.slice(indexOfFirstItem, indexOfLastItem);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 py-8 px-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5">
-        {cardsData.map((data, index) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+        {currentItems.map((data, index) => (
           <div
             key={index}
             className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-start transition-transform transform hover:scale-105 hover:shadow-2xl border border-gray-200"
           >
-            <div className="w-full flex flex-col items-center sm:flex-row mb-4">
+            <div className="w-full flex flex-col items-center mb-4">
               <div className="w-20 h-20 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 flex items-center justify-center border-4 border-blue-500 overflow-hidden">
                 <Image
                   src={data.foto}
                   width={60}
                   height={60}
                   alt="Anggota Foto"
-                  className="rounded-full mx-auto"
+                  className="rounded-full"
                 />
               </div>
-              <div className="mt-4 sm:mt-0 sm:ml-4 flex-grow text-center sm:text-left">
+              <div className="mt-4 text-center">
                 <h2 className="text-xl font-semibold text-gray-800 truncate">
                   {data.name}
                 </h2>
@@ -97,18 +247,28 @@ const TemanUnitKerja = () => {
                     icon={faCalendarAlt}
                     className="text-gray-600 mr-2"
                   />
-                  <span className="font-medium text-gray-700">Cabang:</span>
-                  <span className="ml-2">{data.cabang}</span>
+                  <span className="font-medium text-gray-700">
+                    Tanggal Lahir:
+                  </span>
+                  <span className="ml-2">{data.tanggalLahir}</span>
                 </div>
                 <div className="flex items-center text-gray-800 text-sm">
                   <FontAwesomeIcon
-                    icon={faDatabase}
+                    icon={faUserTie}
+                    className="text-gray-600 mr-2"
+                  />
+                  <span className="font-medium text-gray-700">Jabatan:</span>
+                  <span className="ml-2">{data.jabatan}</span>
+                </div>
+                <div className="flex items-center text-gray-800 text-sm">
+                  <FontAwesomeIcon
+                    icon={faHome}
                     className="text-gray-600 mr-2"
                   />
                   <span className="font-medium text-gray-700">
-                    Sanduka Data:
+                    Alamat Rumah:
                   </span>
-                  <span className="ml-2">{data.sandukaData}</span>
+                  <span className="ml-2">{data.alamatRumah}</span>
                 </div>
                 <div className="flex items-center text-gray-800 text-sm">
                   <FontAwesomeIcon
@@ -128,11 +288,46 @@ const TemanUnitKerja = () => {
                   <span className="font-medium text-gray-700">Daspen:</span>
                   <span className="ml-2">{data.daspenData}</span>
                 </div>
+                <div className="flex items-center text-gray-800 text-sm">
+                  <FontAwesomeIcon
+                    icon={faDatabase}
+                    className="text-gray-600 mr-2"
+                  />
+                  <span className="font-medium text-gray-700">
+                    Sanduka Data:
+                  </span>
+                  <span className="ml-2">{data.sandukaData}</span>
+                </div>
               </div>
             </div>
           </div>
         ))}
       </div>
+      <ul className="flex mt-4 space-x-2">
+        {currentPage > 1 && (
+          <li>
+            <a
+              href="#"
+              onClick={(event) => handleClick(event, currentPage - 1)}
+              className="px-3 py-1 bg-white text-blue-600 rounded-full shadow-md hover:bg-blue-600 hover:text-white transition duration-300"
+            >
+              <FontAwesomeIcon icon={faArrowLeft} />
+            </a>
+          </li>
+        )}
+        {renderPageNumbers()}
+        {currentPage < Math.ceil(cardsData.length / itemsPerPage) && (
+          <li>
+            <a
+              href="#"
+              onClick={(event) => handleClick(event, currentPage + 1)}
+              className="px-3 py-1 bg-white text-blue-600 rounded-full shadow-md hover:bg-blue-600 hover:text-white transition duration-300"
+            >
+              <FontAwesomeIcon icon={faArrowRight} />
+            </a>
+          </li>
+        )}
+      </ul>
     </div>
   );
 };
