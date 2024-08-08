@@ -1,11 +1,14 @@
+"use client";
+import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faIdCard,
   faCalendarAlt,
-  faMapMarkerAlt,
   faUserTie,
   faHome,
   faDatabase,
+  faArrowLeft,
+  faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
 
@@ -67,12 +70,144 @@ const TemanUnitKerja = () => {
       daspenData: "Yes",
       status: "Aktif",
     },
+    {
+      foto: "/sanduka.png",
+      name: "GHANIA DINARA HAQIQI",
+      npaNip: "0003067113159",
+      cabang: "BANGSRI",
+      unit: "SMAN 4 Jepara",
+      tanggalLahir: "04-04-2003",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Dahlia No. 4",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
+    },
+    {
+      foto: "/sanduka.png",
+      name: "GHANIA DINARA HAQIQI",
+      npaNip: "0003067113159",
+      cabang: "BANGSRI",
+      unit: "SMAN 4 Jepara",
+      tanggalLahir: "04-04-2003",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Dahlia No. 4",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
+    },
+    {
+      foto: "/sanduka.png",
+      name: "GHANIA DINARA HAQIQI",
+      npaNip: "0003067113159",
+      cabang: "BANGSRI",
+      unit: "SMAN 4 Jepara",
+      tanggalLahir: "04-04-2003",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Dahlia No. 4",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
+    },
+    {
+      foto: "/sanduka.png",
+      name: "GHANIA DINARA HAQIQI",
+      npaNip: "0003067113159",
+      cabang: "BANGSRI",
+      unit: "SMAN 4 Jepara",
+      tanggalLahir: "04-04-2003",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Dahlia No. 4",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
+    },
+    {
+      foto: "/sanduka.png",
+      name: "GHANIA DINARA HAQIQI",
+      npaNip: "0003067113159",
+      cabang: "BANGSRI",
+      unit: "SMAN 4 Jepara",
+      tanggalLahir: "04-04-2003",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Dahlia No. 4",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
+    },
+    {
+      foto: "/sanduka.png",
+      name: "GHANIA DINARA HAQIQI",
+      npaNip: "0003067113159",
+      cabang: "BANGSRI",
+      unit: "SMAN 4 Jepara",
+      tanggalLahir: "04-04-2003",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Dahlia No. 4",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
+    },
+    {
+      foto: "/sanduka.png",
+      name: "GHANIA DINARA HAQIQI",
+      npaNip: "0003067113159",
+      cabang: "BANGSRI",
+      unit: "SMAN 4 Jepara",
+      tanggalLahir: "04-04-2003",
+      jabatan: "Guru",
+      alamatRumah: "Jl. Dahlia No. 4",
+      sandukaData: "Yes",
+      ktaDigitalData: "Yes",
+      daspenData: "Yes",
+      status: "Aktif",
+    },
   ];
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  const handleClick = (event, pageNumber) => {
+    event.preventDefault();
+    setCurrentPage(pageNumber);
+  };
+
+  const renderPageNumbers = () => {
+    const pageNumbers = [];
+    for (let i = 1; i <= Math.ceil(cardsData.length / itemsPerPage); i++) {
+      pageNumbers.push(
+        <li key={i}>
+          <a
+            href="#"
+            onClick={(event) => handleClick(event, i)}
+            className={`px-3 py-1 rounded-full shadow-md ${
+              currentPage === i
+                ? "bg-blue-600 text-white"
+                : "bg-white text-blue-600 hover:bg-blue-600 hover:text-white transition duration-300"
+            }`}
+          >
+            {i}
+          </a>
+        </li>
+      );
+    }
+    return pageNumbers;
+  };
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = cardsData.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 py-8 px-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        {cardsData.map((data, index) => (
+        {currentItems.map((data, index) => (
           <div
             key={index}
             className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-start transition-transform transform hover:scale-105 hover:shadow-2xl border border-gray-200"
@@ -168,6 +303,31 @@ const TemanUnitKerja = () => {
           </div>
         ))}
       </div>
+      <ul className="flex mt-4 space-x-2">
+        {currentPage > 1 && (
+          <li>
+            <a
+              href="#"
+              onClick={(event) => handleClick(event, currentPage - 1)}
+              className="px-3 py-1 bg-white text-blue-600 rounded-full shadow-md hover:bg-blue-600 hover:text-white transition duration-300"
+            >
+              <FontAwesomeIcon icon={faArrowLeft} />
+            </a>
+          </li>
+        )}
+        {renderPageNumbers()}
+        {currentPage < Math.ceil(cardsData.length / itemsPerPage) && (
+          <li>
+            <a
+              href="#"
+              onClick={(event) => handleClick(event, currentPage + 1)}
+              className="px-3 py-1 bg-white text-blue-600 rounded-full shadow-md hover:bg-blue-600 hover:text-white transition duration-300"
+            >
+              <FontAwesomeIcon icon={faArrowRight} />
+            </a>
+          </li>
+        )}
+      </ul>
     </div>
   );
 };
