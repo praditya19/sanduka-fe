@@ -15,7 +15,6 @@ import {
   faMoneyBill,
   faCheckCircle,
   faCog,
-  faBuilding, // Icon for "Unit Kerja"
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
