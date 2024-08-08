@@ -50,7 +50,7 @@ function SignIn() {
           </Button>
           <p className="mt-4 text-sm text-center text-gray-600">
             Belum punya akun?
-            <Link href={"/create-account"} className="text-blue-500 ml-1">
+            <Link href={"/create-account/syarat-ketentuan"} className="text-blue-500 ml-1">
               {" "}
               Klik di sini untuk membuat akun baru
             </Link>
