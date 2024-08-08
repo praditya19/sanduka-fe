@@ -13,7 +13,7 @@ function DataAnggota() {
         const filteredDataForPrint = selectedCabang === "-- Cabang --"
             ? membersData
             : membersData.filter(item => item.cabang === selectedCabang);
-
+    
         const printWindow = window.open("", "_blank", "width=800,height=600");
         printWindow.document.write(`
           <html>
@@ -55,6 +55,10 @@ function DataAnggota() {
                   font-weight: bold;
                   background-color: #e0f2f1;
                 }
+                .vertical-text {
+                  display: flex;
+                  flex-direction: column;
+                }
               </style>
             </head>
             <body>
@@ -63,11 +67,10 @@ function DataAnggota() {
                 <thead>
                   <tr class="header-row">
                     <th>No</th>
-                    <th>Cabang</th>
                     <th>Unit Kerja</th>
+                    <th>Jumlah</th>
                     <th>Nama</th>
-                    <th>PGRI</th>
-                    <th>Daspen</th>
+                    <th>Keterangan</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -80,8 +83,11 @@ function DataAnggota() {
                     ${group.items.map((item, subIndex) => `
                       <tr>
                         <td>${subIndex + 1}. <span class="font-bold">${item.nama}</span> / ${item.npa}</td>
-                        <td>${item.anggota}</td>
-                        <td>${item.pgri}</td>
+                        <td class="vertical-text">
+                            <div>KTA Digital : ${item.anggota}</div>
+                            <div>Daspen : ${item.pgri}</div>
+                            <div>Sanduka : </div>
+                        </td>
                       </tr>
                     `).join('')}
                   `).join('')}
@@ -94,7 +100,7 @@ function DataAnggota() {
         printWindow.focus();
         printWindow.print();
         printWindow.close();
-    };
+    };    
 
     const filteredData = selectedCabang === "-- Cabang --"
         ? membersData
@@ -162,7 +168,7 @@ function DataAnggota() {
                     </p>
                     <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
                         <div className="space-x-2 w-full flex md:block">
-                            <label htmlFor="maxItems" className="mr-2">Tampilkan:</label>
+                            <label htmlFor="maxItems" className="mr-2">Tampilkan :</label>
                             <select
                                 id="maxItems"
                                 value={maxItems}
@@ -184,13 +190,12 @@ function DataAnggota() {
                     <thead>
                         <tr>
                             <th className="p-2 md:p-3 border text-white bg-green-700">No</th>
-                            <th className="p-2 md:p-3 border text-white bg-green-700">
-                                {selectedCabang === "-- Cabang --" ? "Cabang" : `Unit Kerja ${selectedCabang}`}
+                            <th className="p-2 md:p-3 border text-white bg-green-700">Unit Kerja
+                                {/* {selectedCabang === "-- Cabang --" ? "Cabang" : `Unit Kerja ${selectedCabang}`} */}
                             </th>
                             <th className="p-2 md:p-3 border text-white bg-green-700">Jumlah</th>
                             <th className="p-2 md:p-3 border text-white bg-green-700">Nama</th>
-                            <th className="p-2 md:p-3 border text-white bg-green-700">PGRI</th>
-                            <th className="p-2 md:p-3 border text-white bg-green-700">Daspen</th>
+                            <th className="p-2 md:p-3 border text-white bg-green-700">Keterangan</th>
                             <th className="p-2 md:p-3 border text-white bg-green-700">Action</th>
                         </tr>
                     </thead>
@@ -200,24 +205,23 @@ function DataAnggota() {
                                 <td className="border text-center">{index + 1}</td>
                                 <td className="border text-center">{group.kerja}</td>
                                 <td className="border text-center">{group.jumlah}</td>
-                                <td className="border text-center">
+                                <td className="border">
                                     {group.items.map((item, index) => (
-                                        <div key={index} className="mb-1">
+                                        <div
+                                            key={index}
+                                            className={`mb-1 justify-center py-6 pl-2 ${index < group.items.length - 1 ? 'border-b' : ''}`}
+                                        >
                                             {index + 1}. <span className="font-bold">{item.nama}</span> / {item.npa}
                                         </div>
                                     ))}
                                 </td>
-                                <td className="border text-center">
+                                <td className="border">
                                     {group.items.map((item, index) => (
-                                        <div key={index} className="mb-1">
-                                            {item.anggota}
-                                        </div>
-                                    ))}
-                                </td>
-                                <td className="border text-center">
-                                    {group.items.map((item, index) => (
-                                        <div key={index} className="mb-1">
-                                            {item.pgri}
+                                        <div key={index} className={`mb-1 pl-2 ${index < group.items.length - 1 ? 'border-b' : ''}`}
+                                        >
+                                            <div>KTA Digital : {item.anggota}</div>
+                                            <div>Daspen : {item.pgri}</div>
+                                            <div>Sanduka : </div>
                                         </div>
                                     ))}
                                 </td>
