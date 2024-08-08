@@ -17,6 +17,45 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
 const Page = () => {
+
+  // maps
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
+  const [error, setError] = useState('');
+
+  // const handleLatitudeChange = (e) => {
+  //   setLatitude(e.target.value);
+  // };
+
+  const handleLongitudeChange = (e) => {
+    setLongitude(e.target.value);
+  };
+
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   // Handle form submission, e.g., send data to server
+  //   console.log('Latitude:', latitude);
+  //   console.log('Longitude:', longitude);
+  // };
+
+  const handleGetLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // setLatitude(position.coords.latitude);
+          setLongitude(position.coords.longitude);
+          setError('');
+        },
+        (error) => {
+          setError('Unable to retrieve your location');
+        }
+      );
+    } else {
+      setError('Geolocation is not supported by this browser');
+    }
+  };
+
+  // END 
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
 
@@ -94,6 +133,34 @@ const Page = () => {
               onSubmit={handleSubmit(nextStep)}
               className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-4 sm:p-8 rounded-lg shadow-lg"
             >
+              <div className="w-full md:col-span-2 flex flex-col items-center space-y-4 mt-4">
+                <Image 
+                  width={150}
+                  height={150}
+                  className="border border-gray-300"
+                  src={preview || "https://via.placeholder.com/100"}
+                  alt="Photo Preview"
+                />
+                <Input
+                  type="file"
+                  id="photo-upload"
+                  accept=".jpg,.jpeg,.png"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="photo-upload"
+                  className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md bg-white"
+                >
+                  Choose Files
+                </label>
+                <p className="text-teal-600">*Wajib Menggunakan Batik PGRI</p>
+                <p>{selectedFile ? selectedFile.name : "No file chosen"}</p>
+                <p className="text-red-600 text-center">
+                  *Maksimal ukuran file unggah 250kb format file (jpg, jpeg,
+                  png)
+                </p>
+              </div>
               <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
                   Email
@@ -133,22 +200,10 @@ const Page = () => {
                 )}
               </div>
               <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">NIP</Label>
-                <Input
-                  type="number"
-                  id="nip"
-                  placeholder="Nomor Induk Pendidik ( NIP )"
-                  {...register("nip", { required: true })}
-                />
-                {errors.nip && (
-                  <span className="text-red-500 text-sm">NIP is required</span>
-                )}
-              </div>
-              <div className="w-full">
                 <Label className="flex flex-col sm:flex-row items-start sm:items-center">
                   NPA PGRI
                   <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
-                    *Tidak Wajib (Hanya Yang Sudah Memilik KTA)
+                    *Wajib Isi
                   </span>
                 </Label>
                 <Input
@@ -162,6 +217,24 @@ const Page = () => {
                   <span className="text-red-500 text-sm">NPA is required</span>
                 )}
               </div>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  NIP
+                <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
+                    *Wajib Isi
+                  </span>
+                </Label>
+                <Input
+                  type="number"
+                  id="nip"
+                  placeholder="Nomor Induk Pendidik ( NIP )"
+                  {...register("nip", { required: true })}
+                />
+                {errors.nip && (
+                  <span className="text-red-500 text-sm">NIP is required</span>
+                )}
+              </div>
+              
               <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
                   NIK
@@ -327,7 +400,7 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Textarea
-                      placeholder="Tuliskan Alamat Sesuai KTP"
+                      placeholder="JL. RT.  RW.  Desa, Kecamatan, Kabupaten"
                       value={field.value}
                       onChange={field.onChange}
                     />
@@ -374,6 +447,22 @@ const Page = () => {
                 {errors.noHP && (
                   <span className="text-red-500 text-sm">
                     Nomor Handphone is required
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                Ahli Waris
+                </Label>
+                <Input
+                  type="text"
+                  id="ahliWaris"
+                  placeholder="ahliWaris"
+                  {...register("ahliWaris")}
+                />
+                {errors.ahliWaris && (
+                  <span className="text-red-500 text-sm">
+                    Ahli Waris is required
                   </span>
                 )}
               </div>
@@ -426,34 +515,34 @@ const Page = () => {
                 </Button>
               </div>
 
-              <div className="flex flex-col items-center space-y-4 mt-4">
-                <Image
-                  width={150}
-                  height={150}
-                  className="border border-gray-300"
-                  src={preview || "https://via.placeholder.com/100"}
-                  alt="Photo Preview"
-                />
-                <Input
-                  type="file"
-                  id="photo-upload"
-                  accept=".jpg,.jpeg,.png"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="photo-upload"
-                  className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md bg-white"
-                >
-                  Choose Files
-                </label>
-                <p className="text-teal-600">*Wajib Menggunakan Batik PGRI</p>
-                <p>{selectedFile ? selectedFile.name : "No file chosen"}</p>
-                <p className="text-red-600 text-center">
-                  *Maksimal ukuran file unggah 250kb format file (jpg, jpeg,
-                  png)
-                </p>
-              </div>
+              <div className="w-full p-4 rounded-lg">
+  <div className="mb-3 flex flex-col sm:flex-row sm:items-center">
+    <div className="flex-1">
+      <label htmlFor="longitude" className="block text-sm font-bold mb-2">
+        Longitude
+      </label>
+      <input
+        type="text"
+        id="longitude"
+        value={longitude}
+        onChange={handleLongitudeChange}
+        placeholder="Contoh: 106.816666"
+        className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        required
+      />
+    </div>
+    <button
+      type="button"
+      onClick={handleGetLocation}
+      className="bg-green-500 hover:bg-green-700 ml-2 sm:ml-2 text-white p-2 rounded mt-2 sm:mt-7"
+    >
+      Dapatkan Lokasi Saya
+    </button>
+  </div>
+</div>
+{error && <p className="text-red-500 mb-4">{error}</p>}
+
+              
               <div className="col-span-1 md:col-span-2 flex justify-between mt-4">
                 <Button
                   type="button"
@@ -485,27 +574,7 @@ const Page = () => {
             >
               <div className="w-full">
                 <Label className="flex flex-col sm:flex-row items-start sm:items-center">
-                  Pangkat/Golongan
-                  <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
-                    *Bila Tidak Ada, Isi Tanda (-)
-                  </span>
-                </Label>
-                <Input
-                  className="mt-2 sm:mt-2"
-                  type="text"
-                  id="golongan"
-                  placeholder="Tuliskan Pangkat/Golongan"
-                  {...register("golongan", { required: true })}
-                />
-                {errors.golongan && (
-                  <span className="text-red-500 text-sm">
-                    Pangkat/Golongan is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="flex flex-col sm:flex-row items-start sm:items-center">
-                  Kecamatan/Cabang
+                  Cabang
                   <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0 mb-2 sm:mb-2">
                     *Isi Sesuai Tempat Tugas
                   </span>
@@ -538,38 +607,6 @@ const Page = () => {
               </div>
               <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
-                  Pekerjaan
-                </Label>
-                <Controller
-                  name="pekerjaan"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Pekerjaan" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="guru">Guru</SelectItem>
-                          <SelectItem value="tenagaAdmin">
-                            Tenaga Administrasi
-                          </SelectItem>
-                          <SelectItem value="dosen">Dosen</SelectItem>
-                          <SelectItem value="pengawas">Pengawas</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.pekerjaan && (
-                  <span className="text-red-500 text-sm">
-                    Pekerjaan is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
                   Unit Kerja
                 </Label>
                 <Controller
@@ -592,6 +629,64 @@ const Page = () => {
                 {errors.unitKerja && (
                   <span className="text-red-500 text-sm">
                     Unit Kerja is required
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Jabatan
+                </Label>
+                <Controller
+                  name="jabatan"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Jabatan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="kepalaSekolah">
+                            Kepala Sekolah
+                          </SelectItem>
+                          <SelectItem value="guru">Guru</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.jabatan && (
+                  <span className="text-red-500 text-sm">
+                    Jabatan is required
+                  </span>
+                )}
+              </div>
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Tingkat Sekolah
+                </Label>
+                <Controller
+                  name="tingkatSekolah"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Jenjang Sekolah" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="sd">SD/MI</SelectItem>
+                          <SelectItem value="tk">TK/RA</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.tingkatSekolah && (
+                  <span className="text-red-500 text-sm">
+                    Tingkat Sekolah is required
                   </span>
                 )}
               </div>
@@ -624,18 +719,6 @@ const Page = () => {
                 )}
               </div>
               <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">TMT</Label>
-                <Input
-                  type="date"
-                  id="tmt"
-                  placeholder="dd/mm/yyyy"
-                  {...register("tmt", { required: true })}
-                />
-                {errors.tmt && (
-                  <span className="text-red-500 text-sm">TMT is required</span>
-                )}
-              </div>
-              <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
                   Status Pegawai
                 </Label>
@@ -664,8 +747,42 @@ const Page = () => {
                 )}
               </div>
               <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">Tahun Diangkat PNS/P3K/GTT/GTY</Label>
+                <Input
+                  type="date"
+                  id="tmt"
+                  placeholder="dd/mm/yyyy"
+                  {...register("tmt", { required: true })}
+                />
+                {errors.tmt && (
+                  <span className="text-red-500 text-sm">TMT is required</span>
+                )}
+              </div>
+              
+              <div className="w-full">
+                <Label className="flex flex-col sm:flex-row items-start sm:items-center">
+                  Pangkat Golongan
+                  <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
+                    *Bila Tidak Ada, Isi Tanda (-)
+                  </span>
+                </Label>
+                <Input
+                  className="mt-2 sm:mt-2"
+                  type="text"
+                  id="golongan"
+                  placeholder="Tuliskan Pangkat/Golongan"
+                  {...register("golongan", { required: true })}
+                />
+                {errors.golongan && (
+                  <span className="text-red-500 text-sm">
+                    Pangkat/Golongan is required
+                  </span>
+                )}
+              </div>
+              
+              <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
-                  Pendidikan/Ijazah Terakhir
+                Pendidikan Terakhir
                 </Label>
                 <Controller
                   name="ijazah"
@@ -692,9 +809,81 @@ const Page = () => {
                   </span>
                 )}
               </div>
+
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Sertifikat Pendidik
+                </Label>
+                <Controller
+                  name="sertifikat"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Sertifikat" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="sudah">Sudah</SelectItem>
+                          <SelectItem value="belum">Belum</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.sertifikat && (
+                  <span className="text-red-500 text-sm">
+                    Sertifikat Pendidik is required
+                  </span>
+                )}
+              </div>
+
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Mengajar
+                </Label>
+                <Controller
+                  name="mengajar"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Jenjang Mengajar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="paud">PAUD</SelectItem>
+                          <SelectItem value="tk">TK</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.mengajar && (
+                  <span className="text-red-500 text-sm">
+                    Mengajar is required
+                  </span>
+                )}
+              </div>
+
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">Mulai jadi anggota PGRI</Label>
+                <Input
+                  type="date"
+                  id="mulaiJadiAnggota"
+                  placeholder="dd/mm/yyyy"
+                  {...register("mulaiJadiAnggota", { required: true })}
+                />
+                {errors.mulaiJadianggota && (
+                  <span className="text-red-500 text-sm">Mulai jadi anggota PGRI is required</span>
+                )}
+              </div>
+
               <div className="w-full">
                 <Label className="flex flex-col sm:flex-row items-start sm:items-center">
-                  Pangkat/Golongan
+                  Golongan Jabatan
                   <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
                     *Bila Tidak Ada, Isi Tanda (-)
                   </span>
@@ -712,6 +901,57 @@ const Page = () => {
                   </span>
                 )}
               </div>
+
+              
+              {/* <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">
+                  Pekerjaan
+                </Label>
+                <Controller
+                  name="pekerjaan"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Pekerjaan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="guru">Guru</SelectItem>
+                          <SelectItem value="tenagaAdmin">
+                            Tenaga Administrasi
+                          </SelectItem>
+                          <SelectItem value="dosen">Dosen</SelectItem>
+                          <SelectItem value="pengawas">Pengawas</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.pekerjaan && (
+                  <span className="text-red-500 text-sm">
+                    Pekerjaan is required
+                  </span>
+                )}
+              </div>
+              
+              
+              <div className="w-full">
+                <Label className="block text-sm font-medium mb-3">TMT</Label>
+                <Input
+                  type="date"
+                  id="tmt"
+                  placeholder="dd/mm/yyyy"
+                  {...register("tmt", { required: true })}
+                />
+                {errors.tmt && (
+                  <span className="text-red-500 text-sm">TMT is required</span>
+                )}
+              </div>
+              
+              
+              
 
               <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
@@ -759,36 +999,7 @@ const Page = () => {
                   </span>
                 )}
               </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Jabatan
-                </Label>
-                <Controller
-                  name="jabatan"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Jabatan" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="kepalaSekolah">
-                            Kepala Sekolah
-                          </SelectItem>
-                          <SelectItem value="guru">Guru</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.jabatan && (
-                  <span className="text-red-500 text-sm">
-                    Jabatan is required
-                  </span>
-                )}
-              </div>
+              
               <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">Tugas</Label>
                 <Controller
@@ -817,90 +1028,9 @@ const Page = () => {
                   </span>
                 )}
               </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Sertifikat Pendidik
-                </Label>
-                <Controller
-                  name="sertifikat"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Sertifikat" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="sudah">Sudah</SelectItem>
-                          <SelectItem value="belum">Belum</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.sertifikat && (
-                  <span className="text-red-500 text-sm">
-                    Sertifikat Pendidik is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Mengajar
-                </Label>
-                <Controller
-                  name="mengajar"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Jenjang Mengajar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="paud">PAUD</SelectItem>
-                          <SelectItem value="tk">TK</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.mengajar && (
-                  <span className="text-red-500 text-sm">
-                    Mengajar is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Tingkat Sekolah
-                </Label>
-                <Controller
-                  name="tingkatSekolah"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Jenjang Sekolah" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="sd">SD/MI</SelectItem>
-                          <SelectItem value="tk">TK/RA</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.tingkatSekolah && (
-                  <span className="text-red-500 text-sm">
-                    Tingkat Sekolah is required
-                  </span>
-                )}
-              </div>
+              
+              
+              
               <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
                   Nama Instansi
@@ -919,7 +1049,7 @@ const Page = () => {
                     Nama Instansi is required
                   </span>
                 )}
-              </div>
+              </div> */}
               <div className="col-span-1 sm:col-span-2 flex justify-between mt-4">
                 <Button
                   type="button"
