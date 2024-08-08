@@ -303,7 +303,7 @@ const TemanUnitKerja = () => {
           </div>
         ))}
       </div>
-      <ul className="flex mt-4 space-x-2">
+      <ul className="flex mt-10 space-x-2">
         {currentPage > 1 && (
           <li>
             <a
