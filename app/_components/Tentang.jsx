@@ -18,7 +18,7 @@ function Tentang() {
               />
               <h4 className="text-xl font-bold">APA ITU SANDUKA</h4>
             </div>
-            <p className="text-gray-700 text-sm">
+            <p className="text-gray-700 text-sm text-justify">
               Sanduka adalah santunan duka cita bagi anggota PGRI Aktif yang
               terdaftar di dalam database keanggotaan PGRI Kabupaten Jepara
               sebagai wujud solidaritas.
@@ -35,7 +35,7 @@ function Tentang() {
               />
               <h4 className="text-xl font-bold">BERAPA SUMBANGAN ANGGOTA?</h4>
             </div>
-            <p className="text-gray-700 text-sm">
+            <p className="text-gray-700 text-sm text-justify">
               Berdasarkan surat keputusan Pengurus PGRI Kabupaten Jepara nomor
               :034/SK/PGRI JPR/XXII/2020 tentang Teknis Pelaksanaan Dana Setia
               Kawan Duka PGRI Kabupaten Jepara, sumbangan Sanduka ditetapkan
@@ -56,7 +56,7 @@ function Tentang() {
                 BERAPA SANTUNAN YANG DITERIMA?
               </h4>
             </div>
-            <p className="text-gray-700 text-sm">
+            <p className="text-gray-700 text-sm text-justify">
               Sesuai keputusan bersama Pengurus PGRI Kabupaten Jepara dan
               Pengurus Cabang se-Kabupaten Jepara, maka disepakati sebesar
               Rp.2.500.000,- dengan kuota 5 orang tiap bulan dan apabila anggota
@@ -77,7 +77,7 @@ function Tentang() {
                 BAGAIMANA CARA PENGAJUANNYA?
               </h4>
             </div>
-            <p className="text-gray-700 text-sm">
+            <p className="text-gray-700 text-sm text-justify">
               Pengurus Cabang melaporkan kematian anggotanya secara online
               melalui aplikasi sanduka.
             </p>

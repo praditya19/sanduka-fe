@@ -1,9 +1,4 @@
-import { Manrope } from "next/font/google";
 import "./globals.css";
-import Header from "./_components/Header";
-import Footer from "./_components/Footer";
-
-const roboto_serif = Manrope({ subsets: ["latin"] });
 
 export const metadata = {
   title: "Create Next App",
@@ -13,10 +8,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={roboto_serif.className}>
-        <Header />
+      <body
+        style={{
+          fontFamily: "Lucida Sans",
+        }}
+      >
         {children}
-        <Footer />
       </body>
     </html>
   );

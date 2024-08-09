@@ -2,13 +2,9 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faIdCard,
   faCalendarAlt,
   faUserTie,
   faHome,
-  faDatabase,
-  faArrowLeft,
-  faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
 
@@ -18,160 +14,78 @@ const TemanUnitKerja = () => {
       foto: "/sanduka.png",
       name: "HABIB NOR HAQIQI",
       npaNip: "0001146804614",
-      cabang: "BANGSRI",
-      unit: "SMAN 1 Jepara",
       tanggalLahir: "01-01-2000",
       jabatan: "Guru",
       alamatRumah: "Jl. Mawar No. 1",
-      sandukaData: "Yes",
-      ktaDigitalData: "Yes",
-      daspenData: "Yes",
-      status: "Aktif",
     },
     {
       foto: "/sanduka.png",
       name: "MUHAMMAD ALFARIZA HAQIQI",
       npaNip: "0001190472939",
-      cabang: "BANGSRI",
-      unit: "SMAN 2 Jepara",
       tanggalLahir: "02-02-2001",
       jabatan: "Guru",
       alamatRumah: "Jl. Melati No. 2",
-      sandukaData: "Yes",
-      ktaDigitalData: "Yes",
-      daspenData: "Yes",
-      status: "Aktif",
     },
     {
       foto: "/sanduka.png",
       name: "SHAKILA NAHDA HAQIQI",
       npaNip: "0001908279055",
-      cabang: "BANGSRI",
-      unit: "SMAN 3 Jepara",
       tanggalLahir: "03-03-2002",
       jabatan: "Guru",
-      alamatRumah: "Jl. Kenanga No. 3",
-      sandukaData: "Yes",
-      ktaDigitalData: "Yes",
-      daspenData: "Yes",
-      status: "Aktif",
+      alamatRumah: "Jl. Melati No. 2",
     },
     {
       foto: "/sanduka.png",
-      name: "GHANIA DINARA HAQIQI",
-      npaNip: "0003067113159",
-      cabang: "BANGSRI",
-      unit: "SMAN 4 Jepara",
-      tanggalLahir: "04-04-2003",
+      name: "HABIB NOR HAQIQI",
+      npaNip: "0001146804614",
+      tanggalLahir: "01-01-2000",
       jabatan: "Guru",
-      alamatRumah: "Jl. Dahlia No. 4",
-      sandukaData: "Yes",
-      ktaDigitalData: "Yes",
-      daspenData: "Yes",
-      status: "Aktif",
+      alamatRumah: "Jl. Mawar No. 1",
     },
     {
       foto: "/sanduka.png",
-      name: "GHANIA DINARA HAQIQI",
-      npaNip: "0003067113159",
-      cabang: "BANGSRI",
-      unit: "SMAN 4 Jepara",
-      tanggalLahir: "04-04-2003",
+      name: "MUHAMMAD ALFARIZA HAQIQI",
+      npaNip: "0001190472939",
+      tanggalLahir: "02-02-2001",
       jabatan: "Guru",
-      alamatRumah: "Jl. Dahlia No. 4",
-      sandukaData: "Yes",
-      ktaDigitalData: "Yes",
-      daspenData: "Yes",
-      status: "Aktif",
+      alamatRumah: "Jl. Melati No. 2",
     },
     {
       foto: "/sanduka.png",
-      name: "GHANIA DINARA HAQIQI",
-      npaNip: "0003067113159",
-      cabang: "BANGSRI",
-      unit: "SMAN 4 Jepara",
-      tanggalLahir: "04-04-2003",
+      name: "SHAKILA NAHDA HAQIQI",
+      npaNip: "0001908279055",
+      tanggalLahir: "03-03-2002",
       jabatan: "Guru",
-      alamatRumah: "Jl. Dahlia No. 4",
-      sandukaData: "Yes",
-      ktaDigitalData: "Yes",
-      daspenData: "Yes",
-      status: "Aktif",
+      alamatRumah: "Jl. Melati No. 2",
     },
     {
       foto: "/sanduka.png",
-      name: "GHANIA DINARA HAQIQI",
-      npaNip: "0003067113159",
-      cabang: "BANGSRI",
-      unit: "SMAN 4 Jepara",
-      tanggalLahir: "04-04-2003",
+      name: "HABIB NOR HAQIQI",
+      npaNip: "0001146804614",
+      tanggalLahir: "01-01-2000",
       jabatan: "Guru",
-      alamatRumah: "Jl. Dahlia No. 4",
-      sandukaData: "Yes",
-      ktaDigitalData: "Yes",
-      daspenData: "Yes",
-      status: "Aktif",
+      alamatRumah: "Jl. Mawar No. 1",
     },
     {
       foto: "/sanduka.png",
-      name: "GHANIA DINARA HAQIQI",
-      npaNip: "0003067113159",
-      cabang: "BANGSRI",
-      unit: "SMAN 4 Jepara",
-      tanggalLahir: "04-04-2003",
+      name: "MUHAMMAD ALFARIZA HAQIQI",
+      npaNip: "0001190472939",
+      tanggalLahir: "02-02-2001",
       jabatan: "Guru",
-      alamatRumah: "Jl. Dahlia No. 4",
-      sandukaData: "Yes",
-      ktaDigitalData: "Yes",
-      daspenData: "Yes",
-      status: "Aktif",
+      alamatRumah: "Jl. Melati No. 2",
     },
     {
       foto: "/sanduka.png",
-      name: "GHANIA DINARA HAQIQI",
-      npaNip: "0003067113159",
-      cabang: "BANGSRI",
-      unit: "SMAN 4 Jepara",
-      tanggalLahir: "04-04-2003",
+      name: "SHAKILA NAHDA HAQIQI",
+      npaNip: "0001908279055",
+      tanggalLahir: "03-03-2002",
       jabatan: "Guru",
-      alamatRumah: "Jl. Dahlia No. 4",
-      sandukaData: "Yes",
-      ktaDigitalData: "Yes",
-      daspenData: "Yes",
-      status: "Aktif",
-    },
-    {
-      foto: "/sanduka.png",
-      name: "GHANIA DINARA HAQIQI",
-      npaNip: "0003067113159",
-      cabang: "BANGSRI",
-      unit: "SMAN 4 Jepara",
-      tanggalLahir: "04-04-2003",
-      jabatan: "Guru",
-      alamatRumah: "Jl. Dahlia No. 4",
-      sandukaData: "Yes",
-      ktaDigitalData: "Yes",
-      daspenData: "Yes",
-      status: "Aktif",
-    },
-    {
-      foto: "/sanduka.png",
-      name: "GHANIA DINARA HAQIQI",
-      npaNip: "0003067113159",
-      cabang: "BANGSRI",
-      unit: "SMAN 4 Jepara",
-      tanggalLahir: "04-04-2003",
-      jabatan: "Guru",
-      alamatRumah: "Jl. Dahlia No. 4",
-      sandukaData: "Yes",
-      ktaDigitalData: "Yes",
-      daspenData: "Yes",
-      status: "Aktif",
+      alamatRumah: "Jl. Melati No. 2",
     },
   ];
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 9;
 
   const handleClick = (event, pageNumber) => {
     event.preventDefault();
@@ -205,44 +119,37 @@ const TemanUnitKerja = () => {
   const currentItems = cardsData.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 py-8 px-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        {currentItems.map((data, index) => (
-          <div
-            key={index}
-            className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-start transition-transform transform hover:scale-105 hover:shadow-2xl border border-gray-200"
-          >
-            <div className="w-full flex flex-col items-center mb-4">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 flex items-center justify-center border-4 border-blue-500 overflow-hidden">
-                <Image
-                  src={data.foto}
-                  width={60}
-                  height={60}
-                  alt="Anggota Foto"
-                  className="rounded-full"
-                />
+    <div>
+      {/* Header */}
+      <header className="bg-teal-700 text-white text-lg font-bold py-4 px-6 md:px-12 shadow-md fixed top-0 left-0 w-full z-50">
+        <div className="container mx-auto">
+          <h1>Verifikasi Anggota</h1>
+        </div>
+      </header>
+      <div className="min-h-screen flex flex-col items-center justify-start bg-gray-300 pt-4 px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-16">
+          {currentItems.map((data, index) => (
+            <div
+              key={index}
+              className="bg-white rounded-lg shadow-lg p-4 flex items-start border border-gray-200"
+            >
+              <div className="flex-shrink-0">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 flex items-center justify-center border-2 border-blue-500 overflow-hidden">
+                  <Image
+                    src={data.foto}
+                    width={80}
+                    height={80}
+                    alt="Anggota Foto"
+                    className="rounded-full"
+                  />
+                </div>
               </div>
-              <div className="mt-4 text-center">
-                <h2 className="text-xl font-semibold text-gray-800 truncate">
+              <div className="ml-4 flex-grow">
+                <h2 className="text-lg font-semibold text-gray-800">
                   {data.name}
                 </h2>
-                <p className="text-gray-600 text-sm truncate">{data.npaNip}</p>
-                <p className="text-gray-600 text-sm truncate">{data.unit}</p>
-                <p
-                  className={`text-sm mt-2 font-medium ${
-                    data.status === "Aktif" ? "text-green-500" : "text-red-500"
-                  }`}
-                >
-                  {data.status}
-                </p>
-              </div>
-            </div>
-            <div className="bg-blue-50 rounded-lg p-4 mt-4 w-full border border-blue-200">
-              <h3 className="text-lg font-medium text-blue-800 mb-2">
-                Detail Anggota
-              </h3>
-              <div className="flex flex-col space-y-2">
-                <div className="flex items-center text-gray-800 text-sm">
+                <p className="text-gray-600 text-sm mb-2">{data.npaNip}</p>
+                <div className="flex items-center text-gray-800 text-sm mb-1">
                   <FontAwesomeIcon
                     icon={faCalendarAlt}
                     className="text-gray-600 mr-2"
@@ -252,7 +159,7 @@ const TemanUnitKerja = () => {
                   </span>
                   <span className="ml-2">{data.tanggalLahir}</span>
                 </div>
-                <div className="flex items-center text-gray-800 text-sm">
+                <div className="flex items-center text-gray-800 text-sm mb-1">
                   <FontAwesomeIcon
                     icon={faUserTie}
                     className="text-gray-600 mr-2"
@@ -270,64 +177,36 @@ const TemanUnitKerja = () => {
                   </span>
                   <span className="ml-2">{data.alamatRumah}</span>
                 </div>
-                <div className="flex items-center text-gray-800 text-sm">
-                  <FontAwesomeIcon
-                    icon={faIdCard}
-                    className="text-gray-600 mr-2"
-                  />
-                  <span className="font-medium text-gray-700">
-                    KTA Digital:
-                  </span>
-                  <span className="ml-2">{data.ktaDigitalData}</span>
-                </div>
-                <div className="flex items-center text-gray-800 text-sm">
-                  <FontAwesomeIcon
-                    icon={faDatabase}
-                    className="text-gray-600 mr-2"
-                  />
-                  <span className="font-medium text-gray-700">Daspen:</span>
-                  <span className="ml-2">{data.daspenData}</span>
-                </div>
-                <div className="flex items-center text-gray-800 text-sm">
-                  <FontAwesomeIcon
-                    icon={faDatabase}
-                    className="text-gray-600 mr-2"
-                  />
-                  <span className="font-medium text-gray-700">
-                    Sanduka Data:
-                  </span>
-                  <span className="ml-2">{data.sandukaData}</span>
-                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+        <ul className="flex mt-4 space-x-2">
+          {currentPage > 1 && (
+            <li>
+              <a
+                href="#"
+                onClick={(event) => handleClick(event, currentPage - 1)}
+                className="px-2 py-1 bg-white text-blue-600 rounded-full shadow-md hover:bg-blue-600 hover:text-white transition duration-300"
+              >
+                &lt;
+              </a>
+            </li>
+          )}
+          {renderPageNumbers()}
+          {currentPage < Math.ceil(cardsData.length / itemsPerPage) && (
+            <li>
+              <a
+                href="#"
+                onClick={(event) => handleClick(event, currentPage + 1)}
+                className="px-2 py-1 bg-white text-blue-600 rounded-full shadow-md hover:bg-blue-600 hover:text-white transition duration-300"
+              >
+                &gt;
+              </a>
+            </li>
+          )}
+        </ul>
       </div>
-      <ul className="flex mt-10 space-x-2">
-        {currentPage > 1 && (
-          <li>
-            <a
-              href="#"
-              onClick={(event) => handleClick(event, currentPage - 1)}
-              className="px-3 py-1 bg-white text-blue-600 rounded-full shadow-md hover:bg-blue-600 hover:text-white transition duration-300"
-            >
-              <FontAwesomeIcon icon={faArrowLeft} />
-            </a>
-          </li>
-        )}
-        {renderPageNumbers()}
-        {currentPage < Math.ceil(cardsData.length / itemsPerPage) && (
-          <li>
-            <a
-              href="#"
-              onClick={(event) => handleClick(event, currentPage + 1)}
-              className="px-3 py-1 bg-white text-blue-600 rounded-full shadow-md hover:bg-blue-600 hover:text-white transition duration-300"
-            >
-              <FontAwesomeIcon icon={faArrowRight} />
-            </a>
-          </li>
-        )}
-      </ul>
     </div>
   );
 };

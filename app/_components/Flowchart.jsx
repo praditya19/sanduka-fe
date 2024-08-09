@@ -35,19 +35,21 @@ const Flowchart = () => {
         {steps.map((step) => (
           <div
             key={step.id}
-            className="w-80 h-auto rounded-3xl shadow-lg p-8 flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-300 border border-gray-200"
+            className="w-80 max-w-xs h-auto rounded-3xl shadow-lg p-6 flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-300 border border-gray-200 bg-white"
           >
             <div className="flex items-center mb-4">
               <Image
                 src={step.image}
                 alt={step.title}
-                width={40}
-                height={40}
-                className="w-16 h-16 mr-4 rounded-full border-2 border-white"
+                width={64}
+                height={64}
+                className="w-16 h-16 mr-4 rounded-full border-2 border-gray-300"
               />
-              <h3 className="text-2xl font-bold text-black">{step.title}</h3>
+              <h3 className="text-xl font-bold text-black">{step.title}</h3>
             </div>
-            <p className="text-lg text-black text-center">{step.description}</p>
+            <p className="text-base text-gray-700 text-justify leading-relaxed">
+              {step.description}
+            </p>
           </div>
         ))}
       </div>
