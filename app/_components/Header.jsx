@@ -3,65 +3,16 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { faBell } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(2);
-  const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] =
-    useState(false);
-  const [hasUserInteracted, setHasUserInteracted] = useState(false);
-  const audioRef = useRef(null);
 
   const handleClick = () => {
     setIsOpen(false);
   };
 
-  const handleNotificationClick = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      setIsNotificationSoundPlaying(false);
-    }
-    setNotificationCount(0);
-  };
-
-  useEffect(() => {
-    setHasUserInteracted(true);
-    console.log("notificationCount:", notificationCount);
-    console.log("isNotificationSoundPlaying:", isNotificationSoundPlaying);
-
-    if (
-      notificationCount > 0 &&
-      !isNotificationSoundPlaying &&
-      hasUserInteracted
-    ) {
-      const playNotificationSound = () => {
-        console.log("Playing notification sound");
-        const audio = new Audio("/sound-notification.wav");
-        audioRef.current = audio;
-
-        audio
-          .play()
-          .then(() => {
-            setIsNotificationSoundPlaying(true);
-          })
-          .catch((error) => {
-            console.error("Error playing sound:", error);
-          });
-
-        audio.onended = () => {
-          setIsNotificationSoundPlaying(false);
-        };
-      };
-
-      playNotificationSound();
-    }
-  }, [notificationCount, isNotificationSoundPlaying, hasUserInteracted]);
-
   return (
-    <nav className="bg-white shadow-md relative z-50">
+    <nav className="bg-white shadow-md fixed top-0 inset-x-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
@@ -95,23 +46,6 @@ const Header = () => {
           <div className="hidden md:block">
             <ul className="flex space-x-4 items-center">
               <li className="relative">
-                <Link
-                  href="/"
-                  className="text-gray-700 relative"
-                  onClick={handleNotificationClick}
-                >
-                  <FontAwesomeIcon
-                    icon={faBell}
-                    className="w-6 h-6 text-gray-700"
-                  />
-                  {notificationCount > 0 && (
-                    <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
-                      {notificationCount}
-                    </span>
-                  )}
-                </Link>
-              </li>
-              <li className="relative">
                 <Link href="/sign-in" className="text-blue-500">
                   <Button>Login</Button>
                 </Link>
@@ -124,23 +58,6 @@ const Header = () => {
       <div className={`${isOpen ? "block" : "hidden"} md:hidden`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <ul className="flex flex-col space-y-1">
-            <li className="relative">
-              <Link
-                href="/notifications"
-                className="text-gray-700 relative"
-                onClick={handleNotificationClick}
-              >
-                <FontAwesomeIcon
-                  icon={faBell}
-                  className="w-6 h-6 text-gray-700"
-                />
-                {notificationCount > 0 && (
-                  <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
-                    {notificationCount}
-                  </span>
-                )}
-              </Link>
-            </li>
             <li className="relative">
               <Link
                 href={"/sign-in"}

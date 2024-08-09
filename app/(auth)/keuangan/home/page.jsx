@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
@@ -23,15 +24,41 @@ const data = [
 ];
 
 export default function Home() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      <header className="bg-green-700 text-white p-4 md:p-6 rounded-lg shadow-md">
-        <div className="container mx-auto">
-          <h1 className="text-2xl md:text-3xl font-extrabold">
+    <div>
+      <header className="bg-teal-700 text-white p-4 md:p-6 fixed top-0 left-0 w-full z-50">
+        <div className="container mx-auto flex flex-col md:flex-row justify-between items-center">
+          <h1 className="text-lg md:text-lg font-extrabold md:mb-0">
             Keuangan Data Utama
           </h1>
-          <nav className="mt-4">
-            <ul className="flex flex-wrap space-x-4 md:space-x-6">
+          <Button
+            className="md:hidden text-white focus:outline-none"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            <svg
+              className="h-6 w-6"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d={menuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16m-7 6h7"}
+              />
+            </svg>
+          </Button>
+          <nav
+            className={`md:flex flex-col md:flex-row md:space-x-6 space-y-2 md:space-y-0 ${
+              menuOpen ? "block" : "hidden"
+            }`}
+          >
+            <ul className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6">
               <li className="cursor-pointer">
                 <Link href="/keuangan/home">Home</Link>
               </li>
@@ -48,91 +75,98 @@ export default function Home() {
           </nav>
         </div>
       </header>
-      <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-6">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-          <Image src="/sanduka.png" width={200} height={200} alt="Sanduka" />
+      <div className="min-h-screen bg-gray-50 p-4 md:p-6 pt-20">
+        <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-10">
           <div className="text-center md:mx-6 my-4 md:my-0">
             <h2 className="text-xl md:text-2xl font-extrabold">SALDO</h2>
             <p className="text-md md:text-lg text-gray-600">Juli 2024</p>
           </div>
-        </div>
-        <div className="mb-8">
-          <h3 className="text-lg md:text-xl font-bold mb-4">
-            Santunan Duka Cita PGRI Kabupaten Jepara
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-100 p-4 rounded-md">
-            <div>
-              <h4 className="font-bold text-green-700">PEMASUKAN</h4>
-              <p className="text-md md:text-lg font-semibold">876.865.500,-</p>
-            </div>
-            <div>
-              <h4 className="font-bold text-green-700">SANDUKA</h4>
-              <p className="text-md md:text-lg font-semibold">
+          <div className="flex flex-col md:flex-row justify-center items-center mb-8">
+            {/* Section 1 */}
+            <div className="w-full md:w-1/2 mb-8 md:mb-0 flex flex-col items-center">
+              <Image
+                src="/sanduka.png"
+                width={150}
+                height={150}
+                alt="Sanduka"
+              />
+              <p className="text-xl font-semibold text-gray-800 mt-4">
                 Rp. 300.329.150,-
               </p>
+              <div className="mt-6 bg-gray-50 p-4 rounded-lg w-full max-w-md">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="text-center">
+                    <h4 className="font-bold text-green-700">PEMASUKAN</h4>
+                    <p className="text-xl font-semibold text-gray-800">
+                      876.865.500,-
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <h4 className="font-bold text-red-700">PENGELUARAN</h4>
+                    <p className="text-xl font-semibold text-gray-800">
+                      576.536.350,-
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              <h4 className="font-bold text-green-700">PENGELUARAN</h4>
-              <p className="text-md md:text-lg font-semibold">576.536.350,-</p>
+
+            {/* Section 2 */}
+            <div className="w-full md:w-1/2 flex flex-col items-center">
+              <Image src="/logo.png" width={80} height={80} alt="Organisasi" />
+              <p className="text-xl font-semibold text-gray-800 mt-4 mb-4">
+                Rp. 0,-
+              </p>
+              <div className="bg-gray-50 p-4 rounded-lg w-full max-w-md">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="text-center">
+                    <h4 className="font-bold text-green-700">PEMASUKAN</h4>
+                    <p className="text-xl font-semibold text-gray-800">0,-</p>
+                  </div>
+                  <div className="text-center">
+                    <h4 className="font-bold text-red-700">PENGELUARAN</h4>
+                    <p className="text-xl font-semibold text-gray-800">0,-</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="mb-8">
-          <Image
-            src="/logo.png"
-            width={80}
-            height={80}
-            alt="Organisasi"
-            className="mb-5"
-          />
-          <h3 className="text-lg md:text-xl font-bold mb-4">ORGANISASI</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-100 p-4 rounded-md">
-            <div>
-              <h4 className="font-bold text-green-700">PEMASUKAN</h4>
-              <p className="text-md md:text-lg font-semibold">0,-</p>
-            </div>
-            <div>
-              <h4 className="font-bold text-green-700">ORGANISASI</h4>
-              <p className="text-md md:text-lg font-semibold">Rp. 0,-</p>
-            </div>
-            <div>
-              <h4 className="font-bold text-green-700">PENGELUARAN</h4>
-              <p className="text-md md:text-lg font-semibold">0,-</p>
-            </div>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="container w-full table-auto mb-8">
-            <thead>
-              <tr className="bg-teal-700 text-white">
-                <th className="p-2 md:p-3 border">No</th>
-                <th className="p-2 md:p-3 border">Cabang</th>
-                <th className="p-2 md:p-3 border">Kurang Setor</th>
-                <th className="p-2 md:p-3 border">Detail</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((item, index) => (
-                <tr
-                  key={index}
-                  className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                >
-                  <td className="p-2 md:p-3 border text-center">{index + 1}</td>
-                  <td className="p-2 md:p-3 border">{item.cabang}</td>
-                  <td className="p-2 md:p-3 border text-center">
-                    {item.kurangSetor.toFixed(2)}
-                  </td>
-                  <td className="p-2 md:p-3 border text-center">
-                    <Link href="#" className="text-blue-500">
-                      <Button>Detail</Button>
-                    </Link>
-                  </td>
+
+          <div className="overflow-x-auto">
+            <table className="container w-full table-auto mb-8">
+              <thead>
+                <tr className="bg-teal-700 text-white">
+                  <th className="p-2 md:p-3 border">No</th>
+                  <th className="p-2 md:p-3 border">Cabang</th>
+                  <th className="p-2 md:p-3 border">Kurang Setor</th>
+                  <th className="p-2 md:p-3 border">Detail</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </main>
+              </thead>
+              <tbody>
+                {data.map((item, index) => (
+                  <tr
+                    key={index}
+                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                  >
+                    <td className="p-2 md:p-3 border text-center">
+                      {index + 1}
+                    </td>
+                    <td className="p-2 md:p-3 border">{item.cabang}</td>
+                    <td className="p-2 md:p-3 border text-center">
+                      {item.kurangSetor.toFixed(2)}
+                    </td>
+                    <td className="p-2 md:p-3 border text-center">
+                      <Link href="#" className="text-blue-500">
+                        <Button>Detail</Button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFilePdf } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFilePdf } from "@fortawesome/free-solid-svg-icons";
 
 const page = () => {
   return (
@@ -91,18 +91,22 @@ const page = () => {
         <Link href="/documents/surat-keputusan-sanduka.pdf" legacyBehavior>
           <a className="flex flex-col items-center text-blue-600">
             <FontAwesomeIcon icon={faFilePdf} size="3x" />
-            <span className="mt-2 text-center text-sm md:text-base">Surat Keputusan Sanduka</span>
+            <span className="mt-2 text-center text-sm md:text-base">
+              Surat Keputusan Sanduka
+            </span>
           </a>
         </Link>
         <Link href="/documents/surat-edaran-sanduka.pdf" legacyBehavior>
           <a className="flex flex-col items-center text-blue-600">
             <FontAwesomeIcon icon={faFilePdf} size="3x" />
-            <span className="mt-2 text-center text-sm md:text-base">Surat Edaran Sanduka</span>
+            <span className="mt-2 text-center text-sm md:text-base">
+              Surat Edaran Sanduka
+            </span>
           </a>
         </Link>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default page;

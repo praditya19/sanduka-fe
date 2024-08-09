@@ -409,13 +409,13 @@ export default function Iuran() {
       >
         Rincian Iuran
       </Button>
+      {isFormVisible && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-5 text-center">
+              Besaran Iuran PGRI
+            </h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-5 text-center">
-            Besaran Iuran PGRI
-          </h2>
-          {isFormVisible && (
             <div>
               <div className="mb-4">
                 <Label
@@ -543,56 +543,55 @@ export default function Iuran() {
                 </Button>
               </div>
             </div>
-          )}
-        </div>
+          </div>
 
-        <div className="bg-white p-4 rounded-lg shadow-md">
-          <h3 className="text-lg font-bold mb-2">Jumlah Anggota: 6938</h3>
-          <h3 className="text-lg font-bold mb-2">
-            Setor Provinsi: Rp. 8.325.600
-          </h3>
-          <div className="mb-4">
-            <p className="bg-teal-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-              Jumlah Anggota Selisih laporan Cabang
-            </p>
-            <div className="flex flex-col sm:flex-row items-center mt-2 space-y-2 sm:space-y-0 sm:space-x-2">
-              <select className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                <option>-- Cabang --</option>
-              </select>
-              <select className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                <option>-- Bulan --</option>
-              </select>
-              <select className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                <option>-- Tahun --</option>
-              </select>
-              <input
-                type="text"
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="text-lg font-bold mb-2">Jumlah Anggota: 6938</h3>
+            <h3 className="text-lg font-bold mb-2">
+              Setor Provinsi: Rp. 8.325.600
+            </h3>
+            <div className="mb-4">
+              <p className="bg-teal-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Jumlah Anggota Selisih laporan Cabang
+              </p>
+              <div className="flex flex-col sm:flex-row items-center mt-2 space-y-2 sm:space-y-0 sm:space-x-2">
+                <select className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                  <option>-- Cabang --</option>
+                </select>
+                <select className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                  <option>-- Bulan --</option>
+                </select>
+                <select className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                  <option>-- Tahun --</option>
+                </select>
+                <input
+                  type="text"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  placeholder="Data Cabang"
+                />
+              </div>
+            </div>
+            <div className="mb-4">
+              <label
+                htmlFor="keterangaSilisih"
+                className="block text-gray-700 text-sm font-bold mb-2"
+              >
+                Keterangan Selisih data
+              </label>
+              <textarea
+                id="keterangaSilisih"
                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                placeholder="Data Cabang"
-              />
+                rows="5"
+              ></textarea>
+            </div>
+            <div className="flex justify-center">
+              <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Simpan
+              </button>
             </div>
           </div>
-          <div className="mb-4">
-            <label
-              htmlFor="keterangaSilisih"
-              className="block text-gray-700 text-sm font-bold mb-2"
-            >
-              Keterangan Selisih data
-            </label>
-            <textarea
-              id="keterangaSilisih"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              rows="5"
-            ></textarea>
-          </div>
-          <div className="flex justify-center">
-            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-              Simpan
-            </button>
-          </div>
         </div>
-      </div>
-
+      )}
       <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
         <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
           <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">

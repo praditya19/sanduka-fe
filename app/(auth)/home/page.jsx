@@ -18,6 +18,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
+import HeaderHome from "@/app/_components/HeaderHome";
 
 const icons = [
   { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
@@ -116,15 +117,16 @@ const icons = [
 export default function IconGrid() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 py-8 px-4">
-      <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+      <HeaderHome />
+      <div className="bg-white p-6 rounded-lg shadow-lg mb-8 mt-20">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-28">
           <div className="text-center">
             <FontAwesomeIcon
               icon={faBullhorn}
               size="2x"
               className="text-red-500"
             />
-            <p className="text-2xl font-bold text-gray-700">
+            <p className="text-lg font-bold text-gray-700">
               Laporan Meninggal Bulan Ini
             </p>
             <p className="text-gray-600 font-bold">0 Orang</p>
@@ -135,7 +137,7 @@ export default function IconGrid() {
               size="2x"
               className="text-orange-500"
             />
-            <p className="text-2xl font-bold text-gray-700">
+            <p className="text-lg font-bold text-gray-700">
               Sanduka Telah Diberikan
             </p>
             <p className="text-gray-600 font-bold">173 Orang</p>
@@ -146,7 +148,7 @@ export default function IconGrid() {
               size="2x"
               className="text-green-500"
             />
-            <p className="text-2xl font-bold text-gray-700">
+            <p className="text-lg font-bold text-gray-700">
               Total Santunan Diberikan
             </p>
             <p className="text-gray-600 font-bold">Rp.432.500.000</p>
