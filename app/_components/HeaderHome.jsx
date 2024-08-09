@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { faBell } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { ShoppingBasket } from "lucide-react";
 
 const HeaderHome = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -109,6 +110,11 @@ const HeaderHome = () => {
                       {notificationCount}
                     </span>
                   )}
+                </Link>
+              </li>
+              <li className="relative">
+                <Link href="/comming-soon" className="text-gray-700 relative">
+                  <ShoppingBasket className="h-7 w-7" />
                 </Link>
               </li>
               <li className="relative">

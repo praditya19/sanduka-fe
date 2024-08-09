@@ -123,7 +123,7 @@ const TemanUnitKerja = () => {
       {/* Header */}
       <header className="bg-teal-700 text-white text-lg font-bold py-4 px-6 md:px-12 shadow-md fixed top-0 left-0 w-full z-50">
         <div className="container mx-auto">
-          <h1>Verifikasi Anggota</h1>
+          <h1>Teman Unit Kerja</h1>
         </div>
       </header>
       <div className="min-h-screen flex flex-col items-center justify-start bg-gray-300 pt-4 px-4">
