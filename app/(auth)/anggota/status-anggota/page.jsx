@@ -172,15 +172,13 @@ function StatusAnggota() {
 
     return (
         <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-            <header className="bg-green-700 text-white p-4 md:p-6 rounded-lg shadow-md">
+            <header className="bg-teal-700 text-white text-lg font-bold mb-8 py-4 px-6 md:px-12 shadow-md fixed top-0 left-0 w-full z-50">
                 <div className="container mx-auto">
-                    <h1 className="text-xl md:text-3xl font-extrabold">
-                        STATUS ANGGOTA
-                    </h1>
+                    <h1>Status Anggota</h1>
                 </div>
             </header>
 
-            <div className="flex flex-wrap justify-between mt-4 mb-4 mx-4">
+            <div className="flex flex-wrap justify-between mt-16 mb-4 mx-4">
                 {categories.map((category, index) => (
                     <div key={index} className="flex flex-col items-center w-full md:w-1/3 mb-4 md:mb-0">
                         <div className="bg-teal-500 text-white p-2 rounded-lg mb-2 w-40 text-center">
