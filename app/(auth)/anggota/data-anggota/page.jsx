@@ -178,15 +178,13 @@ function DataAnggota() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      <header className="bg-green-700 text-white p-4 md:p-6 rounded-lg shadow-md">
+      <header className="bg-teal-700 text-white text-lg font-bold mb-8 py-4 px-6 md:px-12 shadow-md fixed top-0 left-0 w-full z-50">
         <div className="container mx-auto">
-          <h1 className="text-xl md:text-3xl font-extrabold">
-            DATA ANGGOTA
-          </h1>
+          <h1>Data Anggota</h1>
         </div>
       </header>
       <div className="mb-4">
-        <div className="flex flex-wrap items-start mt-2 justify-between">
+        <div className="flex flex-wrap items-start mt-16 justify-between">
           <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
             <select
               className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
@@ -251,7 +249,7 @@ function DataAnggota() {
         <table className="container w-full table-auto mb-8">
           <thead>
             <tr>
-              <th className="p-2 md:p-3 border text-white bg-green-700">
+              <th className="p-2 md:p-3 border text-white bg-teal-700">
                 <div className="flex justify-between items-center">
                   <span>No</span>
                   <span className="ml-1 cursor-pointer" onClick={() => requestSort('index')}>
@@ -259,8 +257,8 @@ function DataAnggota() {
                   </span>
                 </div>
               </th>
-              <th className="p-2 md:p-3 border text-white bg-green-700">Foto</th>
-              <th className="p-2 md:p-3 border text-white bg-green-700">
+              <th className="p-2 md:p-3 border text-white bg-teal-700">Foto</th>
+              <th className="p-2 md:p-3 border text-white bg-teal-700">
                 <div className="flex justify-between items-center">
                   <span>Nama</span>
                   <span className="ml-1 cursor-pointer" onClick={() => requestSort('nama')}>
@@ -268,7 +266,7 @@ function DataAnggota() {
                   </span>
                 </div>
               </th>
-              <th className="p-2 md:p-3 border text-white bg-green-700">
+              <th className="p-2 md:p-3 border text-white bg-teal-700">
                 <div className="flex justify-between items-center">
                   <span>Tanggal Lahir</span>
                   <span className="ml-1 cursor-pointer" onClick={() => requestSort('tanggal')}>
@@ -276,7 +274,7 @@ function DataAnggota() {
                   </span>
                 </div>
               </th>
-              <th className="p-2 md:p-3 border text-white bg-green-700">
+              <th className="p-2 md:p-3 border text-white bg-teal-700">
                 <div className="flex justify-between items-center">
                   <span>Unit Kerja</span>
                   <span className="ml-1 cursor-pointer" onClick={() => requestSort('kerja')}>
@@ -284,7 +282,7 @@ function DataAnggota() {
                   </span>
                 </div>
               </th>
-              <th className="p-2 md:p-3 border text-white bg-green-700">
+              <th className="p-2 md:p-3 border text-white bg-teal-700">
                 <div className="flex justify-between items-center">
                   <span>Keterangan</span>
                   <span className="ml-1 cursor-pointer" onClick={() => requestSort('keterangan')}>
@@ -292,7 +290,7 @@ function DataAnggota() {
                   </span>
                 </div>
               </th>
-              <th className="p-2 md:p-3 border text-white bg-green-700">Aksi</th>
+              <th className="p-2 md:p-3 border text-white bg-teal-700">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -336,7 +334,12 @@ function DataAnggota() {
                     <Link href="#" className="text-white bg-red-500 p-2 border rounded-md">
                       <FaExclamationTriangle className="w-4 h-4" title="Lapor" />
                     </Link>
-                    <Link href="#" className="text-white bg-green-500 p-2 border rounded-md">
+                    <Link
+                      href={`https://wa.me/${item.hp}`}
+                      className="text-white bg-green-500 p-2 border rounded-md"
+                      target="_blank" // Opens the link in a new tab
+                      rel="noopener noreferrer" // Security feature to prevent exploitation
+                    >
                       <FaWhatsapp className="w-4 h-4" title="WA" />
                     </Link>
                   </div>
@@ -356,24 +359,29 @@ function DataAnggota() {
         overlayClassName="fixed inset-0 bg-black bg-opacity-50"
       >
         <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-          <h2 className="text-xl font-bold mb-4">Mutasi Anggota</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Mutasi Anggota</h2>
+            <button
+              className="text-2xl font-bold text-gray-700 hover:text-red-500 focus:outline-none"
+              onClick={closeModal}
+            >
+              x
+            </button>
+          </div>
           <div className="space-y-2">
-            <Button className="w-full" onClick={() => alert('Pindah Cabang')}>
+            <Button className="w-full bg-teal-700 hover:bg-teal-500" onClick={() => alert('Pindah Cabang')}>
               Pindah Cabang
             </Button>
-            <Button className="w-full" onClick={() => alert('Unit Kerja')}>
+            <Button className="w-full bg-teal-700 hover:bg-teal-500" onClick={() => alert('Unit Kerja')}>
               Unit Kerja
             </Button>
-            <Button className="w-full" onClick={() => alert('Keluar Anggota')}>
+            <Button className="w-full bg-teal-700 hover:bg-teal-500" onClick={() => alert('Keluar Anggota')}>
               Keluar Anggota
             </Button>
-            <Button className="w-full" onClick={() => alert('Tidak Jelas')}>
+            <Button className="w-full bg-teal-700 hover:bg-teal-500" onClick={() => alert('Tidak Jelas')}>
               Tidak Jelas
             </Button>
           </div>
-          <Button className="mt-4 w-full bg-red-300 hover:bg-red-500" onClick={closeModal}>
-            Keluar
-          </Button>
         </div>
       </Modal>
     </div>

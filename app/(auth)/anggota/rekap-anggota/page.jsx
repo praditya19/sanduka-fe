@@ -172,13 +172,13 @@ function RekapAnggota() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      <header className="bg-green-700 text-white p-4 md:p-6 rounded-lg shadow-md">
+      <header className="bg-teal-700 text-white text-lg font-bold mb-8 py-4 px-6 md:px-12 shadow-md fixed top-0 left-0 w-full z-50">
         <div className="container mx-auto">
-          <h1 className="text-xl md:text-3xl font-extrabold">REKAP ANGGOTA</h1>
+          <h1>Rekap Anggota</h1>
         </div>
       </header>
       <div className="mb-4">
-        <div className="flex flex-wrap items-start mt-2 justify-between">
+        <div className="flex flex-wrap items-start mt-16 justify-between">
           <div className="flex flex-wrap items-center space-x-2">
             <select
               className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
@@ -229,16 +229,16 @@ function RekapAnggota() {
         <table className="container w-full table-auto mb-8">
           <thead>
             <tr>
-              <th className="p-2 md:p-3 border text-white bg-green-700" rowSpan="2">No</th>
-              <th className="p-2 md:p-3 border text-white bg-green-700" rowSpan="2">Unit Kerja</th>
-              <th className="p-2 md:p-3 border text-white bg-green-700" colSpan="3">Status Anggota</th>
-              <th className="p-2 md:p-3 border text-white bg-green-700" rowSpan="2">Jumlah</th>
-              <th className="p-2 md:p-3 border text-white bg-green-700" rowSpan="2">Iuran</th>
+              <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">No</th>
+              <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Unit Kerja</th>
+              <th className="p-2 md:p-3 border text-white bg-teal-700" colSpan="3">Status Anggota</th>
+              <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Jumlah</th>
+              <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Iuran</th>
             </tr>
             <tr>
-              <th className="p-2 md:p-3 border text-white bg-green-700">PNS</th>
-              <th className="p-2 md:p-3 border text-white bg-green-700">PPPK</th>
-              <th className="p-2 md:p-3 border text-white bg-green-700">Non PNS</th>
+              <th className="p-2 md:p-3 border text-white bg-teal-700">PNS</th>
+              <th className="p-2 md:p-3 border text-white bg-teal-700">PPPK</th>
+              <th className="p-2 md:p-3 border text-white bg-teal-700">Non PNS</th>
             </tr>
           </thead>
           <tbody>

@@ -63,7 +63,7 @@ function CariAnggota() {
           <Button
             onClick={onSearch}
             disabled={!npa || !dob || loader}
-            className="w-full mt-4"
+            className="w-full mt-4 bg-teal-700"
           >
             {loader ? <LoaderIcon className="animate-spin mr-2" /> : "Cari "} <Search />
           </Button>
