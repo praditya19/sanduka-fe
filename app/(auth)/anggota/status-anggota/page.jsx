@@ -197,7 +197,7 @@ function StatusAnggota() {
                             {category.items.map((item, idx) => (
                                 <div key={idx} className="bg-white border rounded-lg shadow-md p-4 mb-2 w-full sm:w-60 mx-2 text-center">
                                     <img src={`/images/${item.toLowerCase().replace(/\//g, '-')}.png`} alt={item} className="mb-2 w-40 mx-auto" />
-                                    <Button className="bg-blue-500 w-full">
+                                    <Button className="bg-blue-500 hover:bg-blue-700 w-full">
                                         {countMembersByLevel(item)} Anggota
                                     </Button>
                                 </div>
@@ -252,13 +252,13 @@ function StatusAnggota() {
                 <table className="container w-full table-auto mb-8">
                     <thead>
                         <tr>
-                            <th className="p-2 md:p-3 border text-white bg-green-700">No</th>
-                            <th className="p-2 md:p-3 border text-white bg-green-700">Foto</th>
-                            <th className="p-2 md:p-3 border text-white bg-green-700">Data Anggota</th>
-                            <th className="p-2 md:p-3 border text-white bg-green-700">Tingkat Sekolah</th>
-                            <th className="p-2 md:p-3 border text-white bg-green-700">Cabang</th>
-                            <th className="p-2 md:p-3 border text-white bg-green-700">Status</th>
-                            <th className="p-2 md:p-3 border text-white bg-green-700">Action</th>
+                            <th className="p-2 md:p-3 border text-white bg-teal-700">No</th>
+                            <th className="p-2 md:p-3 border text-white bg-teal-700">Foto</th>
+                            <th className="p-2 md:p-3 border text-white bg-teal-700">Data Anggota</th>
+                            <th className="p-2 md:p-3 border text-white bg-teal-700">Tingkat Sekolah</th>
+                            <th className="p-2 md:p-3 border text-white bg-teal-700">Cabang</th>
+                            <th className="p-2 md:p-3 border text-white bg-teal-700">Status</th>
+                            <th className="p-2 md:p-3 border text-white bg-teal-700">Action</th>
                         </tr>
                     </thead>
                     <tbody>

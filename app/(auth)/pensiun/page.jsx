@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 const Page = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-4">
-      <header className="bg-teal-700 text-white p-4 md:p-6 rounded-lg shadow-md mb-4">
-        <div className="container mx-auto flex justify-center items-center">
-          <h1 className="text-2xl md:text-3xl font-bold">PENSIUN</h1>
+      <header className="bg-teal-700 text-white text-lg font-bold mb-8 py-4 px-6 md:px-12 shadow-md fixed top-0 left-0 w-full z-50">
+        <div className="container mx-auto">
+          <h1>Pensiun</h1>
         </div>
       </header>
-      <div className="bg-teal-700 p-4 rounded-lg mb-4 flex flex-wrap justify-between items-center space-y-4 md:space-y-0 md:flex-nowrap">
+      <div className="bg-teal-700 p-4 rounded-lg mb-4 mt-16 flex flex-wrap justify-between items-center space-y-4 md:space-y-0 md:flex-nowrap">
         <select className="bg-white p-2 rounded border w-full md:w-auto">
           <option>Tampil Semua</option>
         </select>
