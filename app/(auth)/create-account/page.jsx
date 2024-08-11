@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,46 +15,49 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import dynamic from "next/dynamic";
+
+// Dynamically import MapComponent with SSR disabled
+const MapComponent = dynamic(() => import("../../_components/MapComponent"), {
+  ssr: false,
+});
 
 const Page = () => {
-  // maps
+  // State for maps
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [error, setError] = useState("");
+  const [showMap, setShowMap] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // const handleLatitudeChange = (e) => {
-  //   setLatitude(e.target.value);
-  // };
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-  const handleLongitudeChange = (e) => {
-    setLongitude(e.target.value);
-  };
-
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   // Handle form submission, e.g., send data to server
-  //   console.log('Latitude:', latitude);
-  //   console.log('Longitude:', longitude);
-  // };
-
+  // Handler to get current location
   const handleGetLocation = () => {
+    setLoading(true);
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          // setLatitude(position.coords.latitude);
+          setLatitude(position.coords.latitude);
           setLongitude(position.coords.longitude);
           setError("");
+          setLoading(false);
         },
         (error) => {
-          setError("Unable to retrieve your location");
+          setError("Unable to retrieve your location. Please try again.");
+          setLoading(false);
         }
       );
     } else {
-      setError("Geolocation is not supported by this browser");
+      setError("Geolocation is not supported by this browser.");
+      setLoading(false);
     }
   };
 
-  // END
+  // State for file upload
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
 
@@ -71,6 +74,7 @@ const Page = () => {
     }
   };
 
+  // State for dynamic input fields
   const [namesanak, setNamesanak] = useState([""]);
   const handleChange = (index, event) => {
     const newNamesanak = [...namesanak];
@@ -87,6 +91,7 @@ const Page = () => {
     setNamesanak(newNamesanak);
   };
 
+  // Form state
   const [step, setStep] = useState(1);
   const {
     register,
@@ -106,6 +111,8 @@ const Page = () => {
     const finalData = {
       ...data,
       namesanak: namesanak.filter((name) => name.trim() !== ""),
+      latitude,
+      longitude,
     };
     console.log(finalData);
     // Send finalData to the database
@@ -120,7 +127,7 @@ const Page = () => {
   };
 
   return (
-    <div className="min-h-screen p-4 sm:p-3 bg-gray-100 flex items-center justify-center">
+    <div className="max-w-screen-lg mx-auto px-4 py-6">
       <div className="container mx-auto max-w-screen-lg sm:max-w-full md:max-w-screen-lg px-4">
         {step === 1 && (
           <div>
@@ -130,9 +137,9 @@ const Page = () => {
             <hr className="mb-6 border-t-2 border-gray-300 mt-4" />
             <form
               onSubmit={handleSubmit(nextStep)}
-              className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-4 sm:p-8 rounded-lg shadow-lg"
+              className="bg-white p-4 sm:p-8 rounded-lg shadow-lg"
             >
-              <div className="w-full md:col-span-2 flex flex-col items-center space-y-4 mt-4">
+              <div className="w-full flex flex-col items-center space-y-4 mt-4">
                 <Image
                   width={150}
                   height={150}
@@ -149,419 +156,422 @@ const Page = () => {
                 />
                 <label
                   htmlFor="photo-upload"
-                  className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md bg-white"
+                  className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md bg-white text-center"
                 >
                   Choose Files
                 </label>
-                <p className="text-teal-600">*Wajib Menggunakan Batik PGRI</p>
-                <p>{selectedFile ? selectedFile.name : "No file chosen"}</p>
+                <p className="text-red-600 font-bold text-center">
+                  *Wajib Menggunakan Batik PGRI
+                </p>
                 <p className="text-red-600 text-center">
                   *Maksimal ukuran file unggah 250kb format file (jpg, jpeg,
                   png)
                 </p>
               </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Email
-                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                    *Harap Diingat
-                  </span>
-                </Label>
-                <Input
-                  type="email"
-                  id="email"
-                  placeholder="Email"
-                  {...register("email", { required: true })}
-                />
-                {errors.email && (
-                  <span className="text-red-500 text-sm">
-                    Email is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Password Login
-                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                    *Harap Diingat
-                  </span>
-                </Label>
-                <Input
-                  type="password"
-                  id="password"
-                  placeholder="contoh:Kat45and!"
-                  {...register("password", { required: true })}
-                />
-                {errors.password && (
-                  <span className="text-red-500 text-sm">
-                    Password is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="flex flex-col sm:flex-row items-start sm:items-center">
-                  NPA PGRI
-                  <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
-                    *Wajib Isi
-                  </span>
-                </Label>
-                <Input
-                  className="mt-2 sm:mt-2"
-                  type="number"
-                  id="npa"
-                  placeholder="Tuliskan NPA Lama"
-                  {...register("npa")}
-                />
-                {errors.npa && (
-                  <span className="text-red-500 text-sm">NPA is required</span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  NIP
-                  <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
-                    *Wajib Isi
-                  </span>
-                </Label>
-                <Input
-                  type="number"
-                  id="nip"
-                  placeholder="Nomor Induk Pendidik ( NIP )"
-                  {...register("nip", { required: true })}
-                />
-                {errors.nip && (
-                  <span className="text-red-500 text-sm">NIP is required</span>
-                )}
-              </div>
 
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  NIK
-                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                    *16 Digit
-                  </span>
-                </Label>
-                <Input
-                  type="number"
-                  id="nik"
-                  placeholder="16 Digit"
-                  {...register("nik", { required: true })}
-                />
-                {errors.nik && (
-                  <span className="text-red-500 text-sm">NIK is required</span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Nama Lengkap
-                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                    *Bisa Ditambahkan Gelar
-                  </span>
-                </Label>
-                <Input
-                  type="text"
-                  id="nama"
-                  placeholder="Bisa Ditambahkan Gelar"
-                  {...register("nama", { required: true })}
-                />
-                {errors.nama && (
-                  <span className="text-red-500 text-sm">
-                    Nama Lengkap is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Tempat Lahir
-                </Label>
-                <Input
-                  type="text"
-                  id="tempatLahir"
-                  placeholder="Tempat Kelahiran"
-                  {...register("tempatLahir", { required: true })}
-                />
-                {errors.tempatLahir && (
-                  <span className="text-red-500 text-sm">
-                    Tempat Lahir is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Tanggal Lahir
-                </Label>
-                <Input
-                  type="date"
-                  id="tglLahir"
-                  placeholder="dd/mm/yyyy"
-                  {...register("tglLahir", { required: true })}
-                />
-                {errors.tglLahir && (
-                  <span className="text-red-500 text-sm">
-                    Tanggal Lahir is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Jenis Kelamin
-                </Label>
-                <Controller
-                  name="jenisKelamin"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Jenis Kelamin" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="laki-laki">Laki - Laki</SelectItem>
-                          <SelectItem value="perempuan">Perempuan</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3">
+                    Email
+                    <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                      *Harap Diingat
+                    </span>
+                  </Label>
+                  <Input
+                    type="email"
+                    id="email"
+                    placeholder="Email"
+                    {...register("email", { required: true })}
+                  />
+                  {errors.email && (
+                    <span className="text-red-500 text-sm">
+                      Email is required
+                    </span>
                   )}
-                />
-                {errors.jenisKelamin && (
-                  <span className="text-red-500 text-sm">
-                    Jenis Kelamin is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">Agama</Label>
-                <Controller
-                  name="agama"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Agama" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="islam">Islam</SelectItem>
-                          <SelectItem value="kristen">Kristen</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                </div>
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3">
+                    Password Login
+                    <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                      *Harap Diingat
+                    </span>
+                  </Label>
+                  <Input
+                    type="password"
+                    id="password"
+                    placeholder="contoh:Kat45and!"
+                    {...register("password", { required: true })}
+                  />
+                  {errors.password && (
+                    <span className="text-red-500 text-sm">
+                      Password is required
+                    </span>
                   )}
-                />
-                {errors.agama && (
-                  <span className="text-red-500 text-sm">
-                    Agama is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Golongan Darah
-                </Label>
-                <Controller
-                  name="darah"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Golongan Darah" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="A">A</SelectItem>
-                          <SelectItem value="B">B</SelectItem>
-                          <SelectItem value="AB">AB</SelectItem>
-                          <SelectItem value="O">O</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.darah && (
-                  <span className="text-red-500 text-sm">
-                    Golongan Darah is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full md:col-span-2">
-                <Label className="block text-sm font-medium mb-3">
-                  Alamat
-                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                    *Sesuai KTP
-                  </span>
-                </Label>
-                <Controller
-                  name="alamat"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Textarea
-                      placeholder="JL. RT.  RW.  Desa, Kecamatan, Kabupaten"
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  )}
-                />
-                {errors.alamat && (
-                  <span className="text-red-500 text-sm">
-                    Alamat is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Kode Pos
-                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                    *Sesuai KTP
-                  </span>
-                </Label>
-                <Input
-                  type="number"
-                  id="kodePos"
-                  placeholder="Tuliskan Kode Pos"
-                  {...register("kodePos", { required: true })}
-                />
-                {errors.kodePos && (
-                  <span className="text-red-500 text-sm">
-                    Kode Pos is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Nomor Handphone
-                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                    *Tertaut Akun Whatsapp
-                  </span>
-                </Label>
-                <Input
-                  type="number"
-                  id="noHP"
-                  placeholder=" Nomor Handphone Aktif"
-                  {...register("noHP", { required: true })}
-                />
-                {errors.noHP && (
-                  <span className="text-red-500 text-sm">
-                    Nomor Handphone is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Ahli Waris
-                </Label>
-                <Input
-                  type="text"
-                  id="ahliWaris"
-                  placeholder="Ahli Waris"
-                  {...register("ahliWaris")}
-                />
-                {errors.ahliWaris && (
-                  <span className="text-red-500 text-sm">
-                    Ahli Waris is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Nama Suami/Istri
-                </Label>
-                <Input
-                  type="text"
-                  id="namaSuami"
-                  placeholder=" Nama Suami/Istri"
-                  {...register("namaSuami")}
-                />
-                {errors.namaSuami && (
-                  <span className="text-red-500 text-sm">
-                    Nama Suami is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full p-4 rounded-lg">
-                {namesanak.map((name, index) => (
-                  <div key={index} className="mb-3 flex items-center">
-                    <div className="flex-1">
-                      <Label className="block text-sm font-medium mb-1">
-                        Nama Anak {index + 1}
-                      </Label>
-                      <Input
-                        className="block w-full text-sm p-2 mt-2 mb-2 border rounded"
-                        type="text"
-                        placeholder={`Tuliskan Nama Anak ${index + 1}`}
-                        value={name}
-                        onChange={(e) => handleChange(index, e)}
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      onClick={() => handleRemoveInput(index)}
-                      className="ml-2 p-2 bg-red-500 text-white rounded mt-4 hover:bg-red-500"
-                    >
-                      Hapus
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  onClick={handleAddInput}
-                  className="mt-3 p-2 bg-teal-500 text-white rounded hover:bg-teal-500"
-                >
-                  + Tambah Anak
-                </Button>
-              </div>
-
-              <div className="w-full p-4 rounded-lg">
-                <div className="mb-3 flex flex-col sm:flex-row sm:items-center">
-                  <div className="flex-1">
-                    <Label
-                      className="block text-sm font-medium mb-1"
-                    >
-                      Maps Lokasi Rumah
-                    </Label>
-                    <Input
-                      type="text"
-                      id="longitude"
-                      value={longitude}
-                      onChange={handleLongitudeChange}
-                      placeholder="Contoh: 106.816666"
-                      className="block w-full text-sm p-2 mb-2 mt-2 border rounded"
-                      required
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleGetLocation}
-                    className="bg-green-500 hover:bg-green-700 ml-2 sm:ml-2 text-white p-2 rounded mt-2 sm:mt-6"
-                  >
-                    Dapatkan Lokasi Saya
-                  </button>
                 </div>
               </div>
-              {error && <p className="text-red-500 mb-4">{error}</p>}
 
-              <div className="col-span-1 md:col-span-2 flex justify-between mt-4">
-                <Button
-                  type="button"
-                  onClick={prevStep}
-                  className="text-white bg-gray-400 hover:bg-gray-500 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
-                  disabled={step === 1}
-                >
-                  Kembali
-                </Button>
-                <Button
-                  type="submit"
-                  className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
-                >
-                  Selanjutnya
-                </Button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3">
+                    NPA PGRI
+                    <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                      *Wajib Isi
+                    </span>
+                  </Label>
+                  <Input
+                    type="number"
+                    id="npa"
+                    placeholder="Tuliskan NPA"
+                    {...register("npa")}
+                  />
+                  {errors.npa && (
+                    <span className="text-red-500 text-sm">
+                      NPA is required
+                    </span>
+                  )}
+                </div>
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3">
+                    NIP
+                    <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                      *Wajib Isi
+                    </span>
+                  </Label>
+                  <Input
+                    type="number"
+                    id="nip"
+                    placeholder="Nomor Induk Pendidik ( NIP )"
+                    {...register("nip", { required: true })}
+                  />
+                  {errors.nip && (
+                    <span className="text-red-500 text-sm">
+                      NIP is required
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3">
+                    NIK
+                    <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                      *16 Digit
+                    </span>
+                  </Label>
+                  <Input
+                    type="number"
+                    id="nik"
+                    placeholder="16 Digit"
+                    {...register("nik", { required: true })}
+                  />
+                  {errors.nik && (
+                    <span className="text-red-500 text-sm">
+                      NIK is required
+                    </span>
+                  )}
+                </div>
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3">
+                    Nama Lengkap
+                    <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                      *Sesuai Dengan KTP
+                    </span>
+                  </Label>
+                  <Input
+                    type="text"
+                    id="nama"
+                    placeholder="Sesuai Dengan KTP"
+                    {...register("nama", { required: true })}
+                  />
+                  {errors.nama && (
+                    <span className="text-red-500 text-sm">
+                      Nama Lengkap is required
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3">
+                    Tempat Lahir
+                  </Label>
+                  <Input
+                    type="text"
+                    id="tempatLahir"
+                    placeholder="Tempat Kelahiran"
+                    {...register("tempatLahir", { required: true })}
+                  />
+                  {errors.tempatLahir && (
+                    <span className="text-red-500 text-sm">
+                      Tempat Lahir is required
+                    </span>
+                  )}
+                </div>
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3">
+                    Tanggal Lahir
+                  </Label>
+                  <Input
+                    type="date"
+                    id="tglLahir"
+                    placeholder="dd/mm/yyyy"
+                    {...register("tglLahir", { required: true })}
+                  />
+                  {errors.tglLahir && (
+                    <span className="text-red-500 text-sm">
+                      Tanggal Lahir is required
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3">
+                    Jenis Kelamin
+                  </Label>
+                  <Controller
+                    name="jenisKelamin"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih Jenis Kelamin" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem value="laki-laki">
+                              Laki - Laki
+                            </SelectItem>
+                            <SelectItem value="perempuan">Perempuan</SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.jenisKelamin && (
+                    <span className="text-red-500 text-sm">
+                      Jenis Kelamin is required
+                    </span>
+                  )}
+                </div>
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3">
+                    Agama
+                  </Label>
+                  <Controller
+                    name="agama"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih Agama" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem value="islam">Islam</SelectItem>
+                            <SelectItem value="kristen">Kristen</SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.agama && (
+                    <span className="text-red-500 text-sm">
+                      Agama is required
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3">
+                    Golongan Darah
+                  </Label>
+                  <Controller
+                    name="darah"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih Golongan Darah" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem value="a">A</SelectItem>
+                            <SelectItem value="b">B</SelectItem>
+                            <SelectItem value="ab">AB</SelectItem>
+                            <SelectItem value="o">O</SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.darah && (
+                    <span className="text-red-500 text-sm">
+                      Golongan Darah is required
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <div className="w-full ">
+                    <Label className="block text-sm font-medium mb-3">
+                      Alamat
+                      <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                        *Sesuai Dengan KTP
+                      </span>
+                    </Label>
+                    <Controller
+                      name="alamat"
+                      control={control}
+                      rules={{ required: true }}
+                      render={({ field }) => (
+                        <Textarea
+                          placeholder="JL. RT.  RW.  Desa, Kecamatan, Kabupaten"
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      )}
+                    />
+                    {errors.alamat && (
+                      <span className="text-red-500 text-sm">
+                        Alamat is required
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={handleGetLocation}
+                    className="mt-2 p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+                  >
+                    {loading ? "Mendapatkan Lokasi..." : "Get Location"}
+                  </Button>
+                  {error && (
+                    <span className="text-red-500 text-sm mt-2">{error}</span>
+                  )}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3">
+                    Kode Pos
+                  </Label>
+                  <Input
+                    type="number"
+                    id="kodePos"
+                    placeholder="Tuliskan Kode Pos"
+                    {...register("kodePos", { required: true })}
+                  />
+                  {errors.kodePos && (
+                    <span className="text-red-500 text-sm">
+                      Kode Pos is required
+                    </span>
+                  )}
+                </div>
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3 sm:flex  sm:items-center">
+                    Nomor Handphone
+                    <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-2 sm:mt-0 block">
+                      *Tertaut Akun Whatsapp
+                    </span>
+                  </Label>
+                  <Input
+                    type="number"
+                    id="noHP"
+                    placeholder="Nomor Handphone Aktif"
+                    {...register("noHP", { required: true })}
+                  />
+                  {errors.noHP && (
+                    <span className="text-red-500 text-sm">
+                      Nomor Handphone is required
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3">
+                    Nama Suami/Istri
+                  </Label>
+                  <Input
+                    type="text"
+                    id="namaSuami"
+                    placeholder=" Nama Suami/Istri"
+                    {...register("namaSuami")}
+                  />
+                  {errors.namaSuami && (
+                    <span className="text-red-500 text-sm">
+                      Nama Suami is required
+                    </span>
+                  )}
+                </div>
+                <div className="w-full">
+                  {namesanak.map((name, index) => (
+                    <div key={index} className="mb-3 flex items-center">
+                      <div className="flex-1">
+                        <Label className="block text-sm font-medium mb-1">
+                          Nama Anak {index + 1}
+                        </Label>
+                        <Input
+                          className="block w-full text-sm p-2 mt-2 mb-2 border rounded"
+                          type="text"
+                          placeholder={`Tuliskan Nama Anak ${index + 1}`}
+                          value={name}
+                          onChange={(e) => handleChange(index, e)}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={() => handleRemoveInput(index)}
+                        className="ml-2 p-2 bg-red-500 text-white rounded mt-4 hover:bg-red-500"
+                      >
+                        Hapus
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    onClick={handleAddInput}
+                    className="mt-3 p-2 bg-teal-500 text-white rounded hover:bg-teal-500"
+                  >
+                    + Tambah Anak
+                  </Button>
+                </div>
+              </div>
+
+              <div className="w-full col-span-2">
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  Maps Lokasi Rumah
+                </h2>
+                {latitude && longitude && (
+                  <div className="mt-8">
+                    <MapComponent latitude={latitude} longitude={longitude} />
+                  </div>
+                )}
+              </div>
+              <div className="w-full flex justify-end mt-8">
+                <Button type="submit">Next</Button>
               </div>
             </form>
           </div>
         )}
+
         {step === 2 && (
           <div className="max-w-screen-lg mx-auto px-4 py-6">
             <h2 className="font-semibold text-xl text-gray-600 mb-4">
@@ -586,7 +596,7 @@ const Page = () => {
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Pilih Provinsi" />
+                        <SelectValue placeholder="Pilih Cabang" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
@@ -772,7 +782,7 @@ const Page = () => {
                   className="mt-2 sm:mt-2"
                   type="text"
                   id="golongan"
-                  placeholder="Tuliskan Pangkat/Golongan"
+                  placeholder="Tuliskan Golongan"
                   {...register("golongan", { required: true })}
                 />
                 {errors.golongan && (
@@ -823,7 +833,7 @@ const Page = () => {
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Pilih Sertifikat" />
+                        <SelectValue placeholder="Sertifikat" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
@@ -843,36 +853,7 @@ const Page = () => {
 
               <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
-                  Mengajar
-                </Label>
-                <Controller
-                  name="mengajar"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Jenjang Mengajar" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="paud">PAUD</SelectItem>
-                          <SelectItem value="tk">TK</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.mengajar && (
-                  <span className="text-red-500 text-sm">
-                    Mengajar is required
-                  </span>
-                )}
-              </div>
-
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Mulai jadi anggota PGRI
+                  Mulai Jadi Anggota PGRI
                 </Label>
                 <Input
                   type="date"
@@ -888,18 +869,28 @@ const Page = () => {
               </div>
 
               <div className="w-full">
-                <Label className="flex flex-col sm:flex-row items-start sm:items-center">
+                <Label className="block text-sm font-medium mb-3">
                   Golongan Jabatan
-                  <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
-                    *Bila Tidak Ada, Isi Tanda (-)
-                  </span>
                 </Label>
-                <Input
-                  className="mt-2 sm:mt-2"
-                  type="text"
-                  id="golongan"
-                  placeholder="Tuliskan Pangkat/Golongan"
-                  {...register("golongan", { required: true })}
+                <Controller
+                  name="golongan"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Golongan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="pendidik">Pendidik</SelectItem>
+                          <SelectItem value="tenagaKependidikan">
+                            Tenaga kependidikan
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
                 {errors.golongan && (
                   <span className="text-red-500 text-sm">
@@ -908,153 +899,27 @@ const Page = () => {
                 )}
               </div>
 
-              {/* <div className="w-full">
+              <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
-                  Pekerjaan
+                  Mengajar
                 </Label>
-                <Controller
-                  name="pekerjaan"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Pekerjaan" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="guru">Guru</SelectItem>
-                          <SelectItem value="tenagaAdmin">
-                            Tenaga Administrasi
-                          </SelectItem>
-                          <SelectItem value="dosen">Dosen</SelectItem>
-                          <SelectItem value="pengawas">Pengawas</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
+                <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
+                  *Mata Pelajaran
+                </span>
+                <Input
+                  className="mt-2 sm:mt-2"
+                  type="text"
+                  id="mengajar"
+                  placeholder="Mengajar"
+                  {...register("mengajar", { required: true })}
                 />
-                {errors.pekerjaan && (
+                {errors.mengajar && (
                   <span className="text-red-500 text-sm">
-                    Pekerjaan is required
+                    Mengajar is required
                   </span>
                 )}
               </div>
-              
-              
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">TMT</Label>
-                <Input
-                  type="date"
-                  id="tmt"
-                  placeholder="dd/mm/yyyy"
-                  {...register("tmt", { required: true })}
-                />
-                {errors.tmt && (
-                  <span className="text-red-500 text-sm">TMT is required</span>
-                )}
-              </div>
-              
-              
-              
 
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Mata Pelajaran
-                </Label>
-                <Input
-                  type="text"
-                  id="mapel"
-                  placeholder="Tuliskan Mata Pelajaran"
-                  {...register("mapel", { required: true })}
-                />
-                {errors.mapel && (
-                  <span className="text-red-500 text-sm">
-                    Mata Pelajaran is required
-                  </span>
-                )}
-              </div>
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Kelompok Jabatan
-                </Label>
-                <Controller
-                  name="kelJabatan"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Kelompok Jabatan" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="pendidik">Pendidik</SelectItem>
-                          <SelectItem value="tenagaKependidikan">
-                            Tenaga Kependidikan
-                          </SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.kelJabatan && (
-                  <span className="text-red-500 text-sm">
-                    Kelompok Jabatan is required
-                  </span>
-                )}
-              </div>
-              
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">Tugas</Label>
-                <Controller
-                  name="tugas"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Tugas" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="kepalaSekolah">
-                            Kepala Sekolah
-                          </SelectItem>
-                          <SelectItem value="guru">Guru</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.tugas && (
-                  <span className="text-red-500 text-sm">
-                    Tugas is required
-                  </span>
-                )}
-              </div>
-              
-              
-              
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
-                  Nama Instansi
-                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                    *Tempat Tugas
-                  </span>
-                </Label>
-                <Input
-                  type="text"
-                  id="namaInstansi"
-                  placeholder="Tuliskan Nama Tempat Tugas"
-                  {...register("namaInstansi", { required: true })}
-                />
-                {errors.namaInstansi && (
-                  <span className="text-red-500 text-sm">
-                    Nama Instansi is required
-                  </span>
-                )}
-              </div> */}
               <div className="col-span-1 sm:col-span-2 flex justify-between mt-4">
                 <Button
                   type="button"
