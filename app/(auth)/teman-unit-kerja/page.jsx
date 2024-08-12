@@ -5,8 +5,10 @@ import {
   faCalendarAlt,
   faUserTie,
   faHome,
+  faArrowLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const TemanUnitKerja = () => {
   const cardsData = [
@@ -118,16 +120,31 @@ const TemanUnitKerja = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = cardsData.slice(indexOfFirstItem, indexOfLastItem);
 
+  const router = useRouter();
+
+  const handleBackClick = () => {
+    router.back();
+  };
+
   return (
     <div>
-      {/* Header */}
-      <header className="bg-teal-700 text-white text-lg font-bold py-4 px-6 md:px-12 shadow-md fixed top-0 left-0 w-full z-50">
-        <div className="container mx-auto">
-          <h1>Teman Unit Kerja</h1>
+      <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+        <div className="container mx-auto flex items-center">
+          {/* Back Button */}
+          <FontAwesomeIcon
+            icon={faArrowLeft}
+            size="sm"
+            onClick={handleBackClick}
+            className="cursor-pointer mr-2"
+          />
+
+          {/* Title */}
+          <h1 className="text-base">Teman Unit Kerja</h1>
         </div>
       </header>
+
       <div className="min-h-screen flex flex-col items-center justify-start bg-gray-300 pt-4 px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-16">
+        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
           {currentItems.map((data, index) => (
             <div
               key={index}
@@ -137,44 +154,31 @@ const TemanUnitKerja = () => {
                 <div className="w-20 h-20 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 flex items-center justify-center border-2 border-blue-500 overflow-hidden">
                   <Image
                     src={data.foto}
-                    width={80}
-                    height={80}
+                    width={50}
+                    height={50}
                     alt="Anggota Foto"
                     className="rounded-full"
                   />
                 </div>
               </div>
               <div className="ml-4 flex-grow">
-                <h2 className="text-lg font-semibold text-gray-800">
+                <h2 className="text-xs font-semibold text-gray-800">
                   {data.name}
                 </h2>
-                <p className="text-gray-600 text-sm mb-2">{data.npaNip}</p>
+                <p className="text-gray-600 text-xs mb-2">{data.npaNip}</p>
                 <div className="flex items-center text-gray-800 text-sm mb-1">
                   <FontAwesomeIcon
                     icon={faCalendarAlt}
-                    className="text-gray-600 mr-2"
+                    className="text-gray-600"
                   />
-                  <span className="font-medium text-gray-700">
-                    Tanggal Lahir:
-                  </span>
                   <span className="ml-2">{data.tanggalLahir}</span>
                 </div>
                 <div className="flex items-center text-gray-800 text-sm mb-1">
-                  <FontAwesomeIcon
-                    icon={faUserTie}
-                    className="text-gray-600 mr-2"
-                  />
-                  <span className="font-medium text-gray-700">Jabatan:</span>
+                  <FontAwesomeIcon icon={faUserTie} className="text-gray-600" />
                   <span className="ml-2">{data.jabatan}</span>
                 </div>
                 <div className="flex items-center text-gray-800 text-sm">
-                  <FontAwesomeIcon
-                    icon={faHome}
-                    className="text-gray-600 mr-2"
-                  />
-                  <span className="font-medium text-gray-700">
-                    Alamat Rumah:
-                  </span>
+                  <FontAwesomeIcon icon={faHome} className="text-gray-600" />
                   <span className="ml-2">{data.alamatRumah}</span>
                 </div>
               </div>

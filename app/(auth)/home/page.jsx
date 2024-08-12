@@ -1,3 +1,5 @@
+"use client";
+import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBullhorn,
@@ -19,6 +21,10 @@ import {
 import Link from "next/link";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
+import FooterMobile from "@/app/_components/FooterMobile";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const icons = [
   { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
@@ -84,7 +90,7 @@ const icons = [
   },
   {
     icon: faCheckCircle,
-    label: "Verifikasi Anggota Baru",
+    label: "Verifikasi Anggota",
     href: "/verifikasi-anggota-mutasi",
     color: "text-blue-500",
   },
@@ -108,69 +114,179 @@ const icons = [
   },
   {
     icon: faUsers,
-    label: "Teman dalam Unit Kerja",
+    label: "Teman dalam Unit",
     href: "/teman-unit-kerja",
     color: "text-green-700",
   },
 ];
 
 export default function IconGrid() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 py-8 px-4">
-      <HeaderHome />
-      <div className="bg-white p-6 rounded-lg shadow-lg mb-8 mt-20">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-28">
-          <div className="text-center">
-            <FontAwesomeIcon
-              icon={faBullhorn}
-              size="2x"
-              className="text-red-500"
-            />
-            <p className="text-lg font-bold text-gray-700">
-              Laporan Meninggal Bulan Ini
-            </p>
-            <p className="text-gray-600 font-bold">0 Orang</p>
-          </div>
-          <div className="text-center">
-            <FontAwesomeIcon
-              icon={faUser}
-              size="2x"
-              className="text-orange-500"
-            />
-            <p className="text-lg font-bold text-gray-700">
-              Sanduka Telah Diberikan
-            </p>
-            <p className="text-gray-600 font-bold">173 Orang</p>
-          </div>
-          <div className="text-center">
-            <FontAwesomeIcon
-              icon={faMoneyBill}
-              size="2x"
-              className="text-green-500"
-            />
-            <p className="text-lg font-bold text-gray-700">
-              Total Santunan Diberikan
-            </p>
-            <p className="text-gray-600 font-bold">Rp.432.500.000</p>
-          </div>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 p-8 max-w-screen-lg mx-auto">
-        {icons.map((item, index) => (
-          <Link key={index} href={item.href}>
-            <div className="flex flex-col items-center bg-white p-6 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer h-40">
-              <FontAwesomeIcon
-                icon={item.icon}
-                size="3x"
-                className={`mb-4 ${item.color}`}
-              />
-              <span className="text-lg font-semibold text-gray-700">
-                {item.label}
-              </span>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+      {isMobile ? (
+        <>
+          <div className="bg-white rounded-lg shadow-lg border border-gray-200 w-full mb-5 px-4">
+            {/* Logo */}
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center">
+                <Image
+                  src="/sanduka.png"
+                  width={100}
+                  height={50}
+                  alt="logo"
+                  className="object-contain"
+                />
+              </div>
+
+              {/* Search Bar */}
+              <div className="flex items-center w-full max-w-lg ml-4">
+                <Input
+                  type="text"
+                  placeholder="Cari Anggota"
+                  className="w-full p-2 border rounded-l-lg border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300 ease-in-out"
+                />
+                <Button className="bg-blue-500 text-white p-2 rounded-r-lg hover:bg-blue-600 transition duration-300 ease-in-out shadow-md">
+                  Cari
+                </Button>
+              </div>
             </div>
-          </Link>
-        ))}
+          </div>
+        </>
+      ) : (
+        <HeaderHome />
+      )}
+      <div className="bg-white p-4 rounded-lg shadow-lg mb-8 w-full max-w-4xl mx-auto">
+        {isMobile ? (
+          <div className="flex flex-col items-center">
+            <div className="flex justify-around w-full">
+              <div className="text-center">
+                <FontAwesomeIcon
+                  icon={faBullhorn}
+                  size="lg"
+                  className="text-red-500 mb-2"
+                />
+                <p className="text-sm font-normal text-gray-700 whitespace-nowrap mb-1">
+                  Lapor Meninggal
+                </p>
+                <p className="text-gray-600 font-bold text-sm">1 Orang</p>
+              </div>
+              <div className="text-center ml-5">
+                <FontAwesomeIcon
+                  icon={faUser}
+                  size="lg"
+                  className="text-orange-500 mb-2"
+                />
+                <p className="text-sm font-normal text-gray-700 whitespace-nowrap mb-1">
+                  Sanduka diberikan
+                </p>
+                <p className="text-gray-600 font-bold text-sm">173 Orang</p>
+              </div>
+              <div className="text-center ml-5">
+                <FontAwesomeIcon
+                  icon={faMoneyBill}
+                  size="lg"
+                  className="text-green-500 mb-2"
+                />
+                <p className="text-sm font-normal text-gray-700 whitespace-nowrap mb-1">
+                  Total Santunan
+                </p>
+                <p className="text-gray-600 font-bold text-sm">
+                  Rp.432.500.000,-
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-6 mt-12">
+            <div className="text-center">
+              <FontAwesomeIcon
+                icon={faBullhorn}
+                size="lg"
+                className="text-red-500 mb-2"
+              />
+              <p className="text-sm md:text-base font-normal text-gray-700 whitespace-nowrap mb-1">
+                Lapor Meninggal
+              </p>
+              <p className="text-gray-600 font-bold text-sm">1 Orang</p>
+            </div>
+            <div className="text-center">
+              <FontAwesomeIcon
+                icon={faUser}
+                size="lg"
+                className="text-orange-500 mb-2"
+              />
+              <p className="text-sm md:text-base font-normal text-gray-700 whitespace-nowrap mb-1">
+                Sanduka diberikan
+              </p>
+              <p className="text-gray-600 font-bold text-sm">173 Orang</p>
+            </div>
+            <div className="text-center">
+              <FontAwesomeIcon
+                icon={faMoneyBill}
+                size="lg"
+                className="text-green-500 mb-2"
+              />
+              <p className="text-sm md:text-base font-normal text-gray-700 whitespace-nowrap mb-1">
+                Total Santunan
+              </p>
+              <p className="text-gray-600 font-bold text-sm">
+                Rp.432.500.000,-
+              </p>
+            </div>
+          </div>
+        )}
       </div>
+      {isMobile ? (
+        <div className="container grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 max-w-screen-lg mx-auto mb-16">
+          {icons.map((item, index) => (
+            <Link key={index} href={item.href}>
+              <div className="flex flex-col items-center bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
+                <FontAwesomeIcon
+                  icon={item.icon}
+                  size="2x"
+                  className={`mb-2 ${item.color}`}
+                />
+                <span className="text-xs font-normal text-gray-700 text-center whitespace-nowrap">
+                  {item.label}
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 max-w-screen-lg mx-auto mb-16">
+          {icons.map((item, index) => (
+            <Link key={index} href={item.href}>
+              <div className="flex flex-col items-center bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
+                <FontAwesomeIcon
+                  icon={item.icon}
+                  size="2x"
+                  className={`mb-2 ${item.color}`}
+                />
+                <span className="text-xs font-normal text-gray-700 text-center whitespace-nowrap">
+                  {item.label}
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+      <FooterMobile />
     </div>
   );
 }
