@@ -113,11 +113,6 @@ const HeaderHome = () => {
                 </Link>
               </li>
               <li className="relative">
-                <Link href="/comming-soon" className="text-gray-700 relative">
-                  <ShoppingBasket className="h-7 w-7" />
-                </Link>
-              </li>
-              <li className="relative">
                 <Link href="/sign-in" className="text-blue-500">
                   <Button>Login</Button>
                 </Link>

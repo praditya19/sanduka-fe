@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useRouter } from "next/navigation";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
 const SyncData = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,12 +47,26 @@ const SyncData = () => {
     setIsModalOpen(false);
   };
 
+  const router = useRouter();
+
+  const handleBackClick = () => {
+    router.back();
+  };
+
   return (
     <div>
-      {/* Header */}
-      <header className="bg-teal-700 text-white text-lg font-bold py-4 px-6 md:px-12 shadow-md fixed top-0 left-0 w-full z-50">
-        <div className="container mx-auto">
-          <h1>Singkronisasi Data</h1>
+      <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+        <div className="container mx-auto flex items-center">
+          {/* Back Button */}
+          <FontAwesomeIcon
+            icon={faArrowLeft}
+            size="sm"
+            onClick={handleBackClick}
+            className="cursor-pointer mr-2"
+          />
+
+          {/* Title */}
+          <h1 className="text-base">Singkronisasi Data</h1>
         </div>
       </header>
       <div className="min-h-screen flex-grow bg-gray-50 py-10 pt-16">
@@ -127,13 +143,9 @@ const SyncData = () => {
                       <label className="block text-gray-700 text-sm font-bold mb-2">
                         Kategori
                       </label>
-                      <input
-                        type="text"
-                        name="category"
-                        value={formData.category}
-                        onChange={handleInputChange}
-                        className="form-input block w-full mt-1 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent"
-                      />
+                      <select className="form-select block w-full mt-1 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent">
+                        <option>-- Pilih Kategori --</option>
+                      </select>
                     </div>
                     <div className="flex justify-end">
                       <Button

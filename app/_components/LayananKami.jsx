@@ -4,25 +4,23 @@ import Image from "next/image";
 
 function LayananKami() {
   return (
-    <div className="container bg-white mx-auto p-4 pt-6 md:p-6 lg:p-12">
-      <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">
-        Layanan Kami
-      </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <div className="container mx-auto p-4 pt-6 md:p-6 lg:p-12">
+      <h2 className="text-2xl font-bold mb-8 text-center">Layanan Kami</h2>
+      <div className="flex flex-wrap justify-center gap-8 md:gap-12">
         {/* Registrasi Card */}
         <Link
           href="/create-account/syarat-ketentuan"
-          className="bg-white rounded-lg shadow-lg p-6 transition-transform duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center text-center"
+          className="bg-white rounded-lg shadow-lg p-6 transition-transform duration-300 transform hover:scale-105 hover:shadow-2xl flex flex-col items-center justify-center text-center border border-gray-200 w-80 md:w-[400px]"
         >
           <div className="flex flex-col items-center text-gray-700">
             <Image
               src="/registrasi.png"
-              width={60}
-              height={60}
+              width={80}
+              height={80}
               alt="registrasi"
-              className="object-contain"
+              className="object-contain mb-4"
             />
-            <h4 className="text-base md:text-lg lg:text-xl font-semibold">
+            <h4 className="text-base md:text-xl lg:text-2xl font-semibold mb-4">
               Registrasi
             </h4>
           </div>
@@ -31,17 +29,17 @@ function LayananKami() {
         {/* Cari Anggota Card */}
         <Link
           href="/anggota/cari-anggota"
-          className="bg-white rounded-lg shadow-lg p-6 transition-transform duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center text-center"
+          className="bg-white rounded-lg shadow-lg p-6 transition-transform duration-300 transform hover:scale-105 hover:shadow-2xl flex flex-col items-center justify-center text-center border border-gray-200 w-80 md:w-[400px]"
         >
           <div className="flex flex-col items-center text-gray-700">
             <Image
               src="/search.png"
-              width={60}
-              height={60}
+              width={80}
+              height={80}
               alt="search"
-              className="object-contain"
+              className="object-contain mb-4"
             />
-            <h4 className="text-base md:text-lg lg:text-xl font-semibold">
+            <h4 className="text-base md:text-xl lg:text-2xl font-semibold mb-4">
               Cari Anggota
             </h4>
           </div>
@@ -50,37 +48,21 @@ function LayananKami() {
         {/* Bantuan Card */}
         <Link
           href="/bantuan"
-          className="bg-white rounded-lg shadow-lg p-6 transition-transform duration-300 transform hover:scale-105 hover:shadow-xl flex items-center justify-center text-center"
+          className="bg-white rounded-lg shadow-lg p-6 transition-transform duration-300 transform hover:scale-105 hover:shadow-2xl flex flex-col items-center justify-center text-center border border-gray-200 w-80 md:w-[400px]"
         >
           <div className="flex flex-col items-center text-gray-700">
             <Image
               src="/bantuan.png"
-              width={60}
-              height={60}
+              width={80}
+              height={80}
               alt="bantuan"
-              className="object-contain"
+              className="object-contain mb-4"
             />
-            <h4 className="text-base md:text-lg lg:text-xl font-semibold">
+            <h4 className="text-base md:text-xl lg:text-2xl font-semibold mb-4">
               Bantuan
             </h4>
           </div>
         </Link>
-
-        {/* Lapor Card (Disabled) */}
-        <div className="bg-white rounded-lg shadow-lg p-6 flex items-center justify-center text-center cursor-not-allowed">
-          <div className="flex flex-col items-center text-gray-600">
-            <Image
-              src="/lapor.jpg"
-              width={60}
-              height={60}
-              alt="bantuan"
-              className="object-contain"
-            />
-            <h4 className="text-base md:text-lg lg:text-xl font-semibold">
-              Lapor
-            </h4>
-          </div>
-        </div>
       </div>
     </div>
   );

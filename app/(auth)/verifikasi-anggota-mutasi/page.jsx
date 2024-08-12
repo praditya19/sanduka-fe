@@ -4,12 +4,14 @@ import Image from "next/image";
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faArrowLeft,
   faCheckCircle,
   faSearch,
   faTimesCircle,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
+import { useRouter } from "next/navigation";
 
 const VerifikasiAnggotaMutasi = () => {
   const [selectedRow, setSelectedRow] = useState(null);
@@ -46,16 +48,31 @@ const VerifikasiAnggotaMutasi = () => {
     setSelectedRow(null);
   };
 
+  const router = useRouter();
+
+  const handleBackClick = () => {
+    router.back();
+  };
+
   return (
     <div>
-      <header className="bg-teal-700 text-white text-lg font-bold mb-8 py-4 px-6 md:px-12 shadow-md fixed top-0 left-0 w-full z-50">
-        <div className="container mx-auto">
-          <h1>Verifikasi Anggota</h1>
+      <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+        <div className="container mx-auto flex items-center">
+          {/* Back Button */}
+          <FontAwesomeIcon
+            icon={faArrowLeft}
+            size="sm"
+            onClick={handleBackClick}
+            className="cursor-pointer mr-2"
+          />
+
+          {/* Title */}
+          <h1 className="text-base">Verifikasi Anggota</h1>
         </div>
       </header>
 
       <div className="container mx-auto p-4 md:p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-16 text-base">
           <div>
             <label className="block mb-2 font-semibold text-gray-800">
               Kabupaten
@@ -84,7 +101,7 @@ const VerifikasiAnggotaMutasi = () => {
 
         <div className="overflow-x-auto">
           <table className="table-auto w-full mt-4 bg-white shadow-lg rounded-lg border border-gray-200">
-            <thead className="bg-teal-700 text-white">
+            <thead className="bg-teal-700 text-white text-base">
               <tr>
                 {[
                   "No.",
@@ -106,7 +123,7 @@ const VerifikasiAnggotaMutasi = () => {
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-base">
               {tableData.map((row, index) => (
                 <tr key={index} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-2 text-center">{row.no}</td>
@@ -124,14 +141,15 @@ const VerifikasiAnggotaMutasi = () => {
                   <td className="px-4 py-2 text-center">{row.nama}</td>
                   <td className="px-4 py-2 text-center">{row.npaPGRI}</td>
                   <td
-                    className={`px-4 py-2 text-center font-bold rounded-lg ${
+                    className={`px-4 py-2 text-center text-sm font-bold ${
                       row.status === "Belum di verifikasi"
-                        ? "bg-red-500 text-white"
-                        : "bg-green-500 text-white"
+                        ? "text-red-800"
+                        : "text-green-800"
                     }`}
                   >
                     {row.status}
                   </td>
+
                   <td className="px-4 py-2 text-center">
                     <Button
                       onClick={() =>

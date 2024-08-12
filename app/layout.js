@@ -10,7 +10,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body
         style={{
-          fontFamily: "Lucida Sans",
+          fontFamily: "Source Sans Pro",
         }}
       >
         {children}
