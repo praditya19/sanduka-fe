@@ -155,14 +155,16 @@ export default function IconGrid() {
 
               {/* Search Bar */}
               <div className="flex items-center w-full max-w-lg ml-4">
+              <a href="/anggota/pencarian-anggota" className="flex w-full">
                 <Input
                   type="text"
                   placeholder="Cari Anggota"
                   className="w-full p-2 border rounded-l-lg border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300 ease-in-out"
                 />
-                <Button className="bg-blue-500 text-white p-2 rounded-r-lg hover:bg-blue-600 transition duration-300 ease-in-out shadow-md">
-                  Cari
-                </Button>
+                  <Button className="bg-blue-500 text-white p-2 rounded-r-lg hover:bg-blue-600 transition duration-300 ease-in-out shadow-md">
+                    Cari
+                  </Button>
+                </a>
               </div>
             </div>
           </div>

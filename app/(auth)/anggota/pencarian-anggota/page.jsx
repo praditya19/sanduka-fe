@@ -3,21 +3,20 @@ import React, { useState } from "react";
 import Modal from 'react-modal';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { FaEdit, FaExchangeAlt, FaExclamationTriangle, FaWhatsapp, FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
+import { FaExclamationTriangle, FaWhatsapp, FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
 import { membersData } from "../data.js";
-import { Input } from "@/components/ui/input";
 
-function DataAnggota() {
+function PencarianAnggota() {
   const [maxItems, setMaxItems] = useState(10);
   const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("-- Unit Kerja --");
   const [selectedStatus, setSelectedStatus] = useState("Semua");
+  const [selectedNama, setSelectedNama] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
-  
-  const [isCabangEnabled, setIsCabangEnabled] = useState(false);
-  const [isUnitKerjaEnabled, setIsUnitKerjaEnabled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
 
   const calculateRetirementDate = (birthDate) => {
     const [day, month, year] = birthDate.split(" ");
@@ -30,6 +29,7 @@ function DataAnggota() {
   const formatCurrency = (amount) => {
     return `Rp ${parseInt(amount).toLocaleString('id-ID')}`;
   };
+
 
   const handlePrint = () => {
     const filteredDataForPrint = filteredData;
@@ -106,11 +106,12 @@ function DataAnggota() {
                         <div>Prediksi Pensiun: ${calculateRetirementDate(item.tanggal)}</div>
                       </td>
                       <td>
+                      <div>${item.cabang},</div>
                       <div>${item.kerja},</div>
                         <div>anggota: ${item.gabung}</div>
                         <div>${item.golongan}/${formatCurrency(item.iuran)}</div>
                       </td>
-                      <td></td>
+                      <td>${item.anggota}</td>
                     </tr>
                   `
         )
@@ -162,10 +163,18 @@ function DataAnggota() {
   };
 
   const filteredData = sortedData.filter(item => {
+    const query = searchQuery.toLowerCase();
     const statusFilter = selectedStatus === "Semua" || item.anggota === selectedStatus;
     const cabangFilter = selectedCabang === "-- Cabang --" || item.cabang === selectedCabang;
     const unitKerjaFilter = selectedUnitKerja === "-- Unit Kerja --" || item.unitKerja === selectedUnitKerja;
-    return statusFilter && cabangFilter && unitKerjaFilter;
+    const nama = item.nama.toLowerCase().includes(query);
+    const npa = item.npa.toLowerCase().includes(query);
+    const cabang = item.cabang.toLowerCase().includes(query);
+    const unit = item.kerja.toLowerCase().includes(query);
+    const lahir = item.lahir.toLowerCase().includes(query);
+    const tanggal = item.tanggal.toLowerCase().includes(query);
+    
+    return statusFilter && cabangFilter && unitKerjaFilter && (nama || npa || tanggal || cabang || lahir || unit);
   });
 
   const jumlahAnggota = filteredData.length;
@@ -180,39 +189,11 @@ function DataAnggota() {
     setCurrentItem(null);
   };
 
-  const handleCabangChange = () => {
-    setIsCabangEnabled(true);
-    setIsUnitKerjaEnabled(true);
-  };
-
-  const handleUnitKerjaChange = () => {
-    setIsUnitKerjaEnabled(true);
-  };
-
-  const handlePindahCabangClick = () => {
-    if (isCabangEnabled) {
-      alert('Anggota berpindah cabang');
-      setIsCabangEnabled(false);
-      setIsUnitKerjaEnabled(false);
-    } else {
-      handleCabangChange();
-    }
-  };
-
-  const handleUnitKerjaClick = () => {
-    if (isUnitKerjaEnabled) {
-      alert('Anggota berpindah Unit Kerja');
-      setIsUnitKerjaEnabled(false);
-    } else {
-      handleUnitKerjaChange();
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
       <header className="bg-teal-700 text-white text-lg font-bold mb-8 py-4 px-6 md:px-12 shadow-md fixed top-0 left-0 w-full z-50">
         <div className="container mx-auto">
-          <h1>Data Anggota</h1>
+          <h1>Pencarian Anggota</h1>
         </div>
       </header>
       <div className="mb-4">
@@ -236,26 +217,28 @@ function DataAnggota() {
               <option>-- Unit Kerja --</option>
               <option>SMAN 2 Jepara</option>
               <option>SDN 3 Jepara</option>
-              {/* Add other options as needed */}
             </select>
-            <select
+            {/* <select
               className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
+              value={selectedNama}
+              onChange={(e) => setSelectedNama(e.target.value)}
             >
-              <option>Semua</option>
-              <option>Aktif</option>
-              <option>Tidak Aktif</option>
-              <option>Meninggal</option>
-              <option>Keluar</option>
-            </select>
-
+              <option>-- Nama Anggota --</option>
+              <option>Nanda Dwi Kurniawan</option>
+            </select> */}
+            <input
+              className="shadow appearance-none border rounded w-full md:w-80 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+              type="text"
+              placeholder="Cari Anggota"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
             <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
               Jumlah Anggota : {jumlahAnggota}
             </p>
           </div>
           <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
-            Data Anggota
+            Pencarian Anggota
           </p>
           <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
             <div className="space-x-2 w-full flex md:block">
@@ -346,7 +329,7 @@ function DataAnggota() {
                 <td className="p-2 md:p-3 border">
                   <div>{item.cabang},</div>
                   <div>{item.kerja}</div>
-                  <div>Anggota: {item.gabung}</div>
+                  <div>anggota: {item.gabung}</div>
                   <div>{item.golongan}/{formatCurrency(item.iuran)}</div>
                 </td>
                 <td className="p-2 text-center md:p-3 border">
@@ -354,7 +337,7 @@ function DataAnggota() {
                 </td>
                 <td className="p-2 md:p-3 border">
                   <div className="flex justify-center space-x-2">
-                    <Link href="#" className="text-white bg-blue-500 p-2 border rounded-md">
+                    {/* <Link href="#" className="text-white bg-blue-500 p-2 border rounded-md">
                       <FaEdit className="w-4 h-4" title="Edit Data" />
                     </Link>
                     <Button
@@ -363,15 +346,15 @@ function DataAnggota() {
                       onClick={() => openModal(item)}
                     >
                       <FaExchangeAlt className="w-4 h-4" />
-                    </Button>
+                    </Button> */}
                     <Link href="#" className="text-white bg-red-500 p-2 border rounded-md">
                       <FaExclamationTriangle className="w-4 h-4" title="Lapor" />
                     </Link>
                     <Link
                       href={`https://wa.me/${item.hp}`}
                       className="text-white bg-green-500 p-2 border rounded-md"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      target="_blank" // Opens the link in a new tab
+                      rel="noopener noreferrer" // Security feature to prevent exploitation
                     >
                       <FaWhatsapp className="w-4 h-4" title="WA" />
                     </Link>
@@ -401,64 +384,17 @@ function DataAnggota() {
               x
             </button>
           </div>
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-full flex justify-center mb-2">
-              <img
-                src={currentItem?.photo || 'default-photo-url'}
-                alt="Anggota"
-                className="w-32 h-32 object-cover rounded-full border border-gray-300"
-              />
-            </div>
-            <div className="flex flex-col items-center mb-2">
-              <Input
-                className="block text-sm font-medium w-full text-center"
-                placeholder="Nama"
-                value={currentItem?.nama || ''}
-                disabled
-              />
-              <Input
-                className="block text-sm font-medium mt-2 text-center"
-                placeholder="NPA"
-                value={currentItem?.npa || ''}
-                disabled
-              />
-              <Input
-                className="block text-sm font-medium mt-2 text-center"
-                placeholder="Cabang"
-                value={currentItem?.cabang || ''}
-                disabled={!isCabangEnabled}
-              />
-              <Input
-                className="block text-sm font-medium mt-2 text-center"
-                placeholder="Unit Kerja"
-                value={currentItem?.kerja || ''}
-                disabled={!isUnitKerjaEnabled}
-              />
-            </div>
-          </div>
           <div className="space-y-2">
-            <Button
-              className="w-full bg-teal-700 hover:bg-teal-500"
-              onClick={handlePindahCabangClick}
-            >
-              {isCabangEnabled ? 'Konfirmasi Pindah Cabang' : 'Pindah Cabang'}
+            <Button className="w-full bg-teal-700 hover:bg-teal-500" onClick={() => alert('Pindah Cabang')}>
+              Pindah Cabang
             </Button>
-            <Button
-              className="w-full bg-teal-700 hover:bg-teal-500"
-              onClick={handleUnitKerjaClick}
-            >
-              {isUnitKerjaEnabled ? 'Konfirmasi Unit Kerja' : 'Unit Kerja'}
+            <Button className="w-full bg-teal-700 hover:bg-teal-500" onClick={() => alert('Unit Kerja')}>
+              Unit Kerja
             </Button>
-            <Button
-              className="w-full bg-teal-700 hover:bg-teal-500"
-              onClick={() => alert('Keluar Anggota')}
-            >
+            <Button className="w-full bg-teal-700 hover:bg-teal-500" onClick={() => alert('Keluar Anggota')}>
               Keluar Anggota
             </Button>
-            <Button
-              className="w-full bg-teal-700 hover:bg-teal-500"
-              onClick={() => alert('Tidak Jelas')}
-            >
+            <Button className="w-full bg-teal-700 hover:bg-teal-500" onClick={() => alert('Tidak Jelas')}>
               Tidak Jelas
             </Button>
           </div>
@@ -468,4 +404,4 @@ function DataAnggota() {
   );
 }
 
-export default DataAnggota;
+export default PencarianAnggota;
