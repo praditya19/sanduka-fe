@@ -178,7 +178,10 @@ export default function Home() {
                       {item.kurangSetor.toFixed(2)}
                     </td>
                     <td className="p-2 md:p-3 border text-center">
-                      <Link href="#" className="text-blue-500">
+                      <Link
+                        href="/keuangan/home/detail"
+                        className="text-blue-500"
+                      >
                         <Button>Detail</Button>
                       </Link>
                     </td>
