@@ -2,9 +2,12 @@
 import React, { useState } from "react";
 import Modal from 'react-modal';
 import { Button } from "@/components/ui/button";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { FaExclamationTriangle, FaWhatsapp, FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
 import { membersData } from "../data.js";
+import { useRouter } from "next/navigation";
 
 function PencarianAnggota() {
   const [maxItems, setMaxItems] = useState(10);
@@ -189,11 +192,26 @@ function PencarianAnggota() {
     setCurrentItem(null);
   };
 
+  const router = useRouter();
+
+  const handleBackClick = () => {
+    router.back();
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      <header className="bg-teal-700 text-white text-lg font-bold mb-8 py-4 px-6 md:px-12 shadow-md fixed top-0 left-0 w-full z-50">
-        <div className="container mx-auto">
-          <h1>Pencarian Anggota</h1>
+      <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+        <div className="container mx-auto flex items-center">
+          {/* Back Button */}
+          <FontAwesomeIcon
+            icon={faArrowLeft}
+            size="sm"
+            onClick={handleBackClick}
+            className="cursor-pointer mr-2"
+          />
+
+          {/* Title */}
+          <h1 className="text-base">Pencarian Anggota</h1>
         </div>
       </header>
       <div className="mb-4">

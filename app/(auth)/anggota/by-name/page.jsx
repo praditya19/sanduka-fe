@@ -1,8 +1,11 @@
 'use client';
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { membersData } from '../data.js';
+import { useRouter } from "next/navigation";
 
 function DataAnggota() {
     const [maxItems, setMaxItems] = useState(10);
@@ -119,15 +122,30 @@ function DataAnggota() {
         groupedData.push({ kerja, jumlah: items.length, items });
     }
 
+    const router = useRouter();
+
+    const handleBackClick = () => {
+        router.back();
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-            <header className="bg-teal-700 text-white text-lg font-bold mb-8 py-4 px-6 md:px-12 shadow-md fixed top-0 left-0 w-full z-50">
-        <div className="container mx-auto">
-          <h1>Rekap Anggota</h1>
+            <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+        <div className="container mx-auto flex items-center">
+          {/* Back Button */}
+          <FontAwesomeIcon
+            icon={faArrowLeft}
+            size="sm"
+            onClick={handleBackClick}
+            className="cursor-pointer mr-2"
+          />
+
+          {/* Title */}
+          <h1 className="text-base">Anggota by Name</h1>
         </div>
       </header>
             <div className="mb-4">
-                <div className="flex flex-wrap items-start mt-16 justify-between">
+                <div className="flex flex-wrap items-start mt-14 justify-between">
                     <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
                         <select
                             className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
@@ -219,7 +237,7 @@ function DataAnggota() {
                                 <td className="border text-center">
                                     {group.items.map((item, index) => (
                                         <div key={index} className={`mb-1 pl-2 py-6 ${index < group.items.length - 1 ? 'border-b border-dashed' : ''}`}
-                                        >                                            
+                                        >
                                             <div>{item.pgri}</div>
                                         </div>
                                     ))}
