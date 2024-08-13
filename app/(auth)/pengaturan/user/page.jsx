@@ -5,11 +5,11 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
-import { Label } from "@/components/ui/Label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/Button";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { faArrowLeft, faBars } from "@fortawesome/free-solid-svg-icons";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const Page = () => {
   const dummyData = [
