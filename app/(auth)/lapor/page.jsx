@@ -91,7 +91,7 @@ const FormStep1 = ({ onNext }) => {
           />
 
           {/* Title */}
-          <h1 className="text-base">Teman Unit Kerja</h1>
+          <h1 className="text-base">Lapor</h1>
         </div>
       </header>
       <form className="space-y-4 bg-white p-4 sm:p-8 rounded-lg shadow-lg">
