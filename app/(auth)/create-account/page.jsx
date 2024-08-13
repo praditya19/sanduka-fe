@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
@@ -119,7 +118,15 @@ const Page = () => {
   };
 
   const nextStep = () => {
+    // Periksa apakah gambar telah diunggah
+    if (!selectedFile) {
+      setError("Harap unggah gambar sebelum melanjutkan.");
+      return; // Hentikan perpindahan halaman
+    }
+
+    // Jika gambar telah diunggah, lanjutkan ke step berikutnya
     setStep(step + 1);
+    setError(""); // Bersihkan pesan error jika ada
   };
 
   const prevStep = () => {
@@ -167,6 +174,9 @@ const Page = () => {
                   *Maksimal ukuran file unggah 250kb format file (jpg, jpeg,
                   png)
                 </p>
+                {error && (
+                  <p className="text-red-600 text-center mt-2">{error}</p>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
@@ -429,7 +439,7 @@ const Page = () => {
                   )}
                 </div>
                 <div>
-                  <div className="w-full ">
+                  <div className="w-full">
                     <Label className="block text-sm font-medium mb-3">
                       Alamat
                       <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
@@ -439,7 +449,6 @@ const Page = () => {
                     <Controller
                       name="alamat"
                       control={control}
-                      rules={{ required: true }}
                       render={({ field }) => (
                         <Textarea
                           placeholder="JL. RT.  RW.  Desa, Kecamatan, Kabupaten"
@@ -448,11 +457,6 @@ const Page = () => {
                         />
                       )}
                     />
-                    {errors.alamat && (
-                      <span className="text-red-500 text-sm">
-                        Alamat is required
-                      </span>
-                    )}
                   </div>
                   <Button
                     type="button"
@@ -461,9 +465,6 @@ const Page = () => {
                   >
                     {loading ? "Mendapatkan Lokasi..." : "Get Location"}
                   </Button>
-                  {error && (
-                    <span className="text-red-500 text-sm mt-2">{error}</span>
-                  )}
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
@@ -583,9 +584,9 @@ const Page = () => {
               className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white p-4 sm:p-8 rounded-lg shadow-lg"
             >
               <div className="w-full">
-                <Label className="flex flex-col sm:flex-row items-start sm:items-center">
+                <Label className="block text-sm font-medium mb-3">
                   Cabang
-                  <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0 mb-2 sm:mb-2">
+                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
                     *Isi Sesuai Tempat Tugas
                   </span>
                 </Label>
@@ -902,10 +903,10 @@ const Page = () => {
               <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
                   Mengajar
+                  <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                    *Mata Pelajaran
+                  </span>
                 </Label>
-                <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
-                  *Mata Pelajaran
-                </span>
                 <Input
                   className="mt-2 sm:mt-2"
                   type="text"

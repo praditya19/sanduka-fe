@@ -25,6 +25,8 @@ import FooterMobile from "@/app/_components/FooterMobile";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Sidebar from "@/app/_components/Sidebar";
+import SemuaAnggotaCabang from "@/app/_components/SemuaAnggotaCabang";
 
 const icons = [
   { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
@@ -137,158 +139,169 @@ export default function IconGrid() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex flex-col bg-gray-100">
       {isMobile ? (
-        <>
-          <div className="bg-white rounded-lg shadow-lg border border-gray-200 w-full mb-5 px-4">
-            {/* Logo */}
-            <div className="flex items-center justify-between p-4">
-              <div className="flex items-center">
-                <Image
-                  src="/sanduka.png"
-                  width={100}
-                  height={50}
-                  alt="logo"
-                  className="object-contain"
+        <div className="bg-white rounded-lg shadow-lg border border-gray-200 w-full mb-5 px-4">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center">
+              <Image
+                src="/sanduka.png"
+                width={100}
+                height={50}
+                alt="logo"
+                className="object-contain"
+              />
+            </div>
+            <div className="flex items-center w-full max-w-lg ml-4">
+              <a href="/anggota/pencarian-anggota" className="flex w-full">
+                <Input
+                  type="text"
+                  placeholder="Cari Anggota"
+                  className="w-full p-2 border rounded-l-lg border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300 ease-in-out"
                 />
-              </div>
-
-              {/* Search Bar */}
-              <div className="flex items-center w-full max-w-lg ml-4">
-                <a href="/anggota/pencarian-anggota" className="flex w-full">
-                  <Input
-                    type="text"
-                    placeholder="Cari Anggota"
-                    className="w-full p-2 border rounded-l-lg border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300 ease-in-out"
-                  />
-                  <Button className="bg-blue-500 text-white p-2 rounded-r-lg hover:bg-blue-600 transition duration-300 ease-in-out shadow-md">
-                    Cari
-                  </Button>
-                </a>
-              </div>
+                <Button className="bg-blue-500 text-white p-2 rounded-r-lg hover:bg-blue-600 transition duration-300 ease-in-out shadow-md">
+                  Cari
+                </Button>
+              </a>
             </div>
           </div>
-        </>
+        </div>
       ) : (
         <HeaderHome />
       )}
-      <div className="bg-white p-4 rounded-lg shadow-lg mb-8 w-full max-w-4xl mx-auto">
-        {isMobile ? (
-          <div className="flex flex-col items-center">
-            <div className="flex justify-around w-full">
-              <div className="text-center">
-                <FontAwesomeIcon
-                  icon={faBullhorn}
-                  size="lg"
-                  className="text-red-500 mb-2"
-                />
-                <p className="text-sm font-normal text-gray-700 whitespace-nowrap mb-1">
-                  Lapor Meninggal
-                </p>
-                <p className="text-gray-600 font-bold text-sm">1 Orang</p>
-              </div>
-              <div className="text-center ml-5">
-                <FontAwesomeIcon
-                  icon={faUser}
-                  size="lg"
-                  className="text-orange-500 mb-2"
-                />
-                <p className="text-sm font-normal text-gray-700 whitespace-nowrap mb-1">
-                  Sanduka diberikan
-                </p>
-                <p className="text-gray-600 font-bold text-sm">173 Orang</p>
-              </div>
-              <div className="text-center ml-5">
-                <FontAwesomeIcon
-                  icon={faMoneyBill}
-                  size="lg"
-                  className="text-green-500 mb-2"
-                />
-                <p className="text-sm font-normal text-gray-700 whitespace-nowrap mb-1">
-                  Total Santunan
-                </p>
-                <p className="text-gray-600 font-bold text-sm">
-                  Rp.432.500.000,-
-                </p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-6">
-            <div className="text-center">
-              <FontAwesomeIcon
-                icon={faBullhorn}
-                size="lg"
-                className="text-red-500 mb-2"
-              />
-              <p className="text-sm md:text-base font-normal text-gray-700 whitespace-nowrap mb-1">
-                Lapor Meninggal
-              </p>
-              <p className="text-gray-600 font-bold text-sm">1 Orang</p>
-            </div>
-            <div className="text-center">
-              <FontAwesomeIcon
-                icon={faUser}
-                size="lg"
-                className="text-orange-500 mb-2"
-              />
-              <p className="text-sm md:text-base font-normal text-gray-700 whitespace-nowrap mb-1">
-                Sanduka diberikan
-              </p>
-              <p className="text-gray-600 font-bold text-sm">173 Orang</p>
-            </div>
-            <div className="text-center">
-              <FontAwesomeIcon
-                icon={faMoneyBill}
-                size="lg"
-                className="text-green-500 mb-2"
-              />
-              <p className="text-sm md:text-base font-normal text-gray-700 whitespace-nowrap mb-1">
-                Total Santunan
-              </p>
-              <p className="text-gray-600 font-bold text-sm">
-                Rp.432.500.000,-
-              </p>
-            </div>
+
+      <div className="flex flex-1">
+        {!isMobile && (
+          <div>
+            <Sidebar />
           </div>
         )}
+        <div className="flex-1 p-4">
+          <div className="bg-white p-4 rounded-lg shadow-lg mb-8 w-full">
+            {isMobile ? (
+              <div className="flex flex-col items-center">
+                <div className="flex justify-around w-full gap-2">
+                  <div className="bg-red-100 rounded-lg shadow-md transform transition duration-300 hover:scale-105 p-1.5">
+                    <div className="text-center">
+                      <FontAwesomeIcon
+                        icon={faBullhorn}
+                        size="lg"
+                        className="text-red-500 mb-2"
+                      />
+                      <p className="text-xs font-normal text-gray-700 whitespace-nowrap mb-1">
+                        Lapor Meninggal
+                      </p>
+                      <p className="text-gray-600 font-bold text-sm">1 Orang</p>
+                    </div>
+                  </div>
+                  <div className="bg-orange-100 rounded-lg shadow-md transform transition duration-300 hover:scale-105 p-1.5">
+                    <div className="text-center">
+                      <FontAwesomeIcon
+                        icon={faUser}
+                        size="lg"
+                        className="text-orange-500 mb-2"
+                      />
+                      <p className="text-xs font-normal text-gray-700 whitespace-nowrap mb-1">
+                        Sanduka diberikan
+                      </p>
+                      <p className="text-gray-600 font-bold text-sm">
+                        173 Orang
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-green-100 rounded-lg shadow-md transform transition duration-300 hover:scale-105 p-1.5">
+                    <div className="text-center">
+                      <FontAwesomeIcon
+                        icon={faMoneyBill}
+                        size="lg"
+                        className="text-green-500 mb-2"
+                      />
+                      <p className="text-xs font-normal text-gray-700 whitespace-nowrap mb-1">
+                        Total Santunan
+                      </p>
+                      <p className="text-gray-600 font-bold text-sm">
+                        Rp.432.500.000,-
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="w-full mt-12">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="bg-red-100 p-6 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
+                    <div className="text-center">
+                      <FontAwesomeIcon
+                        icon={faBullhorn}
+                        size="lg"
+                        className="text-red-500 mb-4"
+                      />
+                      <p className="text-sm md:text-base font-normal text-gray-800 mb-2">
+                        Lapor Meninggal
+                      </p>
+                      <p className="text-gray-700 font-bold text-sm">1 Orang</p>
+                    </div>
+                  </div>
+                  <div className="bg-orange-100 p-6 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
+                    <div className="text-center">
+                      <FontAwesomeIcon
+                        icon={faUser}
+                        size="lg"
+                        className="text-orange-500 mb-4"
+                      />
+                      <p className="text-sm md:text-base font-normal text-gray-800 mb-2">
+                        Sanduka diberikan
+                      </p>
+                      <p className="text-gray-700 font-bold text-sm">
+                        173 Orang
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-green-100 p-6 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
+                    <div className="text-center">
+                      <FontAwesomeIcon
+                        icon={faMoneyBill}
+                        size="lg"
+                        className="text-green-500 mb-4"
+                      />
+                      <p className="text-sm md:text-base font-normal text-gray-800 mb-2">
+                        Total Santunan
+                      </p>
+                      <p className="text-gray-700 font-bold text-sm">
+                        Rp.432.500.000,-
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          {isMobile ? (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-16">
+              {icons.map((item, index) => (
+                <Link key={index} href={item.href}>
+                  <div className="flex flex-col items-center bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
+                    <FontAwesomeIcon
+                      icon={item.icon}
+                      size="2x"
+                      className={`mb-2 ${item.color}`}
+                    />
+                    <span className="text-xs font-normal text-gray-700 text-center whitespace-nowrap">
+                      {item.label}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white">
+              <SemuaAnggotaCabang />
+            </div>
+          )}
+        </div>
       </div>
-      {isMobile ? (
-        <div className="container grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 max-w-screen-lg mx-auto mb-16">
-          {icons.map((item, index) => (
-            <Link key={index} href={item.href}>
-              <div className="flex flex-col items-center bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
-                <FontAwesomeIcon
-                  icon={item.icon}
-                  size="2x"
-                  className={`mb-2 ${item.color}`}
-                />
-                <span className="text-xs font-normal text-gray-700 text-center whitespace-nowrap">
-                  {item.label}
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4 max-w-screen-lg mx-auto mb-16">
-          {icons.map((item, index) => (
-            <Link key={index} href={item.href}>
-              <div className="flex flex-col items-center bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
-                <FontAwesomeIcon
-                  icon={item.icon}
-                  size="2x"
-                  className={`mb-2 ${item.color}`}
-                />
-                <span className="text-xs font-normal text-gray-700 text-center whitespace-nowrap">
-                  {item.label}
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-      <FooterMobile />
+
+      {isMobile && <FooterMobile />}
     </div>
   );
 }

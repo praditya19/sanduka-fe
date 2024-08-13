@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/table";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import { useRouter } from "next/navigation";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
 const data = [
   {
@@ -134,94 +136,113 @@ const Page = () => {
     alert(`Editing: ${item.data}`);
   };
 
+  const router = useRouter();
+
+  const handleBackClick = () => {
+    router.back();
+  };
+
   return (
-    <div className="w-full p-4 container shadow-lg rounded-lg">
-      <div className="rounded-md flex flex-col py-4">
-        <div className="container px-2">
-          <h2 className="text-lg md:text-xl font-bold mb-4 text-center">
-            HISTORY DATA
-          </h2>
-          <div className="w-full flex mb-4 relative">
-            <input
-              type="text"
-              placeholder="Search"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="p-2 pl-10 border rounded max-w-sm w-full"
-            />
-            <FontAwesomeIcon
-              icon={faMagnifyingGlass}
-              className="absolute left-3 top-2.5 w-5 h-5 text-gray-500"
-            />
-          </div>
-          <Table className="w-full table-auto mb-8">
-            <TableHeader className="p-2 md:p-3 border bg-green-300">
-              <TableRow>
-                <TableHead
-                  rowspan="2"
-                  className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                >
-                  No
-                </TableHead>
-                <TableHead
-                  rowspan="2"
-                  className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                >
-                  Date
-                </TableHead>
-                <TableHead
-                  rowspan="2"
-                  className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                >
-                  Data
-                </TableHead>
-                <TableHead
-                  rowspan="2"
-                  className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                >
-                  Cabang
-                </TableHead>
-                <TableHead
-                  rowspan="2"
-                  className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                >
-                  Detail
-                </TableHead>
-                <TableHead
-                  rowspan="2"
-                  className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                >
-                  Action
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredData.map((item, index) => (
-                <TableRow
-                  key={index}
-                  className={index % 2 === 0 ? "bg-gray-200" : "bg-white"}
-                >
-                  <TableCell className="text-center border">
-                    {index + 1}
-                  </TableCell>
-                  <TableCell className="border">{item.dateLapor}</TableCell>
-                  <TableCell className="border">{item.data}</TableCell>
-                  <TableCell className="text-center border">
-                    {item.cabang}
-                  </TableCell>
-                  <TableCell className="border">{item.detail}</TableCell>
-                  <TableCell className="text-center border">
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                    >
-                      Edit
-                    </button>
-                  </TableCell>
+    <div>
+      <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+        <div className="container mx-auto flex items-center">
+          {/* Back Button */}
+          <FontAwesomeIcon
+            icon={faArrowLeft}
+            size="sm"
+            onClick={handleBackClick}
+            className="cursor-pointer mr-2"
+          />
+
+          {/* Title */}
+          <h1 className="text-base">History Data</h1>
+        </div>
+      </header>
+      <div className="w-full p-4 container shadow-lg rounded-lg mt-12">
+        <div className="rounded-md flex flex-col py-4">
+          <div className="container px-2">
+            <div className="w-full flex mb-4 relative">
+              <input
+                type="text"
+                placeholder="Search"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="p-2 pl-10 border rounded max-w-sm w-full"
+              />
+              <FontAwesomeIcon
+                icon={faMagnifyingGlass}
+                className="absolute left-3 top-2.5 w-5 h-5 text-gray-500"
+              />
+            </div>
+            <Table className="w-full table-auto mb-8">
+              <TableHeader className="p-2 md:p-3 border bg-green-300">
+                <TableRow>
+                  <TableHead
+                    rowspan="2"
+                    className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                  >
+                    No
+                  </TableHead>
+                  <TableHead
+                    rowspan="2"
+                    className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                  >
+                    Date
+                  </TableHead>
+                  <TableHead
+                    rowspan="2"
+                    className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                  >
+                    Data
+                  </TableHead>
+                  <TableHead
+                    rowspan="2"
+                    className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                  >
+                    Cabang
+                  </TableHead>
+                  <TableHead
+                    rowspan="2"
+                    className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                  >
+                    Detail
+                  </TableHead>
+                  <TableHead
+                    rowspan="2"
+                    className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                  >
+                    Action
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredData.map((item, index) => (
+                  <TableRow
+                    key={index}
+                    className={index % 2 === 0 ? "bg-gray-200" : "bg-white"}
+                  >
+                    <TableCell className="text-center border">
+                      {index + 1}
+                    </TableCell>
+                    <TableCell className="border">{item.dateLapor}</TableCell>
+                    <TableCell className="border">{item.data}</TableCell>
+                    <TableCell className="text-center border">
+                      {item.cabang}
+                    </TableCell>
+                    <TableCell className="border">{item.detail}</TableCell>
+                    <TableCell className="text-center border">
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                      >
+                        Edit
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
     </div>
