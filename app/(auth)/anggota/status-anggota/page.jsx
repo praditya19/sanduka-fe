@@ -3,13 +3,16 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { membersData } from "../data.js";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { useRouter } from "next/navigation";
 
-function formatRupiah(angka) {
-    var reverse = angka.toString().split('').reverse().join(''),
-        ribuan = reverse.match(/\d{1,3}/g);
-    ribuan = ribuan.join('.').split('').reverse().join('');
-    return 'Rp. ' + ribuan;
-}
+// function formatRupiah(angka) {
+//     var reverse = angka.toString().split('').reverse().join(''),
+//         ribuan = reverse.match(/\d{1,3}/g);
+//     ribuan = ribuan.join('.').split('').reverse().join('');
+//     return 'Rp. ' + ribuan;
+// }
 
 function StatusAnggota() {
     const [maxItems, setMaxItems] = useState(10);
@@ -170,15 +173,31 @@ function StatusAnggota() {
         ? membersData
         : membersData.filter(member => member.cabang === selectedCabang);
 
+    const router = useRouter();
+
+    const handleBackClick = () => {
+        router.back();
+    };
+
+
     return (
         <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-            <header className="bg-teal-700 text-white text-lg font-bold mb-8 py-4 px-6 md:px-12 shadow-md fixed top-0 left-0 w-full z-50">
-                <div className="container mx-auto">
-                    <h1>Status Anggota</h1>
+            <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+                <div className="container mx-auto flex items-center">
+                    {/* Back Button */}
+                    <FontAwesomeIcon
+                        icon={faArrowLeft}
+                        size="sm"
+                        onClick={handleBackClick}
+                        className="cursor-pointer mr-2"
+                    />
+
+                    {/* Title */}
+                    <h1 className="text-base">Status Anggota</h1>
                 </div>
             </header>
 
-            <div className="flex flex-wrap justify-between mt-16 mb-4 mx-4">
+            <div className="flex flex-wrap justify-between mt-14 mb-4 mx-4">
                 {categories.map((category, index) => (
                     <div key={index} className="flex flex-col items-center w-full md:w-1/3 mb-4 md:mb-0">
                         <div className="bg-teal-500 text-white p-2 rounded-lg mb-2 w-40 text-center">
