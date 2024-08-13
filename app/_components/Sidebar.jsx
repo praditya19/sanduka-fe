@@ -94,7 +94,7 @@ const icons = [
   {
     icon: faCog,
     label: "Pengaturan",
-    href: "/pengaturan",
+    href: "/pengaturan/user",
     color: "text-gray-700",
   },
   {
