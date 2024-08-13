@@ -161,10 +161,10 @@ const DataTable = () => {
     <div className="w-full p-4 container shadow-lg rounded-lg">
       <div className="rounded-md flex flex-col py-4">
         <div className="container px-2">
-          <h2 className="text-lg md:text-xl font-bold mb-4 text-center">
+          <h2 className="text-base md:text-base font-bold mb-4 text-center">
             DATA ANGGOTA
           </h2>
-          <div className="w-full flex mb-4 space-x-4">
+          <div className="w-full flex mb-4 space-x-4 text-base">
             <select
               value={detailFilter}
               onChange={(e) => setDetailFilter(e.target.value)}
@@ -204,7 +204,7 @@ const DataTable = () => {
               <option value="WELAHAN">WELAHAN</option>
             </select>
           </div>
-          <Table className="w-full table-auto mb-8">
+          <Table className="w-full table-auto mb-8 text-sm">
             <TableHeader className="p-2 md:p-3 border bg-teal-700 ">
               <TableRow>
                 <TableHead
