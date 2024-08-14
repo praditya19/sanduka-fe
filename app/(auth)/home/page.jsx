@@ -241,7 +241,7 @@ export default function IconGrid() {
                       <p className="text-xs md:text-sm font-bold text-gray-800 tracking-wide uppercase mb-1">
                         Lapor Meninggal
                       </p>
-                      <p className="text-3xl text-gray-700 font-normal">
+                      <p className="text-2xl text-gray-700 font-normal">
                         1 Orang
                       </p>
                     </div>
@@ -258,7 +258,7 @@ export default function IconGrid() {
                       <p className="text-xs md:text-sm font-bold text-gray-700 tracking-wide uppercase mb-1">
                         Sanduka Diberikan
                       </p>
-                      <p className="text-3xl text-gray-800 font-normal">
+                      <p className="text-2xl text-gray-800 font-normal">
                         173 Orang
                       </p>
                     </div>
@@ -275,7 +275,7 @@ export default function IconGrid() {
                       <p className="text-xs md:text-sm font-bold text-gray-700 tracking-wide uppercase mb-1">
                         Total Santunan
                       </p>
-                      <p className="text-3xl text-gray-800 font-normal">
+                      <p className="text-2xl text-gray-800 font-normal">
                         Rp.432.500.000,-
                       </p>
                     </div>

@@ -26,7 +26,7 @@ function Table() {
 
   return (
     <div className="container mx-auto p-6 min-h-screen">
-      <h1 className="text-sm font-extrabold mb-6 text-gray-800 text-center">
+      <h1 className="text-base font-extrabold mb-6 text-gray-800 text-center">
         Data Anggota <br />
         Agustus 2024
       </h1>
