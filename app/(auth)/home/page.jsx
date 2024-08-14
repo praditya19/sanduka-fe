@@ -31,28 +31,10 @@ import SemuaAnggotaCabang from "@/app/_components/SemuaAnggotaCabang";
 const icons = [
   { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
   {
-    icon: faFileAlt,
-    label: "Statistik",
-    href: "/statistik",
+    icon: faCheckCircle,
+    label: "Verifikasi Anggota",
+    href: "/verifikasi-anggota-mutasi",
     color: "text-blue-500",
-  },
-  {
-    icon: faDatabase,
-    label: "History data",
-    href: "/history-data",
-    color: "text-green-500",
-  },
-  {
-    icon: faHandsHelping,
-    label: "Bantuan",
-    href: "/bantuan",
-    color: "text-purple-500",
-  },
-  {
-    icon: faFileInvoice,
-    label: "Rekap Meninggal",
-    href: "/rekap-meninggal",
-    color: "text-pink-500",
   },
   {
     icon: faUsers,
@@ -61,10 +43,28 @@ const icons = [
     color: "text-orange-500",
   },
   {
-    icon: faClipboardCheck,
-    label: "Ketentuan",
-    href: "/ketentuan",
-    color: "text-teal-500",
+    icon: faUbuntu,
+    label: "Rekap Anggota",
+    href: "/anggota/rekap-anggota",
+    color: "text-gray-500",
+  },
+  {
+    icon: faUsersGear,
+    label: "Anggota by Name",
+    href: "/anggota/by-name",
+    color: "text-yellow-500",
+  },
+  {
+    icon: faFileInvoice,
+    label: "Rekap Meninggal",
+    href: "/rekap-meninggal",
+    color: "text-pink-500",
+  },
+  {
+    icon: faFileAlt,
+    label: "Statistik",
+    href: "/statistik",
+    color: "text-blue-500",
   },
   {
     icon: faUserGraduate,
@@ -73,10 +73,16 @@ const icons = [
     color: "text-indigo-500",
   },
   {
-    icon: faUbuntu,
-    label: "Rekap Anggota",
-    href: "/anggota/rekap-anggota",
-    color: "text-gray-500",
+    icon: faDatabase,
+    label: "History data",
+    href: "/history-data",
+    color: "text-green-500",
+  },
+  {
+    icon: faSyncAlt,
+    label: "Pensiun",
+    href: "/pensiun",
+    color: "text-rose-500",
   },
   {
     icon: faWallet,
@@ -86,21 +92,21 @@ const icons = [
   },
   {
     icon: faSyncAlt,
-    label: "Pensiun",
-    href: "/pensiun",
-    color: "text-rose-500",
+    label: "Singkron Data",
+    href: "/singkron-data",
+    color: "text-teal-700",
   },
   {
-    icon: faCheckCircle,
-    label: "Verifikasi Anggota",
-    href: "/verifikasi-anggota-mutasi",
-    color: "text-blue-500",
+    icon: faClipboardCheck,
+    label: "Ketentuan",
+    href: "/ketentuan",
+    color: "text-teal-500",
   },
   {
-    icon: faUsersGear,
-    label: "Anggota by Name",
-    href: "/anggota/by-name",
-    color: "text-yellow-500",
+    icon: faHandsHelping,
+    label: "Bantuan",
+    href: "/bantuan",
+    color: "text-purple-500",
   },
   {
     icon: faCog,
@@ -108,12 +114,7 @@ const icons = [
     href: "/pengaturan/user",
     color: "text-gray-700",
   },
-  {
-    icon: faSyncAlt,
-    label: "Singkron Data",
-    href: "/singkron-data",
-    color: "text-teal-700",
-  },
+
   {
     icon: faUsers,
     label: "Teman dalam Unit",
@@ -229,45 +230,52 @@ export default function IconGrid() {
             ) : (
               <div className="w-full mt-12">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div className="bg-red-100 p-6 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
+                  {/* Lapor Meninggal */}
+                  <div className="bg-white p-6 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
                     <div className="text-center">
                       <FontAwesomeIcon
                         icon={faBullhorn}
                         size="lg"
-                        className="text-red-500 mb-4"
+                        className="text-blue-500 mb-2"
                       />
-                      <p className="text-sm md:text-base font-normal text-gray-800 mb-2">
+                      <p className="text-xs md:text-sm font-bold text-gray-800 tracking-wide uppercase mb-1">
                         Lapor Meninggal
                       </p>
-                      <p className="text-gray-700 font-bold text-sm">1 Orang</p>
+                      <p className="text-3xl text-gray-700 font-normal">
+                        1 Orang
+                      </p>
                     </div>
                   </div>
-                  <div className="bg-orange-100 p-6 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
+
+                  {/* Sanduka Diberikan */}
+                  <div className="bg-white p-6 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
                     <div className="text-center">
                       <FontAwesomeIcon
                         icon={faUser}
                         size="lg"
-                        className="text-orange-500 mb-4"
+                        className="text-red-500 mb-2"
                       />
-                      <p className="text-sm md:text-base font-normal text-gray-800 mb-2">
-                        Sanduka diberikan
+                      <p className="text-xs md:text-sm font-bold text-gray-700 tracking-wide uppercase mb-1">
+                        Sanduka Diberikan
                       </p>
-                      <p className="text-gray-700 font-bold text-sm">
+                      <p className="text-3xl text-gray-800 font-normal">
                         173 Orang
                       </p>
                     </div>
                   </div>
-                  <div className="bg-green-100 p-6 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
+
+                  {/* Total Santunan */}
+                  <div className="bg-white p-6 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
                     <div className="text-center">
                       <FontAwesomeIcon
                         icon={faMoneyBill}
                         size="lg"
-                        className="text-green-500 mb-4"
+                        className="text-green-500 mb-2"
                       />
-                      <p className="text-sm md:text-base font-normal text-gray-800 mb-2">
+                      <p className="text-xs md:text-sm font-bold text-gray-700 tracking-wide uppercase mb-1">
                         Total Santunan
                       </p>
-                      <p className="text-gray-700 font-bold text-sm">
+                      <p className="text-3xl text-gray-800 font-normal">
                         Rp.432.500.000,-
                       </p>
                     </div>
