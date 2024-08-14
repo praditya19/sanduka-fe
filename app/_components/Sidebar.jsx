@@ -115,22 +115,22 @@ const icons = [
 export default function Sidebar() {
   return (
     <div className="w-64 min-h-screen bg-white p-4 flex flex-col space-y-2 shadow-lg mt-12">
-      {icons.map((item, index) => (
-        <a
-          key={index}
-          href={item.href}
-          className="flex items-center p-3 space-x-3 transition duration-300 ease-in-out transform hover:bg-gray-100 rounded-lg hover:shadow-md"
-        >
-          <FontAwesomeIcon
-            icon={item.icon}
-            size="lg"
-            className={`${item.color} w-6`}
-          />
-          <span className="text-sm md:text-base font-medium text-gray-700">
-            {item.label}
-          </span>
-        </a>
-      ))}
-    </div>
+    {icons.map((item, index) => (
+      <a
+        key={index}
+        href={item.href}
+        className="flex items-center p-3 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
+      >
+        <FontAwesomeIcon
+          icon={item.icon}
+          size="lg"
+          className={`${item.color} w-6`}
+        />
+        <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
+          {item.label}
+        </span>
+      </a>
+    ))}
+  </div>
   );
 }

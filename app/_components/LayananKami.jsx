@@ -3,10 +3,11 @@ import Link from "next/link";
 import Image from "next/image";
 
 function LayananKami() {
+
   return (
-    <div className="container mx-auto p-4 pt-6 md:p-6 lg:p-12">
+    <div id="layananKamiSection"  className="container mx-auto p-4 pt-6 md:p-6 lg:p-12">
       <h2 className="text-2xl font-bold mb-8 text-center">Layanan Kami</h2>
-      <div className="flex flex-wrap justify-center gap-8 md:gap-12">
+      <div className="flex flex-col md:flex-row flex-wrap justify-center gap-4 md:gap-8 lg:gap-12">
         {/* Registrasi Card */}
         <Link
           href="/create-account/syarat-ketentuan"
@@ -65,7 +66,7 @@ function LayananKami() {
         </Link>
       </div>
     </div>
-  );
+    );
 }
 
 export default LayananKami;

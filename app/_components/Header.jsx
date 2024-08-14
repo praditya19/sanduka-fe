@@ -1,23 +1,91 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    // Clean up the event listener
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleClick = () => {
     setIsOpen(false);
   };
 
+  const scrollToSection = (sectionId) => (event) => {
+    event.preventDefault(); // Prevent default link behavior
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+    handleClick(); // Close the menu if it's open (for mobile view)
+  };
+
   return (
-    <nav className="bg-white shadow-md fixed top-0 inset-x-0 z-50">
+    <nav
+      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+        isScrolled ? "bg-white shadow-md" : "bg-transparent"
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link href="/">
-              <Image src="/sanduka.png" width={170} height={170} alt="logo" />
+              <Image
+                src={isScrolled ? "/sanduka.png" : "/sanduka_bg_white.png"}
+                width={120}
+                height={120}
+                alt="logo"
+              />
+            </Link>
+          </div>
+          <div className="hidden md:flex items-center space-x-4">
+            <Link
+              href="#layananKamiSection"
+              onClick={scrollToSection('layananKamiSection')}
+              className={`text-base ${isScrolled ? "text-gray-900" : "text-white"}`}
+            >
+              Layanan Kami
+            </Link>
+            <Link
+              href="#galeriSec"
+              onClick={scrollToSection('galeriSec')}
+              className={`text-base ${isScrolled ? "text-gray-900" : "text-white"}`}
+            >
+              Galeri Kegiatan
+            </Link>
+            <Link
+              href="#daftarSec"
+              onClick={scrollToSection('daftarSec')}
+              className={`text-base ${isScrolled ? "text-gray-900" : "text-white"}`}
+            >
+              Proses Pendaftaran
+            </Link>
+            <div className="border-r border-gray-700 h-6 mx-4"></div>
+            <Link
+              href={"/sign-in"}
+              className={`transition-all duration-300 ${isScrolled ? "text-white" : "text-white"}`}
+            >
+              <Button
+                className={`transition-all duration-300 ${
+                  isScrolled
+                    ? "bg-blue-400 text-white hover:bg-blue-500"
+                    : "bg-transparent text-white hover:bg-blue-400"
+                }`}
+              >
+                Login
+              </Button>
             </Link>
           </div>
           <div className="-mr-2 flex md:hidden">
@@ -43,15 +111,6 @@ const Header = () => {
               </svg>
             </button>
           </div>
-          <div className="hidden md:block">
-            <ul className="flex space-x-4 items-center">
-              <li className="relative">
-                <Link href="/sign-in" className="text-blue-500">
-                  <Button>Login</Button>
-                </Link>
-              </li>
-            </ul>
-          </div>
         </div>
       </div>
 
@@ -61,10 +120,20 @@ const Header = () => {
             <li className="relative">
               <Link
                 href={"/sign-in"}
-                className="text-blue-500"
+                className={`transition-all duration-300 ${
+                  isScrolled ? "text-white" : "text-white"
+                }`}
                 onClick={handleClick}
               >
-                <Button>Login</Button>
+                <Button
+                  className={`transition-all duration-300 ${
+                    isScrolled
+                      ? "bg-blue-400 text-white hover:bg-blue-500"
+                      : "bg-transparent text-white hover:bg-blue-400"
+                  }`}
+                >
+                  Login
+                </Button>
               </Link>
             </li>
           </ul>
