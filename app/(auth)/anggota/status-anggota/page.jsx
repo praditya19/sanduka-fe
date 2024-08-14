@@ -6,6 +6,7 @@ import { membersData } from "../data.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 // function formatRupiah(angka) {
 //     var reverse = angka.toString().split('').reverse().join(''),
@@ -287,7 +288,14 @@ function StatusAnggota() {
                                 className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
                             >
                                 <td className="p-2 md:p-3 border text-center">{index + 1}</td>
-                                <td className="p-2 md:p-3 border"></td>
+                                <td className="p-2 md:p-3 border">
+                                    <Image
+                                        src={item.photoUrl}
+                                        className="rounded-full mx-auto"
+                                        width={100}
+                                        height={100}
+                                    />
+                                </td>
                                 <td className="p-2 md:p-3 border">
                                     <div className="font-bold">{item.nama}</div>
                                     <div>{item.npa}</div>

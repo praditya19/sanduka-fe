@@ -8,6 +8,7 @@ import Link from "next/link";
 import { FaExclamationTriangle, FaWhatsapp, FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
 import { membersData } from "../data.js";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 function PencarianAnggota() {
   const [maxItems, setMaxItems] = useState(10);
@@ -32,7 +33,6 @@ function PencarianAnggota() {
   const formatCurrency = (amount) => {
     return `Rp ${parseInt(amount).toLocaleString('id-ID')}`;
   };
-
 
   const handlePrint = () => {
     const filteredDataForPrint = filteredData;
@@ -176,7 +176,7 @@ function PencarianAnggota() {
     const unit = item.kerja.toLowerCase().includes(query);
     const lahir = item.lahir.toLowerCase().includes(query);
     const tanggal = item.tanggal.toLowerCase().includes(query);
-    
+
     return statusFilter && cabangFilter && unitKerjaFilter && (nama || npa || tanggal || cabang || lahir || unit);
   });
 
@@ -333,7 +333,14 @@ function PencarianAnggota() {
                 className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
               >
                 <td className="p-2 md:p-3 border text-center">{index + 1}</td>
-                <td className="p-2 md:p-3 border"></td>
+                <td className="p-2 md:p-3 border">
+                  <Image
+                    src={item.photoUrl}
+                    className="rounded-full mx-auto"
+                    width={100}
+                    height={100}
+                  />
+                </td>
                 <td className="p-2 md:p-3 border">
                   <div className="font-bold">{item.nama}</div>
                   <div>{item.npa}</div>
@@ -351,7 +358,12 @@ function PencarianAnggota() {
                   <div>{item.golongan}/{formatCurrency(item.iuran)}</div>
                 </td>
                 <td className="p-2 text-center md:p-3 border">
-                  {item.anggota}
+                  <div
+                    className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.anggota === 'Tidak Aktif' ? 'bg-red-200 text-red-900' : 'bg-green-200 text-green-900'
+                      }`}
+                  >
+                    {item.anggota}
+                  </div>
                 </td>
                 <td className="p-2 md:p-3 border">
                   <div className="flex justify-center space-x-2">
@@ -371,8 +383,8 @@ function PencarianAnggota() {
                     <Link
                       href={`https://wa.me/${item.hp}`}
                       className="text-white bg-green-500 p-2 border rounded-md"
-                      target="_blank" // Opens the link in a new tab
-                      rel="noopener noreferrer" // Security feature to prevent exploitation
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
                       <FaWhatsapp className="w-4 h-4" title="WA" />
                     </Link>
