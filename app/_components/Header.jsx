@@ -27,7 +27,7 @@ const Header = () => {
     event.preventDefault(); // Prevent default link behavior
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      element.scrollIntoView({ behavior: "smooth" });
     }
     handleClick(); // Close the menu if it's open (for mobile view)
   };
@@ -53,29 +53,37 @@ const Header = () => {
           <div className="hidden md:flex items-center space-x-4">
             <Link
               href="#layananKamiSection"
-              onClick={scrollToSection('layananKamiSection')}
-              className={`text-base ${isScrolled ? "text-gray-900" : "text-white"}`}
+              onClick={scrollToSection("layananKamiSection")}
+              className={`text-base ${
+                isScrolled ? "text-gray-900" : "text-white"
+              }`}
             >
               Layanan Kami
             </Link>
             <Link
               href="#galeriSec"
-              onClick={scrollToSection('galeriSec')}
-              className={`text-base ${isScrolled ? "text-gray-900" : "text-white"}`}
+              onClick={scrollToSection("galeriSec")}
+              className={`text-base ${
+                isScrolled ? "text-gray-900" : "text-white"
+              }`}
             >
               Galeri Kegiatan
             </Link>
             <Link
               href="#daftarSec"
-              onClick={scrollToSection('daftarSec')}
-              className={`text-base ${isScrolled ? "text-gray-900" : "text-white"}`}
+              onClick={scrollToSection("daftarSec")}
+              className={`text-base ${
+                isScrolled ? "text-gray-900" : "text-white"
+              }`}
             >
               Proses Pendaftaran
             </Link>
             <div className="border-r border-gray-700 h-6 mx-4"></div>
             <Link
               href={"/sign-in"}
-              className={`transition-all duration-300 ${isScrolled ? "text-white" : "text-white"}`}
+              className={`transition-all duration-300 ${
+                isScrolled ? "text-white" : "text-white"
+              }`}
             >
               <Button
                 className={`transition-all duration-300 ${
@@ -89,9 +97,13 @@ const Header = () => {
             </Link>
           </div>
           <div className="-mr-2 flex md:hidden">
-            <button
+            <Button
               onClick={() => setIsOpen(!isOpen)}
-              className="bg-gray-50 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+              className={`inline-flex items-center justify-center p-2 rounded-md ${
+                isScrolled ? "bg-transparent" : "bg-transparent"
+              } ${
+                isScrolled ? "text-black" : "text-white"
+              } hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500`}
             >
               <span className="sr-only">Open main menu</span>
               <svg
@@ -109,7 +121,7 @@ const Header = () => {
                   d={isOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16m-7 6h7"}
                 />
               </svg>
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -117,6 +129,39 @@ const Header = () => {
       <div className={`${isOpen ? "block" : "hidden"} md:hidden`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <ul className="flex flex-col space-y-1">
+            <li className="relative">
+              <Link
+                href="#layananKamiSection"
+                onClick={scrollToSection("layananKamiSection")}
+                className={`text-base ${
+                  isScrolled ? "text-gray-900" : "text-white"
+                } hover:bg-gray-200 hover:text-gray-900 block px-4 py-2 rounded-md`}
+              >
+                Layanan Kami
+              </Link>
+            </li>
+            <li className="relative">
+              <Link
+                href="#galeriSec"
+                onClick={scrollToSection("galeriSec")}
+                className={`text-base ${
+                  isScrolled ? "text-gray-900" : "text-white"
+                } hover:bg-gray-200 hover:text-gray-900 block px-4 py-2 rounded-md`}
+              >
+                Galeri Kegiatan
+              </Link>
+            </li>
+            <li className="relative">
+              <Link
+                href="#daftarSec"
+                onClick={scrollToSection("daftarSec")}
+                className={`text-base ${
+                  isScrolled ? "text-gray-900" : "text-white"
+                } hover:bg-gray-200 hover:text-gray-900 block px-4 py-2 rounded-md`}
+              >
+                Proses Pendaftaran
+              </Link>
+            </li>
             <li className="relative">
               <Link
                 href={"/sign-in"}
