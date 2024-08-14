@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Modal from 'react-modal';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { FaEdit, FaExchangeAlt, FaExclamationTriangle, FaWhatsapp, FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
@@ -18,7 +19,7 @@ function DataAnggota() {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
-  
+
   const [isCabangEnabled, setIsCabangEnabled] = useState(false);
   const [isUnitKerjaEnabled, setIsUnitKerjaEnabled] = useState(false);
 
@@ -33,6 +34,7 @@ function DataAnggota() {
   const formatCurrency = (amount) => {
     return `Rp ${parseInt(amount).toLocaleString('id-ID')}`;
   };
+
 
   const handlePrint = () => {
     const filteredDataForPrint = filteredData;
@@ -350,7 +352,14 @@ function DataAnggota() {
                 className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
               >
                 <td className="p-2 md:p-3 border text-center">{index + 1}</td>
-                <td className="p-2 md:p-3 border"></td>
+                <td className="p-2 md:p-3 border">
+                  <Image
+                    src={item.photoUrl}
+                    className="rounded-full mx-auto"
+                    width={100}
+                    height={100}
+                  />
+                </td>
                 <td className="p-2 md:p-3 border">
                   <div className="font-bold">{item.nama}</div>
                   <div>{item.npa}</div>
@@ -368,7 +377,12 @@ function DataAnggota() {
                   <div>{item.golongan}/{formatCurrency(item.iuran)}</div>
                 </td>
                 <td className="p-2 text-center md:p-3 border">
-                  {item.anggota}
+                  <div
+                    className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.anggota === 'Tidak Aktif' ? 'bg-red-200 text-red-900' : 'bg-green-200 text-green-900'
+                      }`}
+                  >
+                    {item.anggota}
+                  </div>
                 </td>
                 <td className="p-2 md:p-3 border">
                   <div className="flex justify-center space-x-2">
@@ -393,6 +407,7 @@ function DataAnggota() {
                     >
                       <FaWhatsapp className="w-4 h-4" title="WA" />
                     </Link>
+
                   </div>
                 </td>
               </tr>
@@ -482,7 +497,7 @@ function DataAnggota() {
           </div>
         </div>
       </Modal>
-    </div>
+    </div >
   );
 }
 
