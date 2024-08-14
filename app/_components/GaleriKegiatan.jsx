@@ -24,7 +24,7 @@ function GaleriKegiatan() {
   return (
     <div id="galeriSec" className="bg-gray-100 py-12">
       <div className="container mx-auto px-4 md:px-12 lg:px-24">
-        <h2 className="text-2xl font-bold mb-8 text-center">Galeri Kegiatan</h2>
+        <h2 className="text-xl font-bold mb-6 text-center">Galeri Kegiatan</h2>
         <div className="relative w-full h-[600px] flex items-center justify-center">
           {galleryItems.map((item, index) => (
             <div

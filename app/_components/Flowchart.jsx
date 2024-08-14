@@ -28,7 +28,7 @@ const Flowchart = () => {
 
   return (
     <div id="daftarSec" className="container mx-auto p-4 pt-6 md:p-6 lg:p-12">
-      <h2 className="text-2xl font-bold mb-8 text-center">
+      <h2 className="text-xl font-bold mb-6 text-center">
         Proses Pendaftaran
       </h2>
       <div className="flex flex-wrap justify-center gap-12">
