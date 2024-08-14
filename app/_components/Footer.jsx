@@ -12,12 +12,12 @@ import Link from "next/link";
 
 const Footer = () => {
   return (
-    <div className="bg-green-900 text-white py-10">
-      <div className="container mx-auto px-4 lg:px-20">
+    <div className="bg-green-900 text-white">
+      <div className="container mx-auto px-4 lg:px-20 pb-4">
         <div className="flex flex-col lg:flex-row lg:justify-between gap-8">
           {/* Sanduka Section */}
           <div className="w-full lg:w-1/3">
-            <div className="flex mb-4">
+            <div className="flex ">
               <Image
                 src="/sanduka_bg_white.png"
                 width={170}
@@ -27,7 +27,7 @@ const Footer = () => {
               />
             </div>
             <h2 className="text-lg font-bold text-yellow-400">SANDUKA</h2>
-            <p className="mt-2">
+            <p className="">
               Persatuan Guru Republik Indonesia (PGRI) <br /> Kabupaten Jepara
             </p>
             <address className="not-italic mt-4 text-sm">
@@ -49,8 +49,8 @@ const Footer = () => {
 
           {/* Link Section */}
           <div className="w-full lg:w-1/3 mt-24">
-            <h3 className="font-bold mb-4 text-yellow-400">LINK</h3>
-            <div className="space-y-6">
+            <h3 className="font-bold mb-2 text-yellow-400">LINK</h3>
+            <div className="space-y-2">
               <div className="flex items-center space-x-4">
                 <Image
                   src="/kta_digital.png"
@@ -90,8 +90,8 @@ const Footer = () => {
             </div>
 
             {/* Media Section */}
-            <div className="w-full lg:w-1/3 mt-10">
-              <h3 className="font-bold mb-4 text-yellow-400">MEDIA</h3>
+            <div className="w-full lg:w-1/3 mt-4">
+              <h3 className="font-bold mb-2 text-yellow-400">MEDIA</h3>
               <div className="flex gap-4">
                 {[
                   { icon: FaFacebook, label: "Facebook" },
@@ -115,7 +115,7 @@ const Footer = () => {
           </div>
 
           {/* App Links Section */}
-          <div className="flex flex-col items-center gap-4 mt-20">
+          <div className="flex flex-col items-center gap-4 mt-24">
             <div className="bg-black p-2 rounded-full flex items-center">
               <Image
                 src="/playstore.svg"
@@ -126,7 +126,7 @@ const Footer = () => {
               />
               <Link href="#" aria-label="Google Play" className="text-white">
                 <span className="hidden md:inline">
-                  Dapatkan di Google Play Store
+                  Google Play Store
                 </span>
                 <span className="md:hidden">Google Play Store</span>
               </Link>
@@ -140,7 +140,7 @@ const Footer = () => {
                   rel="noopener noreferrer"
                   className="text-white"
                 >
-                  Konsultasi Melalui WhatsApp
+                  Konsultasi WhatsApp
                 </a>
               </Link>
             </div>

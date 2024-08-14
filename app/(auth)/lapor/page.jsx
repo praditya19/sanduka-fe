@@ -270,11 +270,11 @@ const Resume = ({ onPrev, onSubmit }) => {
             </Label>
 
             <Label className="block text-lg font-medium text-center"></Label>
-
+            Cabang:
             <Label className="block text-lg font-medium text-center"></Label>
-
+            Unit Kerja:
             <Label className="block text-lg font-medium text-center"></Label>
-
+            Jabatan:
             <Label className="block text-lg font-medium text-center">
               Alamat rumah:
             </Label>
