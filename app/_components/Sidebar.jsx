@@ -20,28 +20,10 @@ import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
 const icons = [
   { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
   {
-    icon: faFileAlt,
-    label: "Statistik",
-    href: "/statistik",
+    icon: faCheckCircle,
+    label: "Verifikasi Anggota",
+    href: "/verifikasi-anggota-mutasi",
     color: "text-blue-500",
-  },
-  {
-    icon: faDatabase,
-    label: "History data",
-    href: "/history-data",
-    color: "text-green-500",
-  },
-  {
-    icon: faHandsHelping,
-    label: "Bantuan",
-    href: "/bantuan",
-    color: "text-purple-500",
-  },
-  {
-    icon: faFileInvoice,
-    label: "Rekap Meninggal",
-    href: "/rekap-meninggal",
-    color: "text-pink-500",
   },
   {
     icon: faUsers,
@@ -50,10 +32,28 @@ const icons = [
     color: "text-orange-500",
   },
   {
-    icon: faClipboardCheck,
-    label: "Ketentuan",
-    href: "/ketentuan",
-    color: "text-teal-500",
+    icon: faUbuntu,
+    label: "Rekap Anggota",
+    href: "/anggota/rekap-anggota",
+    color: "text-gray-500",
+  },
+  {
+    icon: faUsersGear,
+    label: "Anggota by Name",
+    href: "/anggota/by-name",
+    color: "text-yellow-500",
+  },
+  {
+    icon: faFileInvoice,
+    label: "Rekap Meninggal",
+    href: "/rekap-meninggal",
+    color: "text-pink-500",
+  },
+  {
+    icon: faFileAlt,
+    label: "Statistik",
+    href: "/statistik",
+    color: "text-blue-500",
   },
   {
     icon: faUserGraduate,
@@ -62,10 +62,16 @@ const icons = [
     color: "text-indigo-500",
   },
   {
-    icon: faUbuntu,
-    label: "Rekap Anggota",
-    href: "/anggota/rekap-anggota",
-    color: "text-gray-500",
+    icon: faDatabase,
+    label: "History data",
+    href: "/history-data",
+    color: "text-green-500",
+  },
+  {
+    icon: faSyncAlt,
+    label: "Pensiun",
+    href: "/pensiun",
+    color: "text-rose-500",
   },
   {
     icon: faWallet,
@@ -75,21 +81,21 @@ const icons = [
   },
   {
     icon: faSyncAlt,
-    label: "Pensiun",
-    href: "/pensiun",
-    color: "text-rose-500",
+    label: "Singkron Data",
+    href: "/singkron-data",
+    color: "text-teal-700",
   },
   {
-    icon: faCheckCircle,
-    label: "Verifikasi Anggota",
-    href: "/verifikasi-anggota-mutasi",
-    color: "text-blue-500",
+    icon: faClipboardCheck,
+    label: "Ketentuan",
+    href: "/ketentuan",
+    color: "text-teal-500",
   },
   {
-    icon: faUsersGear,
-    label: "Anggota by Name",
-    href: "/anggota/by-name",
-    color: "text-yellow-500",
+    icon: faHandsHelping,
+    label: "Bantuan",
+    href: "/bantuan",
+    color: "text-purple-500",
   },
   {
     icon: faCog,
@@ -97,12 +103,7 @@ const icons = [
     href: "/pengaturan/user",
     color: "text-gray-700",
   },
-  {
-    icon: faSyncAlt,
-    label: "Singkron Data",
-    href: "/singkron-data",
-    color: "text-teal-700",
-  },
+
   {
     icon: faUsers,
     label: "Teman dalam Unit",
