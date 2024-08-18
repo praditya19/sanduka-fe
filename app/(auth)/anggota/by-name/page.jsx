@@ -1,24 +1,28 @@
-'use client';
-import React, { useState } from "react";
+"use client";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { membersData } from "../data.js";
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
-import Link from "next/link";
-import { membersData } from '../data.js';
-import { useRouter } from "next/navigation";
+import HeaderHome from "@/app/_components/HeaderHome";
+import Sidebar from "@/app/_components/Sidebar";
 
 function DataAnggota() {
-    const [maxItems, setMaxItems] = useState(10);
-    const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
-    const [selectedUnitKerja, setSelectedUnitKerja] = useState("-- Unit Kerja --");
+  const [maxItems, setMaxItems] = useState(10);
+  const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
+  const [selectedUnitKerja, setSelectedUnitKerja] =
+    useState("-- Unit Kerja --");
 
-    const handlePrint = () => {
-        const filteredDataForPrint = selectedCabang === "-- Cabang --"
-            ? membersData
-            : membersData.filter(item => item.cabang === selectedCabang);
+  const handlePrint = () => {
+    const filteredDataForPrint =
+      selectedCabang === "-- Cabang --"
+        ? membersData
+        : membersData.filter((item) => item.cabang === selectedCabang);
 
-        const printWindow = window.open("", "_blank", "width=800,height=600");
-        printWindow.document.write(`
+    const printWindow = window.open("", "_blank", "width=800,height=600");
+    printWindow.document.write(`
           <html>
             <head>
               <title>Data Anggota</title>
@@ -65,7 +69,11 @@ function DataAnggota() {
               </style>
             </head>
             <body>
-              <div class="title">Data Anggota ${selectedCabang === "-- Cabang --" ? "Cabang" : `Unit Kerja ${selectedCabang}`}</div>
+              <div class="title">Data Anggota ${
+                selectedCabang === "-- Cabang --"
+                  ? "Cabang"
+                  : `Unit Kerja ${selectedCabang}`
+              }</div>
               <table>
                 <thead>
                   <tr class="header-row">
@@ -77,193 +85,316 @@ function DataAnggota() {
                   </tr>
                 </thead>
                 <tbody>
-                  ${groupedData.slice(0, maxItems).map((group, index) => `
+                  ${groupedData
+                    .slice(0, maxItems)
+                    .map(
+                      (group, index) => `
                     <tr>
                       <td rowspan="${group.items.length + 1}">${index + 1}</td>
-                      <td rowspan="${group.items.length + 1}">${group.kerja}</td>
-                      <td rowspan="${group.items.length + 1}">${group.jumlah}</td>
+                      <td rowspan="${group.items.length + 1}">${
+                        group.kerja
+                      }</td>
+                      <td rowspan="${group.items.length + 1}">${
+                        group.jumlah
+                      }</td>
                     </tr>
-                    ${group.items.map((item, subIndex) => `
+                    ${group.items
+                      .map(
+                        (item, subIndex) => `
                       <tr>
-                        <td>${subIndex + 1}. <span class="font-bold">${item.nama}</span> / ${item.npa}</td>
+                        <td>${subIndex + 1}. <span class="font-bold">${
+                          item.nama
+                        }</span> / ${item.npa}</td>
                         <td class="vertical-text">
                             <div>KTA Digital : ${item.anggota}</div>
                             <div>Daspen : ${item.pgri}</div>
                             <div>Sanduka : </div>
                         </td>
                       </tr>
-                    `).join('')}
-                  `).join('')}
+                    `
+                      )
+                      .join("")}
+                  `
+                    )
+                    .join("")}
                 </tbody>
               </table>
             </body>
           </html>
         `);
-        printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
-    };
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
 
-    const filteredData = selectedCabang === "-- Cabang --"
-        ? membersData
-        : membersData.filter(item => item.cabang === selectedCabang);
+  const filteredData =
+    selectedCabang === "-- Cabang --"
+      ? membersData
+      : membersData.filter((item) => item.cabang === selectedCabang);
 
-    const groupedData = [];
-    const groupByKerja = filteredData.reduce((acc, item) => {
-        if (!acc[item.kerja]) {
-            acc[item.kerja] = [];
-        }
-        acc[item.kerja].push(item);
-        return acc;
-    }, {});
-
-    for (const [kerja, items] of Object.entries(groupByKerja)) {
-        groupedData.push({ kerja, jumlah: items.length, items });
+  const groupedData = [];
+  const groupByKerja = filteredData.reduce((acc, item) => {
+    if (!acc[item.kerja]) {
+      acc[item.kerja] = [];
     }
+    acc[item.kerja].push(item);
+    return acc;
+  }, {});
 
-    const router = useRouter();
+  for (const [kerja, items] of Object.entries(groupByKerja)) {
+    groupedData.push({ kerja, jumlah: items.length, items });
+  }
 
-    const handleBackClick = () => {
-        router.back();
+  useEffect(() => {
+    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+    setIsSidebarOpen(sidebarState);
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const router = useRouter();
+
+  const handleBackClick = () => {
+    router.back();
+  };
+
+  const toggleSidebar = () => {
+    const newSidebarState = !isSidebarOpen;
+    setIsSidebarOpen(newSidebarState);
+    localStorage.setItem("isSidebarOpen", newSidebarState);
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
     };
 
-    return (
-        <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-            <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-        <div className="container mx-auto flex items-center">
-          {/* Back Button */}
-          <FontAwesomeIcon
-            icon={faArrowLeft}
-            size="sm"
-            onClick={handleBackClick}
-            className="cursor-pointer mr-2"
-          />
+    handleResize();
+    window.addEventListener("resize", handleResize);
 
-          {/* Title */}
-          <h1 className="text-base">Anggota by Name</h1>
-        </div>
-      </header>
-            <div className="mb-4">
-                <div className="flex flex-wrap items-start mt-14 justify-between">
-                    <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
-                        <select
-                            className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                            value={selectedCabang}
-                            onChange={(e) => setSelectedCabang(e.target.value)}
-                        >
-                            <option>-- Cabang --</option>
-                            <option>BANGSRI</option>
-                            <option>JEPARA</option>
-                        </select>
-                        <select
-                            className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                            value={selectedUnitKerja}
-                            onChange={(e) => setSelectedUnitKerja(e.target.value)}
-                        >
-                            <option>-- Unit Kerja --</option>
-                            <option>SMAN 2 Jepara</option>
-                            <option>SDN 3 Jepara</option>
-                        </select>
-                        <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0">
-                            <option>Semua</option>
-                        </select>
-                    </div>
-                    <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
-                        Data Anggota By Name
-                    </p>
-                    <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
-                        <div className="space-x-2 w-full flex md:block">
-                            <label htmlFor="maxItems" className="mr-2">Tampilkan :</label>
-                            <select
-                                id="maxItems"
-                                value={maxItems}
-                                onChange={(e) => setMaxItems(parseInt(e.target.value))}
-                                className="shadow appearance-none border rounded w-full md:w-20 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            >
-                                <option value={5}>5</option>
-                                <option value={10}>10</option>
-                                <option value={15}>15</option>
-                                <option value={20}>20</option>
-                            </select>
-                            <Button className="px-8 mt-2 md:mt-0" variant="outline" onClick={handlePrint}>Cetak</Button>
-                        </div>
-                    </div>
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+      {isMobile ? (
+        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+          <div className="container mx-auto flex items-center justify-between">
+            {/* Back Button and Title */}
+            <div className="flex items-center">
+              <FontAwesomeIcon
+                icon={faArrowLeft}
+                size="sm"
+                onClick={handleBackClick}
+                className="cursor-pointer mr-4"
+              />
+              <h1 className="text-base">Rekap Meninggal</h1>
+            </div>
+          </div>
+        </header>
+      ) : (
+        <HeaderHome />
+      )}
+      <div>
+        <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+
+        <div
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
+        >
+          <div className="mb-4">
+            <div className="flex flex-wrap items-start mt-14 justify-between">
+              <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
+                <select
+                  className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                  value={selectedCabang}
+                  onChange={(e) => setSelectedCabang(e.target.value)}
+                >
+                  <option>-- Cabang --</option>
+                  <option>BANGSRI</option>
+                  <option>JEPARA</option>
+                </select>
+                <select
+                  className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                  value={selectedUnitKerja}
+                  onChange={(e) => setSelectedUnitKerja(e.target.value)}
+                >
+                  <option>-- Unit Kerja --</option>
+                  <option>SMAN 2 Jepara</option>
+                  <option>SDN 3 Jepara</option>
+                </select>
+                <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0">
+                  <option>Semua</option>
+                </select>
+              </div>
+              <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
+                Data Anggota By Name
+              </p>
+              <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
+                <div className="space-x-2 w-full flex md:block">
+                  <label htmlFor="maxItems" className="mr-2">
+                    Tampilkan :
+                  </label>
+                  <select
+                    id="maxItems"
+                    value={maxItems}
+                    onChange={(e) => setMaxItems(parseInt(e.target.value))}
+                    className="shadow appearance-none border rounded w-full md:w-20 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={15}>15</option>
+                    <option value={20}>20</option>
+                  </select>
+                  <Button
+                    className="px-8 mt-2 md:mt-0"
+                    variant="outline"
+                    onClick={handlePrint}
+                  >
+                    Cetak
+                  </Button>
                 </div>
+              </div>
             </div>
-            <div className="overflow-x-auto">
-                <table className="container w-full table-auto mb-8">
-                    <thead>
-                        <tr>
-                            <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">No</th>
-                            <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Unit Kerja
-                                {/* {selectedCabang === "-- Cabang --" ? "Cabang" : `Unit Kerja ${selectedCabang}`} */}
-                            </th>
-                            <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Jumlah</th>
-                            <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Nama</th>
-                            <th className="p-2 md:p-3 border text-white bg-teal-700" colSpan="3">Keterangan</th>
-                            <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Aksi</th>
-                        </tr>
-                        <tr>
-                            <th className="p-2 md:p-3 border text-white bg-teal-700">KTA Digital</th>
-                            <th className="p-2 md:p-3 border text-white bg-teal-700">Daspen</th>
-                            <th className="p-2 md:p-3 border text-white bg-teal-700">Sanduka</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {groupedData.slice(0, maxItems).map((group, index) => (
-                            <tr key={index}>
-                                <td className="border text-center">{index + 1}</td>
-                                <td className="border text-center">{group.kerja}</td>
-                                <td className="border text-center">{group.jumlah}</td>
-                                <td className="border">
-                                    {group.items.map((item, index) => (
-                                        <div
-                                            key={index}
-                                            className={`mb-1 py-6 pl-2 ${index < group.items.length - 1 ? 'border-b border-dashed' : ''}`}
-                                        >
-                                            {index + 1}. <span className="font-bold">{item.nama}</span> / {item.npa}
-                                        </div>
-                                    ))}
-                                </td>
-                                <td className="border text-center">
-                                    {group.items.map((item, index) => (
-                                        <div key={index} className={`mb-1 pl-2 py-6  ${index < group.items.length - 1 ? 'border-b border-dashed' : ''}`}
-                                        >
-                                            <div>{item.anggota}</div>
-                                        </div>
-                                    ))}
-                                </td>
-                                <td className="border text-center">
-                                    {group.items.map((item, index) => (
-                                        <div key={index} className={`mb-1 pl-2 py-6 ${index < group.items.length - 1 ? 'border-b border-dashed' : ''}`}
-                                        >
-                                            <div>{item.pgri}</div>
-                                        </div>
-                                    ))}
-                                </td>
-                                <td className="border text-center">
-                                    {group.items.map((item, index) => (
-                                        <div key={index} className={`mb-1 pl-2 py-6 ${index < group.items.length - 1 ? 'border-b border-dashed' : ''}`}
-                                        >
-                                            <div>Aktif</div>
-                                        </div>
-                                    ))}
-                                </td>
-                                <td className="p-2 md:p-3 border text-center">
-                                    <Link href="#" className="text-blue-500">
-                                        <div className="flex flex-col space-y-2 items-center">
-                                            <Button className="w-24 bg-blue-500">Edit</Button>
-                                        </div>
-                                    </Link>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="container w-full table-auto mb-8">
+              <thead>
+                <tr>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    rowSpan="2"
+                  >
+                    No
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    rowSpan="2"
+                  >
+                    Unit Kerja
+                    {/* {selectedCabang === "-- Cabang --" ? "Cabang" : `Unit Kerja ${selectedCabang}`} */}
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    rowSpan="2"
+                  >
+                    Jumlah
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    rowSpan="2"
+                  >
+                    Nama
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    colSpan="3"
+                  >
+                    Keterangan
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    rowSpan="2"
+                  >
+                    Aksi
+                  </th>
+                </tr>
+                <tr>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                    KTA Digital
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                    Daspen
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                    Sanduka
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {groupedData.slice(0, maxItems).map((group, index) => (
+                  <tr key={index}>
+                    <td className="border text-center">{index + 1}</td>
+                    <td className="border text-center">{group.kerja}</td>
+                    <td className="border text-center">{group.jumlah}</td>
+                    <td className="border">
+                      {group.items.map((item, index) => (
+                        <div
+                          key={index}
+                          className={`mb-1 py-6 pl-2 ${
+                            index < group.items.length - 1
+                              ? "border-b border-dashed"
+                              : ""
+                          }`}
+                        >
+                          {index + 1}.{" "}
+                          <span className="font-bold">{item.nama}</span> /{" "}
+                          {item.npa}
+                        </div>
+                      ))}
+                    </td>
+                    <td className="border text-center">
+                      {group.items.map((item, index) => (
+                        <div
+                          key={index}
+                          className={`mb-1 pl-2 py-6  ${
+                            index < group.items.length - 1
+                              ? "border-b border-dashed"
+                              : ""
+                          }`}
+                        >
+                          <div>{item.anggota}</div>
+                        </div>
+                      ))}
+                    </td>
+                    <td className="border text-center">
+                      {group.items.map((item, index) => (
+                        <div
+                          key={index}
+                          className={`mb-1 pl-2 py-6 ${
+                            index < group.items.length - 1
+                              ? "border-b border-dashed"
+                              : ""
+                          }`}
+                        >
+                          <div>{item.pgri}</div>
+                        </div>
+                      ))}
+                    </td>
+                    <td className="border text-center">
+                      {group.items.map((item, index) => (
+                        <div
+                          key={index}
+                          className={`mb-1 pl-2 py-6 ${
+                            index < group.items.length - 1
+                              ? "border-b border-dashed"
+                              : ""
+                          }`}
+                        >
+                          <div>Aktif</div>
+                        </div>
+                      ))}
+                    </td>
+                    <td className="p-2 md:p-3 border text-center">
+                      <Link href="#" className="text-blue-500">
+                        <div className="flex flex-col space-y-2 items-center">
+                          <Button className="w-24 bg-blue-500">Edit</Button>
+                        </div>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 }
 
 export default DataAnggota;

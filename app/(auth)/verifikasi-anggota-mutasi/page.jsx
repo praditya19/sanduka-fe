@@ -4,14 +4,17 @@ import Image from "next/image";
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faArrowLeft,
   faCheckCircle,
   faSearch,
   faTimesCircle,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
+import HeaderHome from "@/app/_components/HeaderHome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Sidebar from "@/app/_components/Sidebar";
 
 const VerifikasiAnggotaMutasi = () => {
   const [selectedRow, setSelectedRow] = useState(null);
@@ -48,29 +51,66 @@ const VerifikasiAnggotaMutasi = () => {
     setSelectedRow(null);
   };
 
+  useEffect(() => {
+    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+    setIsSidebarOpen(sidebarState);
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
 
   const handleBackClick = () => {
     router.back();
   };
 
+  const toggleSidebar = () => {
+    const newSidebarState = !isSidebarOpen;
+    setIsSidebarOpen(newSidebarState);
+    localStorage.setItem("isSidebarOpen", newSidebarState);
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
-    <div>
-      <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-        <div className="container mx-auto flex items-center">
-          {/* Back Button */}
-          <FontAwesomeIcon
-            icon={faArrowLeft}
-            size="sm"
-            onClick={handleBackClick}
-            className="cursor-pointer mr-2"
-          />
+    <div className="min-h-screen flex flex-col bg-gray-100">
+    {isMobile ? (
+       <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+       <div className="container mx-auto flex items-center">
+         {/* Back Button */}
+         <FontAwesomeIcon
+           icon={faArrowLeft}
+           size="sm"
+           onClick={handleBackClick}
+           className="cursor-pointer mr-4"
+         />
 
-          {/* Title */}
-          <h1 className="text-base">Verifikasi Anggota</h1>
-        </div>
-      </header>
+         {/* Title */}
+         <h1 className="text-base">Verifikasi Anggota</h1>
+       </div>
+     </header>
+    ) : (
+      <HeaderHome />
+    )}
+ <div>
+      <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
+      <div
+        className={`flex-1 transition-all duration-300 ease-in-out ${
+          isSidebarOpen ? "ml-64" : "ml-0"
+        }`}
+      >
       <div className="container mx-auto p-4 md:p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-16 text-base">
           <div>
@@ -236,6 +276,8 @@ const VerifikasiAnggotaMutasi = () => {
             </div>
           </div>
         )}
+      </div>
+      </div>
       </div>
     </div>
   );
