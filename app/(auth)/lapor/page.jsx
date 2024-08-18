@@ -13,15 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  faBullhorn,
-  faUserTimes,
-  faFileAlt,
-  faArrowLeft,
-} from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import HeaderHome from "@/app/_components/HeaderHome";
+import Sidebar from "@/app/_components/Sidebar";
 
 const dummyDataNames = [
   { name: "Budi Waseso" },
@@ -72,289 +69,395 @@ const FormStep1 = ({ onNext }) => {
     onNext(formData);
   };
 
+  useEffect(() => {
+    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+    setIsSidebarOpen(sidebarState);
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
 
   const handleBackClick = () => {
     router.back();
   };
 
+  const toggleSidebar = () => {
+    const newSidebarState = !isSidebarOpen;
+    setIsSidebarOpen(newSidebarState);
+    localStorage.setItem("isSidebarOpen", newSidebarState);
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <div>
-      <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-        <div className="container mx-auto flex items-center">
-          {/* Back Button */}
-          <FontAwesomeIcon
-            icon={faArrowLeft}
-            size="sm"
-            onClick={handleBackClick}
-            className="cursor-pointer mr-2"
-          />
+      {isMobile ? (
+        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+          <div className="container mx-auto flex items-center justify-between">
+            {/* Back Button and Title */}
+            <div className="flex items-center">
+              <FontAwesomeIcon
+                icon={faArrowLeft}
+                size="sm"
+                onClick={handleBackClick}
+                className="cursor-pointer mr-4"
+              />
+              <h1 className="text-base">Pelaporan</h1>
+            </div>
+          </div>
+        </header>
+      ) : (
+        <HeaderHome />
+      )}
+      <div>
+        <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-          {/* Title */}
-          <h1 className="text-base">Lapor</h1>
-        </div>
-      </header>
-      <form className="space-y-4 bg-white p-4 sm:p-8 rounded-lg shadow-lg">
-        <h2 className="text-xl font-bold mb-4 ml-4 pt-4 text-gray-800">
-          Data Pelapor
-        </h2>
-        <div className="w-full flex flex-col items-start gap-1.5">
-          <Label className="block text-sm font-medium mb-1">
-            Tanggal Pelaporan
-          </Label>
-          <Input
-            type="date"
-            id="date"
-            placeholder="tanggal"
-            className="text-sm"
-            value={formData.date}
-            disabled
-          />
-        </div>
-        {/* diambil langsung dari data yang login */}
-        <div className="w-full flex flex-col items-start gap-1.5">
-          <Input
-            type="text"
-            id="name"
-            placeholder="Nama"
-            className="text-sm"
-            disabled
-            value={formData.name}
-          />
-        </div>
-        <div className="w-full flex flex-col items-start gap-1.5">
-          <Input
-            type="text"
-            id="branch"
-            placeholder="Cabang / Khusus"
-            className="text-sm"
-            disabled
-            value={formData.branch}
-          />
-        </div>
+        <div
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
+        >
+          <div className="flex justify-center ">
+            <h1 className="text-xl font-semibold text-gray-800">Pelaporan</h1>
+          </div>
+          <form className="space-y-4 bg-white p-4 sm:p-8 rounded-lg shadow-lg">
+            <div className="flex flex-wrap -mx-2">
+              {/* Bagian kiri - Data Pelapor */}
+              <div className="w-full lg:w-1/2 px-2">
+                <h2 className="text-xl font-bold mb-4 pt-4 text-gray-800">
+                  Pelapor
+                </h2>
+                <div className="w-full flex flex-col items-start">
+                  <Label className="block text-sm font-medium mb-1">
+                    Tanggal Pelaporan
+                  </Label>
+                  <Input
+                    type="date"
+                    id="date"
+                    placeholder="tanggal"
+                    className="text-sm"
+                    value={formData.date}
+                    disabled
+                  />
+                </div>
+                {/* diambil langsung dari data yang login */}
+                <div className="w-full flex flex-col items-start mt-2">
+                  <Input
+                    type="text"
+                    id="name"
+                    placeholder="Nama"
+                    className="text-sm"
+                    disabled
+                    value={formData.name}
+                  />
+                </div>
+                <div className="w-full flex flex-col items-start mt-2">
+                  <Input
+                    type="text"
+                    id="branch"
+                    placeholder="Cabang / Khusus"
+                    className="text-sm"
+                    disabled
+                    value={formData.branch}
+                  />
+                </div>
+                <div className="w-full flex flex-col items-start mt-2">
+                  <Input
+                    type="text"
+                    id="position"
+                    placeholder="Jabatan"
+                    className="text-sm"
+                    disabled
+                    value={formData.position}
+                  />
+                </div>
+                <div className="w-full flex flex-col items-start mt-2">
+                  <Input
+                    type="number"
+                    id="phone"
+                    placeholder="Nomor Whatsapp"
+                    className="text-sm"
+                    disabled
+                    value={formData.phone}
+                  />
+                </div>
+              </div>
 
-        <div className="w-full flex flex-col items-start gap-1.5">
-          <Input
-            type="text"
-            id="position"
-            placeholder="Jabatan"
-            className="text-sm"
-            disabled
-            value={formData.position}
-          />
-        </div>
-        <div className="w-full flex flex-col items-start gap-1.5">
-          <Input
-            type="number"
-            id="phone"
-            placeholder="Nomor Whatsapp"
-            className="text-sm"
-            disabled
-            value={formData.phone}
-          />
-        </div>
-        {/* batas  */}
-        <h2 className="text-xl font-bold mb-4 ml-4 pt-4 text-gray-800">
-          Data Anggota Meninggal
-        </h2>
-        <div className="w-full flex flex-col items-start gap-1.5">
-          <Label className="block text-sm font-medium mb-1">
-            Cabang / Khusus
-          </Label>
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Pilih Cabang" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="laki-laki">Laki - Laki</SelectItem>
-                <SelectItem value="perempuan">Perempuan</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-full flex flex-col items-start gap-1.5">
-          <Label className="block text-sm font-medium mb-1">Unit Kerja</Label>
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Pilih Unit Kerja" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="laki-laki">Jepara</SelectItem>
-                <SelectItem value="perempuan">Bangsri</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="relative w-full flex flex-col items-start gap-1.5">
-          <label className="block text-sm font-medium mb-1">Nama Anggota</label>
-          <Input
-            type="text"
-            placeholder="Cari Nama Anggota"
-            value={searchTerm}
-            onChange={handleSearch}
-            className="text-sm border border-gray-300 p-2 rounded"
-          />
-          {filteredNames.length > 0 && (
-            <ul className="border border-gray-300 mt-1 w-full max-h-40 overflow-y-auto bg-white z-10">
-              {filteredNames.map((data, index) => (
-                <li
-                  key={index}
-                  onClick={() => handleNameClick(data.name)}
-                  className="p-2 hover:bg-gray-100 cursor-pointer"
-                >
-                  {data.name}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="w-full flex flex-col items-start gap-1.5">
-          <Label className="block text-sm font-medium mb-1">
-            Waktu Meninggal
-          </Label>
-          <Input
-            type="date"
-            id="date"
-            placeholder="tanggal"
-            className="text-sm"
-          />
-        </div>
-        <div className="w-full flex flex-col items-start gap-1.5">
-          <Label className="block text-sm font-medium mb-1">Keterangan</Label>
-          <Textarea
-            type="text"
-            id="description"
-            placeholder="Keterangan"
-            className="text-sm"
-          />
-        </div>
+              {/* Bagian kanan - Data Anggota Meninggal */}
+              <div className="w-full lg:w-1/2 px-2">
+                <h2 className="text-xl font-bold mb-4 pt-4 text-gray-800">
+                  Data Anggota Meninggal
+                </h2>
+                <div className="w-full flex flex-col items-start">
+                  <Label className="block text-sm font-medium mb-1">
+                    Cabang / Khusus
+                  </Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih Cabang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="jepara">Jepara</SelectItem>
+                        <SelectItem value="semarang">Semarang</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="w-full flex flex-col items-start mt-3">
+                  <Label className="block text-sm font-medium mb-1">
+                    Unit Kerja
+                  </Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih Unit Kerja" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="laki-laki">Jepara</SelectItem>
+                        <SelectItem value="perempuan">Bangsri</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="relative w-full flex flex-col items-start mt-3">
+                  <label className="block text-sm font-medium mb-1">
+                    Nama Anggota
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Cari Nama Anggota"
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    className="text-sm border border-gray-300 p-2 rounded"
+                  />
+                  {filteredNames.length > 0 && (
+                    <ul className="border border-gray-300 mt-1 w-full max-h-40 overflow-y-auto bg-white z-10">
+                      {filteredNames.map((data, index) => (
+                        <li
+                          key={index}
+                          onClick={() => handleNameClick(data.name)}
+                          className="p-2 hover:bg-gray-100 cursor-pointer"
+                        >
+                          {data.name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div className="w-full flex flex-col items-start mt-3">
+                  <Label className="block text-sm font-medium mb-1">
+                    Waktu Meninggal
+                  </Label>
+                  <Input
+                    type="date"
+                    id="date"
+                    placeholder="tanggal"
+                    className="text-sm"
+                  />
+                </div>
+                <div className="w-full flex flex-col items-start mt-3">
+                  <Label className="block text-sm font-medium mb-1">
+                    Keterangan
+                  </Label>
+                  <Textarea
+                    type="text"
+                    id="description"
+                    placeholder="Keterangan"
+                    className="text-sm"
+                  />
+                </div>
+              </div>
+            </div>
 
-        <div className="flex justify-end mt-4">
-          <Button type="button" onClick={onNext} className="ml-auto">
-            Next
-          </Button>
+            <div className="flex justify-end mt-4">
+              <Button type="button" onClick={onNext} className="ml-auto">
+                Next
+              </Button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   );
 };
 
 const Resume = ({ onPrev, onSubmit }) => {
+  useEffect(() => {
+    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+    setIsSidebarOpen(sidebarState);
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const router = useRouter();
+
+  const handleBackClick = () => {
+    router.back();
+  };
+
+  const toggleSidebar = () => {
+    const newSidebarState = !isSidebarOpen;
+    setIsSidebarOpen(newSidebarState);
+    localStorage.setItem("isSidebarOpen", newSidebarState);
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
   return (
-    <div className="space-y-6 bg-white p-4 sm:p-8 rounded-lg shadow-lg">
-      <div className="flex flex-col items-center gap-4 bg-gray-50 p-6 rounded-lg shadow-lg">
-        <Label className="block text-2xl font-bold text-gray-700 mb-4">
-          ANGGOTA MENINGGAL
-        </Label>
-        <div className="flex flex-col items-center gap-6">
-          <Image
-            src="/profile.png"
-            alt="foto Anggota"
-            className="w-36 h-36 object-cover rounded-full border-4 border-gray-200 shadow-md"
-            width={144} // Adjust width in pixels (36 * 4 = 144px, matching w-36)
-            height={144} // Adjust height in pixels (36 * 4 = 144px, matching h-36)
-          />
-          <div className="flex flex-col items-center gap-4 text-gray-700">
-            <Label className="block text-lg font-medium text-center">
-              Nama:
-            </Label>
+    <div>
+      {isMobile ? (
+        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+          <div className="container mx-auto flex items-center justify-between">
+            {/* Back Button and Title */}
+            <div className="flex items-center">
+              <h1 className="text-base">Pelaporan</h1>
+            </div>
+          </div>
+        </header>
+      ) : (
+        <HeaderHome />
+      )}
+      <div>
+        <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-            <Label className="block text-lg font-medium text-center">
-              NPA PGRI:
-            </Label>
+        <div
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
+        >
+          <div className="flex justify-center mt-3">
+            <h1 className="text-xl font-semibold text-gray-800">Resume</h1>
+          </div>
+          <div className="relative max-w-xl mx-auto bg-white shadow-lg rounded-2xl overflow-hidden my-4 border border-gray-300">
+            <div className="flex flex-col items-center gap-4 bg-gray-50 p-4 rounded-lg shadow-lg">
+              <Label className="block text-xl font-bold text-gray-700 mb-4">
+                ANGGOTA MENINGGAL
+              </Label>
+              <div className="flex flex-col items-center gap-2">
+                <Image
+                  src="/profile.png"
+                  alt="foto Anggota"
+                  className="w-24 h-36 object-cover rounded-full border-4 border-gray-200 shadow-md"
+                  width={110} // Adjust width in pixels (36 * 4 = 144px, matching w-36)
+                  height={110} // Adjust height in pixels (36 * 4 = 144px, matching h-36)
+                />
+                <div className="flex flex-col items-center gap-4 text-gray-700">
+                  <Label className="block text-sm font-medium text-center">
+                    Nama:
+                  </Label>
+                  <Label className="block text-sm font-medium text-center">
+                    NPA PGRI:
+                  </Label>
+                  <Label className="block text-sm font-medium text-center">
+                    Usia: tahun
+                  </Label>
+                  <Label className="block text-sm font-medium text-center">
+                    Cabang:
+                  </Label>
+                  <Label className="block text-sm font-medium text-center">
+                    Unit Kerja:
+                  </Label>
+                  <Label className="block text-sm font-medium text-center">
+                    Jabatan:
+                  </Label>
+                  <Label className="block text-sm font-medium text-center">
+                    Alamat rumah:
+                  </Label>
+                  <Label className="block text-sm font-medium text-center">
+                    Tanggal Meninggal:
+                  </Label>
+                  <Label className="block text-sm font-medium text-center">
+                    Keterangan:
+                  </Label>
+                  <Label className="block text-sm font-medium text-center">
+                    No HP:{" "}
+                    <Link
+                      href=""
+                      target="blank"
+                      className="text-blue-600 font-semibold"
+                    >
+                      (WhatsApp)
+                    </Link>
+                  </Label>
+                  <Label className="block text-sm font-medium text-center">
+                    Maps alamat yang meninggal:{" "}
+                    <Link
+                      href=""
+                      className="text-blue-600 font-semibold"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Lihat di Google Maps
+                    </Link>
+                  </Label>
+                </div>
+              </div>
+            </div>
 
-            <Label className="block text-lg font-medium text-center">
-              Usia: tahun
-            </Label>
+            <div className="flex flex-col items-center gap-4 p-4">
+              <Label className="block text-xl font-semibold text-red-600">
+                Pelapor
+              </Label>
+              <div className="rounded-lg w-full flex justify-center">
+                <div className="flex flex-col items-center gap-2">
+                  <Label className="block text-sm font-medium text-center">
+                    Nama:
+                  </Label>
+                  <Label className="block text-sm font-medium text-center">
+                    NPA:
+                  </Label>
+                  <Label className="block text-sm font-medium text-center">
+                    Cabang:
+                  </Label>
+                  <Label className="block text-sm font-medium text-center">
+                    Unit Kerja:
+                  </Label>
+                  <Label className="block text-sm font-medium text-center">
+                    Jabatan:
+                  </Label>
+                  <Label className="block text-sm font-medium text-center">
+                    No HP:{" "}
+                    <Link href="" target="blank" className="text-blue-500">
+                      (WhatsApp)
+                    </Link>
+                  </Label>
+                </div>
+              </div>
+            </div>
 
-            <Label className="block text-lg font-medium text-center"></Label>
-            Cabang:
-            <Label className="block text-lg font-medium text-center"></Label>
-            Unit Kerja:
-            <Label className="block text-lg font-medium text-center"></Label>
-            Jabatan:
-            <Label className="block text-lg font-medium text-center">
-              Alamat rumah:
-            </Label>
-
-            <Label className="block text-lg font-medium text-center">
-              Tanggal Meninggal:
-            </Label>
-
-            <Label className="block text-lg font-medium text-center">
-              Keterangan:
-            </Label>
-
-            <Label className="block text-lg font-medium text-center">
-              No HP:{" "}
-              <Link
-                href=""
-                target="blank"
-                className="text-blue-600 font-semibold"
-              >
-                (WhatsApp)
-              </Link>
-            </Label>
-
-            <Label className="block text-lg font-medium text-center">
-              Maps alamat yang meninggal:{" "}
-              <Link
-                href=""
-                className="text-blue-600 font-semibold"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Lihat di Google Maps
-              </Link>
-            </Label>
+            <div className="flex justify-center p-2">
+              <Button type="button" onClick={onPrev} className="mr-2">
+                Previous
+              </Button>
+              <Button type="button" onClick={onSubmit} className="ml-2">
+                Submit
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div className="flex flex-col items-center gap-2">
-        <Label className="block text-xl font-semibold text-red-600">
-          Pelapor
-        </Label>
-        <div className=" p-4 rounded-lg w-full flex justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <Label className="block text-sm font-medium text-center">
-              Nama:
-            </Label>
-
-            <Label className="block text-sm font-medium text-center">
-              NPA:
-            </Label>
-
-            <Label className="block text-sm font-medium text-center">
-              Cabang:
-            </Label>
-
-            <Label className="block text-sm font-medium text-center">
-              Unit Kerja:
-            </Label>
-
-            <Label className="block text-sm font-medium text-center">
-              Jabatan:
-            </Label>
-
-            <Label className="block text-sm font-medium text-center">
-              No HP:{" "}
-              <Link href="" target="blank" className="text-blue-500">
-                (WhatsApp)
-              </Link>
-            </Label>
-          </div>
-        </div>
-      </div>
-      <div className="flex justify-center mt-4">
-        <Button type="button" onClick={onPrev} className="mr-2">
-          Previous
-        </Button>
-        <Button type="button" onClick={onSubmit} className="ml-2">
-          Submit
-        </Button>
       </div>
     </div>
   );
@@ -371,50 +474,6 @@ const Page = () => {
 
   return (
     <div className="container mx-auto p-6 mt-12">
-      <div className="flex justify-around mb-8">
-        <div className="flex flex-col items-center">
-          <div
-            className={`p-4 rounded-full mb-2 transition-colors duration-300 ${
-              step === 1 ? "bg-red-500 text-white" : "bg-gray-200 text-red-500"
-            }`}
-          >
-            <FontAwesomeIcon
-              icon={faBullhorn}
-              className={`text-xl sm:text-xl md:text-xl`}
-            />
-          </div>
-          <span
-            className={`text-sm sm:text-md md:text-lg lg:text-lg ${
-              step === 1 ? "text-red-500" : "text-gray-600"
-            }`}
-          >
-            Pelaporan
-          </span>
-        </div>
-
-        <div className="flex flex-col items-center">
-          <div
-            className={`p-2 sm:p-2 md:p-4 lg:p-4 rounded-full mb-1 ${
-              step === 2
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-blue-500"
-            }`}
-          >
-            <FontAwesomeIcon
-              icon={faFileAlt}
-              className={`text-xl sm:text-xl md:text-xl`}
-            />
-          </div>
-          <span
-            className={`text-sm sm:text-md md:text-lg lg:text-lg ${
-              step === 2 ? "text-blue-500" : "text-gray-600"
-            }`}
-          >
-            Resume
-          </span>
-        </div>
-      </div>
-
       {step === 1 && <FormStep1 onNext={handleNext} />}
       {step === 2 && <Resume onPrev={handlePrev} onSubmit={handleSubmit} />}
     </div>

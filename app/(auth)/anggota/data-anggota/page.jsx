@@ -1,15 +1,18 @@
 'use client';
-import React, { useState } from "react";
+import React from "react";
+import { useState, useEffect } from "react";
 import Modal from 'react-modal';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { FaEdit, FaExchangeAlt, FaExclamationTriangle, FaWhatsapp, FaSortUp, FaSortDown, FaSort } from "react-icons/fa";
 import { membersData } from "../data.js";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import HeaderHome from "@/app/_components/HeaderHome";
+import Sidebar from "@/app/_components/Sidebar";
 
 function DataAnggota() {
   const [maxItems, setMaxItems] = useState(10);
@@ -175,12 +178,6 @@ function DataAnggota() {
 
   const jumlahAnggota = filteredData.length;
 
-  const router = useRouter();
-
-  const handleBackClick = () => {
-    router.back();
-  };
-
   const openModal = (item) => {
     setCurrentItem(item);
     setIsModalOpen(true);
@@ -219,22 +216,66 @@ function DataAnggota() {
     }
   };
 
+  useEffect(() => {
+    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+    setIsSidebarOpen(sidebarState);
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const router = useRouter();
+
+  const handleBackClick = () => {
+    router.back();
+  };
+
+  const toggleSidebar = () => {
+    const newSidebarState = !isSidebarOpen;
+    setIsSidebarOpen(newSidebarState);
+    localStorage.setItem("isSidebarOpen", newSidebarState);
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-        <div className="container mx-auto flex items-center">
-          {/* Back Button */}
-          <FontAwesomeIcon
-            icon={faArrowLeft}
-            size="sm"
-            onClick={handleBackClick}
-            className="cursor-pointer mr-2"
-          />
+      {isMobile ? (
+        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+          <div className="container mx-auto flex items-center justify-between">
+            {/* Back Button and Title */}
+            <div className="flex items-center">
+              <FontAwesomeIcon
+                icon={faArrowLeft}
+                size="sm"
+                onClick={handleBackClick}
+                className="cursor-pointer mr-4"
+              />
+              <h1 className="text-base">Rekap Meninggal</h1>
+            </div>
+          </div>
+        </header>
+      ) : (
+        <HeaderHome />
+      )}
+      <div>
+        <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-          {/* Title */}
-          <h1 className="text-base">Data Anggota</h1>
-        </div>
-      </header>
+        <div
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
+        >
       <div className="mb-4">
         <div className="flex flex-wrap items-start mt-14 justify-between">
           <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
@@ -497,6 +538,8 @@ function DataAnggota() {
           </div>
         </div>
       </Modal>
+    </div >
+    </div >
     </div >
   );
 }

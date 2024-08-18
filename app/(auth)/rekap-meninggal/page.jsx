@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -9,11 +9,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { faArrowLeft, faBars } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import HeaderHome from "@/app/_components/HeaderHome";
+import Sidebar from "@/app/_components/Sidebar";
+import { Button } from "@/components/ui/button";
 
 const data = [
   {
@@ -29,7 +32,7 @@ const data = [
     photoUrl: "/profile.png",
   },
   {
-    dateLapor: "2024-02-12 10:00",
+    dateLapor: "2020-02-12 10:00",
     name: "Bob Johnson",
     age: 72,
     birthDate: "1952-02-15",
@@ -208,8 +211,295 @@ const data = [
     diterimakan: "Daniel Green",
     photoUrl: "/profile.png",
   },
+  {
+    dateLapor: "2024-03-19 09:00",
+    name: "Oscar Young",
+    age: 77,
+    birthDate: "1947-03-12",
+    workUnit: "Unit O",
+    homeAddress: "Jl. Pinang No.15, Palembang",
+    cabang: "Palembang",
+    description: "Old age.",
+    diterimakan: "Emily Davis",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-04-30 15:45",
+    name: "Patricia Moore",
+    age: 81,
+    birthDate: "1943-04-25",
+    workUnit: "Unit P",
+    homeAddress: "Jl. Kenanga No.16, Bali",
+    cabang: "Bali",
+    description: "Cancer.",
+    diterimakan: "Daniel Green",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-03-19 09:00",
+    name: "Oscar Young",
+    age: 77,
+    birthDate: "1947-03-12",
+    workUnit: "Unit O",
+    homeAddress: "Jl. Pinang No.15, Palembang",
+    cabang: "Palembang",
+    description: "Old age.",
+    diterimakan: "Emily Davis",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-04-30 15:45",
+    name: "Patricia Moore",
+    age: 81,
+    birthDate: "1943-04-25",
+    workUnit: "Unit P",
+    homeAddress: "Jl. Kenanga No.16, Bali",
+    cabang: "Bali",
+    description: "Cancer.",
+    diterimakan: "Daniel Green",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-03-19 09:00",
+    name: "Oscar Young",
+    age: 77,
+    birthDate: "1947-03-12",
+    workUnit: "Unit O",
+    homeAddress: "Jl. Pinang No.15, Palembang",
+    cabang: "Palembang",
+    description: "Old age.",
+    diterimakan: "Emily Davis",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-04-30 15:45",
+    name: "Patricia Moore",
+    age: 81,
+    birthDate: "1943-04-25",
+    workUnit: "Unit P",
+    homeAddress: "Jl. Kenanga No.16, Bali",
+    cabang: "Bali",
+    description: "Cancer.",
+    diterimakan: "Daniel Green",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-03-19 09:00",
+    name: "Oscar Young",
+    age: 77,
+    birthDate: "1947-03-12",
+    workUnit: "Unit O",
+    homeAddress: "Jl. Pinang No.15, Palembang",
+    cabang: "Palembang",
+    description: "Old age.",
+    diterimakan: "Emily Davis",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-04-30 15:45",
+    name: "Patricia Moore",
+    age: 81,
+    birthDate: "1943-04-25",
+    workUnit: "Unit P",
+    homeAddress: "Jl. Kenanga No.16, Bali",
+    cabang: "Bali",
+    description: "Cancer.",
+    diterimakan: "Daniel Green",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-03-19 09:00",
+    name: "Oscar Young",
+    age: 77,
+    birthDate: "1947-03-12",
+    workUnit: "Unit O",
+    homeAddress: "Jl. Pinang No.15, Palembang",
+    cabang: "Palembang",
+    description: "Old age.",
+    diterimakan: "Emily Davis",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-04-30 15:45",
+    name: "Patricia Moore",
+    age: 81,
+    birthDate: "1943-04-25",
+    workUnit: "Unit P",
+    homeAddress: "Jl. Kenanga No.16, Bali",
+    cabang: "Bali",
+    description: "Cancer.",
+    diterimakan: "Daniel Green",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-03-19 09:00",
+    name: "Oscar Young",
+    age: 77,
+    birthDate: "1947-03-12",
+    workUnit: "Unit O",
+    homeAddress: "Jl. Pinang No.15, Palembang",
+    cabang: "Palembang",
+    description: "Old age.",
+    diterimakan: "Emily Davis",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-04-30 15:45",
+    name: "Patricia Moore",
+    age: 81,
+    birthDate: "1943-04-25",
+    workUnit: "Unit P",
+    homeAddress: "Jl. Kenanga No.16, Bali",
+    cabang: "Bali",
+    description: "Cancer.",
+    diterimakan: "Daniel Green",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-03-19 09:00",
+    name: "Oscar Young",
+    age: 77,
+    birthDate: "1947-03-12",
+    workUnit: "Unit O",
+    homeAddress: "Jl. Pinang No.15, Palembang",
+    cabang: "Palembang",
+    description: "Old age.",
+    diterimakan: "Emily Davis",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-04-30 15:45",
+    name: "Patricia Moore",
+    age: 81,
+    birthDate: "1943-04-25",
+    workUnit: "Unit P",
+    homeAddress: "Jl. Kenanga No.16, Bali",
+    cabang: "Bali",
+    description: "Cancer.",
+    diterimakan: "Daniel Green",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-03-19 09:00",
+    name: "Oscar Young",
+    age: 77,
+    birthDate: "1947-03-12",
+    workUnit: "Unit O",
+    homeAddress: "Jl. Pinang No.15, Palembang",
+    cabang: "Palembang",
+    description: "Old age.",
+    diterimakan: "Emily Davis",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-04-30 15:45",
+    name: "Patricia Moore",
+    age: 81,
+    birthDate: "1943-04-25",
+    workUnit: "Unit P",
+    homeAddress: "Jl. Kenanga No.16, Bali",
+    cabang: "Bali",
+    description: "Cancer.",
+    diterimakan: "Daniel Green",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-03-19 09:00",
+    name: "Oscar Young",
+    age: 77,
+    birthDate: "1947-03-12",
+    workUnit: "Unit O",
+    homeAddress: "Jl. Pinang No.15, Palembang",
+    cabang: "Palembang",
+    description: "Old age.",
+    diterimakan: "Emily Davis",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-04-30 15:45",
+    name: "Patricia Moore",
+    age: 81,
+    birthDate: "1943-04-25",
+    workUnit: "Unit P",
+    homeAddress: "Jl. Kenanga No.16, Bali",
+    cabang: "Bali",
+    description: "Cancer.",
+    diterimakan: "Daniel Green",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2020-03-19 09:00",
+    name: "Oscar Young",
+    age: 77,
+    birthDate: "1947-03-12",
+    workUnit: "Unit O",
+    homeAddress: "Jl. Pinang No.15, Palembang",
+    cabang: "Palembang",
+    description: "Old age.",
+    diterimakan: "Emily Davis",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2024-04-30 15:45",
+    name: "Patricia Moore",
+    age: 81,
+    birthDate: "1943-04-25",
+    workUnit: "Unit P",
+    homeAddress: "Jl. Kenanga No.16, Bali",
+    cabang: "Bali",
+    description: "Cancer.",
+    diterimakan: "Daniel Green",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2020-03-19 09:00",
+    name: "Oscar Young",
+    age: 77,
+    birthDate: "1947-03-12",
+    workUnit: "Unit O",
+    homeAddress: "Jl. Pinang No.15, Palembang",
+    cabang: "Palembang",
+    description: "Old age.",
+    diterimakan: "Emily Davis",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2020-04-30 15:45",
+    name: "Patricia Moore",
+    age: 81,
+    birthDate: "1943-04-25",
+    workUnit: "Unit P",
+    homeAddress: "Jl. Kenanga No.16, Bali",
+    cabang: "Bali",
+    description: "Cancer.",
+    diterimakan: "Daniel Green",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2020-03-19 09:00",
+    name: "Oscar Young",
+    age: 77,
+    birthDate: "1947-03-12",
+    workUnit: "Unit O",
+    homeAddress: "Jl. Pinang No.15, Palembang",
+    cabang: "Palembang",
+    description: "Old age.",
+    diterimakan: "Emily Davis",
+    photoUrl: "/profile.png",
+  },
+  {
+    dateLapor: "2020-04-30 15:45",
+    name: "Patricia Moore",
+    age: 81,
+    birthDate: "1943-04-25",
+    workUnit: "Unit P",
+    homeAddress: "Jl. Kenanga No.16, Bali",
+    cabang: "Bali",
+    description: "Cancer.",
+    diterimakan: "Daniel Green",
+    photoUrl: "/profile.png",
+  },
 ];
-
 const months = [
   { name: "January", value: "01" },
   { name: "February", value: "02" },
@@ -228,6 +518,19 @@ const months = [
 const Page = () => {
   const [filter, setFilter] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [itemsPerPage, setItemsPerPage] = useState(10); // Default to 10 items per page
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Extract unique years from data
+  const getUniqueYears = () => {
+    const years = new Set(
+      data.map((item) => new Date(item.dateLapor).getFullYear())
+    );
+    return Array.from(years).sort((a, b) => b - a); // Sort descending
+  };
+
+  const years = getUniqueYears();
 
   const filteredData = data
     .filter((item) => {
@@ -238,147 +541,293 @@ const Page = () => {
       const isMonthMatch =
         !selectedMonth || item.dateLapor.includes(`-${selectedMonth}-`);
 
-      return isDateLaporMatch && isMonthMatch;
+      const isYearMatch =
+        !selectedYear ||
+        new Date(item.dateLapor).getFullYear() === Number(selectedYear);
+
+      return isDateLaporMatch && isMonthMatch && isYearMatch;
     })
     .sort((a, b) => new Date(b.dateLapor) - new Date(a.dateLapor)); // Sort data by dateLapor in descending order
 
-  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const router = useRouter();
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!isMobileMenuOpen);
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
   };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handlePageClick = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1); // Reset to first page when items per page changes
+  };
+
+  useEffect(() => {
+    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+    setIsSidebarOpen(sidebarState);
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const router = useRouter();
 
   const handleBackClick = () => {
     router.back();
   };
 
+  const toggleSidebar = () => {
+    const newSidebarState = !isSidebarOpen;
+    setIsSidebarOpen(newSidebarState);
+    localStorage.setItem("isSidebarOpen", newSidebarState);
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <div>
-      <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-        <div className="container mx-auto flex items-center justify-between">
-          {/* Back Button and Title */}
-          <div className="flex items-center">
-            <FontAwesomeIcon
-              icon={faArrowLeft}
-              size="sm"
-              onClick={handleBackClick}
-              className="cursor-pointer mr-2"
-            />
-            <h1 className="text-base">Rekap Meninggal</h1>
-          </div>
-        </div>
-      </header>
-      <div className="w-full p-4 container shadow-lg rounded-lg">
-        <div className="rounded-md flex flex-col py-4 mt-12">
-          <div className="container px-2">
-            <h2 className="text-base md:text-base font-bold mb-4 text-center">
-              REKAP MENINGGAL
-            </h2>
-            <div className="w-full flex mb-4 text-sm relative">
-              <input
-                type="text"
-                placeholder="Search"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="p-2 pl-10 border rounded max-w-sm w-full"
-              />
+      {isMobile ? (
+        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+          <div className="container mx-auto flex items-center justify-between">
+            {/* Back Button and Title */}
+            <div className="flex items-center">
               <FontAwesomeIcon
-                icon={faMagnifyingGlass}
-                className="absolute left-3 top-2.5 w-4 h-4 text-gray-500"
+                icon={faArrowLeft}
+                size="sm"
+                onClick={handleBackClick}
+                className="cursor-pointer mr-4"
               />
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="p-2 border rounded ml-4"
-              >
-                <option value="">All Months</option>
-                {months.map((month) => (
-                  <option key={month.value} value={month.value}>
-                    {month.name}
-                  </option>
-                ))}
-              </select>
+              <h1 className="text-base">Rekap Meninggal</h1>
             </div>
-            <Table className="w-full table-auto text-sm mb-8">
-              <TableHeader className="p-2 md:p-3 border bg-green-300">
-                <TableRow>
-                  <TableHead className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white">
-                    No
-                  </TableHead>
-                  <TableHead className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white">
-                    Foto
-                  </TableHead>
-                  <TableHead className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white">
-                    Data Lapor
-                  </TableHead>
-                  <TableHead className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white">
-                    Data Meninggal
-                  </TableHead>
-                  <TableHead className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white">
-                    Cabang
-                  </TableHead>
-                  <TableHead className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white">
-                    Keterangan
-                  </TableHead>
-                  <TableHead className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white">
-                    Diterimakan
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredData.map((item, index) => (
-                  <TableRow
-                    key={index}
-                    className={index % 2 === 0 ? "bg-gray-200" : "bg-white"}
+          </div>
+        </header>
+      ) : (
+        <HeaderHome />
+      )}
+      <div>
+        <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+
+        <div
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
+        >
+          <div className="w-full p-4 container shadow-lg rounded-lg">
+            <div className="rounded-md flex flex-col py-4 mt-12">
+              <div className="container px-2">
+                <h2 className="text-base md:text-base font-bold mb-4 text-center">
+                  REKAP MENINGGAL
+                </h2>
+                <div className="w-full flex mb-4 text-sm relative">
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                    className="p-2 pl-10 border rounded max-w-sm w-full"
+                  />
+                  <FontAwesomeIcon
+                    icon={faMagnifyingGlass}
+                    className="absolute left-3 top-2.5 w-4 h-4 text-gray-500"
+                  />
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="p-2 border rounded ml-4"
                   >
-                    <TableCell className="text-center border">
-                      {index + 1}
-                    </TableCell>
-                    <TableCell className="border">
-                      <Image
-                        src={item.photoUrl}
-                        alt={item.name}
-                        className="rounded-full mx-auto"
-                        width={100}
-                        height={100}
-                      />
-                    </TableCell>
-                    <TableCell className="border">
-                      {item.dateLapor} <br />
-                      {item.dateLapor.split(" ")[0]} <br />
-                      {item.name} <br />
-                      {item.cabang} <br />
-                      {item.workUnit}
-                    </TableCell>
-                    <TableCell className="border">
-                      {item.name} <br />
-                      {item.age} years <br />
-                      {item.birthDate} <br />
-                      {item.workUnit} <br />
-                      {item.homeAddress}
-                    </TableCell>
-                    <TableCell className="border text-center">
-                      {item.cabang}
-                    </TableCell>
-                    <TableCell className="border">
-                      {item.description} <br />
-                      {item.dateLapor} <br />
-                      {item.description}
-                    </TableCell>
-                    <TableCell className="text-center border">
-                      {item.diterimakan ? (
-                        <span className="text-green-600">SUDAH TERIMAKAN</span>
-                      ) : (
-                        <span className="text-red-600">BELUM DITERIMAKAN</span>
-                      )}
-                      <br />
-                      {item.diterimakan || "N/A"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    <option value="">All Months</option>
+                    {months.map((month) => (
+                      <option key={month.value} value={month.value}>
+                        {month.name}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(e.target.value)}
+                    className="p-2 border rounded ml-4"
+                  >
+                    <option value="">All Years</option>
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex justify-between mb-4">
+                  <select
+                    value={itemsPerPage}
+                    onChange={handleItemsPerPageChange}
+                    className="p-2 border rounded"
+                  >
+                    <option value={10}>10</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+                <Table className="w-full table-auto text-sm mb-8">
+                  <TableHeader className="p-2 md:p-3 border bg-green-300">
+                    <TableRow>
+                      <TableHead className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white">
+                        No
+                      </TableHead>
+                      <TableHead className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white">
+                        Foto
+                      </TableHead>
+                      <TableHead className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white">
+                        Data Lapor
+                      </TableHead>
+                      <TableHead className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white">
+                        Data Meninggal
+                      </TableHead>
+                      <TableHead className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white">
+                        Cabang
+                      </TableHead>
+                      <TableHead className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white">
+                        Keterangan
+                      </TableHead>
+                      <TableHead className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white">
+                        Diterimakan
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currentData.map((item, index) => (
+                      <TableRow
+                        key={index}
+                        className={index % 2 === 0 ? "bg-gray-200" : "bg-white"}
+                      >
+                        <TableCell className="text-center border">
+                          {indexOfFirstItem + index + 1}
+                        </TableCell>
+                        <TableCell className="border">
+                          <Image
+                            src={item.photoUrl}
+                            alt={item.name}
+                            className="rounded-full mx-auto"
+                            width={100}
+                            height={100}
+                          />
+                        </TableCell>
+                        <TableCell className="border">
+                          {item.dateLapor} <br />
+                          {item.dateLapor.split(" ")[0]} <br />
+                          {item.name} <br />
+                          {item.cabang} <br />
+                          {item.workUnit}
+                        </TableCell>
+                        <TableCell className="border">
+                          {item.name} <br />
+                          {item.age} years <br />
+                          {item.birthDate} <br />
+                          {item.workUnit} <br />
+                          {item.homeAddress}
+                        </TableCell>
+                        <TableCell className="border text-center">
+                          {item.cabang}
+                        </TableCell>
+                        <TableCell className="border">
+                          {item.description} <br />
+                          {item.dateLapor} <br />
+                          {item.description}
+                        </TableCell>
+                        <TableCell className="text-center border">
+                          {item.diterimakan ? (
+                            <span className="text-green-600">
+                              SUDAH TERIMAKAN
+                            </span>
+                          ) : (
+                            <span className="text-red-600">
+                              BELUM DITERIMAKAN
+                            </span>
+                          )}
+                          <br />
+                          {item.diterimakan || "N/A"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <div className="flex justify-end items-center mb-4">
+                  <Button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="mr-2"
+                  >
+                    Previous
+                  </Button>
+                  <div className="flex items-center">
+                    {totalPages > 1 && (
+                      <ul className="flex space-x-1">
+                        {/* Calculate the range of pages to display */}
+                        {(() => {
+                          let startPage = Math.max(1, currentPage - 1);
+                          let endPage = Math.min(totalPages, currentPage + 1);
+
+                          if (currentPage === 1) {
+                            endPage = Math.min(3, totalPages);
+                          } else if (currentPage === totalPages) {
+                            startPage = Math.max(totalPages - 2, 1);
+                          } else if (totalPages - currentPage < 2) {
+                            startPage = Math.max(totalPages - 2, 1);
+                          }
+
+                          return Array.from(
+                            { length: endPage - startPage + 1 },
+                            (_, i) => startPage + i
+                          );
+                        })().map((number) => (
+                          <li key={number}>
+                            <Button
+                              onClick={() => handlePageClick(number)}
+                              className={`mx-1 px-4 py-2 border rounded-md ${
+                                currentPage === number
+                                  ? "bg-blue-500 text-white"
+                                  : "bg-white text-black"
+                              }`}
+                            >
+                              {number}
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <Button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="ml-2"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -3,6 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useRouter } from "next/navigation";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import HeaderHome from "@/app/_components/HeaderHome";
+import Sidebar from "@/app/_components/Sidebar";
 
 const TableData = [
   {
@@ -401,280 +406,348 @@ export default function Iuran() {
     setFormVisible(!isFormVisible);
   };
 
+  useEffect(() => {
+    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+    setIsSidebarOpen(sidebarState);
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const router = useRouter();
+
+  const handleBackClick = () => {
+    router.back();
+  };
+
+  const toggleSidebar = () => {
+    const newSidebarState = !isSidebarOpen;
+    setIsSidebarOpen(newSidebarState);
+    localStorage.setItem("isSidebarOpen", newSidebarState);
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
-    <div className="container mx-auto p-6 bg-gray-50 rounded-lg shadow-lg">
-      <Button
-        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-        onClick={handleToggleForm}
-      >
-        Rincian Iuran
-      </Button>
-      {isFormVisible && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-5 text-center">
-              Besaran Iuran PGRI
-            </h2>
-
-            <div>
-              <div className="mb-4">
-                <Label
-                  htmlFor="iuranPB"
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                >
-                  Iuran PB
-                </Label>
-                <Input
-                  type="text"
-                  id="iuranPB"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  value={formatRupiah(iuranPB)}
-                  onChange={(event) => handleInputChange(event, setIuranPB)}
-                />
-              </div>
-              <div className="mb-4">
-                <Label
-                  htmlFor="iuranProvinsi"
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                >
-                  Iuran Provinsi
-                </Label>
-                <Input
-                  type="text"
-                  id="iuranProvinsi"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  value={formatRupiah(iuranProvinsi)}
-                  onChange={(event) =>
-                    handleInputChange(event, setIuranProvinsi)
-                  }
-                />
-              </div>
-              <div className="mb-4">
-                <Label
-                  htmlFor="iuranKabupaten"
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                >
-                  Iuran Kabupaten
-                </Label>
-                <Input
-                  type="text"
-                  id="iuranKabupaten"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  value={formatRupiah(iuranKabupaten)}
-                  onChange={(event) =>
-                    handleInputChange(event, setIuranKabupaten)
-                  }
-                />
-              </div>
-              <div className="mb-4">
-                <Label
-                  htmlFor="iuranCabang"
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                >
-                  Iuran Cabang/Ranting
-                </Label>
-                <Input
-                  type="text"
-                  id="iuranCabang"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  value={formatRupiah(iuranCabang)}
-                  onChange={(event) => handleInputChange(event, setIuranCabang)}
-                />
-              </div>
-              <div className="mb-4">
-                <Label
-                  htmlFor="totalIuran"
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                >
-                  Total Iuran
-                </Label>
-                <Input
-                  type="text"
-                  id="totalIuran"
-                  className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                    totalIuran === totalIuran ? "bg-gray-200" : ""
-                  }`}
-                  value={formatRupiah(totalIuran)}
-                  readOnly
-                />
-              </div>
-              <div className="mb-4">
-                <Label
-                  htmlFor="sumbanganSanduka"
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                >
-                  Sumbangan Sanduka
-                </Label>
-                <Input
-                  type="text"
-                  id="sumbanganSanduka"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  value={formatRupiah(sumbanganSanduka)}
-                  onChange={(event) =>
-                    handleInputChange(event, setSumbanganSanduka)
-                  }
-                />
-              </div>
-              <div className="mb-4">
-                <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-1 text-center">
-                  Total Sumbangan dan Iuran PGRI
-                </h2>
-                <Input
-                  type="text"
-                  id="totalSumbangan"
-                  className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                    totalSumbangan === totalIuran + sumbanganSanduka
-                      ? "bg-gray-200"
-                      : ""
-                  }`}
-                  value={formatRupiah(totalSumbangan)}
-                  readOnly
-                />
-              </div>
-              <div className="flex justify-center space-x-2">
-                <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                  Simpan
-                </Button>
-                <Button
-                  className="bg-red-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                  onClick={handleReset}
-                >
-                  Reset
-                </Button>
-              </div>
+    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+      {isMobile ? (
+        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+          <div className="container mx-auto flex items-center justify-between">
+            {/* Back Button and Title */}
+            <div className="flex items-center">
+              <FontAwesomeIcon
+                icon={faArrowLeft}
+                size="sm"
+                onClick={handleBackClick}
+                className="cursor-pointer mr-4"
+              />
+              <h1 className="text-base">Rekap Meninggal</h1>
             </div>
           </div>
-
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-lg font-bold mb-2">Jumlah Anggota: 6938</h3>
-            <h3 className="text-lg font-bold mb-2">
-              Setor Provinsi: Rp. 8.325.600
-            </h3>
-            <div className="mb-4">
-              <p className="bg-teal-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                Jumlah Anggota Selisih laporan Cabang
-              </p>
-              <div className="flex flex-col sm:flex-row items-center mt-2 space-y-2 sm:space-y-0 sm:space-x-2">
-                <select className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                  <option>-- Cabang --</option>
-                </select>
-                <select className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                  <option>-- Bulan --</option>
-                </select>
-                <select className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                  <option>-- Tahun --</option>
-                </select>
-                <input
-                  type="text"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  placeholder="Data Cabang"
-                />
-              </div>
-            </div>
-            <div className="mb-4">
-              <label
-                htmlFor="keterangaSilisih"
-                className="block text-gray-700 text-sm font-bold mb-2"
-              >
-                Keterangan Selisih data
-              </label>
-              <textarea
-                id="keterangaSilisih"
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                rows="5"
-              ></textarea>
-            </div>
-            <div className="flex justify-center">
-              <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                Simpan
-              </button>
-            </div>
-          </div>
-        </div>
+        </header>
+      ) : (
+        <HeaderHome />
       )}
-      <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
-        <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
-          <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-            <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-              <option>Tampil Semua</option>
-            </select>
-            <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-              <option>Juli</option>
-              <option>Agustus</option>
-              <option>September</option>
-            </select>
-            <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-              <option>2023</option>
-              <option>2024</option>
-              <option>2025</option>
-            </select>
-          </div>
-          <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-            Transaksi Juli 2024
-          </h1>
-          <Button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out mt-3 mr-6 w-24"
-            onClick={handlePrint}
-          >
-            Cetak
-          </Button>
-        </div>
-      </div>
+      <div>
+        <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left table-auto border-collapse border border-gray-300 bg-white rounded-lg shadow-lg">
-          <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
-            <tr>
-              <th className="border px-6 py-3">No</th>
-              <th className="border px-6 py-3">Cabang/Khusus</th>
-              <th className="border px-6 py-3">Jumlah Anggota</th>
-              <th className="border px-6 py-3">Iuran PGRI</th>
-              <th className="border px-6 py-3">PB. PGRI</th>
-              <th className="border px-6 py-3">Provinsi</th>
-              <th className="border px-6 py-3">Kabupaten</th>
-              <th className="border px-6 py-3">Cabang/Ranting</th>
-              <th className="border px-6 py-3">Sanduka</th>
-              <th className="border px-6 py-3">Total Sumbangan</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.map((item, index) => (
-              <tr
-                key={`${item.No}`}
-                className={`transition duration-200 ease-in-out ${
-                  index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                } ${item.CabangKhusus === "JUMLAH" ? "font-bold" : ""}`}
-              >
-                <td className="border px-6 py-4">{item.No}</td>
-                <td className="border px-6 py-4">{item.CabangKhusus}</td>
-                <td className="border px-6 py-4">{item.JumlahAnggota}</td>
-                <td className="border px-6 py-4">
-                  {formatRupiah(item.IuranPGRI)}
-                </td>
-                <td className="border px-6 py-4">
-                  {formatRupiah(item.PBPGRI)}
-                </td>
-                <td className="border px-6 py-4">
-                  {formatRupiah(item.Provinsi)}
-                </td>
-                <td className="border px-6 py-4">
-                  {formatRupiah(item.Kabupaten)}
-                </td>
-                <td className="border px-6 py-4">
-                  {formatRupiah(item.CabangRanting)}
-                </td>
-                <td className="border px-6 py-4">
-                  {formatRupiah(item.Sanduka)}
-                </td>
-                <td className="border px-6 py-4">
-                  {item.TotalSumbangang
-                    ? formatRupiah(item.TotalSumbangang)
-                    : ""}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
+        >
+          <div className="container mx-auto p-6 bg-gray-50 rounded-lg shadow-lg mt-10">
+            <Button
+              className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+              onClick={handleToggleForm}
+            >
+              Rincian Iuran
+            </Button>
+            {isFormVisible && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                  <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-5 text-center">
+                    Besaran Iuran PGRI
+                  </h2>
+
+                  <div>
+                    <div className="mb-4">
+                      <Label
+                        htmlFor="iuranPB"
+                        className="block text-gray-700 text-sm font-bold mb-2"
+                      >
+                        Iuran PB
+                      </Label>
+                      <Input
+                        type="text"
+                        id="iuranPB"
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        value={formatRupiah(iuranPB)}
+                        onChange={(event) =>
+                          handleInputChange(event, setIuranPB)
+                        }
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <Label
+                        htmlFor="iuranProvinsi"
+                        className="block text-gray-700 text-sm font-bold mb-2"
+                      >
+                        Iuran Provinsi
+                      </Label>
+                      <Input
+                        type="text"
+                        id="iuranProvinsi"
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        value={formatRupiah(iuranProvinsi)}
+                        onChange={(event) =>
+                          handleInputChange(event, setIuranProvinsi)
+                        }
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <Label
+                        htmlFor="iuranKabupaten"
+                        className="block text-gray-700 text-sm font-bold mb-2"
+                      >
+                        Iuran Kabupaten
+                      </Label>
+                      <Input
+                        type="text"
+                        id="iuranKabupaten"
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        value={formatRupiah(iuranKabupaten)}
+                        onChange={(event) =>
+                          handleInputChange(event, setIuranKabupaten)
+                        }
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <Label
+                        htmlFor="iuranCabang"
+                        className="block text-gray-700 text-sm font-bold mb-2"
+                      >
+                        Iuran Cabang/Ranting
+                      </Label>
+                      <Input
+                        type="text"
+                        id="iuranCabang"
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        value={formatRupiah(iuranCabang)}
+                        onChange={(event) =>
+                          handleInputChange(event, setIuranCabang)
+                        }
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <Label
+                        htmlFor="totalIuran"
+                        className="block text-gray-700 text-sm font-bold mb-2"
+                      >
+                        Total Iuran
+                      </Label>
+                      <Input
+                        type="text"
+                        id="totalIuran"
+                        className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                          totalIuran === totalIuran ? "bg-gray-200" : ""
+                        }`}
+                        value={formatRupiah(totalIuran)}
+                        readOnly
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <Label
+                        htmlFor="sumbanganSanduka"
+                        className="block text-gray-700 text-sm font-bold mb-2"
+                      >
+                        Sumbangan Sanduka
+                      </Label>
+                      <Input
+                        type="text"
+                        id="sumbanganSanduka"
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        value={formatRupiah(sumbanganSanduka)}
+                        onChange={(event) =>
+                          handleInputChange(event, setSumbanganSanduka)
+                        }
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-1 text-center">
+                        Total Sumbangan dan Iuran PGRI
+                      </h2>
+                      <Input
+                        type="text"
+                        id="totalSumbangan"
+                        className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
+                          totalSumbangan === totalIuran + sumbanganSanduka
+                            ? "bg-gray-200"
+                            : ""
+                        }`}
+                        value={formatRupiah(totalSumbangan)}
+                        readOnly
+                      />
+                    </div>
+                    <div className="flex justify-center space-x-2">
+                      <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Simpan
+                      </Button>
+                      <Button
+                        className="bg-red-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                        onClick={handleReset}
+                      >
+                        Reset
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-lg shadow-md">
+                  <h3 className="text-lg font-bold mb-2">
+                    Jumlah Anggota: 6938
+                  </h3>
+                  <h3 className="text-lg font-bold mb-2">
+                    Setor Provinsi: Rp. 8.325.600
+                  </h3>
+                  <div className="mb-4">
+                    <p className="bg-teal-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                      Jumlah Anggota Selisih laporan Cabang
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-center mt-2 space-y-2 sm:space-y-0 sm:space-x-2">
+                      <select className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option>-- Cabang --</option>
+                      </select>
+                      <select className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option>-- Bulan --</option>
+                      </select>
+                      <select className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option>-- Tahun --</option>
+                      </select>
+                      <input
+                        type="text"
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        placeholder="Data Cabang"
+                      />
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <label
+                      htmlFor="keterangaSilisih"
+                      className="block text-gray-700 text-sm font-bold mb-2"
+                    >
+                      Keterangan Selisih data
+                    </label>
+                    <textarea
+                      id="keterangaSilisih"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      rows="5"
+                    ></textarea>
+                  </div>
+                  <div className="flex justify-center">
+                    <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                      Simpan
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
+              <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
+                <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
+                  <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+                    <option>Tampil Semua</option>
+                  </select>
+                  <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+                    <option>Juli</option>
+                    <option>Agustus</option>
+                    <option>September</option>
+                  </select>
+                  <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+                    <option>2023</option>
+                    <option>2024</option>
+                    <option>2025</option>
+                  </select>
+                </div>
+                <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
+                  Transaksi Juli 2024
+                </h1>
+                <Button
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out mt-3 mr-6 w-24"
+                  onClick={handlePrint}
+                >
+                  Cetak
+                </Button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left table-auto border-collapse border border-gray-300 bg-white rounded-lg shadow-lg">
+                <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
+                  <tr>
+                    <th className="border px-6 py-3">No</th>
+                    <th className="border px-6 py-3">Cabang/Khusus</th>
+                    <th className="border px-6 py-3">Jumlah Anggota</th>
+                    <th className="border px-6 py-3">Iuran PGRI</th>
+                    <th className="border px-6 py-3">PB. PGRI</th>
+                    <th className="border px-6 py-3">Provinsi</th>
+                    <th className="border px-6 py-3">Kabupaten</th>
+                    <th className="border px-6 py-3">Cabang/Ranting</th>
+                    <th className="border px-6 py-3">Sanduka</th>
+                    <th className="border px-6 py-3">Total Sumbangan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredData.map((item, index) => (
+                    <tr
+                      key={`${item.No}`}
+                      className={`transition duration-200 ease-in-out ${
+                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                      } ${item.CabangKhusus === "JUMLAH" ? "font-bold" : ""}`}
+                    >
+                      <td className="border px-6 py-4">{item.No}</td>
+                      <td className="border px-6 py-4">{item.CabangKhusus}</td>
+                      <td className="border px-6 py-4">{item.JumlahAnggota}</td>
+                      <td className="border px-6 py-4">
+                        {formatRupiah(item.IuranPGRI)}
+                      </td>
+                      <td className="border px-6 py-4">
+                        {formatRupiah(item.PBPGRI)}
+                      </td>
+                      <td className="border px-6 py-4">
+                        {formatRupiah(item.Provinsi)}
+                      </td>
+                      <td className="border px-6 py-4">
+                        {formatRupiah(item.Kabupaten)}
+                      </td>
+                      <td className="border px-6 py-4">
+                        {formatRupiah(item.CabangRanting)}
+                      </td>
+                      <td className="border px-6 py-4">
+                        {formatRupiah(item.Sanduka)}
+                      </td>
+                      <td className="border px-6 py-4">
+                        {item.TotalSumbangang
+                          ? formatRupiah(item.TotalSumbangang)
+                          : ""}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

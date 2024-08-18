@@ -3,7 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useRouter } from "next/navigation";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import HeaderHome from "@/app/_components/HeaderHome";
+import Sidebar from "@/app/_components/Sidebar";
 
 function Pemasukan() {
   const [formValues, setFormValues] = useState({
@@ -119,263 +124,327 @@ function Pemasukan() {
     0
   );
 
+  useEffect(() => {
+    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+    setIsSidebarOpen(sidebarState);
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const router = useRouter();
+
+  const handleBackClick = () => {
+    router.back();
+  };
+
+  const toggleSidebar = () => {
+    const newSidebarState = !isSidebarOpen;
+    setIsSidebarOpen(newSidebarState);
+    localStorage.setItem("isSidebarOpen", newSidebarState);
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
-    <div className="container mx-auto p-6">
-      <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
-        <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
-          POS PEMASUKAN
-        </h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="flex flex-col">
-            <Label
-              className="block text-gray-700 text-sm font-semibold mb-2"
-              htmlFor="noBukti"
-            >
-              No. Bukti
-            </Label>
-            <Input
-              className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              id="noBukti"
-              type="text"
-              name="noBukti"
-              value={formValues.noBukti}
-              onChange={handleChange}
-            />
+    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+      {isMobile ? (
+        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+          <div className="container mx-auto flex items-center justify-between">
+            {/* Back Button and Title */}
+            <div className="flex items-center">
+              <FontAwesomeIcon
+                icon={faArrowLeft}
+                size="sm"
+                onClick={handleBackClick}
+                className="cursor-pointer mr-4"
+              />
+              <h1 className="text-base">Rekap Meninggal</h1>
+            </div>
           </div>
-          <div className="flex flex-col">
-            <Label
-              className="block text-gray-700 text-sm font-semibold mb-2"
-              htmlFor="tanggalTransaksi"
-            >
-              Tanggal Transaksi
-            </Label>
-            <Input
-              className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              id="tanggalTransaksi"
-              type="date"
-              name="tanggalTransaksi"
-              value={formValues.tanggalTransaksi}
-              readOnly
-            />
-          </div>
-          <div className="flex flex-col">
-            <Label
-              className="block text-gray-700 text-sm font-semibold mb-2"
-              htmlFor="posPenerimaan"
-            >
-              Pos Penerimaan
-            </Label>
-            <select
-              className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              id="posPenerimaan"
-              name="posPenerimaan"
-              value={formValues.posPenerimaan}
-              onChange={handleChange}
-            >
-              <option value="iuran pgri">Iuran PGRI</option>
-              <option value="daspen">Daspen</option>
-              <option value="derap">Derap</option>
-              <option value="sewa gudung">Sewa Gudung</option>
-              <option value="kalender">Kalender</option>
-              <option value="lain-lain">Lain - lain</option>
-              <option value="saldo awal">Saldo Awal</option>
-            </select>
-          </div>
-          <div className="flex flex-col">
-            <Label
-              className="block text-gray-700 text-sm font-semibold mb-2"
-              htmlFor="jenisPenerimaan"
-            >
-              Jenis Penerimaan
-            </Label>
-            <select
-              className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              id="jenisPenerimaan"
-              name="jenisPenerimaan"
-              value={formValues.jenisPenerimaan}
-              onChange={handleChange}
-            >
-              <option value="Bank">Bank</option>
-              <option value="Cash">Cash</option>
-            </select>
-          </div>
-          <div className="flex flex-col">
-            <Label
-              className="block text-gray-700 text-sm font-semibold mb-2"
-              htmlFor="cabang"
-            >
-              Cabang
-            </Label>
-            <select
-              className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              id="cabang"
-              name="cabang"
-              value={formValues.cabang}
-              onChange={handleChange}
-            >
-              <option>-- Cabang --</option>
-            </select>
-          </div>
-          <div className="flex flex-col">
-            <Label
-              className="block text-gray-700 text-sm font-semibold mb-2"
-              htmlFor="setoranBulan"
-            >
-              Setoran Bulan
-            </Label>
-            <Input
-              className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              id="setoranBulan"
-              type="month"
-              name="setoranBulan"
-              value={formValues.setoranBulan}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="flex flex-col">
-            <Label
-              className="block text-gray-700 text-sm font-semibold mb-2"
-              htmlFor="nominal"
-            >
-              Nominal
-            </Label>
-            <Input
-              className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              id="nominal"
-              type="number"
-              name="nominal"
-              value={formValues.nominal}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="flex flex-col">
-            <Label
-              className="block text-gray-700 text-sm font-semibold mb-2"
-              htmlFor="keterangan"
-            >
-              Keterangan
-            </Label>
-            <Textarea
-              className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              id="keterangan"
-              name="keterangan"
-              value={formValues.keterangan}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
-        <div className="flex items-center mt-6 justify-center">
-          <Button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            onClick={handleSubmit}
-          >
-            Simpan
-          </Button>
-          <Button
-            className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-700 transition duration-150 ease-in-out ml-6"
-            type="button"
-            onClick={handleReset}
-          >
-            Reset
-          </Button>
-        </div>
-      </div>
+        </header>
+      ) : (
+        <HeaderHome />
+      )}
+      <div>
+        <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-      <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
-        <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
-          <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-            <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-              <option>Juli</option>
-              <option>Agustus</option>
-              <option>September</option>
-            </select>
-            <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-              <option>2023</option>
-              <option>2024</option>
-              <option>2025</option>
-            </select>
-          </div>
-          <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-            Transaksi Juli 2024
-          </h1>
-          <div className="flex justify-center space-x-4 mt-5 mr-10">
-            <Input
-              type="checkbox"
-              className="form-checkbox h-4 w-4 mt-3"
-              checked={selectAll}
-              onChange={handleSelectAll}
-            />
-            <Button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300">
-              Hapus
-            </Button>
-            <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300">
-              Cetak
-            </Button>
+        <div
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
+        >
+          <div className="container mx-auto p-6 mt-8">
+            <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
+              <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
+                POS PEMASUKAN
+              </h2>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="noBukti"
+                  >
+                    No. Bukti
+                  </Label>
+                  <Input
+                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="noBukti"
+                    type="text"
+                    name="noBukti"
+                    value={formValues.noBukti}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="tanggalTransaksi"
+                  >
+                    Tanggal Transaksi
+                  </Label>
+                  <Input
+                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="tanggalTransaksi"
+                    type="date"
+                    name="tanggalTransaksi"
+                    value={formValues.tanggalTransaksi}
+                    readOnly
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="posPenerimaan"
+                  >
+                    Pos Penerimaan
+                  </Label>
+                  <select
+                    className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="posPenerimaan"
+                    name="posPenerimaan"
+                    value={formValues.posPenerimaan}
+                    onChange={handleChange}
+                  >
+                    <option value="iuran pgri">Iuran PGRI</option>
+                    <option value="daspen">Daspen</option>
+                    <option value="derap">Derap</option>
+                    <option value="sewa gudung">Sewa Gudung</option>
+                    <option value="kalender">Kalender</option>
+                    <option value="lain-lain">Lain - lain</option>
+                    <option value="saldo awal">Saldo Awal</option>
+                  </select>
+                </div>
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="jenisPenerimaan"
+                  >
+                    Jenis Penerimaan
+                  </Label>
+                  <select
+                    className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="jenisPenerimaan"
+                    name="jenisPenerimaan"
+                    value={formValues.jenisPenerimaan}
+                    onChange={handleChange}
+                  >
+                    <option value="Bank">Bank</option>
+                    <option value="Cash">Cash</option>
+                  </select>
+                </div>
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="cabang"
+                  >
+                    Cabang
+                  </Label>
+                  <select
+                    className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="cabang"
+                    name="cabang"
+                    value={formValues.cabang}
+                    onChange={handleChange}
+                  >
+                    <option>-- Cabang --</option>
+                  </select>
+                </div>
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="setoranBulan"
+                  >
+                    Setoran Bulan
+                  </Label>
+                  <Input
+                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="setoranBulan"
+                    type="month"
+                    name="setoranBulan"
+                    value={formValues.setoranBulan}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="nominal"
+                  >
+                    Nominal
+                  </Label>
+                  <Input
+                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="nominal"
+                    type="number"
+                    name="nominal"
+                    value={formValues.nominal}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="keterangan"
+                  >
+                    Keterangan
+                  </Label>
+                  <Textarea
+                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="keterangan"
+                    name="keterangan"
+                    value={formValues.keterangan}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center mt-6 justify-center">
+                <Button
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                  onClick={handleSubmit}
+                >
+                  Simpan
+                </Button>
+                <Button
+                  className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-700 transition duration-150 ease-in-out ml-6"
+                  type="button"
+                  onClick={handleReset}
+                >
+                  Reset
+                </Button>
+              </div>
+            </div>
+
+            <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
+              <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
+                <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
+                  <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+                    <option>Juli</option>
+                    <option>Agustus</option>
+                    <option>September</option>
+                  </select>
+                  <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
+                    <option>2023</option>
+                    <option>2024</option>
+                    <option>2025</option>
+                  </select>
+                </div>
+                <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
+                  Transaksi Juli 2024
+                </h1>
+                <div className="flex justify-center space-x-4 mt-5 mr-10">
+                  <Input
+                    type="checkbox"
+                    className="form-checkbox h-4 w-4 mt-3"
+                    checked={selectAll}
+                    onChange={handleSelectAll}
+                  />
+                  <Button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                    Hapus
+                  </Button>
+                  <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                    Cetak
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead className="text-sm text-black uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
+                  <tr className="bg-gray-200 text-black text-center">
+                    <th className="px-6 py-3 font-semibold">No</th>
+                    <th className="px-6 py-3 font-semibold">Tgl Transaksi</th>
+                    <th className="px-6 py-3 font-semibold">No. Bukti</th>
+                    <th className="px-6 py-3 font-semibold">Uraian</th>
+                    <th className="px-6 py-3 font-semibold">Debet</th>
+                    <th className="px-6 py-3 font-semibold">Kredit</th>
+                    <th className="px-6 py-3 font-semibold">Saldo</th>
+                    <th className="px-6 py-3 font-semibold">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((transaction) => (
+                    <tr
+                      key={transaction.id}
+                      className={`border-b text-black text-center ${
+                        transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
+                      }`}
+                    >
+                      <td className="px-6 py-4">{transaction.id}</td>
+                      <td className="px-6 py-4">{transaction.date}</td>
+                      <td className="px-6 py-4">{transaction.noBukti}</td>
+                      <td className="px-6 py-4">{transaction.description}</td>
+                      <td className="px-6 py-4">
+                        {formatCurrency(parseNumber(transaction.debit))}
+                      </td>
+                      <td className="px-6 py-4">
+                        {formatCurrency(parseNumber(transaction.credit))}
+                      </td>
+                      <td className="px-6 py-4">
+                        {formatCurrency(parseNumber(transaction.balance))}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-2">
+                          <Input
+                            type="checkbox"
+                            className="form-checkbox h-4 w-4"
+                            checked={transaction.checked}
+                            onChange={() => handleCheck(transaction.id)}
+                          />
+                          <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                            Edit
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="bg-gray-200 font-bold text-black text-center">
+                    <td className="px-6 py-4 text-left" colSpan="4">
+                      TOTAL
+                    </td>
+                    <td className="px-6 py-4">{formatCurrency(totalDebit)}</td>
+                    <td className="px-6 py-4">{formatCurrency(totalCredit)}</td>
+                    <td className="px-6 py-4">
+                      {formatCurrency(totalBalance)}
+                    </td>
+                    <td className="px-6 py-4"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
-          <thead className="text-sm text-black uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
-            <tr className="bg-gray-200 text-black text-center">
-              <th className="px-6 py-3 font-semibold">No</th>
-              <th className="px-6 py-3 font-semibold">Tgl Transaksi</th>
-              <th className="px-6 py-3 font-semibold">No. Bukti</th>
-              <th className="px-6 py-3 font-semibold">Uraian</th>
-              <th className="px-6 py-3 font-semibold">Debet</th>
-              <th className="px-6 py-3 font-semibold">Kredit</th>
-              <th className="px-6 py-3 font-semibold">Saldo</th>
-              <th className="px-6 py-3 font-semibold">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((transaction) => (
-              <tr
-                key={transaction.id}
-                className={`border-b text-black text-center ${
-                  transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
-                }`}
-              >
-                <td className="px-6 py-4">{transaction.id}</td>
-                <td className="px-6 py-4">{transaction.date}</td>
-                <td className="px-6 py-4">{transaction.noBukti}</td>
-                <td className="px-6 py-4">{transaction.description}</td>
-                <td className="px-6 py-4">
-                  {formatCurrency(parseNumber(transaction.debit))}
-                </td>
-                <td className="px-6 py-4">
-                  {formatCurrency(parseNumber(transaction.credit))}
-                </td>
-                <td className="px-6 py-4">
-                  {formatCurrency(parseNumber(transaction.balance))}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      type="checkbox"
-                      className="form-checkbox h-4 w-4"
-                      checked={transaction.checked}
-                      onChange={() => handleCheck(transaction.id)}
-                    />
-                    <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">
-                      Edit
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            <tr className="bg-gray-200 font-bold text-black text-center">
-              <td className="px-6 py-4 text-left" colSpan="4">
-                TOTAL
-              </td>
-              <td className="px-6 py-4">{formatCurrency(totalDebit)}</td>
-              <td className="px-6 py-4">{formatCurrency(totalCredit)}</td>
-              <td className="px-6 py-4">{formatCurrency(totalBalance)}</td>
-              <td className="px-6 py-4"></td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div>
   );
