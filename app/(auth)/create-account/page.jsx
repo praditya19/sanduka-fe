@@ -15,26 +15,95 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import GlobalApi from "@/app/_utils/GlobalApi";
+import toast, { Toaster } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
-// Dynamically import MapComponent with SSR disabled
 const MapComponent = dynamic(() => import("../../_components/MapComponent"), {
   ssr: false,
 });
 
 const Page = () => {
-  // State for maps
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [error, setError] = useState("");
-  const [showMap, setShowMap] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [namaAnak, setNamesanak] = useState([""]);
+  const [step, setStep] = useState(1);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [cabang, setCabang] = useState([]);
+  const [jabatan, setJabatan] = useState([]);
+  const [golonganJabatan, setGolonganJabatan] = useState([]);
+  const [unitKerja, setUnitKerja] = useState([]);
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
+  const [base64String, setBase64String] = useState("");
+  const [today, setToday] = useState("");
+
+  const router = useRouter();
+
+  const updateUnitKerja = (kecamatan) => {
+    const filteredUnitKerja = unitKerja.filter((item) => {
+      return item.cabang === kecamatan;
+    });
+    setFilteredUnitKerja(filteredUnitKerja);
+  };
+
+  const handleCabangChange = (value) => {
+    setSelectedCabang(value);
+    updateUnitKerja(value);
+  };
 
   useEffect(() => {
+    const currentDate = new Date().toISOString().split("T")[0];
+    setToday(currentDate);
+
+    updateUnitKerja();
     setIsClient(true);
+    fetchData();
+    fetchJabatan();
+    fetchGolonganJabatan();
+    fetchUnitKerja();
   }, []);
 
-  // Handler to get current location
+  const fetchData = async () => {
+    try {
+      const response = await GlobalApi.getCabang();
+      setCabang(response.data);
+    } catch (error) {
+      console.error("Error fetching recipes:", error);
+    }
+  };
+
+  const fetchJabatan = async () => {
+    try {
+      const response = await GlobalApi.getJabatan();
+      setJabatan(response.data);
+    } catch (error) {
+      console.error("Error fetching recipes:", error);
+    }
+  };
+
+  const fetchGolonganJabatan = async () => {
+    try {
+      const response = await GlobalApi.getGolonganJabatan();
+      setGolonganJabatan(response.data);
+    } catch (error) {
+      console.error("Error fetching recipes:", error);
+    }
+  };
+
+  const fetchUnitKerja = async () => {
+    try {
+      const response = await GlobalApi.getUnitKerja();
+      setUnitKerja(response.data);
+    } catch (error) {
+      console.error("Error fetching recipes:", error);
+    }
+  };
+
   const handleGetLocation = () => {
     setLoading(true);
     if (navigator.geolocation) {
@@ -56,77 +125,91 @@ const Page = () => {
     }
   };
 
-  // State for file upload
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
       setSelectedFile(file);
+      setPreview(URL.createObjectURL(file));
+
       const reader = new FileReader();
-      reader.onload = (e) => setPreview(e.target.result);
+      reader.onloadend = () => {
+        const base64String = reader.result.split(",")[1];
+        setBase64String(base64String);
+      };
       reader.readAsDataURL(file);
     } else {
       setSelectedFile(null);
       setPreview(null);
+      setBase64String("");
     }
   };
 
-  // State for dynamic input fields
-  const [namesanak, setNamesanak] = useState([""]);
   const handleChange = (index, event) => {
-    const newNamesanak = [...namesanak];
+    const newNamesanak = [...namaAnak];
     newNamesanak[index] = event.target.value;
     setNamesanak(newNamesanak);
   };
 
   const handleAddInput = () => {
-    setNamesanak([...namesanak, ""]);
+    setNamesanak([...namaAnak, ""]);
   };
 
   const handleRemoveInput = (index) => {
-    const newNamesanak = namesanak.filter((_, i) => i !== index);
+    const newNamesanak = namaAnak.filter((_, i) => i !== index);
     setNamesanak(newNamesanak);
   };
 
-  // Form state
-  const [step, setStep] = useState(1);
   const {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
-    watch,
     control,
-    clearErrors,
   } = useForm({
     defaultValues: {
       jenisKelamin: "",
     },
   });
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
+    const formattedTanggalLahir = new Date(data.tanggalLahir)
+      .toISOString()
+      .split("T")[0];
+    const formattedTahunDiangkat = new Date(data.tahunDiangkat)
+      .toISOString()
+      .split("T")[0];
+    const formattedMulaiJadiAnggota = new Date(data.mulaiJadiAnggotaPgri)
+      .toISOString()
+      .split("T")[0];
     const finalData = {
       ...data,
-      namesanak: namesanak.filter((name) => name.trim() !== ""),
+      tanggalLahir: formattedTanggalLahir,
+      tahunDiangkat: formattedTahunDiangkat,
+      mulaiJadiAnggotaPgri: formattedMulaiJadiAnggota,
+      namaAnak: namaAnak.filter((name) => name.trim() !== ""),
       latitude,
       longitude,
+      foto: base64String,
     };
-    console.log(finalData);
-    // Send finalData to the database
+
+    try {
+      const response = await GlobalApi.registerUser(finalData);
+      toast.success("Anda Berhasil Mendaftar Menjadi Anggota Sanduka");
+      setTimeout(() => {
+        router.push("/sign-in");
+      }, 2000);
+    } catch (error) {
+      toast.error("Anda Tidak Berhasil Mendaftar Menjadi Anggota Sanduka");
+    }
   };
 
   const nextStep = () => {
-    // Periksa apakah gambar telah diunggah
     if (!selectedFile) {
       setError("Harap unggah gambar sebelum melanjutkan.");
-      return; // Hentikan perpindahan halaman
+      return;
     }
 
-    // Jika gambar telah diunggah, lanjutkan ke step berikutnya
     setStep(step + 1);
-    setError(""); // Bersihkan pesan error jika ada
+    setError("");
   };
 
   const prevStep = () => {
@@ -136,6 +219,7 @@ const Page = () => {
   return (
     <div className="max-w-screen-lg mx-auto px-4 py-6">
       <div className="container mx-auto max-w-screen-lg sm:max-w-full md:max-w-screen-lg px-4">
+        <Toaster />
         {step === 1 && (
           <div>
             <h2 className="font-semibold text-xl text-gray-600">
@@ -156,13 +240,13 @@ const Page = () => {
                 />
                 <Input
                   type="file"
-                  id="photo-upload"
+                  id="foto"
                   accept=".jpg,.jpeg,.png"
                   onChange={handleFileChange}
                   className="hidden"
                 />
                 <label
-                  htmlFor="photo-upload"
+                  htmlFor="foto"
                   className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md bg-white text-center"
                 >
                   Choose Files
@@ -229,12 +313,12 @@ const Page = () => {
                     </span>
                   </Label>
                   <Input
-                    type="number"
-                    id="npa"
+                    type="text"
+                    id="npaPgri"
                     placeholder="Tuliskan NPA"
-                    {...register("npa")}
+                    {...register("npaPgri")}
                   />
-                  {errors.npa && (
+                  {errors.npaPgri && (
                     <span className="text-red-500 text-sm">
                       NPA is required
                     </span>
@@ -290,11 +374,11 @@ const Page = () => {
                   </Label>
                   <Input
                     type="text"
-                    id="nama"
+                    id="namaLengkap"
                     placeholder="Sesuai Dengan KTP"
-                    {...register("nama", { required: true })}
+                    {...register("namaLengkap", { required: true })}
                   />
-                  {errors.nama && (
+                  {errors.namaLengkap && (
                     <span className="text-red-500 text-sm">
                       Nama Lengkap is required
                     </span>
@@ -325,11 +409,12 @@ const Page = () => {
                   </Label>
                   <Input
                     type="date"
-                    id="tglLahir"
+                    id="tanggalLahir"
                     placeholder="dd/mm/yyyy"
-                    {...register("tglLahir", { required: true })}
+                    max={today}
+                    {...register("tanggalLahir", { required: true })}
                   />
-                  {errors.tglLahir && (
+                  {errors.tanggalLahir && (
                     <span className="text-red-500 text-sm">
                       Tanggal Lahir is required
                     </span>
@@ -356,10 +441,10 @@ const Page = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
-                            <SelectItem value="laki-laki">
+                            <SelectItem value="LAKI_LAKI">
                               Laki - Laki
                             </SelectItem>
-                            <SelectItem value="perempuan">Perempuan</SelectItem>
+                            <SelectItem value="PEREMPUAN">Perempuan</SelectItem>
                           </SelectGroup>
                         </SelectContent>
                       </Select>
@@ -389,8 +474,13 @@ const Page = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
-                            <SelectItem value="islam">Islam</SelectItem>
-                            <SelectItem value="kristen">Kristen</SelectItem>
+                            <SelectItem value="ISLAM">Islam</SelectItem>
+                            <SelectItem value="KATOLIK">Katolik</SelectItem>
+                            <SelectItem value="PROTESTAN">Protestan</SelectItem>
+                            <SelectItem value="HINDU">Hindu</SelectItem>
+                            <SelectItem value="BUDHA">Budha</SelectItem>
+                            <SelectItem value="KONGHUCU">Konghucu</SelectItem>
+                            <SelectItem value="LAINNYA">Lainya</SelectItem>
                           </SelectGroup>
                         </SelectContent>
                       </Select>
@@ -410,7 +500,7 @@ const Page = () => {
                     Golongan Darah
                   </Label>
                   <Controller
-                    name="darah"
+                    name="golonganDarah"
                     control={control}
                     rules={{ required: true }}
                     render={({ field }) => (
@@ -423,16 +513,16 @@ const Page = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
-                            <SelectItem value="a">A</SelectItem>
-                            <SelectItem value="b">B</SelectItem>
-                            <SelectItem value="ab">AB</SelectItem>
-                            <SelectItem value="o">O</SelectItem>
+                            <SelectItem value="A">A</SelectItem>
+                            <SelectItem value="B">B</SelectItem>
+                            <SelectItem value="AB">AB</SelectItem>
+                            <SelectItem value="O">O</SelectItem>
                           </SelectGroup>
                         </SelectContent>
                       </Select>
                     )}
                   />
-                  {errors.darah && (
+                  {errors.golonganDarah && (
                     <span className="text-red-500 text-sm">
                       Golongan Darah is required
                     </span>
@@ -493,11 +583,11 @@ const Page = () => {
                   </Label>
                   <Input
                     type="number"
-                    id="noHP"
+                    id="nomorHp"
                     placeholder="Nomor Handphone Aktif"
-                    {...register("noHP", { required: true })}
+                    {...register("nomorHp", { required: true })}
                   />
-                  {errors.noHP && (
+                  {errors.nomorHp && (
                     <span className="text-red-500 text-sm">
                       Nomor Handphone is required
                     </span>
@@ -512,18 +602,18 @@ const Page = () => {
                   </Label>
                   <Input
                     type="text"
-                    id="namaSuami"
+                    id="namaSuamiIstri"
                     placeholder=" Nama Suami/Istri"
-                    {...register("namaSuami")}
+                    {...register("namaSuamiIstri")}
                   />
-                  {errors.namaSuami && (
+                  {errors.namaSuamiIstri && (
                     <span className="text-red-500 text-sm">
                       Nama Suami is required
                     </span>
                   )}
                 </div>
                 <div className="w-full">
-                  {namesanak.map((name, index) => (
+                  {namaAnak.map((name, index) => (
                     <div key={index} className="mb-3 flex items-center">
                       <div className="flex-1">
                         <Label className="block text-sm font-medium mb-1">
@@ -595,16 +685,26 @@ const Page = () => {
                   control={control}
                   rules={{ required: true }}
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        handleCabangChange(value);
+                      }}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Pilih Cabang" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectItem value="Aceh">Aceh</SelectItem>
-                          <SelectItem value="Bali">Bali</SelectItem>
-                          <SelectItem value="banten">Banten</SelectItem>
-                          <SelectItem value="jambi">Jambi</SelectItem>
+                          {cabang.map((item) => (
+                            <SelectItem
+                              key={item.idKecamatan}
+                              value={item.kecamatan}
+                            >
+                              {item.kecamatan}
+                            </SelectItem>
+                          ))}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -612,10 +712,11 @@ const Page = () => {
                 />
                 {errors.cabang && (
                   <span className="text-red-500 text-sm">
-                    Kecamatan/Cabang is required
+                    Kecamatan/Cabang harus dipilih
                   </span>
                 )}
               </div>
+
               <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
                   Unit Kerja
@@ -625,13 +726,21 @@ const Page = () => {
                   control={control}
                   rules={{ required: true }}
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={!selectedCabang}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Pilih Unit Kerja" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectItem value="Aceh">-- Unit Kerja --</SelectItem>
+                          {filteredUnitKerja.map((item) => (
+                            <SelectItem key={item.id} value={item.unitKerja}>
+                              {item.unitKerja}
+                            </SelectItem>
+                          ))}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -639,10 +748,11 @@ const Page = () => {
                 />
                 {errors.unitKerja && (
                   <span className="text-red-500 text-sm">
-                    Unit Kerja is required
+                    Unit Kerja harus dipilih
                   </span>
                 )}
               </div>
+
               <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
                   Jabatan
@@ -658,10 +768,11 @@ const Page = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectItem value="kepalaSekolah">
-                            Kepala Sekolah
-                          </SelectItem>
-                          <SelectItem value="guru">Guru</SelectItem>
+                          {jabatan.map((item) => (
+                            <SelectItem key={item.id} value={item.jabatan}>
+                              {item.jabatan}
+                            </SelectItem>
+                          ))}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -688,8 +799,17 @@ const Page = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectItem value="sd">SD/MI</SelectItem>
-                          <SelectItem value="tk">TK/RA</SelectItem>
+                          <SelectItem value="PAUD">PAUD</SelectItem>
+                          <SelectItem value="TK_RA">TK/RA</SelectItem>
+                          <SelectItem value="SD_MI">SD/MI</SelectItem>
+                          <SelectItem value="SMP">SMP</SelectItem>
+                          <SelectItem value="SMA">SMA</SelectItem>
+                          <SelectItem value="DIPLOMA">DIPLOMA</SelectItem>
+                          <SelectItem value="SARJANA">SARJANA</SelectItem>
+                          <SelectItem value="DMAGISTERIPLOMA">
+                            MAGISTER
+                          </SelectItem>
+                          <SelectItem value="DOKTOR">DOKTOR</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -716,8 +836,8 @@ const Page = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectItem value="swasta">Swasta</SelectItem>
-                          <SelectItem value="negeri">Negeri</SelectItem>
+                          <SelectItem value="SWASTA">Swasta</SelectItem>
+                          <SelectItem value="NEGERI">Negeri</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -744,8 +864,9 @@ const Page = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectItem value="pns">ASN PNS</SelectItem>
-                          <SelectItem value="pppk">ASN PPPK</SelectItem>
+                          <SelectItem value="PNS">PNS</SelectItem>
+                          <SelectItem value="NON_PNS">NON_PNS</SelectItem>
+                          <SelectItem value="PPPK">PPPK</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -763,9 +884,10 @@ const Page = () => {
                 </Label>
                 <Input
                   type="date"
-                  id="tmt"
+                  id="tahunDiangkat"
                   placeholder="dd/mm/yyyy"
-                  {...register("tmt", { required: true })}
+                  max={today}
+                  {...register("tahunDiangkat", { required: true })}
                 />
                 {errors.tmt && (
                   <span className="text-red-500 text-sm">TMT is required</span>
@@ -782,11 +904,11 @@ const Page = () => {
                 <Input
                   className="mt-2 sm:mt-2"
                   type="text"
-                  id="golongan"
+                  id="pangkatGolongan"
                   placeholder="Tuliskan Golongan"
-                  {...register("golongan", { required: true })}
+                  {...register("pangkatGolongan", { required: true })}
                 />
-                {errors.golongan && (
+                {errors.pangkatGolongan && (
                   <span className="text-red-500 text-sm">
                     Pangkat/Golongan is required
                   </span>
@@ -798,7 +920,7 @@ const Page = () => {
                   Pendidikan Terakhir
                 </Label>
                 <Controller
-                  name="ijazah"
+                  name="pendidikanTerakhir"
                   control={control}
                   rules={{ required: true }}
                   render={({ field }) => (
@@ -808,9 +930,10 @@ const Page = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectItem value="s1">S1</SelectItem>
-                          <SelectItem value="s2">S2</SelectItem>
-                          <SelectItem value="d3">D3</SelectItem>
+                          <SelectItem value="DIPLOMA">DIPLOMA</SelectItem>
+                          <SelectItem value="SARJANA">SARJANA</SelectItem>
+                          <SelectItem value="MAGISTER">MAGISTER</SelectItem>
+                          <SelectItem value="DOKTOR">DOKTOR</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -828,7 +951,7 @@ const Page = () => {
                   Sertifikat Pendidik
                 </Label>
                 <Controller
-                  name="sertifikat"
+                  name="sertifikatPendidik"
                   control={control}
                   rules={{ required: true }}
                   render={({ field }) => (
@@ -838,8 +961,8 @@ const Page = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectItem value="sudah">Sudah</SelectItem>
-                          <SelectItem value="belum">Belum</SelectItem>
+                          <SelectItem value="YA">Sudah</SelectItem>
+                          <SelectItem value="TIDAK">Belum</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -858,9 +981,10 @@ const Page = () => {
                 </Label>
                 <Input
                   type="date"
-                  id="mulaiJadiAnggota"
+                  id="mulaiJadiAnggotaPgri"
                   placeholder="dd/mm/yyyy"
-                  {...register("mulaiJadiAnggota", { required: true })}
+                  max={today}
+                  {...register("mulaiJadiAnggotaPgri", { required: true })}
                 />
                 {errors.mulaiJadianggota && (
                   <span className="text-red-500 text-sm">
@@ -874,7 +998,7 @@ const Page = () => {
                   Golongan Jabatan
                 </Label>
                 <Controller
-                  name="golongan"
+                  name="golonganJabatan"
                   control={control}
                   rules={{ required: true }}
                   render={({ field }) => (
@@ -884,10 +1008,11 @@ const Page = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectItem value="pendidik">Pendidik</SelectItem>
-                          <SelectItem value="tenagaKependidikan">
-                            Tenaga kependidikan
-                          </SelectItem>
+                          {golonganJabatan.map((item) => (
+                            <SelectItem key={item.id} value={item.golongan}>
+                              {item.golongan}
+                            </SelectItem>
+                          ))}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
