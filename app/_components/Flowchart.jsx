@@ -27,27 +27,27 @@ const Flowchart = () => {
   ];
 
   return (
-    <div id="daftarSec" className="container mx-auto p-4 pt-6 md:p-6 lg:p-12">
-      <h2 className="text-xl font-bold mb-6 text-center">
+    <div id="daftarSec" className="container mx-auto p-4 pt-6 md:p-6 lg:p-8">
+      <h2 className="text-lg md:text-xl font-bold mb-4 text-center">
         Proses Pendaftaran
       </h2>
-      <div className="flex flex-wrap justify-center gap-12">
+      <div className="flex flex-wrap justify-center gap-8 md:gap-10">
         {steps.map((step) => (
           <div
             key={step.id}
-            className="w-80 max-w-xs h-auto rounded-3xl shadow-lg p-6 flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-300 border border-gray-200 bg-white"
+            className="w-80 max-w-lg h-auto rounded-xl shadow-md p-4 flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-300 border border-gray-200 bg-white"
           >
-            <div className="flex items-center mb-4">
+            <div className="flex items-center mb-3">
               <Image
                 src={step.image}
                 alt={step.title}
-                width={64}
-                height={64}
-                className="w-16 h-16 mr-4 rounded-full border-2 border-gray-300"
+                width={48}
+                height={48}
+                className="w-12 h-12 mr-3 rounded-full border-2 border-gray-300"
               />
-              <h3 className="text-xl font-bold text-black">{step.title}</h3>
+              <h3 className="text-lg font-semibold text-black">{step.title}</h3>
             </div>
-            <p className="text-base text-gray-700 text-justify leading-relaxed">
+            <p className="text-sm text-gray-700 text-justify leading-relaxed">
               {step.description}
             </p>
           </div>

@@ -136,7 +136,7 @@ const Page = () => {
   return (
     <div className="max-w-screen-lg mx-auto px-4 py-6">
       <div className="container mx-auto max-w-screen-lg sm:max-w-full md:max-w-screen-lg px-4">
-        {step === 1 && (
+        {step === 2 && (
           <div>
             <h2 className="font-semibold text-xl text-gray-600">
               I. DATA PRIBADI
@@ -573,7 +573,7 @@ const Page = () => {
           </div>
         )}
 
-        {step === 2 && (
+        {step === 1 && (
           <div className="max-w-screen-lg mx-auto px-4 py-6">
             <h2 className="font-semibold text-xl text-gray-600 mb-4">
               II. DATA PEKERJAAN

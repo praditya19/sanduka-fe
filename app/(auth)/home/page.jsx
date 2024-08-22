@@ -190,8 +190,8 @@ export default function IconGrid() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <div className="flex-1 p-4">
-            <div className="bg-white p-4 rounded-lg shadow-lg mb-8 w-full">
+          <div className="flex-1 p-6 ">
+            <div className="bg-white pt-0.5 pb-4 px-4 rounded-lg shadow-lg mb-5 w-full">
               {isMobile ? (
                 <div className="flex flex-col items-center">
                   <div className="flex justify-around w-full gap-2">
@@ -244,83 +244,97 @@ export default function IconGrid() {
                 </div>
               ) : (
                 <div className="w-full mt-12">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 px-12">
                     {/* Lapor Meninggal */}
-                    <div className="bg-white p-6 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
-                      <div className="text-center">
-                        <FontAwesomeIcon
-                          icon={faBullhorn}
-                          size="lg"
-                          className="text-blue-500 mb-2"
-                        />
-                        <p className="text-xs md:text-sm font-bold text-gray-800 tracking-wide uppercase mb-1">
-                          Lapor Meninggal
-                        </p>
-                        <p className="text-2xl text-gray-700 font-normal">
-                          1 Orang
-                        </p>
+                    <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-xl font-bold text-gray-800">
+                            Lapor Meninggal
+                          </p>
+                          <p className="text-xs font-semibold text-gray-500 uppercase">
+                            1 Orang
+                          </p>
+                          <p className="text-xs text-green-500 font-medium mt-1">
+                            <span className="mr-1">↑</span>3.48% Since last
+                            month
+                          </p>
+                        </div>
+                        <div className="flex-shrink-0 bg-red-500 rounded-full p-2">
+                          <FontAwesomeIcon
+                            icon={faBullhorn}
+                            className="text-white text-xl"
+                          />
+                        </div>
                       </div>
                     </div>
 
                     {/* Sanduka Diberikan */}
-                    <div className="bg-white p-6 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
-                      <div className="text-center">
-                        <FontAwesomeIcon
-                          icon={faUser}
-                          size="lg"
-                          className="text-red-500 mb-2"
-                        />
-                        <p className="text-xs md:text-sm font-bold text-gray-700 tracking-wide uppercase mb-1">
-                          Sanduka Diberikan
-                        </p>
-                        <p className="text-2xl text-gray-800 font-normal">
-                          173 Orang
-                        </p>
+                    <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-xl font-bold text-gray-800">
+                            Sanduka Diberikan
+                          </p>
+                          <p className="text-xs font-semibold text-gray-500 uppercase">
+                            173 Orang
+                          </p>
+                          <p className="text-xs text-red-500 font-medium mt-1">
+                            <span className="mr-1">↓</span>1.10% Since yesterday
+                          </p>
+                        </div>
+                        <div className="flex-shrink-0 bg-orange-500 rounded-full p-2">
+                          <FontAwesomeIcon
+                            icon={faUser}
+                            className="text-white text-xl"
+                          />
+                        </div>
                       </div>
                     </div>
 
                     {/* Total Santunan */}
-                    <div className="bg-white p-6 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
-                      <div className="text-center">
-                        <FontAwesomeIcon
-                          icon={faMoneyBill}
-                          size="lg"
-                          className="text-green-500 mb-2"
-                        />
-                        <p className="text-xs md:text-sm font-bold text-gray-700 tracking-wide uppercase mb-1">
-                          Total Santunan
-                        </p>
-                        <p className="text-2xl text-gray-800 font-normal">
-                          Rp.432.500.000,-
-                        </p>
+                    <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-xl font-bold text-gray-800">
+                            Total Santunan
+                          </p>
+                          <p className="text-xs font-semibold text-gray-500 uppercase">
+                            Rp.432.500.000,-
+                          </p>
+                          <p className="text-xs text-red-500 font-medium mt-1">
+                            <span className="mr-1">↓</span>3.48% Since last week
+                          </p>
+                        </div>
+                        <div className="flex-shrink-0 bg-yellow-500 rounded-full p-2">
+                          <FontAwesomeIcon
+                            icon={faMoneyBill}
+                            className="text-white text-xl"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
             </div>
-            {isMobile ? (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-16">
-                {icons.map((item, index) => (
-                  <Link key={index} href={item.href}>
-                    <div className="flex flex-col items-center bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
-                      <FontAwesomeIcon
-                        icon={item.icon}
-                        size="2x"
-                        className={`mb-2 ${item.color}`}
-                      />
-                      <span className="text-xs font-normal text-gray-700 text-center whitespace-nowrap">
-                        {item.label}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white">
-                <SemuaAnggotaCabang />
-              </div>
-            )}
+
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-16">
+              {icons.map((item, index) => (
+                <Link key={index} href={item.href}>
+                  <div className="flex flex-col items-center bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
+                    <FontAwesomeIcon
+                      icon={item.icon}
+                      size="2x"
+                      className={`mb-2 ${item.color}`}
+                    />
+                    <span className="text-xs font-normal text-gray-700 text-center whitespace-nowrap">
+                      {item.label}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>

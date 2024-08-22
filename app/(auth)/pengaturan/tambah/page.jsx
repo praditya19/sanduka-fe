@@ -228,11 +228,11 @@ const page = () => {
                   <div className="flex flex-col space-y-4">
                     <div className="mb-4">
                       <Label className="block text-sm font-medium mb-2">
-                        Kabupaten
+                        Cabang
                       </Label>
                       <Select>
                         <SelectTrigger>
-                          <SelectValue placeholder="Pilih Kabupaten" />
+                          <SelectValue placeholder="Pilih Cabang" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
@@ -246,11 +246,11 @@ const page = () => {
                     </div>
                     <div className="mb-4">
                       <Label className="block text-sm font-medium mb-2">
-                        Cabang
+                        Unit Kerja
                       </Label>
                       <Select>
                         <SelectTrigger>
-                          <SelectValue placeholder="Pilih Cabang" />
+                          <SelectValue placeholder="Pilih Unit Kerja" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
