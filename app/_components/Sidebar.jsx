@@ -166,7 +166,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
             onClick={toggleSidebar}
             className={`p-2 rounded-md text-black ${
               isSidebarOpen ? "bg-black" : "bg-transparent"
-            } transition-colors duration-300 hover:bg-gray-500 focus:outline-none fixed top-10 sm:top-3 left-2 sm:left-4 z-50`}
+            } transition-colors duration-300 hover:bg-gray-500 focus:outline-none fixed top-5 sm:top-1 left-2 sm:left-4 z-50`}
           >
             <FontAwesomeIcon
               icon={isSidebarOpen ? faTimes : faBars}
@@ -184,7 +184,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } overflow-hidden`}
       >
-        <div className="flex flex-col space-y-2 max-h-[calc(100vh-4rem)] overflow-y-auto">
+        <div className="flex flex-col space-y-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
           {icons.map((item, index) => {
             const isActive = currentPath === item.href;
 

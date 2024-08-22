@@ -88,8 +88,8 @@ const Header = () => {
               <Button
                 className={`transition-all duration-300 ${
                   isScrolled
-                    ? "bg-blue-400 text-white hover:bg-blue-500"
-                    : "bg-transparent text-white hover:bg-blue-400"
+                    ? "bg-teal-400 text-white hover:bg-teal-500"
+                    : "bg-transparent text-white hover:bg-teal-400"
                 }`}
               >
                 Login
@@ -173,8 +173,8 @@ const Header = () => {
                 <Button
                   className={`transition-all duration-300 ${
                     isScrolled
-                      ? "bg-blue-400 text-white hover:bg-blue-500"
-                      : "bg-transparent text-white hover:bg-blue-400"
+                      ? "bg-teal-400 text-white hover:bg-teal-500"
+                      : "bg-transparent text-white hover:bg-teal-400"
                   }`}
                 >
                   Login

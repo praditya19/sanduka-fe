@@ -3,18 +3,13 @@ import {
   faHome,
   faShoppingCart,
   faUser,
+  faCog,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 
 export default function FooterMobile() {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-2 flex justify-around items-center border-t border-gray-200 mt-10">
-      <Link href="/home">
-        <div className="flex flex-col items-center">
-          <FontAwesomeIcon icon={faHome} size="lg" className="text-blue-500" />
-          <span className="text-xs font-normal text-gray-700">Home</span>
-        </div>
-      </Link>
       <Link href="/comming-soon">
         <div className="flex flex-col items-center">
           <FontAwesomeIcon
@@ -23,6 +18,22 @@ export default function FooterMobile() {
             className="text-green-500"
           />
           <span className="text-xs font-normal text-gray-700">Keranjang</span>
+        </div>
+      </Link>
+      <Link href="/home">
+        <div className="flex flex-col items-center">
+          <FontAwesomeIcon icon={faHome} size="lg" className="text-blue-500" />
+          <span className="text-xs font-normal text-gray-700">Home</span>
+        </div>
+      </Link>
+      <Link href="/profile">
+        <div className="flex flex-col items-center">
+          <FontAwesomeIcon
+            icon={faCog}
+            size="lg"
+            className="text-gray-700"
+          />
+          <span className="text-xs font-normal text-gray-700">Pengaturan</span>
         </div>
       </Link>
       <Link href="/profile">
