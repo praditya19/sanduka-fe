@@ -5,52 +5,108 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import { LoaderIcon } from "lucide-react";
+import GlobalApi from "@/app/_utils/GlobalApi";
+import { Label } from "@radix-ui/react-label";
+import toast, { Toaster } from "react-hot-toast";
+import ReCAPTCHA from "react-google-recaptcha";
+import { useRouter } from "next/navigation";
 
 function SignIn() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [npaPgri, setNpaPgri] = useState("");
+  const [tanggalLahir, setTanggalLahir] = useState("");
   const [loader, setLoader] = useState(false);
+  const [error, setError] = useState("");
+  const [isVerified, setIsVerified] = useState(false);
+
+  const router = useRouter();
 
   const onSignIn = async () => {
     setLoader(true);
-    setTimeout(() => {
+    setError("");
+    try {
+      if (npaPgri.length < 6 || tanggalLahir.length !== 8) {
+        throw new Error(
+          "NPA PGRI harus 6 digit dan Tanggal Lahir harus 8 digit."
+        );
+      }
+
+      if (!isVerified) {
+        throw new Error("Harap verifikasi reCAPTCHA.");
+      }
+
+      const loginData = {
+        npaPgri: npaPgri,
+        tanggalLahir: tanggalLahir,
+      };
+
+      const response = await GlobalApi.login(loginData);
+      toast.success("Anda Berhasil Login");
+      setTimeout(() => {
+        router.push("/home");
+      }, 2000);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
       setLoader(false);
-      console.log("SignIn berhasil");
-    }, 2000);
-    console.log(`Username: ${username}, Password: ${password}`);
+    }
   };
+
+  function onChange(value) {
+    setIsVerified(!!value);
+  }
 
   return (
     <div className="flex items-baseline justify-center my-20">
       <div className="flex flex-col items-center justify-center p-10 bg-gray-100 border border-gray-200 rounded-lg shadow-md">
+        <Toaster />
         <Image src="/sanduka.png" width={200} height={200} alt="logo" />
         <h2 className="font-bold text-3xl mt-4">Masuk ke Akun</h2>
-        <h2 className="text-gray-500 mt-2">
-          Masukkan Username dan Kata Sandi Anda untuk Masuk
+        <h2 className="text-gray-500 mt-2 text-center">
+          Masukkan NPA PGRI dan Tanggal Lahir Anda untuk Masuk
         </h2>
         <div className="w-full max-w-md mt-6">
-          <Input
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <Input
-            placeholder="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-3"
+          {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+          <div className="mb-6">
+            <Label htmlFor="npaPgri" className="block text-sm">
+              NPA PGRI
+            </Label>
+            <Input
+              id="npaPgri"
+              placeholder="123456"
+              value={npaPgri}
+              onChange={(e) => setNpaPgri(e.target.value)}
+              className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+            />
+          </div>
+          <div className="mb-6">
+            <Label htmlFor="tanggalLahir" className="block text-sm">
+              Tanggal Lahir
+            </Label>
+            <Input
+              id="tanggalLahir"
+              placeholder="21082024"
+              value={tanggalLahir}
+              onChange={(e) => setTanggalLahir(e.target.value)}
+              className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+            />
+          </div>
+          <ReCAPTCHA
+            sitekey="6LfcOy4qAAAAAK8b5Xuk7AEpN7FXwkZc0B4nLS94"
+            onChange={onChange}
           />
           <Button
             onClick={onSignIn}
-            disabled={!username || !password || loader}
+            disabled={!npaPgri || !tanggalLahir || loader || !isVerified}
             className="w-full mt-4"
           >
             {loader ? <LoaderIcon className="animate-spin mr-2" /> : "Masuk"}
           </Button>
           <p className="mt-4 text-sm text-center text-gray-600">
             Belum punya akun?
-            <Link href={"/create-account/syarat-ketentuan"} className="text-blue-500 ml-1">
+            <Link
+              href={"/create-account/syarat-ketentuan"}
+              className="text-blue-500 ml-1 hover:underline"
+            >
               {" "}
               Klik di sini untuk membuat akun baru
             </Link>
