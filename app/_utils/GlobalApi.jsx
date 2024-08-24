@@ -43,9 +43,25 @@ const registerUser = async (userData) => {
     );
 
     return response.data;
+  } catch (error) {}
+};
+const login = async (loginData) => {
+  try {
+    const response = await axiosClient.post(
+      "/api/auth/login-tanggal-lahir",
+      loginData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
   } catch (error) {
-    console.error("Error registering user:", error);
-    throw error;
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    }
   }
 };
 
@@ -60,6 +76,7 @@ const getUnitKerja = () => axiosClient.get("/api/unit-kerja/all");
 // Keuangan
 export default {
   registerUser,
+  login,
   getCabang,
   getJabatan,
   getGolonganJabatan,
