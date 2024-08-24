@@ -183,7 +183,7 @@ export default function IconGrid() {
         <HeaderHome />
       )}
       <div>
-        <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      <Sidebar isSidebarOpen={true} toggleSidebar={() => {}} />
 
         <div
           className={`flex-1 transition-all duration-300 ease-in-out ${
@@ -191,7 +191,6 @@ export default function IconGrid() {
           }`}
         >
           <div className="flex-1 p-6 ">
-            <div className="bg-white pt-0.5 pb-4 px-4 rounded-lg shadow-lg mb-5 w-full">
               {isMobile ? (
                 <div className="flex flex-col items-center">
                   <div className="flex justify-around w-full gap-2">
@@ -319,7 +318,7 @@ export default function IconGrid() {
               )}
             </div>
 
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-16">
+            <div className="px-16 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-16">
               {icons.map((item, index) => (
                 <Link key={index} href={item.href}>
                   <div className="flex flex-col items-center bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
@@ -337,7 +336,7 @@ export default function IconGrid() {
             </div>
           </div>
         </div>
-      </div>
+      
 
       {isMobile && <FooterMobile />}
     </div>

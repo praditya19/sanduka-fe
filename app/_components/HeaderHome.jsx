@@ -2,25 +2,17 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { faBell, faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBell, faSearch } from "@fortawesome/free-solid-svg-icons";
 
 const HeaderHome = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(2);
   const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] =
     useState(false);
-  const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const audioRef = useRef(null);
 
-  // Replace this URL with the actual URL from your database
-  const profileImageUrl = "/path-to-your-profile-image.jpg";
-
-  const handleClick = () => {
-    setIsOpen(false);
-  };
+  const profileImageUrl = "/profile.png";
 
   const handleNotificationClick = () => {
     if (audioRef.current) {
@@ -32,17 +24,8 @@ const HeaderHome = () => {
   };
 
   useEffect(() => {
-    setHasUserInteracted(true);
-    console.log("notificationCount:", notificationCount);
-    console.log("isNotificationSoundPlaying:", isNotificationSoundPlaying);
-
-    if (
-      notificationCount > 0 &&
-      !isNotificationSoundPlaying &&
-      hasUserInteracted
-    ) {
+    if (notificationCount > 0 && !isNotificationSoundPlaying) {
       const playNotificationSound = () => {
-        console.log("Playing notification sound");
         const audio = new Audio("/sound-notification.wav");
         audioRef.current = audio;
 
@@ -62,7 +45,7 @@ const HeaderHome = () => {
 
       playNotificationSound();
     }
-  }, [notificationCount, isNotificationSoundPlaying, hasUserInteracted]);
+  }, [notificationCount, isNotificationSoundPlaying]);
 
   return (
     <nav className="bg-white shadow-md fixed top-0 inset-x-0 z-50">
@@ -101,11 +84,7 @@ const HeaderHome = () => {
           <div className="hidden md:block">
             <ul className="flex space-x-6 items-center">
               <li className="relative">
-                <Link
-                  href="/home"
-                  className="text-gray-700 relative"
-                  onClick={handleNotificationClick}
-                >
+                <button onClick={handleNotificationClick} className="relative">
                   <FontAwesomeIcon
                     icon={faBell}
                     className="w-6 h-6 text-gray-700"
@@ -115,7 +94,7 @@ const HeaderHome = () => {
                       {notificationCount}
                     </span>
                   )}
-                </Link>
+                </button>
               </li>
               <li>
                 <Link href="/anggota/pencarian-anggota">
@@ -128,7 +107,7 @@ const HeaderHome = () => {
               <li>
                 <Link href="/update-profile">
                   <Image
-                    src={"/profile.png"}
+                    src={profileImageUrl}
                     alt="Profile"
                     width={40}
                     height={40}
@@ -145,10 +124,9 @@ const HeaderHome = () => {
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <ul className="flex flex-col space-y-1">
             <li className="relative">
-              <Link
-                href="/home"
-                className="text-gray-700 relative"
+              <button
                 onClick={handleNotificationClick}
+                className="relative w-full text-left"
               >
                 <FontAwesomeIcon
                   icon={faBell}
@@ -159,7 +137,7 @@ const HeaderHome = () => {
                     {notificationCount}
                   </span>
                 )}
-              </Link>
+              </button>
             </li>
             <li>
               <Link href="/anggota/pencarian-anggota">
@@ -172,7 +150,7 @@ const HeaderHome = () => {
             <li className="relative flex justify-end">
               <Link href="/update-profile" className="text-blue-500">
                 <Image
-                  src={"/profile.png"}
+                  src={profileImageUrl}
                   alt="Profile"
                   width={40}
                   height={40}
