@@ -132,152 +132,159 @@ const FormStep1 = ({ onNext }) => {
           <div className="flex justify-center ">
             <h1 className="text-xl font-semibold text-gray-800">Pelaporan</h1>
           </div>
-          <form className="space-y-4 bg-white p-4 sm:p-8 rounded-lg shadow-lg">
+          <form className="space-y-4 p-4 sm:p-8 rounded-lg ">
             <div className="flex flex-wrap -mx-2">
               {/* Bagian kiri - Data Pelapor */}
               <div className="w-full lg:w-1/2 px-2">
-                <h2 className="text-xl font-bold mb-4 pt-4 text-gray-800">
-                  Pelapor
-                </h2>
-                <div className="w-full flex flex-col items-start">
-                  <Label className="block text-sm font-medium mb-1">
-                    Tanggal Pelaporan
-                  </Label>
-                  <Input
-                    type="date"
-                    id="date"
-                    placeholder="tanggal"
-                    className="text-sm"
-                    value={formData.date}
-                    disabled
-                  />
-                </div>
-                {/* diambil langsung dari data yang login */}
-                <div className="w-full flex flex-col items-start mt-2">
-                  <Input
-                    type="text"
-                    id="name"
-                    placeholder="Nama"
-                    className="text-sm"
-                    disabled
-                    value={formData.name}
-                  />
-                </div>
-                <div className="w-full flex flex-col items-start mt-2">
-                  <Input
-                    type="text"
-                    id="branch"
-                    placeholder="Cabang / Khusus"
-                    className="text-sm"
-                    disabled
-                    value={formData.branch}
-                  />
-                </div>
-                <div className="w-full flex flex-col items-start mt-2">
-                  <Input
-                    type="text"
-                    id="position"
-                    placeholder="Jabatan"
-                    className="text-sm"
-                    disabled
-                    value={formData.position}
-                  />
-                </div>
-                <div className="w-full flex flex-col items-start mt-2">
-                  <Input
-                    type="number"
-                    id="phone"
-                    placeholder="Nomor Whatsapp"
-                    className="text-sm"
-                    disabled
-                    value={formData.phone}
-                  />
+                <div className=" p-4 rounded-lg">
+                  {" "}
+                  {/* Background untuk bagian kiri */}
+                  <h2 className="text-xl font-bold mb-4 pt-4 text-gray-800">
+                    Pelapor
+                  </h2>
+                  <div className="w-full flex flex-col items-start">
+                    <Label className="block text-sm font-medium mb-1">
+                      Tanggal Pelaporan
+                    </Label>
+                    <Input
+                      type="date"
+                      id="date"
+                      placeholder="tanggal"
+                      className="text-sm"
+                      value={formData.date}
+                      disabled
+                    />
+                  </div>
+                  <div className="w-full flex flex-col items-start mt-2">
+                    <Input
+                      type="text"
+                      id="name"
+                      placeholder="Nama"
+                      className="text-sm"
+                      disabled
+                      value={formData.name}
+                    />
+                  </div>
+                  <div className="w-full flex flex-col items-start mt-2">
+                    <Input
+                      type="text"
+                      id="branch"
+                      placeholder="Cabang / Khusus"
+                      className="text-sm"
+                      disabled
+                      value={formData.branch}
+                    />
+                  </div>
+                  <div className="w-full flex flex-col items-start mt-2">
+                    <Input
+                      type="text"
+                      id="position"
+                      placeholder="Jabatan"
+                      className="text-sm"
+                      disabled
+                      value={formData.position}
+                    />
+                  </div>
+                  <div className="w-full flex flex-col items-start mt-2">
+                    <Input
+                      type="number"
+                      id="phone"
+                      placeholder="Nomor Whatsapp"
+                      className="text-sm"
+                      disabled
+                      value={formData.phone}
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Bagian kanan - Data Anggota Meninggal */}
               <div className="w-full lg:w-1/2 px-2">
-                <h2 className="text-xl font-bold mb-4 pt-4 text-gray-800">
-                  Data Anggota Meninggal
-                </h2>
-                <div className="w-full flex flex-col items-start">
-                  <Label className="block text-sm font-medium mb-1">
-                    Cabang / Khusus
-                  </Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih Cabang" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="jepara">Jepara</SelectItem>
-                        <SelectItem value="semarang">Semarang</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="w-full flex flex-col items-start mt-3">
-                  <Label className="block text-sm font-medium mb-1">
-                    Unit Kerja
-                  </Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih Unit Kerja" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="laki-laki">Jepara</SelectItem>
-                        <SelectItem value="perempuan">Bangsri</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="relative w-full flex flex-col items-start mt-3">
-                  <label className="block text-sm font-medium mb-1">
-                    Nama Anggota
-                  </label>
-                  <Input
-                    type="text"
-                    placeholder="Cari Nama Anggota"
-                    value={searchTerm}
-                    onChange={handleSearch}
-                    className="text-sm border border-gray-300 p-2 rounded"
-                  />
-                  {filteredNames.length > 0 && (
-                    <ul className="border border-gray-300 mt-1 w-full max-h-40 overflow-y-auto bg-white z-10">
-                      {filteredNames.map((data, index) => (
-                        <li
-                          key={index}
-                          onClick={() => handleNameClick(data.name)}
-                          className="p-2 hover:bg-gray-100 cursor-pointer"
-                        >
-                          {data.name}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                <div className="w-full flex flex-col items-start mt-3">
-                  <Label className="block text-sm font-medium mb-1">
-                    Waktu Meninggal
-                  </Label>
-                  <Input
-                    type="date"
-                    id="date"
-                    placeholder="tanggal"
-                    className="text-sm"
-                  />
-                </div>
-                <div className="w-full flex flex-col items-start mt-3">
-                  <Label className="block text-sm font-medium mb-1">
-                    Keterangan
-                  </Label>
-                  <Textarea
-                    type="text"
-                    id="description"
-                    placeholder="Keterangan"
-                    className="text-sm"
-                  />
+                <div className="bg-white p-4 rounded-lg shadow-lg">
+                  {" "}
+                  {/* Background untuk bagian kanan */}
+                  <h2 className="text-xl font-bold mb-4 pt-4 text-gray-800">
+                    Data Anggota Meninggal
+                  </h2>
+                  <div className="w-full flex flex-col items-start">
+                    <Label className="block text-sm font-medium mb-1">
+                      Cabang / Khusus
+                    </Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Cabang" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="jepara">Jepara</SelectItem>
+                          <SelectItem value="semarang">Semarang</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-full flex flex-col items-start mt-3">
+                    <Label className="block text-sm font-medium mb-1">
+                      Unit Kerja
+                    </Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Unit Kerja" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="laki-laki">Jepara</SelectItem>
+                          <SelectItem value="perempuan">Bangsri</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="relative w-full flex flex-col items-start mt-3">
+                    <label className="block text-sm font-medium mb-1">
+                      Nama Anggota
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="Cari Nama Anggota"
+                      value={searchTerm}
+                      onChange={handleSearch}
+                      className="text-sm border border-gray-300 p-2 rounded"
+                    />
+                    {filteredNames.length > 0 && (
+                      <ul className="border border-gray-300 mt-1 w-full max-h-40 overflow-y-auto bg-white z-10">
+                        {filteredNames.map((data, index) => (
+                          <li
+                            key={index}
+                            onClick={() => handleNameClick(data.name)}
+                            className="p-2 hover:bg-gray-100 cursor-pointer"
+                          >
+                            {data.name}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className="w-full flex flex-col items-start mt-3">
+                    <Label className="block text-sm font-medium mb-1">
+                      Waktu Meninggal
+                    </Label>
+                    <Input
+                      type="date"
+                      id="date"
+                      placeholder="tanggal"
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="w-full flex flex-col items-start mt-3">
+                    <Label className="block text-sm font-medium mb-1">
+                      Keterangan
+                    </Label>
+                    <Textarea
+                      type="text"
+                      id="description"
+                      placeholder="Keterangan"
+                      className="text-sm"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

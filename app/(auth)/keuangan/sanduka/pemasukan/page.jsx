@@ -230,12 +230,25 @@ function Pemasukan() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Rekap Meninggal</h1>
+              <h1 className="text-base">Pemasukan Sanduka</h1>
             </div>
           </div>
         </header>
       ) : (
-        <HeaderHome />
+        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+          <div className="container mx-auto flex items-center justify-between">
+            {/* Back Button and Title */}
+            <div className="flex items-center">
+              <FontAwesomeIcon
+                icon={faArrowLeft}
+                size="sm"
+                onClick={handleBackClick}
+                className="cursor-pointer mr-4"
+              />
+              <h1 className="text-base">Pemasukan Sanduka</h1>
+            </div>
+          </div>
+        </header>
       )}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
