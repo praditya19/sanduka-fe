@@ -183,7 +183,7 @@ export default function IconGrid() {
         <HeaderHome />
       )}
       <div>
-      <Sidebar isSidebarOpen={true} toggleSidebar={() => {}} />
+      <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
           className={`flex-1 transition-all duration-300 ease-in-out ${
