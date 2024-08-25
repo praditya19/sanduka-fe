@@ -17,6 +17,11 @@ import {
   faMoneyBill,
   faCheckCircle,
   faCog,
+  faCalendarAlt,
+  faUserTie,
+  faHome,
+  faChevronLeft,
+  faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
@@ -124,7 +129,43 @@ const icons = [
   },
 ];
 
+const dummyData = [
+  {
+    name: "MUHAMMAD ALFARIZA HAQIQI",
+    id: "0001146804614",
+    dateOfDeath: "01-01-2000",
+    position: "Guru",
+    address: "Jl. Mawar No. 1",
+    img: "/profile.png",
+  },
+  {
+    name: "Venushyntha Phauna Pharamytha Tribuana",
+    id: "0001146804614",
+    dateOfDeath: "01-01-2000",
+    position: "Guru",
+    address: "Jl. Mawar No. 1",
+    img: "/profile.png",
+  },
+  {
+    name: "ALEXANDER JOSEPH",
+    id: "0001146804615",
+    dateOfDeath: "02-02-2001",
+    position: "Guru",
+    address: "Jl. Melati No. 2",
+    img: "/profile.png",
+  },
+  {
+    name: "LARAS MAHARANI",
+    id: "0001146804616",
+    dateOfDeath: "03-03-2002",
+    position: "Guru",
+    address: "Jl. Anggrek No. 3",
+    img: "/profile.png",
+  },
+];
+
 export default function IconGrid() {
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { token } = useAuth();
@@ -148,12 +189,29 @@ export default function IconGrid() {
       return () => {
         window.removeEventListener("resize", handleResize);
       };
+      const intervalId = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % dummyData.length);
+      }, 10000); // Change slide every 10 seconds
+
+      return () => clearInterval(intervalId);
     }
   }, [token, router]);
 
   if (loading) {
     return <div>Loading...</div>;
   }
+
+  const handleNext = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % dummyData.length);
+  };
+
+  const handlePrev = () => {
+    setCurrentIndex((prevIndex) =>
+      prevIndex === 0 ? dummyData.length - 1 : prevIndex - 1
+    );
+  };
+
+  const currentData = dummyData[currentIndex];
 
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
@@ -325,7 +383,7 @@ export default function IconGrid() {
             )}
           </div>
 
-          <div className="px-16 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-16">
+          <div className="px-16 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-2">
             {icons.map((item, index) => (
               <Link key={index} href={item.href}>
                 <div className="flex flex-col items-center bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
@@ -342,6 +400,64 @@ export default function IconGrid() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Separator with Title */}
+      <div className="w-full text-center my-4">
+        <hr className="mt-2 border-gray-300" />
+        <h3 className="text-xl font-semibold text-gray-800">
+          Anggota Meninggal Bulan Ini
+        </h3>
+      </div>
+
+      {/* Card anggota meninggal */}
+      <div className="w-full flex justify-center items-center relative mb-4">
+        <button
+          onClick={handlePrev}
+          className="absolute left-1/4 bg-white rounded-full p-2 shadow-md"
+        >
+          <FontAwesomeIcon icon={faChevronLeft} size="lg" />
+        </button>
+
+        <div className="bg-white rounded-lg shadow-md overflow-hidden flex items-center justify-center p-4 w-1/3">
+          <Image
+            className="rounded-full"
+            src={currentData.img}
+            alt="Profile Image"
+            width={100}
+            height={100}
+          />
+          <div className="ml-8">
+            <h2 className="text-xs font-semibold text-gray-800">
+              {currentData.name}
+            </h2>
+            <p className="text-sm text-gray-600">{currentData.id}</p>
+            <div className="mt-2">
+              <div className="flex items-center text-gray-800 text-sm mb-1">
+                <FontAwesomeIcon
+                  icon={faCalendarAlt}
+                  className="text-gray-600"
+                />
+                <span className="ml-2">{currentData.dateOfDeath}</span>
+              </div>
+              <div className="flex items-center text-gray-800 text-sm mb-1">
+                <FontAwesomeIcon icon={faUserTie} className="text-gray-600" />
+                <span className="ml-2">{currentData.position}</span>
+              </div>
+              <div className="flex items-center text-gray-800 text-sm mb-1">
+                <FontAwesomeIcon icon={faHome} className="text-gray-600" />
+                <span className="ml-2">{currentData.address}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={handleNext}
+          className="absolute right-1/4 bg-white rounded-full p-2 shadow-md"
+        >
+          <FontAwesomeIcon icon={faChevronRight} size="lg" />
+        </button>
       </div>
 
       {isMobile && <FooterMobile />}

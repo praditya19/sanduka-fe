@@ -98,6 +98,25 @@ export default function Home() {
               />
               <h1 className="text-base">Keuangan</h1>
             </div>
+
+            {/* Navigation Links */}
+            <nav className="flex items-center space-x-4">
+              <Link
+                href="/keuangan/data-utama"
+                className="text-white hover:text-gray-300"
+              >
+                Data Utama
+              </Link>
+              <Link href="/keuangan/sanduka" className="text-white hover:text-gray-300">
+                Sanduka
+              </Link>
+              <Link
+                href="/keuangan/organisasi"
+                className="text-white hover:text-gray-300"
+              >
+                Organisasi
+              </Link>
+            </nav>
           </div>
         </header>
       )}

@@ -348,7 +348,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
                                 </span>
                               </Link>
                               <Link
-                                href="/keuangan/sanduka/lapor"
+                                href="/keuangan/sanduka"
                                 className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
                               >
                                 <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
@@ -399,7 +399,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
                                 </span>
                               </Link>
                               <Link
-                                href="/keuangan/organisasi/laporan"
+                                href="/keuangan/organisasi"
                                 className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
                               >
                                 <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
@@ -407,7 +407,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
                                 </span>
                               </Link>
                               <Link
-                                href="/keuangan/organisasi/kwitansi"
+                                href="/keuangan/organisasi"
                                 className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
                               >
                                 <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
