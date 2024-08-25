@@ -56,6 +56,7 @@ const login = async (loginData) => {
         },
       }
     );
+    return response.data;
   } catch (error) {
     if (error.response) {
       throw new Error(

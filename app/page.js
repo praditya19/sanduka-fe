@@ -12,7 +12,6 @@ import Image from "next/image";
 export default function Home() {
   const [isPopupVisible, setIsPopupVisible] = useState(true);
 
-  // Function to close the popup
   const closePopup = () => setIsPopupVisible(false);
 
   return (

@@ -31,6 +31,8 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Sidebar from "@/app/_components/Sidebar";
+import { useAuth } from "@/app/AuthContext";
+import { useRouter } from "next/navigation";
 
 const icons = [
   { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
@@ -166,6 +168,14 @@ export default function IconGrid() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { token } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!token) {
+      router.push("/sign-in");
+    }
+  }, [token, router]);
 
   // card anggota meninggal
   useEffect(() => {
