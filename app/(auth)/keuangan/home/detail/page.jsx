@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
+import { useAuth } from "@/app/AuthContext";
 
 const data = [
   {
@@ -39,6 +40,13 @@ export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
 
+  const { token } = useAuth();
+  useEffect(() => {
+    if (!token) {
+      router.push("/sign-in");
+    }
+  }, [token, router]);
+
   const handleBackClick = () => {
     router.back();
   };
@@ -64,7 +72,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-     {isMobile ? (
+      {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
             {/* Back Button and Title */}

@@ -170,21 +170,36 @@ export default function IconGrid() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { token } = useAuth();
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
+    } else {
+      setLoading(false);
+      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+      setIsSidebarOpen(sidebarState);
+      const handleResize = () => {
+        setIsMobile(window.innerWidth <= 768);
+      };
+
+      handleResize();
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
+      const intervalId = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % dummyData.length);
+      }, 10000); // Change slide every 10 seconds
+
+      return () => clearInterval(intervalId);
     }
   }, [token, router]);
 
-  // card anggota meninggal
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % dummyData.length);
-    }, 10000); // Change slide every 10 seconds
-
-    return () => clearInterval(intervalId);
-  }, []);
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   const handleNext = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % dummyData.length);
@@ -198,30 +213,11 @@ export default function IconGrid() {
 
   const currentData = dummyData[currentIndex];
 
-  // sidebar header
-  useEffect(() => {
-    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-    setIsSidebarOpen(sidebarState);
-  }, []);
-
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -406,16 +402,16 @@ export default function IconGrid() {
         </div>
       </div>
 
-       {/* Separator with Title */}
-       <div className="w-full text-center my-4">
+      {/* Separator with Title */}
+      <div className="w-full text-center my-4">
         <hr className="mt-2 border-gray-300" />
         <h3 className="text-xl font-semibold text-gray-800">
           Anggota Meninggal Bulan Ini
         </h3>
       </div>
 
-       {/* Card anggota meninggal */}
-       <div className="w-full flex justify-center items-center relative mb-4">
+      {/* Card anggota meninggal */}
+      <div className="w-full flex justify-center items-center relative mb-4">
         <button
           onClick={handlePrev}
           className="absolute left-1/4 bg-white rounded-full p-2 shadow-md"
@@ -438,7 +434,10 @@ export default function IconGrid() {
             <p className="text-sm text-gray-600">{currentData.id}</p>
             <div className="mt-2">
               <div className="flex items-center text-gray-800 text-sm mb-1">
-                <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-600" />
+                <FontAwesomeIcon
+                  icon={faCalendarAlt}
+                  className="text-gray-600"
+                />
                 <span className="ml-2">{currentData.dateOfDeath}</span>
               </div>
               <div className="flex items-center text-gray-800 text-sm mb-1">
@@ -460,8 +459,6 @@ export default function IconGrid() {
           <FontAwesomeIcon icon={faChevronRight} size="lg" />
         </button>
       </div>
-
-  
 
       {isMobile && <FooterMobile />}
     </div>

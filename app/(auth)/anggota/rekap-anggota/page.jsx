@@ -1,5 +1,5 @@
-'use client'
-import React, { useState } from "react";
+"use client";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { membersData } from "../data.js";
 import { useEffect } from "react";
@@ -8,36 +8,51 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
+import { useAuth } from "@/app/AuthContext";
 
 function formatRupiah(angka) {
-  if (isNaN(angka)) return 'Rp. 0';
-  var reverse = angka.toString().split('').reverse().join(''),
+  if (isNaN(angka)) return "Rp. 0";
+  var reverse = angka.toString().split("").reverse().join(""),
     ribuan = reverse.match(/\d{1,3}/g);
-  ribuan = ribuan.join('.').split('').reverse().join('');
-  return 'Rp. ' + ribuan;
+  ribuan = ribuan.join(".").split("").reverse().join("");
+  return "Rp. " + ribuan;
 }
 
 function RekapAnggota() {
   const [maxItems, setMaxItems] = useState(10);
   const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
+  const { token } = useAuth();
+
+  useEffect(() => {
+    if (!token) {
+      router.push("/sign-in");
+    }
+  }, [token, router]);
 
   const aggregateData = () => {
     // Filter data based on selected cabang
-    const filteredData = selectedCabang === "-- Cabang --"
-      ? membersData
-      : membersData.filter(member => member.cabang === selectedCabang);
+    const filteredData =
+      selectedCabang === "-- Cabang --"
+        ? membersData
+        : membersData.filter((member) => member.cabang === selectedCabang);
 
     const aggregated = {
       JumlahPNS: 0,
       JumlahPPPK: 0,
       JumlahNonPNS: 0,
-      JumlahSemua: filteredData.length
+      JumlahSemua: filteredData.length,
     };
 
     const aggregatedByUnitKerja = {};
     filteredData.forEach((item) => {
       if (!aggregatedByUnitKerja[item.kerja]) {
-        aggregatedByUnitKerja[item.kerja] = { PNS: 0, PPPK: 0, NonPNS: 0, anggota: 0, Iuran: 0 };
+        aggregatedByUnitKerja[item.kerja] = {
+          PNS: 0,
+          PPPK: 0,
+          NonPNS: 0,
+          anggota: 0,
+          Iuran: 0,
+        };
       }
       switch (item.status) {
         case "PNS":
@@ -61,23 +76,30 @@ function RekapAnggota() {
 
     return {
       aggregated,
-      aggregatedByUnitKerja: Object.entries(aggregatedByUnitKerja).map(([kerja, data], index) => ({
-        kerja,
-        ...data,
-        index
-      }))
+      aggregatedByUnitKerja: Object.entries(aggregatedByUnitKerja).map(
+        ([kerja, data], index) => ({
+          kerja,
+          ...data,
+          index,
+        })
+      ),
     };
   };
 
   const { aggregated, aggregatedByUnitKerja } = aggregateData();
   const { JumlahPNS, JumlahPPPK, JumlahNonPNS, JumlahSemua } = aggregated;
 
-  const totalIuran = formatRupiah(aggregatedByUnitKerja.reduce((total, item) => total + item.Iuran, 0));
+  const totalIuran = formatRupiah(
+    aggregatedByUnitKerja.reduce((total, item) => total + item.Iuran, 0)
+  );
 
   const handlePrint = () => {
-    const filteredDataForPrint = selectedCabang === "-- Cabang --"
-      ? aggregatedByUnitKerja
-      : aggregatedByUnitKerja.filter(item => item.cabang === selectedCabang);
+    const filteredDataForPrint =
+      selectedCabang === "-- Cabang --"
+        ? aggregatedByUnitKerja
+        : aggregatedByUnitKerja.filter(
+            (item) => item.cabang === selectedCabang
+          );
 
     const printWindow = window.open("", "_blank", "width=800,height=600");
     printWindow.document.write(`
@@ -140,7 +162,10 @@ function RekapAnggota() {
                   </tr>
                 </thead>
                 <tbody>
-                  ${filteredDataForPrint.slice(0, maxItems).map((item, index) => `
+                  ${filteredDataForPrint
+                    .slice(0, maxItems)
+                    .map(
+                      (item, index) => `
                     <tr class="${index % 2 === 0 ? "bg-gray-50" : "bg-white"}">
                       <td>${index + 1}</td>
                       <td>${item.kerja}</td>
@@ -150,7 +175,9 @@ function RekapAnggota() {
                       <td>${item.anggota}</td>
                       <td>${formatRupiah(item.Iuran)}</td>
                     </tr>
-                  `).join("")}
+                  `
+                    )
+                    .join("")}
                 </tbody>
                 <tfoot>
                   <tr>
@@ -210,7 +237,7 @@ function RekapAnggota() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-    {isMobile ? (
+      {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
             {/* Back Button and Title */}
@@ -236,104 +263,180 @@ function RekapAnggota() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-      <div className="mb-4">
-        <div className="flex flex-wrap items-start mt-14 justify-between">
-          <div className="flex flex-wrap items-center space-x-2">
-            <select
-              className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-              value={selectedCabang}
-              onChange={(e) => setSelectedCabang(e.target.value)}
-            >
-              <option>-- Cabang --</option>
-              <option>BANGSRI</option>
-              <option>JEPARA</option>
-            </select>
-            <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0">
-              <option>-- Unit Kerja --</option>
-              {/* Add options dynamically if available */}
-            </select>
-            <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0">
-              <option>Semua</option>
-            </select>
-            <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-              <option>Bulan</option>
-              {/* Add options dynamically if available */}
-            </select>
-            <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-              <option>Tahun</option>
-              {/* Add options dynamically if available */}
-            </select>
-          </div>
-          <div className="flex items-end mt-2 md:mt-0">
-            <div className="mb-4 space-x-2">
-              <label htmlFor="maxItems" className="mr-2">Tampilkan:</label>
-              <select
-                id="maxItems"
-                value={maxItems}
-                onChange={(e) => setMaxItems(parseInt(e.target.value))}
-                className="shadow appearance-none border rounded w-20 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={15}>15</option>
-                <option value={20}>20</option>
-              </select>
-              <Button className="px-8" variant="outline" onClick={handlePrint}>Cetak</Button>
+          <div className="mb-4">
+            <div className="flex flex-wrap items-start mt-14 justify-between">
+              <div className="flex flex-wrap items-center space-x-2">
+                <select
+                  className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                  value={selectedCabang}
+                  onChange={(e) => setSelectedCabang(e.target.value)}
+                >
+                  <option>-- Cabang --</option>
+                  <option>BANGSRI</option>
+                  <option>JEPARA</option>
+                </select>
+                <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0">
+                  <option>-- Unit Kerja --</option>
+                  {/* Add options dynamically if available */}
+                </select>
+                <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0">
+                  <option>Semua</option>
+                </select>
+                <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                  <option>Bulan</option>
+                  {/* Add options dynamically if available */}
+                </select>
+                <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                  <option>Tahun</option>
+                  {/* Add options dynamically if available */}
+                </select>
+              </div>
+              <div className="flex items-end mt-2 md:mt-0">
+                <div className="mb-4 space-x-2">
+                  <label htmlFor="maxItems" className="mr-2">
+                    Tampilkan:
+                  </label>
+                  <select
+                    id="maxItems"
+                    value={maxItems}
+                    onChange={(e) => setMaxItems(parseInt(e.target.value))}
+                    className="shadow appearance-none border rounded w-20 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={15}>15</option>
+                    <option value={20}>20</option>
+                  </select>
+                  <Button
+                    className="px-8"
+                    variant="outline"
+                    onClick={handlePrint}
+                  >
+                    Cetak
+                  </Button>
+                </div>
+              </div>
             </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="container w-full table-auto mb-8">
+              <thead>
+                <tr>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    rowSpan="2"
+                  >
+                    No
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    rowSpan="2"
+                  >
+                    Unit Kerja
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    colSpan="3"
+                  >
+                    Status Anggota
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    rowSpan="2"
+                  >
+                    Jumlah
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    rowSpan="2"
+                  >
+                    Iuran
+                  </th>
+                </tr>
+                <tr>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                    PNS
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                    PPPK
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                    Non PNS
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {aggregatedByUnitKerja.slice(0, maxItems).map((item, index) => (
+                  <tr
+                    key={index}
+                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                  >
+                    <td className="p-2 md:p-3 border text-center">
+                      {index + 1}
+                    </td>
+                    <td className="p-2 md:p-3 border">{item.kerja}</td>
+                    <td className="p-2 md:p-3 border text-center">
+                      {item.PNS}
+                    </td>
+                    <td className="p-2 md:p-3 border text-center">
+                      {item.PPPK}
+                    </td>
+                    <td className="p-2 md:p-3 border text-center">
+                      {item.NonPNS}
+                    </td>
+                    <td className="p-2 md:p-3 border text-center">
+                      {item.anggota}
+                    </td>
+                    <td className="p-2 md:p-3 border text-center">
+                      {formatRupiah(item.Iuran)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td
+                    colSpan="2"
+                    className="p-2 md:p-3 border bg-green-200 text-left"
+                  >
+                    Jumlah :
+                  </td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">
+                    {JumlahPNS}
+                  </td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">
+                    {JumlahPPPK}
+                  </td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">
+                    {JumlahNonPNS}
+                  </td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">
+                    {JumlahSemua}
+                  </td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">
+                    {totalIuran}
+                  </td>
+                </tr>
+                <tr>
+                  <td
+                    colSpan="2"
+                    className="p-2 md:p-3 border bg-green-200 text-left"
+                  >
+                    Total Sumbangan :
+                  </td>
+                  <td
+                    colSpan="5"
+                    className="p-2 md:p-3 border bg-green-200 text-left"
+                  >
+                    {totalIuran}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
         </div>
       </div>
-
-      <div className="overflow-x-auto">
-        <table className="container w-full table-auto mb-8">
-          <thead>
-            <tr>
-              <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">No</th>
-              <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Unit Kerja</th>
-              <th className="p-2 md:p-3 border text-white bg-teal-700" colSpan="3">Status Anggota</th>
-              <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Jumlah</th>
-              <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Iuran</th>
-            </tr>
-            <tr>
-              <th className="p-2 md:p-3 border text-white bg-teal-700">PNS</th>
-              <th className="p-2 md:p-3 border text-white bg-teal-700">PPPK</th>
-              <th className="p-2 md:p-3 border text-white bg-teal-700">Non PNS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {aggregatedByUnitKerja.slice(0, maxItems).map((item, index) => (
-              <tr
-                key={index}
-                className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-              >
-                <td className="p-2 md:p-3 border text-center">{index + 1}</td>
-                <td className="p-2 md:p-3 border">{item.kerja}</td>
-                <td className="p-2 md:p-3 border text-center">{item.PNS}</td>
-                <td className="p-2 md:p-3 border text-center">{item.PPPK}</td>
-                <td className="p-2 md:p-3 border text-center">{item.NonPNS}</td>
-                <td className="p-2 md:p-3 border text-center">{item.anggota}</td>
-                <td className="p-2 md:p-3 border text-center">{formatRupiah(item.Iuran)}</td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colSpan="2" className="p-2 md:p-3 border bg-green-200 text-left">Jumlah :</td>
-              <td className="p-2 md:p-3 border bg-green-200 text-center">{JumlahPNS}</td>
-              <td className="p-2 md:p-3 border bg-green-200 text-center">{JumlahPPPK}</td>
-              <td className="p-2 md:p-3 border bg-green-200 text-center">{JumlahNonPNS}</td>
-              <td className="p-2 md:p-3 border bg-green-200 text-center">{JumlahSemua}</td>
-              <td className="p-2 md:p-3 border bg-green-200 text-center">{totalIuran}</td>
-            </tr>
-            <tr>
-              <td colSpan="2" className="p-2 md:p-3 border bg-green-200 text-left">Total Sumbangan :</td>
-              <td colSpan="5" className="p-2 md:p-3 border bg-green-200 text-left">{totalIuran}</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </div>
-    </div>
     </div>
   );
 }

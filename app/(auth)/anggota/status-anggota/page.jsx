@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
+import { useAuth } from "@/app/AuthContext.js";
 
 // function formatRupiah(angka) {
 //     var reverse = angka.toString().split('').reverse().join(''),
@@ -185,37 +186,44 @@ function StatusAnggota() {
       ? membersData
       : membersData.filter((member) => member.cabang === selectedCabang);
 
-      useEffect(() => {
-        const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-        setIsSidebarOpen(sidebarState);
-      }, []);
-    
-      const [isMobile, setIsMobile] = useState(false);
-      const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-      const router = useRouter();
-    
-      const handleBackClick = () => {
-        router.back();
-      };
-    
-      const toggleSidebar = () => {
-        const newSidebarState = !isSidebarOpen;
-        setIsSidebarOpen(newSidebarState);
-        localStorage.setItem("isSidebarOpen", newSidebarState);
-      };
-    
-      useEffect(() => {
-        const handleResize = () => {
-          setIsMobile(window.innerWidth <= 768);
-        };
-    
-        handleResize();
-        window.addEventListener("resize", handleResize);
-    
-        return () => {
-          window.removeEventListener("resize", handleResize);
-        };
-      }, []);
+  useEffect(() => {
+    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+    setIsSidebarOpen(sidebarState);
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const router = useRouter();
+
+  const { token } = useAuth();
+  useEffect(() => {
+    if (!token) {
+      router.push("/sign-in");
+    }
+  }, [token, router]);
+
+  const handleBackClick = () => {
+    router.back();
+  };
+
+  const toggleSidebar = () => {
+    const newSidebarState = !isSidebarOpen;
+    setIsSidebarOpen(newSidebarState);
+    localStorage.setItem("isSidebarOpen", newSidebarState);
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
