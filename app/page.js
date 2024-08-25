@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Slider from "./_components/Slider";
 import LayananKami from "./_components/LayananKami";
 import Flowchart from "./_components/Flowchart";
@@ -8,11 +8,18 @@ import Header from "./_components/Header";
 import Footer from "./_components/Footer";
 import Tentang from "./_components/Tentang";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [isPopupVisible, setIsPopupVisible] = useState(true);
-
   const closePopup = () => setIsPopupVisible(false);
+
+  const router = useRouter();
+  useEffect(() => {
+    if (router.pathname !== "/") {
+      router.push("/");
+    }
+  }, [router]);
 
   return (
     <div>
