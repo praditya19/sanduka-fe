@@ -20,6 +20,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
+import { useAuth } from "@/app/AuthContext";
 
 const Page = () => {
   const [filter, setFilter] = useState("");
@@ -290,6 +291,13 @@ const Page = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
 
+  const { token } = useAuth();
+  useEffect(() => {
+    if (!token) {
+      router.push("/sign-in");
+    }
+  }, [token, router]);
+
   const handleBackClick = () => {
     router.back();
   };
@@ -341,231 +349,233 @@ const Page = () => {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-      <div className="w-full p-4 container shadow-lg rounded-lg mt-12">
-        <div className="rounded-md flex flex-col py-4">
-          <div className="container px-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-              <div className="flex items-center bg-white shadow-md rounded-lg p-2 sm:p-4">
-                <div className="flex items-center justify-center bg-blue-100 rounded-full w-8 h-8 sm:w-12 sm:h-12">
-                  <FontAwesomeIcon
-                    icon={faUserPlus}
-                    className="text-blue-600 w-4 h-4 sm:w-6 sm:h-6"
-                  />
-                </div>
-                <div className="ml-2 sm:ml-4">
-                  <div className="text-base sm:text-base font-semibold text-gray-800">
-                    153
+          <div className="w-full p-4 container shadow-lg rounded-lg mt-12">
+            <div className="rounded-md flex flex-col py-4">
+              <div className="container px-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                  <div className="flex items-center bg-white shadow-md rounded-lg p-2 sm:p-4">
+                    <div className="flex items-center justify-center bg-blue-100 rounded-full w-8 h-8 sm:w-12 sm:h-12">
+                      <FontAwesomeIcon
+                        icon={faUserPlus}
+                        className="text-blue-600 w-4 h-4 sm:w-6 sm:h-6"
+                      />
+                    </div>
+                    <div className="ml-2 sm:ml-4">
+                      <div className="text-base sm:text-base font-semibold text-gray-800">
+                        153
+                      </div>
+                      <div className="text-xs sm:text-sm text-gray-500">
+                        Anggota Masuk
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs sm:text-sm text-gray-500">
-                    Anggota Masuk
+                  <div className="flex items-center bg-white shadow-md rounded-lg p-2 sm:p-4">
+                    <div className="flex items-center justify-center bg-red-100 rounded-full w-8 h-8 sm:w-12 sm:h-12">
+                      <FontAwesomeIcon
+                        icon={faUserMinus}
+                        className="text-red-600 w-4 h-4 sm:w-6 sm:h-6"
+                      />
+                    </div>
+                    <div className="ml-2 sm:ml-4">
+                      <div className="text-base sm:text-base font-semibold text-gray-800">
+                        2
+                      </div>
+                      <div className="text-xs sm:text-sm text-gray-500">
+                        Anggota Keluar
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center bg-white shadow-md rounded-lg p-2 sm:p-4">
+                    <div className="flex items-center justify-center bg-green-100 rounded-full w-8 h-8 sm:w-12 sm:h-12">
+                      <FontAwesomeIcon
+                        icon={faUsers}
+                        className="text-green-600 w-4 h-4 sm:w-6 sm:h-6"
+                      />
+                    </div>
+                    <div className="ml-2 sm:ml-4">
+                      <div className="text-base sm:text-base font-semibold text-gray-800">
+                        6950
+                      </div>
+                      <div className="text-xs sm:text-sm text-gray-500">
+                        Total Anggota
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center bg-white shadow-md rounded-lg p-2 sm:p-4">
-                <div className="flex items-center justify-center bg-red-100 rounded-full w-8 h-8 sm:w-12 sm:h-12">
-                  <FontAwesomeIcon
-                    icon={faUserMinus}
-                    className="text-red-600 w-4 h-4 sm:w-6 sm:h-6"
-                  />
-                </div>
-                <div className="ml-2 sm:ml-4">
-                  <div className="text-base sm:text-base font-semibold text-gray-800">
-                    2
-                  </div>
-                  <div className="text-xs sm:text-sm text-gray-500">
-                    Anggota Keluar
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center bg-white shadow-md rounded-lg p-2 sm:p-4">
-                <div className="flex items-center justify-center bg-green-100 rounded-full w-8 h-8 sm:w-12 sm:h-12">
-                  <FontAwesomeIcon
-                    icon={faUsers}
-                    className="text-green-600 w-4 h-4 sm:w-6 sm:h-6"
-                  />
-                </div>
-                <div className="ml-2 sm:ml-4">
-                  <div className="text-base sm:text-base font-semibold text-gray-800">
-                    6950
-                  </div>
-                  <div className="text-xs sm:text-sm text-gray-500">
-                    Total Anggota
+                <div className="flex justify-start mb-4">
+                  <div className="relative w-full md:w-1/2 lg:w-1/3">
+                    <input
+                      type="text"
+                      placeholder="Search Data..."
+                      value={filter}
+                      onChange={(e) => setFilter(e.target.value)}
+                      className="w-full pr-10 pl-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring focus:border-blue-300"
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                      <FontAwesomeIcon
+                        icon={faMagnifyingGlass}
+                        className="text-gray-400"
+                      />
+                    </div>
                   </div>
                 </div>
+                <Table className="table-auto w-full border-collapse border border-gray-300 text-sm">
+                  <TableHeader className="bg-gray-100">
+                    <TableRow>
+                      <TableHead
+                        rowspan="2"
+                        className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white"
+                      >
+                        No
+                      </TableHead>
+                      <TableHead
+                        rowspan="2"
+                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                      >
+                        Cabang
+                      </TableHead>
+                      <TableHead
+                        rowspan="2"
+                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                      >
+                        Data Lalu
+                      </TableHead>
+                      <TableHead
+                        colSpan="5"
+                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white "
+                      >
+                        Mutasi
+                      </TableHead>
+                      <TableHead
+                        colSpan="2"
+                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white "
+                      >
+                        Pindah Cabang
+                      </TableHead>
+                      <TableHead
+                        rowspan="2"
+                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                      >
+                        Data Sekarang
+                      </TableHead>
+                    </TableRow>
+                    <TableRow>
+                      {/* Empty cells for the non-Mutasi headers to align properly */}
+                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                        Baru
+                      </TableHead>
+                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                        Aktif
+                      </TableHead>
+                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                        Pensiun
+                      </TableHead>
+                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                        Meninggal
+                      </TableHead>
+                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                        Keluar Anggota
+                      </TableHead>
+                      {/* Individual headers for Mutasi columns */}
+                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                        masuk
+                      </TableHead>
+                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                        keluar
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredData.map((item, index) => (
+                      <TableRow
+                        key={index}
+                        className={
+                          index % 2 === 0
+                            ? "bg-gray-200 text-base"
+                            : "bg-white text-base"
+                        }
+                      >
+                        <TableCell className="text-center border">
+                          {index + 1}
+                        </TableCell>
+                        <TableCell className="border border-gray-300 p-2 text-xs">
+                          {item.cabang}
+                        </TableCell>
+                        <TableCell className="border border-gray-300 p-2 text-xs text-center ">
+                          {item.dataLalu}
+                        </TableCell>
+                        <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                          {item.baru}
+                        </TableCell>
+                        <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                          {item.aktif}
+                        </TableCell>
+                        <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                          {item.pensiun}
+                        </TableCell>
+                        <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                          {item.meninggal}
+                        </TableCell>
+                        <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                          {item.keluarAnggota}
+                        </TableCell>
+                        <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                          {item.masuk}
+                        </TableCell>
+                        <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                          {item.keluar}
+                        </TableCell>
+                        <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                          {item.dataSekarang}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="bg-gray-200">
+                      <TableCell
+                        colSpan="2"
+                        className="border border-gray-300 p-2 text-xs font-bold text-center"
+                      >
+                        Total
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
+                        {totals.dataLalu}
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
+                        {totals.baru}
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
+                        {totals.aktif}
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
+                        {totals.pensiun}
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
+                        {totals.meninggal}
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
+                        {totals.keluarAnggota}
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
+                        {totals.masuk}
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
+                        {totals.keluar}
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
+                        {totals.dataSekarang}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </div>
             </div>
-            <div className="flex justify-start mb-4">
-              <div className="relative w-full md:w-1/2 lg:w-1/3">
-                <input
-                  type="text"
-                  placeholder="Search Data..."
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                  className="w-full pr-10 pl-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring focus:border-blue-300"
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                  <FontAwesomeIcon
-                    icon={faMagnifyingGlass}
-                    className="text-gray-400"
-                  />
-                </div>
-              </div>
-            </div>
-            <Table className="table-auto w-full border-collapse border border-gray-300 text-sm">
-              <TableHeader className="bg-gray-100">
-                <TableRow>
-                  <TableHead
-                    rowspan="2"
-                    className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white"
-                  >
-                    No
-                  </TableHead>
-                  <TableHead
-                    rowspan="2"
-                    className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                  >
-                    Cabang
-                  </TableHead>
-                  <TableHead
-                    rowspan="2"
-                    className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                  >
-                    Data Lalu
-                  </TableHead>
-                  <TableHead
-                    colSpan="5"
-                    className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white "
-                  >
-                    Mutasi
-                  </TableHead>
-                  <TableHead
-                    colSpan="2"
-                    className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white "
-                  >
-                    Pindah Cabang
-                  </TableHead>
-                  <TableHead
-                    rowspan="2"
-                    className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                  >
-                    Data Sekarang
-                  </TableHead>
-                </TableRow>
-                <TableRow>
-                  {/* Empty cells for the non-Mutasi headers to align properly */}
-                  <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                    Baru
-                  </TableHead>
-                  <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                    Aktif
-                  </TableHead>
-                  <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                    Pensiun
-                  </TableHead>
-                  <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                    Meninggal
-                  </TableHead>
-                  <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                    Keluar Anggota
-                  </TableHead>
-                  {/* Individual headers for Mutasi columns */}
-                  <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                    masuk
-                  </TableHead>
-                  <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                    keluar
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredData.map((item, index) => (
-                  <TableRow
-                    key={index}
-                    className={
-                      index % 2 === 0
-                        ? "bg-gray-200 text-base"
-                        : "bg-white text-base"
-                    }
-                  >
-                    <TableCell className="text-center border">
-                      {index + 1}
-                    </TableCell>
-                    <TableCell className="border border-gray-300 p-2 text-xs">
-                      {item.cabang}
-                    </TableCell>
-                    <TableCell className="border border-gray-300 p-2 text-xs text-center ">
-                      {item.dataLalu}
-                    </TableCell>
-                    <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                      {item.baru}
-                    </TableCell>
-                    <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                      {item.aktif}
-                    </TableCell>
-                    <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                      {item.pensiun}
-                    </TableCell>
-                    <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                      {item.meninggal}
-                    </TableCell>
-                    <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                      {item.keluarAnggota}
-                    </TableCell>
-                    <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                      {item.masuk}
-                    </TableCell>
-                    <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                      {item.keluar}
-                    </TableCell>
-                    <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                      {item.dataSekarang}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                <TableRow className="bg-gray-200">
-                  <TableCell
-                    colSpan="2"
-                    className="border border-gray-300 p-2 text-xs font-bold text-center"
-                  >
-                    Total
-                  </TableCell>
-                  <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                    {totals.dataLalu}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                    {totals.baru}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                    {totals.aktif}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                    {totals.pensiun}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                    {totals.meninggal}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                    {totals.keluarAnggota}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                    {totals.masuk}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                    {totals.keluar}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                    {totals.dataSekarang}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+            <div
+              style={{ borderTop: "1px solid #ccc", margin: "20px 0" }}
+            ></div>
+            <Seldata />
           </div>
         </div>
-        <div style={{ borderTop: "1px solid #ccc", margin: "20px 0" }}></div>
-        <Seldata />
       </div>
-    </div>
-    </div>
     </div>
   );
 };

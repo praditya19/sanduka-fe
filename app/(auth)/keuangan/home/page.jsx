@@ -38,6 +38,13 @@ export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
 
+  const { token } = useAuth();
+  useEffect(() => {
+    if (!token) {
+      router.push("/sign-in");
+    }
+  }, [token, router]);
+
   const handleBackClick = () => {
     router.back();
   };
@@ -80,19 +87,19 @@ export default function Home() {
         </header>
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-        <div className="container mx-auto flex items-center justify-between">
-          {/* Back Button and Title */}
-          <div className="flex items-center">
-            <FontAwesomeIcon
-              icon={faArrowLeft}
-              size="sm"
-              onClick={handleBackClick}
-              className="cursor-pointer mr-4"
-            />
-            <h1 className="text-base">Keuangan</h1>
+          <div className="container mx-auto flex items-center justify-between">
+            {/* Back Button and Title */}
+            <div className="flex items-center">
+              <FontAwesomeIcon
+                icon={faArrowLeft}
+                size="sm"
+                onClick={handleBackClick}
+                className="cursor-pointer mr-4"
+              />
+              <h1 className="text-base">Keuangan</h1>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
       )}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />

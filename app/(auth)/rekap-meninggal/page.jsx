@@ -17,6 +17,7 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/app/AuthContext";
 
 const data = [
   {
@@ -584,6 +585,13 @@ const Page = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
+
+  const { token } = useAuth();
+  useEffect(() => {
+    if (!token) {
+      router.push("/sign-in");
+    }
+  }, [token, router]);
 
   const handleBackClick = () => {
     router.back();

@@ -15,6 +15,14 @@ function DataAnggota() {
   const [selectedUnitKerja, setSelectedUnitKerja] =
     useState("-- Unit Kerja --");
 
+  const { token } = useAuth();
+
+  useEffect(() => {
+    if (!token) {
+      router.push("/sign-in");
+    }
+  }, [token, router]);
+
   const handlePrint = () => {
     const filteredDataForPrint =
       selectedCabang === "-- Cabang --"

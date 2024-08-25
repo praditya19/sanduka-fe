@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
+import { useAuth } from "@/app/AuthContext";
 
 const dummyDataNames = [
   { name: "Budi Waseso" },
@@ -77,6 +78,13 @@ const FormStep1 = ({ onNext }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
+
+  const { token } = useAuth();
+  useEffect(() => {
+    if (!token) {
+      router.push("/sign-in");
+    }
+  }, [token, router]);
 
   const handleBackClick = () => {
     router.back();
