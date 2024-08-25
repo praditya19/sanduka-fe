@@ -1,3 +1,4 @@
+import { AuthProvider } from "./AuthContext";
 import "./globals.css";
 
 export const metadata = {
@@ -13,7 +14,7 @@ export default function RootLayout({ children }) {
           fontFamily: "Source Sans Pro",
         }}
       >
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
