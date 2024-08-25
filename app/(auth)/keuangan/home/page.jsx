@@ -80,19 +80,38 @@ export default function Home() {
         </header>
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-        <div className="container mx-auto flex items-center justify-between">
-          {/* Back Button and Title */}
-          <div className="flex items-center">
-            <FontAwesomeIcon
-              icon={faArrowLeft}
-              size="sm"
-              onClick={handleBackClick}
-              className="cursor-pointer mr-4"
-            />
-            <h1 className="text-base">Keuangan</h1>
+          <div className="container mx-auto flex items-center justify-between">
+            {/* Back Button and Title */}
+            <div className="flex items-center">
+              <FontAwesomeIcon
+                icon={faArrowLeft}
+                size="sm"
+                onClick={handleBackClick}
+                className="cursor-pointer mr-4"
+              />
+              <h1 className="text-base">Keuangan</h1>
+            </div>
+
+            {/* Navigation Links */}
+            <nav className="flex items-center space-x-4">
+              <Link
+                href="/keuangan/data-utama"
+                className="text-white hover:text-gray-300"
+              >
+                Data Utama
+              </Link>
+              <Link href="/keuangan/sanduka" className="text-white hover:text-gray-300">
+                Sanduka
+              </Link>
+              <Link
+                href="/keuangan/organisasi"
+                className="text-white hover:text-gray-300"
+              >
+                Organisasi
+              </Link>
+            </nav>
           </div>
-        </div>
-      </header>
+        </header>
       )}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />

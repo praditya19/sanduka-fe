@@ -27,6 +27,10 @@ export default function DataUtama() {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
