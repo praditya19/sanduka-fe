@@ -129,36 +129,37 @@ export default function IconGrid() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { token } = useAuth();
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
+    } else {
+      setLoading(false);
+      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+      setIsSidebarOpen(sidebarState);
+      const handleResize = () => {
+        setIsMobile(window.innerWidth <= 768);
+      };
+
+      handleResize();
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
     }
   }, [token, router]);
 
-  useEffect(() => {
-    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-    setIsSidebarOpen(sidebarState);
-  }, []);
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
