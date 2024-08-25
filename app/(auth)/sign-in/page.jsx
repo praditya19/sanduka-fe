@@ -10,6 +10,7 @@ import { Label } from "@radix-ui/react-label";
 import toast, { Toaster } from "react-hot-toast";
 import ReCAPTCHA from "react-google-recaptcha";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/AuthContext";
 
 function SignIn() {
   const [npaPgri, setNpaPgri] = useState("");
@@ -19,6 +20,7 @@ function SignIn() {
   const [isVerified, setIsVerified] = useState(false);
 
   const router = useRouter();
+  const { setToken } = useAuth();
 
   const onSignIn = async () => {
     setLoader(true);
@@ -40,6 +42,8 @@ function SignIn() {
       };
 
       const response = await GlobalApi.login(loginData);
+      setToken(response.token);
+
       toast.success("Anda Berhasil Login");
       setTimeout(() => {
         router.push("/home");

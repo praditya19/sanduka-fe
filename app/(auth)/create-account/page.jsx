@@ -475,8 +475,8 @@ const Page = () => {
                         <SelectContent>
                           <SelectGroup>
                             <SelectItem value="ISLAM">Islam</SelectItem>
+                            <SelectItem value="KRISTEN">Kristen</SelectItem>
                             <SelectItem value="KATOLIK">Katolik</SelectItem>
-                            <SelectItem value="PROTESTAN">Protestan</SelectItem>
                             <SelectItem value="HINDU">Hindu</SelectItem>
                             <SelectItem value="BUDHA">Budha</SelectItem>
                             <SelectItem value="KONGHUCU">Konghucu</SelectItem>
@@ -802,14 +802,11 @@ const Page = () => {
                           <SelectItem value="PAUD">PAUD</SelectItem>
                           <SelectItem value="TK_RA">TK/RA</SelectItem>
                           <SelectItem value="SD_MI">SD/MI</SelectItem>
-                          <SelectItem value="SMP">SMP</SelectItem>
-                          <SelectItem value="SMA">SMA</SelectItem>
-                          <SelectItem value="DIPLOMA">DIPLOMA</SelectItem>
-                          <SelectItem value="SARJANA">SARJANA</SelectItem>
-                          <SelectItem value="DMAGISTERIPLOMA">
-                            MAGISTER
+                          <SelectItem value="SMP_MTS">SMP/MTS</SelectItem>
+                          <SelectItem value="SMA_SMK_MA">SMA/SMK/MA</SelectItem>
+                          <SelectItem value="PERGURUAN_TINGGI">
+                            PERGURUAN TINGGI
                           </SelectItem>
-                          <SelectItem value="DOKTOR">DOKTOR</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
