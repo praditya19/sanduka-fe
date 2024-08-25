@@ -88,7 +88,7 @@ export default function Home() {
                 icon={faArrowLeft}
                 size="sm"
                 onClick={handleBackClick}
-                className="cursor-pointer mr-2"
+                className="cursor-pointer mr-4"
               />
               <h1 className="text-base">Detail</h1>
             </div>
