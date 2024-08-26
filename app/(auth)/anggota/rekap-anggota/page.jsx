@@ -21,6 +21,7 @@ function RekapAnggota() {
   const [maxItems, setMaxItems] = useState(10);
   const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
   const { token } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (!token) {
@@ -29,7 +30,6 @@ function RekapAnggota() {
   }, [token, router]);
 
   const aggregateData = () => {
-    // Filter data based on selected cabang
     const filteredData =
       selectedCabang === "-- Cabang --"
         ? membersData
@@ -209,7 +209,6 @@ function RekapAnggota() {
 
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const router = useRouter();
 
   const handleBackClick = () => {
     router.back();
