@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
+import { useAuth } from "@/app/AuthContext";
 
 const data = [
   { cabang: "BANGSRI", kurangSetor: 1000.0 },
@@ -107,7 +108,10 @@ export default function Home() {
               >
                 Data Utama
               </Link>
-              <Link href="/keuangan/sanduka" className="text-white hover:text-gray-300">
+              <Link
+                href="/keuangan/sanduka"
+                className="text-white hover:text-gray-300"
+              >
                 Sanduka
               </Link>
               <Link
