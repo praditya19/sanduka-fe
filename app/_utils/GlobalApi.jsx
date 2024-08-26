@@ -73,11 +73,16 @@ const getGolonganJabatan = () => axiosClient.get("/api/daftarGolongan");
 const getUnitKerja = () => axiosClient.get("/api/unit-kerja/all");
 
 // Anggota
+const getAllAnggota = (page = 0, size = 10) => {
+  return axiosClient.get(`/api/auth/users?page=${page}&size=${size}`);
+}
+
 
 // Keuangan
 export default {
   registerUser,
   login,
+  getAllAnggota,
   getCabang,
   getJabatan,
   getGolonganJabatan,
