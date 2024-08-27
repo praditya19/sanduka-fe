@@ -75,14 +75,44 @@ const getUnitKerja = () => axiosClient.get("/api/unit-kerja/all");
 // Anggota
 const getAllAnggota = (page = 0, size = 10) => {
   return axiosClient.get(`/api/auth/users?page=${page}&size=${size}`);
-}
+};
 
+// Verifikasi Anggota
+const getUnverifiedUsers = (
+  page = 0,
+  size = 10,
+  cabang = null,
+  unitKerja = null
+) => {
+  const params = new URLSearchParams({ page, size });
+
+  if (cabang) params.append("cabang", cabang);
+  if (unitKerja) params.append("unitKerja", unitKerja);
+
+  return axiosClient.get(`/api/auth/unverified-users?${params.toString()}`);
+};
+const verifyUser = async (userId) => {
+  try {
+    const response = await axiosClient.put(`/api/auth/user/${userId}/verify`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
 
 // Keuangan
 export default {
   registerUser,
   login,
   getAllAnggota,
+  getUnverifiedUsers,
+  verifyUser,
   getCabang,
   getJabatan,
   getGolonganJabatan,
