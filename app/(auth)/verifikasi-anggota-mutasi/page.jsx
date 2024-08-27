@@ -9,6 +9,7 @@ import {
   faTimesCircle,
   faUser,
   faArrowLeft,
+  faUndo,
 } from "@fortawesome/free-solid-svg-icons";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
@@ -16,6 +17,8 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import { Badge } from "@/components/ui/badge";
+import toast, { Toaster } from "react-hot-toast";
 
 const VerifikasiAnggotaMutasi = () => {
   const [selectedRow, setSelectedRow] = useState(null);
@@ -28,29 +31,69 @@ const VerifikasiAnggotaMutasi = () => {
   const [unitKerja, setUnitKerja] = useState([]);
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
+  const [anggotaData, setAnggotaData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [fotoBase64, setFotoBase64] = useState("");
 
-  const tableData = [
-    {
-      no: 1,
-      foto: "/sanduka.png",
-      cabang: "BANGSRI",
-      unitKerja: "SMAN 1 Jepara",
-      nama: "Bagas Adi Prabowo, S.Pd",
-      npaPGRI: "123456",
-      contactNumber: "+6287839465101",
-      status: "Belum di verifikasi",
-    },
-    {
-      no: 2,
-      foto: "/sanduka.png",
-      cabang: "BANGSRI",
-      unitKerja: "SMAN 1 Jepara",
-      nama: "Nanda coding, S.Pd",
-      npaPGRI: "123456",
-      contactNumber: "+62895704340678",
-      status: "Belum di verifikasi",
-    },
-  ];
+  const fetchDataAnggota = async (
+    page = 0,
+    size = 10,
+    cabang = "",
+    unitKerja = ""
+  ) => {
+    try {
+      const response = await GlobalApi.getUnverifiedUsers(
+        page,
+        size,
+        cabang,
+        unitKerja
+      );
+
+      const fetchedData = response.data.content;
+
+      const fotoBase64Array = [];
+
+      if (fetchedData && fetchedData.length > 0) {
+        fetchedData.forEach((item) => {
+          if (item.foto) {
+            try {
+              const decodedString = atob(item.foto);
+              fotoBase64Array.push(decodedString); // Add decoded image to the array
+            } catch (error) {
+              console.error("Error decoding Base64:", error);
+              fotoBase64Array.push(null); // Ensure the array length matches the data length
+            }
+          } else {
+            fotoBase64Array.push(null); // No image for this item
+          }
+        });
+      } else {
+        console.warn("No data found.");
+      }
+
+      setAnggotaData(fetchedData || []); // Set empty array if no data
+      setFotoBase64(fotoBase64Array); // Set all decoded images
+      setTotalPages(response.data.totalPages || 0);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching anggota data:", error);
+    }
+  };
+
+  const updateVerifyUser = async (userId) => {
+    try {
+      const response = await GlobalApi.verifyUser(userId);
+      toast.success("Pengguna berhasil diverifikasi!");
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      console.error("Error fetching cabang:", error);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -77,6 +120,8 @@ const VerifikasiAnggotaMutasi = () => {
       setLoading(false);
       fetchData();
       fetchUnitKerja();
+      fetchDataAnggota(currentPage, pageSize);
+
       const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
       setIsSidebarOpen(sidebarState);
 
@@ -91,14 +136,16 @@ const VerifikasiAnggotaMutasi = () => {
         window.removeEventListener("resize", handleResize);
       };
     }
-  }, [token, router]);
+  }, [token, router, currentPage, pageSize]);
 
   if (loading) {
     return <div>Loading...</div>;
   }
 
   const handleUserClick = (rowId) => {
-    const row = tableData.find((item) => item.no === rowId);
+    const row = anggotaData.find((item) => {
+      return item.id === rowId;
+    });
     setSelectedRow(row);
   };
 
@@ -129,8 +176,34 @@ const VerifikasiAnggotaMutasi = () => {
     updateUnitKerja(selectedKecamatan);
   };
 
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    fetchDataAnggota(newPage, pageSize);
+  };
+
+  const handleSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setCurrentPage(0);
+    fetchDataAnggota(0, newSize);
+  };
+
+  const handleSearchClick = () => {
+    fetchDataAnggota(currentPage, pageSize, selectedCabang, selectedUnitKerja);
+  };
+
+  const handleVerifyUserClick = (rowId) => {
+    updateVerifyUser(rowId);
+  };
+
+  const handleResetClick = () => {
+    setSelectedCabang("");
+    setFilteredUnitKerja([]);
+    fetchDataAnggota(currentPage, pageSize);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
+      <Toaster />
       {isMobile ? (
         <MobileHeader handleBackClick={handleBackClick} />
       ) : (
@@ -149,24 +222,36 @@ const VerifikasiAnggotaMutasi = () => {
               unitKerja={filteredUnitKerja}
               selectedCabang={selectedCabang}
               handleCabangChange={handleCabangChange}
+              handleSearchClick={handleSearchClick}
+              handleResetClick={handleResetClick}
             />
 
             <div className="overflow-x-auto">
               <DataTable
-                tableData={tableData}
+                anggotaData={anggotaData}
                 handleUserClick={handleUserClick}
+                fotoBase64={fotoBase64}
+                handleVerifyUserClick={handleVerifyUserClick}
               />
             </div>
 
-            {selectedRow && (
-              <PopupDetail
-                selectedRow={selectedRow}
-                handleClosePopup={handleClosePopup}
-              />
-            )}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              onSizeChange={handleSizeChange}
+              pageSize={pageSize}
+            />
           </div>
         </div>
       </div>
+      {selectedRow && (
+        <PopupDetail
+          selectedRow={selectedRow}
+          handleClosePopup={handleClosePopup}
+          fotoBase64={fotoBase64}
+        />
+      )}
     </div>
   );
 };
@@ -189,33 +274,54 @@ const FilterSection = ({
   cabang,
   unitKerja,
   selectedCabang,
+  selectedUnitKerja,
   handleCabangChange,
+  handleUnitKerjaChange,
+  handleSearchClick,
+  handleResetClick,
 }) => (
   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-16 text-sm">
-    <DropdownCabang
-      label="Cabang"
-      options={cabang}
-      handleChange={handleCabangChange}
-    />
-    <DropdownUnitKerja
-      label="Unit Kerja"
-      options={unitKerja}
-      disabled={!selectedCabang}
-    />
-    <div className="flex items-end">
-      <Button className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg flex items-center">
+    <div className="flex items-end gap-4">
+      <DropdownCabang
+        label="Cabang"
+        options={cabang}
+        selectedCabang={selectedCabang}
+        handleChange={handleCabangChange}
+      />
+      <DropdownUnitKerja
+        label="Unit Kerja"
+        options={unitKerja}
+        disabled={!selectedCabang}
+        selectedUnitKerja={selectedUnitKerja}
+        handleChange={handleUnitKerjaChange}
+      />
+    </div>
+    <div className="flex items-end gap-4 ml-28">
+      <Button
+        className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-1 rounded-lg flex items-center h-9"
+        onClick={handleSearchClick}
+      >
         <FontAwesomeIcon icon={faSearch} size="lg" />
         <span className="ml-2">Cari data filter</span>
+      </Button>
+
+      <Button
+        className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center h-9"
+        onClick={handleResetClick}
+      >
+        <FontAwesomeIcon icon={faUndo} size="lg" />
+        <span className="ml-2">Reset Filter</span>
       </Button>
     </div>
   </div>
 );
 
-const DropdownCabang = ({ label, options, handleChange }) => (
+const DropdownCabang = ({ label, options, handleChange, selectedCabang }) => (
   <div>
     <label className="block mb-2 font-semibold text-gray-800">{label}</label>
     <select
-      className="border rounded-lg p-2 w-full bg-white shadow-sm"
+      className="border rounded-lg p-2 w-56 bg-white shadow-sm"
+      value={selectedCabang}
       onChange={handleChange}
     >
       <option>Pilih {label}</option>
@@ -228,15 +334,16 @@ const DropdownCabang = ({ label, options, handleChange }) => (
   </div>
 );
 
-const DropdownUnitKerja = ({ label, options, disabled }) => (
+const DropdownUnitKerja = ({ label, options, disabled, handleChange }) => (
   <div>
     <label className="block mb-2 font-semibold text-gray-800">{label}</label>
     <select
-      className="border rounded-lg p-2 w-full bg-white shadow-sm"
+      className="border rounded-lg p-2 w-56 bg-white shadow-sm"
       disabled={disabled}
+      onChange={handleChange}
     >
-      <option>Pilih {label}</option>
-      {options.map((item, index) => (
+      <option value="">Pilih {label}</option>
+      {options.map((item) => (
         <option key={item.id} value={item.unitKerja}>
           {item.unitKerja}
         </option>
@@ -245,94 +352,100 @@ const DropdownUnitKerja = ({ label, options, disabled }) => (
   </div>
 );
 
-const DataTable = ({ tableData, handleUserClick }) => (
-  <table className="table-auto w-full mt-4 bg-white shadow-lg rounded-lg border border-gray-200">
-    <thead className="bg-teal-700 text-white text-sm">
+const DataTable = ({
+  anggotaData,
+  handleUserClick,
+  fotoBase64,
+  handleVerifyUserClick,
+}) => (
+  <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+    <thead className="bg-gray-100 text-gray-600">
       <tr>
-        {[
-          "No.",
-          "Foto",
-          "Cabang",
-          "Unit Kerja",
-          "Nama",
-          "NPA PGRI",
-          "Status",
-          "Whatsapp",
-          "Aksi",
-        ].map((header, index) => (
-          <th key={index} className="px-4 py-2 text-center font-semibold">
-            {header}
-          </th>
-        ))}
+        <th className="py-2 px-4 border-b">No</th>
+        <th className="py-2 px-4 border-b">Foto</th>
+        <th className="py-2 px-4 border-b">Cabang</th>
+        <th className="py-2 px-4 border-b">Unit Kerja</th>
+        <th className="py-2 px-4 border-b">Nama</th>
+        <th className="py-2 px-4 border-b">NPA PGRI</th>
+        <th className="py-2 px-4 border-b">Status</th>
+        <th className="py-2 px-4 border-b">Aksi</th>
       </tr>
     </thead>
-    <tbody className="text-base">
-      {tableData.map((row, index) => (
-        <tr key={index} className="border-b hover:bg-gray-50">
-          <td className="px-4 py-2 text-center">{row.no}</td>
-          <td className="px-4 py-2 text-center">
-            <Image
-              src={row.foto}
-              width={60}
-              height={60}
-              alt="Anggota Foto"
-              className="mx-auto"
-            />
+    <tbody>
+      {(anggotaData || []).length === 0 ? (
+        <tr>
+          <td colSpan="9" className="py-4 px-4 text-center text-gray-600">
+            Data tidak ditemukan
           </td>
-          <td className="px-4 py-2 text-center">{row.cabang}</td>
-          <td className="px-4 py-2 text-center">{row.unitKerja}</td>
-          <td className="px-4 py-2 text-center">{row.nama}</td>
-          <td className="px-4 py-2 text-center">{row.npaPGRI}</td>
-          <td className="px-4 py-2 text-center text-yellow-500">
-            <FontAwesomeIcon icon={faTimesCircle} className="mr-1" />
-            {row.status}
-          </td>
-          <td className="px-4 py-2 text-center">
-            <a
-              href={`https://wa.me/${row.contactNumber}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <FontAwesomeIcon
-                icon={faWhatsapp}
-                className="text-green-500"
-                size="lg"
+        </tr>
+      ) : (
+        (anggotaData || []).map((item, index) => (
+          <tr key={item.id} className="hover:bg-gray-50 text-sm cursor-pointer">
+            <td className="py-2 px-4 border-b">{index + 1}</td>
+            <td className="py-2 px-4 border-b">
+              <Image
+                src={`data:image/jpeg;base64,${fotoBase64[index]}`}
+                width={50}
+                height={50}
+                alt="Anggota Foto"
+                className="rounded-full"
               />
-            </a>
-          </td>
-          <td className="px-4 py-2 text-center">
-            <button
-              onClick={() => handleUserClick(row.no)}
-              className="text-teal-700 hover:underline flex items-center justify-center"
-            >
+            </td>
+            <td className="py-2 px-4 border-b">{item.cabang}</td>
+            <td className="py-2 px-4 border-b">{item.unitKerja}</td>
+            <td className="py-2 px-4 border-b">{item.namaLengkap}</td>
+            <td className="py-2 px-4 border-b">{item.npaPgri}</td>
+            <td className="py-2 px-4 border-b">
+              {!item.isVerified && (
+                <Badge variant="destructive">
+                  <FontAwesomeIcon
+                    icon={faTimesCircle}
+                    className="mr-2 text-white"
+                    size="lg"
+                  />
+                  <span>Belum Terverifikasi</span>
+                </Badge>
+              )}
+            </td>
+            <td className="px-4 py-2 border-b">
+              <a
+                href={`https://wa.me/${item.nomorHp}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FontAwesomeIcon
+                  icon={faWhatsapp}
+                  className="text-green-500"
+                  size="lg mr-4"
+                />
+              </a>
               <FontAwesomeIcon
                 icon={faCheckCircle}
-                size="lg"
-                className="mr-2"
-              />
-              <FontAwesomeIcon
-                icon={faTimesCircle}
-                size="lg"
-                className="mr-2 text-red-500"
+                size="lg mr-4 text-green-500"
+                onClick={() => {
+                  handleVerifyUserClick(item.id);
+                }}
               />
               <FontAwesomeIcon
                 icon={faUser}
-                size="lg"
-                className="text-yellow-500"
+                size="lg text-yellow-500 cursor-pointer"
+                onClick={() => {
+                  handleUserClick(item.id);
+                }}
               />
-            </button>
-          </td>
-        </tr>
-      ))}
+            </td>
+          </tr>
+        ))
+      )}
     </tbody>
   </table>
 );
 
-const PopupDetail = ({ selectedRow, handleClosePopup }) => (
+const PopupDetail = ({ selectedRow, handleClosePopup, fotoBase64 }) => (
   <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-60 z-50 transition-opacity duration-300 ease-in-out">
     <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg transform transition-transform duration-300 ease-in-out">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-900">Detail Anggota</h2>
+        <h2 className="text-xl font-bold text-gray-900">Detail Anggota</h2>
         <button
           onClick={handleClosePopup}
           className="text-gray-500 hover:text-gray-900 transition-colors duration-300 ease-in-out"
@@ -340,40 +453,97 @@ const PopupDetail = ({ selectedRow, handleClosePopup }) => (
           <FontAwesomeIcon icon={faTimesCircle} size="2x" />
         </button>
       </div>
-      <div className="flex flex-col items-center">
-        <Image
-          src={selectedRow.foto}
-          width={150}
-          height={150}
-          alt="Anggota Foto"
-          className="mb-4"
-        />
-        <h3 className="text-xl font-semibold text-gray-800 mb-2">
-          {selectedRow.nama}
-        </h3>
-        <p className="text-gray-700 mb-1">
-          Cabang: <span className="font-medium">{selectedRow.cabang}</span>
-        </p>
-        <p className="text-gray-700 mb-1">
-          Unit Kerja:{" "}
-          <span className="font-medium">{selectedRow.unitKerja}</span>
-        </p>
-        <p className="text-gray-700 mb-2">
-          NPA PGRI: <span className="font-medium">{selectedRow.npaPGRI}</span>
-        </p>
-        <p
-          className={`${
-            selectedRow.status.includes("Aktif")
-              ? "text-green-500"
-              : "text-red-500"
-          } flex items-center`}
-        >
-          <FontAwesomeIcon icon={faTimesCircle} className="mr-2" />
-          {selectedRow.status}
-        </p>
+      <div className="flex flex-col space-y-4">
+        <div>
+          <Image
+            src={`data:image/png;base64,${fotoBase64}`}
+            width={100}
+            height={100}
+            alt="Anggota Foto"
+            className="mb-4 rounded-full"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 text-gray-700 mb-4">
+          <div>
+            <p className="font-medium text-gray-600">Nama Lengkap:</p>
+            <p>{selectedRow.namaLengkap}</p>
+          </div>
+          <div>
+            <p className="font-medium text-gray-600">Email:</p>
+            <p>{selectedRow.email}</p>
+          </div>
+          <div>
+            <p className="font-medium text-gray-600">NPA PGRI:</p>
+            <p>{selectedRow.npaPgri}</p>
+          </div>
+          <div>
+            <p className="font-medium text-gray-600">NIK:</p>
+            <p>{selectedRow.nik}</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4 text-gray-700">
+          <div>
+            <p className="font-medium text-gray-600">Cabang:</p>
+            <p>{selectedRow.cabang}</p>
+          </div>
+          <div>
+            <p className="font-medium text-gray-600">Unit Kerja:</p>
+            <p>{selectedRow.unitKerja}</p>
+          </div>
+          <div>
+            <p className="font-medium text-gray-600">Nomor Hp:</p>
+            <a
+              href={`https://wa.me/${selectedRow.nomorHp}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center text-green-500"
+            >
+              <FontAwesomeIcon icon={faWhatsapp} className="mr-2" size="lg" />
+              <span>{selectedRow.nomorHp}</span>
+            </a>
+          </div>
+
+          <div>
+            <p className="font-medium text-gray-600">Status:</p>
+            {!selectedRow.isVerified && (
+              <Badge variant="destructive">
+                <FontAwesomeIcon
+                  icon={faTimesCircle}
+                  className="mr-2 text-white"
+                  size="lg"
+                />
+                <span>Belum Terverifikasi</span>
+              </Badge>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   </div>
 );
+
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex justify-between items-center mt-4">
+      <Button
+        className="bg-blue-700 text-white px-4 py-2 rounded-lg"
+        onClick={() => onPageChange(Math.max(currentPage - 1, 0))}
+        disabled={currentPage === 0}
+      >
+        Previous
+      </Button>
+      <Button
+        className="bg-blue-700 text-white px-4 py-2 rounded-lg"
+        onClick={() => onPageChange(Math.min(currentPage + 1, totalPages - 1))}
+        disabled={currentPage === totalPages - 1}
+      >
+        Next
+      </Button>
+    </div>
+  );
+};
 
 export default VerifikasiAnggotaMutasi;
