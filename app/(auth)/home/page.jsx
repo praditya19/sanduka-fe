@@ -254,9 +254,8 @@ export default function IconGrid() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="flex-1 p-6 ">
             {isMobile ? (
@@ -400,64 +399,66 @@ export default function IconGrid() {
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Separator with Title */}
-      <div className="w-full text-center my-4">
-        <hr className="mt-2 border-gray-300" />
-        <h3 className="text-xl font-semibold text-gray-800">
-          Anggota Meninggal Bulan Ini
-        </h3>
-      </div>
 
-      {/* Card anggota meninggal */}
-      <div className="w-full flex justify-center items-center relative mb-4">
-        <button
-          onClick={handlePrev}
-          className="absolute left-1/4 bg-white rounded-full p-2 shadow-md"
-        >
-          <FontAwesomeIcon icon={faChevronLeft} size="lg" />
-        </button>
+        {/* Pembatas with Title */}
+        <div className={`w-full flex flex-col items-center my-4 ${isSidebarOpen ? 'ml-32' : 'ml-0'}`}>
+          <hr className="mt-2 border-gray-300 w-full" />
+          <h3 className="text-xl font-semibold text-gray-800 mt-4">
+            Anggota Meninggal Bulan Ini
+          </h3>
+        </div>
 
-        <div className="bg-white rounded-lg shadow-md overflow-hidden flex items-center justify-center p-4 w-1/3">
-          <Image
-            className="rounded-full"
-            src={currentData.img}
-            alt="Profile Image"
-            width={100}
-            height={100}
-          />
-          <div className="ml-8">
-            <h2 className="text-xs font-semibold text-gray-800">
-              {currentData.name}
-            </h2>
-            <p className="text-sm text-gray-600">{currentData.id}</p>
-            <div className="mt-2">
-              <div className="flex items-center text-gray-800 text-sm mb-1">
-                <FontAwesomeIcon
-                  icon={faCalendarAlt}
-                  className="text-gray-600"
-                />
-                <span className="ml-2">{currentData.dateOfDeath}</span>
-              </div>
-              <div className="flex items-center text-gray-800 text-sm mb-1">
-                <FontAwesomeIcon icon={faUserTie} className="text-gray-600" />
-                <span className="ml-2">{currentData.position}</span>
-              </div>
-              <div className="flex items-center text-gray-800 text-sm mb-1">
-                <FontAwesomeIcon icon={faHome} className="text-gray-600" />
-                <span className="ml-2">{currentData.address}</span>
+
+        {/* Card anggota meninggal */}
+        <div className={`w-full flex justify-center items-center relative mb-4 ${isSidebarOpen ? "ml-32" : "ml-0"}`}>
+          <button
+            onClick={handlePrev}
+            className="absolute left-0 sm:left-1/3 bg-white rounded-full p-2 shadow-md"
+          >
+            <FontAwesomeIcon icon={faChevronLeft} size="lg" />
+          </button>
+
+          <div className="bg-white rounded-lg shadow-md overflow-hidden flex items-center justify-center p-4 max-w-xl">
+            <Image
+              className="rounded-full"
+              src={currentData.img}
+              alt="Profile Image"
+              width={100}
+              height={100}
+            />
+            <div className="ml-8">
+              <h2 className="text-xs font-semibold text-gray-800">
+                {currentData.name}
+              </h2>
+              <p className="text-sm text-gray-600">{currentData.id}</p>
+              <div className="mt-2">
+                <div className="flex items-center text-gray-800 text-sm mb-1">
+                  <FontAwesomeIcon
+                    icon={faCalendarAlt}
+                    className="text-gray-600"
+                  />
+                  <span className="ml-2">{currentData.dateOfDeath}</span>
+                </div>
+                <div className="flex items-center text-gray-800 text-sm mb-1">
+                  <FontAwesomeIcon icon={faUserTie} className="text-gray-600" />
+                  <span className="ml-2">{currentData.position}</span>
+                </div>
+                <div className="flex items-center text-gray-800 text-sm mb-1">
+                  <FontAwesomeIcon icon={faHome} className="text-gray-600" />
+                  <span className="ml-2">{currentData.address}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <button
-          onClick={handleNext}
-          className="absolute right-1/4 bg-white rounded-full p-2 shadow-md"
-        >
-          <FontAwesomeIcon icon={faChevronRight} size="lg" />
-        </button>
+          <button
+            onClick={handleNext}
+            className="absolute right-0 sm:right-1/3 bg-white rounded-full p-2 shadow-md"
+          >
+            <FontAwesomeIcon icon={faChevronRight} size="lg" />
+          </button>
+        </div>
       </div>
 
       {isMobile && <FooterMobile />}

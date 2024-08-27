@@ -43,8 +43,12 @@ const registerUser = async (userData) => {
     );
 
     return response.data;
-  } catch (error) {}
+  } catch (error) {
+    console.error("Error registering user:", error);
+    throw error;
+  }
 };
+
 const login = async (loginData) => {
   try {
     const response = await axiosClient.post(
@@ -62,6 +66,8 @@ const login = async (loginData) => {
       throw new Error(
         error.response.data.message || "Terjadi kesalahan pada server"
       );
+    } else {
+      throw new Error("Terjadi kesalahan pada server");
     }
   }
 };
@@ -106,7 +112,18 @@ const verifyUser = async (userId) => {
   }
 };
 
-// Keuangan
+// Add Unit Kerja
+const addUnitKerja = async (payload) => {
+  try {
+    const response = await axiosClient.post("/api/unit-kerja/create", payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error adding unit kerja:", error);
+    throw error;
+  }
+};
+
+// Export all functions
 export default {
   registerUser,
   login,
@@ -117,4 +134,5 @@ export default {
   getJabatan,
   getGolonganJabatan,
   getUnitKerja,
+  addUnitKerja,
 };

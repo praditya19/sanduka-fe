@@ -1,20 +1,60 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
+import GlobalApi from "@/app/_utils/GlobalApi";
+import toast, { Toaster } from "react-hot-toast";
+import { useAuth } from "@/app/AuthContext";
+import { useRouter } from "next/navigation";
 
 const AddUnitForm = () => {
-  useEffect(() => {
-    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-    setIsSidebarOpen(sidebarState);
-  }, []);
-
+  const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
+  const [unitKerja, setUnitKerja] = useState(""); // State for unit kerja input
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [cabang, setCabang] = useState([]); // State for cabang data from API
+  const { token } = useAuth();
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  // Fetch cabang data from API
+  useEffect(() => {
+    if (!token) {
+      router.push("/sign-in");
+    } else {
+      setLoading(false);
+      const fetchCabang = async () => {
+        try {
+          const response = await GlobalApi.getCabang();
+          setCabang(response.data); // Adjust according to response structure
+        } catch (error) {
+          console.error("Error fetching cabang data:", error);
+        }
+      };
+
+      fetchCabang();
+
+      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+      setIsSidebarOpen(sidebarState);
+
+      const handleResize = () => {
+        setIsMobile(window.innerWidth <= 768);
+      };
+
+      handleResize();
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
+    }
+  }, [token, router]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   const handleBackClick = () => {
     router.back();
@@ -26,21 +66,36 @@ const AddUnitForm = () => {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+  // Handle form submission
+  const handleFormSubmit = async () => {
+    try {
+      const payload = {
+        cabang: selectedCabang,
+        unitKerja: unitKerja,
+      };
 
-    handleResize();
-    window.addEventListener("resize", handleResize);
+      // Send POST request to the API to save unit kerja data
+      const response = await GlobalApi.addUnitKerja(payload);
 
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+      // Reset the form after successful submission
+      setSelectedCabang("-- Cabang --");
+      setUnitKerja("");
+
+      toast.success("Unit Kerja berhasil ditambahkan!");
+
+      // Reload halaman setelah 2 detik
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+
+    } catch (error) {
+      toast.error("Gagal menambahkan Unit Kerja. Coba lagi nanti.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+      <Toaster />
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
@@ -52,7 +107,7 @@ const AddUnitForm = () => {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Rekap Meninggal</h1>
+              <h1 className="text-base">TAMBAH UNIT KERJA</h1>
             </div>
           </div>
         </header>
@@ -63,9 +118,8 @@ const AddUnitForm = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
             <div className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-6">
@@ -80,11 +134,16 @@ const AddUnitForm = () => {
                   Cabang
                 </label>
                 <select
-                  id="branch"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  className="shadow appearance-none border rounded w-full md:w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                  value={selectedCabang}
+                  onChange={(e) => setSelectedCabang(e.target.value)}
                 >
-                  <option>-- Nama Cabang --</option>
-                  {/* Add options here */}
+                  <option value="">-- Cabang --</option>
+                  {cabang.map((item) => (
+                    <option key={item.id} value={item.kecamatan}>
+                      {item.kecamatan}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="mb-6">
@@ -97,6 +156,8 @@ const AddUnitForm = () => {
                 <input
                   id="unit"
                   type="text"
+                  value={unitKerja}
+                  onChange={(e) => setUnitKerja(e.target.value)}
                   placeholder="Tambah Unit kerja"
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 />
@@ -105,6 +166,7 @@ const AddUnitForm = () => {
                 <button
                   className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                   type="button"
+                  onClick={handleFormSubmit}
                 >
                   TAMBAH UNIT KERJA
                 </button>
