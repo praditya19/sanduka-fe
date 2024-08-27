@@ -295,8 +295,6 @@ const FilterSection = ({
         selectedUnitKerja={selectedUnitKerja}
         handleChange={handleUnitKerjaChange}
       />
-    </div>
-    <div className="flex items-end gap-4 ml-28">
       <Button
         className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-1 rounded-lg flex items-center h-9"
         onClick={handleSearchClick}
@@ -359,7 +357,7 @@ const DataTable = ({
   handleVerifyUserClick,
 }) => (
   <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
-    <thead className="bg-gray-100 text-gray-600">
+    <thead className="bg-gray-100 text-gray-600 text-center">
       <tr>
         <th className="py-2 px-4 border-b">No</th>
         <th className="py-2 px-4 border-b">Foto</th>
@@ -380,7 +378,10 @@ const DataTable = ({
         </tr>
       ) : (
         (anggotaData || []).map((item, index) => (
-          <tr key={item.id} className="hover:bg-gray-50 text-sm cursor-pointer">
+          <tr
+            key={item.id}
+            className="hover:bg-gray-50 text-sm cursor-pointer text-center"
+          >
             <td className="py-2 px-4 border-b">{index + 1}</td>
             <td className="py-2 px-4 border-b">
               <Image
