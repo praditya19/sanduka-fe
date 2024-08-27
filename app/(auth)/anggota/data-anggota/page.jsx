@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Modal from "react-modal";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -22,42 +22,96 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 function DataAnggota() {
   const [maxItems, setMaxItems] = useState(10);
   const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
-  const [selectedUnitKerja, setSelectedUnitKerja] =
-    useState("-- Unit Kerja --");
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState("-- Unit Kerja --");
   const [selectedStatus, setSelectedStatus] = useState("Semua");
-  const [sortConfig, setSortConfig] = useState({
-    key: null,
-    direction: "ascending",
-  });
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "ascending" });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
-
+  const [anggota, setAnggota] = useState([]);
+  const [cabang, setCabang] = useState([]);
+  const [unitKerja, setUnitKerja] = useState([]);
   const [isCabangEnabled, setIsCabangEnabled] = useState(false);
   const [isUnitKerjaEnabled, setIsUnitKerjaEnabled] = useState(false);
-
+  const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { token } = useAuth();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
+    } else {
+      setLoading(false);
+      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+      setIsSidebarOpen(sidebarState);
+
+      const handleResize = () => {
+        setIsMobile(window.innerWidth <= 768);
+      };
+
+      handleResize();
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
     }
   }, [token, router]);
 
-  const calculateRetirementDate = (birthDate) => {
-    const [day, month, year] = birthDate.split(" ");
-    const birthYear = parseInt(year);
-    const birthMonth = new Date(`${month} 1, ${year}`).getMonth() + 1;
-    const retirementYear = birthYear + 60;
-    return `${birthMonth.toString().padStart(2, "0")}-${retirementYear}`;
+  useEffect(() => {
+    fetchAnggota();
+    fetchData();
+    fetchUnitKerja();
+  }, []);
+
+  useEffect(() => {
+    if (selectedCabang) {
+      const filtered = unitKerja.filter(uk => uk.cabang === selectedCabang);
+      setFilteredUnitKerja(filtered);
+    } else {
+      setFilteredUnitKerja([]);
+    }
+  }, [selectedCabang]);
+
+
+  const fetchAnggota = async () => {
+    try {
+      const page = 0; // Or the page number you want to fetch
+      const size = 10; // Or the number of items per page you want to fetch
+      const response = await GlobalApi.getAllAnggota(page, size);
+      setAnggota(response.data.content || []); // Use response.data.content if it's a Page object
+    } catch (error) {
+      console.error("Error fetching anggota:", error);
+      setAnggota([]); // Optionally, set to an empty array if there's an error
+    }
   };
 
-  const formatCurrency = (amount) => {
-    return `Rp ${parseInt(amount).toLocaleString("id-ID")}`;
+  const fetchData = async () => {
+    try {
+      const response = await GlobalApi.getCabang();
+      setCabang(response.data);
+    } catch (error) {
+      console.error("Error fetching cabang data:", error);
+    }
   };
+
+  const fetchUnitKerja = async () => {
+    try {
+      const response = await GlobalApi.getUnitKerja();
+      setUnitKerja(response.data);
+    } catch (error) {
+      console.error("Error fetching unit kerja data:", error);
+    }
+  };
+
+  const formatCurrency = (amount) => `Rp ${parseInt(amount).toLocaleString("id-ID")}`;
 
   const handlePrint = () => {
     const filteredDataForPrint = filteredData;
@@ -67,40 +121,14 @@ function DataAnggota() {
         <head>
           <title>Data Anggota</title>
           <style>
-            body {
-              font-family: Arial, sans-serif;
-              margin: 20px;
-            }
-            .title, .subtitle {
-              text-align: center;
-              margin-bottom: 10px;
-            }
-            .title {
-              font-size: 28px;
-              font-weight: bold;
-              color: #00796b;
-            }
-            .subtitle {
-              font-size: 20px;
-              font-weight: normal;
-              color: #555;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              border: 1px solid #ccc;
-            }
-            th, td {
-              padding: 8px;
-              border: 1px solid #ccc;
-            }
-            .header-row th[colspan="2"] {
-              text-align: center;
-            }
-            .total-row {
-              font-weight: bold;
-              background-color: #e0f2f1;
-            }
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .title, .subtitle { text-align: center; margin-bottom: 10px; }
+            .title { font-size: 28px; font-weight: bold; color: #00796b; }
+            .subtitle { font-size: 20px; font-weight: normal; color: #555; }
+            table { width: 100%; border-collapse: collapse; border: 1px solid #ccc; }
+            th, td { padding: 8px; border: 1px solid #ccc; }
+            .header-row th[colspan="2"] { text-align: center; }
+            .total-row { font-weight: bold; background-color: #e0f2f1; }
           </style>
         </head>
         <body>
@@ -118,35 +146,34 @@ function DataAnggota() {
             </thead>
             <tbody>
               ${filteredDataForPrint
-                .map(
-                  (item, index) => `
+        .map((item, index) => `
                     <tr>
                       <td>${index + 1}</td>
                       <td></td>
                       <td>
-                        <div class="font-bold">${item.nama}</div>
-                        <div>${item.npa}</div>
-                        <div>${item.tugas}</div>
+                        <div class="font-bold">${item.namaLengkap}</div>
+                        <div>${item.npaPgri}</div>
+                        <div>${item.jabatan}</div>
                       </td>
                       <td>
-                        <div>${item.lahir}, ${item.tanggal}</div>
-                        <div>${item.usia} Tahun</div>
-                        <div>Prediksi Pensiun: ${calculateRetirementDate(
-                          item.tanggal
-                        )}</div>
+                        <div>${item.tempatLahir},</div>
+                        <div>${formatDate(item.tanggalLahir)}</div>
+                        <div>${calculateAge(item.tanggalLahir)} Tahun</div>
+                        <div>${calculateRetirementDate(item.tanggalLahir, item.statusPegawai)}</div>
                       </td>
                       <td>
-                      <div>${item.kerja},</div>
-                        <div>anggota: ${item.gabung}</div>
-                        <div>${item.golongan}/${formatCurrency(
-                    item.iuran
-                  )}</div>
+                        <div>${item.cabang},</div>
+                        <div>${item.unitKerja}</div>
+                        <div>Anggota: ${item.tahunDiangkat ? item.tahunDiangkat : '-'}</div>
+                        <div>
+                          ${item.pangkatGolongan} || ${formatCurrency(item.iuran)}
+                        </div>
                       </td>
-                      <td></td>
+                      <td>
+                        <div>${item.status}</div>
+                      </td>
                     </tr>
-                  `
-                )
-                .join("")}
+                  `).join("")}
             </tbody>
           </table>
         </body>
@@ -158,29 +185,28 @@ function DataAnggota() {
     printWindow.close();
   };
 
-  const sortedData = React.useMemo(() => {
-    let sortableItems = [...membersData];
-    if (sortConfig !== null) {
+  const sortedData = useMemo(() => {
+    if (!Array.isArray(anggota)) return []; // Ensure it's an array
+
+    let sortableItems = [...anggota];
+
+    if (sortConfig && sortConfig.key) {
       sortableItems.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
+        const key = sortConfig.key;
+        const direction = sortConfig.direction === 'ascending' ? 1 : -1;
+
+        if (a[key] < b[key]) return direction * -1;
+        if (a[key] > b[key]) return direction;
         return 0;
       });
     }
+
     return sortableItems;
-  }, [membersData, sortConfig]);
+  }, [anggota, sortConfig]);
 
   const requestSort = (key) => {
     let direction = "ascending";
-    if (
-      sortConfig &&
-      sortConfig.key === key &&
-      sortConfig.direction === "ascending"
-    ) {
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === "ascending") {
       direction = "descending";
     }
     setSortConfig({ key, direction });
@@ -193,16 +219,17 @@ function DataAnggota() {
     return sortConfig.direction === "ascending" ? <FaSortUp /> : <FaSortDown />;
   };
 
-  const filteredData = sortedData.filter((item) => {
-    const statusFilter =
-      selectedStatus === "Semua" || item.anggota === selectedStatus;
-    const cabangFilter =
-      selectedCabang === "-- Cabang --" || item.cabang === selectedCabang;
-    const unitKerjaFilter =
-      selectedUnitKerja === "-- Unit Kerja --" ||
-      item.unitKerja === selectedUnitKerja;
-    return statusFilter && cabangFilter && unitKerjaFilter;
-  });
+  const filteredData = useMemo(() => {
+    return sortedData.filter((item) => {
+      const statusFilter =
+        selectedStatus === "Semua" || item.anggota === selectedStatus;
+      const cabangFilter =
+        selectedCabang === "-- Cabang --" || item.cabang === selectedCabang;
+      const unitKerjaFilter =
+        selectedUnitKerja === "-- Unit Kerja --" || item.unitKerja === selectedUnitKerja;
+      return statusFilter && cabangFilter && unitKerjaFilter;
+    });
+  }, [sortedData, selectedStatus, selectedCabang, selectedUnitKerja]);
 
   const jumlahAnggota = filteredData.length;
 
@@ -244,15 +271,6 @@ function DataAnggota() {
     }
   };
 
-  useEffect(() => {
-    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-    setIsSidebarOpen(sidebarState);
-  }, []);
-
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const router = useRouter();
-
   const handleBackClick = () => {
     router.back();
   };
@@ -263,18 +281,41 @@ function DataAnggota() {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
 
-    handleResize();
-    window.addEventListener("resize", handleResize);
+  const calculateAge = (birthDateString) => {
+    const birthDate = new Date(birthDateString);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDifference = today.getMonth() - birthDate.getMonth();
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
 
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+  const calculateRetirementDate = (birthDateString, employmentType) => {
+    const birthDate = new Date(birthDateString);
+    const retirementAge = employmentType === 'PNS' ? 60 : 58;
+    const retirementYear = birthDate.getFullYear() + retirementAge;
+    const retirementDate = new Date(retirementYear, birthDate.getMonth(), birthDate.getDate());
+
+    const formattedRetirementDate = retirementDate
+      .toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      .replace(/\//g, '-');
+
+    return formattedRetirementDate;
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
@@ -300,9 +341,8 @@ function DataAnggota() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="mb-4">
             <div className="flex flex-wrap items-start mt-14 justify-between">
@@ -312,20 +352,25 @@ function DataAnggota() {
                   value={selectedCabang}
                   onChange={(e) => setSelectedCabang(e.target.value)}
                 >
-                  <option>-- Cabang --</option>
-                  <option>BANGSRI</option>
-                  <option>JEPARA</option>
-                  {/* Add other options as needed */}
+                  <option value="">-- Cabang --</option>
+                  {cabang.map(item => (
+                    <option key={item.id} value={item.kecamatan}>
+                      {item.kecamatan}
+                    </option>
+                  ))}
                 </select>
+
                 <select
                   className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
                   value={selectedUnitKerja}
                   onChange={(e) => setSelectedUnitKerja(e.target.value)}
                 >
-                  <option>-- Unit Kerja --</option>
-                  <option>SMAN 2 Jepara</option>
-                  <option>SDN 3 Jepara</option>
-                  {/* Add other options as needed */}
+                  <option value="">-- Unit Kerja --</option>
+                  {filteredUnitKerja.map(item => (
+                    <option key={item.id} value={item.unitKerja}>
+                      {item.unitKerja}
+                    </option>
+                  ))}
                 </select>
                 <select
                   className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
@@ -459,37 +504,32 @@ function DataAnggota() {
                       />
                     </td>
                     <td className="p-2 md:p-3 border">
-                      <div className="font-bold">{item.nama}</div>
-                      <div>{item.npa}</div>
-                      <div>{item.tugas}</div>
+                      <div className="font-bold">{item.namaLengkap}</div>
+                      <div>{item.npaPgri}</div>
+                      <div>{item.jabatan}</div>
                     </td>
                     <td className="p-2 md:p-3 border">
-                      <div>
-                        {item.lahir}, {item.tanggal}
-                      </div>
-                      <div>{item.usia} Tahun</div>
-                      <div>
-                        Prediksi Pensiun:{" "}
-                        {calculateRetirementDate(item.tanggal)}
-                      </div>
+                      <div>{item.tempatLahir},</div>
+                      <div>{formatDate(item.tanggalLahir)}</div>
+                      <div>{calculateAge(item.tanggalLahir)} Tahun</div>
+                      <div>{calculateRetirementDate(item.tanggalLahir, item.statusPegawai)}</div>
                     </td>
                     <td className="p-2 md:p-3 border">
                       <div>{item.cabang},</div>
-                      <div>{item.kerja}</div>
-                      <div>Anggota: {item.gabung}</div>
+                      <div>{item.unitKerja}</div>
+                      <div>Anggota: {item.tahunDiangkat ? item.tahunDiangkat : '-'}</div>
                       <div>
-                        {item.golongan}/{formatCurrency(item.iuran)}
+                        {item.pangkatGolongan} || {formatCurrency(item.iuran)}
                       </div>
                     </td>
                     <td className="p-2 text-center md:p-3 border">
                       <div
-                        className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold shadow-sm sm:ml-3 sm:w-auto ${
-                          item.anggota === "Tidak Aktif"
-                            ? "bg-red-200 text-red-900"
-                            : "bg-green-200 text-green-900"
-                        }`}
+                        className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
+                          ? "bg-red-200 text-red-900"
+                          : "bg-green-200 text-green-900"
+                          }`}
                       >
-                        {item.anggota}
+                        {item.status}
                       </div>
                     </td>
                     <td className="p-2 md:p-3 border">
