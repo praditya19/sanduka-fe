@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -9,153 +9,60 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
-
-const anggota = [
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "NALUMSARI",
-    detail: "Menjadi Anggota Baru",
-  },
-  {
-    date: "Senin, 01/07/2024 7:36:17",
-    data: "REDZA ABIDURAHMAN 33200310649 JEPARA, 1997-02-10 SDN KALIPUCANGWETAN 1 27 Tahun",
-    cabang: "WELAHAN",
-    detail: "Menjadi Anggota Baru",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "NALUMSARI",
-    detail: "Meninggal",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "NALUMSARI",
-    detail: "Pensiun",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "NALUMSARI",
-    detail: "Keluar",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "NALUMSARI",
-    detail: "Meninggal",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "NALUMSARI",
-    detail: "Pensiun",
-  },
-  {
-    date: "Senin, 01/07/2024 8:00:28",
-    data: "MARIA ULFA 33200410494 Jepara, 1992-09-10 SDN MAYONGLOR 5 32 Tahun",
-    cabang: "MAYONG",
-    detail: "Menjadi Anggota Baru",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "NALUMSARI",
-    detail: "Meninggal",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "NALUMSARI",
-    detail: "Keluar",
-  },
-  {
-    date: "Senin, 01/07/2024 9:07:12",
-    data: " NINA ERVIANA 33200307436 KUDUS, 1997-12-07 SDN BUGO 3 27 Tahun",
-    cabang: "WELAHAN",
-    detail: "Menjadi Anggota Baru",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "NALUMSARI",
-    detail: "Meninggal",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "NALUMSARI",
-    detail: "Pensiun",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "NALUMSARI",
-    detail: "Keluar",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "KEDUNG",
-    detail: "Meninggal",
-  },
-  {
-    date: "Senin, 01/07/2024 8:00:28",
-    data: "MARIA ULFA 33200410494 Jepara, 1992-09-10 SDN MAYONGLOR 5 32 Tahun",
-    cabang: "KEMBANG",
-    detail: "Menjadi Anggota Baru",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "NALUMSARI",
-    detail: "Pensiun",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "BATEALIT",
-    detail: "Meninggal",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "NALUMSARI",
-    detail: "Menjadi Anggota Baru",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "BATEALIT",
-    detail: "Keluar",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "NALUMSARI",
-    detail: "Pensiun",
-  },
-  {
-    date: "Senin, 01/07/2024 0:09:08",
-    data: "Nurul Huda 33201222192 Jepara, 1998-12-22 SDN BLIMBINGREJO 2 26 Tahun",
-    cabang: "BANGSRI",
-    detail: "Meninggal",
-  },
-];
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 const DataTable = () => {
   const [detailFilter, setDetailFilter] = useState("");
   const [cabangFilter, setCabangFilter] = useState("");
+  const [cabangOptions, setCabangOptions] = useState([]);
+  const [anggotaData, setAnggotaData] = useState([]); // Initialize as an empty array
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filteredData = anggota.filter(
+  const fetchCabangData = async () => {
+    try {
+      const response = await GlobalApi.getCabang();
+      setCabangOptions(response.data);
+    } catch (error) {
+      console.error("Error fetching cabang data:", error);
+    }
+  };
+
+  const fetchAnggotaData = async () => {
+    try {
+      const response = await GlobalApi.getAllAnggota();
+      if (Array.isArray(response.data)) {
+        setAnggotaData(response.data); // Ensure the data is an array
+      } else {
+        console.error("Unexpected data format:", response.data);
+        setAnggotaData([]); // Set to empty array if data format is unexpected
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching anggota data:", error);
+      setError("Failed to load data");
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCabangData();
+    fetchAnggotaData();
+  }, []);
+
+  const filteredData = anggotaData.filter(
     (item) =>
       (detailFilter === "" || item.detail === detailFilter) &&
       (cabangFilter === "" || item.cabang === cabangFilter)
   );
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div className="w-full p-4 container shadow-lg rounded-lg">
@@ -179,60 +86,46 @@ const DataTable = () => {
             <select
               value={cabangFilter}
               onChange={(e) => setCabangFilter(e.target.value)}
+              a
               className="p-2 border rounded max-w-sm w-full"
             >
-              <option value="">Select Cabang Filter</option>
-              <option value="BANGSRI">BANGSRI</option>
-              <option value="BATEALIT">BATEALIT</option>
-              <option value="CABSUS DINAS PENDIDIKAN">
-                CABSUS DINAS PENDIDIKAN
-              </option>
-              <option value="CABSUS IGTKI">CABSUS IGTKI</option>
-              <option value="DONOROJO">DONOROJO</option>
-              <option value="JEPARA">JEPARA</option>
-              <option value="BATEALIT">KALINYAMATAN</option>
-              <option value="KARIMUNJAWA">KARIMUNJAWA</option>
-              <option value="KEDUNG">KEDUNG</option>
-              <option value="KELING">KELING</option>
-              <option value="KEMBANG">KEMBANG</option>
-              <option value="MAYONG">MAYONG</option>
-              <option value="MLONGGO">MLONGGO</option>
-              <option value="NALUMSARI">NALUMSARI</option>
-              <option value="PAKIS AJI">PAKIS AJI</option>
-              <option value="PECANGAAN">PECANGAAN</option>
-              <option value="TAHUNAN">TAHUNAN</option>
-              <option value="WELAHAN">WELAHAN</option>
+              <option>Pilih Cabang</option>
+              {cabangOptions.map((cabang) => (
+                <option key={cabang.idKecamatan} value={cabang.kecamatan}>
+                  {cabang.kecamatan}
+                </option>
+              ))}
             </select>
           </div>
           <Table className="w-full table-auto mb-8 text-sm">
             <TableHeader className="p-2 md:p-3 border bg-teal-700 ">
               <TableRow>
                 <TableHead
-                  rowspan="2"
+                  rowSpan="2"
                   className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
                 >
                   No
                 </TableHead>
                 <TableHead
-                  rowspan="2"
+                  rowSpan="2"
                   className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
                 >
                   Date
                 </TableHead>
                 <TableHead
-                  rowspan="2"
+                  rowSpan="2"
                   className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
                 >
                   Data
                 </TableHead>
                 <TableHead
-                  rowspan="2"
+                  rowSpan="2"
                   className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
                 >
                   Cabang
                 </TableHead>
                 <TableHead
-                  rowspan="2"
+                  rowSpan="2"
                   className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
                 >
                   Detail
