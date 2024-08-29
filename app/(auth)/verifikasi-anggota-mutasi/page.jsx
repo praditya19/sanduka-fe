@@ -406,7 +406,7 @@ const DataTable = ({
 
   return (
     <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
-      <thead className="bg-gray-100 text-gray-600 text-center">
+      <thead className="bg-teal-700 text-white text-center">
         <tr>
           <th className="py-2 px-4 border-b">No</th>
           {!isMobile && <th className="py-2 px-4 border-b">Foto</th>}

@@ -19,21 +19,20 @@ const AddUnitForm = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
-  // Fetch cabang data from API
+  const fetchCabang = async () => {
+    try {
+      const response = await GlobalApi.getCabang();
+      setCabang(response.data);
+    } catch (error) {
+      console.error("Error fetching cabang data:", error);
+    }
+  };
+
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
     } else {
       setLoading(false);
-      const fetchCabang = async () => {
-        try {
-          const response = await GlobalApi.getCabang();
-          setCabang(response.data); // Adjust according to response structure
-        } catch (error) {
-          console.error("Error fetching cabang data:", error);
-        }
-      };
-
       fetchCabang();
 
       const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -66,7 +65,6 @@ const AddUnitForm = () => {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  // Handle form submission
   const handleFormSubmit = async () => {
     try {
       const payload = {
@@ -87,7 +85,6 @@ const AddUnitForm = () => {
       setTimeout(() => {
         window.location.reload();
       }, 2000);
-
     } catch (error) {
       toast.error("Gagal menambahkan Unit Kerja. Coba lagi nanti.");
     }
@@ -99,7 +96,6 @@ const AddUnitForm = () => {
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -118,8 +114,9 @@ const AddUnitForm = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
             <div className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-6">
