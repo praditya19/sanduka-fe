@@ -11,10 +11,10 @@ import { useRouter } from "next/navigation";
 
 const AddUnitForm = () => {
   const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
-  const [unitKerja, setUnitKerja] = useState(""); // State for unit kerja input
+  const [unitKerja, setUnitKerja] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [cabang, setCabang] = useState([]); // State for cabang data from API
+  const [cabang, setCabang] = useState([]);
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -71,17 +71,11 @@ const AddUnitForm = () => {
         cabang: selectedCabang,
         unitKerja: unitKerja,
       };
-
-      // Send POST request to the API to save unit kerja data
       const response = await GlobalApi.addUnitKerja(payload);
-
-      // Reset the form after successful submission
       setSelectedCabang("-- Cabang --");
       setUnitKerja("");
 
       toast.success("Unit Kerja berhasil ditambahkan!");
-
-      // Reload halaman setelah 2 detik
       setTimeout(() => {
         window.location.reload();
       }, 2000);

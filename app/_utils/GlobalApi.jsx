@@ -126,7 +126,7 @@ const RejectUser = async (userId) => {
   }
 };
 
-// Add Unit Kerja
+// Pengaturan
 const addUnitKerja = async (payload) => {
   try {
     const response = await axiosClient.post("/api/unit-kerja/create", payload);
@@ -134,6 +134,29 @@ const addUnitKerja = async (payload) => {
   } catch (error) {
     console.error("Error adding unit kerja:", error);
     throw error;
+  }
+};
+const addCabang = async (payload) => {
+  try {
+    const response = await axiosClient.post("/api/daftarCabang", payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error adding unit kerja:", error);
+    throw error;
+  }
+};
+const deleteCabang = async (idCabang) => {
+  try {
+    const response = await axiosClient.delete(`/api/daftarCabang/${idCabang}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
   }
 };
 
@@ -150,4 +173,6 @@ export default {
   getGolonganJabatan,
   getUnitKerja,
   addUnitKerja,
+  addCabang,
+  deleteCabang,
 };
