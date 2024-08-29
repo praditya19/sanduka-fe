@@ -63,13 +63,13 @@ const VerifikasiAnggotaMutasi = () => {
           if (item.foto) {
             try {
               const decodedString = atob(item.foto);
-              fotoBase64Array.push(decodedString); // Add decoded image to the array
+              fotoBase64Array.push(decodedString);
             } catch (error) {
               console.error("Error decoding Base64:", error);
-              fotoBase64Array.push(null); // Ensure the array length matches the data length
+              fotoBase64Array.push(null);
             }
           } else {
-            fotoBase64Array.push(null); // No image for this item
+            fotoBase64Array.push(null);
           }
         });
       } else {
@@ -184,10 +184,14 @@ const VerifikasiAnggotaMutasi = () => {
     setFilteredUnitKerja(filteredUnitKerja);
   };
 
-  const handleCabangChange = (e) => {
-    const selectedKecamatan = e.target.value;
+  const handleCabangChange = (value) => {
+    const selectedKecamatan = value;
     setSelectedCabang(selectedKecamatan);
     updateUnitKerja(selectedKecamatan);
+  };
+
+  const handleUnitKerjaChange = (value) => {
+    setSelectedUnitKerja(value);
   };
 
   const handlePageChange = (newPage) => {
@@ -240,6 +244,7 @@ const VerifikasiAnggotaMutasi = () => {
               unitKerja={filteredUnitKerja}
               selectedCabang={selectedCabang}
               handleCabangChange={handleCabangChange}
+              handleUnitKerjaChange={handleUnitKerjaChange}
               handleSearchClick={handleSearchClick}
               handleResetClick={handleResetClick}
             />
@@ -341,41 +346,118 @@ const FilterSection = ({
   </div>
 );
 
-const DropdownCabang = ({ label, options, handleChange, selectedCabang }) => (
-  <div>
-    <label className="block mb-2 font-semibold text-gray-800">{label}</label>
-    <select
-      className="border rounded-lg p-2 w-56 bg-white shadow-sm"
-      value={selectedCabang}
-      onChange={handleChange}
-    >
-      <option>Pilih {label}</option>
-      {options.map((item, index) => (
-        <option key={item.idKecamatan} value={item.kecamatan}>
-          {item.kecamatan}
-        </option>
-      ))}
-    </select>
-  </div>
-);
+const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
+  const [query, setQuery] = React.useState("");
+  const [showDropdown, setShowDropdown] = React.useState(false);
 
-const DropdownUnitKerja = ({ label, options, disabled, handleChange }) => (
-  <div>
-    <label className="block mb-2 font-semibold text-gray-800">{label}</label>
-    <select
-      className="border rounded-lg p-2 w-56 bg-white shadow-sm"
-      disabled={disabled}
-      onChange={handleChange}
-    >
-      <option value="">Pilih {label}</option>
-      {options.map((item) => (
-        <option key={item.id} value={item.unitKerja}>
-          {item.unitKerja}
-        </option>
-      ))}
-    </select>
-  </div>
-);
+  const filteredOptions = options.filter((option) =>
+    option.kecamatan.toLowerCase().includes(query.toLowerCase())
+  );
+
+  return (
+    <div className="relative inline-block">
+      <label className="block mb-2 font-semibold text-gray-800">{label}</label>
+      <input
+        type="text"
+        className="border rounded-lg p-2 w-56 bg-white shadow-sm"
+        placeholder={`Pilih ${label}`}
+        value={query || selectedCabang}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          handleChange(e.target.value);
+        }}
+        onFocus={() => setShowDropdown(true)}
+        onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+      />
+      {showDropdown && (
+        <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 max-h-48 overflow-y-auto w-full">
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map((item) => (
+              <li
+                key={item.idKecamatan}
+                className="p-2 cursor-pointer hover:bg-gray-100"
+                onClick={() => {
+                  setQuery(item.kecamatan);
+                  setShowDropdown(false);
+                  handleChange(item.kecamatan);
+                }}
+              >
+                {item.kecamatan}
+              </li>
+            ))
+          ) : (
+            <li className="p-2 text-gray-500">No results found</li>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+};
+
+const DropdownUnitKerja = ({
+  label,
+  options,
+  disabled,
+  selectedUnitKerja,
+  handleChange,
+}) => {
+  const [query, setQuery] = React.useState(selectedUnitKerja || "");
+  const [showDropdown, setShowDropdown] = React.useState(false);
+
+  const filteredOptions = options.filter((option) =>
+    option.unitKerja.toLowerCase().includes(query.toLowerCase())
+  );
+
+  const handleInputChange = (e) => {
+    setQuery(e.target.value);
+    handleChange(e.target.value);
+  };
+
+  const handleOptionSelect = (item) => {
+    setQuery(item.unitKerja);
+    setShowDropdown(false);
+    handleChange(item.unitKerja);
+  };
+
+  const handleBlur = () => {
+    setTimeout(() => setShowDropdown(false), 200);
+  };
+
+  return (
+    <div className="relative inline-block w-56">
+      <label className="block mb-2 font-semibold text-gray-800">{label}</label>
+      <input
+        type="text"
+        className={`border rounded-lg p-2 w-full bg-white shadow-sm ${
+          disabled ? "bg-gray-200 cursor-not-allowed" : ""
+        }`}
+        placeholder={`Pilih ${label}`}
+        value={query}
+        onChange={handleInputChange}
+        onFocus={() => !disabled && setShowDropdown(true)}
+        onBlur={handleBlur}
+        disabled={disabled}
+      />
+      {showDropdown && !disabled && (
+        <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 max-h-48 overflow-y-auto w-full">
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map((item) => (
+              <li
+                key={item.id}
+                className="p-2 cursor-pointer hover:bg-gray-100"
+                onClick={() => handleOptionSelect(item)}
+              >
+                {item.unitKerja}
+              </li>
+            ))
+          ) : (
+            <li className="p-2 text-gray-500">No results found</li>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+};
 
 const DataTable = ({
   anggotaData,
@@ -434,7 +516,7 @@ const DataTable = ({
           (anggotaData || []).map((item, index) => (
             <React.Fragment key={item.id}>
               <tr className="hover:bg-gray-50 text-sm cursor-pointer text-center">
-                <td className="py-2 px-4 border-b">{index + 1}</td>
+                <td className="py-2 px-4 border-b">{item.id}</td>
                 {!isMobile && (
                   <td className="py-2 px-4 border-b">
                     <Image
