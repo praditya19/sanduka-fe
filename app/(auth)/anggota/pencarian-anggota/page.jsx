@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Modal from "react-modal";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -17,28 +17,92 @@ import { useRouter } from "next/navigation";
 import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
 import Image from "next/image";
+import { useAuth } from "@/app/AuthContext";
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 function PencarianAnggota() {
   const [maxItems, setMaxItems] = useState(10);
   const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
-  const [selectedUnitKerja, setSelectedUnitKerja] =
-    useState("-- Unit Kerja --");
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState("-- Unit Kerja --");
   const [selectedStatus, setSelectedStatus] = useState("Semua");
-  const [selectedNama, setSelectedNama] = useState("");
-  const [sortConfig, setSortConfig] = useState({
-    key: null,
-    direction: "ascending",
-  });
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "ascending" });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
+  const [anggota, setAnggota] = useState([]);
+  const [cabang, setCabang] = useState([]);
+  const [unitKerja, setUnitKerja] = useState([]);
+  const [isCabangEnabled, setIsCabangEnabled] = useState(false);
+  const [isUnitKerjaEnabled, setIsUnitKerjaEnabled] = useState(false);
+  const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { token } = useAuth();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [selectedNama, setSelectedNama] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [query, setQuery] = useState('');
 
-  const calculateRetirementDate = (birthDate) => {
-    const [day, month, year] = birthDate.split(" ");
-    const birthYear = parseInt(year);
-    const birthMonth = new Date(`${month} 1, ${year}`).getMonth() + 1;
-    const retirementYear = birthYear + 60;
-    return `${birthMonth.toString().padStart(2, "0")}-${retirementYear}`;
+  useEffect(() => {
+    if (selectedCabang) {
+      const filtered = unitKerja.filter(uk => uk.cabang === selectedCabang);
+      setFilteredUnitKerja(filtered);
+    } else {
+      setFilteredUnitKerja([]);
+    }
+
+    fetchAnggota();
+    fetchData();
+    fetchUnitKerja();
+
+    if (!token) {
+      router.push("/sign-in");
+    } else {
+      setLoading(false);
+      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+      setIsSidebarOpen(sidebarState);
+
+      const handleResize = () => {
+        setIsMobile(window.innerWidth <= 768);
+      };
+
+      handleResize();
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
+    }
+  }, [token, router, selectedCabang]);
+
+  const fetchAnggota = async () => {
+    try {
+      const page = 0; // Or the page number you want to fetch
+      const size = 10; // Or the number of items per page you want to fetch
+      const response = await GlobalApi.getAllAnggota(page, size);
+      setAnggota(response.data.content || []); // Use response.data.content if it's a Page object
+    } catch (error) {
+      console.error("Error fetching anggota:", error);
+      setAnggota([]); // Optionally, set to an empty array if there's an error
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      const response = await GlobalApi.getCabang();
+      setCabang(response.data);
+    } catch (error) {
+      console.error("Error fetching cabang data:", error);
+    }
+  };
+
+  const fetchUnitKerja = async () => {
+    try {
+      const response = await GlobalApi.getUnitKerja();
+      setUnitKerja(response.data);
+    } catch (error) {
+      console.error("Error fetching unit kerja data:", error);
+    }
   };
 
   const formatCurrency = (amount) => {
@@ -145,21 +209,24 @@ function PencarianAnggota() {
     printWindow.close();
   };
 
-  const sortedData = React.useMemo(() => {
-    let sortableItems = [...membersData];
-    if (sortConfig !== null) {
+  const sortedData = useMemo(() => {
+    if (!Array.isArray(anggota)) return []; // Ensure it's an array
+
+    let sortableItems = [...anggota];
+
+    if (sortConfig && sortConfig.key) {
       sortableItems.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
+        const key = sortConfig.key;
+        const direction = sortConfig.direction === 'ascending' ? 1 : -1;
+
+        if (a[key] < b[key]) return direction * -1;
+        if (a[key] > b[key]) return direction;
         return 0;
       });
     }
+
     return sortableItems;
-  }, [membersData, sortConfig]);
+  }, [anggota, sortConfig]);
 
   const requestSort = (key) => {
     let direction = "ascending";
@@ -180,29 +247,36 @@ function PencarianAnggota() {
     return sortConfig.direction === "ascending" ? <FaSortUp /> : <FaSortDown />;
   };
 
-  const filteredData = sortedData.filter((item) => {
-    const query = searchQuery.toLowerCase();
-    const statusFilter =
-      selectedStatus === "Semua" || item.anggota === selectedStatus;
-    const cabangFilter =
-      selectedCabang === "-- Cabang --" || item.cabang === selectedCabang;
-    const unitKerjaFilter =
-      selectedUnitKerja === "-- Unit Kerja --" ||
-      item.unitKerja === selectedUnitKerja;
-    const nama = item.nama.toLowerCase().includes(query);
-    const npa = item.npa.toLowerCase().includes(query);
-    const cabang = item.cabang.toLowerCase().includes(query);
-    const unit = item.kerja.toLowerCase().includes(query);
-    const lahir = item.lahir.toLowerCase().includes(query);
-    const tanggal = item.tanggal.toLowerCase().includes(query);
-
-    return (
-      statusFilter &&
-      cabangFilter &&
-      unitKerjaFilter &&
-      (nama || npa || tanggal || cabang || lahir || unit)
-    );
-  });
+  const filteredData = useMemo(() => {
+    return sortedData.filter((item) => {
+      const statusFilter =
+        selectedStatus === "Semua" || item.anggota === selectedStatus;
+      const cabangFilter =
+        selectedCabang === "-- Cabang --" || item.cabang === selectedCabang;
+      const unitKerjaFilter =
+        selectedUnitKerja === "-- Unit Kerja --" || item.unitKerja === selectedUnitKerja;
+  
+      // Ensure query is lowercase
+      const lowerCaseQuery = query.toLowerCase();
+  
+      // Use optional chaining and provide default values to prevent errors
+      const nama = item.nama?.toLowerCase().includes(lowerCaseQuery) ?? false;
+      const npa = item.npa?.toLowerCase().includes(lowerCaseQuery) ?? false;
+      const cabang = item.cabang?.toLowerCase().includes(lowerCaseQuery) ?? false;
+      const unitKerja = item.kerja?.toLowerCase().includes(lowerCaseQuery) ?? false;
+      const lahir = item.lahir?.toLowerCase().includes(lowerCaseQuery) ?? false;
+      const tanggal = item.tanggal?.toLowerCase().includes(lowerCaseQuery) ?? false;
+  
+      return (
+        statusFilter &&
+        cabangFilter &&
+        unitKerjaFilter &&
+        (nama || npa || cabang || unitKerja || lahir || tanggal)
+      );
+    });
+  }, [sortedData, selectedStatus, selectedCabang, selectedUnitKerja, query]); // Add dependencies
+  
+  
 
   const jumlahAnggota = filteredData.length;
 
@@ -220,10 +294,6 @@ function PencarianAnggota() {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
     setIsSidebarOpen(sidebarState);
   }, []);
-
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const router = useRouter();
 
   const handleBackClick = () => {
     router.back();
@@ -247,6 +317,42 @@ function PencarianAnggota() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
+  const calculateAge = (birthDateString) => {
+    const birthDate = new Date(birthDateString);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDifference = today.getMonth() - birthDate.getMonth();
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const calculateRetirementDate = (birthDateString, employmentType) => {
+    const birthDate = new Date(birthDateString);
+    const retirementAge = employmentType === 'PNS' ? 60 : 58;
+    const retirementYear = birthDate.getFullYear() + retirementAge;
+    const retirementDate = new Date(retirementYear, birthDate.getMonth(), birthDate.getDate());
+
+    const formattedRetirementDate = retirementDate
+      .toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      .replace(/\//g, '-');
+
+    return formattedRetirementDate;
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div>
@@ -280,33 +386,31 @@ function PencarianAnggota() {
             <div className="mb-4">
               <div className="flex flex-wrap items-start mt-16 justify-between">
                 <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
-                  <select
-                    className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                    value={selectedCabang}
-                    onChange={(e) => setSelectedCabang(e.target.value)}
-                  >
-                    <option>-- Cabang --</option>
-                    <option>BANGSRI</option>
-                    <option>JEPARA</option>
-                    {/* Add other options as needed */}
-                  </select>
-                  <select
-                    className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                    value={selectedUnitKerja}
-                    onChange={(e) => setSelectedUnitKerja(e.target.value)}
-                  >
-                    <option>-- Unit Kerja --</option>
-                    <option>SMAN 2 Jepara</option>
-                    <option>SDN 3 Jepara</option>
-                  </select>
-                  {/* <select
-              className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-              value={selectedNama}
-              onChange={(e) => setSelectedNama(e.target.value)}
-            >
-              <option>-- Nama Anggota --</option>
-              <option>Nanda Dwi Kurniawan</option>
-            </select> */}
+                <select
+                  className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                  value={selectedCabang}
+                  onChange={(e) => setSelectedCabang(e.target.value)}
+                >
+                  <option value="">Pilih Cabang</option>
+                  {cabang.map(item => (
+                    <option key={item.id} value={item.kecamatan}>
+                      {item.kecamatan}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                  value={selectedUnitKerja}
+                  onChange={(e) => setSelectedUnitKerja(e.target.value)}
+                >
+                  <option value="">Pilih Unit Kerja</option>
+                  {filteredUnitKerja.map(item => (
+                    <option key={item.id} value={item.unitKerja}>
+                      {item.unitKerja}
+                    </option>
+                  ))}
+                </select>
                   <input
                     className="shadow appearance-none border rounded w-full md:w-80 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
                     type="text"
@@ -419,54 +523,49 @@ function PencarianAnggota() {
                 <tbody>
                   {filteredData.slice(0, maxItems).map((item, index) => (
                     <tr
-                      key={index}
-                      className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                    >
-                      <td className="p-2 md:p-3 border text-center">
-                        {index + 1}
-                      </td>
-                      <td className="p-2 md:p-3 border">
-                        <Image
-                          src={item.photoUrl}
-                          className="rounded-full mx-auto"
-                          width={100}
-                          height={100}
-                        />
-                      </td>
-                      <td className="p-2 md:p-3 border">
-                        <div className="font-bold">{item.nama}</div>
-                        <div>{item.npa}</div>
-                        <div>{item.tugas}</div>
-                      </td>
-                      <td className="p-2 md:p-3 border">
-                        <div>
-                          {item.lahir}, {item.tanggal}
-                        </div>
-                        <div>{item.usia} Tahun</div>
-                        <div>
-                          Prediksi Pensiun:{" "}
-                          {calculateRetirementDate(item.tanggal)}
-                        </div>
-                      </td>
-                      <td className="p-2 md:p-3 border">
-                        <div>{item.cabang},</div>
-                        <div>{item.kerja}</div>
-                        <div>anggota: {item.gabung}</div>
-                        <div>
-                          {item.golongan}/{formatCurrency(item.iuran)}
-                        </div>
-                      </td>
-                      <td className="p-2 text-center md:p-3 border">
-                        <div
-                          className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold shadow-sm sm:ml-3 sm:w-auto ${
-                            item.anggota === "Tidak Aktif"
-                              ? "bg-red-200 text-red-900"
-                              : "bg-green-200 text-green-900"
+                    key={index}
+                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                  >
+                    <td className="p-2 md:p-3 border text-center">
+                      {index + 1}
+                    </td>
+                    <td className="p-2 md:p-3 border">
+                      <Image
+                        src={item.photoUrl}
+                        className="rounded-full mx-auto"
+                        width={100}
+                        height={100}
+                      />
+                    </td>
+                    <td className="p-2 md:p-3 border">
+                      <div className="font-bold text-sm">{item.namaLengkap}</div>
+                      <div className="text-sm">{item.npaPgri}</div>
+                      <div className="text-sm">{item.jabatan}</div>
+                    </td>
+                    <td className="p-2 md:p-3 border">
+                      <div className="text-sm">{item.tempatLahir},</div>
+                      <div className="text-sm">{formatDate(item.tanggalLahir)}</div>
+                      <div className="text-sm">{calculateAge(item.tanggalLahir)} Tahun</div>
+                      <div className="text-sm">Pensiun : {calculateRetirementDate(item.tanggalLahir, item.statusPegawai)}</div>
+                    </td>
+                    <td className="p-2 md:p-3 border">
+                      <div className="text-sm">{item.cabang},</div>
+                      <div className="text-sm">{item.unitKerja}</div>
+                      <div className="text-sm">Anggota: {item.tahunDiangkat ? item.tahunDiangkat : '-'}</div>
+                      <div className="text-sm">
+                        {item.pangkatGolongan} || {formatCurrency(item.iuran)}
+                      </div>
+                    </td>
+                    <td className="p-2 text-center md:p-3 border">
+                      <div
+                        className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
+                          ? "bg-red-200 text-red-900"
+                          : "bg-green-200 text-green-900"
                           }`}
-                        >
-                          {item.anggota}
-                        </div>
-                      </td>
+                      >
+                        {item.status}
+                      </div>
+                    </td>
                       <td className="p-2 md:p-3 border">
                         <div className="flex justify-center space-x-2">
                           {/* <Link href="#" className="text-white bg-blue-500 p-2 border rounded-md">

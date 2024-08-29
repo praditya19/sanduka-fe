@@ -56,7 +56,7 @@ const icons = [
   },
   {
     icon: faUsersGear,
-    label: "Anggota by Name",
+    label: "By Name",
     href: "/anggota/by-name",
     color: "text-yellow-500",
   },
