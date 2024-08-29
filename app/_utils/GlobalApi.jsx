@@ -111,6 +111,20 @@ const verifyUser = async (userId) => {
     }
   }
 };
+const RejectUser = async (userId) => {
+  try {
+    const response = await axiosClient.delete(`/api/auth/user/${userId}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
 
 // Add Unit Kerja
 const addUnitKerja = async (payload) => {
@@ -130,6 +144,7 @@ export default {
   getAllAnggota,
   getUnverifiedUsers,
   verifyUser,
+  RejectUser,
   getCabang,
   getJabatan,
   getGolonganJabatan,

@@ -10,6 +10,8 @@ import {
   faUser,
   faArrowLeft,
   faUndo,
+  faPlusCircle,
+  faMinusCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
@@ -87,6 +89,18 @@ const VerifikasiAnggotaMutasi = () => {
     try {
       const response = await GlobalApi.verifyUser(userId);
       toast.success("Pengguna berhasil diverifikasi!");
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      console.error("Error fetching cabang:", error);
+    }
+  };
+
+  const rejectUser = async (userId) => {
+    try {
+      const response = await GlobalApi.RejectUser(userId);
+      toast.success("Pengguna berhasil diHapus!");
       setTimeout(() => {
         window.location.reload();
       }, 2000);
@@ -195,6 +209,10 @@ const VerifikasiAnggotaMutasi = () => {
     updateVerifyUser(rowId);
   };
 
+  const handleRejectUserClick = (rowId) => {
+    rejectUser(rowId);
+  };
+
   const handleResetClick = () => {
     setSelectedCabang("");
     setFilteredUnitKerja([]);
@@ -232,6 +250,7 @@ const VerifikasiAnggotaMutasi = () => {
                 handleUserClick={handleUserClick}
                 fotoBase64={fotoBase64}
                 handleVerifyUserClick={handleVerifyUserClick}
+                handleRejectUserClick={handleRejectUserClick}
               />
             </div>
 
@@ -250,6 +269,8 @@ const VerifikasiAnggotaMutasi = () => {
           selectedRow={selectedRow}
           handleClosePopup={handleClosePopup}
           fotoBase64={fotoBase64}
+          handleVerifyUserClick={handleVerifyUserClick}
+          handleRejectUserClick={handleRejectUserClick}
         />
       )}
     </div>
@@ -281,35 +302,41 @@ const FilterSection = ({
   handleResetClick,
 }) => (
   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-16 text-sm">
-    <div className="flex items-end gap-4">
-      <DropdownCabang
-        label="Cabang"
-        options={cabang}
-        selectedCabang={selectedCabang}
-        handleChange={handleCabangChange}
-      />
-      <DropdownUnitKerja
-        label="Unit Kerja"
-        options={unitKerja}
-        disabled={!selectedCabang}
-        selectedUnitKerja={selectedUnitKerja}
-        handleChange={handleUnitKerjaChange}
-      />
-      <Button
-        className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-1 rounded-lg flex items-center h-9"
-        onClick={handleSearchClick}
-      >
-        <FontAwesomeIcon icon={faSearch} size="lg" />
-        <span className="ml-2">Cari data filter</span>
-      </Button>
+    <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
+      <div className="w-full md:w-auto">
+        <DropdownCabang
+          label="Cabang"
+          options={cabang}
+          selectedCabang={selectedCabang}
+          handleChange={handleCabangChange}
+        />
+      </div>
+      <div className="w-full md:w-auto">
+        <DropdownUnitKerja
+          label="Unit Kerja"
+          options={unitKerja}
+          disabled={!selectedCabang}
+          selectedUnitKerja={selectedUnitKerja}
+          handleChange={handleUnitKerjaChange}
+        />
+      </div>
+      <div className="flex gap-4 w-full md:w-auto mt-4 md:mt-0">
+        <Button
+          className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg flex items-center w-full md:w-auto h-9"
+          onClick={handleSearchClick}
+        >
+          <FontAwesomeIcon icon={faSearch} size="lg" />
+          <span className="ml-2">Cari data filter</span>
+        </Button>
 
-      <Button
-        className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center h-9"
-        onClick={handleResetClick}
-      >
-        <FontAwesomeIcon icon={faUndo} size="lg" />
-        <span className="ml-2">Reset Filter</span>
-      </Button>
+        <Button
+          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center w-full md:w-auto h-9"
+          onClick={handleResetClick}
+        >
+          <FontAwesomeIcon icon={faUndo} size="lg" />
+          <span className="ml-2">Reset Filter</span>
+        </Button>
+      </div>
     </div>
   </div>
 );
@@ -355,117 +382,241 @@ const DataTable = ({
   handleUserClick,
   fotoBase64,
   handleVerifyUserClick,
-}) => (
-  <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
-    <thead className="bg-gray-100 text-gray-600 text-center">
-      <tr>
-        <th className="py-2 px-4 border-b">No</th>
-        <th className="py-2 px-4 border-b">Foto</th>
-        <th className="py-2 px-4 border-b">Cabang</th>
-        <th className="py-2 px-4 border-b">Unit Kerja</th>
-        <th className="py-2 px-4 border-b">Nama</th>
-        <th className="py-2 px-4 border-b">NPA PGRI</th>
-        <th className="py-2 px-4 border-b">Status</th>
-        <th className="py-2 px-4 border-b">Aksi</th>
-      </tr>
-    </thead>
-    <tbody>
-      {(anggotaData || []).length === 0 ? (
+  handleRejectUserClick,
+}) => {
+  const [expandedRow, setExpandedRow] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  const toggleExpandRow = (index) => {
+    setExpandedRow(expandedRow === index ? null : index);
+  };
+
+  return (
+    <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+      <thead className="bg-gray-100 text-gray-600 text-center">
         <tr>
-          <td colSpan="9" className="py-4 px-4 text-center text-gray-600">
-            Data tidak ditemukan
-          </td>
+          <th className="py-2 px-4 border-b">No</th>
+          {!isMobile && <th className="py-2 px-4 border-b">Foto</th>}
+          <th className="py-2 px-4 border-b">Cabang</th>
+          <th className="py-2 px-4 border-b">Unit Kerja</th>
+          <th className="py-2 px-4 border-b">Nama</th>
+          {!isMobile && (
+            <>
+              <th className="py-2 px-4 border-b">NPA PGRI</th>
+              <th className="py-2 px-4 border-b">Status</th>
+              <th className="py-2 px-4 border-b">Aksi</th>
+            </>
+          )}
+          {isMobile && <th className="py-2 px-4 border-b">Lihat Data</th>}
         </tr>
-      ) : (
-        (anggotaData || []).map((item, index) => (
-          <tr
-            key={item.id}
-            className="hover:bg-gray-50 text-sm cursor-pointer text-center"
-          >
-            <td className="py-2 px-4 border-b">{index + 1}</td>
-            <td className="py-2 px-4 border-b">
-              <Image
-                src={`data:image/jpeg;base64,${fotoBase64[index]}`}
-                width={50}
-                height={50}
-                alt="Anggota Foto"
-                className="rounded-full"
-              />
-            </td>
-            <td className="py-2 px-4 border-b">{item.cabang}</td>
-            <td className="py-2 px-4 border-b">{item.unitKerja}</td>
-            <td className="py-2 px-4 border-b">{item.namaLengkap}</td>
-            <td className="py-2 px-4 border-b">{item.npaPgri}</td>
-            <td className="py-2 px-4 border-b">
-              {!item.isVerified && (
-                <Badge variant="destructive">
-                  <FontAwesomeIcon
-                    icon={faTimesCircle}
-                    className="mr-2 text-white"
-                    size="lg"
-                  />
-                  <span>Belum Terverifikasi</span>
-                </Badge>
-              )}
-            </td>
-            <td className="px-4 py-2 border-b">
-              <a
-                href={`https://wa.me/${item.nomorHp}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FontAwesomeIcon
-                  icon={faWhatsapp}
-                  className="text-green-500"
-                  size="lg mr-4"
-                />
-              </a>
-              <FontAwesomeIcon
-                icon={faCheckCircle}
-                size="lg mr-4 text-green-500"
-                onClick={() => {
-                  handleVerifyUserClick(item.id);
-                }}
-              />
-              <FontAwesomeIcon
-                icon={faUser}
-                size="lg text-yellow-500 cursor-pointer"
-                onClick={() => {
-                  handleUserClick(item.id);
-                }}
-              />
+      </thead>
+      <tbody>
+        {(anggotaData || []).length === 0 ? (
+          <tr>
+            <td colSpan="9" className="py-4 px-4 text-center text-gray-600">
+              Data tidak ditemukan
             </td>
           </tr>
-        ))
-      )}
-    </tbody>
-  </table>
-);
+        ) : (
+          (anggotaData || []).map((item, index) => (
+            <React.Fragment key={item.id}>
+              <tr className="hover:bg-gray-50 text-sm cursor-pointer text-center">
+                <td className="py-2 px-4 border-b">{index + 1}</td>
+                {!isMobile && (
+                  <td className="py-2 px-4 border-b">
+                    <Image
+                      src={`data:image/jpeg;base64,${fotoBase64[index]}`}
+                      width={50}
+                      height={50}
+                      alt="Anggota Foto"
+                      className="rounded-full"
+                    />
+                  </td>
+                )}
+                <td className="py-2 px-4 border-b">{item.cabang}</td>
+                <td className="py-2 px-4 border-b">{item.unitKerja}</td>
+                <td className="py-2 px-4 border-b">{item.namaLengkap}</td>
+                {!isMobile && (
+                  <>
+                    <td className="py-2 px-4 border-b">{item.npaPgri}</td>
 
-const PopupDetail = ({ selectedRow, handleClosePopup, fotoBase64 }) => (
+                    <td className="py-2 px-4 border-b">
+                      {!item.isVerified && (
+                        <Badge variant="destructive">
+                          <FontAwesomeIcon
+                            icon={faTimesCircle}
+                            className="mr-2 text-white"
+                            size="lg"
+                          />
+                          <span>Belum Terverifikasi</span>
+                        </Badge>
+                      )}
+                    </td>
+
+                    <td className="px-4 py-2 border-b">
+                      <a
+                        href={`https://wa.me/${item.nomorHp}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <FontAwesomeIcon
+                          icon={faWhatsapp}
+                          className="text-green-500 mr-4"
+                          size="lg"
+                        />
+                      </a>
+                      <FontAwesomeIcon
+                        icon={faCheckCircle}
+                        size="lg"
+                        className="text-green-500 mr-4 cursor-pointer"
+                        onClick={() => handleVerifyUserClick(item.id)}
+                      />
+                      <FontAwesomeIcon
+                        icon={faTimesCircle}
+                        size="lg"
+                        className="text-red-500 mr-4 cursor-pointer"
+                        onClick={() => handleRejectUserClick(item.id)}
+                      />
+                      <FontAwesomeIcon
+                        icon={faUser}
+                        size="lg"
+                        className="text-yellow-500 cursor-pointer"
+                        onClick={() => handleUserClick(item.id)}
+                      />
+                    </td>
+                  </>
+                )}
+                {isMobile && (
+                  <td className="px-4 py-2 border-b">
+                    <FontAwesomeIcon
+                      icon={
+                        expandedRow === index ? faMinusCircle : faPlusCircle
+                      }
+                      className="text-blue-500 cursor-pointer"
+                      size="lg"
+                      onClick={() => toggleExpandRow(index)}
+                    />
+                  </td>
+                )}
+              </tr>
+              {expandedRow === index && (
+                <tr>
+                  <td colSpan="9" className="px-4 py-4 bg-gray-50">
+                    <div className="flex flex-col text-left space-y-2">
+                      <div className="flex items-center">
+                        <strong>Foto:</strong>{" "}
+                        <Image
+                          src={`data:image/jpeg;base64,${fotoBase64[index]}`}
+                          width={50}
+                          height={50}
+                          alt="Anggota Foto"
+                          className="rounded-full"
+                        />
+                      </div>
+                      <div>
+                        <strong>Npa Pgri:</strong> {item.npaPgri}
+                      </div>
+                      <div>
+                        <strong>Status</strong>{" "}
+                        {!item.isVerified && (
+                          <Badge variant="destructive">
+                            <FontAwesomeIcon
+                              icon={faTimesCircle}
+                              className="mr-2 text-white"
+                              size="lg"
+                            />
+                            <span>Belum Terverifikasi</span>
+                          </Badge>
+                        )}
+                      </div>
+                      <div>
+                        <strong>Aksi:</strong>{" "}
+                        <a
+                          href={`https://wa.me/${item.nomorHp}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <FontAwesomeIcon
+                            icon={faWhatsapp}
+                            className="text-green-500 mr-4"
+                            size="lg"
+                          />
+                        </a>
+                        <FontAwesomeIcon
+                          icon={faCheckCircle}
+                          size="lg"
+                          className="text-green-500 mr-4 cursor-pointer"
+                          onClick={() => handleVerifyUserClick(item.id)}
+                        />
+                        <FontAwesomeIcon
+                          icon={faTimesCircle}
+                          size="lg"
+                          className="text-red-500 mr-4 cursor-pointer"
+                          onClick={() => handleRejectUserClick(item.id)}
+                        />
+                        <FontAwesomeIcon
+                          icon={faUser}
+                          size="lg"
+                          className="text-yellow-500 cursor-pointer"
+                          onClick={() => handleUserClick(item.id)}
+                        />
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
+          ))
+        )}
+      </tbody>
+    </table>
+  );
+};
+
+const PopupDetail = ({
+  selectedRow,
+  handleClosePopup,
+  fotoBase64,
+  handleVerifyUserClick,
+  handleRejectUserClick,
+}) => (
   <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-60 z-50 transition-opacity duration-300 ease-in-out">
-    <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg transform transition-transform duration-300 ease-in-out">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-900">Detail Anggota</h2>
+    <div className="bg-white p-4 sm:p-8 rounded-lg shadow-xl w-full max-w-lg transform transition-transform duration-300 ease-in-out">
+      <div className="flex justify-between items-center mb-4 sm:mb-6">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+          Detail Anggota
+        </h2>
         <button
           onClick={handleClosePopup}
           className="text-gray-500 hover:text-gray-900 transition-colors duration-300 ease-in-out"
         >
-          <FontAwesomeIcon icon={faTimesCircle} size="2x" />
+          <FontAwesomeIcon icon={faTimesCircle} size="lg" />
         </button>
       </div>
-      <div className="flex flex-col space-y-4">
-        <div>
+      <div className="flex flex-col space-y-4 sm:space-y-6">
+        <div className="flex justify-center">
           <Image
             src={`data:image/png;base64,${fotoBase64}`}
-            width={100}
-            height={100}
+            width={80}
+            height={80}
             alt="Anggota Foto"
-            className="mb-4 rounded-full"
+            className="rounded-full"
           />
         </div>
-
-        <div className="grid grid-cols-2 gap-4 text-gray-700 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700 mb-4">
           <div>
             <p className="font-medium text-gray-600">Nama Lengkap:</p>
             <p>{selectedRow.namaLengkap}</p>
@@ -483,7 +634,7 @@ const PopupDetail = ({ selectedRow, handleClosePopup, fotoBase64 }) => (
             <p>{selectedRow.nik}</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4 text-gray-700">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
           <div>
             <p className="font-medium text-gray-600">Cabang:</p>
             <p>{selectedRow.cabang}</p>
@@ -504,19 +655,36 @@ const PopupDetail = ({ selectedRow, handleClosePopup, fotoBase64 }) => (
               <span>{selectedRow.nomorHp}</span>
             </a>
           </div>
-
           <div>
-            <p className="font-medium text-gray-600">Status:</p>
-            {!selectedRow.isVerified && (
-              <Badge variant="destructive">
-                <FontAwesomeIcon
-                  icon={faTimesCircle}
-                  className="mr-2 text-white"
-                  size="lg"
-                />
-                <span>Belum Terverifikasi</span>
-              </Badge>
-            )}
+            <p className="font-medium text-gray-600 mr-4">Status:</p>
+            <div className="flex items-center">
+              {!selectedRow.isVerified && (
+                <Badge variant="destructive" className="flex items-center mr-4">
+                  <FontAwesomeIcon
+                    icon={faTimesCircle}
+                    className="mr-2 text-white"
+                    size="lg"
+                  />
+                  <span>Belum Terverifikasi</span>
+                </Badge>
+              )}
+              <FontAwesomeIcon
+                icon={faCheckCircle}
+                size="lg"
+                className="text-green-500 cursor-pointer"
+                onClick={() => {
+                  handleVerifyUserClick(selectedRow.id);
+                }}
+              />
+              <FontAwesomeIcon
+                icon={faTimesCircle}
+                size="lg"
+                className="text-red-500 cursor-pointer ml-3"
+                onClick={() => {
+                  handleRejectUserClick(selectedRow.id);
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
