@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  FaPlus,
   FaEdit,
   FaExchangeAlt,
   FaExclamationTriangle,
@@ -15,7 +16,6 @@ import {
   FaSortDown,
   FaSort,
 } from "react-icons/fa";
-import { membersData } from "../data.js";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
@@ -27,6 +27,8 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 function DataAnggota() {
   const [maxItems, setMaxItems] = useState(10);
   const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
+  const [filterCabang, setFilterCabang] = useState('');
+  const [filterUnitKerja, setFilterUnitKerja] = useState('');
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("-- Unit Kerja --");
   const [selectedStatus, setSelectedStatus] = useState("Semua");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "ascending" });
@@ -38,13 +40,42 @@ function DataAnggota() {
   const [isCabangEnabled, setIsCabangEnabled] = useState(false);
   const [isUnitKerjaEnabled, setIsUnitKerjaEnabled] = useState(false);
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
+  const [expandedIndex, setExpandedIndex] = useState(null);
+  const [itemsPerPage, setItemsPerPage] = useState(10); // Default to 10 items per page
+  const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [isPopupVisible, setPopupVisible] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [filteredCabang, setFilteredCabang] = useState([]);
 
   useEffect(() => {
+    if (selectedCabang) {
+      const filtered = unitKerja.filter(uk => uk.cabang === selectedCabang);
+      setFilteredUnitKerja(filtered);
+    } else {
+      setFilteredUnitKerja([]);
+    };
+
+    setFilteredCabang(
+      cabang.filter((item) =>
+        item.kecamatan.toLowerCase().includes(filterCabang.toLowerCase())
+      )
+    );
+
+    setFilteredUnitKerja(
+      unitKerja.filter((item) =>
+        item.unitKerja.toLowerCase().includes(filterUnitKerja.toLowerCase())
+      )
+    );
+
+    fetchAnggota();
+    fetchData();
+    fetchUnitKerja();
+
     if (!token) {
       router.push("/sign-in");
     } else {
@@ -63,28 +94,12 @@ function DataAnggota() {
         window.removeEventListener("resize", handleResize);
       };
     }
-  }, [token, router]);
-
-  useEffect(() => {
-    fetchAnggota();
-    fetchData();
-    fetchUnitKerja();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCabang) {
-      const filtered = unitKerja.filter(uk => uk.cabang === selectedCabang);
-      setFilteredUnitKerja(filtered);
-    } else {
-      setFilteredUnitKerja([]);
-    }
-  }, [selectedCabang]);
-
+  }, [token, router, selectedCabang, filterCabang, filterUnitKerja]);
 
   const fetchAnggota = async () => {
     try {
       const page = 0; // Or the page number you want to fetch
-      const size = 10; // Or the number of items per page you want to fetch
+      const size = 50; // Or the number of items per page you want to fetch
       const response = await GlobalApi.getAllAnggota(page, size);
       setAnggota(response.data.content || []); // Use response.data.content if it's a Page object
     } catch (error) {
@@ -227,9 +242,15 @@ function DataAnggota() {
         selectedCabang === "-- Cabang --" || item.cabang === selectedCabang;
       const unitKerjaFilter =
         selectedUnitKerja === "-- Unit Kerja --" || item.unitKerja === selectedUnitKerja;
-      return statusFilter && cabangFilter && unitKerjaFilter;
+
+      const searchCabangFilter = item.cabang.toLowerCase().includes(filterCabang.toLowerCase());
+      const searchUnitKerjaFilter = item.unitKerja.toLowerCase().includes(filterUnitKerja.toLowerCase());
+
+      return statusFilter && cabangFilter && unitKerjaFilter &&
+        (filterCabang ? searchCabangFilter : true) &&
+        (filterUnitKerja ? searchUnitKerjaFilter : true);
     });
-  }, [sortedData, selectedStatus, selectedCabang, selectedUnitKerja]);
+  }, [sortedData, selectedStatus, selectedCabang, selectedUnitKerja, filterCabang, filterUnitKerja]);
 
   const jumlahAnggota = filteredData.length;
 
@@ -313,6 +334,83 @@ function DataAnggota() {
     return formattedRetirementDate;
   };
 
+  const handleExpand = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalItems = filteredData.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handlePageClick = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1);
+  };
+
+  const handleKeluarAnggotaClick = () => {
+    setPopupVisible(true);
+  };
+
+  const handleConfirm = () => {
+    alert("Anggota dikeluarkan");
+    setPopupVisible(false);
+  };
+
+  const handleCancel = () => {
+    setPopupVisible(false);
+  };
+
+  const handleInputChange = (e) => {
+    setFilterCabang(e.target.value);
+    setShowDropdown(true);
+  };
+
+  const handleInputChangeUnit = (e) => {
+    setFilterUnitKerja(e.target.value);
+    setShowDropdown(true);
+  };
+
+  const handleSelectChange = (e) => {
+    setSelectedCabang(e.target.value);
+    setFilterCabang(e.target.value);
+    setShowDropdown(false);
+  };
+
+  const handleSelectChangeUnit = (e) => {
+    setSelectedUnitKerja(e.target.value);
+    setFilterUnitKerja(e.target.value);
+    setShowDropdown(false);
+  };
+
+  const handleOptionClick = (kecamatan) => {
+    setSelectedCabang(kecamatan);
+    setFilterCabang(kecamatan);
+    setShowDropdown(false);
+  };
+
+  const handleOptionClickUnit = (unitKerja) => {
+    setSelectedUnitKerja(unitKerja);
+    setFilterUnitKerja(unitKerja);
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -322,7 +420,6 @@ function DataAnggota() {
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -330,7 +427,7 @@ function DataAnggota() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Rekap Meninggal</h1>
+              <h1 className="text-base">Data Anggota</h1>
             </div>
           </div>
         </header>
@@ -347,33 +444,80 @@ function DataAnggota() {
           <div className="mb-4">
             <div className="flex flex-wrap items-start mt-14 justify-between">
               <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
-                <select
-                  className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                  value={selectedCabang}
-                  onChange={(e) => setSelectedCabang(e.target.value)}
-                >
-                  <option value="">-- Cabang --</option>
-                  {cabang.map(item => (
-                    <option key={item.id} value={item.kecamatan}>
-                      {item.kecamatan}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative flex flex-col md:flex">
+                  <input
+                    type="text"
+                    placeholder="Cari Cabang..."
+                    value={filterCabang}
+                    onChange={handleInputChange}
+                    className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                  />
+                  {showDropdown && filteredCabang.length > 0 && (
+                    <div className="absolute left-0 mt-10 w-full bg-white border rounded shadow-lg z-10">
+                      {filteredCabang.map((item) => (
+                        <div
+                          key={item.id}
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                          onClick={() => handleOptionClick(item.kecamatan)}
+                        >
+                          {item.kecamatan}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <select
+                    className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
+                    value={selectedCabang}
+                    onChange={handleSelectChange}
+                  >
+                    <option value="">Pilih Cabang</option>
+                    {cabang.map(item => (
+                      <option key={item.id} value={item.kecamatan}>
+                        {item.kecamatan}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col md:flex">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Cari Unit Kerja..."
+                      value={filterUnitKerja}
+                      onChange={handleInputChangeUnit}
+                      className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                    />
+                    {showDropdown && filteredUnitKerja.length > 0 && (
+                      <div className="absolute left-0 mt-1 w-full bg-white border rounded shadow-lg z-10">
+                        {filteredUnitKerja.map((item) => (
+                          <div
+                            key={item.id}
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                            onClick={() => handleOptionClickUnit(item.unitKerja)}
+                          >
+                            {item.unitKerja}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <select
+                    className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
+                    value={selectedUnitKerja}
+                    onChange={handleSelectChangeUnit}
+                  >
+                    <option value="">Pilih Unit Kerja</option>
+                    {unitKerja.map(item => (
+                      <option key={item.id} value={item.unitKerja}>
+                        {item.unitKerja}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 <select
-                  className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                  value={selectedUnitKerja}
-                  onChange={(e) => setSelectedUnitKerja(e.target.value)}
-                >
-                  <option value="">-- Unit Kerja --</option>
-                  {filteredUnitKerja.map(item => (
-                    <option key={item.id} value={item.unitKerja}>
-                      {item.unitKerja}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                  className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mt-12 md:mb-0"
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
                 >
@@ -384,15 +528,15 @@ function DataAnggota() {
                   <option>Keluar</option>
                 </select>
 
-                <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
+                <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto mt-12">
                   Jumlah Anggota : {jumlahAnggota}
                 </p>
               </div>
-              <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
+              <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto mt-12">
                 Data Anggota
               </p>
               <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
-                <div className="space-x-2 w-full flex md:block">
+                <div className="space-x-2 w-full flex md:block mt-12 md:mt-1">
                   <label htmlFor="maxItems" className="mr-2">
                     Tampilkan:
                   </label>
@@ -434,7 +578,7 @@ function DataAnggota() {
                       </span>
                     </div>
                   </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
                     Foto
                   </th>
                   <th className="p-2 md:p-3 border text-white bg-teal-700">
@@ -448,7 +592,7 @@ function DataAnggota() {
                       </span>
                     </div>
                   </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
                     <div className="flex justify-between items-center">
                       <span>Tanggal Lahir</span>
                       <span
@@ -459,7 +603,7 @@ function DataAnggota() {
                       </span>
                     </div>
                   </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
                     <div className="flex justify-between items-center">
                       <span>Unit Kerja</span>
                       <span
@@ -470,7 +614,7 @@ function DataAnggota() {
                       </span>
                     </div>
                   </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
                     <div className="flex justify-between items-center">
                       <span>Keterangan</span>
                       <span
@@ -487,89 +631,184 @@ function DataAnggota() {
                 </tr>
               </thead>
               <tbody>
-                {filteredData.slice(0, maxItems).map((item, index) => (
-                  <tr
-                    key={index}
-                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                  >
-                    <td className="p-2 md:p-3 border text-center">
-                      {index + 1}
-                    </td>
-                    <td className="p-2 md:p-3 border">
-                      <Image
-                        src={item.photoUrl}
-                        className="rounded-full mx-auto"
-                        width={100}
-                        height={100}
-                      />
-                    </td>
-                    <td className="p-2 md:p-3 border">
-                      <div className="font-bold">{item.namaLengkap}</div>
-                      <div>{item.npaPgri}</div>
-                      <div>{item.jabatan}</div>
-                    </td>
-                    <td className="p-2 md:p-3 border">
-                      <div>{item.tempatLahir},</div>
-                      <div>{formatDate(item.tanggalLahir)}</div>
-                      <div>{calculateAge(item.tanggalLahir)} Tahun</div>
-                      <div>{calculateRetirementDate(item.tanggalLahir, item.statusPegawai)}</div>
-                    </td>
-                    <td className="p-2 md:p-3 border">
-                      <div>{item.cabang},</div>
-                      <div>{item.unitKerja}</div>
-                      <div>Anggota: {item.tahunDiangkat ? item.tahunDiangkat : '-'}</div>
-                      <div>
-                        {item.pangkatGolongan} || {formatCurrency(item.iuran)}
-                      </div>
-                    </td>
-                    <td className="p-2 text-center md:p-3 border">
-                      <div
-                        className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
-                          ? "bg-red-200 text-red-900"
-                          : "bg-green-200 text-green-900"
-                          }`}
+                {currentData.slice(0, maxItems).map((item, index) => {
+                  const globalIndex = (currentPage - 1) * maxItems + index + 1; // Calculate globalIndex outside the JSX return
+                  return (
+                    <React.Fragment key={index}>
+                      <tr
+                        key={index}
+                        className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
                       >
-                        {item.status}
-                      </div>
-                    </td>
-                    <td className="p-2 md:p-3 border">
-                      <div className="flex justify-center space-x-2">
-                        <Link
-                          href="#"
-                          className="text-white bg-blue-500 p-2 border rounded-md"
-                        >
-                          <FaEdit className="w-4 h-4" title="Edit Data" />
-                        </Link>
-                        <Button
-                          className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
-                          title="Mutasi"
-                          onClick={() => openModal(item)}
-                        >
-                          <FaExchangeAlt className="w-4 h-4" />
-                        </Button>
-                        <Link
-                          href="#"
-                          className="text-white bg-red-500 p-2 border rounded-md"
-                        >
-                          <FaExclamationTriangle
-                            className="w-4 h-4"
-                            title="Lapor"
+                        <td className="p-2 md:p-3 border text-center">
+                          {globalIndex} {/* Use globalIndex instead of index + 1 */}
+                        </td>
+                        <td className="p-2 md:p-3 border md:table-cell hidden">
+                          <Image
+                            src={item.photoUrl}
+                            className="rounded-full mx-auto"
+                            width={100}
+                            height={100}
                           />
-                        </Link>
-                        <Link
-                          href={`https://wa.me/${item.hp}`}
-                          className="text-white bg-green-500 p-2 border rounded-md"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <FaWhatsapp className="w-4 h-4" title="WA" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                        </td>
+                        <td className="p-2 md:p-3 border">
+                          <div className="font-bold text-sm">{item.namaLengkap}</div>
+                          <div className="text-sm">{item.npaPgri}</div>
+                          <div className="text-sm">{item.jabatan}</div>
+                        </td>
+                        <td className="p-2 md:p-3 border md:table-cell hidden">
+                          <div className="text-sm">{item.tempatLahir},</div>
+                          <div className="text-sm">{formatDate(item.tanggalLahir)}</div>
+                          <div className="text-sm">{calculateAge(item.tanggalLahir)} Tahun</div>
+                          <div className="text-sm">
+                            Pensiun : {calculateRetirementDate(item.tanggalLahir, item.statusPegawai)}
+                          </div>
+                        </td>
+                        <td className="p-2 md:p-3 border md:table-cell hidden">
+                          <div className="text-sm">{item.cabang},</div>
+                          <div className="text-sm">{item.unitKerja}</div>
+                          <div className="text-sm">
+                            Anggota: {item.tahunDiangkat ? item.tahunDiangkat : '-'}
+                          </div>
+                          <div className="text-sm">
+                            {item.pangkatGolongan} || {formatCurrency(item.iuran)}
+                          </div>
+                        </td>
+                        <td className="p-2 text-center md:p-3 border md:table-cell hidden">
+                          <div
+                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
+                              ? "bg-red-200 text-red-900"
+                              : "bg-green-200 text-green-900"
+                              }`}
+                          >
+                            {item.status}
+                          </div>
+                        </td>
+                        <td className="p-2 md:p-3 border">
+                          <div className="flex justify-center space-x-2">
+                            <Link
+                              href="#"
+                              className="text-white bg-blue-500 p-2 border rounded-md"
+                            >
+                              <FaEdit className="w-4 h-4" title="Edit Data" />
+                            </Link>
+                            <Button
+                              className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                              title="Mutasi"
+                              onClick={() => openModal(item)}
+                            >
+                              <FaExchangeAlt className="w-4 h-4" />
+                            </Button>
+                            <Link
+                              href="#"
+                              className="text-white bg-red-500 p-2 border rounded-md"
+                            >
+                              <FaExclamationTriangle
+                                className="w-4 h-4"
+                                title="Lapor"
+                              />
+                            </Link>
+                            <Link
+                              href={`https://wa.me/${item.nomorHp}`}
+                              className="text-white bg-green-500 p-2 border rounded-md"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <FaWhatsapp className="w-4 h-4" title="WA" />
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                      {/* Mobile View Row Expansion */}
+                      <tr className="md:hidden">
+                        <td colSpan="7" className="p-2 border">
+                          <div className="flex justify-between items-center">
+                            <button
+                              className="text-blue-500"
+                              onClick={() => handleExpand(index)}
+                            >
+                              <FaPlus className="w-4 h-4" />
+                            </button>
+                          </div>
+                          {expandedIndex === index && (
+                            <div className="mt-2">
+                              <div className="font-bold">{item.namaLengkap}</div>
+                              <div>{item.npaPgri}</div>
+                              <div>{item.tugas}</div>
+                              <div>{item.tempatLahir}, {formatDate(item.tanggalLahir)}</div>
+                              <div>{calculateAge(item.tanggalLahir)} Tahun</div>
+                              <div>Prediksi Pensiun: {calculateRetirementDate(item.tanggalLahir, item.statusPegawai)}</div>
+                              <div>{item.cabang},</div>
+                              <div>{item.unitKerja}</div>
+                              <div>Anggota: {item.gabung}</div>
+                              <div>{item.golongan}/{formatCurrency(item.iuran)}</div>
+                              <div className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.anggota === 'Tidak Aktif' ? 'bg-red-200 text-red-900' : 'bg-green-200 text-green-900'}`}>
+                                {item.anggota}
+                              </div>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
+            <div className="flex justify-end items-center mb-4">
+              {totalItems > 10 && (
+                <>
+                  <Button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="mr-2"
+                  >
+                    Previous
+                  </Button>
+                  <div className="flex items-center">
+                    {totalPages > 1 && (
+                      <ul className="flex space-x-1">
+                        {/* Calculate the range of pages to display */}
+                        {(() => {
+                          let startPage = Math.max(1, currentPage - 1);
+                          let endPage = Math.min(totalPages, currentPage + 1);
+
+                          if (currentPage === 1) {
+                            endPage = Math.min(3, totalPages);
+                          } else if (currentPage === totalPages) {
+                            startPage = Math.max(totalPages - 2, 1);
+                          } else if (totalPages - currentPage < 2) {
+                            startPage = Math.max(totalPages - 2, 1);
+                          }
+
+                          return Array.from(
+                            { length: endPage - startPage + 1 },
+                            (_, i) => startPage + i
+                          );
+                        })().map((number) => (
+                          <li key={number}>
+                            <Button
+                              onClick={() => handlePageClick(number)}
+                              className={`mx-1 px-4 py-2 border rounded-md ${currentPage === number
+                                ? "bg-blue-500 text-white"
+                                : "bg-white text-black"
+                                }`}
+                            >
+                              {number}
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <Button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="ml-2"
+                  >
+                    Next
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Modal for Mutation Actions */}
@@ -602,13 +841,13 @@ function DataAnggota() {
                   <Input
                     className="block text-sm font-medium w-full text-center"
                     placeholder="Nama"
-                    value={currentItem?.nama || ""}
+                    value={currentItem?.namaLengkap || ""}
                     disabled
                   />
                   <Input
                     className="block text-sm font-medium mt-2 text-center"
                     placeholder="NPA"
-                    value={currentItem?.npa || ""}
+                    value={currentItem?.npaPgri || ""}
                     disabled
                   />
                   <Input
@@ -620,7 +859,7 @@ function DataAnggota() {
                   <Input
                     className="block text-sm font-medium mt-2 text-center"
                     placeholder="Unit Kerja"
-                    value={currentItem?.kerja || ""}
+                    value={currentItem?.unitKerja || ""}
                     disabled={!isUnitKerjaEnabled}
                   />
                 </div>
@@ -628,21 +867,19 @@ function DataAnggota() {
               <div className="space-y-2">
                 <Button
                   className="w-full bg-teal-700 hover:bg-teal-500"
-                  onClick={handlePindahCabangClick}
+                  onClick={() => handlePindahCabangClick()}
                 >
-                  {isCabangEnabled
-                    ? "Konfirmasi Pindah Cabang"
-                    : "Pindah Cabang"}
+                  {isCabangEnabled ? "Konfirmasi Pindah Cabang" : "Pindah Cabang"}
                 </Button>
                 <Button
                   className="w-full bg-teal-700 hover:bg-teal-500"
-                  onClick={handleUnitKerjaClick}
+                  onClick={() => handleUnitKerjaClick()}
                 >
                   {isUnitKerjaEnabled ? "Konfirmasi Unit Kerja" : "Unit Kerja"}
                 </Button>
                 <Button
                   className="w-full bg-teal-700 hover:bg-teal-500"
-                  onClick={() => alert("Keluar Anggota")}
+                  onClick={handleKeluarAnggotaClick}
                 >
                   Keluar Anggota
                 </Button>
@@ -650,8 +887,39 @@ function DataAnggota() {
                   className="w-full bg-teal-700 hover:bg-teal-500"
                   onClick={() => alert("Tidak Jelas")}
                 >
-                  Tidak Jelas
+                  Pensiun
                 </Button>
+
+                {isPopupVisible && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white p-4 rounded-lg shadow-lg">
+                      <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-bold">Keluar Anggota</h2>
+                        <button
+                          className=" text-xl font-bold text-gray-700 hover:text-red-500 focus:outline-none"
+                          onClick={handleCancel}
+                        >
+                          x
+                        </button>
+                      </div>
+                      <p>Apakah Anggota dikeluarkan?</p>
+                      <div className="flex justify-end mt-4 space-x-2">
+                        <Button
+                          className="bg-green-500 hover:bg-green-400 text-white px-4 py-2 rounded"
+                          onClick={handleConfirm}
+                        >
+                          Ya
+                        </Button>
+                        <Button
+                          className="bg-red-500 hover:bg-red-400 text-white px-4 py-2 rounded"
+                          onClick={handleCancel}
+                        >
+                          Tidak
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </Modal>
