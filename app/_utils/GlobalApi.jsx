@@ -82,6 +82,20 @@ const getUnitKerja = () => axiosClient.get("/api/unit-kerja/all");
 const getAllAnggota = (page = 0, size = 10) => {
   return axiosClient.get(`/api/auth/users?page=${page}&size=${size}`);
 };
+const getUserById = async (userId) => {
+  try {
+    const response = await axiosClient.get(`/api/auth/user/${userId}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
 
 // Verifikasi Anggota
 const getUnverifiedUsers = (
@@ -159,6 +173,20 @@ const deleteCabang = async (idCabang) => {
     }
   }
 };
+const cekNpa = async (npa) => {
+  try {
+    const response = await axiosClient.get(`/api/auth/npa/${npa}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
 
 // Export all functions
 export default {
@@ -175,4 +203,6 @@ export default {
   addUnitKerja,
   addCabang,
   deleteCabang,
+  cekNpa,
+  getUserById,
 };
