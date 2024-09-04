@@ -43,7 +43,7 @@ function SignIn() {
 
       const response = await GlobalApi.login(loginData);
       setToken(response.token);
-
+      sessionStorage.setItem("userId", response.id);
       toast.success("Anda Berhasil Login");
       setTimeout(() => {
         router.push("/home");

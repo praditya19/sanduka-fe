@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBell, faSearch } from "@fortawesome/free-solid-svg-icons";
+import GlobalApi from "../_utils/GlobalApi";
 
 const HeaderHome = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,7 +13,18 @@ const HeaderHome = () => {
     useState(false);
   const audioRef = useRef(null);
 
-  const profileImageUrl = "/profile.png";
+  const [profileImageUrl, setProfileImageUrl] = useState("/profile.png");
+
+  const getAnggotaById = async () => {
+    try {
+      const userId = sessionStorage.getItem("userId");
+      const response = await GlobalApi.getUserById(userId);
+      const decodedString = atob(response.foto);
+      setProfileImageUrl(decodedString);
+    } catch (error) {
+      console.error("Error Saat Mendapatkan Foto:", error);
+    }
+  };
 
   const handleNotificationClick = () => {
     if (audioRef.current) {
@@ -24,6 +36,7 @@ const HeaderHome = () => {
   };
 
   useEffect(() => {
+    getAnggotaById();
     if (notificationCount > 0 && !isNotificationSoundPlaying) {
       const playNotificationSound = () => {
         const audio = new Audio("/sound-notification.wav");
@@ -46,6 +59,8 @@ const HeaderHome = () => {
       playNotificationSound();
     }
   }, [notificationCount, isNotificationSoundPlaying]);
+
+  console.log(profileImageUrl);
 
   return (
     <nav className="bg-white shadow-md fixed top-0 inset-x-0 z-50">
@@ -107,11 +122,11 @@ const HeaderHome = () => {
               <li>
                 <Link href="/update-profile">
                   <Image
-                    src={profileImageUrl}
-                    alt="Profile"
-                    width={40}
-                    height={40}
-                    className="rounded-full cursor-pointer"
+                    src={`data:image/jpeg;base64,${profileImageUrl}`}
+                    width={50}
+                    height={50}
+                    alt="Anggota Foto"
+                    className="rounded-full"
                   />
                 </Link>
               </li>
@@ -150,7 +165,7 @@ const HeaderHome = () => {
             <li className="relative flex justify-end">
               <Link href="/update-profile" className="text-blue-500">
                 <Image
-                  src={profileImageUrl}
+                  src={`data:image/jpeg;base64,${profileImageUrl}`}
                   alt="Profile"
                   width={40}
                   height={40}
