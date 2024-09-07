@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
-import Sidebar from "@/app/_components/Sidebar";
+// import Sidebar from "@/app/_components/Sidebar";
 
 const SyncData = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -49,24 +49,24 @@ const SyncData = () => {
     setIsModalOpen(false);
   };
 
-  useEffect(() => {
-    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-    setIsSidebarOpen(sidebarState);
-  }, []);
+  // useEffect(() => {
+  //   const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+  //   setIsSidebarOpen(sidebarState);
+  // }, []);
 
   const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  // const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
 
   const handleBackClick = () => {
     router.back();
   };
 
-  const toggleSidebar = () => {
-    const newSidebarState = !isSidebarOpen;
-    setIsSidebarOpen(newSidebarState);
-    localStorage.setItem("isSidebarOpen", newSidebarState);
-  };
+  // const toggleSidebar = () => {
+  //   const newSidebarState = !isSidebarOpen;
+  //   setIsSidebarOpen(newSidebarState);
+  //   localStorage.setItem("isSidebarOpen", newSidebarState);
+  // };
 
   useEffect(() => {
     const handleResize = () => {
@@ -102,15 +102,15 @@ const SyncData = () => {
         <HeaderHome />
       )}
       <div>
-        <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        {/* <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} /> */}
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          // className={`flex-1 transition-all duration-300 ease-in-out ${
+          //   isSidebarOpen ? "ml-64" : "ml-0"
+          // }`}
         >
           <div className="min-h-screen flex-grow bg-gray-50 py-10 pt-16">
-            <div className="container mx-auto p-6 bg-white shadow-md rounded-lg">
+            {/* <div className="container mx-auto p-6 bg-white shadow-md rounded-lg"> */}
               <div className="flex flex-col md:flex-row justify-center md:space-x-4 mb-6">
                 <Button className="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300 mb-2 md:mb-0">
                   Rekap Hasil Upload
@@ -295,7 +295,7 @@ const SyncData = () => {
                   </tbody>
                 </table>
               </div>
-            </div>
+            {/* </div> */}
           </div>
         </div>
       </div>

@@ -50,7 +50,10 @@ function DataAnggota() {
   const [loading, setLoading] = useState(true);
   const [isPopupVisible, setPopupVisible] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showDropdownCabang, setShowDropdownCabang] = useState(false);
+  const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
   const [filteredCabang, setFilteredCabang] = useState([]);
+  const [fotoBase64, setFotoBase64] = useState("");
 
   useEffect(() => {
     if (selectedCabang) {
@@ -101,7 +104,35 @@ function DataAnggota() {
       const page = 0; // Or the page number you want to fetch
       const size = 50; // Or the number of items per page you want to fetch
       const response = await GlobalApi.getAllAnggota(page, size);
-      setAnggota(response.data.content || []); // Use response.data.content if it's a Page object
+      const fotoBase64Array = [];
+
+      const fetchedData = response.data.content;
+
+      if (fetchedData && fetchedData.length > 0) {
+        fetchedData.forEach((item) => {
+          console.log('test', item)
+          if (item.foto) {
+            try {
+              const decodedString = atob(item.foto);
+              fotoBase64Array.push(decodedString);
+            } catch (error) {
+              console.error("Error decoding Base64:", error);
+              fotoBase64Array.push(null);
+            }
+          } else {
+            fotoBase64Array.push(null);
+          }
+        });
+      } else {
+        console.warn("No data found.");
+      }
+
+      // setAnggotaData(fetchedData || []);
+      setFotoBase64(fotoBase64Array);
+      // setTotalPages(response.data.totalPages || 0);
+      setLoading(false);
+      setAnggota(fetchedData || []); // Use response.data.content if it's a Page object
+
     } catch (error) {
       console.error("Error fetching anggota:", error);
       setAnggota([]); // Optionally, set to an empty array if there's an error
@@ -379,25 +410,42 @@ function DataAnggota() {
   };
 
   const handleInputChange = (e) => {
-    setFilterCabang(e.target.value);
-    setShowDropdown(true);
+    const { value } = e.target;
+    setFilterCabang(value);
+    setShowDropdownCabang(true);
+    setShowDropdownUnitKerja(false);
+
+    const filtered = cabang.filter((item) =>
+      item.kecamatan.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredCabang(filtered);
   };
 
   const handleInputChangeUnit = (e) => {
-    setFilterUnitKerja(e.target.value);
-    setShowDropdown(true);
+    const { value } = e.target;
+    setFilterUnitKerja(value);
+    setShowDropdownUnitKerja(true);
+    setShowDropdownCabang(false);
+
+    const filtered = unitKerja.filter((item) =>
+      item.unitKerja.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredUnitKerja(filtered);
   };
 
   const handleSelectChange = (e) => {
-    setSelectedCabang(e.target.value);
-    setFilterCabang(e.target.value);
-    setShowDropdown(false);
+    const { value } = e.target;
+    setSelectedCabang(value);
+    setShowDropdownCabang(false);
+
+    setFilterUnitKerja('');
+    setFilteredUnitKerja([]);
   };
 
   const handleSelectChangeUnit = (e) => {
-    setSelectedUnitKerja(e.target.value);
-    setFilterUnitKerja(e.target.value);
-    setShowDropdown(false);
+    const { value } = e.target;
+    setSelectedUnitKerja(value);
+    setShowDropdownUnitKerja(false);
   };
 
   const handleOptionClick = (kecamatan) => {
@@ -444,80 +492,83 @@ function DataAnggota() {
           <div className="mb-4">
             <div className="flex flex-wrap items-start mt-14 justify-between">
               <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
-                <div className="relative flex flex-col md:flex">
-                  <input
-                    type="text"
-                    placeholder="Cari Cabang..."
-                    value={filterCabang}
-                    onChange={handleInputChange}
-                    className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                  />
-                  {showDropdown && filteredCabang.length > 0 && (
-                    <div className="absolute left-0 mt-10 w-full bg-white border rounded shadow-lg z-10">
-                      {filteredCabang.map((item) => (
-                        <div
-                          key={item.id}
-                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                          onClick={() => handleOptionClick(item.kecamatan)}
-                        >
-                          {item.kecamatan}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <select
-                    className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
-                    value={selectedCabang}
-                    onChange={handleSelectChange}
-                  >
-                    <option value="">Pilih Cabang</option>
-                    {cabang.map(item => (
-                      <option key={item.id} value={item.kecamatan}>
-                        {item.kecamatan}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex flex-col md:flex">
-                  <div className="relative">
+                <>
+                  <div className="relative flex flex-col md:flex">
                     <input
                       type="text"
-                      placeholder="Cari Unit Kerja..."
-                      value={filterUnitKerja}
-                      onChange={handleInputChangeUnit}
+                      placeholder="Cari Cabang..."
+                      value={filterCabang}
+                      onChange={handleInputChange}
                       className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
                     />
-                    {showDropdown && filteredUnitKerja.length > 0 && (
-                      <div className="absolute left-0 mt-1 w-full bg-white border rounded shadow-lg z-10">
-                        {filteredUnitKerja.map((item) => (
+                    {showDropdownCabang && filteredCabang.length > 0 && (
+                      <div className="absolute left-0 mt-10 w-full bg-white border rounded shadow-lg z-10 max-h-40 overflow-y-auto">
+                        {filteredCabang.map((item) => (
                           <div
                             key={item.id}
                             className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                            onClick={() => handleOptionClickUnit(item.unitKerja)}
+                            onClick={() => handleSelectChange({ target: { value: item.kecamatan } })}
                           >
-                            {item.unitKerja}
+                            {item.kecamatan}
                           </div>
                         ))}
                       </div>
                     )}
+                    <select
+                      className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
+                      value={selectedCabang}
+                      onChange={handleSelectChange}
+                    >
+                      <option value="">Pilih Cabang</option>
+                      {cabang.map((item) => (
+                        <option key={item.id} value={item.kecamatan}>
+                          {item.kecamatan}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  <select
-                    className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
-                    value={selectedUnitKerja}
-                    onChange={handleSelectChangeUnit}
-                  >
-                    <option value="">Pilih Unit Kerja</option>
-                    {unitKerja.map(item => (
-                      <option key={item.id} value={item.unitKerja}>
-                        {item.unitKerja}
-                      </option>
-                    ))}
-                  </select>
-                </div>
 
+                  <div className="flex flex-col md:flex">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Cari Unit Kerja..."
+                        value={filterUnitKerja}
+                        onChange={handleInputChangeUnit}
+                        className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                        disabled={!selectedCabang} // Disable when no cabang is selected
+                      />
+                      {showDropdownUnitKerja && filteredUnitKerja.length > 0 && (
+                        <div className="absolute left-0 mt-1 w-full bg-white border rounded shadow-lg z-10 max-h-40 overflow-y-auto">
+                          {filteredUnitKerja.map((item) => (
+                            <div
+                              key={item.id}
+                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                              onClick={() => handleSelectChangeUnit({ target: { value: item.unitKerja } })}
+                            >
+                              {item.unitKerja}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <select
+                      className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
+                      value={selectedUnitKerja}
+                      onChange={handleSelectChangeUnit}
+                      disabled={!selectedCabang} // Disable when no cabang is selected
+                    >
+                      <option value="">Pilih Unit Kerja</option>
+                      {unitKerja.map((item) => (
+                        <option key={item.id} value={item.unitKerja}>
+                          {item.unitKerja}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
                 <select
-                  className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mt-12 md:mb-0"
+                  className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline lg:mt-12"
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
                 >
@@ -528,15 +579,15 @@ function DataAnggota() {
                   <option>Keluar</option>
                 </select>
 
-                <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto mt-12">
+                <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto lg:mt-12">
                   Jumlah Anggota : {jumlahAnggota}
                 </p>
               </div>
-              <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto mt-12">
+              <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto lg:mt-12">
                 Data Anggota
               </p>
               <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
-                <div className="space-x-2 w-full flex md:block mt-12 md:mt-1">
+                <div className="space-x-2 w-full flex md:block lg:mt-12">
                   <label htmlFor="maxItems" className="mr-2">
                     Tampilkan:
                   </label>
@@ -578,7 +629,7 @@ function DataAnggota() {
                       </span>
                     </div>
                   </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">
                     Foto
                   </th>
                   <th className="p-2 md:p-3 border text-white bg-teal-700">
@@ -625,7 +676,7 @@ function DataAnggota() {
                       </span>
                     </div>
                   </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
                     Aksi
                   </th>
                 </tr>
@@ -640,15 +691,28 @@ function DataAnggota() {
                         className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
                       >
                         <td className="p-2 md:p-3 border text-center">
-                          {globalIndex} {/* Use globalIndex instead of index + 1 */}
+                          <div className="flex justify-center items-center">
+                            {globalIndex}
+                            <Button
+                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"  // `lg:hidden` makes the button hidden on screens larger than the "lg" size
+                              onClick={() => handleExpand(index)}
+                            >
+                              <FaPlus className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </td>
-                        <td className="p-2 md:p-3 border md:table-cell hidden">
-                          <Image
-                            src={item.photoUrl}
-                            className="rounded-full mx-auto"
-                            width={100}
-                            height={100}
-                          />
+                        <td className="p-2 md:p-3 border">
+                          {fotoBase64[index] ? (
+                            <Image
+                              src={`data:image/jpeg;base64,${fotoBase64[index]}`}
+                              className="rounded-full mx-auto"
+                              width={100}
+                              height={100}
+                              alt="Belum ada Foto"
+                            />
+                          ) : (
+                            <span>Belum ada foto</span>
+                          )}
                         </td>
                         <td className="p-2 md:p-3 border">
                           <div className="font-bold text-sm">{item.namaLengkap}</div>
@@ -680,10 +744,10 @@ function DataAnggota() {
                               : "bg-green-200 text-green-900"
                               }`}
                           >
-                            {item.status}
+                            {item.status === "ANGGOTA" ? "Aktif" : item.status}
                           </div>
                         </td>
-                        <td className="p-2 md:p-3 border">
+                        <td className="p-2 md:p-3 border md:table-cell hidden">
                           <div className="flex justify-center space-x-2">
                             <Link
                               href="#"
@@ -721,14 +785,6 @@ function DataAnggota() {
                       {/* Mobile View Row Expansion */}
                       <tr className="md:hidden">
                         <td colSpan="7" className="p-2 border">
-                          <div className="flex justify-between items-center">
-                            <button
-                              className="text-blue-500"
-                              onClick={() => handleExpand(index)}
-                            >
-                              <FaPlus className="w-4 h-4" />
-                            </button>
-                          </div>
                           {expandedIndex === index && (
                             <div className="mt-2">
                               <div className="font-bold">{item.namaLengkap}</div>
@@ -741,8 +797,45 @@ function DataAnggota() {
                               <div>{item.unitKerja}</div>
                               <div>Anggota: {item.gabung}</div>
                               <div>{item.golongan}/{formatCurrency(item.iuran)}</div>
-                              <div className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.anggota === 'Tidak Aktif' ? 'bg-red-200 text-red-900' : 'bg-green-200 text-green-900'}`}>
-                                {item.anggota}
+                              <div
+                                className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${item.status === "BUKAN ANGGOTA"
+                                  ? "bg-red-200 text-red-900"
+                                  : "bg-green-200 text-green-900"
+                                  }`}
+                              >
+                                {item.status === "ANGGOTA" ? "Aktif" : item.status}
+                              </div>
+                              <div className="flex justify-center space-x-2 mt-2">
+                                <Link
+                                  href="#"
+                                  className="text-white bg-blue-500 p-2 border rounded-md"
+                                >
+                                  <FaEdit className="w-4 h-4" title="Edit Data" />
+                                </Link>
+                                <Button
+                                  className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                  title="Mutasi"
+                                  onClick={() => openModal(item)}
+                                >
+                                  <FaExchangeAlt className="w-4 h-4" />
+                                </Button>
+                                <Link
+                                  href="#"
+                                  className="text-white bg-red-500 p-2 border rounded-md"
+                                >
+                                  <FaExclamationTriangle
+                                    className="w-4 h-4"
+                                    title="Lapor"
+                                  />
+                                </Link>
+                                <Link
+                                  href={`https://wa.me/${item.nomorHp}`}
+                                  className="text-white bg-green-500 p-2 border rounded-md"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <FaWhatsapp className="w-4 h-4" title="WA" />
+                                </Link>
                               </div>
                             </div>
                           )}

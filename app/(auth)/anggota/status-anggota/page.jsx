@@ -34,6 +34,7 @@ function StatusAnggota() {
   const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("-- Unit Kerja --");
   const [selectedStatus, setSelectedStatus] = useState("Semua");
+  const [selectedTingkat, setSelectedTingkat] = useState('');
   const [anggota, setAnggota] = useState([]);
   const [cabang, setCabang] = useState([]);
   const [unitKerja, setUnitKerja] = useState([]);
@@ -53,6 +54,7 @@ function StatusAnggota() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [filteredCabang, setFilteredCabang] = useState([]);
   const [isPopupVisible, setPopupVisible] = useState(false);
+  const [fotoBase64, setFotoBase64] = useState("");
 
   useEffect(() => {
     if (selectedCabang) {
@@ -103,7 +105,35 @@ function StatusAnggota() {
       const page = 0; // Or the page number you want to fetch
       const size = 50; // Or the number of items per page you want to fetch
       const response = await GlobalApi.getAllAnggota(page, size);
-      setAnggota(response.data.content || []); // Use response.data.content if it's a Page object
+      const fotoBase64Array = [];
+
+      const fetchedData = response.data.content;
+
+      if (fetchedData && fetchedData.length > 0) {
+        fetchedData.forEach((item) => {
+          console.log('test', item)
+          if (item.foto) {
+            try {
+              const decodedString = atob(item.foto);
+              fotoBase64Array.push(decodedString);
+            } catch (error) {
+              console.error("Error decoding Base64:", error);
+              fotoBase64Array.push(null);
+            }
+          } else {
+            fotoBase64Array.push(null);
+          }
+        });
+      } else {
+        console.warn("No data found.");
+      }
+
+      // setAnggotaData(fetchedData || []);
+      setFotoBase64(fotoBase64Array);
+      // setTotalPages(response.data.totalPages || 0);
+      setLoading(false);
+      setAnggota(fetchedData || []); // Use response.data.content if it's a Page object
+
     } catch (error) {
       console.error("Error fetching anggota:", error);
       setAnggota([]); // Optionally, set to an empty array if there's an error
@@ -189,6 +219,20 @@ function StatusAnggota() {
 
   const { JumlahPNS, JumlahPPPK, JumlahNON_PNS, } = aggregated;
 
+  const tingkatSekolahMap = {
+    "TK_RA": "TK/RA",
+    "SD_MI": "SD/MI",
+    "SMP_MTS": "SMP/MTS",
+    "SMA_SMK_MA": "SMA/SMK/MA",
+    "PERGURUAN_TINGGI": "Perguruan Tinggi",
+    "PAUD": "PAUD"
+  };
+
+  // Fungsi untuk mengubah tingkat menjadi format yang lebih user-friendly
+  const formatTingkat = (tingkat) => {
+    return tingkatSekolahMap[tingkat] || tingkat; // Kembalikan nilai yang di-map, jika tidak ada gunakan nilai asli
+  };
+
   const categories = [
     { title: "PNS", count: JumlahPNS, items: ["PAUD", "SMP_MTS"] },
     { title: "NON PNS", count: JumlahNON_PNS, items: ["TK_RA", "SMA_SMK_MA"] },
@@ -261,15 +305,15 @@ function StatusAnggota() {
                           <td>${index + 1}</td>
                           <td></td>
                           <td>
-                            <div class="font-bold">${item.nama}</div>
-                            <div>${item.npa}</div>
-                            <div>${item.lahir}, ${item.tanggal}</div>
-                            <div>Usia ${item.usia} Tahun</div>
+                            <div class="font-bold">${item.namaLengkap}</div>
+                            <div>${item.npaPgri}</div>
+                            <div>${formatDate(item.tanggalLahir)}, ${calculateAge(item.tanggalLahir)}</div>
+                            <div>Usia ${calculateAge(item.tanggalLahir)} Tahun</div>
                             <div>${item.unitKerja}</div>
-                            <div>${item.tugas}</div>
-                            <div>${item.hp}</div>
+                            <div>${item.jabatan}</div>
+                            <div>${item.nomorHp}</div>
                           </td>
-                          <td>${item.tingkat}</td>
+                          <td>${item.tingkatSekolah}</td>
                           <td>${item.cabang}</td>
                           <td>${item.status}</td>
                         </tr>
@@ -318,11 +362,19 @@ function StatusAnggota() {
       const searchCabangFilter = item.cabang.toLowerCase().includes(filterCabang.toLowerCase());
       const searchUnitKerjaFilter = item.unitKerja.toLowerCase().includes(filterUnitKerja.toLowerCase());
 
-      return statusFilter && cabangFilter && unitKerjaFilter &&
+      // New: Filter for the selected school level (Tingkat Sekolah)
+      const tingkatSekolahFilter =
+        selectedTingkat === "" || item.tingkatSekolah === selectedTingkat;
+
+      return statusFilter &&
+        cabangFilter &&
+        unitKerjaFilter &&
         (filterCabang ? searchCabangFilter : true) &&
-        (filterUnitKerja ? searchUnitKerjaFilter : true);
+        (filterUnitKerja ? searchUnitKerjaFilter : true) &&
+        tingkatSekolahFilter; // Apply the school level filter
     });
-  }, [sortedData, selectedStatus, selectedCabang, selectedUnitKerja, filterCabang, filterUnitKerja]);
+  }, [sortedData, selectedStatus, selectedCabang, selectedUnitKerja, filterCabang, filterUnitKerja, selectedTingkat]);
+
 
   const openModal = (item) => {
     setCurrentItem(item);
@@ -499,7 +551,7 @@ function StatusAnggota() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">StatusAnggota</h1>
+              <h1 className="text-base">Status Anggota</h1>
             </div>
           </div>
         </header>
@@ -628,10 +680,20 @@ function StatusAnggota() {
                     ))}
                   </select>
                 </div>
-                <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mt-12 md:mb-0">
-                  <option>Pilih Tingkat Sekolah</option>
+                <select
+                  className="shadow appearance-none border rounded w-full md:w-44 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline lg:mt-12 md:mb-0"
+                  value={selectedTingkat}
+                  onChange={(e) => setSelectedTingkat(e.target.value)}
+                >
+                  <option value="">Pilih Tingkat Sekolah</option>
+                  <option value="PAUD">PAUD</option>
+                  <option value="TK_RA">TK/RA</option>
+                  <option value="SD_MI">SD/MI</option>
+                  <option value="SMP_MTS">SMP/MTS</option>
+                  <option value="SMA_SMK_MA">SMA/SMK/MA</option>
+                  <option value="PERGURUAN_TINGGI">Perguruan Tinggi</option>
                 </select>
-                <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto mt-12">
+                <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto lg:mt-12">
                   Jumlah Anggota : {jumlahAnggota}
                 </p>
               </div>
@@ -665,6 +727,65 @@ function StatusAnggota() {
 
           <div className="overflow-x-auto">
             <table className="w-full">
+              <thead>
+                <tr>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                    <div className="flex justify-between items-center">
+                      <span>No</span>
+                      <span
+                        className="ml-1 cursor-pointer"
+                        onClick={() => requestSort("index")}
+                      >
+                        {/* {getSortDirection("index")} */}
+                      </span>
+                    </div>
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
+                    Foto
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                    <div className="flex justify-between items-center">
+                      <span>Nama</span>
+                      <span
+                        className="ml-1 cursor-pointer"
+                        onClick={() => requestSort("nama")}
+                      >
+                        {/* {getSortDirection("nama")} */}
+                      </span>
+                    </div>
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
+                    <div className="flex justify-between items-center">
+                      <span>Tingkat Sekolah</span>
+                    </div>
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
+                    <div className="flex justify-between items-center">
+                      <span>Cabang</span>
+                      <span
+                        className="ml-1 cursor-pointer"
+                        onClick={() => requestSort("kerja")}
+                      >
+                        {/* {getSortDirection("kerja")} */}
+                      </span>
+                    </div>
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
+                    <div className="flex justify-between items-center">
+                      <span>Keterangan</span>
+                      <span
+                        className="ml-1 cursor-pointer"
+                        onClick={() => requestSort("keterangan")}
+                      >
+                        {/* {getSortDirection("keterangan")} */}
+                      </span>
+                    </div>
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                    Aksi
+                  </th>
+                </tr>
+              </thead>
               <tbody>
                 {paginatedMembersData.map((item, index) => (
                   <tr
@@ -674,13 +795,18 @@ function StatusAnggota() {
                     <td className="p-2 md:p-3 border text-center">
                       {startIndex + index + 1}
                     </td>
-                    <td className="p-2 md:p-3 border">
-                      <Image
-                        src={item.photoUrl}
-                        className="rounded-full mx-auto"
-                        width={100}
-                        height={100}
-                      />
+                    <td className="p-2 md:p-3 border md:table-cell hidden">
+                      {fotoBase64[index] ? (
+                        <Image
+                          src={`data:image/jpeg;base64,${fotoBase64[index]}`}
+                          className="rounded-full mx-auto"
+                          width={100}
+                          height={100}
+                          alt="Belum ada Foto"
+                        />
+                      ) : (
+                        <span>Belum ada foto</span>
+                      )}
                     </td>
                     <td className="p-2 md:p-3 border">
                       <div className="font-bold text-sm">{item.namaLengkap}</div>
@@ -695,14 +821,21 @@ function StatusAnggota() {
                       <div className="text-sm">{item.jabatan}</div>
                       <div className="text-sm">{item.nomorHp}</div>
                     </td>
-                    <td className="p-2 md:p-3 border text-center text-sm">
-                      {item.tingkatSekolah}
+                    <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
+                      {formatTingkat(item.tingkatSekolah)}
                     </td>
-                    <td className="p-2 md:p-3 border text-center text-sm">
+                    <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
                       {item.cabang}
                     </td>
-                    <td className="p-2 md:p-3 border text-center text-sm">
-                      {item.status}
+                    <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
+                      <div
+                        className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
+                          ? "bg-red-200 text-red-900"
+                          : "bg-green-200 text-green-900"
+                          }`}
+                      >
+                        {item.status === "ANGGOTA" ? "Aktif" : item.status}
+                      </div>
                     </td>
                     <td className="p-2 md:p-3 border text-center">
                       <div className="flex justify-center space-x-2">
@@ -720,7 +853,7 @@ function StatusAnggota() {
                           <FaExclamationTriangle className="w-4 h-4" title="Lapor" />
                         </Link>
                         <Link
-                          href={`https://wa.me/${item.hp}`}
+                          href={`https://wa.me/${item.nomorHp}`}
                           className="text-white bg-green-500 p-2 border rounded-md"
                           target="_blank"
                           rel="noopener noreferrer"
@@ -767,8 +900,8 @@ function StatusAnggota() {
                             <Button
                               onClick={() => handlePageClick(number)}
                               className={`mx-1 px-4 py-2 border rounded-md ${currentPage === number
-                                  ? "bg-blue-500 text-white"
-                                  : "bg-white text-black"
+                                ? "bg-blue-500 text-white"
+                                : "bg-white text-black"
                                 }`}
                             >
                               {number}
