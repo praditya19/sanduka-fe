@@ -535,6 +535,7 @@ function PencarianAnggota() {
                         className="rounded-full mx-auto"
                         width={100}
                         height={100}
+                        alt="Belum ada Foto"
                       />
                     </td>
                     <td className="p-2 md:p-3 border">
