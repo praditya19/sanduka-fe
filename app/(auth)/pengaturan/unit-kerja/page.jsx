@@ -1,8 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
@@ -88,19 +87,7 @@ const AddUnitForm = () => {
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
       <Toaster />
       {isMobile ? (
-        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-          <div className="container mx-auto flex items-center justify-between">
-            <div className="flex items-center">
-              <FontAwesomeIcon
-                icon={faArrowLeft}
-                size="sm"
-                onClick={handleBackClick}
-                className="cursor-pointer mr-4"
-              />
-              <h1 className="text-base">TAMBAH UNIT KERJA</h1>
-            </div>
-          </div>
-        </header>
+       <HeaderMobile />
       ) : (
         <HeaderHome />
       )}

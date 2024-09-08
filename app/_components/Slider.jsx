@@ -21,41 +21,33 @@ const Slider = () => {
       id: 1,
       imageUrl:
         "https://www.blibli.com/friends-backend/wp-content/uploads/2023/08/B800788-Cover-Pantai-yang-Ada-di-Kalimantan.jpg",
-      title: "Pantai Kalimantan",
+      title: "APA ITU SANDUKA?",
       description:
-        "Nikmati indahnya pantai yang ada di Kalimantan dengan pemandangan yang memukau.",
+        "Sanduka adalah santunan duka cita bagi anggota PGRI Aktif yang terdaftar di dalam database keanggotaan PGRI Kabupaten Jepara sebagai wujud solidaritas.",
     },
     {
       id: 2,
       imageUrl:
         "https://media.suara.com/pictures/653x366/2023/01/16/86458-ilustrasi-pantai-unsplashderek-oulasin.jpg",
-      title: "Liburan di Pantai",
+      title: "BERAPA SUMBANGAN ANGGOTA?",
       description:
-        "Pantai merupakan tempat yang tepat untuk menghabiskan waktu bersama keluarga.",
+        "Berdasarkan surat keputusan Pengurus PGRI Kabupaten Jepara nomor :034/SK/PGRI JPR/XXII/2020 tentang Teknis Pelaksanaan Dana Setia Kawan Duka PGRI Kabupaten Jepara, sumbangan Sanduka ditetapkan sebesar Rp. 3000 tiap anggota, dibayarkan tiap bulan, bersamaan dengan iuran anggota PGRI.",
     },
     {
       id: 3,
       imageUrl:
         "https://www.blibli.com/friends-backend/wp-content/uploads/2023/08/B800788-Cover-Pantai-yang-Ada-di-Kalimantan.jpg",
-      title: "Eksplorasi Pantai",
+      title: " BERAPA SANTUNAN YANG DITERIMA?",
       description:
-        "Jelajahi pantai-pantai yang indah di berbagai daerah di Indonesia.",
+        "Sesuai keputusan bersama Pengurus PGRI Kabupaten Jepara dan Pengurus Cabang se-Kabupaten Jepara, maka disepakati sebesar Rp.2.500.000,- dengan kuota 5 orang tiap bulan dan apabila anggota meninggal lebih daripada kuota akan diperhitungkan pada bulan berikutnya.",
     },
     {
       id: 4,
       imageUrl:
         "https://media.suara.com/pictures/653x366/2023/01/16/86458-ilustrasi-pantai-unsplashderek-oulasin.jpg",
-      title: "Sunset di Pantai",
+      title: "BAGAIMANA CARA PENGAJUANNYA?",
       description:
-        "Saksikan keindahan matahari terbenam di pantai yang menakjubkan.",
-    },
-    {
-      id: 5,
-      imageUrl:
-        "https://www.blibli.com/friends-backend/wp-content/uploads/2023/08/B800788-Cover-Pantai-yang-Ada-di-Kalimantan.jpg",
-      title: "Pantai Tropis",
-      description:
-        "Rasakan suasana tropis yang menyegarkan di pantai-pantai eksotis.",
+        "Pengurus Cabang melaporkan kematian anggotanya secara online melalui aplikasi sanduka.",
     },
   ];
 
@@ -125,23 +117,23 @@ const Slider = () => {
 
       {/* Text Content */}
       <div
-        className={`relative z-30 text-white py-64 px-8 max-w-7xl mx-auto transition-all duration-500 transform rounded-lg ${
+        className={`relative z-30 text-white py-64 px-20 max-w-7xl mx-auto transition-all duration-500 transform rounded-lg ${
           fade ? "opacity-0 translate-y-8" : "opacity-100 translate-y-0"
         } ${sliderList[currentSlide].textBackgroundColor} 
-    md:top-0 top-[-24%]`} // Menambahkan class untuk top di layar HP
+    md:top-0 top-[-26%]`} // Menambahkan class untuk top di layar HP
       >
         <h1
-          className={`text-4xl md:text-4xl font-bold mb-4 transition-all duration-500 transform ${
+          className={`text-xl md:text-xl font-bold mb-4 transition-all duration-500 transform ${
             fade ? "opacity-0 translate-y-8" : "opacity-100 translate-y-0"
           }`}
         >
           {sliderList[currentSlide].title}
         </h1>
-        {splitTextIntoLines(sliderList[currentSlide].description, 9).map(
+        {splitTextIntoLines(sliderList[currentSlide].description, 8).map(
           (line, index) => (
             <p
               key={index}
-              className={`text-lg md:text-2xl transition-all duration-500 transform ${
+              className={`text-sm md:text-lg transition-all duration-500 transform ${
                 fade ? "opacity-0 translate-y-8" : "opacity-100 translate-y-0"
               }`}
             >

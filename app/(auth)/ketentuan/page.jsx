@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 
 const page = () => {
@@ -46,20 +47,7 @@ const page = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
       {isMobile ? (
-        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-          <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
-            <div className="flex items-center">
-              <FontAwesomeIcon
-                icon={faArrowLeft}
-                size="sm"
-                onClick={handleBackClick}
-                className="cursor-pointer mr-4"
-              />
-              <h1 className="text-base">Rekap Meninggal</h1>
-            </div>
-          </div>
-        </header>
+        <HeaderMobile />
       ) : (
         <HeaderHome />
       )}
