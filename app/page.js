@@ -54,7 +54,6 @@ export default function Home() {
 
       <Header />
       <Slider />
-      <Tentang />
       <LayananKami />
       <GaleriKegiatan />
       <Flowchart />

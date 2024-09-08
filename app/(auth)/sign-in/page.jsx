@@ -20,7 +20,7 @@ function SignIn() {
   const [isVerified, setIsVerified] = useState(false);
 
   const router = useRouter();
-  const { setToken } = useAuth();
+  const { setToken, setUserId } = useAuth(); // Assuming you have a setUserId method
 
   const onSignIn = async () => {
     setLoader(true);
@@ -31,19 +31,20 @@ function SignIn() {
           "NPA PGRI harus 6 digit dan Tanggal Lahir harus 8 digit."
         );
       }
-
+  
       if (!isVerified) {
         throw new Error("Harap verifikasi reCAPTCHA.");
       }
-
+  
       const loginData = {
         npaPgri: npaPgri,
         tanggalLahir: tanggalLahir,
       };
-
+  
       const response = await GlobalApi.login(loginData);
       setToken(response.token);
-
+      sessionStorage.setItem('userId', response.id); // Store user ID in session storage
+  
       toast.success("Anda Berhasil Login");
       setTimeout(() => {
         router.push("/home");
@@ -54,6 +55,8 @@ function SignIn() {
       setLoader(false);
     }
   };
+  
+  
 
   function onChange(value) {
     setIsVerified(!!value);

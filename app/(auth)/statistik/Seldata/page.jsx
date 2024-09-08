@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import {
   Table,
@@ -10,6 +9,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import { useAuth } from "@/app/AuthContext";
+import { useRouter } from "next/navigation";
 
 const DataTable = () => {
   const [detailFilter, setDetailFilter] = useState("");
@@ -17,14 +18,16 @@ const DataTable = () => {
   const [cabangOptions, setCabangOptions] = useState([]);
   const [anggotaData, setAnggotaData] = useState([]); // Initialize as an empty array
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(false); // Change to a boolean for error state
+  const { token } = useAuth();
+  const router = useRouter();
 
   const fetchCabangData = async () => {
     try {
       const response = await GlobalApi.getCabang();
       setCabangOptions(response.data);
     } catch (error) {
-      console.error("Error fetching cabang data:", error);
+      console.error("Error fetching cabang data:", error); // Log error for debugging
     }
   };
 
@@ -39,30 +42,35 @@ const DataTable = () => {
       }
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching anggota data:", error);
-      setError("Failed to load data");
+      console.error("Error fetching anggota data:", error); // Log error for debugging
+      setError(true); // Set error state to true
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCabangData();
-    fetchAnggotaData();
-  }, []);
+    if (!token) {
+      router.push("/sign-in");
+    } else {
+      setLoading(true); // Start loading data
+      fetchCabangData();
+      fetchAnggotaData();
+    }
+  }, [token, router]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) { // Show generic error message if there's an error
+    return <div>Something went wrong. Please try again later.</div>;
+  }
 
   const filteredData = anggotaData.filter(
     (item) =>
       (detailFilter === "" || item.detail === detailFilter) &&
       (cabangFilter === "" || item.cabang === cabangFilter)
   );
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
 
   return (
     <div className="w-full p-4 container shadow-lg rounded-lg">

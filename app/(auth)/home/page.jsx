@@ -26,10 +26,9 @@ import {
 import Link from "next/link";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMobile from "@/app/_components/HeaderMobile";
 import FooterMobile from "@/app/_components/FooterMobile";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import { useRouter } from "next/navigation";
@@ -38,7 +37,7 @@ const icons = [
   { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
   {
     icon: faCheckCircle,
-    label: "Verifikasi Anggota",
+    label: "Verifikasi",
     href: "/verifikasi-anggota-mutasi",
     color: "text-blue-500",
   },
@@ -56,7 +55,7 @@ const icons = [
   },
   {
     icon: faUsersGear,
-    label: "Anggota by Name",
+    label: "by Name",
     href: "/anggota/by-name",
     color: "text-yellow-500",
   },
@@ -98,7 +97,7 @@ const icons = [
   },
   {
     icon: faSyncAlt,
-    label: "Singkron Data",
+    label: "Singkronisasi",
     href: "/singkron-data",
     color: "text-teal-700",
   },
@@ -123,7 +122,7 @@ const icons = [
 
   {
     icon: faUsers,
-    label: "Teman dalam Unit",
+    label: "Teman Unit",
     href: "/teman-unit-kerja",
     color: "text-green-700",
   },
@@ -221,91 +220,89 @@ export default function IconGrid() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      {isMobile ? (
-        <div className="bg-white rounded-lg shadow-lg border border-gray-200 w-full mb-5 px-4">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center">
-              <Image
-                src="/sanduka.png"
-                width={100}
-                height={50}
-                alt="logo"
-                className="object-contain"
-              />
-            </div>
-            <div className="flex items-center w-full max-w-lg ml-4">
-              <a href="/anggota/pencarian-anggota" className="flex w-full">
-                <Input
-                  type="text"
-                  placeholder="Cari Anggota"
-                  className="w-full p-2 border rounded-l-lg border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300 ease-in-out"
-                />
-                <Button className="bg-blue-500 text-white p-2 rounded-r-lg hover:bg-blue-600 transition duration-300 ease-in-out shadow-md">
-                  Cari
-                </Button>
-              </a>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <HeaderHome />
-      )}
+      {isMobile ? <HeaderMobile /> : <HeaderHome />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="flex-1 p-6 ">
             {isMobile ? (
-              <div className="flex flex-col items-center">
-                <div className="flex justify-around w-full gap-2">
-                  <div className="bg-red-100 rounded-lg shadow-md transform transition duration-300 hover:scale-105 p-1.5">
-                    <div className="text-center">
-                      <FontAwesomeIcon
-                        icon={faBullhorn}
-                        size="lg"
-                        className="text-red-500 mb-2"
-                      />
-                      <p className="text-xs font-normal text-gray-700 whitespace-nowrap mb-1">
-                        Lapor Meninggal
-                      </p>
-                      <p className="text-gray-600 font-bold text-sm">1 Orang</p>
-                    </div>
-                  </div>
-                  <div className="bg-orange-100 rounded-lg shadow-md transform transition duration-300 hover:scale-105 p-1.5">
-                    <div className="text-center">
-                      <FontAwesomeIcon
-                        icon={faUser}
-                        size="lg"
-                        className="text-orange-500 mb-2"
-                      />
-                      <p className="text-xs font-normal text-gray-700 whitespace-nowrap mb-1">
-                        Sanduka diberikan
-                      </p>
-                      <p className="text-gray-600 font-bold text-sm">
-                        173 Orang
-                      </p>
-                    </div>
-                  </div>
-                  <div className="bg-green-100 rounded-lg shadow-md transform transition duration-300 hover:scale-105 p-1.5">
-                    <div className="text-center">
-                      <FontAwesomeIcon
-                        icon={faMoneyBill}
-                        size="lg"
-                        className="text-green-500 mb-2"
-                      />
-                      <p className="text-xs font-normal text-gray-700 whitespace-nowrap mb-1">
-                        Total Santunan
-                      </p>
-                      <p className="text-gray-600 font-bold text-sm">
-                        Rp.432.500.000,-
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+               <div className="w-full mt-12">
+               <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-4 px-4">
+                 {/* Lapor Meninggal */}
+                 <div className="bg-white p-2 rounded-lg shadow-lg transform transition duration-300 hover:scale-105">
+                   <div className="flex justify-between items-center">
+                     <div>
+                       <p className="text-sm font-bold text-gray-800">
+                         Lapor Meninggal
+                       </p>
+                       <p className="text-xs font-semibold text-gray-500 uppercase">
+                         1 Orang
+                       </p>
+                       <p className="text-xs text-green-500 font-medium mt-1">
+                         <span className="mr-1">↑</span>3.48% Since last month
+                       </p>
+                     </div>
+                     <div className="flex-shrink-0 bg-red-500 rounded-full p-1">
+                       <FontAwesomeIcon
+                         icon={faBullhorn}
+                         className="text-white text-lg"
+                       />
+                     </div>
+                   </div>
+                 </div>
+           
+                 {/* Sanduka Diberikan */}
+                 <div className="bg-white p-2 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
+                   <div className="flex justify-between items-center">
+                     <div>
+                       <p className="text-sm font-bold text-gray-800">
+                         Sanduka Diberikan
+                       </p>
+                       <p className="text-xs font-semibold text-gray-500 uppercase">
+                         173 Orang
+                       </p>
+                       <p className="text-xs text-red-500 font-medium mt-1">
+                         <span className="mr-1">↓</span>1.10% Since yesterday
+                       </p>
+                     </div>
+                     <div className="flex-shrink-0 bg-orange-500 rounded-full p-1">
+                       <FontAwesomeIcon
+                         icon={faUser}
+                         className="text-white text-lg"
+                       />
+                     </div>
+                   </div>
+                 </div>
+           
+                 {/* Total Santunan */}
+                 <div className="bg-white p-2 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
+                   <div className="flex justify-between items-center">
+                     <div>
+                       <p className="text-sm font-bold text-gray-800">
+                         Total Santunan
+                       </p>
+                       <p className="text-xs font-semibold text-gray-500 uppercase">
+                         Rp.432.500.000,-
+                       </p>
+                       <p className="text-xs text-red-500 font-medium mt-1">
+                         <span className="mr-1">↓</span>3.48% Since last week
+                       </p>
+                     </div>
+                     <div className="flex-shrink-0 bg-yellow-500 rounded-full p-1">
+                       <FontAwesomeIcon
+                         icon={faMoneyBill}
+                         className="text-white text-lg"
+                       />
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </div>
             ) : (
               <div className="w-full mt-12">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 px-12">
@@ -382,7 +379,7 @@ export default function IconGrid() {
             )}
           </div>
 
-          <div className="px-16 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-2">
+          <div className="px-6 sm:px-12 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-2">
             {icons.map((item, index) => (
               <Link key={index} href={item.href}>
                 <div className="flex flex-col items-center bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
@@ -400,18 +397,24 @@ export default function IconGrid() {
           </div>
         </div>
 
-
         {/* Pembatas with Title */}
-        <div className={`w-full flex flex-col items-center my-4 ${isSidebarOpen ? 'ml-32' : 'ml-0'}`}>
+        <div
+          className={`w-full flex flex-col items-center my-4 ${
+            isSidebarOpen ? "ml-32" : "ml-0"
+          }`}
+        >
           <hr className="mt-2 border-gray-300 w-full" />
-          <h3 className="text-xl font-semibold text-gray-800 mt-4">
+          <h5 className="text-lg sm:text-xl font-semibold text-gray-800 mt-4 text-center">
             Anggota Meninggal Bulan Ini
-          </h3>
+          </h5>
         </div>
 
-
         {/* Card anggota meninggal */}
-        <div className={`w-full flex justify-center items-center relative mb-4 ${isSidebarOpen ? "ml-32" : "ml-0"}`}>
+        <div
+          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${
+            isSidebarOpen ? "ml-32" : "ml-0"
+          }`}
+        >
           <button
             onClick={handlePrev}
             className="absolute left-0 sm:left-1/3 bg-white rounded-full p-2 shadow-md"
@@ -424,8 +427,8 @@ export default function IconGrid() {
               className="rounded-full"
               src={currentData.img}
               alt="Profile Image"
-              width={100}
-              height={100}
+              width={80}
+              height={80}
             />
             <div className="ml-8">
               <h2 className="text-xs font-semibold text-gray-800">

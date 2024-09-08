@@ -16,8 +16,7 @@ import {
   faCog,
   faBars,
   faTimes,
-  faChevronDown,
-  faChevronUp,
+  faChevronDown
 } from "@fortawesome/free-solid-svg-icons";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,7 @@ const icons = [
   { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
   {
     icon: faCheckCircle,
-    label: "Verifikasi Anggota",
+    label: "Verifikasi",
     href: "/verifikasi-anggota-mutasi",
     color: "text-blue-500",
   },
@@ -46,7 +45,7 @@ const icons = [
   },
   {
     icon: faUsersGear,
-    label: "Anggota by Name",
+    label: "by Name",
     href: "/anggota/by-name",
     color: "text-yellow-500",
   },
@@ -83,13 +82,12 @@ const icons = [
   {
     icon: faWallet,
     label: "Keuangan",
-    href: "#",
+    href: "/keuangan/home",
     color: "text-lime-500",
-    isDropdown: true,
   },
   {
     icon: faSyncAlt,
-    label: "Singkron Data",
+    label: "Singkronisasi",
     href: "/singkron-data",
     color: "text-teal-700",
   },
@@ -114,7 +112,7 @@ const icons = [
   },
   {
     icon: faUsers,
-    label: "Teman dalam Unit",
+    label: "Teman Unit",
     href: "/teman-unit-kerja",
     color: "text-green-700",
   },
@@ -123,10 +121,6 @@ const icons = [
 export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState({
     pengaturan: false,
-    keuangan: false,
-    dataUtama: false,
-    sanduka: false,
-    organisasi: false,
   });
 
   const [currentPath, setCurrentPath] = useState(null);
@@ -166,7 +160,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
             onClick={toggleSidebar}
             className={`p-2 rounded-md text-black ${
               isSidebarOpen ? "bg-black" : "bg-transparent"
-            } transition-colors duration-300 hover:bg-gray-500 focus:outline-none fixed top-5 sm:top-1 left-2 sm:left-4 z-50`}
+            } transition-colors duration-300 hover:bg-gray-500 focus:outline-none fixed top-1 left-2 sm:left-2 z-50`}
           >
             <FontAwesomeIcon
               icon={isSidebarOpen ? faTimes : faBars}
@@ -250,172 +244,6 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
                               Unit Kerja
                             </span>
                           </Link>
-                        </>
-                      )}
-                      {/* dropdown keuangan */}
-                      {item.label === "Keuangan" && (
-                        <>
-                          <Link
-                            href="/keuangan/home"
-                            className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
-                          >
-                            <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                              Home
-                            </span>
-                          </Link>
-                          <button
-                            onClick={() => toggleDropdown("dataUtama")}
-                            className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md w-full justify-between"
-                          >
-                            <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                              Data Utama
-                            </span>
-                            <FontAwesomeIcon
-                              icon={faChevronDown}
-                              className={`ml-auto text-gray-700 transform ${
-                                isDropdownOpen["dataUtama"] ? "rotate-180" : ""
-                              } transition-transform duration-300`}
-                            />
-                          </button>
-
-                          {isDropdownOpen["dataUtama"] && (
-                            <div className="pl-4">
-                              <Link
-                                href="/keuangan/data-utama/iuran-pgri"
-                                className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
-                              >
-                                <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                                  Iuran PGRI
-                                </span>
-                              </Link>
-                              <Link
-                                href="/keuangan/data-utama/daspen"
-                                className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
-                              >
-                                <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                                  Daspen
-                                </span>
-                              </Link>
-                              <Link
-                                href="/keuangan/data-utama/derap"
-                                className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
-                              >
-                                <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                                  Derap
-                                </span>
-                              </Link>
-                              <Link
-                                href="/keuangan/data-utama/kalender"
-                                className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
-                              >
-                                <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                                  Kalender
-                                </span>
-                              </Link>
-                            </div>
-                          )}
-                          <button
-                            onClick={() => toggleDropdown("sanduka")}
-                            className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md w-full justify-between"
-                          >
-                            <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                              Sanduka
-                            </span>
-                            <FontAwesomeIcon
-                              icon={faChevronDown}
-                              className={`ml-auto text-gray-700 transform ${
-                                isDropdownOpen["sanduka"] ? "rotate-180" : ""
-                              } transition-transform duration-300`}
-                            />
-                          </button>
-
-                          {isDropdownOpen["sanduka"] && (
-                            <div className="pl-4">
-                              <Link
-                                href="/keuangan/sanduka/pemasukan"
-                                className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
-                              >
-                                <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                                  Pemasukan
-                                </span>
-                              </Link>
-                              <Link
-                                href="/keuangan/sanduka/pengeluaran"
-                                className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
-                              >
-                                <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                                  Pengeluaran
-                                </span>
-                              </Link>
-                              <Link
-                                href="/keuangan/sanduka"
-                                className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
-                              >
-                                <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                                  Lapor
-                                </span>
-                              </Link>
-                              <Link
-                                href="/keuangan/sanduka/laporan"
-                                className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
-                              >
-                                <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                                  Laporan
-                                </span>
-                              </Link>
-                            </div>
-                          )}
-                          <button
-                            onClick={() => toggleDropdown("organisasi")}
-                            className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md w-full justify-between"
-                          >
-                            <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                              Organisasi
-                            </span>
-                            <FontAwesomeIcon
-                              icon={faChevronDown}
-                              className={`text-gray-700 transform ${
-                                isDropdownOpen["organisasi"] ? "rotate-180" : ""
-                              } transition-transform duration-300`}
-                            />
-                          </button>
-
-                          {isDropdownOpen["organisasi"] && (
-                            <div className="pl-4">
-                              <Link
-                                href="/keuangan/organisasi/pemasukan"
-                                className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
-                              >
-                                <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                                  Pemasukan
-                                </span>
-                              </Link>
-                              <Link
-                                href="/keuangan/organisasi/pengeluaran"
-                                className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
-                              >
-                                <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                                  Pengeluaran
-                                </span>
-                              </Link>
-                              <Link
-                                href="/keuangan/organisasi"
-                                className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
-                              >
-                                <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                                  Laporan
-                                </span>
-                              </Link>
-                              <Link
-                                href="/keuangan/organisasi"
-                                className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
-                              >
-                                <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                                  Kwitansi
-                                </span>
-                              </Link>
-                            </div>
-                          )}
                         </>
                       )}
                     </div>

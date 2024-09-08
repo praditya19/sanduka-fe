@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheckCircle,
@@ -10,6 +10,7 @@ import {
   faUser,
   faArrowLeft,
   faUndo,
+  faBell,
 } from "@fortawesome/free-solid-svg-icons";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
@@ -19,6 +20,7 @@ import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Badge } from "@/components/ui/badge";
 import toast, { Toaster } from "react-hot-toast";
+import Link from "next/link";
 
 const VerifikasiAnggotaMutasi = () => {
   const [selectedRow, setSelectedRow] = useState(null);
@@ -37,6 +39,10 @@ const VerifikasiAnggotaMutasi = () => {
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [fotoBase64, setFotoBase64] = useState("");
+  const [notificationCount, setNotificationCount] = useState(2);
+  const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] =
+    useState(false);
+  const audioRef = useRef(null);
 
   const fetchDataAnggota = async (
     page = 0,
@@ -95,14 +101,15 @@ const VerifikasiAnggotaMutasi = () => {
     }
   };
 
-  const fetchData = async () => {
-    try {
-      const response = await GlobalApi.getCabang();
-      setCabang(response.data);
-    } catch (error) {
-      console.error("Error fetching cabang:", error);
-    }
-  };
+  // filterr cabng
+    const fetchData = async () => {
+      try {
+        const response = await GlobalApi.getCabang();
+        setCabang(response.data);
+      } catch (error) {
+        console.error("Error fetching cabang:", error);
+      }
+    };
 
   const fetchUnitKerja = async () => {
     try {
@@ -117,26 +124,49 @@ const VerifikasiAnggotaMutasi = () => {
     if (!token) {
       router.push("/sign-in");
     } else {
-      setLoading(false);
+      setLoading(false);  
       fetchData();
       fetchUnitKerja();
       fetchDataAnggota(currentPage, pageSize);
-
+  
       const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
       setIsSidebarOpen(sidebarState);
-
+  
       const handleResize = () => {
         setIsMobile(window.innerWidth <= 768);
       };
-
+  
       handleResize();
       window.addEventListener("resize", handleResize);
-
+  
       return () => {
         window.removeEventListener("resize", handleResize);
       };
     }
-  }, [token, router, currentPage, pageSize]);
+  
+    if (notificationCount > 0 && !isNotificationSoundPlaying) {
+      const playNotificationSound = () => {
+        const audio = new Audio("/sound-notification.wav");
+        audioRef.current = audio;
+  
+        audio
+          .play()
+          .then(() => {
+            setIsNotificationSoundPlaying(true);
+          })
+          .catch((error) => {
+            console.error("Error playing sound:", error);
+          });
+  
+        audio.onended = () => {
+          setIsNotificationSoundPlaying(false);
+        };
+      };
+  
+      playNotificationSound();
+    }
+  }, [token, router, currentPage, pageSize, notificationCount, isNotificationSoundPlaying]);
+  
 
   if (loading) {
     return <div>Loading...</div>;
@@ -201,11 +231,68 @@ const VerifikasiAnggotaMutasi = () => {
     fetchDataAnggota(currentPage, pageSize);
   };
 
+  const profileImageUrl = "/profile.png";
+
+  const handleNotificationClick = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsNotificationSoundPlaying(false);
+    }
+    setNotificationCount(0);
+  };
+
+
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
       <Toaster />
       {isMobile ? (
-        <MobileHeader handleBackClick={handleBackClick} />
+        <header className="bg-teal-500 text-white text-lg font-bold py-1.5 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+        <div className="flex justify-between w-full">
+          {/* Left Section: Back Button and Title */}
+          <div className="flex items-center">
+            <FontAwesomeIcon
+              icon={faArrowLeft}
+              size="sm"
+              onClick={handleBackClick}
+              className="cursor-pointer text-black mr-4"
+            />
+            <Link href="/home">
+              <Image src="/sanduka.png" width={70} height={60} alt="logo" />
+            </Link>
+          </div>
+          {/* Right Section: Notifications, Search, and Profile */}
+          <div className="flex space-x-6 items-center">
+            <button onClick={handleNotificationClick} className="relative">
+              <FontAwesomeIcon
+                icon={faBell}
+                className="w-5 h-5 text-gray-700"
+              />
+              {notificationCount > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center w-3 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+                  {notificationCount}
+                </span>
+              )}
+            </button>
+            <Link href="/anggota/pencarian-anggota">
+              <FontAwesomeIcon
+                icon={faSearch}
+                className="w-5 h-5 text-gray-700"
+              />
+            </Link>
+            <Link href="/update-profile">
+              <Image
+                src={profileImageUrl}
+                alt="Profile"
+                width={30}
+                height={30}
+                className="rounded-full cursor-pointer"
+              />
+            </Link>
+          </div>
+        </div>
+      </header>
       ) : (
         <HeaderHome />
       )}

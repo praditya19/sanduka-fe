@@ -9,15 +9,77 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
+import { useAuth } from "@/app/AuthContext";
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 const Page = () => {
+  const [entries, setEntries] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [npa, setNpa] = useState("");
+  const [adminData, setAdminData] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { token } = useAuth();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!token) {
+      router.push("/sign-in");
+    } else {
+      setLoading(false);
+
+      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+      setIsSidebarOpen(sidebarState);
+
+      const handleResize = () => {
+        setIsMobile(window.innerWidth <= 768);
+      };
+
+      handleResize();
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
+    }
+  }, [token, router]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  const cekNpa = async (npa) => {
+    try {
+      const data = await GlobalApi.cekNpa(npa);
+      setAdminData(data);
+    } catch (error) {
+      console.error("Error fetching npa:", error);
+      setAdminData(null);
+    }
+  };
+
+  const getAnggotaByNPA = async (npa) => {
+    try {
+      const data = await GlobalApi.cekNpa(npa);
+      setAdminData(data);
+      return data;
+    } catch (error) {
+      console.error("Error fetching npa:", error);
+      setAdminData();
+      return null;
+    }
+  };
+
   const dummyData = [
     {
       id: 1,
-      npa_pgri: "123456",
+      npa_pgri: "PG1234567",
       nama: "Budi Santoso",
       jabatan: "Ketua Cabang",
       email: "budi.santoso@example.com",
@@ -182,18 +244,11 @@ const Page = () => {
     },
   ];
 
-  const [entries, setEntries] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isPopupVisible, setIsPopupVisible] = useState(false);
-  const [npa, setNpa] = useState("");
-  const [adminData, setAdminData] = useState(null);
-
   const totalPages = Math.ceil(dummyData.length / entries);
 
   const handleEntriesChange = (e) => {
     setEntries(parseInt(e.target.value));
-    setCurrentPage(1); // Reset to first page when changing entries
+    setCurrentPage(1);
   };
 
   const handlePageChange = (newPage) => {
@@ -204,7 +259,7 @@ const Page = () => {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value.toLowerCase());
-    setCurrentPage(1); // Reset to first page when changing search
+    setCurrentPage(1);
   };
 
   const handleAddUserClick = () => {
@@ -221,13 +276,17 @@ const Page = () => {
     setNpa(e.target.value);
   };
 
-  const handleCekNpa = () => {
-    const foundData = dummyData.find((item) => item.npa_pgri === npa);
-
-    if (foundData) {
-      setAdminData(foundData); // Set admin data dari dummy data
-    } else {
-      setAdminData(null); // Handle jika data tidak ditemukan
+  const handleCekNpa = async () => {
+    try {
+      const data = await getAnggotaByNPA(npa);
+      if (data) {
+        setAdminData(data);
+      } else {
+        setAdminData(null);
+      }
+    } catch (error) {
+      console.error("Error fetching npa:", error);
+      setAdminData(null);
     }
   };
 
@@ -244,21 +303,10 @@ const Page = () => {
 
   const startIndex = (currentPage - 1) * entries;
   const selectedData = filteredData.slice(startIndex, startIndex + entries);
+
   const handleAddUser = () => {
-    // Implementasikan logika penambahan user baru di sini
     console.log("Menambahkan user baru:", adminData);
-
-    // Misalnya, kamu bisa menambahkan logika untuk menyimpan data ke database atau mengirim data ke API.
   };
-
-  useEffect(() => {
-    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-    setIsSidebarOpen(sidebarState);
-  }, []);
-
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const router = useRouter();
 
   const handleBackClick = () => {
     router.back();
@@ -270,36 +318,10 @@ const Page = () => {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-       {isMobile ? (
-        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-          <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
-            <div className="flex items-center">
-              <FontAwesomeIcon
-                icon={faArrowLeft}
-                size="sm"
-                onClick={handleBackClick}
-                className="cursor-pointer mr-4"
-              />
-              <h1 className="text-base">Rekap Meninggal</h1>
-            </div>
-          </div>
-        </header>
+      {isMobile ? (
+           <HeaderMobile />
       ) : (
         <HeaderHome />
       )}
@@ -315,7 +337,7 @@ const Page = () => {
             <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-6">
               <div className="mb-2">
                 <h3 className="text-base md:text-base font-bold mb-2">
-                  Data Pengurus Cabang dan Password
+                  Data Pengurus Cabang
                 </h3>
                 <div className="flex flex-col md:flex-row justify-between mb-4 space-y-4 md:space-y-0">
                   <div className="flex items-center  space-x-2">
@@ -425,7 +447,6 @@ const Page = () => {
 
                   {Array.from({ length: totalPages }, (_, index) => {
                     const pageNumber = index + 1;
-                    // Determine if the page number should be shown
                     const shouldShowPage =
                       pageNumber === currentPage ||
                       pageNumber === currentPage - 1 ||
@@ -489,7 +510,7 @@ const Page = () => {
                     </Label>
                     <Button
                       className="bg-blue-500 text-white px-4 py-2 mt-4 md:mt-6 rounded w-full md:w-auto"
-                      onClick={handleCekNpa}
+                      onClick={cekNpa}
                     >
                       Cek NPA
                     </Button>
@@ -530,47 +551,49 @@ const Page = () => {
 
                         {adminData && (
                           <div className="mt-4">
-                            <h3 className="text-lg font-semibold mb-4">
+                            <h3 className="text-lg font-semibold mb-4 text-center md:text-left">
                               Data Admin
                             </h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                              <div className="flex flex-col md:flex-row md:items-center">
+                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
                                 <Label
                                   htmlFor="nama"
-                                  className="block font-semibold mr-2 mb-1 md:mb-0"
+                                  className="block font-semibold md:w-1/3"
                                 >
                                   Nama:
                                 </Label>
                                 <Input
                                   type="text"
                                   id="nama"
-                                  value={adminData.nama}
+                                  value={adminData.namaLengkap}
+                                  readOnly
                                   className="border rounded w-full p-2 text-black bg-gray-200"
                                 />
                               </div>
 
-                              <div className="flex flex-col md:flex-row md:items-center">
+                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
                                 <Label
                                   htmlFor="npa_pgri"
-                                  className="block font-semibold mr-2 mb-1 md:mb-0"
+                                  className="block font-semibold md:w-1/3"
                                 >
                                   NPA:
                                 </Label>
                                 <Input
                                   type="text"
                                   id="npa_pgri"
-                                  value={adminData.npa_pgri}
-                                  className="border rounded w-full p-2 text-black bg-gray-200" // Perbaiki className
+                                  value={adminData.npaPgri}
+                                  readOnly
+                                  className="border rounded w-full p-2 text-black bg-gray-200"
                                 />
                               </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                              <div className="flex flex-col md:flex-row md:items-center">
+                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
                                 <Label
                                   htmlFor="jabatan"
-                                  className="block font-semibold mr-2 mb-1 md:mb-0"
+                                  className="block font-semibold md:w-1/3"
                                 >
                                   Jabatan:
                                 </Label>
@@ -578,14 +601,15 @@ const Page = () => {
                                   type="text"
                                   id="jabatan"
                                   value={adminData.jabatan}
-                                  className="border rounded w-full p-2 text-black bg-gray-200" // Perbaiki className
+                                  readOnly
+                                  className="border rounded w-full p-2 text-black bg-gray-200"
                                 />
                               </div>
 
-                              <div className="flex flex-col md:flex-row md:items-center">
+                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
                                 <Label
                                   htmlFor="email"
-                                  className="block font-semibold mr-2 mb-1 md:mb-0"
+                                  className="block font-semibold md:w-1/3"
                                 >
                                   Email:
                                 </Label>
@@ -593,24 +617,46 @@ const Page = () => {
                                   type="text"
                                   id="email"
                                   value={adminData.email}
-                                  className="border rounded w-full p-2 text-black bg-gray-200" // Perbaiki className
+                                  readOnly
+                                  className="border rounded w-full p-2 text-black bg-gray-200"
                                 />
                               </div>
                             </div>
 
-                            <div className="flex flex-col md:flex-row md:items-center mb-4">
-                              <Label
-                                htmlFor="password"
-                                className="block font-semibold mr-2 mb-1 md:mb-0"
-                              >
-                                Password:
-                              </Label>
-                              <Input
-                                type="text"
-                                id="password"
-                                value={adminData.password}
-                                className="border rounded w-full p-2 text-black bg-gray-200" // Perbaiki className
-                              />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
+                                <Label
+                                  htmlFor="password"
+                                  className="block font-semibold md:w-1/3"
+                                >
+                                  Role:
+                                </Label>
+                                <Input
+                                  type="text"
+                                  id="password"
+                                  value={adminData.status}
+                                  readOnly
+                                  className="border rounded w-full p-2 text-black bg-gray-200"
+                                />
+                              </div>
+
+                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
+                                <Label
+                                  htmlFor="role"
+                                  className="block font-semibold md:w-1/3"
+                                >
+                                  Ubah Role:
+                                </Label>
+                                <select
+                                  id="role"
+                                  className="border rounded w-full p-2 text-black bg-gray-200"
+                                >
+                                  <option value="super_admin">
+                                    SUPER ADMIN
+                                  </option>
+                                  <option value="admin">ADMIN</option>
+                                </select>
+                              </div>
                             </div>
 
                             <div className="mt-6 flex justify-end">
