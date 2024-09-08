@@ -10,7 +10,7 @@ const axiosClient = axios.create({
 // Konversi Gambar Dalam Format Base64
 const base64ToBlob = (base64, mime) => {
   const byteChars = atob(base64);
-  const byteNumbers = new Uint8Array(byteChars.length); 
+  const byteNumbers = new Uint8Array(byteChars.length);
   for (let i = 0; i < byteChars.length; i++) {
     byteNumbers[i] = byteChars.charCodeAt(i);
   }
@@ -82,7 +82,6 @@ const getUnitKerja = () => axiosClient.get("/api/unit-kerja/all");
 const getAllAnggota = (page = 0, size = 10) => {
   return axiosClient.get(`/api/auth/users?page=${page}&size=${size}`);
 };
-
 const getUserById = async (userId) => {
   try {
     const response = await axiosClient.get(`/api/auth/user/${userId}`);
@@ -126,8 +125,22 @@ const verifyUser = async (userId) => {
     }
   }
 };
+const RejectUser = async (userId) => {
+  try {
+    const response = await axiosClient.delete(`/api/auth/user/${userId}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
 
-// Add Unit Kerja
+// Pengaturan
 const addUnitKerja = async (payload) => {
   try {
     const response = await axiosClient.post("/api/unit-kerja/create", payload);
@@ -135,6 +148,43 @@ const addUnitKerja = async (payload) => {
   } catch (error) {
     console.error("Error adding unit kerja:", error);
     throw error;
+  }
+};
+const addCabang = async (payload) => {
+  try {
+    const response = await axiosClient.post("/api/daftarCabang", payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error adding unit kerja:", error);
+    throw error;
+  }
+};
+const deleteCabang = async (idCabang) => {
+  try {
+    const response = await axiosClient.delete(`/api/daftarCabang/${idCabang}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
+const cekNpa = async (npa) => {
+  try {
+    const response = await axiosClient.get(`/api/auth/npa/${npa}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
   }
 };
 
@@ -198,6 +248,7 @@ export default {
   getAllAnggota,
   getUnverifiedUsers,
   verifyUser,
+  RejectUser,
   getCabang,
   getJabatan,
   getGolonganJabatan,
