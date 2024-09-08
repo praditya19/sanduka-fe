@@ -187,25 +187,81 @@ const cekNpa = async (npa) => {
     }
   }
 };
+const getAllAdmin = (page = 0, size = 10, nama = "", email = "") => {
+  let query = `?page=${page}&size=${size}`;
+  if (nama) {
+    query += `&nama=${encodeURIComponent(nama)}`;
+  }
+  if (email) {
+    query += `&email=${encodeURIComponent(email)}`;
+  }
+  return axiosClient.get(`/api/register-admin/all${query}`);
+};
+const createAdmin = async (adminData) => {
+  try {
+    const formData = new FormData();
+    for (const [key, value] of Object.entries(adminData)) {
+      if (key === "foto" && value) {
+        formData.append(key, value);
+      } else {
+        formData.append(key, value);
+      }
+    }
+
+    const response = await axiosClient.post(
+      "/api/register-admin/create",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error creating admin:", error);
+    throw error;
+  }
+};
+const deleteAdmin = async (idAdmin) => {
+  try {
+    const response = await axiosClient.delete(`/api/register-admin/${idAdmin}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
 
 // LAPOR
 // Search users by name LAPOR
 const searchUsers = (name) => {
-  return axiosClient.get(`api/auth/users/name-and-ids?name=${encodeURIComponent(name)}`);
+  return axiosClient.get(
+    `api/auth/users/name-and-ids?name=${encodeURIComponent(name)}`
+  );
 };
 
 // submit lapor
-  const submitReport = async (reportData) => {
-    try {
-      const response = await axiosClient.post("/api/laporan/create", reportData);
-      return response.data;
-    } catch (error) {
-      console.error("Error submitting report:", error.response ? error.response.data : error.message);
-      throw error;
-    }
-  };
+const submitReport = async (reportData) => {
+  try {
+    const response = await axiosClient.post("/api/laporan/create", reportData);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error submitting report:",
+      error.response ? error.response.data : error.message
+    );
+    throw error;
+  }
+};
 
-  // REKAP MENINGGAL
+// REKAP MENINGGAL
 const getRekapMeninggal = async () => {
   try {
     const response = await axiosClient.get("/api/rekap/meninggal"); // Ganti dengan endpoint yang sesuai
@@ -254,8 +310,14 @@ export default {
   getGolonganJabatan,
   getUnitKerja,
   addUnitKerja,
+  addCabang,
+  deleteCabang,
+  cekNpa,
   searchUsers,
   getUserById,
+  getAllAdmin,
+  createAdmin,
+  deleteAdmin,
   submitReport,
   getRekapMeninggal,
   getRekapById,

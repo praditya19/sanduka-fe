@@ -11,7 +11,7 @@ const HeaderHome = () => {
   const [notificationCount, setNotificationCount] = useState(2);
   const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] =
     useState(false);
-    const audioRef = useRef(null);
+  const audioRef = useRef(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); // State for toggling profile menu
   const profileMenuRef = useRef(null); // Ref for profile menu
 
@@ -42,7 +42,10 @@ const HeaderHome = () => {
   };
 
   const handleClickOutside = (event) => {
-    if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+    if (
+      profileMenuRef.current &&
+      !profileMenuRef.current.contains(event.target)
+    ) {
       setIsProfileMenuOpen(false);
     }
   };
@@ -123,7 +126,10 @@ const HeaderHome = () => {
                 </Link>
               </li>
               <li className="relative" ref={profileMenuRef}>
-                <button onClick={toggleProfileMenu} className="flex items-center focus:outline-none">
+                <button
+                  onClick={toggleProfileMenu}
+                  className="flex items-center focus:outline-none"
+                >
                   <Image
                     src={`data:image/jpeg;base64,${profileImageUrl}`}
                     width={30}

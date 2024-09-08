@@ -14,25 +14,54 @@ import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import toast, { Toaster } from "react-hot-toast";
+
+const formatPhoneNumber = (phoneNumber) => {
+  if (phoneNumber.startsWith("08")) {
+    return `+62${phoneNumber.substring(1)}`;
+  }
+  return phoneNumber;
+};
 
 const Page = () => {
   const [entries, setEntries] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [npa, setNpa] = useState("");
   const [adminData, setAdminData] = useState(null);
+  const [adminDataAll, setAdminDataAll] = useState([]);
+  const [role, setRole] = useState(adminData?.status || "ADMIN");
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [totalEntries, setTotalEntries] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+
+  const fetchAdminData = async (
+    page = currentPage,
+    size = entries,
+    nama = "",
+    email = ""
+  ) => {
+    try {
+      const response = await GlobalApi.getAllAdmin(page, size, nama, email);
+      setAdminDataAll(response.data.content || []);
+      setTotalEntries(response.data.totalElements);
+      setTotalPages(response.data.totalPages);
+    } catch (error) {
+      console.error("Error fetching admin data:", error);
+    }
+  };
 
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
     } else {
       setLoading(false);
+      fetchAdminData(currentPage, entries);
 
       const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
       setIsSidebarOpen(sidebarState);
@@ -48,7 +77,7 @@ const Page = () => {
         window.removeEventListener("resize", handleResize);
       };
     }
-  }, [token, router]);
+  }, [token, router, currentPage, entries]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -76,190 +105,34 @@ const Page = () => {
     }
   };
 
-  const dummyData = [
-    {
-      id: 1,
-      npa_pgri: "PG1234567",
-      nama: "Budi Santoso",
-      jabatan: "Ketua Cabang",
-      email: "budi.santoso@example.com",
-      password: "password123",
-      kabupaten: "Jakarta",
-      cabang: "Jakarta Pusat",
-      userId: "budi123",
-    },
-    {
-      id: 2,
-      npa_pgri: "654321",
-      nama: "Siti Aminah",
-      jabatan: "Sekretaris Cabang",
-      email: "siti.aminah@example.com",
-      password: "password456",
-      kabupaten: "Bandung",
-      cabang: "Bandung Timur",
-      userId: "siti321",
-    },
-    {
-      id: 3,
-      npa_pgri: "789012",
-      nama: "Ahmad Fauzi",
-      jabatan: "Bendahara Cabang",
-      email: "ahmad.fauzi@example.com",
-      password: "password789",
-      kabupaten: "Surabaya",
-      cabang: "Surabaya Barat",
-      userId: "ahmad789",
-    },
-    {
-      id: 4,
-      npa_pgri: "345678",
-      nama: "Dewi Lestari",
-      jabatan: "Anggota Cabang",
-      email: "dewi.lestari@example.com",
-      password: "password101",
-      kabupaten: "Yogyakarta",
-      cabang: "Yogyakarta Utara",
-      userId: "dewi101",
-    },
-    {
-      id: 5,
-      npa_pgri: "901234",
-      nama: "Rudi Hartono",
-      jabatan: "Ketua Cabang",
-      email: "rudi.hartono@example.com",
-      password: "password102",
-      kabupaten: "Medan",
-      cabang: "Medan Selatan",
-      userId: "rudi102",
-    },
-    {
-      id: 6,
-      npa_pgri: "112233",
-      nama: "Tini Susanti",
-      jabatan: "Sekretaris Cabang",
-      email: "tini.susanti@example.com",
-      password: "password103",
-      kabupaten: "Semarang",
-      cabang: "Semarang Barat",
-      userId: "tini103",
-    },
-    {
-      id: 7,
-      npa_pgri: "445566",
-      nama: "Andi Setiawan",
-      jabatan: "Bendahara Cabang",
-      email: "andi.setiawan@example.com",
-      password: "password104",
-      kabupaten: "Makassar",
-      cabang: "Makassar Timur",
-      userId: "andi104",
-    },
-    {
-      id: 8,
-      npa_pgri: "778899",
-      nama: "Ratna Sari",
-      jabatan: "Anggota Cabang",
-      email: "ratna.sari@example.com",
-      password: "password105",
-      kabupaten: "Palembang",
-      cabang: "Palembang Barat",
-      userId: "ratna105",
-    },
-    {
-      id: 9,
-      npa_pgri: "123789",
-      nama: "Yudi Pratama",
-      jabatan: "Ketua Cabang",
-      email: "yudi.pratama@example.com",
-      password: "password106",
-      kabupaten: "Banjarmasin",
-      cabang: "Banjarmasin Tengah",
-      userId: "yudi106",
-    },
-    {
-      id: 10,
-      npa_pgri: "456012",
-      nama: "Maya Putri",
-      jabatan: "Sekretaris Cabang",
-      email: "maya.putri@example.com",
-      password: "password107",
-      kabupaten: "Bali",
-      cabang: "Denpasar Selatan",
-      userId: "maya107",
-    },
-    {
-      id: 11,
-      npa_pgri: "789345",
-      nama: "Hendra Wijaya",
-      jabatan: "Bendahara Cabang",
-      email: "hendra.wijaya@example.com",
-      password: "password108",
-      kabupaten: "Pontianak",
-      cabang: "Pontianak Utara",
-      userId: "hendra108",
-    },
-    {
-      id: 12,
-      npa_pgri: "101112",
-      nama: "Lia Wulandari",
-      jabatan: "Anggota Cabang",
-      email: "lia.wulandari@example.com",
-      password: "password109",
-      kabupaten: "Batam",
-      cabang: "Batam Timur",
-      userId: "lia109",
-    },
-    {
-      id: 13,
-      npa_pgri: "131415",
-      nama: "Agus Susanto",
-      jabatan: "Ketua Cabang",
-      email: "agus.susanto@example.com",
-      password: "password110",
-      kabupaten: "Pekanbaru",
-      cabang: "Pekanbaru Selatan",
-      userId: "agus110",
-    },
-    {
-      id: 14,
-      npa_pgri: "161718",
-      nama: "Fitriani",
-      jabatan: "Sekretaris Cabang",
-      email: "fitriani@example.com",
-      password: "password111",
-      kabupaten: "Bandar Lampung",
-      cabang: "Lampung Tengah",
-      userId: "fitri111",
-    },
-    {
-      id: 15,
-      npa_pgri: "192021",
-      nama: "Dedi Kurniawan",
-      jabatan: "Bendahara Cabang",
-      email: "dedi.kurniawan@example.com",
-      password: "password112",
-      kabupaten: "Malang",
-      cabang: "Malang Barat",
-      userId: "dedi112",
-    },
-  ];
-
-  const totalPages = Math.ceil(dummyData.length / entries);
+  const deleteAdmin = async (idAdmin) => {
+    try {
+      const response = await GlobalApi.deleteAdmin(idAdmin);
+      toast.success("Admin berhasil diHapus!");
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      console.error("Error fetching cabang:", error);
+    }
+  };
 
   const handleEntriesChange = (e) => {
     setEntries(parseInt(e.target.value));
-    setCurrentPage(1);
+    setCurrentPage(0);
   };
 
   const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
+    if (newPage >= 0 && newPage < totalPages) {
       setCurrentPage(newPage);
+      fetchAdminData(newPage, entries);
     }
   };
 
   const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value.toLowerCase());
-    setCurrentPage(1);
+    const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
+    fetchAdminData(0, entries, query);
   };
 
   const handleAddUserClick = () => {
@@ -290,22 +163,46 @@ const Page = () => {
     }
   };
 
-  const filteredData = dummyData.filter((item) => {
+  const filteredData = adminDataAll?.filter((item) => {
     return (
-      item.kabupaten.toLowerCase().includes(searchQuery) ||
-      item.cabang.toLowerCase().includes(searchQuery) ||
-      item.nama.toLowerCase().includes(searchQuery) ||
-      item.email.toLowerCase().includes(searchQuery) ||
-      item.userId.toLowerCase().includes(searchQuery) ||
-      item.password.toLowerCase().includes(searchQuery)
+      item.cabang.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.email.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
 
-  const startIndex = (currentPage - 1) * entries;
-  const selectedData = filteredData.slice(startIndex, startIndex + entries);
+  const startIndex = currentPage * entries;
+  const selectedData = filteredData?.slice(startIndex, startIndex + entries);
 
-  const handleAddUser = () => {
-    console.log("Menambahkan user baru:", adminData);
+  const handleRoleChange = (e) => {
+    setRole(e.target.value);
+  };
+
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+
+    const updatedAdminData = {
+      daerah: "KAB. JEPARA",
+      cabang: adminData.cabang,
+      nama: adminData.namaLengkap,
+      npapgri: adminData.npaPgri,
+      jabatan: adminData.jabatan,
+      nohp: adminData.noHp,
+      email: adminData.email,
+      password: adminData.password,
+      role: role,
+      foto: adminData.foto,
+    };
+
+    try {
+      const result = await GlobalApi.createAdmin(updatedAdminData);
+      toast.success("Admin berhasil ditambahkan!");
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      console.error("Error creating admin:", error);
+    }
   };
 
   const handleBackClick = () => {
@@ -318,8 +215,13 @@ const Page = () => {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
+  const handleDeleteAdminClick = (idAdmin) => {
+    deleteAdmin(idAdmin);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
+      <Toaster />
       {isMobile ? (
            <HeaderMobile />
       ) : (
@@ -380,103 +282,103 @@ const Page = () => {
                   <tr className="bg-teal-700 text-white">
                     <th className="p-2 md:p-3 border">No.</th>
                     <th className="p-2 md:p-3 border">Email</th>
-                    <th className="p-2 md:p-3 border">Kabupaten</th>
                     <th className="p-2 md:p-3 border">Cabang</th>
                     <th className="p-2 md:p-3 border">Nama</th>
-                    <th className="p-2 md:p-3 border">NIP</th>
-                    <th className="p-2 md:p-3 border">HP</th>
-                    <th className="p-2 md:p-3 border">ID User & Password</th>
+                    <th className="p-2 md:p-3 border">Npa Pgri</th>
+                    <th className="p-2 md:p-3 border">Nomor HP</th>
                     <th className="p-2 md:p-3 border">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {selectedData.map((item, index) => (
-                    <tr key={item.id} className="bg-gray-100">
-                      <td className="p-2 md:p-3 border text-center">
-                        {startIndex + index + 1}
-                      </td>
-                      <td className="p-2 md:p-3 border text-center">
-                        {item.email}
-                      </td>
-                      <td className="p-2 md:p-3 border">{item.kabupaten}</td>
-                      <td className="p-2 md:p-3 border">{item.cabang}</td>
-                      <td className="p-2 md:p-3 border">{item.nama}</td>
-                      <td className="p-2 md:p-3 border">{item.nama}</td>
-                      <td className="p-2 md:p-3 border text-center">
-                        {item.email}
-                      </td>
-                      <td className="p-2 md:p-3 border">
-                        Id User : {item.userId} <br /> Password :{" "}
-                        {item.password}
-                      </td>
-                      <td className="p-2 border">
-                        <div className="flex space-x-2 justify-center">
-                          <Button className="bg-red-500 text-white px-2 py-2 rounded">
-                            <FontAwesomeIcon icon={faTrash} />
-                          </Button>
-                          <Link
-                            href={`https://wa.me/${item.email}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-green-500 text-white px-2 py-2 rounded"
-                          >
-                            <FontAwesomeIcon icon={faWhatsapp} />
-                          </Link>
-                        </div>
+                  {filteredData.length > 0 ? (
+                    filteredData.map((item, index) => {
+                      const formattedPhoneNumber = formatPhoneNumber(
+                        item?.noHp || ""
+                      );
+
+                      return (
+                        <tr key={item.id} className="bg-gray-100">
+                          <td className="p-2 md:p-3 border text-center">
+                            {index + 1 + currentPage * entries}
+                          </td>
+                          <td className="p-2 md:p-3 border text-center">
+                            {item.email}
+                          </td>
+                          <td className="p-2 md:p-3 border">{item.cabang}</td>
+                          <td className="p-2 md:p-3 border">{item.nama}</td>
+                          <td className="p-2 md:p-3 border">{item.npaPgri}</td>
+                          <td className="p-2 md:p-3 border text-center">
+                            {item.noHp}
+                          </td>
+                          <td className="p-2 border">
+                            <div className="flex space-x-2 justify-center">
+                              <Button
+                                className="bg-red-500 text-white px-2 py-2 rounded"
+                                onClick={() => handleDeleteAdminClick(item.id)}
+                              >
+                                <FontAwesomeIcon icon={faTrash} />
+                              </Button>
+                              <Link
+                                href={`https://wa.me/${formattedPhoneNumber}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-green-500 text-white px-2 py-2 rounded"
+                              >
+                                <FontAwesomeIcon icon={faWhatsapp} />
+                              </Link>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="p-4 text-center">
+                        No data found
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
-              <div className="flex flex-col md:flex-row justify-between text-sm mt-4 items-center space-y-2 md:space-y-0">
+
+              <div className="flex justify-between text-sm mt-4 items-center space-y-2">
                 <span className="text-center md:text-left">
-                  Showing {startIndex + 1} to{" "}
-                  {Math.min(startIndex + entries, filteredData.length)} of{" "}
-                  {filteredData.length} entries
+                  Showing {currentPage * entries + 1} to{" "}
+                  {Math.min((currentPage + 1) * entries, totalEntries)} of{" "}
+                  {totalEntries} entries
                 </span>
-                <div className="flex flex-wrap justify-between md:justify-between space-x-2">
+                <div className="flex space-x-2">
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     className={`px-3 py-1 border text-sm rounded ${
-                      currentPage === 1 ? "bg-gray-300" : "bg-white"
+                      currentPage === 0 ? "bg-gray-300" : "bg-white"
                     }`}
-                    disabled={currentPage === 1}
+                    disabled={currentPage === 0}
                   >
                     Previous
                   </button>
 
-                  {Array.from({ length: totalPages }, (_, index) => {
-                    const pageNumber = index + 1;
-                    const shouldShowPage =
-                      pageNumber === currentPage ||
-                      pageNumber === currentPage - 1 ||
-                      pageNumber === currentPage + 1;
-
-                    if (totalPages <= 3 || shouldShowPage) {
-                      return (
-                        <button
-                          key={pageNumber}
-                          onClick={() => handlePageChange(pageNumber)}
-                          className={`px-3 py-1 text-sm border rounded ${
-                            currentPage === pageNumber
-                              ? "bg-blue-500 text-white"
-                              : "bg-white"
-                          }`}
-                        >
-                          {pageNumber}
-                        </button>
-                      );
-                    }
-
-                    return null;
-                  })}
-
+                  {Array.from({ length: totalPages }).map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handlePageChange(index)}
+                      className={`px-3 py-1 border text-sm rounded ${
+                        currentPage === index
+                          ? "bg-blue-500 text-white"
+                          : "bg-white"
+                      }`}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     className={`px-3 py-1 border text-sm rounded ${
-                      currentPage === totalPages ? "bg-gray-300" : "bg-white"
+                      currentPage === totalPages - 1
+                        ? "bg-gray-300"
+                        : "bg-white"
                     }`}
-                    disabled={currentPage === totalPages}
+                    disabled={currentPage === totalPages - 1}
                   >
                     Next
                   </button>
@@ -633,7 +535,7 @@ const Page = () => {
                                 </Label>
                                 <Input
                                   type="text"
-                                  id="password"
+                                  id="role"
                                   value={adminData.status}
                                   readOnly
                                   className="border rounded w-full p-2 text-black bg-gray-200"
@@ -650,11 +552,13 @@ const Page = () => {
                                 <select
                                   id="role"
                                   className="border rounded w-full p-2 text-black bg-gray-200"
+                                  value={role}
+                                  onChange={handleRoleChange}
                                 >
-                                  <option value="super_admin">
+                                  <option value="SUPER_ADMIN">
                                     SUPER ADMIN
                                   </option>
-                                  <option value="admin">ADMIN</option>
+                                  <option value="ADMIN">ADMIN</option>
                                 </select>
                               </div>
                             </div>
