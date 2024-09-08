@@ -188,6 +188,59 @@ const cekNpa = async (npa) => {
   }
 };
 
+// LAPOR
+// Search users by name LAPOR
+const searchUsers = (name) => {
+  return axiosClient.get(`api/auth/users/name-and-ids?name=${encodeURIComponent(name)}`);
+};
+
+// submit lapor
+  const submitReport = async (reportData) => {
+    try {
+      const response = await axiosClient.post("/api/laporan/create", reportData);
+      return response.data;
+    } catch (error) {
+      console.error("Error submitting report:", error.response ? error.response.data : error.message);
+      throw error;
+    }
+  };
+
+  // REKAP MENINGGAL
+const getRekapMeninggal = async () => {
+  try {
+    const response = await axiosClient.get("/api/rekap/meninggal"); // Ganti dengan endpoint yang sesuai
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching rekap meninggal:", error);
+    throw error;
+  }
+};
+
+const getAllDataLapor = async () => {
+  try {
+    const response = await axiosClient.get("/api/laporan/all");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all data:", error);
+    throw error;
+  }
+};
+
+const getRekapById = async (userId) => {
+  try {
+    const response = await axiosClient.get(`/api/laporan/${userId}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -201,8 +254,10 @@ export default {
   getGolonganJabatan,
   getUnitKerja,
   addUnitKerja,
-  addCabang,
-  deleteCabang,
-  cekNpa,
+  searchUsers,
   getUserById,
+  submitReport,
+  getRekapMeninggal,
+  getRekapById,
+  getAllDataLapor,
 };

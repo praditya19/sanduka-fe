@@ -18,6 +18,7 @@ import dynamic from "next/dynamic";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { AiOutlineInfoCircle } from 'react-icons/ai'; // Information icon from react-icons
 
 const MapComponent = dynamic(() => import("../../_components/MapComponent"), {
   ssr: false,
@@ -41,8 +42,10 @@ const Page = () => {
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [base64String, setBase64String] = useState("");
   const [today, setToday] = useState("");
-
   const router = useRouter();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
 
   const updateUnitKerja = (kecamatan) => {
     const filteredUnitKerja = unitKerja.filter((item) => {
@@ -230,7 +233,7 @@ const Page = () => {
               onSubmit={handleSubmit(nextStep)}
               className="bg-white p-4 sm:p-8 rounded-lg shadow-lg"
             >
-              <div className="w-full flex flex-col items-center space-y-4 mt-4">
+              <div className="w-full flex flex-col items-center">
                 <Image
                   width={150}
                   height={150}
@@ -247,23 +250,27 @@ const Page = () => {
                 />
                 <label
                   htmlFor="foto"
-                  className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md bg-white text-center"
+                  className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md bg-white text-center mt-2" // Jarak atas label
                 >
                   Choose Files
                 </label>
-                <p className="text-red-600 font-bold text-center">
+                <p className="text-red-600 font-bold text-center mt-2">
+                  {" "}
+                  {/* Jarak atas untuk teks Wajib */}
                   *Wajib Menggunakan Batik PGRI
                 </p>
                 <p className="text-red-600 text-center">
+                  {" "}
+                  {/* Jarak atas untuk teks Maksimal ukuran */}
                   *Maksimal ukuran file unggah 250kb format file (jpg, jpeg,
                   png)
                 </p>
                 {error && (
-                  <p className="text-red-600 text-center mt-2">{error}</p>
+                  <p className="text-red-600 text-center mt-2">{error}</p> // Jarak atas untuk error
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
                 <div className="w-full">
                   <Label className="block text-sm font-medium mb-3">
                     Email
@@ -529,33 +536,53 @@ const Page = () => {
                   )}
                 </div>
                 <div>
-                  <div className="w-full">
-                    <Label className="block text-sm font-medium mb-3">
-                      Alamat
-                      <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                        *Sesuai Dengan KTP
-                      </span>
-                    </Label>
-                    <Controller
-                      name="alamat"
-                      control={control}
-                      render={({ field }) => (
-                        <Textarea
-                          placeholder="JL. RT.  RW.  Desa, Kecamatan, Kabupaten"
-                          value={field.value}
-                          onChange={field.onChange}
-                        />
-                      )}
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    onClick={handleGetLocation}
-                    className="mt-2 p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
-                  >
-                    {loading ? "Mendapatkan Lokasi..." : "Get Location"}
-                  </Button>
-                </div>
+      <div className="w-full">
+        <Label className="block text-sm font-medium mb-3">
+          Alamat
+          <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+            *Sesuai Dengan KTP
+          </span>
+        </Label>
+        <Controller
+          name="alamat"
+          control={control}
+          render={({ field }) => (
+            <Textarea
+              placeholder="JL. RT.  RW.  Desa, Kecamatan, Kabupaten"
+              value={field.value}
+              onChange={field.onChange}
+            />
+          )}
+        />
+      </div>
+      <Button
+        type="button"
+        onClick={handleGetLocation}
+        className="mt-2 p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+      >
+        {loading ? "Mendapatkan Lokasi..." : "Get Location"}
+      </Button>
+      <AiOutlineInfoCircle
+            className="inline-block ml-2 text-blue-500 cursor-pointer"
+            size={20}
+            onClick={handleOpenModal}
+          />
+      {/* Modal Popup */}
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+          <div className="bg-white p-4 rounded-lg shadow-lg">
+            <h2 className="text-lg font-semibold">Informasi</h2>
+            <p className="mt-2">Mohon Get Location Ketika Anda Berada Dirumah</p>
+            <button
+              onClick={handleCloseModal}
+              className="mt-4 px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
                 <div className="w-full">

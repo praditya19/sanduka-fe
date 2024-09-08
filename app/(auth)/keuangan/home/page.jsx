@@ -1,11 +1,15 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowLeft,
+  faBell,
+  faSearch,
+} from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
@@ -46,6 +50,48 @@ export default function Home() {
     }
   }, [token, router]);
 
+  // header
+  const [notificationCount, setNotificationCount] = useState(2);
+  const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] =
+    useState(false);
+  const audioRef = useRef(null);
+
+  const profileImageUrl = "/profile.png";
+
+  const handleNotificationClick = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsNotificationSoundPlaying(false);
+    }
+    setNotificationCount(0);
+  };
+
+  useEffect(() => {
+    if (notificationCount > 0 && !isNotificationSoundPlaying) {
+      const playNotificationSound = () => {
+        const audio = new Audio("/sound-notification.wav");
+        audioRef.current = audio;
+
+        audio
+          .play()
+          .then(() => {
+            setIsNotificationSoundPlaying(true);
+          })
+          .catch((error) => {
+            console.error("Error playing sound:", error);
+          });
+
+        audio.onended = () => {
+          setIsNotificationSoundPlaying(false);
+        };
+      };
+
+      playNotificationSound();
+    }
+  }, [notificationCount, isNotificationSoundPlaying]);
+  // end
+
   const handleBackClick = () => {
     router.back();
   };
@@ -72,57 +118,53 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
       {isMobile ? (
-        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-          <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
+        <header className="bg-teal-500 text-white text-lg font-bold py-1.5 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+          <div className="flex justify-between w-full">
+            {/* Left Section: Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
                 size="sm"
                 onClick={handleBackClick}
-                className="cursor-pointer mr-4"
+                className="cursor-pointer text-black mr-4"
               />
-              <h1 className="text-base">Keuangan</h1>
+              <Link href="/home">
+                <Image src="/sanduka.png" width={70} height={60} alt="logo" />
+              </Link>
+            </div>
+            {/* Right Section: Notifications, Search, and Profile */}
+            <div className="flex space-x-6 items-center">
+              <button onClick={handleNotificationClick} className="relative">
+                <FontAwesomeIcon
+                  icon={faBell}
+                  className="w-5 h-5 text-gray-700"
+                />
+                {notificationCount > 0 && (
+                  <span className="absolute top-0 right-0 inline-flex items-center justify-center w-3 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+                    {notificationCount}
+                  </span>
+                )}
+              </button>
+              <Link href="/anggota/pencarian-anggota">
+                <FontAwesomeIcon
+                  icon={faSearch}
+                  className="w-5 h-5 text-gray-700"
+                />
+              </Link>
+              <Link href="/update-profile">
+                <Image
+                  src={profileImageUrl}
+                  alt="Profile"
+                  width={30}
+                  height={30}
+                  className="rounded-full cursor-pointer"
+                />
+              </Link>
             </div>
           </div>
         </header>
       ) : (
-        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-          <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
-            <div className="flex items-center">
-              <FontAwesomeIcon
-                icon={faArrowLeft}
-                size="sm"
-                onClick={handleBackClick}
-                className="cursor-pointer mr-4"
-              />
-              <h1 className="text-base">Keuangan</h1>
-            </div>
-
-            {/* Navigation Links */}
-            <nav className="flex items-center space-x-4">
-              <Link
-                href="/keuangan/data-utama"
-                className="text-white hover:text-gray-300"
-              >
-                Data Utama
-              </Link>
-              <Link
-                href="/keuangan/sanduka"
-                className="text-white hover:text-gray-300"
-              >
-                Sanduka
-              </Link>
-              <Link
-                href="/keuangan/organisasi"
-                className="text-white hover:text-gray-300"
-              >
-                Organisasi
-              </Link>
-            </nav>
-          </div>
-        </header>
+        <HeaderHome />
       )}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -132,8 +174,39 @@ export default function Home() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <div className="min-h-screen bg-gray-50 p-4 md:p-6 pt-20">
-            <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-10">
+          <div className="min-h-screen bg-gray-50 p-4 md:p-6 pt-6 ">
+          <div className="min-h-screen bg-gray-50 -ml-8 -mb-96 sm:-mb-40">
+            <nav className="container mt-8">
+              <ul className="flex flex-wrap space-x-4 md:space-x-6">
+                <li>
+                  <Link
+                    href="/keuangan/data-utama"
+                    className="text-gray-700 hover:text-teal-600"
+                  >
+                    Data Utama
+
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/keuangan/sanduka"
+                    className="text-gray-700 hover:text-teal-600"
+                  >
+                    Sanduka
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/keuangan/organisasi"
+                    className="text-gray-700 hover:text-teal-600"
+                  >
+                    Organisasi
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+          </div>
+            <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg -mt-[39rem] sm:-mt-[36rem]">
               <div className="text-center md:mx-6 my-4 md:my-0">
                 <h2 className="text-xl md:text-2xl font-extrabold">SALDO</h2>
                 <p className="text-md md:text-lg text-gray-600">Juli 2024</p>

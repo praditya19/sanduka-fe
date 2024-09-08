@@ -218,7 +218,7 @@ function App() {
                 id="agreement"
               />
               <Label className="ml-2 text-sm text-justify text-gray-600">
-                Dengan mengisi formulir pendaftaran ini, Saya dianggap telah
+                Dengan mengisi formulir pendaftaran ini, Saya telah
                 membaca, memahami, dan menyetujui syarat dan ketentuan ini.
               </Label>
             </div>

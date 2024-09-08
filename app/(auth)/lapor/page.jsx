@@ -1,90 +1,187 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowLeft,
+  faBell,
+  faSearch,
+} from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
+import GlobalApi from "@/app/_utils/GlobalApi";
+import Link from "next/link";
+import Image from "next/image";
+import toast, { Toaster } from "react-hot-toast";
 
-const dummyDataNames = [
-  { name: "Budi Waseso" },
-  { name: "Budi Doremi" },
-  { name: "Budi Santoso" },
-  { name: "Agus Susan" },
-  { name: "Susan Susanti" },
-];
-
-const FormStep1 = ({ onNext }) => {
-  const [formData, setFormData] = useState({
-    branch: "Jakarta",
-    unit: "Jepara",
-    memberName: "",
-    deathDate: "",
-    description: "",
-  });
+const FormStep1 = ({
+  formData,
+  setFormData,
+  pelaporData,
+  setPelaporData,
+  onNext,
+}) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredNames, setFilteredNames] = useState([]);
+  const [cabangOptions, setCabangOptions] = useState([]);
+  const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
+  const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
+  const [cabangFilter, setCabangFilter] = useState("");
+  const [isUnitKerjaDisabled, setIsUnitKerjaDisabled] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const router = useRouter();
+  const { token } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null); // Assuming you have a way to get the user ID
+  const today = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
+  const [silaporData, setSilaporData] = useState(null); // Tambahkan useState
 
   useEffect(() => {
-    if (searchTerm.length > 0) {
-      const filtered = dummyDataNames.filter((data) =>
-        data.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredNames(filtered);
+    if (!token) {
+      router.push("/sign-in");
     } else {
-      setFilteredNames([]);
-    }
-  }, [searchTerm]);
+      setLoading(false);
 
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
+      const fetchData = async () => {
+        try {
+          const [cabangResponse, unitKerjaResponse] = await Promise.all([
+            GlobalApi.getCabang(),
+            GlobalApi.getUnitKerja(),
+          ]);
+
+          setCabangOptions(cabangResponse.data);
+          setUnitKerjaOptions(unitKerjaResponse.data);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      };
+      fetchData();
+    }
+
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [token, router]);
+
+  useEffect(() => {
+    const fetchPelaporData = async () => {
+      const userId = sessionStorage.getItem("userId");
+      if (!userId) return; // Cek jika userId tidak ada
+
+      try {
+        const response = await GlobalApi.getUserById(userId);
+        setSilaporData(response);
+      } catch (error) {
+        console.error("Error fetching pelapor data:", error);
+      }
+    };
+
+    fetchPelaporData();
+  }, []);
+
+  useEffect(() => {
+    const fetchLaporanData = async () => {
+      const userId = sessionStorage.getItem("userId");
+      if (userId) {
+        try {
+          const laporanData = await GlobalApi.getUserById(userId);
+          setPelaporData(laporanData);
+
+          // Update formData only if it's different from laporanData
+          if (laporanData && laporanData !== formData) {
+            setFormData({
+              ...formData,
+            });
+            setPelaporData({
+              memberName: laporanData?.namaLengkap,
+              branch: laporanData?.cabang,
+              position: laporanData?.jabatan,
+              phone: laporanData?.nomorHp,
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching pelapor data:", error);
+        }
+      }
+    };
+
+    fetchLaporanData();
+  }, [setFormData, setPelaporData]);
+
+  const formatPhoneNumber = (number) => {
+    if (number && number.startsWith("+62")) {
+      return "0" + number.slice(3); // Replace +62 with 0
+    }
+    return number; // Return the number as is if it doesn't start with +62
   };
 
-  const handleNameClick = (name) => {
-    setFormData((prev) => ({ ...prev, memberName: name }));
+  const handleSearch = async (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setFormData((prevFormData) => ({ ...prevFormData, memberName: value }));
+
+    try {
+      const response = await GlobalApi.searchUsers(value);
+      const allNames = response.data;
+
+      const filtered = allNames.filter((data) =>
+        data.namaLengkap.toLowerCase().includes(value.toLowerCase())
+      );
+
+      setFilteredNames(filtered);
+    } catch (error) {
+      console.error("Error fetching names:", error);
+    }
+  };
+
+  const handleNameClick = (name, id) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      memberName: name,
+      memberId: id,
+    }));
     setSearchTerm(name);
-    setFilteredNames([]); // Hide the dropdown after selecting
+    setFilteredNames([]);
+    sessionStorage.setItem("selectedMemberId", id);
+  };
+
+  const handleNext = () => {
+    onNext(formData.memberId); // Pass the memberId to the onNext handler
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleSubmit = () => {
-    onNext(formData);
+  const handleCabangFilterChange = (e) => {
+    const selectedCabang = e.target.value;
+    setCabangFilter(selectedCabang);
+    setFormData((prev) => ({ ...prev, branch: selectedCabang }));
+
+    const filtered = unitKerjaOptions.filter(
+      (unit) => unit.cabang === selectedCabang
+    );
+    setFilteredUnitKerja(filtered);
+    setIsUnitKerjaDisabled(false);
   };
-
-  useEffect(() => {
-    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-    setIsSidebarOpen(sidebarState);
-  }, []);
-
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const router = useRouter();
-
-  const { token } = useAuth();
-  useEffect(() => {
-    if (!token) {
-      router.push("/sign-in");
-    }
-  }, [token, router]);
 
   const handleBackClick = () => {
     router.back();
@@ -96,36 +193,84 @@ const FormStep1 = ({ onNext }) => {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+  // Corrected FilterSection usage of Dropdown components
+  const FilterSection = ({
+    cabang,
+    unitKerja,
+    selectedCabang,
+    selectedUnitKerja,
+    handleCabangChange,
+    handleUnitKerjaChange,
+  }) => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-16 text-sm">
+      <div className="flex items-end gap-4">
+        <DropdownCabang
+          label="Cabang"
+          options={cabang}
+          selectedCabang={selectedCabang}
+          handleChange={handleCabangChange}
+        />
+        <DropdownUnitKerja
+          label="Unit Kerja"
+          options={unitKerja}
+          disabled={!selectedCabang}
+          selectedUnitKerja={selectedUnitKerja}
+          handleChange={handleUnitKerjaChange}
+        />
+      </div>
+    </div>
+  );
 
-    handleResize();
-    window.addEventListener("resize", handleResize);
+  const DropdownCabang = ({ label, options, handleChange, selectedCabang }) => (
+    <div>
+      <label className="block mb-2 font-semibold text-gray-800">{label}</label>
+      <select
+        className="border rounded-lg p-2 w-56 bg-white shadow-sm"
+        value={selectedCabang}
+        onChange={handleChange}
+      >
+        <option>Pilih {label}</option>
+        {options.map((item, index) => (
+          <option key={item.idKecamatan} value={item.kecamatan}>
+            {item.kecamatan}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+  // Corrected Unit Kerja dropdown rendering
+  const DropdownUnitKerja = ({
+    label,
+    options,
+    disabled,
+    handleChange,
+    selectedUnitKerja,
+  }) => (
+    <div>
+      <label className="block mb-2 font-semibold text-gray-800">{label}</label>
+      <select
+        className="border rounded-lg p-2 w-56 bg-white shadow-sm"
+        disabled={disabled}
+        value={selectedUnitKerja} // Bind value to selected state
+        onChange={handleChange}
+      >
+        <option value="">Pilih {label}</option>
+        {options.map((unit) => (
+          <option key={unit.id} value={unit.unitKerja}>
+            {unit.unitKerja}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
+  const profileImageUrl = "/profile.png";
 
   return (
     <div>
       {isMobile ? (
-        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-          <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
-            <div className="flex items-center">
-              <FontAwesomeIcon
-                icon={faArrowLeft}
-                size="sm"
-                onClick={handleBackClick}
-                className="cursor-pointer mr-4"
-              />
-              <h1 className="text-base">Pelaporan</h1>
-            </div>
-          </div>
-        </header>
+        <HeaderMobile />
       ) : (
         <HeaderHome />
       )}
@@ -137,16 +282,13 @@ const FormStep1 = ({ onNext }) => {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <div className="flex justify-center ">
-            <h1 className="text-xl font-semibold text-gray-800">Pelaporan</h1>
+          <div className="flex justify-center bg-red-600 py-2 rounded-b-lg shadow-md sm:mt-14 mt-12 sm:-mb-5 -mb-10">
+            <h1 className="text-xl font-semibold text-white">Pelaporan</h1>
           </div>
-          <form className="space-y-4 p-4 sm:p-8 rounded-lg ">
-            <div className="flex flex-wrap -mx-2">
-              {/* Bagian kiri - Data Pelapor */}
+          <form className=" p-4 sm:p-8 rounded-lg">
+            <div className="flex flex-wrap ">
               <div className="w-full lg:w-1/2 px-2">
-                <div className=" p-4 rounded-lg">
-                  {" "}
-                  {/* Background untuk bagian kiri */}
+                <div className="p-4 rounded-lg">
                   <h2 className="text-xl font-bold mb-4 pt-4 text-gray-800">
                     Pelapor
                   </h2>
@@ -159,8 +301,8 @@ const FormStep1 = ({ onNext }) => {
                       id="date"
                       placeholder="tanggal"
                       className="text-sm"
-                      value={formData.date}
-                      disabled
+                      value={today} // Set the default value here
+                      disabled // Make sure it's disabled
                     />
                   </div>
                   <div className="w-full flex flex-col items-start mt-2">
@@ -170,7 +312,7 @@ const FormStep1 = ({ onNext }) => {
                       placeholder="Nama"
                       className="text-sm"
                       disabled
-                      value={formData.name}
+                      value={silaporData?.namaLengkap}
                     />
                   </div>
                   <div className="w-full flex flex-col items-start mt-2">
@@ -180,7 +322,7 @@ const FormStep1 = ({ onNext }) => {
                       placeholder="Cabang / Khusus"
                       className="text-sm"
                       disabled
-                      value={formData.branch}
+                      value={silaporData?.cabang} // Display pelapor data
                     />
                   </div>
                   <div className="w-full flex flex-col items-start mt-2">
@@ -190,7 +332,7 @@ const FormStep1 = ({ onNext }) => {
                       placeholder="Jabatan"
                       className="text-sm"
                       disabled
-                      value={formData.position}
+                      value={silaporData?.jabatan} // Display pelapor data
                     />
                   </div>
                   <div className="w-full flex flex-col items-start mt-2">
@@ -200,107 +342,129 @@ const FormStep1 = ({ onNext }) => {
                       placeholder="Nomor Whatsapp"
                       className="text-sm"
                       disabled
-                      value={formData.phone}
+                      value={formatPhoneNumber(silaporData?.nomorHp)} // Display formatted phone number
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Bagian kanan - Data Anggota Meninggal */}
               <div className="w-full lg:w-1/2 px-2">
-                <div className="bg-white p-4 rounded-lg shadow-lg">
-                  {" "}
-                  {/* Background untuk bagian kanan */}
-                  <h2 className="text-xl font-bold mb-4 pt-4 text-gray-800">
-                    Data Anggota Meninggal
-                  </h2>
-                  <div className="w-full flex flex-col items-start">
-                    <Label className="block text-sm font-medium mb-1">
-                      Cabang / Khusus
-                    </Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Cabang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="jepara">Jepara</SelectItem>
-                          <SelectItem value="semarang">Semarang</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="w-full flex flex-col items-start mt-3">
-                    <Label className="block text-sm font-medium mb-1">
-                      Unit Kerja
-                    </Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Unit Kerja" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="laki-laki">Jepara</SelectItem>
-                          <SelectItem value="perempuan">Bangsri</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="relative w-full flex flex-col items-start mt-3">
-                    <label className="block text-sm font-medium mb-1">
-                      Nama Anggota
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder="Cari Nama Anggota"
-                      value={searchTerm}
-                      onChange={handleSearch}
-                      className="text-sm border border-gray-300 p-2 rounded"
-                    />
-                    {filteredNames.length > 0 && (
-                      <ul className="border border-gray-300 mt-1 w-full max-h-40 overflow-y-auto bg-white z-10">
-                        {filteredNames.map((data, index) => (
-                          <li
-                            key={index}
-                            onClick={() => handleNameClick(data.name)}
-                            className="p-2 hover:bg-gray-100 cursor-pointer"
+                <div className="bg-gray-100 p-4 rounded-lg shadow-lg">
+                  <div className="bg-gray-100 p-4 rounded-lg shadow-lg">
+                    <h2 className="text-xl font-bold mb-4 pt-4 text-gray-800">
+                      Data Anggota Meninggal
+                    </h2>
+                    <div className="w-full flex flex-col items-start">
+                      <Label className="block text-sm font-medium mb-1">
+                        Cabang / Khusus
+                      </Label>
+                      <select
+                        value={cabangFilter}
+                        onChange={handleCabangFilterChange}
+                        className="p-2 border rounded w-full"
+                      >
+                        <option value="">Pilih Cabang</option>
+                        {cabangOptions.map((cabang) => (
+                          <option
+                            key={cabang.idKecamatan}
+                            value={cabang.kecamatan}
                           >
-                            {data.name}
-                          </li>
+                            {cabang.kecamatan}
+                          </option>
                         ))}
-                      </ul>
-                    )}
-                  </div>
-                  <div className="w-full flex flex-col items-start mt-3">
-                    <Label className="block text-sm font-medium mb-1">
-                      Waktu Meninggal
-                    </Label>
-                    <Input
-                      type="date"
-                      id="date"
-                      placeholder="tanggal"
-                      className="text-sm"
-                    />
-                  </div>
-                  <div className="w-full flex flex-col items-start mt-3">
-                    <Label className="block text-sm font-medium mb-1">
-                      Keterangan
-                    </Label>
-                    <Textarea
-                      type="text"
-                      id="description"
-                      placeholder="Keterangan"
-                      className="text-sm"
-                    />
+                      </select>
+                    </div>
+                    <div className="w-full flex flex-col items-start mt-3">
+                      <Label className="block text-sm font-medium mb-1">
+                        Unit Kerja
+                      </Label>
+                      <select
+                        className="border rounded-lg p-2 w-full bg-white shadow-sm"
+                        name="unit"
+                        value={formData.unit}
+                        onChange={handleChange}
+                        disabled={isUnitKerjaDisabled} // Disable based on state
+                      >
+                        <option value="">Pilih Unit Kerja</option>
+                        {filteredUnitKerja.map((unit) => (
+                          <option key={unit.id} value={unit.unitKerja}>
+                            {unit.unitKerja}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="w-full flex flex-col items-start mt-3 relative">
+                      <Label className="block text-sm font-medium mb-1">
+                        Nama Anggota
+                      </Label>
+                      <Input
+                        type="text"
+                        id="memberName"
+                        name="memberName"
+                        value={searchTerm} // Bind input value to searchTerm
+                        onChange={handleSearch}
+                        placeholder="Cari Nama Anggota"
+                        className="text-sm"
+                      />
+                      {/* Render dropdown list of filtered names */}
+                      {filteredNames.length > 0 && (
+                        <ul className="absolute left-0 w-full mt-16 bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                          {filteredNames.map((data) => (
+                            <li
+                              key={data.id} // Use a unique key based on user ID
+                              className="py-2 px-4 hover:bg-gray-100 cursor-pointer"
+                              onClick={() =>
+                                handleNameClick(data.namaLengkap, data.id)
+                              } // Pass the clicked name and ID to the handler
+                            >
+                              {data.namaLengkap} {/* Display the full name */}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
+                    <div className="w-full flex flex-col items-start mt-3">
+                      <Label className="block text-sm font-medium mb-1">
+                        Tanggal Meninggal
+                      </Label>
+                      <Input
+                        type="date"
+                        id="deathDate"
+                        name="deathDate"
+                        value={formData.deathDate}
+                        onChange={handleChange}
+                        placeholder="Tanggal Wafat"
+                        className="text-sm"
+                      />
+                    </div>
+
+                    <div className="w-full flex flex-col items-start mt-3">
+                      <Label className="block text-sm font-medium mb-1">
+                        Keterangan
+                      </Label>
+                      <Textarea
+                        id="description"
+                        name="description" // Pastikan nama ini sesuai dengan nama dalam formData
+                        value={formData.description} // Menghubungkan nilai input dengan state
+                        onChange={handleChange} // Memastikan perubahan input di-handle
+                        placeholder="Keterangan"
+                        className="text-sm"
+                      />
+                    </div>
+
+                    <div className="flex justify-end mt-4">
+                      <Button
+                        type="button"
+                        onClick={handleNext} // Use handleNext to ensure memberId is included
+                        className="ml-auto"
+                      >
+                        Next
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div className="flex justify-end mt-4">
-              <Button type="button" onClick={onNext} className="ml-auto">
-                Next
-              </Button>
             </div>
           </form>
         </div>
@@ -309,15 +473,87 @@ const FormStep1 = ({ onNext }) => {
   );
 };
 
-const Resume = ({ onPrev, onSubmit }) => {
-  useEffect(() => {
-    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-    setIsSidebarOpen(sidebarState);
-  }, []);
-
+const Resume = ({
+  formData,
+  onPrev,
+  onSubmit,
+  selectedId,
+  onFormDataUpdate,
+}) => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [pelaporData, setPelaporData] = useState(null);
+  const [profileImageUrl, setProfileImageUrl] = useState("/profile.png");
   const router = useRouter();
+
+  // Functions for Fetching Data
+  const getAnggotaById = async () => {
+    try {
+      const memberId = sessionStorage.getItem("selectedMemberId");
+      const response = await GlobalApi.getUserById(memberId);
+      const decodedString = atob(response.foto);
+      setProfileImageUrl(decodedString);
+    } catch (error) {
+      console.error("Error Saat Mendapatkan Foto:", error);
+    }
+  };
+
+  const fetchPelaporData = async () => {
+    const userId = sessionStorage.getItem("userId");
+    if (userId) {
+      try {
+        const laporanData = await GlobalApi.getUserById(userId);
+        setPelaporData(laporanData);
+      } catch (error) {
+        console.error("Error fetching pelapor data:", error);
+      }
+    }
+  };
+
+  const fetchDataById = async () => {
+    if (selectedId) {
+      try {
+        const response = await GlobalApi.getUserById(selectedId);
+        onFormDataUpdate(response);
+      } catch (error) {
+        console.error(
+          "Error fetching report data:",
+          error.response?.data || error.message
+        );
+      }
+    }
+  };
+
+  // Utility Functions
+  const formatPhoneNumber = (number) => {
+    if (number && number.startsWith("+62")) {
+      return "0" + number.slice(3); // Replace +62 with 0
+    }
+    return number;
+  };
+
+  const calculateAge = (birthDate) => {
+    if (!birthDate) return 0;
+
+    const today = new Date();
+    const birthDateObj = new Date(birthDate);
+    let age = today.getFullYear() - birthDateObj.getFullYear();
+    const monthDifference = today.getMonth() - birthDateObj.getMonth();
+
+    if (
+      monthDifference < 0 ||
+      (monthDifference === 0 && today.getDate() < birthDateObj.getDate())
+    ) {
+      age--;
+    }
+
+    return age;
+  };
+
+  // Event Handlers
+  const handleResize = () => {
+    setIsMobile(window.innerWidth <= 768);
+  };
 
   const handleBackClick = () => {
     router.back();
@@ -330,10 +566,20 @@ const Resume = ({ onPrev, onSubmit }) => {
   };
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+    setIsSidebarOpen(sidebarState);
+  }, []);
 
+  useEffect(() => {
+    getAnggotaById();
+    fetchDataById();
+  }, [selectedId]);
+
+  useEffect(() => {
+    fetchPelaporData();
+  }, [selectedId]);
+
+  useEffect(() => {
     handleResize();
     window.addEventListener("resize", handleResize);
 
@@ -341,17 +587,11 @@ const Resume = ({ onPrev, onSubmit }) => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
   return (
     <div>
       {isMobile ? (
-        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-          <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
-            <div className="flex items-center">
-              <h1 className="text-base">Pelaporan</h1>
-            </div>
-          </div>
-        </header>
+       <HeaderMobile />
       ) : (
         <HeaderHome />
       )}
@@ -363,6 +603,7 @@ const Resume = ({ onPrev, onSubmit }) => {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
+          <Toaster />
           <div className="flex justify-center mt-3">
             <h1 className="text-xl font-semibold text-gray-800">Resume</h1>
           </div>
@@ -373,39 +614,42 @@ const Resume = ({ onPrev, onSubmit }) => {
               </Label>
               <div className="flex flex-col items-center gap-2">
                 <Image
-                  src="/profile.png"
+                  src={`data:image/jpeg;base64,${profileImageUrl}`}
                   alt="foto Anggota"
                   className="w-24 h-36 object-cover rounded-full border-4 border-gray-200 shadow-md"
                   width={110} // Adjust width in pixels (36 * 4 = 144px, matching w-36)
                   height={110} // Adjust height in pixels (36 * 4 = 144px, matching h-36)
                 />
-                <div className="flex flex-col items-center gap-4 text-gray-700">
+                <div className="flex flex-col items-center gap-1 text-gray-700">
                   <Label className="block text-sm font-medium text-center">
-                    Nama:
+                    {formData.id}
                   </Label>
                   <Label className="block text-sm font-medium text-center">
-                    NPA PGRI:
+                    {formData.namaLengkap}
                   </Label>
                   <Label className="block text-sm font-medium text-center">
-                    Usia: tahun
+                    {formData.npaPgri}
+                  </Label>
+                  <Label className="block text-sm font-medium mb-1">
+                    {calculateAge(formData.tanggalLahir)} tahun
                   </Label>
                   <Label className="block text-sm font-medium text-center">
-                    Cabang:
+                    {formData.cabang}
                   </Label>
                   <Label className="block text-sm font-medium text-center">
-                    Unit Kerja:
+                    {formData.unitKerja}
                   </Label>
                   <Label className="block text-sm font-medium text-center">
-                    Jabatan:
+                    {formData.jabatan}
                   </Label>
                   <Label className="block text-sm font-medium text-center">
-                    Alamat rumah:
+                    Alamat rumah: {formData.alamat}
                   </Label>
                   <Label className="block text-sm font-medium text-center">
-                    Tanggal Meninggal:
+                    Tanggal Meninggal: {formData.deathDate}
                   </Label>
                   <Label className="block text-sm font-medium text-center">
-                    Keterangan:
+                    Keterangan: {formData.description}
                   </Label>
                   <Label className="block text-sm font-medium text-center">
                     No HP:{" "}
@@ -414,13 +658,13 @@ const Resume = ({ onPrev, onSubmit }) => {
                       target="blank"
                       className="text-blue-600 font-semibold"
                     >
-                      (WhatsApp)
+                      {formData.nomorHp} (WhatsApp)
                     </Link>
                   </Label>
                   <Label className="block text-sm font-medium text-center">
                     Maps alamat yang meninggal:{" "}
                     <Link
-                      href=""
+                      href={`https://www.google.com/maps?q=${formData.latitude},${formData.longitude}`}
                       className="text-blue-600 font-semibold"
                       target="_blank"
                       rel="noopener noreferrer"
@@ -437,26 +681,29 @@ const Resume = ({ onPrev, onSubmit }) => {
                 Pelapor
               </Label>
               <div className="rounded-lg w-full flex justify-center">
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex flex-col items-center gap-1">
                   <Label className="block text-sm font-medium text-center">
-                    Nama:
+                    {pelaporData?.namaLengkap}
                   </Label>
                   <Label className="block text-sm font-medium text-center">
-                    NPA:
+                    {pelaporData?.npaPgri}
                   </Label>
                   <Label className="block text-sm font-medium text-center">
-                    Cabang:
+                    {pelaporData?.cabang}
                   </Label>
                   <Label className="block text-sm font-medium text-center">
-                    Unit Kerja:
+                    {pelaporData?.unitKerja}
                   </Label>
                   <Label className="block text-sm font-medium text-center">
-                    Jabatan:
+                    {pelaporData?.jabatan}
                   </Label>
                   <Label className="block text-sm font-medium text-center">
                     No HP:{" "}
-                    <Link href="" target="blank" className="text-blue-500">
-                      (WhatsApp)
+                    <Link
+                      href={`tel:${formData.nomorHpPelapor}`}
+                      className="text-blue-500"
+                    >
+                      {pelaporData?.nomorHp} (WhatsApp)
                     </Link>
                   </Label>
                 </div>
@@ -468,6 +715,7 @@ const Resume = ({ onPrev, onSubmit }) => {
                 Previous
               </Button>
               <Button type="button" onClick={onSubmit} className="ml-2">
+                {/* onSubmit used here */}
                 Submit
               </Button>
             </div>
@@ -480,17 +728,97 @@ const Resume = ({ onPrev, onSubmit }) => {
 
 const Page = () => {
   const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState({
+    id: "",
+    namaLengkap: "",
+    cabang: "",
+    unitKerja: "",
+    deathDate: "",
+    description: "",
+  });
+  const [selectedMemberId, setSelectedMemberId] = useState(""); // Add state for selectedMemberId
+  const [pelaporData, setPelaporData] = useState({
+    namaLengkap: "",
+    cabang: "",
+    jabatan: "",
+    nomorHp: "",
+  });
 
-  const handleNext = () => setStep(step + 1);
-  const handlePrev = () => setStep(step - 1);
-  const handleSubmit = () => {
-    console.log("Form submitted");
+  const handleNext = (memberId) => {
+    setSelectedMemberId(memberId); // Save the memberId
+    setStep((prev) => prev + 1);
+  };
+
+  const handlePrev = () => {
+    setStep(1); // Go back to FormStep1
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const currentDate = new Date().toISOString().split("T")[0];
+
+      const reportData = {
+        idTerlapor: formData.id,
+        tanggalPelaporan: currentDate,
+        namaPelapor: pelaporData?.memberName,
+        cabangPelapor: pelaporData?.branch,
+        jabatanPelapor: pelaporData?.position,
+        nomorHpPelapor: pelaporData?.phone,
+        cabangKhususTerlapor: formData.cabang,
+        unitKerjaTerlapor: formData.unitKerja,
+        namaAnggotaTerlapor: formData.namaLengkap,
+        waktuMeninggalTerlapor: formData.deathDate,
+        keteranganTerlapor: formData.description,
+      };
+
+      await GlobalApi.submitReport(reportData); // Submit the report
+
+      // Save the idTerlapor in session storage after successful submission
+      sessionStorage.setItem("idTerlapor", formData.id); // Saving idTerlapor in session storage
+
+      // handle toast
+      toast.success("Laporan berhasil ditambahkan!");
+      // Reload halaman setelah 2 detik
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      toast.error("Gagal menambahkan laporan. Coba lagi nanti.");
+    }
+  };
+
+  const handleFormDataUpdate = (data) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      ...data,
+    }));
+    setPelaporData((prevData) => ({
+      ...prevData,
+      ...data,
+    }));
   };
 
   return (
-    <div className="container mx-auto p-6 mt-12">
-      {step === 1 && <FormStep1 onNext={handleNext} />}
-      {step === 2 && <Resume onPrev={handlePrev} onSubmit={handleSubmit} />}
+    <div>
+      {step === 1 && (
+        <FormStep1
+          formData={formData}
+          setFormData={setFormData}
+          onNext={handleNext}
+          setPelaporData={setPelaporData}
+        />
+      )}
+      {step === 2 && (
+        <Resume
+          formData={formData}
+          setFormData={setFormData}
+          setPelaporData={setPelaporData}
+          onPrev={handlePrev}
+          onSubmit={handleSubmit}
+          selectedId={selectedMemberId}
+          onFormDataUpdate={handleFormDataUpdate}
+        />
+      )}
     </div>
   );
 };
