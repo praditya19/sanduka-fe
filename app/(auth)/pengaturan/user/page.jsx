@@ -2,7 +2,12 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMagnifyingGlass, faTrash } from "@fortawesome/free-solid-svg-icons";
+import {
+  faMagnifyingGlass,
+  faMinusCircle,
+  faPlusCircle,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { Label } from "@/components/ui/label";
@@ -16,11 +21,11 @@ import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
 
-const formatPhoneNumber = (phoneNumber) => {
-  if (phoneNumber.startsWith("08")) {
-    return `+62${phoneNumber.substring(1)}`;
-  }
-  return phoneNumber;
+const phoneNumberForLink = (phoneNumber) => {
+  const formatted = phoneNumber.startsWith("08")
+    ? `+62${phoneNumber.substring(1)}`
+    : phoneNumber;
+  return encodeURIComponent(formatted);
 };
 
 const Page = () => {
@@ -32,6 +37,7 @@ const Page = () => {
   const [adminData, setAdminData] = useState(null);
   const [adminDataAll, setAdminDataAll] = useState([]);
   const [role, setRole] = useState(adminData?.status || "ADMIN");
+  const [expandedRow, setExpandedRow] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [totalEntries, setTotalEntries] = useState(0);
@@ -219,14 +225,14 @@ const Page = () => {
     deleteAdmin(idAdmin);
   };
 
+  const toggleDetails = (id) => {
+    setExpandedRow((prevExpandedRow) => (prevExpandedRow === id ? null : id));
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
       <Toaster />
-      {isMobile ? (
-           <HeaderMobile />
-      ) : (
-        <HeaderHome />
-      )}
+      {isMobile ? <HeaderMobile /> : <HeaderHome />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
@@ -277,77 +283,162 @@ const Page = () => {
                   />
                 </div>
               </div>
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr className="bg-teal-700 text-white">
-                    <th className="p-2 md:p-3 border">No.</th>
-                    <th className="p-2 md:p-3 border">Email</th>
-                    <th className="p-2 md:p-3 border">Cabang</th>
-                    <th className="p-2 md:p-3 border">Nama</th>
-                    <th className="p-2 md:p-3 border">Npa Pgri</th>
-                    <th className="p-2 md:p-3 border">Nomor HP</th>
-                    <th className="p-2 md:p-3 border">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredData.length > 0 ? (
-                    filteredData.map((item, index) => {
-                      const formattedPhoneNumber = formatPhoneNumber(
-                        item?.noHp || ""
-                      );
-
-                      return (
-                        <tr key={item.id} className="bg-gray-100">
-                          <td className="p-2 md:p-3 border text-center">
-                            {index + 1 + currentPage * entries}
-                          </td>
-                          <td className="p-2 md:p-3 border text-center">
-                            {item.email}
-                          </td>
-                          <td className="p-2 md:p-3 border">{item.cabang}</td>
-                          <td className="p-2 md:p-3 border">{item.nama}</td>
-                          <td className="p-2 md:p-3 border">{item.npaPgri}</td>
-                          <td className="p-2 md:p-3 border text-center">
-                            {item.noHp}
-                          </td>
-                          <td className="p-2 border">
-                            <div className="flex space-x-2 justify-center">
-                              <Button
-                                className="bg-red-500 text-white px-2 py-2 rounded"
-                                onClick={() => handleDeleteAdminClick(item.id)}
-                              >
-                                <FontAwesomeIcon icon={faTrash} />
-                              </Button>
-                              <Link
-                                href={`https://wa.me/${formattedPhoneNumber}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="bg-green-500 text-white px-2 py-2 rounded"
-                              >
-                                <FontAwesomeIcon icon={faWhatsapp} />
-                              </Link>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan="7" className="p-4 text-center">
-                        No data found
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="p-2 md:p-3 border text-left">No</th>
+                      <th className="p-2 md:p-3 border text-left">Email</th>
+                      <th className="p-2 md:p-3 border hidden md:table-cell">
+                        Cabang
+                      </th>
+                      <th className="p-2 md:p-3 border hidden md:table-cell">
+                        Nama
+                      </th>
+                      <th className="p-2 md:p-3 border hidden md:table-cell">
+                        NPA PGri
+                      </th>
+                      <th className="p-2 md:p-3 border hidden md:table-cell">
+                        No HP
+                      </th>
+                      <th className="p-2 border text-center">Action</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {filteredData.length > 0 ? (
+                      filteredData.map((item, index) => {
+                        return (
+                          <React.Fragment key={item.id}>
+                            <tr className="bg-gray-100">
+                              <td className="p-2 md:p-3 border text-center">
+                                {index + 1 + currentPage * entries}
+                              </td>
+                              <td className="p-2 md:p-3 border text-center">
+                                {item.email}
+                              </td>
+                              <td className="p-2 md:p-3 border hidden md:table-cell">
+                                {item.cabang}
+                              </td>
+                              <td className="p-2 md:p-3 border hidden md:table-cell">
+                                {item.nama}
+                              </td>
+                              <td className="p-2 md:p-3 border hidden md:table-cell">
+                                {item.npaPgri}
+                              </td>
+                              <td className="p-2 md:p-3 border hidden md:table-cell">
+                                {item.noHp}
+                              </td>
+                              <td className="p-2 border text-center">
+                                <div className="flex space-x-2 justify-center">
+                                  {!isMobile ? (
+                                    <>
+                                      <Button
+                                        className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
+                                        onClick={() =>
+                                          handleDeleteAdminClick(item.id)
+                                        }
+                                      >
+                                        <FontAwesomeIcon icon={faTrash} />
+                                      </Button>
+                                      <Link
+                                        href={`https://wa.me/${phoneNumberForLink(
+                                          item.noHp
+                                        )}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="bg-green-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300 transition ease-in-out duration-150"
+                                      >
+                                        <FontAwesomeIcon icon={faWhatsapp} />
+                                      </Link>
+                                    </>
+                                  ) : (
+                                    <Button
+                                      className="bg-blue-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 transition ease-in-out duration-150"
+                                      onClick={() => toggleDetails(item.id)}
+                                    >
+                                      <FontAwesomeIcon
+                                        icon={
+                                          expandedRow === item.id
+                                            ? faMinusCircle
+                                            : faPlusCircle
+                                        }
+                                      />
+                                    </Button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                            {expandedRow === item.id && (
+                              <tr className="bg-gray-200">
+                                <td colSpan="7" className="p-4">
+                                  <div className="flex flex-col md:flex-row">
+                                    <div className="md:w-1/2">
+                                      <strong>Cabang:</strong> {item.cabang}
+                                      <br />
+                                      <strong>Nama:</strong> {item.nama}
+                                      <br />
+                                      <strong>Npa Pgri:</strong> {item.npaPgri}
+                                      <br />
+                                      {isMobile && (
+                                        <>
+                                          <strong>Nomor HP:</strong> {item.noHp}
+                                          <br />
+                                        </>
+                                      )}
+                                      <div className="flex flex-col space-y-2 mt-2">
+                                        <strong className="text-lg font-semibold">
+                                          Action:
+                                        </strong>
+                                        <div className="flex space-x-2">
+                                          <Button
+                                            className="bg-red-500 text-white px-3 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
+                                            onClick={() =>
+                                              handleDeleteAdminClick(item.id)
+                                            }
+                                          >
+                                            <FontAwesomeIcon icon={faTrash} />
+                                          </Button>
+                                          <Link
+                                            href={`https://wa.me/${phoneNumberForLink(
+                                              item.noHp
+                                            )}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="bg-green-500 text-white px-3 py-2 rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300 transition ease-in-out duration-150"
+                                          >
+                                            <FontAwesomeIcon
+                                              icon={faWhatsapp}
+                                            />
+                                          </Link>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan="7" className="p-4 text-center">
+                          No data found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-              <div className="flex justify-between text-sm mt-4 items-center space-y-2">
+              <div className="flex flex-col md:flex-row justify-between text-sm mt-4 items-center space-y-2 md:space-y-0 md:space-x-2">
                 <span className="text-center md:text-left">
                   Showing {currentPage * entries + 1} to{" "}
                   {Math.min((currentPage + 1) * entries, totalEntries)} of{" "}
                   {totalEntries} entries
                 </span>
-                <div className="flex space-x-2">
+
+                <div className="flex flex-wrap justify-center md:justify-end space-x-2">
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     className={`px-3 py-1 border text-sm rounded ${
@@ -358,19 +449,39 @@ const Page = () => {
                     Previous
                   </button>
 
-                  {Array.from({ length: totalPages }).map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handlePageChange(index)}
-                      className={`px-3 py-1 border text-sm rounded ${
-                        currentPage === index
-                          ? "bg-blue-500 text-white"
-                          : "bg-white"
-                      }`}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
+                  {Array.from({ length: totalPages }).map((_, index) => {
+                    if (
+                      index < 3 ||
+                      index > totalPages - 4 ||
+                      (index >= currentPage - 1 && index <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => handlePageChange(index)}
+                          className={`px-3 py-1 border text-sm rounded ${
+                            currentPage === index
+                              ? "bg-blue-500 text-white"
+                              : "bg-white"
+                          }`}
+                        >
+                          {index + 1}
+                        </button>
+                      );
+                    }
+                    if (index === 3 || index === totalPages - 4) {
+                      return (
+                        <span
+                          key={index}
+                          className="px-3 py-1 border text-sm rounded text-gray-500"
+                        >
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  })}
+
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     className={`px-3 py-1 border text-sm rounded ${
