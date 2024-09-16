@@ -1,10 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faMagnifyingGlass,
-  faTrash,
-} from "@fortawesome/free-solid-svg-icons";
+import { faMagnifyingGlass, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
@@ -14,6 +11,7 @@ import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import toast, { Toaster } from "react-hot-toast";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import Link from "next/link";
 
 const Page = () => {
   const [entries, setEntries] = useState(10);
@@ -132,22 +130,47 @@ const Page = () => {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+    <div className="min-h-screen bg-gray-50 p-2 md:p-6 mt-4 sm:mt-0 ml-4 sm:ml-0">
       <Toaster />
-      {isMobile ? (
-        <HeaderMobile />
-      ) : (
-        <HeaderHome />
-      )}
-
-      <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${
-          isSidebarOpen ? "ml-64" : "ml-0"
-        }`}
-      >
+      {isMobile ? <HeaderMobile /> : <HeaderHome />}
+      <div className="flex flex-col md:flex-row">
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+
+        <div
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
+        >
         <main className="min-h-screen bg-gray-50 p-4 md:p-6">
-          <div className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-6">
+          <nav className=" mt-6">
+            <ul className="flex flex-wrap space-x-4 md:space-x-6">
+              <li>
+                <Link
+                  href="/pengaturan/user"
+                  className="text-gray-700 hover:text-teal-600"
+                >
+                  User
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/pengaturan/unit-kerja"
+                  className="text-gray-700 hover:text-teal-600"
+                >
+                  Unit Kerja
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/pengaturan/tambah"
+                  className="text-gray-700 hover:text-teal-600"
+                >
+                  Tambah
+                </Link>
+              </li>
+            </ul>
+          </nav>
+          <div className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-4">
             <div className="mb-2">
               <h3 className="text-base font-bold mb-2">Tambah Cabang</h3>
               <div className="bg-white p-6 rounded-lg shadow-md">
@@ -209,6 +232,7 @@ const Page = () => {
           </div>
         </main>
       </div>
+    </div>
     </div>
   );
 };

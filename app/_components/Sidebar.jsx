@@ -101,7 +101,7 @@ const icons = [
   {
     icon: faCog,
     label: "Pengaturan",
-    href: "#",
+    href: "/pengaturan/user",
     color: "text-gray-700",
     isDropdown: true,
   },
@@ -177,75 +177,6 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
           {icons.map((item, index) => {
             const isActive = currentPath === item.href;
 
-            if (item.isDropdown) {
-              return (
-                <div className="relative" key={index}>
-                  <button
-                    onClick={() => toggleDropdown(item.label.toLowerCase())}
-                    className={`flex items-center justify-between p-3 w-full space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md ${
-                      isActive ? "bg-blue-500" : ""
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <FontAwesomeIcon
-                        icon={item.icon}
-                        size="lg"
-                        className={`${item.color} w-6`}
-                      />
-                      <span
-                        className={`text-sm md:text-base font-medium ${
-                          isActive ? "text-white" : "text-gray-700"
-                        }`}
-                      >
-                        {item.label}
-                      </span>
-                    </div>
-                    <FontAwesomeIcon
-                      icon={
-                        isDropdownOpen[item.label.toLowerCase()]
-                          ? faChevronUp
-                          : faChevronDown
-                      }
-                      className="text-gray-700"
-                    />
-                  </button>
-
-                  {isDropdownOpen[item.label.toLowerCase()] && (
-                    <div className="pl-10 mt-2">
-                      {/* dropdown pengaturan */}
-                      {item.label === "Pengaturan" && (
-                        <>
-                          <Link
-                            href="/pengaturan/user"
-                            className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
-                          >
-                            <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                              User
-                            </span>
-                          </Link>
-                          <Link
-                            href="/pengaturan/tambah"
-                            className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
-                          >
-                            <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                              Tambah Cabang
-                            </span>
-                          </Link>
-                          <Link
-                            href="/pengaturan/unit-kerja"
-                            className="flex items-center p-2 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md"
-                          >
-                            <span className="text-sm md:text-base font-medium text-gray-700 hover:text-white">
-                              Unit Kerja
-                            </span>
-                          </Link>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            }
             return (
               <Link
                 href={item.href}

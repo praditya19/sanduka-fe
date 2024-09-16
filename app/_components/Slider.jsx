@@ -106,7 +106,7 @@ const Slider = () => {
 
       {/* SVG Overlay */}
       <div
-        className={`absolute top-[-38%] inset-x-0 z-30 w-full h-full lg:w-screen lg:left-[-35%] lg:top-0`}
+        className={`absolute top-[-33%] inset-x-0 z-30 w-full h-full lg:w-screen lg:left-[-35%] lg:top-0`}
       >
         <img
           src="/bg_depan.png"
@@ -123,17 +123,17 @@ const Slider = () => {
     md:top-0 top-[-26%]`} // Menambahkan class untuk top di layar HP
       >
         <h1
-          className={`text-xl md:text-xl font-bold mb-4 transition-all duration-500 transform ${
+          className={`text-3xl md:text-3xlxl font-bold mb-4 transition-all duration-500 transform ${
             fade ? "opacity-0 translate-y-8" : "opacity-100 translate-y-0"
           }`}
         >
           {sliderList[currentSlide].title}
         </h1>
-        {splitTextIntoLines(sliderList[currentSlide].description, 8).map(
+        {splitTextIntoLines(sliderList[currentSlide].description, 8).map( 
           (line, index) => (
             <p
               key={index}
-              className={`text-sm md:text-lg transition-all duration-500 transform ${
+              className={`text-xl md:text-xl transition-all duration-500 transform ${
                 fade ? "opacity-0 translate-y-8" : "opacity-100 translate-y-0"
               }`}
             >

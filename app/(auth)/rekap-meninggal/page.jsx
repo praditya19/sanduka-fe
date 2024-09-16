@@ -8,6 +8,7 @@ import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import Image from "next/image";
 
 const Page = () => {
   // 1. State Management
@@ -22,10 +23,11 @@ const Page = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true); // New state for loading
 
-  const profileImageUrl = "/profile.png";
   const router = useRouter();
   const { token } = useAuth();
   const totalPages = Math.ceil(data.length / itemsPerPage);
+  const profileImageUrl = "/profile.png";
+  const [fotoBase64, setFotoBase64] = useState([]);
 
   // Combined useEffect
   useEffect(() => {
@@ -34,8 +36,34 @@ const Page = () => {
     } else {
       const fetchData = async () => {
         try {
-          const result = await GlobalApi.getAllDataLapor();
-          setData(result);
+          const fetchedData = await GlobalApi.getAllDataLapor();
+          setData(fetchedData);
+
+          const fotoBase64Array = [];
+
+          // Loop through data to decode Base64 images
+          if (fetchedData && fetchedData.length > 0) {
+            fetchedData.forEach((item) => {
+              if (item.foto) {
+                try {
+                  const decodedString = atob(item.foto);
+                  fotoBase64Array.push(decodedString);
+                } catch (error) {
+                  console.error("Error decoding Base64:", error);
+                  fotoBase64Array.push(null);
+                }
+              } else {
+                fotoBase64Array.push(null);
+              }
+            });
+
+            // Tambahkan ini untuk menampilkan array foto yang sudah di decode ke base64
+            console.log("Decoded Base64 Images:", fotoBase64Array);
+          } else {
+            console.warn("No data found.");
+          }
+
+          setFotoBase64(fotoBase64Array); // Set all decoded images
           setLoading(false);
         } catch (error) {
           console.error("Failed to fetch data:", error.message);
@@ -120,14 +148,16 @@ const Page = () => {
       {isMobile ? <HeaderMobile /> : <HeaderHome />}
       <div className="flex flex-col md:flex-row">
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-  
+
         <div
           className={`flex-1 transition-all duration-300 ease-in-out ${
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
           <div className="flex justify-center bg-red-600 py-2 rounded-b-lg shadow-md sm:mt-14 mt-12 sm:-mb-5 -mb-10">
-            <h1 className="text-xl font-semibold text-white">Rekap Meninggal</h1>
+            <h1 className="text-xl font-semibold text-white">
+              Rekap Meninggal
+            </h1>
           </div>
           <div className="w-full p-4 container shadow-lg rounded-lg mt-5 sm:mt-0">
             <div className="rounded-md flex flex-col py-4">
@@ -153,13 +183,15 @@ const Page = () => {
                       className="p-2 border rounded md:ml-4 mb-2 md:mb-0 w-full md:w-auto"
                     >
                       <option value="">All Months</option>
-                      {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                        <option key={month} value={month}>
-                          {new Date(0, month - 1).toLocaleString("default", {
-                            month: "long",
-                          })}
-                        </option>
-                      ))}
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map(
+                        (month) => (
+                          <option key={month} value={month}>
+                            {new Date(0, month - 1).toLocaleString("default", {
+                              month: "long",
+                            })}
+                          </option>
+                        )
+                      )}
                     </select>
                     <select
                       value={selectedYear}
@@ -181,7 +213,9 @@ const Page = () => {
                     </select>
                     <select
                       value={itemsPerPage}
-                      onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
+                      onChange={(e) =>
+                        setItemsPerPage(parseInt(e.target.value))
+                      }
                       className="p-2 border rounded md:ml-4 mb-2 md:mb-0 w-full md:w-auto"
                     >
                       <option value={10}>10</option>
@@ -189,7 +223,10 @@ const Page = () => {
                       <option value={100}>100</option>
                     </select>
                   </div>
-                  <button className="p-2 px-4 bg-blue-500 text-white rounded w-full md:w-auto">
+                  <button
+                    onClick={() => window.print()} // Fungsi untuk mencetak halaman
+                    className="p-2 px-4 bg-blue-500 text-white rounded w-full md:w-auto"
+                  >
                     Cetak
                   </button>
                 </div>
@@ -234,12 +271,21 @@ const Page = () => {
                               {(currentPage - 1) * itemsPerPage + index + 1}
                             </td>
                             <td className="border px-4 py-2">
-                              <img
-                                src="/path-to-image"
-                                alt="Foto"
+                              <Image
+                                src={
+                                  fotoBase64[index]
+                                    ? `data:image/jpeg;base64,${fotoBase64[index]}` // Ensure the format is correct
+                                    : profileImageUrl // Fallback image if no Base64 image is available
+                                }
+                                alt={`Foto ${item.namaPelapor || "User"}`}
                                 width={50}
                                 height={50}
                                 className="rounded"
+                                unoptimized={true} // Base64 images might not need optimization
+                                onError={(e) => {
+                                  console.error("Image failed to load:", e);
+                                  // You could set a state here to show a different fallback
+                                }}
                               />
                             </td>
                             {/* Data Lapor */}
@@ -321,7 +367,7 @@ const Page = () => {
                   >
                     Prev
                   </button>
-  
+
                   {getVisiblePages().map((page) => (
                     <button
                       key={page}
@@ -333,7 +379,7 @@ const Page = () => {
                       {page}
                     </button>
                   ))}
-  
+
                   <button
                     onClick={() =>
                       setCurrentPage((prev) => Math.min(prev + 1, totalPages))
@@ -358,7 +404,6 @@ const Page = () => {
       </div>
     </div>
   );
-  
 };
 
 export default Page;

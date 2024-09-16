@@ -8,9 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { useRouter } from "next/navigation";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import HeaderHome from "@/app/_components/HeaderHome";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
@@ -28,6 +26,50 @@ const Page = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { token } = useAuth();
+
+  const [cabangOptions, setCabangOptions] = useState([]);
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+
+  useEffect(() => {
+    GlobalApi.getCabang()
+      .then((response) => {
+        console.log("Fetched cabang data:", response.data); // Log the fetched data
+        setCabangOptions(response.data);
+        setLoading(false); // Set loading to false once data is fetched
+      })
+      .catch((error) => {
+        console.error("Error fetching cabang options:", error);
+        setLoading(false);
+      });
+  }, []);
+
+  const months = [
+    { value: "01", label: "January" },
+    { value: "02", label: "February" },
+    { value: "03", label: "March" },
+    { value: "04", label: "April" },
+    { value: "05", label: "May" },
+    { value: "06", label: "June" },
+    { value: "07", label: "July" },
+    { value: "08", label: "August" },
+    { value: "09", label: "September" },
+    { value: "10", label: "October" },
+    { value: "11", label: "November" },
+    { value: "12", label: "December" },
+  ];
+
+  const years = Array.from(new Array(20), (v, i) => i + 2020); // Generate years from 2020
+
+  const handleFilterChange = () => {
+    // Implement your logic to fetch or filter data based on selectedCabang, selectedMonth, and selectedYear
+    console.log("Filters applied:", {
+      selectedCabang,
+      selectedMonth,
+      selectedYear,
+    });
+  };
 
   const fetchData = async () => {
     try {
@@ -147,18 +189,58 @@ const Page = () => {
           <div className="w-full p-4 container shadow-lg rounded-lg mt-12">
             <div className="rounded-md flex flex-col py-4">
               <div className="container px-2">
-                <div className="w-full flex mb-4 relative">
-                  <input
-                    type="text"
-                    placeholder="Search"
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    className="p-2 pl-10 border rounded max-w-sm w-full"
-                  />
-                  <FontAwesomeIcon
-                    icon={faMagnifyingGlass}
-                    className="absolute left-3 top-2.5 w-5 h-5 text-gray-500"
-                  />
+                <div className="w-full flex items-center justify-between mb-4">
+                  <div className="flex w-2/3 space-x-2">
+                    {/* Cabang Dropdown */}
+                    <select
+                      value={selectedCabang}
+                      onChange={(e) => setSelectedCabang(e.target.value)}
+                      className="p-2 border rounded w-full"
+                    >
+                      <option value="">Semua Cabang</option>
+                      {cabangOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.kecamatan}{" "}
+                          {/* Sesuaikan properti ini dengan yang benar */}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Month Dropdown */}
+                    <select
+                      value={selectedMonth}
+                      onChange={(e) => setSelectedMonth(e.target.value)}
+                      className="p-2 border rounded w-full"
+                    >
+                      <option value="">Pilih Bulan</option>
+                      {months.map((month) => (
+                        <option key={month.value} value={month.value}>
+                          {month.label}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Year Dropdown */}
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(e.target.value)}
+                      className="p-2 border rounded w-full"
+                    >
+                      <option value="">Pilih Tahun</option>
+                      {years.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button
+                    onClick={handleFilterChange}
+                    className="p-2 bg-blue-500 text-white rounded"
+                  >
+                    Cetak
+                  </button>
                 </div>
 
                 <Table className="w-full table-auto mb-8">
