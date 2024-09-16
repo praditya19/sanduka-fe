@@ -1,12 +1,11 @@
 "use client";
 import React from "react";
 import { useState, useEffect } from "react";
-import Image from "next/image";
+import Image from "next/image"; 
 import Link from "next/link";
 import { faFilePdf } from "@fortawesome/free-solid-svg-icons";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";

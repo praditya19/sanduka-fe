@@ -153,7 +153,7 @@ export default function Sanduka() {
               isActive={activeTab === "kalender"}
               onClick={() => handleTabChange("kalender")}
             >
-              Laporan
+              Kalender
             </NavItem>
           </ul>
         </nav>

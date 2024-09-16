@@ -7,6 +7,7 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "@/app/AuthContext";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const AddUnitForm = () => {
   const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
@@ -84,7 +85,7 @@ const AddUnitForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+    <div className="min-h-screen bg-gray-50 p-2 md:p-6 mt-4 sm:mt-0 ml-4 sm:ml-0">
       <Toaster />
       {isMobile ? (
        <HeaderMobile />
@@ -100,7 +101,36 @@ const AddUnitForm = () => {
           }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-            <div className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-6">
+          <nav className="mt-6">
+              <ul className="flex flex-wrap space-x-4 md:space-x-6">
+                <li>
+                  <Link
+                    href="/pengaturan/user"
+                    className="text-gray-700 hover:text-teal-600"
+                  >
+                    User
+
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/pengaturan/unit-kerja"
+                    className="text-gray-700 hover:text-teal-600"
+                  >
+                    Unit Kerja
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/pengaturan/tambah"
+                    className="text-gray-700 hover:text-teal-600"
+                  >
+                    Tambah
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+            <div className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-4">
               <h2 className="text-base font-bold mb-4 text-center text-teal-600">
                 TAMBAH UNIT KERJA
               </h2>

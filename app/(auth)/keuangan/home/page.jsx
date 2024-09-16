@@ -206,7 +206,7 @@ export default function Home() {
               </ul>
             </nav>
           </div>
-            <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg -mt-[39rem] sm:-mt-[36rem]">
+            <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg -mt-[39rem] sm:-mt-[41rem]">
               <div className="text-center md:mx-6 my-4 md:my-0">
                 <h2 className="text-xl md:text-2xl font-extrabold">SALDO</h2>
                 <p className="text-md md:text-lg text-gray-600">Juli 2024</p>

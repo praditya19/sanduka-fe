@@ -44,8 +44,8 @@ const Header = () => {
             <Link href="/">
               <Image
                 src={isScrolled ? "/sanduka.png" : "/sanduka_bg_white.png"}
-                width={120}
-                height={120}
+                width={70}
+                height={70}
                 alt="logo"
               />
             </Link>
@@ -126,7 +126,7 @@ const Header = () => {
         </div>
       </div>
 
-      <div className={`${isOpen ? "block" : "hidden"} md:hidden`}>
+      <div className={`md:hidden ${isOpen ? "block bg-white" : "hidden"}`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <ul className="flex flex-col space-y-1">
             <li className="relative">
@@ -134,7 +134,7 @@ const Header = () => {
                 href="#layananKamiSection"
                 onClick={scrollToSection("layananKamiSection")}
                 className={`text-base ${
-                  isScrolled ? "text-gray-900" : "text-white"
+                  isScrolled ? "text-gray-900" : "text-gray-900"
                 } hover:bg-gray-200 hover:text-gray-900 block px-4 py-2 rounded-md`}
               >
                 Layanan Kami
@@ -145,7 +145,7 @@ const Header = () => {
                 href="#galeriSec"
                 onClick={scrollToSection("galeriSec")}
                 className={`text-base ${
-                  isScrolled ? "text-gray-900" : "text-white"
+                  isScrolled ? "text-gray-900" : "text-gray-900"
                 } hover:bg-gray-200 hover:text-gray-900 block px-4 py-2 rounded-md`}
               >
                 Galeri Kegiatan
@@ -156,7 +156,7 @@ const Header = () => {
                 href="#daftarSec"
                 onClick={scrollToSection("daftarSec")}
                 className={`text-base ${
-                  isScrolled ? "text-gray-900" : "text-white"
+                  isScrolled ? "text-gray-900" : "text-gray-900"
                 } hover:bg-gray-200 hover:text-gray-900 block px-4 py-2 rounded-md`}
               >
                 Proses Pendaftaran
@@ -173,8 +173,8 @@ const Header = () => {
                 <Button
                   className={`transition-all duration-300 ${
                     isScrolled
-                      ? "bg-teal-400 text-white hover:bg-teal-500"
-                      : "bg-transparent text-white hover:bg-teal-400"
+                      ? "bg-teal-600 text-white hover:bg-teal-700"
+                      : "bg-teal-600 text-white hover:bg-teal-700"
                   }`}
                 >
                   Login

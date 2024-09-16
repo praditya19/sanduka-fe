@@ -15,6 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMobile from "@/app/_components/HeaderMobile";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
@@ -227,7 +228,7 @@ const VerifikasiAnggotaMutasi = () => {
     <div className="min-h-screen flex flex-col bg-gray-100">
       <Toaster />
       {isMobile ? (
-        <MobileHeader handleBackClick={handleBackClick} />
+        <HeaderMobile />
       ) : (
         <HeaderHome />
       )}
