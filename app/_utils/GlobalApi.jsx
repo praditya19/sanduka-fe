@@ -297,6 +297,39 @@ const getRekapById = async (userId) => {
   }
 };
 
+// History Data
+const getHistoryData = async (page = 0, size = 10) => {
+  try {
+    const response = await axiosClient.get(`/api/history`, {
+      params: {
+        page: page,
+        size: size,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching history data:", error);
+    throw error;
+  }
+};
+
+const cekNpaList = async (npaList) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/auth/getByNpa?npaList=${npaList.join(",")}`
+    );
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -322,4 +355,6 @@ export default {
   getRekapMeninggal,
   getRekapById,
   getAllDataLapor,
+  getHistoryData,
+  cekNpaList,
 };
