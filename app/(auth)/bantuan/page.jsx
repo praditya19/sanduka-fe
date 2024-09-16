@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation";
 import HeaderHome from "@/app/_components/HeaderHome";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
+import { useAuth } from "@/app/AuthContext";
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 const HelpPage = () => {
   const [formData, setFormData] = useState({
@@ -17,6 +19,69 @@ const HelpPage = () => {
     subject: "",
     message: "",
   });
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [adminCabang, setAdminCabang] = useState([]);
+  // const [profileImageUrl, setProfileImageUrl] = useState("/default-image.jpg");
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { token } = useAuth();
+
+  const contacts = [
+    {
+      name: "Praditya Rendi Ferdian",
+      phone: "+628999937400",
+      image: "/profile.png",
+    },
+    {
+      name: "Nanda Dwi Kurniawan",
+      phone: "+62895704340678",
+      image: "/profile.png",
+    },
+    {
+      name: "Fausta Rizky Abriansah",
+      phone: "+6287839465101",
+      image: "/profile.png",
+    },
+  ];
+
+  const fetchData = async () => {
+    try {
+      const response = await GlobalApi.getAdminBantuan();
+      // const decodedString = atob(response.data.foto);
+      // setProfileImageUrl(decodedString);
+      setAdminCabang(response.data);
+    } catch (error) {
+      console.error("Error fetching cabang data:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (!token) {
+      router.push("/sign-in");
+    } else {
+      setLoading(false);
+      fetchData();
+
+      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+      setIsSidebarOpen(sidebarState);
+
+      const handleResize = () => {
+        setIsMobile(window.innerWidth <= 768);
+      };
+
+      handleResize();
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
+    }
+  }, [token, router]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -37,38 +102,6 @@ const HelpPage = () => {
     });
   };
 
-  const contacts = [
-    {
-      name: "Hartono, M.Pd.",
-      phone: "+621325754589",
-      image: "/profile.png",
-    },
-    {
-      name: "Habib Nor Haqiqi, S.I.Pust.",
-      phone: "+621325552982",
-      image: "/profile.png",
-    },
-    {
-      name: "Sudiharto, S.Pd.",
-      phone: "+621325386311",
-      image: "/profile.png",
-    },
-    {
-      name: "Harmanto, M.Pd.",
-      phone: "+625227227011",
-      image: "/profile.png",
-    },
-  ];
-
-  useEffect(() => {
-    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-    setIsSidebarOpen(sidebarState);
-  }, []);
-
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const router = useRouter();
-
   const handleBackClick = () => {
     router.back();
   };
@@ -79,26 +112,9 @@ const HelpPage = () => {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      {isMobile ? (
-        <HeaderMobile />
-      ) : (
-        <HeaderHome />
-      )}
+      {isMobile ? <HeaderMobile /> : <HeaderHome />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
@@ -110,47 +126,51 @@ const HelpPage = () => {
           <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 mt-5">
             <div className="w-full max-w-6xl p-8 bg-white rounded-lg shadow-md">
               <div className="mb-8 text-center">
-                <h1 className="text-4xl font-bold text-gray-800">
+                <h1 className="text-xl font-bold text-gray-800">
                   Kontak Bantuan
                 </h1>
-                <p className="mt-4 text-gray-600">
+                <p className="mt-4 text-gray-600 text-base">
                   Jika Anda memiliki pertanyaan atau butuh bantuan, silakan
                   hubungi kami melalui informasi di bawah ini.
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="p-4">
-                  <h2 className="text-2xl font-semibold text-gray-800">
+                  <h2 className="text-xl font-semibold text-gray-800">
                     Informasi Kontak
                   </h2>
                   <ul className="mt-4 space-y-4">
-                    {contacts.map((contact, index) => (
+                    {adminCabang.map((admin, index) => (
                       <li key={index} className="flex items-center space-x-4">
-                        <div className="relative w-16 h-16">
+                        <div className="relative w-12 h-12">
                           <Image
-                            src={contact.image}
-                            alt={contact.name}
+                            src="/profile.png"
+                            alt={admin.nama}
                             layout="fill"
                             className="rounded-full object-cover"
                           />
                         </div>
                         <div>
-                          <h3 className="text-lg font-medium text-gray-900">
-                            {contact.name}
+                          <h3 className="text-sm font-medium text-gray-900">
+                            {admin.nama} ({admin.cabang})
                           </h3>
                           <a
-                            href={`https://wa.me/${contact.phone}`}
-                            className="block text-blue-500 hover:underline"
+                            href={`https://wa.me/${admin.nohp.replace(
+                              /^08/,
+                              "+62"
+                            )}`}
+                            className="block text-blue-500 hover:underline text-sm"
                           >
-                            {contact.phone}
+                            {admin.nohp}
                           </a>
                         </div>
                       </li>
                     ))}
                   </ul>
                 </div>
+
                 <div className="p-4">
-                  <h2 className="text-2xl font-semibold text-gray-800">
+                  <h2 className="text-xl font-semibold text-gray-800">
                     Formulir Kontak
                   </h2>
                   <form onSubmit={handleSubmit} className="mt-4 space-y-4">
@@ -221,8 +241,9 @@ const HelpPage = () => {
                   </form>
                 </div>
               </div>
+
               <div className="mt-8">
-                <h2 className="text-2xl font-semibold text-gray-800">
+                <h2 className="text-xl font-semibold text-gray-800">
                   Lokasi Kami
                 </h2>
                 <iframe
@@ -235,6 +256,37 @@ const HelpPage = () => {
                   referrerPolicy="no-referrer-when-downgrade"
                   className="rounded-md shadow-md mt-4"
                 ></iframe>
+              </div>
+
+              <div className="mt-8">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Tim Pengembang / IT
+                </h2>
+                <ul className="mt-4 space-y-4">
+                  {contacts.map((contact, index) => (
+                    <li key={index} className="flex items-center space-x-4">
+                      <div className="relative w-16 h-16">
+                        <Image
+                          src={contact.image}
+                          alt={contact.name}
+                          layout="fill"
+                          className="rounded-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-900">
+                          {contact.name}
+                        </h3>
+                        <a
+                          href={`https://wa.me/${contact.phone}`}
+                          className="block text-blue-500 hover:underline text-sm"
+                        >
+                          {contact.phone}
+                        </a>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>

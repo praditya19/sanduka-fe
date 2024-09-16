@@ -16,7 +16,8 @@ import {
   faCog,
   faBars,
   faTimes,
-  faChevronDown
+  faChevronDown,
+  faChevronUp,
 } from "@fortawesome/free-solid-svg-icons";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
 import { Button } from "@/components/ui/button";
@@ -84,12 +85,6 @@ const icons = [
     label: "Keuangan",
     href: "/keuangan/home",
     color: "text-lime-500",
-  },
-  {
-    icon: faSyncAlt,
-    label: "Singkronisasi",
-    href: "/singkron-data",
-    color: "text-teal-700",
   },
   {
     icon: faClipboardCheck,

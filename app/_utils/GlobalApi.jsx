@@ -312,7 +312,6 @@ const getHistoryData = async (page = 0, size = 10) => {
     throw error;
   }
 };
-
 const cekNpaList = async (npaList) => {
   try {
     const response = await axiosClient.get(
@@ -329,6 +328,10 @@ const cekNpaList = async (npaList) => {
     }
   }
 };
+
+// Bantuan
+const getAdminBantuan = () =>
+  axiosClient.get("/api/register-admin/admins-per-cabang");
 
 // Export all functions
 export default {
@@ -357,4 +360,5 @@ export default {
   getAllDataLapor,
   getHistoryData,
   cekNpaList,
+  getAdminBantuan,
 };
