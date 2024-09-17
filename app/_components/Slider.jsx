@@ -117,23 +117,23 @@ const Slider = () => {
 
       {/* Text Content */}
       <div
-        className={`relative z-30 text-white py-64 px-20 max-w-7xl mx-auto transition-all duration-500 transform rounded-lg ${
+        className={`relative z-30 text-white  py-64 px-20 max-w-7xl mx-auto transition-all duration-500 transform rounded-lg ${
           fade ? "opacity-0 translate-y-8" : "opacity-100 translate-y-0"
         } ${sliderList[currentSlide].textBackgroundColor} 
-    md:top-0 top-[-26%]`} // Menambahkan class untuk top di layar HP
+    md:top-0 top-[-30%] -left-12 sm:-left-14`} // Menambahkan class untuk top di layar HP
       >
         <h1
-          className={`text-3xl md:text-3xlxl font-bold mb-4 transition-all duration-500 transform ${
+          className={`text-xl md:text-3xl font-bold mb-2 transition-all duration-500 transform ${
             fade ? "opacity-0 translate-y-8" : "opacity-100 translate-y-0"
           }`}
         >
           {sliderList[currentSlide].title}
         </h1>
-        {splitTextIntoLines(sliderList[currentSlide].description, 8).map( 
+        {splitTextIntoLines(sliderList[currentSlide].description, 8).map(
           (line, index) => (
             <p
               key={index}
-              className={`text-xl md:text-xl transition-all duration-500 transform ${
+              className={`text-sm md:text-xl transition-all duration-500 transform ${
                 fade ? "opacity-0 translate-y-8" : "opacity-100 translate-y-0"
               }`}
             >

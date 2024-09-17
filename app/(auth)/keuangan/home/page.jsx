@@ -175,65 +175,65 @@ export default function Home() {
           }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6 pt-6 ">
-          <div className="min-h-screen bg-gray-50 -ml-8 -mb-96 sm:-mb-40">
-            <nav className="container mt-8">
-              <ul className="flex flex-wrap space-x-4 md:space-x-6">
-                <li>
-                  <Link
-                    href="/keuangan/data-utama"
-                    className="text-gray-700 hover:text-teal-600"
-                  >
-                    Data Utama
-
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/keuangan/sanduka"
-                    className="text-gray-700 hover:text-teal-600"
-                  >
-                    Sanduka
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/keuangan/organisasi"
-                    className="text-gray-700 hover:text-teal-600"
-                  >
-                    Organisasi
-                  </Link>
-                </li>
-              </ul>
-            </nav>
-          </div>
+            <div className="min-h-screen bg-gray-50 -ml-8 -mb-96 sm:-mb-40">
+              <nav className="container mt-8">
+                <ul className="flex flex-wrap space-x-4 md:space-x-6">
+                  <li>
+                    <Link
+                      href="/keuangan/data-utama"
+                      className="text-gray-700 hover:text-teal-600"
+                    >
+                      Data Utama
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/keuangan/sanduka"
+                      className="text-gray-700 hover:text-teal-600"
+                    >
+                      Sanduka
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/keuangan/organisasi"
+                      className="text-gray-700 hover:text-teal-600"
+                    >
+                      Organisasi
+                    </Link>
+                  </li>
+                </ul>
+              </nav>
+            </div>
             <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg -mt-[39rem] sm:-mt-[41rem]">
               <div className="text-center md:mx-6 my-4 md:my-0">
-                <h2 className="text-xl md:text-2xl font-extrabold">SALDO</h2>
-                <p className="text-md md:text-lg text-gray-600">Juli 2024</p>
+                <h4 className="text-xl md:text-2xl font-extrabold">SALDO</h4>
+                <p className="text-md md:text-base text-gray-600">Juli 2024</p>
               </div>
-              <div className="flex flex-col md:flex-row justify-center items-center mb-8">
+              <div className="flex flex-row flex-wrap justify-center items-center mb-8">
                 {/* Section 1 */}
-                <div className="w-full md:w-1/2 mb-8 md:mb-0 flex flex-col items-center">
+                <div className="w-1/2 flex flex-col items-center">
                   <Image
                     src="/sanduka.png"
-                    width={150}
-                    height={150}
+                    width={100}
+                    height={100}
+                    className="w-24 sm:w-28"
                     alt="Sanduka"
                   />
-                  <p className="text-xl font-semibold text-gray-800 mt-4">
+                  <p className="text-sm font-semibold text-gray-800 text-center w-full">
                     Rp. 300.329.150,-
                   </p>
-                  <div className="mt-6 bg-gray-50 p-4 rounded-lg w-full max-w-md">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="text-center">
-                        <h4 className="font-bold text-green-700">PEMASUKAN</h4>
-                        <p className="text-xl font-semibold text-gray-800">
+                  <div className="mt-1 bg-gray-50 p-4 rounded-lg w-full max-w-md">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="text-center w-full">
+                        <h6 className="font-bold text-green-700">PEMASUKAN</h6>
+                        <p className="text-sm font-semibold text-gray-800">
                           876.865.500,-
                         </p>
                       </div>
-                      <div className="text-center">
-                        <h4 className="font-bold text-red-700">PENGELUARAN</h4>
-                        <p className="text-xl font-semibold text-gray-800">
+                      <div className="text-center w-full">
+                        <h6 className="font-bold text-red-700">PENGELUARAN</h6>
+                        <p className="text-sm font-semibold text-gray-800">
                           576.536.350,-
                         </p>
                       </div>
@@ -242,27 +242,28 @@ export default function Home() {
                 </div>
 
                 {/* Section 2 */}
-                <div className="w-full md:w-1/2 flex flex-col items-center">
+                <div className="w-1/2 flex flex-col items-center">
                   <Image
                     src="/logo.png"
-                    width={80}
-                    height={80}
+                    width={100}
+                    height={100}
+                    className="w-10 sm:w-14"
                     alt="Organisasi"
                   />
-                  <p className="text-xl font-semibold text-gray-800 mt-4 mb-4">
+                  <p className="text-xs font-semibold text-gray-800 mt-4 text-center w-full">
                     Rp. 0,-
                   </p>
                   <div className="bg-gray-50 p-4 rounded-lg w-full max-w-md">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="text-center">
-                        <h4 className="font-bold text-green-700">PEMASUKAN</h4>
-                        <p className="text-xl font-semibold text-gray-800">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="text-center w-full">
+                        <h6 className="font-bold text-green-700">PEMASUKAN</h6>
+                        <p className="text-sm font-semibold text-gray-800">
                           0,-
                         </p>
                       </div>
-                      <div className="text-center">
-                        <h4 className="font-bold text-red-700">PENGELUARAN</h4>
-                        <p className="text-xl font-semibold text-gray-800">
+                      <div className="text-center w-full">
+                        <h6 className="font-bold text-red-700">PENGELUARAN</h6>
+                        <p className="text-sm font-semibold text-gray-800">
                           0,-
                         </p>
                       </div>
@@ -270,7 +271,6 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-
               <div className="overflow-x-auto">
                 <table className="container w-full table-auto mb-8">
                   <thead>
