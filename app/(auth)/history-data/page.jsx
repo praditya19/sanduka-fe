@@ -46,30 +46,25 @@ const Page = () => {
   }, []);
 
   const months = [
-    { value: "01", label: "January" },
-    { value: "02", label: "February" },
-    { value: "03", label: "March" },
+    { value: "01", label: "Januari" },
+    { value: "02", label: "Februari" },
+    { value: "03", label: "Maret" },
     { value: "04", label: "April" },
-    { value: "05", label: "May" },
-    { value: "06", label: "June" },
-    { value: "07", label: "July" },
-    { value: "08", label: "August" },
+    { value: "05", label: "Mei" },
+    { value: "06", label: "Juni" },
+    { value: "07", label: "Juli" },
+    { value: "08", label: "Agustus" },
     { value: "09", label: "September" },
-    { value: "10", label: "October" },
+    { value: "10", label: "Oktober" },
     { value: "11", label: "November" },
-    { value: "12", label: "December" },
+    { value: "12", label: "Desember" },
   ];
 
-  const years = Array.from(new Array(20), (v, i) => i + 2020); // Generate years from 2020
+  const years = Array.from(new Array(11), (v, i) => i + 2020); // Generate years from 2020
 
-  const handleFilterChange = () => {
-    // Implement your logic to fetch or filter data based on selectedCabang, selectedMonth, and selectedYear
-    console.log("Filters applied:", {
-      selectedCabang,
-      selectedMonth,
-      selectedYear,
-    });
-  };
+  const handlePrint = () => {
+    window.print();
+  };  
 
   const fetchData = async () => {
     try {
@@ -124,14 +119,34 @@ const Page = () => {
     return <div>Loading...</div>;
   }
 
-  const filteredData = data.filter(
-    (item) =>
+  const filteredData = data.filter((item) => {
+    // Filter based on search term (if applicable)
+    const matchesSearchTerm =
       (item.npaDetail.namaLengkap &&
         item.npaDetail.namaLengkap
           .toLowerCase()
           .includes(filter.toLowerCase())) ||
-      (item.cabang && item.cabang.toLowerCase().includes(filter.toLowerCase()))
-  );
+      (item.cabang && item.cabang.toLowerCase().includes(filter.toLowerCase()));
+
+    // Filter based on selected cabang
+    const matchesCabang = selectedCabang
+      ? item.cabang &&
+        item.cabang.toLowerCase() === selectedCabang.toLowerCase()
+      : true;
+
+    // Filter based on selected month (using the date column)
+    const matchesMonth = selectedMonth
+      ? new Date(item.tanggal).getMonth() + 1 === parseInt(selectedMonth, 10)
+      : true;
+
+    // Filter based on selected year (using the date column)
+    const matchesYear = selectedYear
+      ? new Date(item.tanggal).getFullYear() === parseInt(selectedYear, 10)
+      : true;
+
+    // Apply all filters
+    return matchesSearchTerm && matchesCabang && matchesMonth && matchesYear;
+  });
 
   const handleEdit = (item) => {
     alert(`Editing: ${item.data}`);
@@ -199,9 +214,9 @@ const Page = () => {
                     >
                       <option value="">Semua Cabang</option>
                       {cabangOptions.map((option) => (
-                        <option key={option.id} value={option.id}>
+                        <option key={option.id} value={option.kecamatan}>
                           {option.kecamatan}{" "}
-                          {/* Sesuaikan properti ini dengan yang benar */}
+                          {/* Pastikan properti ini sesuai dengan kolom 'cabang' */}
                         </option>
                       ))}
                     </select>
@@ -236,8 +251,8 @@ const Page = () => {
                   </div>
 
                   <button
-                    onClick={handleFilterChange}
-                    className="p-2 bg-blue-500 text-white rounded"
+                    onClick={handlePrint}
+                    className="p-2 px-4 bg-blue-500 text-white rounded w-full md:w-auto"
                   >
                     Cetak
                   </button>
