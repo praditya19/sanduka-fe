@@ -6,13 +6,15 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import {
+  FaPlus,
+  FaEdit,
+  FaExchangeAlt,
   FaExclamationTriangle,
   FaWhatsapp,
   FaSortUp,
   FaSortDown,
   FaSort,
 } from "react-icons/fa";
-import { membersData } from "../data.js";
 import { useRouter } from "next/navigation";
 import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
@@ -42,6 +44,10 @@ function PencarianAnggota() {
   const [selectedNama, setSelectedNama] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [query, setQuery] = useState('');
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [expandedIndex, setExpandedIndex] = useState(null);
+  const [fotoBase64, setFotoBase64] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (selectedCabang) {
@@ -49,7 +55,19 @@ function PencarianAnggota() {
       setFilteredUnitKerja(filtered);
     } else {
       setFilteredUnitKerja([]);
-    }
+    };
+
+    // setFilteredCabang(
+    //   cabang.filter((item) =>
+    //     item.kecamatan.toLowerCase().includes(filterCabang.toLowerCase())
+    //   )
+    // );
+
+    // setFilteredUnitKerja(
+    //   unitKerja.filter((item) =>
+    //     item.unitKerja.toLowerCase().includes(filterUnitKerja.toLowerCase())
+    //   )
+    // );
 
     fetchAnggota();
     fetchData();
@@ -77,13 +95,39 @@ function PencarianAnggota() {
 
   const fetchAnggota = async () => {
     try {
-      const page = 0; // Or the page number you want to fetch
-      const size = 10; // Or the number of items per page you want to fetch
+      const page = 0;
+      const size = 50;
       const response = await GlobalApi.getAllAnggota(page, size);
-      setAnggota(response.data.content || []); // Use response.data.content if it's a Page object
+      const fotoBase64Array = [];
+
+      const fetchedData = response.data.content;
+
+      if (fetchedData && fetchedData.length > 0) {
+        fetchedData.forEach((item) => {
+          console.log('test', item)
+          if (item.foto) {
+            try {
+              const decodedString = atob(item.foto);
+              fotoBase64Array.push(decodedString);
+            } catch (error) {
+              console.error("Error decoding Base64:", error);
+              fotoBase64Array.push(null);
+            }
+          } else {
+            fotoBase64Array.push(null);
+          }
+        });
+      } else {
+        console.warn("No data found.");
+      }
+
+      setFotoBase64(fotoBase64Array);
+      setLoading(false);
+      setAnggota(fetchedData || []);
+
     } catch (error) {
       console.error("Error fetching anggota:", error);
-      setAnggota([]); // Optionally, set to an empty array if there's an error
+      setAnggota([]);
     }
   };
 
@@ -168,8 +212,8 @@ function PencarianAnggota() {
             </thead>
             <tbody>
               ${filteredDataForPrint
-                .map(
-                  (item, index) => `
+        .map(
+          (item, index) => `
                     <tr>
                       <td>${index + 1}</td>
                       <td></td>
@@ -182,22 +226,22 @@ function PencarianAnggota() {
                         <div>${item.lahir}, ${item.tanggal}</div>
                         <div>${item.usia} Tahun</div>
                         <div>Prediksi Pensiun: ${calculateRetirementDate(
-                          item.tanggal
-                        )}</div>
+            item.tanggal
+          )}</div>
                       </td>
                       <td>
                       <div>${item.cabang},</div>
                       <div>${item.kerja},</div>
                         <div>anggota: ${item.gabung}</div>
                         <div>${item.golongan}/${formatCurrency(
-                    item.iuran
-                  )}</div>
+            item.iuran
+          )}</div>
                       </td>
                       <td>${item.anggota}</td>
                     </tr>
                   `
-                )
-                .join("")}
+        )
+        .join("")}
             </tbody>
           </table>
         </body>
@@ -255,28 +299,21 @@ function PencarianAnggota() {
         selectedCabang === "-- Cabang --" || item.cabang === selectedCabang;
       const unitKerjaFilter =
         selectedUnitKerja === "-- Unit Kerja --" || item.unitKerja === selectedUnitKerja;
-  
-      // Ensure query is lowercase
-      const lowerCaseQuery = query.toLowerCase();
-  
-      // Use optional chaining and provide default values to prevent errors
-      const nama = item.nama?.toLowerCase().includes(lowerCaseQuery) ?? false;
-      const npa = item.npa?.toLowerCase().includes(lowerCaseQuery) ?? false;
-      const cabang = item.cabang?.toLowerCase().includes(lowerCaseQuery) ?? false;
-      const unitKerja = item.kerja?.toLowerCase().includes(lowerCaseQuery) ?? false;
-      const lahir = item.lahir?.toLowerCase().includes(lowerCaseQuery) ?? false;
-      const tanggal = item.tanggal?.toLowerCase().includes(lowerCaseQuery) ?? false;
-  
-      return (
-        statusFilter &&
-        cabangFilter &&
-        unitKerjaFilter &&
-        (nama || npa || cabang || unitKerja || lahir || tanggal)
-      );
+
+      const searchLower = searchQuery.toLowerCase();
+
+      const searchFilter =
+        item.namaLengkap?.toLowerCase().includes(searchLower) ||
+        item.npaPgri?.toLowerCase().includes(searchLower) ||
+        item.jabatan?.toLowerCase().includes(searchLower) ||
+        item.tempatLahir?.toLowerCase().includes(searchLower) ||
+        item.cabang?.toLowerCase().includes(searchLower) ||
+        item.unitKerja?.toLowerCase().includes(searchLower) ||
+        item.status?.toLowerCase().includes(searchLower);
+
+      return statusFilter && cabangFilter && unitKerjaFilter && searchFilter;
     });
-  }, [sortedData, selectedStatus, selectedCabang, selectedUnitKerja, query]); // Add dependencies
-  
-  
+  }, [sortedData, selectedStatus, selectedCabang, selectedUnitKerja, searchQuery]); // Updated dependency array
 
   const jumlahAnggota = filteredData.length;
 
@@ -290,11 +327,6 @@ function PencarianAnggota() {
     setCurrentItem(null);
   };
 
-  useEffect(() => {
-    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-    setIsSidebarOpen(sidebarState);
-  }, []);
-
   const handleBackClick = () => {
     router.back();
   };
@@ -304,19 +336,6 @@ function PencarianAnggota() {
     setIsSidebarOpen(newSidebarState);
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -350,6 +369,32 @@ function PencarianAnggota() {
     return formattedRetirementDate;
   };
 
+  const handleExpand = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalItems = filteredData.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handlePageClick = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -367,7 +412,7 @@ function PencarianAnggota() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-2"
               />
-              <h1 className="text-base">Rekap Meninggal</h1>
+              <h1 className="text-base">Pencarian Anggota</h1>
             </div>
           </div>
         </header>
@@ -378,39 +423,38 @@ function PencarianAnggota() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="min-h-screen bg-gray-50 p-2 md:p-6">
             <div className="mb-4">
               <div className="flex flex-wrap items-start mt-16 justify-between">
                 <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
-                <select
-                  className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                  value={selectedCabang}
-                  onChange={(e) => setSelectedCabang(e.target.value)}
-                >
-                  <option value="">Pilih Cabang</option>
-                  {cabang.map(item => (
-                    <option key={item.id} value={item.kecamatan}>
-                      {item.kecamatan}
-                    </option>
-                  ))}
-                </select>
+                  <select
+                    className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                    value={selectedCabang}
+                    onChange={(e) => setSelectedCabang(e.target.value)}
+                  >
+                    <option value="">Pilih Cabang</option>
+                    {cabang.map(item => (
+                      <option key={item.id} value={item.kecamatan}>
+                        {item.kecamatan}
+                      </option>
+                    ))}
+                  </select>
 
-                <select
-                  className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                  value={selectedUnitKerja}
-                  onChange={(e) => setSelectedUnitKerja(e.target.value)}
-                >
-                  <option value="">Pilih Unit Kerja</option>
-                  {filteredUnitKerja.map(item => (
-                    <option key={item.id} value={item.unitKerja}>
-                      {item.unitKerja}
-                    </option>
-                  ))}
-                </select>
+                  <select
+                    className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                    value={selectedUnitKerja}
+                    onChange={(e) => setSelectedUnitKerja(e.target.value)}
+                  >
+                    <option value="">Pilih Unit Kerja</option>
+                    {filteredUnitKerja.map(item => (
+                      <option key={item.id} value={item.unitKerja}>
+                        {item.unitKerja}
+                      </option>
+                    ))}
+                  </select>
                   <input
                     className="shadow appearance-none border rounded w-full md:w-80 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
                     type="text"
@@ -482,7 +526,7 @@ function PencarianAnggota() {
                         </span>
                       </div>
                     </th>
-                    <th className="p-2 md:p-3 border text-white bg-teal-700">
+                    <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
                       <div className="flex justify-between items-center">
                         <span>Tanggal Lahir</span>
                         <span
@@ -493,7 +537,7 @@ function PencarianAnggota() {
                         </span>
                       </div>
                     </th>
-                    <th className="p-2 md:p-3 border text-white bg-teal-700">
+                    <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
                       <div className="flex justify-between items-center">
                         <span>Unit Kerja</span>
                         <span
@@ -504,7 +548,7 @@ function PencarianAnggota() {
                         </span>
                       </div>
                     </th>
-                    <th className="p-2 md:p-3 border text-white bg-teal-700">
+                    <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
                       <div className="flex justify-between items-center">
                         <span>Keterangan</span>
                         <span
@@ -515,93 +559,196 @@ function PencarianAnggota() {
                         </span>
                       </div>
                     </th>
-                    <th className="p-2 md:p-3 border text-white bg-teal-700">
+                    <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
                       Aksi
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredData.slice(0, maxItems).map((item, index) => (
-                    <tr
-                    key={index}
-                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                  >
-                    <td className="p-2 md:p-3 border text-center">
-                      {index + 1}
-                    </td>
-                    <td className="p-2 md:p-3 border">
-                      <Image
-                        src={item.photoUrl}
-                        className="rounded-full mx-auto"
-                        width={100}
-                        height={100}
-                        alt="Belum ada Foto"
-                      />
-                    </td>
-                    <td className="p-2 md:p-3 border">
-                      <div className="font-bold text-sm">{item.namaLengkap}</div>
-                      <div className="text-sm">{item.npaPgri}</div>
-                      <div className="text-sm">{item.jabatan}</div>
-                    </td>
-                    <td className="p-2 md:p-3 border">
-                      <div className="text-sm">{item.tempatLahir},</div>
-                      <div className="text-sm">{formatDate(item.tanggalLahir)}</div>
-                      <div className="text-sm">{calculateAge(item.tanggalLahir)} Tahun</div>
-                      <div className="text-sm">Pensiun : {calculateRetirementDate(item.tanggalLahir, item.statusPegawai)}</div>
-                    </td>
-                    <td className="p-2 md:p-3 border">
-                      <div className="text-sm">{item.cabang},</div>
-                      <div className="text-sm">{item.unitKerja}</div>
-                      <div className="text-sm">Anggota: {item.tahunDiangkat ? item.tahunDiangkat : '-'}</div>
-                      <div className="text-sm">
-                        {item.pangkatGolongan} || {formatCurrency(item.iuran)}
-                      </div>
-                    </td>
-                    <td className="p-2 text-center md:p-3 border">
-                      <div
-                        className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
-                          ? "bg-red-200 text-red-900"
-                          : "bg-green-200 text-green-900"
-                          }`}
-                      >
-                        {item.status}
-                      </div>
-                    </td>
-                      <td className="p-2 md:p-3 border">
-                        <div className="flex justify-center space-x-2">
-                          {/* <Link href="#" className="text-white bg-blue-500 p-2 border rounded-md">
-                      <FaEdit className="w-4 h-4" title="Edit Data" />
-                    </Link>
-                    <Button
-                      className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
-                      title="Mutasi"
-                      onClick={() => openModal(item)}
-                    >
-                      <FaExchangeAlt className="w-4 h-4" />
-                    </Button> */}
-                          <Link
-                            href="#"
-                            className="text-white bg-red-500 p-2 border rounded-md"
-                          >
-                            <FaExclamationTriangle
-                              className="w-4 h-4"
-                              title="Lapor"
-                            />
-                          </Link>
-                          <Link
-                            href={`https://wa.me/${item.hp}`}
-                            className="text-white bg-green-500 p-2 border rounded-md"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <FaWhatsapp className="w-4 h-4" title="WA" />
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {currentData.slice(0, maxItems).map((item, index) => {
+                    const isEvenRow = index % 2 === 0;
+                    const isNotMember = item.status === "BUKAN ANGGOTA";
+                    const itemStatusClass = isNotMember ? "bg-red-200 text-red-900" : "bg-green-200 text-green-900";
+                    const globalIndex = (currentPage - 1) * maxItems + index + 1;
+
+                    return (
+                      <React.Fragment key={index}>
+                        <tr className={isEvenRow ? "bg-gray-50" : "bg-white"}>
+                          <td className="p-2 md:p-3 border text-center">
+                            <div className="flex justify-center items-center">
+                              {globalIndex}
+                              <Button
+                                className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"  // `lg:hidden` makes the button hidden on screens larger than the "lg" size
+                                onClick={() => handleExpand(index)}
+                              >
+                                <FaPlus className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </td>
+                          {/* <td className="p-2 md:p-3 border text-center">{index + 1}</td> */}
+                          <td className="p-2 md:p-3 border">
+                            {fotoBase64[index] ? (
+                              <Image
+                                src={`data:image/jpeg;base64,${fotoBase64[index]}`}
+                                className="rounded-full mx-auto"
+                                width={100}
+                                height={100}
+                                alt="Belum ada Foto"
+                              />
+                            ) : (
+                              <span>Belum ada foto</span>
+                            )}
+                          </td>
+                          <td className="p-2 md:p-3 border">
+                            <div className="font-bold text-sm">{item.namaLengkap}</div>
+                            <div className="text-sm">{item.npaPgri}</div>
+                            <div className="text-sm">{item.jabatan}</div>
+                          </td>
+                          <td className="p-2 md:p-3 border md:table-cell hidden">
+                            <div className="text-sm">{item.tempatLahir},</div>
+                            <div className="text-sm">{formatDate(item.tanggalLahir)}</div>
+                            <div className="text-sm">{calculateAge(item.tanggalLahir)} Tahun</div>
+                            <div className="text-sm">Pensiun: {calculateRetirementDate(item.tanggalLahir, item.statusPegawai)}</div>
+                          </td>
+                          <td className="p-2 md:p-3 border md:table-cell hidden">
+                            <div className="text-sm">{item.cabang},</div>
+                            <div className="text-sm">{item.unitKerja}</div>
+                            <div className="text-sm">Anggota: {item.tahunDiangkat || '-'}</div>
+                            <div className="text-sm">{item.pangkatGolongan} || {formatCurrency(item.iuran)}</div>
+                          </td>
+                          <td className="p-2 text-center md:p-3 border md:table-cell hidden">
+                            <div
+                              className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
+                                ? "bg-red-200 text-red-900"
+                                : "bg-green-200 text-green-900"
+                                }`}
+                            >
+                              {item.status === "ANGGOTA" ? "Aktif" : item.status}
+                            </div>
+                          </td>
+                          <td className="p-2 md:p-3 border md:table-cell hidden">
+                            <div className="flex justify-center space-x-2">
+                              <Button
+                                className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                                title="Edit Data"
+                                onClick={() => router.push('/anggota/edit-anggota')}
+                              >
+                                <FaEdit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                title="Mutasi"
+                                onClick={() => openModal(item)}
+                              >
+                                <FaExchangeAlt className="w-4 h-4" />
+                              </Button>
+                              <Link href="#" className="text-white bg-red-500 p-2 border rounded-md">
+                                <FaExclamationTriangle className="w-4 h-4" title="Lapor" />
+                              </Link>
+                              <Link href={`https://wa.me/${item.hp}`} className="text-white bg-green-500 p-2 border rounded-md" target="_blank" rel="noopener noreferrer">
+                                <FaWhatsapp className="w-4 h-4" title="WA" />
+                              </Link>
+                            </div>
+                          </td>
+                        </tr>
+                        {/* Mobile View Row Expansion */}
+                        {expandedIndex === index && (
+                          <tr className="md:hidden">
+                            <td colSpan="7" className="p-2 border">
+                              <div className="mt-2">
+                                <div className="font-bold">{item.namaLengkap}</div>
+                                <div>{item.npaPgri}</div>
+                                <div>{item.jabatan}</div>
+                                <div>{item.tempatLahir}, {formatDate(item.tanggalLahir)}</div>
+                                <div>{calculateAge(item.tanggalLahir)} Tahun</div>
+                                <div>Pensiun: {calculateRetirementDate(item.tanggalLahir, item.statusPegawai)}</div>
+                                <div>{item.cabang},</div>
+                                <div>{item.unitKerja}</div>
+                                <div>Anggota: {item.tahunDiangkat || '-'}</div>
+                                <div>{item.golongan}/{formatCurrency(item.iuran)}</div>
+                                <div className={`text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${itemStatusClass}`}>
+                                  {item.status === "ANGGOTA" ? "Aktif" : item.status}
+                                </div>
+                                <div className="flex justify-center space-x-2 mt-2">
+                                  <Link href="#" className="text-white bg-blue-500 p-2 border rounded-md">
+                                    <FaEdit className="w-4 h-4" title="Edit Data" />
+                                  </Link>
+                                  <Button className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md" title="Mutasi" onClick={() => openModal(item)}>
+                                    <FaExchangeAlt className="w-4 h-4" />
+                                  </Button>
+                                  <Link href="#" className="text-white bg-red-500 p-2 border rounded-md">
+                                    <FaExclamationTriangle className="w-4 h-4" title="Lapor" />
+                                  </Link>
+                                  <Link href={`https://wa.me/${item.hp}`} className="text-white bg-green-500 p-2 border rounded-md" target="_blank" rel="noopener noreferrer">
+                                    <FaWhatsapp className="w-4 h-4" title="WA" />
+                                  </Link>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </tbody>
+
               </table>
+              <div className="flex justify-end items-center mb-4">
+                {totalItems > 10 && (
+                  <>
+                    <Button
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}
+                      className="mr-2"
+                    >
+                      Previous
+                    </Button>
+                    <div className="flex items-center">
+                      {totalPages > 1 && (
+                        <ul className="flex space-x-1">
+                          {/* Calculate the range of pages to display */}
+                          {(() => {
+                            let startPage = Math.max(1, currentPage - 1);
+                            let endPage = Math.min(totalPages, currentPage + 1);
+
+                            if (currentPage === 1) {
+                              endPage = Math.min(3, totalPages);
+                            } else if (currentPage === totalPages) {
+                              startPage = Math.max(totalPages - 2, 1);
+                            } else if (totalPages - currentPage < 2) {
+                              startPage = Math.max(totalPages - 2, 1);
+                            }
+
+                            return Array.from(
+                              { length: endPage - startPage + 1 },
+                              (_, i) => startPage + i
+                            );
+                          })().map((number) => (
+                            <li key={number}>
+                              <Button
+                                onClick={() => handlePageClick(number)}
+                                className={`mx-1 px-4 py-2 border rounded-md ${currentPage === number
+                                  ? "bg-blue-500 text-white"
+                                  : "bg-white text-black"
+                                  }`}
+                              >
+                                {number}
+                              </Button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    <Button
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                      className="ml-2"
+                    >
+                      Next
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Modal for Mutation Actions */}
@@ -653,7 +800,7 @@ function PencarianAnggota() {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 
