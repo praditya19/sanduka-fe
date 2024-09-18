@@ -333,6 +333,24 @@ const cekNpaList = async (npaList) => {
 const getAdminBantuan = () =>
   axiosClient.get("/api/register-admin/admins-per-cabang");
 
+// Teman Unit Kerja
+const getTemanUnitKerja = async (unitKerja, page = 0, size = 10) => {
+  try {
+    const response = await axiosClient.get("/api/auth/teman-unit-kerja", {
+      params: {
+        unitKerja: unitKerja,
+        page: page,
+        size: size,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching teman unit kerja:", error);
+    throw error;
+  }
+};
+
+
 // Export all functions
 export default {
   registerUser,
@@ -361,4 +379,5 @@ export default {
   getHistoryData,
   cekNpaList,
   getAdminBantuan,
+  getTemanUnitKerja,
 };
