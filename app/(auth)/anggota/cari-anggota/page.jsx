@@ -113,6 +113,7 @@ function CariAnggota() {
             <div className="p-4 border border-green-200 rounded-lg shadow-md">
               <h3 className="font-bold text-center text-lg mb-2">HASIL PENCARIAN DATA</h3>
               <p><strong>Nama :</strong> {filteredMember.namaLengkap}</p>
+              <p><strong>NPA :</strong> {filteredMember.npaPgri}</p>
               <p><strong>Cabang :</strong> {filteredMember.cabang}</p>
               <p><strong>Unit Kerja :</strong> {filteredMember.unitKerja}</p>
             </div>
