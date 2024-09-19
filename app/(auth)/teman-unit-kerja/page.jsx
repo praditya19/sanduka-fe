@@ -133,7 +133,7 @@ const TemanUnitKerja = () => {
                 return (
                   <div
                     key={index}
-                    className="bg-white items-center rounded-lg shadow-lg p-4 flex items-start border border-gray-200"
+                    className="bg-white items-center rounded-lg shadow-lg p-4 flex border border-gray-200 w-90"
                   >
                     <div className="flex-shrink-0">
                       <div className="w-20 h-20 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 flex items-center justify-center border-2 border-blue-500 overflow-hidden">
