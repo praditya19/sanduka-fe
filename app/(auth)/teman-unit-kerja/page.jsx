@@ -136,7 +136,7 @@ const TemanUnitKerja = () => {
                     className="bg-white items-center rounded-lg shadow-lg p-4 flex border border-gray-200 w-90"
                   >
                     <div className="flex-shrink-0">
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 flex items-center justify-center border-2 border-blue-500 overflow-hidden">
+                     
                         <Image
                           src={base64Image}
                           width={50}
@@ -144,7 +144,7 @@ const TemanUnitKerja = () => {
                           alt={imageAlt}
                           className="rounded-full"
                         />
-                      </div>
+                    
                     </div>
                     <div className="ml-4 flex-grow">
                       <h2 className="text-xs font-semibold text-gray-800">
