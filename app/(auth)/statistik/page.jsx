@@ -97,7 +97,7 @@ const Page = () => {
         let result;
         const bulan = selectedBulan || null;
         const tahun = selectedTahun || null;
-  
+
         if (selectedCabang) {
           result = await GlobalApi.getCalculateSanduka(
             bulan,
@@ -114,7 +114,7 @@ const Page = () => {
         } else if (searchTerm.trim() === "") {
           // Jika searchTerm kosong, ambil semua data
           result = await GlobalApi.getCalculateSandukaAll(bulan, tahun);
-  
+
           if (typeof result === "object" && result !== null) {
             const dataArray = Object.entries(result).map(
               ([cabang, values]) => ({
@@ -131,29 +131,27 @@ const Page = () => {
         console.error("Error fetching data:", error);
       }
     };
-  
+
     fetchData();
   }, [selectedBulan, selectedTahun, selectedCabang, searchTerm]); // Tambahkan searchTerm sebagai dependency
-  
 
   // Handle input changes for search
   const handleInputChange = (event) => {
     const value = event.target.value;
     setSearchTerm(value);
-  
+
     const filtered = cabangOptions.filter((option) =>
       option.kecamatan.toLowerCase().includes(value.toLowerCase())
     );
-  
+
     setFilteredOptions(filtered);
     setShowDropdown(value.length > 0);
-  
+
     // Jika input kosong, reset selectedCabang
     if (value.trim() === "") {
       setSelectedCabang("");
     }
   };
-  
 
   const handleOptionClick = (option) => {
     // Jika user mengklik cabang yang sama, reset selectedCabang
@@ -425,89 +423,121 @@ const Page = () => {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      data.map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="text-center border">
-                            {index + 1}
-                          </TableCell>
-                          <TableCell className="border border-gray-300 p-2 text-xs">
-                            {item.cabang || selectedCabang}
-                          </TableCell>
-                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                            {item.jumlahLalu}
-                          </TableCell>
-                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                            {item.jumlahMurni}
-                          </TableCell>
-                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                            {item.jumlahAktifkan}
-                          </TableCell>
-                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                            {item.jumlahPensiun}
-                          </TableCell>
-                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                            {item.jumlahMeninggal}
-                          </TableCell>
-                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                            {item.jumlahKeluarLainnya}
-                          </TableCell>
-                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                            {item.jumlahMasuk}
-                          </TableCell>
-                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                            {item.jumlahKeluar}
-                          </TableCell>
-                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                            {item.dataSekarang}
-                          </TableCell>
-                        </TableRow>
-                      ))
+                      (() => {
+                        // Inisialisasi variabel untuk menghitung total
+                        let totalLalu = 0,
+                          totalMurni = 0,
+                          totalAktifkan = 0,
+                          totalPensiun = 0,
+                          totalMeninggal = 0,
+                          totalKeluarLainnya = 0,
+                          totalMasuk = 0,
+                          totalKeluar = 0,
+                          totalDataSekarang = 0;
+
+                        return (
+                          <>
+                            {data.map((item, index) => {
+                              // Hitung dataSekarang
+                              const dataSekarang =
+                                item.jumlahLalu +
+                                item.jumlahMurni -
+                                item.jumlahPensiun -
+                                item.jumlahMeninggal -
+                                item.jumlahKeluarLainnya +
+                                item.jumlahMasuk -
+                                item.jumlahKeluar;
+
+                              // Akumulasi nilai ke variabel total
+                              totalLalu += item.jumlahLalu;
+                              totalMurni += item.jumlahMurni;
+                              totalAktifkan += item.jumlahAktifkan;
+                              totalPensiun += item.jumlahPensiun;
+                              totalMeninggal += item.jumlahMeninggal;
+                              totalKeluarLainnya += item.jumlahKeluarLainnya;
+                              totalMasuk += item.jumlahMasuk;
+                              totalKeluar += item.jumlahKeluar;
+                              totalDataSekarang += dataSekarang;
+
+                              return (
+                                <TableRow key={index}>
+                                  <TableCell className="text-center border">
+                                    {index + 1}
+                                  </TableCell>
+                                  <TableCell className="border border-gray-300 p-2 text-xs">
+                                    {item.cabang || selectedCabang}
+                                  </TableCell>
+                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                    {item.jumlahLalu}
+                                  </TableCell>
+                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                    {item.jumlahMurni}
+                                  </TableCell>
+                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                    {item.jumlahAktifkan}
+                                  </TableCell>
+                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                    {item.jumlahPensiun}
+                                  </TableCell>
+                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                    {item.jumlahMeninggal}
+                                  </TableCell>
+                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                    {item.jumlahKeluarLainnya}
+                                  </TableCell>
+                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                    {item.jumlahMasuk}
+                                  </TableCell>
+                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                    {item.jumlahKeluar}
+                                  </TableCell>
+                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                    {dataSekarang}
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+
+                            {/* Baris Total */}
+                            <TableRow className="bg-gray-200">
+                              <TableCell
+                                colSpan="2"
+                                className="border border-gray-300 p-2 text-xs font-bold text-center"
+                              >
+                                Total
+                              </TableCell>
+                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                {totalLalu}
+                              </TableCell>
+                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                {totalMurni}
+                              </TableCell>
+                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                {totalAktifkan}
+                              </TableCell>
+                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                {totalPensiun}
+                              </TableCell>
+                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                {totalMeninggal}
+                              </TableCell>
+                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                {totalKeluarLainnya}
+                              </TableCell>
+                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                {totalMasuk}
+                              </TableCell>
+                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                {totalKeluar}
+                              </TableCell>
+                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                                {totalDataSekarang}
+                              </TableCell>
+                            </TableRow>
+                          </>
+                        );
+                      })()
                     )}
-                    <TableRow className="bg-gray-200">
-                      <TableCell
-                        colSpan="2"
-                        className="border border-gray-300 p-2 text-xs font-bold text-center"
-                      >
-                        Total
-                      </TableCell>
-                      {/* Total per kategori jika diperlukan */}
-                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                        {" "}
-                        {/* Total Data Lalu */}{" "}
-                      </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                        {" "}
-                        {/* Total Data Murni */}{" "}
-                      </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                        {" "}
-                        {/* Total Data Aktif */}{" "}
-                      </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                        {" "}
-                        {/* Total Data Pensiun */}{" "}
-                      </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                        {" "}
-                        {/* Total Data Meninggal */}{" "}
-                      </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                        {" "}
-                        {/* Total Data Keluar Lainnya */}{" "}
-                      </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                        {" "}
-                        {/* Total Data Masuk */}{" "}
-                      </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                        {" "}
-                        {/* Total Data Keluar */}{" "}
-                      </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                        {" "}
-                        {/* Total Data Sekarang */}{" "}
-                      </TableCell>
-                    </TableRow>
                   </TableBody>
                 </Table>
               </div>
@@ -515,7 +545,7 @@ const Page = () => {
             <div
               style={{ borderTop: "1px solid #ccc", margin: "20px 0" }}
             ></div>
-            {/* <Seldata /> */}
+            <Seldata />
           </div>
         </div>
       </div>
