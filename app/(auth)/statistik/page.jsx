@@ -9,7 +9,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  faMagnifyingGlass,
   faUserPlus,
   faUserMinus,
   faUsers,
@@ -21,293 +20,181 @@ import HeaderHome from "@/app/_components/HeaderHome";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
+import GlobalApi from "@/app/_utils/GlobalApi";
+import { Input } from "@/components/ui/input";
 
 const Page = () => {
-  const [filter, setFilter] = useState("");
+  // State Management
+  const [searchTerm, setSearchTerm] = useState("");
+  const [cabangOptions, setCabangOptions] = useState([]);
+  const [filteredOptions, setFilteredOptions] = useState([]);
+  const [selectedBulan, setSelectedBulan] = useState("");
+  const [selectedTahun, setSelectedTahun] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [tahunOptions, setTahunOptions] = useState([]);
+  const [data, setData] = useState([]);
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
+  const [bulanOptions, setBulanOptions] = useState([]);
 
-  const data = [
-    {
-      no: 1,
-      cabang: "BANGSRI",
-      dataLalu: 431,
-      baru: 10,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 0,
-      keluar: 0,
-      dataSekarang: 441,
-    },
-    {
-      no: 2,
-      cabang: "BATEALIT",
-      dataLalu: 466,
-      baru: 2,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 0,
-      keluar: 0,
-      dataSekarang: 468,
-    },
-    {
-      no: 3,
-      cabang: "CABSUS DINAS PENDIDIKAN",
-      dataLalu: 182,
-      baru: 5,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 0,
-      keluar: 0,
-      dataSekarang: 187,
-    },
-    {
-      no: 4,
-      cabang: "CABSUS IGTKI",
-      dataLalu: 672,
-      baru: 3,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 0,
-      keluar: 0,
-      dataSekarang: 675,
-    },
-    {
-      no: 5,
-      cabang: "DONOROJO",
-      dataLalu: 336,
-      baru: 4,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 0,
-      keluar: 0,
-      dataSekarang: 340,
-    },
-    {
-      no: 6,
-      cabang: "JEPARA",
-      dataLalu: 829,
-      baru: 15,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 1,
-      keluar: 0,
-      dataSekarang: 845,
-    },
-    {
-      no: 7,
-      cabang: "KALINYAMATAN",
-      dataLalu: 377,
-      baru: 1,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 1,
-      keluar: 0,
-      dataSekarang: 379,
-    },
-    {
-      no: 8,
-      cabang: "KARIMUNJAWA",
-      dataLalu: 126,
-      baru: 2,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 0,
-      keluar: 0,
-      dataSekarang: 128,
-    },
-    {
-      no: 9,
-      cabang: "KEDUNG",
-      dataLalu: 312,
-      baru: 10,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 0,
-      keluar: 2,
-      dataSekarang: 320,
-    },
-    {
-      no: 10,
-      cabang: "KELING",
-      dataLalu: 269,
-      baru: 7,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 0,
-      keluar: 0,
-      dataSekarang: 276,
-    },
-    {
-      no: 11,
-      cabang: "KEMBANG",
-      dataLalu: 436,
-      baru: 3,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 0,
-      keluar: 0,
-      dataSekarang: 439,
-    },
-    {
-      no: 12,
-      cabang: "MAYONG",
-      dataLalu: 318,
-      baru: 9,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 0,
-      keluar: 0,
-      dataSekarang: 327,
-    },
-    {
-      no: 13,
-      cabang: "MLONGGO",
-      dataLalu: 273,
-      baru: 5,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 0,
-      keluar: 0,
-      dataSekarang: 278,
-    },
-    {
-      no: 14,
-      cabang: "NALUMSARI",
-      dataLalu: 367,
-      baru: 30,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 0,
-      keluar: 0,
-      dataSekarang: 397,
-    },
-    {
-      no: 15,
-      cabang: "PAKIS AJI",
-      dataLalu: 253,
-      baru: 12,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 0,
-      keluar: 0,
-      dataSekarang: 265,
-    },
-    {
-      no: 16,
-      cabang: "PECANGAAN",
-      dataLalu: 328,
-      baru: 5,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 0,
-      keluar: 0,
-      dataSekarang: 333,
-    },
-    {
-      no: 17,
-      cabang: "TAHUNAN",
-      dataLalu: 378,
-      baru: 1,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 1,
-      keluar: 0,
-      dataSekarang: 380,
-    },
-    {
-      no: 18,
-      cabang: "WELAHAN",
-      dataLalu: 444,
-      baru: 38,
-      aktif: 0,
-      pensiun: 0,
-      meninggal: 0,
-      keluarAnggota: 0,
-      masuk: 0,
-      keluar: 0,
-      dataSekarang: 482,
-    },
-  ];
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const router = useRouter();
+  const { token } = useAuth();
 
-  const filteredData = data.filter((item) =>
-    item.cabang.toLowerCase().includes(filter.toLowerCase())
-  );
+  useEffect(() => {
+    const today = new Date();
+    const currentMonth = today.toLocaleString("default", { month: "long" }); // e.g., "September"
+    const currentYear = today.getFullYear(); // e.g., 2024
 
-  const calculateTotal = (key) => {
-    return data.reduce((sum, item) => sum + item[key], 0);
+    setSelectedBulan(currentMonth);
+    setSelectedTahun(currentYear);
+  }, []);
+
+  // Effect for fetching options
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const bulanResponse = await GlobalApi.getBulan();
+        if (bulanResponse?.data) {
+          setBulanOptions(bulanResponse.data); // Set bulan options
+        } else {
+          console.error("Unexpected data format", bulanResponse);
+        }
+
+        // Generate year options dynamically, e.g., from 2020 to 2030
+        const tahunArray = Array.from(
+          { length: 11 },
+          (_, index) => 2020 + index
+        );
+        setTahunOptions(tahunArray);
+      } catch (error) {
+        console.error("Error fetching options:", error);
+      }
+    };
+
+    fetchOptions();
+  }, []);
+
+  // Effect for fetching cabang data
+  useEffect(() => {
+    const fetchCabangData = async () => {
+      try {
+        const response = await GlobalApi.getCabang();
+        setCabangOptions(response.data);
+        setFilteredOptions(response.data);
+      } catch (error) {
+        console.error("Error fetching cabang data:", error);
+      }
+    };
+
+    fetchCabangData();
+  }, []);
+
+  // Effect for fetching data based on selected filters
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        let result;
+        const bulan = selectedBulan || null;
+        const tahun = selectedTahun || null;
+  
+        if (selectedCabang) {
+          result = await GlobalApi.getCalculateSanduka(
+            bulan,
+            tahun,
+            selectedCabang
+          );
+          const dataArray = [
+            {
+              cabang: selectedCabang,
+              ...result,
+            },
+          ];
+          setData(dataArray); // Set data untuk cabang yang dipilih
+        } else if (searchTerm.trim() === "") {
+          // Jika searchTerm kosong, ambil semua data
+          result = await GlobalApi.getCalculateSandukaAll(bulan, tahun);
+  
+          if (typeof result === "object" && result !== null) {
+            const dataArray = Object.entries(result).map(
+              ([cabang, values]) => ({
+                cabang,
+                ...values,
+              })
+            );
+            setData(dataArray); // Set data untuk semua cabang
+          } else {
+            setData([]); // Reset data jika tidak valid
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+  
+    fetchData();
+  }, [selectedBulan, selectedTahun, selectedCabang, searchTerm]); // Tambahkan searchTerm sebagai dependency
+  
+
+  // Handle input changes for search
+  const handleInputChange = (event) => {
+    const value = event.target.value;
+    setSearchTerm(value);
+  
+    const filtered = cabangOptions.filter((option) =>
+      option.kecamatan.toLowerCase().includes(value.toLowerCase())
+    );
+  
+    setFilteredOptions(filtered);
+    setShowDropdown(value.length > 0);
+  
+    // Jika input kosong, reset selectedCabang
+    if (value.trim() === "") {
+      setSelectedCabang("");
+    }
+  };
+  
+
+  const handleOptionClick = (option) => {
+    // Jika user mengklik cabang yang sama, reset selectedCabang
+    if (selectedCabang === option.kecamatan) {
+      setSelectedCabang(""); // Hapus pilihan cabang
+    } else {
+      setSelectedCabang(option.kecamatan);
+    }
+    setSearchTerm(option.kecamatan);
+    setShowDropdown(false);
   };
 
-  const totals = {
-    dataLalu: calculateTotal("dataLalu"),
-    baru: calculateTotal("baru"),
-    aktif: calculateTotal("aktif"),
-    pensiun: calculateTotal("pensiun"),
-    meninggal: calculateTotal("meninggal"),
-    keluarAnggota: calculateTotal("keluarAnggota"),
-    masuk: calculateTotal("masuk"),
-    keluar: calculateTotal("keluar"),
-    dataSekarang: calculateTotal("dataSekarang"),
+  const handleBulanChange = (event) => {
+    setSelectedBulan(event.target.value);
   };
 
+  const handleTahunChange = (event) => {
+    setSelectedTahun(event.target.value);
+  };
+
+  // Effect for checking sidebar state
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
     setIsSidebarOpen(sidebarState);
   }, []);
 
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const router = useRouter();
-
-  const { token } = useAuth();
+  // Effect for token validation
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
     }
   }, [token, router]);
 
-  const handleBackClick = () => {
-    router.back();
-  };
-
+  // Toggle sidebar
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
+  // Effect for handling mobile responsiveness
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -323,11 +210,7 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      {isMobile ? (
-         <HeaderMobile />
-      ) : (
-        <HeaderHome />
-      )}
+      {isMobile ? <HeaderMobile /> : <HeaderHome />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
@@ -341,11 +224,13 @@ const Page = () => {
               <div className="container px-2">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                   <div className="flex items-center bg-white shadow-md rounded-lg p-2 sm:p-4">
-                    <div className="flex items-center justify-center bg-blue-100 rounded-full w-8 h-8 sm:w-12 sm:h-12">
-                      <FontAwesomeIcon
-                        icon={faUserPlus}
-                        className="text-blue-600 w-4 h-4 sm:w-6 sm:h-6"
-                      />
+                    <div className="flex flex-col items-center justify-center relative">
+                      <div className="flex items-center justify-center bg-blue-100 rounded-full w-8 h-8 sm:w-12 sm:h-12 mt-4">
+                        <FontAwesomeIcon
+                          icon={faUserPlus}
+                          className="text-blue-600 w-4 h-4 sm:w-6 sm:h-6"
+                        />
+                      </div>
                     </div>
                     <div className="ml-2 sm:ml-4">
                       <div className="text-base sm:text-base font-semibold text-gray-800">
@@ -389,20 +274,78 @@ const Page = () => {
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-start mb-4">
-                  <div className="relative w-full md:w-1/2 lg:w-1/3">
-                    <input
-                      type="text"
-                      placeholder="Search Data..."
-                      value={filter}
-                      onChange={(e) => setFilter(e.target.value)}
-                      className="w-full pr-10 pl-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring focus:border-blue-300"
-                    />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                      <FontAwesomeIcon
-                        icon={faMagnifyingGlass}
-                        className="text-gray-400"
+                <div className="flex mb-4">
+                  <div className="w-full flex space-x-4">
+                    {/* Input for searching cabang */}
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        placeholder="Cari atau ketik Cabang..."
+                        value={searchTerm}
+                        onChange={handleInputChange}
+                        className="p-2 border border-gray-300 rounded-md mb-2"
+                        onFocus={() => setShowDropdown(true)} // Show dropdown on focus
+                        onBlur={() =>
+                          setTimeout(() => setShowDropdown(false), 200)
+                        } // Hide dropdown on blur
                       />
+
+                      {showDropdown && (
+                        <ul className="absolute w-64 bg-white border border-gray-300 rounded-md max-h-48 overflow-y-auto shadow-lg z-10">
+                          {filteredOptions.length > 0 ? (
+                            filteredOptions.map((option, index) => (
+                              <li
+                                key={index}
+                                className="p-2 hover:bg-blue-100 cursor-pointer"
+                                onClick={() => handleOptionClick(option)}
+                              >
+                                {option.kecamatan}
+                              </li>
+                            ))
+                          ) : (
+                            <li className="p-2 text-gray-500">
+                              Tidak ada hasil
+                            </li>
+                          )}
+                        </ul>
+                      )}
+                    </div>
+
+                    {/* Dropdown for Bulan */}
+                    <div>
+                      <select
+                        onChange={handleBulanChange}
+                        value={selectedBulan}
+                        className="p-2 border border-gray-300 rounded-md mb-2 w-40"
+                      >
+                        <option value="" disabled>
+                          Pilih Bulan
+                        </option>
+                        {Array.isArray(bulanOptions) &&
+                          bulanOptions.map((bulan) => (
+                            <option key={bulan.id} value={bulan.namaBulan}>
+                              {bulan.namaBulan}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+
+                    {/* Dropdown for Tahun */}
+                    <div>
+                      <select
+                        value={selectedTahun}
+                        onChange={handleTahunChange}
+                        className="p-2 border border-gray-300 rounded-md mb-2 w-40"
+                      >
+                        <option value="" disabled>
+                          Pilih Tahun
+                        </option>
+                        {tahunOptions.map((tahun) => (
+                          <option key={tahun} value={tahun}>
+                            {tahun}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -410,44 +353,43 @@ const Page = () => {
                   <TableHeader className="bg-gray-100">
                     <TableRow>
                       <TableHead
-                        rowspan="2"
+                        rowSpan="2"
                         className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white"
                       >
                         No
                       </TableHead>
                       <TableHead
-                        rowspan="2"
+                        rowSpan="2"
                         className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
                       >
                         Cabang
                       </TableHead>
                       <TableHead
-                        rowspan="2"
+                        rowSpan="2"
                         className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
                       >
                         Data Lalu
                       </TableHead>
                       <TableHead
                         colSpan="5"
-                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white "
+                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
                       >
                         Mutasi
                       </TableHead>
                       <TableHead
                         colSpan="2"
-                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white "
+                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
                       >
                         Pindah Cabang
                       </TableHead>
                       <TableHead
-                        rowspan="2"
+                        rowSpan="2"
                         className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
                       >
                         Data Sekarang
                       </TableHead>
                     </TableRow>
                     <TableRow>
-                      {/* Empty cells for the non-Mutasi headers to align properly */}
                       <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
                         Baru
                       </TableHead>
@@ -463,7 +405,6 @@ const Page = () => {
                       <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
                         Keluar Anggota
                       </TableHead>
-                      {/* Individual headers for Mutasi columns */}
                       <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
                         masuk
                       </TableHead>
@@ -473,50 +414,55 @@ const Page = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredData.map((item, index) => (
-                      <TableRow
-                        key={index}
-                        className={
-                          index % 2 === 0
-                            ? "bg-gray-200 text-base"
-                            : "bg-white text-base"
-                        }
-                      >
-                        <TableCell className="text-center border">
-                          {index + 1}
-                        </TableCell>
-                        <TableCell className="border border-gray-300 p-2 text-xs">
-                          {item.cabang}
-                        </TableCell>
-                        <TableCell className="border border-gray-300 p-2 text-xs text-center ">
-                          {item.dataLalu}
-                        </TableCell>
-                        <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                          {item.baru}
-                        </TableCell>
-                        <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                          {item.aktif}
-                        </TableCell>
-                        <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                          {item.pensiun}
-                        </TableCell>
-                        <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                          {item.meninggal}
-                        </TableCell>
-                        <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                          {item.keluarAnggota}
-                        </TableCell>
-                        <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                          {item.masuk}
-                        </TableCell>
-                        <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                          {item.keluar}
-                        </TableCell>
-                        <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                          {item.dataSekarang}
+                    {data.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={11}
+                          className="border border-gray-300 p-2 text-center text-gray-500"
+                        >
+                          Tidak ada data. Silakan pilih filter untuk melihat
+                          hasil.
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      data.map((item, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="text-center border">
+                            {index + 1}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 p-2 text-xs">
+                            {item.cabang || selectedCabang}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                            {item.jumlahLalu}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                            {item.jumlahMurni}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                            {item.jumlahAktifkan}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                            {item.jumlahPensiun}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                            {item.jumlahMeninggal}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                            {item.jumlahKeluarLainnya}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                            {item.jumlahMasuk}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                            {item.jumlahKeluar}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                            {item.dataSekarang}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                     <TableRow className="bg-gray-200">
                       <TableCell
                         colSpan="2"
@@ -524,32 +470,42 @@ const Page = () => {
                       >
                         Total
                       </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                        {totals.dataLalu}
+                      {/* Total per kategori jika diperlukan */}
+                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                        {" "}
+                        {/* Total Data Lalu */}{" "}
                       </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                        {totals.baru}
+                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                        {" "}
+                        {/* Total Data Murni */}{" "}
                       </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                        {totals.aktif}
+                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                        {" "}
+                        {/* Total Data Aktif */}{" "}
                       </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                        {totals.pensiun}
+                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                        {" "}
+                        {/* Total Data Pensiun */}{" "}
                       </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                        {totals.meninggal}
+                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                        {" "}
+                        {/* Total Data Meninggal */}{" "}
                       </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                        {totals.keluarAnggota}
+                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                        {" "}
+                        {/* Total Data Keluar Lainnya */}{" "}
                       </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                        {totals.masuk}
+                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                        {" "}
+                        {/* Total Data Masuk */}{" "}
                       </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                        {totals.keluar}
+                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                        {" "}
+                        {/* Total Data Keluar */}{" "}
                       </TableCell>
-                      <TableCell className="border border-gray-300 p-2 text-xs font-bold text-center">
-                        {totals.dataSekarang}
+                      <TableCell className="border border-gray-300 p-2 text-xs text-center">
+                        {" "}
+                        {/* Total Data Sekarang */}{" "}
                       </TableCell>
                     </TableRow>
                   </TableBody>
@@ -559,7 +515,7 @@ const Page = () => {
             <div
               style={{ borderTop: "1px solid #ccc", margin: "20px 0" }}
             ></div>
-            <Seldata />
+            {/* <Seldata /> */}
           </div>
         </div>
       </div>

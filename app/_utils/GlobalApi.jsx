@@ -77,6 +77,7 @@ const getCabang = () => axiosClient.get("/api/daftarCabang");
 const getJabatan = () => axiosClient.get("/api/daftarJabatan");
 const getGolonganJabatan = () => axiosClient.get("/api/daftarGolongan");
 const getUnitKerja = () => axiosClient.get("/api/unit-kerja/all");
+const getBulan = () => axiosClient.get("/api/bulan");
 
 // Anggota
 const getAllAnggota = (page = 0, size = 10) => {
@@ -350,6 +351,52 @@ const getTemanUnitKerja = async (unitKerja, page = 0, size = 10) => {
   }
 };
 
+// STATISTIK
+const getCalculateSanduka = async (bulan, tahun, cabang) => {
+  try {
+    const response = await axiosClient.get("/api/calculate-sanduka", {
+      params: {
+        xbulan: bulan,
+        xtahun: tahun,
+        cabang: cabang,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching calculate sanduka:", error);
+    throw error;
+  }
+};
+
+// Fungsi untuk mengambil semua data dari calculate-sanduka/cabang-all
+const getCalculateSandukaAll = async (bulan, tahun) => {
+  try {
+    // Dapatkan bulan dan tahun saat ini jika tidak diberikan
+    const today = new Date();
+    const currentMonth = today.toLocaleString('default', { month: 'long' }); // e.g., "September"
+    const currentYear = today.getFullYear(); // e.g., 2024
+
+    // Gunakan bulan dan tahun saat ini jika bulan atau tahun tidak diberikan
+    const xbulan = bulan || currentMonth; 
+    const xtahun = tahun || currentYear;
+
+    // Lakukan request ke API dengan parameter bulan dan tahun yang telah diset
+    const response = await axiosClient.get("/api/calculate-sanduka/cabang-all", {
+      params: {
+        xbulan: xbulan, // Parameter bulan
+        xtahun: xtahun, // Parameter tahun
+      },
+    });
+
+    // Kembalikan data jika sukses
+    return response.data;
+  } catch (error) {
+    // Tangani error
+    console.error("Error fetching calculate sanduka cabang all:", error);
+    throw error;
+  }
+};
+
 
 // Export all functions
 export default {
@@ -380,4 +427,7 @@ export default {
   cekNpaList,
   getAdminBantuan,
   getTemanUnitKerja,
+  getBulan,
+  getCalculateSanduka,
+  getCalculateSandukaAll,
 };

@@ -323,7 +323,7 @@ function RekapAnggota() {
                     className="p-2 md:p-3 border text-white bg-teal-700"
                     colSpan="3"
                   >
-                    Keuangan
+                    Status Anggota
                   </th>
                   <th
                     className="p-2 md:p-3 border text-white bg-teal-700"
@@ -340,13 +340,13 @@ function RekapAnggota() {
                 </tr>
                 <tr>
                   <th className="p-2 md:p-3 border text-white bg-teal-700">
-                    PGRI
+                    PNS
                   </th>
                   <th className="p-2 md:p-3 border text-white bg-teal-700">
-                    Sanduka
+                    PPPK
                   </th>
                   <th className="p-2 md:p-3 border text-white bg-teal-700">
-                    DASPEN
+                    Non PNS
                   </th>
                 </tr>
               </thead>
