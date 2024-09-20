@@ -467,7 +467,7 @@ function DataAnggota() {
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
       {isMobile ? (
-       <HeaderMobile />
+        <HeaderMobile />
       ) : (
         <HeaderHome />
       )}
@@ -482,13 +482,13 @@ function DataAnggota() {
             <div className="flex flex-wrap items-start mt-14 justify-between">
               <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
                 <>
-                  <div className="relative flex flex-col md:flex">
+                  <div className="relative flex flex-col md:flex ml-2">
                     <input
                       type="text"
                       placeholder="Cari Cabang..."
                       value={filterCabang}
                       onChange={handleInputChange}
-                      className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                      className="shadow appearance-none border rounded w-44 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
                     />
                     {showDropdownCabang && filteredCabang.length > 0 && (
                       <div className="absolute left-0 mt-10 w-full bg-white border rounded shadow-lg z-10 max-h-40 overflow-y-auto">
@@ -504,7 +504,7 @@ function DataAnggota() {
                       </div>
                     )}
                     <select
-                      className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
+                      className="shadow appearance-none border rounded w-44 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
                       value={selectedCabang}
                       onChange={handleSelectChange}
                     >
@@ -524,7 +524,7 @@ function DataAnggota() {
                         placeholder="Cari Unit Kerja..."
                         value={filterUnitKerja}
                         onChange={handleInputChangeUnit}
-                        className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                        className="shadow appearance-none border rounded w-44 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
                         disabled={!selectedCabang} // Disable when no cabang is selected
                       />
                       {showDropdownUnitKerja && filteredUnitKerja.length > 0 && (
@@ -542,7 +542,7 @@ function DataAnggota() {
                       )}
                     </div>
                     <select
-                      className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
+                      className="shadow appearance-none border rounded w-44 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
                       value={selectedUnitKerja}
                       onChange={handleSelectChangeUnit}
                       disabled={!selectedCabang} // Disable when no cabang is selected
@@ -738,12 +738,13 @@ function DataAnggota() {
                         </td>
                         <td className="p-2 md:p-3 border md:table-cell hidden">
                           <div className="flex justify-center space-x-2">
-                            <Link
-                              href="#"
-                              className="text-white bg-blue-500 p-2 border rounded-md"
+                            <Button
+                              className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                              title="Edit Data"
+                              onClick={() => router.push('/anggota/edit-anggota')}
                             >
-                              <FaEdit className="w-4 h-4" title="Edit Data" />
-                            </Link>
+                              <FaEdit className="w-4 h-4" />
+                            </Button>
                             <Button
                               className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
                               title="Mutasi"
@@ -795,12 +796,13 @@ function DataAnggota() {
                                 {item.status === "ANGGOTA" ? "Aktif" : item.status}
                               </div>
                               <div className="flex justify-center space-x-2 mt-2">
-                                <Link
-                                  href="#"
-                                  className="text-white bg-blue-500 p-2 border rounded-md"
+                                <Button
+                                  className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                                  title="Edit Data"
+                                  onClick={() => router.push('/anggota/edit-anggota')}
                                 >
-                                  <FaEdit className="w-4 h-4" title="Edit Data" />
-                                </Link>
+                                  <FaEdit className="w-4 h-4" />
+                                </Button>
                                 <Button
                                   className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
                                   title="Mutasi"
