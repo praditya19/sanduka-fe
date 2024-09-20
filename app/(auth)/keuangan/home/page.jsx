@@ -34,6 +34,16 @@ const data = [
 ];
 
 export default function Home() {
+  const [currentDate, setCurrentDate] = useState('');
+
+  useEffect(() => {
+    const date = new Date();
+    const options = { year: 'numeric', month: 'long', day: 'numeric' }; // Format: Juli 2024
+    const formattedDate = date.toLocaleDateString('id-ID', options); // Bahasa Indonesia
+
+    setCurrentDate(formattedDate);
+  }, []);
+
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
     setIsSidebarOpen(sidebarState);
@@ -208,7 +218,7 @@ export default function Home() {
             <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg -mt-[39rem] sm:-mt-[41rem]">
               <div className="text-center md:mx-6 my-4 md:my-0">
                 <h4 className="text-xl md:text-2xl font-extrabold">SALDO</h4>
-                <p className="text-md md:text-base text-gray-600">Juli 2024</p>
+                <p className="text-md md:text-base text-gray-600">{currentDate}</p>
               </div>
               <div className="flex flex-row flex-wrap justify-center items-center mb-8">
                 {/* Section 1 */}

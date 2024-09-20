@@ -166,19 +166,19 @@ function KalenderForm() {
                   {[
                     {
                       id: "provinsi",
-                      label: "Derap Provinsi",
+                      label: "Provinsi",
                       value: provinsi,
                       onChange: handleProvinsiChange,
                     },
                     {
                       id: "kabupaten",
-                      label: "Derap Kabupaten",
+                      label: "Kabupaten",
                       value: kabupaten,
                       onChange: handleKabupatenChange,
                     },
                     {
                       id: "cabang",
-                      label: "Derap Cabang/Ranting",
+                      label: "Cabang/Ranting",
                       value: cabang,
                       onChange: handleCabangChange,
                     },

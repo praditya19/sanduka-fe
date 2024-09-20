@@ -261,7 +261,7 @@ const Page = () => {
                 <Table className="w-full table-auto mb-8">
                   <TableHeader className="p-2 md:p-3 border bg-green-300">
                     <TableRow>
-                      {["No", "Date", "Data", "Cabang", "Detail", "Action"].map(
+                      {["No", "Date", "Data", "Cabang", "Detail", "Keterangan"].map(
                         (header, idx) => (
                           <TableHead
                             key={header}
