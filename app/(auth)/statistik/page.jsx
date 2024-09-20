@@ -545,7 +545,7 @@ const Page = () => {
             <div
               style={{ borderTop: "1px solid #ccc", margin: "20px 0" }}
             ></div>
-            {/* <Seldata /> */}
+            <Seldata />
           </div>
         </div>
       </div>
