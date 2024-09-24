@@ -136,15 +136,13 @@ const TemanUnitKerja = () => {
                     className="bg-white items-center rounded-lg shadow-lg p-4 flex border border-gray-200 w-90"
                   >
                     <div className="flex-shrink-0">
-                     
-                        <Image
-                          src={base64Image}
-                          width={50}
-                          height={50}
-                          alt={imageAlt}
-                          className="rounded-full"
-                        />
-                    
+                      <Image
+                        src={base64Image}
+                        width={50}
+                        height={50}
+                        alt={imageAlt}
+                        className="rounded-full"
+                      />
                     </div>
                     <div className="ml-4 flex-grow">
                       <h2 className="text-xs font-semibold text-gray-800">
