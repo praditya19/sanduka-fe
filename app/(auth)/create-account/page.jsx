@@ -18,7 +18,6 @@ import dynamic from "next/dynamic";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { AiOutlineInfoCircle } from 'react-icons/ai'; // Information icon from react-icons
 
 const MapComponent = dynamic(() => import("../../_components/MapComponent"), {
   ssr: false,
@@ -536,53 +535,38 @@ const Page = () => {
                   )}
                 </div>
                 <div>
-      <div className="w-full">
-        <Label className="block text-sm font-medium mb-3">
-          Alamat
-          <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-            *Sesuai Dengan KTP
-          </span>
-        </Label>
-        <Controller
-          name="alamat"
-          control={control}
-          render={({ field }) => (
-            <Textarea
-              placeholder="JL. RT.  RW.  Desa, Kecamatan, Kabupaten"
-              value={field.value}
-              onChange={field.onChange}
-            />
-          )}
-        />
-      </div>
-      <Button
-        type="button"
-        onClick={handleGetLocation}
-        className="mt-2 p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
-      >
-        {loading ? "Mendapatkan Lokasi..." : "Get Location"}
-      </Button>
-      <AiOutlineInfoCircle
-            className="inline-block ml-2 text-blue-500 cursor-pointer"
-            size={20}
-            onClick={handleOpenModal}
-          />
-      {/* Modal Popup */}
-      {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
-          <div className="bg-white p-4 rounded-lg shadow-lg">
-            <h2 className="text-lg font-semibold">Informasi</h2>
-            <p className="mt-2">Mohon Get Location Ketika Anda Berada Dirumah</p>
-            <button
-              onClick={handleCloseModal}
-              className="mt-4 px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+                  <div className="w-full">
+                    <Label className="block text-sm font-medium mb-3">
+                      Alamat
+                      <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                        *Sesuai Dengan KTP
+                      </span>
+                    </Label>
+                    <Controller
+                      name="alamat"
+                      control={control}
+                      render={({ field }) => (
+                        <Textarea
+                          placeholder="JL. RT.  RW.  Desa, Kecamatan, Kabupaten"
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-4 mt-2">
+                    <Button
+                      type="button"
+                      onClick={handleGetLocation}
+                      className="p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+                    >
+                      {loading ? "Mendapatkan Lokasi..." : "Get Location"}
+                    </Button>
+                    <p className="text-red-500 text-xs sm:text-sm">
+                      Mohon Get Location Ketika Anda Berada Dirumah
+                    </p>
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
                 <div className="w-full">

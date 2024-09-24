@@ -397,6 +397,41 @@ const getCalculateSandukaAll = async (bulan, tahun) => {
   }
 };
 
+// KEUANGAN
+// Home start
+const getSaldoSanduka = async () => {
+  try {
+    const response = await axiosClient.get("/api/sanduka/saldo-sanduka");
+    console.log("Data saldo sanduka:", response.data); // Cetak data ke console
+    return response.data; // Kembalikan data yang didapat dari API
+  } catch (error) {
+    console.error("Error fetching saldo sanduka:", error);
+    throw error;
+  }
+};
+
+const getSaldoOrganisasi = async () => {
+  try {
+    const response = await axiosClient.get("/api/sanduka/saldo-organisasi");
+    console.log("Data saldo organisasi:", response.data); // Cetak data ke console
+    return response.data; // Kembalikan data yang didapat dari API
+  } catch (error) {
+    console.error("Error fetching saldo organisasi:", error);
+    throw error;
+  }
+};
+// end
+// DASPEN start
+const getFormDaspen = async () => {
+  try {
+    const response = await axiosClient.get("/api/tabel-daspen");
+    return response.data; // Kembalikan data dari API
+  } catch (error) {
+    console.error("Error fetching tabel daspen:", error);
+    throw error;
+  }
+};
+// end
 
 // Export all functions
 export default {
@@ -430,4 +465,7 @@ export default {
   getBulan,
   getCalculateSanduka,
   getCalculateSandukaAll,
+  getSaldoSanduka,
+  getSaldoOrganisasi,
+  getFormDaspen,
 };
