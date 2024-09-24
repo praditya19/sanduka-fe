@@ -316,7 +316,7 @@ const Page = () => {
                         value={selectedBulan}
                         className="p-2 border border-gray-300 rounded-md mb-2 w-40"
                       >
-                        <option value="" disabled>
+                        <option value="" >
                           Pilih Bulan
                         </option>
                         {Array.isArray(bulanOptions) &&
@@ -335,7 +335,7 @@ const Page = () => {
                         onChange={handleTahunChange}
                         className="p-2 border border-gray-300 rounded-md mb-2 w-40"
                       >
-                        <option value="" disabled>
+                        <option value="" >
                           Pilih Tahun
                         </option>
                         {tahunOptions.map((tahun) => (

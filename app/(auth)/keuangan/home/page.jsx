@@ -13,6 +13,7 @@ import {
 import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 const data = [
   { cabang: "BANGSRI", kurangSetor: 1000.0 },
@@ -34,12 +35,65 @@ const data = [
 ];
 
 export default function Home() {
-  const [currentDate, setCurrentDate] = useState('');
+  const [currentDate, setCurrentDate] = useState("");
+
+  const [saldoAkhir, setSaldoAkhir] = useState("");
+  const [pemasukan, setPemasukan] = useState("");
+  const [pengeluaran, setPengeluaran] = useState("");
+  const [saldoAkhirOr, setSaldoAkhirOr] = useState("");
+  const [pemasukanOr, setPemasukanOr] = useState("");
+  const [pengeluaranOr, setPengeluaranOr] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  // Fungsi untuk memanggil API dan mendapatkan data saldo sanduka
+  const fetchSaldoSanduka = async () => {
+    try {
+      const response = await GlobalApi.getSaldoSanduka();
+      setSaldoAkhir(response.saldo_akhir_sanduka);
+      setPemasukan(response.total_masuk);
+      setPengeluaran(response.total_keluar);
+      setLoading(false);
+    } catch (error) {
+      console.error(
+        "Error fetching saldo sanduka:",
+        error.message,
+        error.config
+      );
+      setLoading(false);
+    }
+  };
+
+  // Mengambil data saat komponen pertama kali di-render
+  useEffect(() => {
+    fetchSaldoSanduka();
+  }, []);
+
+  const fetchSaldoOrganisasi = async () => {
+    try {
+      const response = await GlobalApi.getSaldoOrganisasi();
+      setSaldoAkhirOr(response.saldo_akhir_organisasi);
+      setPemasukanOr(response.total_masuk);
+      setPengeluaranOr(response.total_keluar);
+      setLoading(false);
+    } catch (error) {
+      console.error(
+        "Error fetching saldo Organisasi:",
+        error.message,
+        error.config
+      );
+      setLoading(false);
+    }
+  };
+
+  // Mengambil data saat komponen pertama kali di-render
+  useEffect(() => {
+    fetchSaldoOrganisasi();
+  }, []);
 
   useEffect(() => {
     const date = new Date();
-    const options = { year: 'numeric', month: 'long', day: 'numeric' }; // Format: Juli 2024
-    const formattedDate = date.toLocaleDateString('id-ID', options); // Bahasa Indonesia
+    const options = { year: "numeric", month: "long", day: "numeric" }; // Format: Juli 2024
+    const formattedDate = date.toLocaleDateString("id-ID", options); // Bahasa Indonesia
 
     setCurrentDate(formattedDate);
   }, []);
@@ -218,7 +272,9 @@ export default function Home() {
             <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg -mt-[39rem] sm:-mt-[41rem]">
               <div className="text-center md:mx-6 my-4 md:my-0">
                 <h4 className="text-xl md:text-2xl font-extrabold">SALDO</h4>
-                <p className="text-md md:text-base text-gray-600">{currentDate}</p>
+                <p className="text-md md:text-base text-gray-600">
+                  {currentDate}
+                </p>
               </div>
               <div className="flex flex-row flex-wrap justify-center items-center mb-8">
                 {/* Section 1 */}
@@ -230,25 +286,40 @@ export default function Home() {
                     className="w-24 sm:w-28"
                     alt="Sanduka"
                   />
-                  <p className="text-sm font-semibold text-gray-800 text-center w-full">
-                    Rp. 300.329.150,-
-                  </p>
-                  <div className="mt-1 bg-gray-50 p-4 rounded-lg w-full max-w-md">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div className="text-center w-full">
-                        <h6 className="font-bold text-green-700">PEMASUKAN</h6>
-                        <p className="text-sm font-semibold text-gray-800">
-                          876.865.500,-
-                        </p>
+                  {loading ? (
+                    <p className="text-sm font-semibold text-gray-800 text-center w-full">
+                      Loading...
+                    </p>
+                  ) : (
+                    <>
+                      {/* Saldo Akhir */}
+                      <p className="text-sm font-semibold text-gray-800 text-center w-full">
+                        Rp. {saldoAkhir}
+                      </p>
+                      <div className="mt-1 bg-gray-50 p-4 rounded-lg w-full max-w-md">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          {/* Pemasukan */}
+                          <div className="text-center w-full">
+                            <h6 className="font-bold text-green-700">
+                              PEMASUKAN
+                            </h6>
+                            <p className="text-sm font-semibold text-gray-800">
+                              Rp. {pemasukan}
+                            </p>
+                          </div>
+                          {/* Pengeluaran */}
+                          <div className="text-center w-full">
+                            <h6 className="font-bold text-red-700">
+                              PENGELUARAN
+                            </h6>
+                            <p className="text-sm font-semibold text-gray-800">
+                              Rp. {pengeluaran}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-center w-full">
-                        <h6 className="font-bold text-red-700">PENGELUARAN</h6>
-                        <p className="text-sm font-semibold text-gray-800">
-                          576.536.350,-
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Section 2 */}
@@ -261,20 +332,20 @@ export default function Home() {
                     alt="Organisasi"
                   />
                   <p className="text-xs font-semibold text-gray-800 mt-4 text-center w-full">
-                    Rp. 0,-
+                    Rp. {saldoAkhirOr}
                   </p>
                   <div className="bg-gray-50 p-4 rounded-lg w-full max-w-md">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="text-center w-full">
                         <h6 className="font-bold text-green-700">PEMASUKAN</h6>
                         <p className="text-sm font-semibold text-gray-800">
-                          0,-
+                          Rp. {pemasukanOr}
                         </p>
                       </div>
                       <div className="text-center w-full">
                         <h6 className="font-bold text-red-700">PENGELUARAN</h6>
                         <p className="text-sm font-semibold text-gray-800">
-                          0,-
+                          Rp. {pengeluaranOr}
                         </p>
                       </div>
                     </div>

@@ -96,12 +96,6 @@ const icons = [
     color: "text-lime-500",
   },
   {
-    icon: faSyncAlt,
-    label: "Singkronisasi",
-    href: "/singkron-data",
-    color: "text-teal-700",
-  },
-  {
     icon: faClipboardCheck,
     label: "Ketentuan",
     href: "/ketentuan",
@@ -128,48 +122,77 @@ const icons = [
   },
 ];
 
-const dummyData = [
+const dataArray = [
   {
-    name: "MUHAMMAD ALFARIZA HAQIQI",
-    id: "0001146804614",
-    dateOfDeath: "01-01-2000",
-    position: "Guru",
-    address: "Jl. Mawar No. 1",
     img: "/profile.png",
+    name: "John Doe",
+    id: "12345",
+    dateOfDeath: "2023-01-01",
+    position: "Manager",
+    address: "123 Main St",
   },
   {
-    name: "Venushyntha Phauna Pharamytha Tribuana",
-    id: "0001146804614",
-    dateOfDeath: "01-01-2000",
-    position: "Guru",
-    address: "Jl. Mawar No. 1",
     img: "/profile.png",
+    name: "Jane Doe",
+    id: "12346",
+    dateOfDeath: "2023-01-02",
+    position: "Director",
+    address: "456 Elm St",
   },
   {
-    name: "ALEXANDER JOSEPH",
-    id: "0001146804615",
-    dateOfDeath: "02-02-2001",
-    position: "Guru",
-    address: "Jl. Melati No. 2",
     img: "/profile.png",
+    name: "John Doe",
+    id: "12345",
+    dateOfDeath: "2023-01-01",
+    position: "Manager",
+    address: "123 Main St",
   },
   {
-    name: "LARAS MAHARANI",
-    id: "0001146804616",
-    dateOfDeath: "03-03-2002",
-    position: "Guru",
-    address: "Jl. Anggrek No. 3",
     img: "/profile.png",
+    name: "Jane Doe",
+    id: "12346",
+    dateOfDeath: "2023-01-02",
+    position: "Director",
+    address: "456 Elm St",
+  },
+  {
+    img: "/profile.png",
+    name: "John Doe",
+    id: "12345",
+    dateOfDeath: "2023-01-01",
+    position: "Manager",
+    address: "123 Main St",
+  },
+  {
+    img: "/profile.png",
+    name: "Jane Doe",
+    id: "12346",
+    dateOfDeath: "2023-01-02",
+    position: "Director",
+    address: "456 Elm St",
   },
 ];
 
 export default function IconGrid() {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const itemsPerPage = 5; // Define itemsPerPage here
+
+  const handleNext = () => {
+    if (currentIndex + itemsPerPage < dataArray.length) {
+      setCurrentIndex(currentIndex + itemsPerPage);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentIndex - itemsPerPage >= 0) {
+      setCurrentIndex(currentIndex - itemsPerPage);
+    }
+  };
 
   useEffect(() => {
     if (!token) {
@@ -188,29 +211,12 @@ export default function IconGrid() {
       return () => {
         window.removeEventListener("resize", handleResize);
       };
-      const intervalId = setInterval(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % dummyData.length);
-      }, 10000); // Change slide every 10 seconds
-
-      return () => clearInterval(intervalId);
     }
   }, [token, router]);
 
   if (loading) {
     return <div>Loading...</div>;
   }
-
-  const handleNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % dummyData.length);
-  };
-
-  const handlePrev = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex === 0 ? dummyData.length - 1 : prevIndex - 1
-    );
-  };
-
-  const currentData = dummyData[currentIndex];
 
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
@@ -229,80 +235,56 @@ export default function IconGrid() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <div className="flex-1 p-6 ">
+          <div className="flex-1 mt-14">
             {isMobile ? (
-               <div className="w-full mt-12">
-               <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-4 px-4">
-                 {/* Lapor Meninggal */}
-                 <div className="bg-white p-2 rounded-lg shadow-lg transform transition duration-300 hover:scale-105">
-                   <div className="flex justify-between items-center">
-                     <div>
-                       <p className="text-sm font-bold text-gray-800">
-                         Lapor Meninggal
-                       </p>
-                       <p className="text-xs font-semibold text-gray-500 uppercase">
-                         1 Orang
-                       </p>
-                       <p className="text-xs text-green-500 font-medium mt-1">
-                         <span className="mr-1">↑</span>3.48% Since last month
-                       </p>
-                     </div>
-                     <div className="flex-shrink-0 bg-red-500 rounded-full p-1">
-                       <FontAwesomeIcon
-                         icon={faBullhorn}
-                         className="text-white text-lg"
-                       />
-                     </div>
-                   </div>
-                 </div>
-           
-                 {/* Sanduka Diberikan */}
-                 <div className="bg-white p-2 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
-                   <div className="flex justify-between items-center">
-                     <div>
-                       <p className="text-sm font-bold text-gray-800">
-                         Sanduka Diberikan
-                       </p>
-                       <p className="text-xs font-semibold text-gray-500 uppercase">
-                         173 Orang
-                       </p>
-                       <p className="text-xs text-red-500 font-medium mt-1">
-                         <span className="mr-1">↓</span>1.10% Since yesterday
-                       </p>
-                     </div>
-                     <div className="flex-shrink-0 bg-orange-500 rounded-full p-1">
-                       <FontAwesomeIcon
-                         icon={faUser}
-                         className="text-white text-lg"
-                       />
-                     </div>
-                   </div>
-                 </div>
-           
-                 {/* Total Santunan */}
-                 <div className="bg-white p-2 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
-                   <div className="flex justify-between items-center">
-                     <div>
-                       <p className="text-sm font-bold text-gray-800">
-                         Total Santunan
-                       </p>
-                       <p className="text-xs font-semibold text-gray-500 uppercase">
-                         Rp.432.500.000,-
-                       </p>
-                       <p className="text-xs text-red-500 font-medium mt-1">
-                         <span className="mr-1">↓</span>3.48% Since last week
-                       </p>
-                     </div>
-                     <div className="flex-shrink-0 bg-yellow-500 rounded-full p-1">
-                       <FontAwesomeIcon
-                         icon={faMoneyBill}
-                         className="text-white text-lg"
-                       />
-                     </div>
-                   </div>
-                 </div>
-               </div>
-             </div>
+              <div className="w-full border mt-10 overflow-x-auto">
+                <div className="flex space-x-4 px-4">
+                  {/* Lapor Meninggal */}
+                  <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 flex-shrink-0 w-48">
+                    <div>
+                      <p className="text-sm font-bold text-gray-800">
+                        Lapor Meninggal
+                      </p>
+                      <p className="text-xs font-semibold text-gray-500 uppercase">
+                        1 Orang
+                      </p>
+                      <p className="text-xs text-green-500 font-medium mt-1">
+                        <span className="mr-1">↑</span>3.48% Since last month
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Sanduka Diberikan */}
+                  <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 flex-shrink-0 w-48">
+                    <div>
+                      <p className="text-sm font-bold text-gray-800">
+                        Sanduka Diberikan
+                      </p>
+                      <p className="text-xs font-semibold text-gray-500 uppercase">
+                        173 Orang
+                      </p>
+                      <p className="text-xs text-red-500 font-medium mt-1">
+                        <span className="mr-1">↓</span>1.10% Since yesterday
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Total Santunan */}
+                  <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 flex-shrink-0 w-48">
+                    <div>
+                      <p className="text-sm font-bold text-gray-800">
+                        Total Santunan
+                      </p>
+                      <p className="text-xs font-semibold text-gray-500 uppercase">
+                        Rp.432.500.000,-
+                      </p>
+                      <p className="text-xs text-red-500 font-medium mt-1">
+                        <span className="mr-1">↓</span>3.48% Since last week
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="w-full mt-12">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 px-12">
@@ -379,7 +361,7 @@ export default function IconGrid() {
             )}
           </div>
 
-          <div className="px-6 sm:px-12 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-2">
+          <div className="px-6 mt-5 sm:px-12 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-2">
             {icons.map((item, index) => (
               <Link key={index} href={item.href}>
                 <div className="flex flex-col items-center bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
@@ -415,51 +397,71 @@ export default function IconGrid() {
             isSidebarOpen ? "ml-32" : "ml-0"
           }`}
         >
+          {/* Left Arrow Button - Only Visible on Larger Screens */}
           <button
             onClick={handlePrev}
-            className="absolute left-0 sm:left-1/3 bg-white rounded-full p-2 shadow-md"
+            className="hidden text-red-500 lg:block absolute left-32 top-1/2 transform -translate-y-1/2 z-10 bg-gray-100 p-2 rounded-full shadow-md hover:bg-gray-300"
           >
-            <FontAwesomeIcon icon={faChevronLeft} size="lg" />
+            <FontAwesomeIcon icon={faChevronLeft} />
           </button>
 
-          <div className="bg-white rounded-lg shadow-md overflow-hidden flex items-center justify-center p-4 max-w-xl">
-            <Image
-              className="rounded-full"
-              src={currentData.img}
-              alt="Profile Image"
-              width={80}
-              height={80}
-            />
-            <div className="ml-8">
-              <h2 className="text-xs font-semibold text-gray-800">
-                {currentData.name}
-              </h2>
-              <p className="text-sm text-gray-600">{currentData.id}</p>
-              <div className="mt-2">
-                <div className="flex items-center text-gray-800 text-sm mb-1">
-                  <FontAwesomeIcon
-                    icon={faCalendarAlt}
-                    className="text-gray-600"
+          {/* Data Grid with Horizontal Scroll for Mobile */}
+          <div className="flex mx-auto sm:mx-44 space-x-4 overflow-x-auto w-full px-4 lg:px-0 lg:grid lg:grid-cols-5 lg:gap-4 lg:overflow-hidden">
+            {dataArray
+              .slice(currentIndex, currentIndex + itemsPerPage)
+              .map((currentData, index) => (
+                <button // Card dalam button
+                  key={index}
+                  className="min-w-[45%] sm:min-w-[30%]  bg-white rounded-lg shadow-lg overflow-hidden" // Ubah min-w untuk desktop
+                >
+                  <Image
+                    className="ml-10 sm:ml-16 h-20 w-20 object-cover"
+                    src={currentData.img}
+                    alt="Profile Image"
+                    width={100}
+                    height={100}
                   />
-                  <span className="ml-2">{currentData.dateOfDeath}</span>
-                </div>
-                <div className="flex items-center text-gray-800 text-sm mb-1">
-                  <FontAwesomeIcon icon={faUserTie} className="text-gray-600" />
-                  <span className="ml-2">{currentData.position}</span>
-                </div>
-                <div className="flex items-center text-gray-800 text-sm mb-1">
-                  <FontAwesomeIcon icon={faHome} className="text-gray-600" />
-                  <span className="ml-2">{currentData.address}</span>
-                </div>
-              </div>
-            </div>
+                  <div className="p-4">
+                    <h2 className="text-base font-semibold text-gray-800">
+                      {currentData.name}
+                    </h2>
+                    <p className="text-sm text-gray-600 mb-2">
+                      {currentData.id}
+                    </p>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <div className="flex items-center">
+                        <FontAwesomeIcon
+                          icon={faCalendarAlt}
+                          className="text-gray-600"
+                        />
+                        <span className="ml-2">{currentData.dateOfDeath}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <FontAwesomeIcon
+                          icon={faUserTie}
+                          className="text-gray-600"
+                        />
+                        <span className="ml-2">{currentData.position}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <FontAwesomeIcon
+                          icon={faHome}
+                          className="text-gray-600"
+                        />
+                        <span className="ml-2">{currentData.address}</span>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
           </div>
 
+          {/* Right Arrow Button - Only Visible on Larger Screens */}
           <button
             onClick={handleNext}
-            className="absolute right-0 sm:right-1/3 bg-white rounded-full p-2 shadow-md"
+            className="hidden text-red-500 lg:block absolute right-32 top-1/2 transform -translate-y-1/2 z-10 bg-gray-100 p-2 rounded-full shadow-md hover:bg-gray-300"
           >
-            <FontAwesomeIcon icon={faChevronRight} size="lg" />
+            <FontAwesomeIcon icon={faChevronRight} />
           </button>
         </div>
       </div>
