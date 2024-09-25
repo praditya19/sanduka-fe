@@ -262,6 +262,16 @@ const submitReport = async (reportData) => {
   }
 };
 
+const getRekapAnggota = async (cabang) => {
+  try {
+    const response = await axiosClient.get(`/api/rekap-anggota/by-cabang?cabang=${cabang}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching rekap anggota:", error);
+    throw error;
+  }
+};
+
 // REKAP MENINGGAL
 const getRekapMeninggal = async () => {
   try {
@@ -455,6 +465,7 @@ export default {
   createAdmin,
   deleteAdmin,
   submitReport,
+  getRekapAnggota,
   getRekapMeninggal,
   getRekapById,
   getAllDataLapor,

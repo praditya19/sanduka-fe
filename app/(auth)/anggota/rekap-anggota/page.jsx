@@ -11,16 +11,19 @@ function RekapAnggota() {
   const [maxItems, setMaxItems] = useState(10);
   const { token } = useAuth();
   const router = useRouter();
+  const [rekapData, setRekapData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(rekapData.length / maxItems);
 
   const [cabangList, setCabangList] = useState([]);
   const [filteredCabangList, setFilteredCabangList] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
   const [showCabangDropdown, setShowCabangDropdown] = useState(false);
 
-  const [unitKerjaList, setUnitKerjaList] = useState([]); // Store unit kerja list
-  const [filteredUnitKerja, setFilteredUnitKerja] = useState([]); // Store filtered unit kerja
-  const [selectedUnitKerja, setSelectedUnitKerja] = useState(""); // Store selected unit kerja
-  const [unitKerjaInput, setUnitKerjaInput] = useState(""); // Input for searching unit kerja
+  const [unitKerjaList, setUnitKerjaList] = useState([]);
+  const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
+  const [unitKerjaInput, setUnitKerjaInput] = useState("");
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
 
   // Fetch cabang data
@@ -65,6 +68,23 @@ function RekapAnggota() {
       setFilteredUnitKerja([]); // Reset if no cabang is selected
     }
   }, [selectedCabang, unitKerjaList]);
+
+  useEffect(() => {
+    const fetchRekapAnggota = async () => {
+      try {
+        const cabang = selectedCabang; // Use the selected cabang value
+        const response = await GlobalApi.getRekapAnggota(cabang);
+        console.log("API Response:", response); // Log the response here
+        setRekapData(response); // Store the fetched data in state
+      } catch (error) {
+        console.error("Error fetching rekap data:", error);
+      }
+    };
+
+    if (selectedCabang) {
+      fetchRekapAnggota();
+    }
+  }, [selectedCabang]);
 
   // Handle input change for cabang
   const handleInputChange = (e) => {
@@ -149,6 +169,33 @@ function RekapAnggota() {
     };
   }, []);
 
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Determine the start and end index of the items to display based on the current page
+  const startIndex = (currentPage - 1) * maxItems;
+  const paginatedData = rekapData.slice(startIndex, startIndex + maxItems);
+
+  const jumlahPns = rekapData.reduce((acc, curr) => acc + curr.totalPns, 0);
+  const jumlahPppk = rekapData.reduce((acc, curr) => acc + curr.totalPppk, 0);
+  const jumlahNonPns = rekapData.reduce((acc, curr) => acc + curr.totalNonPns, 0);
+
+  // Correct the syntax here by accessing `curr` directly
+  const jumlah = rekapData.reduce((acc, curr) => acc + (curr.totalPns + curr.totalPppk + curr.totalNonPns), 0);
+
+  const jumlahIuran = rekapData.reduce((acc, curr) => acc + curr.totalIuran, 0);
+
+
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
       {isMobile ? <HeaderMobile /> : <HeaderHome />}
@@ -156,9 +203,7 @@ function RekapAnggota() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"}`}
         >
           <div className="mb-4 mx-12">
             <div className="flex flex-wrap items-start mt-14 justify-between">
@@ -245,101 +290,73 @@ function RekapAnggota() {
             <table className="container w-full table-auto mb-8">
               <thead>
                 <tr>
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
-                    rowSpan="2"
-                  >
-                    No
-                  </th>
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
-                    rowSpan="2"
-                  >
-                    Unit Kerja
-                  </th>
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
-                    colSpan="3"
-                  >
-                    Status Anggota
-                  </th>
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
-                    rowSpan="2"
-                  >
-                    Jumlah
-                  </th>
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
-                    rowSpan="2"
-                  >
-                    Iuran
-                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">No</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Unit Kerja</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" colSpan="3">Status Anggota</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Jumlah</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Iuran</th>
                 </tr>
                 <tr>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
-                    PNS
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
-                    PPPK
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
-                    Non PNS
-                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">PNS</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">PPPK</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">Non PNS</th>
                 </tr>
               </thead>
               <tbody>
-                {/* Default Empty Row */}
-                <tr>
-                  <td className="p-2 md:p-3 border text-center">1</td>
-                  <td className="p-2 md:p-3 border"></td>
-                  <td className="p-2 md:p-3 border text-center">0</td>
-                  <td className="p-2 md:p-3 border text-center">0</td>
-                  <td className="p-2 md:p-3 border text-center">0</td>
-                  <td className="p-2 md:p-3 border text-center">0</td>
-                  <td className="p-2 md:p-3 border text-center">0</td>
-                </tr>
+                {paginatedData.length > 0 ? (
+                  paginatedData.map((row, index) => (
+                    <tr key={index}>
+                      <td className="p-2 md:p-3 border text-center">{startIndex + index + 1}</td>
+                      <td className="p-2 md:p-3 border">{row.alamatKerja}</td>
+                      <td className="p-2 md:p-3 border text-center">{row.totalPns}</td>
+                      <td className="p-2 md:p-3 border text-center">{row.totalPppk}</td>
+                      <td className="p-2 md:p-3 border text-center">{row.totalNonPns}</td>
+                      <td className="p-2 md:p-3 border text-center">
+                        {row.totalPns + row.totalPppk + row.totalNonPns}
+                      </td>
+                      <td className="p-2 md:p-3 border text-center">{`Rp. ${row.totalIuran.toLocaleString("id-ID")},-`}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7" className="p-2 md:p-3 border text-center">No data available</td>
+                  </tr>
+                )}
               </tbody>
               <tfoot>
                 <tr>
-                  <td
-                    colSpan="2"
-                    className="p-2 md:p-3 border bg-green-200 text-left"
-                  >
+                  <td colSpan="2" className="p-2 md:p-3 border bg-green-200 text-left">
                     Jumlah :
                   </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
-                    0
-                  </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
-                    0
-                  </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
-                    0
-                  </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
-                    0
-                  </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
-                    0
-                  </td>
-                </tr>
-                <tr>
-                  <td
-                    colSpan="2"
-                    className="p-2 md:p-3 border bg-green-200 text-left"
-                  >
-                    Total Sumbangan :
-                  </td>
-                  <td
-                    colSpan="5"
-                    className="p-2 md:p-3 border bg-green-200 text-left"
-                  >
-                    Rp. 0,-
-                  </td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">{jumlahPns}</td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">{jumlahPppk}</td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">{jumlahNonPns}</td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">{jumlah}</td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">{`Rp. ${jumlahIuran.toLocaleString("id-ID")},-`}</td>
                 </tr>
               </tfoot>
             </table>
+          </div>
+
+          {/* Pagination controls */}
+          <div className="flex justify-end items-center mb-4">
+            <button
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+              className="mr-2 px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className="ml-2 px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
+            >
+              Next
+            </button>
           </div>
         </div>
       </div>
