@@ -432,6 +432,17 @@ const getFormDaspen = async () => {
   }
 };
 // end
+// start
+const getRekapAnggotaByCabang = async (cabang) => {
+  try {
+    const response = await axiosClient.get(`/api/rekap-anggota/by-cabang?cabang=${cabang}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching rekap anggota:", error);
+    throw error;
+  }
+};  
+// end
 
 // Export all functions
 export default {
@@ -468,4 +479,5 @@ export default {
   getSaldoSanduka,
   getSaldoOrganisasi,
   getFormDaspen,
+  getRekapAnggotaByCabang,
 };
