@@ -12,11 +12,6 @@ function RekapAnggota() {
   const { token } = useAuth();
   const router = useRouter();
   const [rekapData, setRekapData] = useState([]);
-<<<<<<< HEAD
-=======
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(rekapData.length / maxItems);
->>>>>>> 9c502f8387924f79c7337b9bb7907dfd9ca71c49
 
   const [cabangList, setCabangList] = useState([]);
   const [filteredCabangList, setFilteredCabangList] = useState([]);
@@ -28,6 +23,9 @@ function RekapAnggota() {
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [unitKerjaInput, setUnitKerjaInput] = useState("");
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(rekapData.length / maxItems);
 
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
