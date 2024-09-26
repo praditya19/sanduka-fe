@@ -12,6 +12,11 @@ function RekapAnggota() {
   const { token } = useAuth();
   const router = useRouter();
   const [rekapData, setRekapData] = useState([]);
+<<<<<<< HEAD
+=======
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(rekapData.length / maxItems);
+>>>>>>> 9c502f8387924f79c7337b9bb7907dfd9ca71c49
 
   const [cabangList, setCabangList] = useState([]);
   const [filteredCabangList, setFilteredCabangList] = useState([]);
@@ -237,6 +242,33 @@ function RekapAnggota() {
     };
   }, []);
 
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Determine the start and end index of the items to display based on the current page
+  const startIndex = (currentPage - 1) * maxItems;
+  const paginatedData = rekapData.slice(startIndex, startIndex + maxItems);
+
+  const jumlahPns = rekapData.reduce((acc, curr) => acc + curr.totalPns, 0);
+  const jumlahPppk = rekapData.reduce((acc, curr) => acc + curr.totalPppk, 0);
+  const jumlahNonPns = rekapData.reduce((acc, curr) => acc + curr.totalNonPns, 0);
+
+  // Correct the syntax here by accessing `curr` directly
+  const jumlah = rekapData.reduce((acc, curr) => acc + (curr.totalPns + curr.totalPppk + curr.totalNonPns), 0);
+
+  const jumlahIuran = rekapData.reduce((acc, curr) => acc + curr.totalIuran, 0);
+
+
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
       {isMobile ? <HeaderMobile /> : <HeaderHome />}
@@ -244,9 +276,7 @@ function RekapAnggota() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"}`}
         >
           <div className="mb-4 mx-12">
             <div className="flex flex-wrap items-start mt-14 justify-between">
@@ -330,47 +360,16 @@ function RekapAnggota() {
             <table className="container w-full table-auto mb-8">
               <thead>
                 <tr>
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
-                    rowSpan="2"
-                  >
-                    No
-                  </th>
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
-                    rowSpan="2"
-                  >
-                    Unit Kerja
-                  </th>
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
-                    colSpan="3"
-                  >
-                    Status Anggota
-                  </th>
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
-                    rowSpan="2"
-                  >
-                    Jumlah
-                  </th>
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
-                    rowSpan="2"
-                  >
-                    Iuran
-                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">No</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Unit Kerja</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" colSpan="3">Status Anggota</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Jumlah</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Iuran</th>
                 </tr>
                 <tr>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
-                    PNS
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
-                    PPPK
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
-                    Non PNS
-                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">PNS</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">PPPK</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">Non PNS</th>
                 </tr>
               </thead>
               <tbody>
@@ -412,44 +411,38 @@ function RekapAnggota() {
               </tbody>
               <tfoot>
                 <tr>
-                  <td
-                    colSpan="2"
-                    className="p-2 md:p-3 border bg-green-200 text-left"
-                  >
+                  <td colSpan="2" className="p-2 md:p-3 border bg-green-200 text-left">
                     Jumlah :
                   </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
-                    0
-                  </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
-                    0
-                  </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
-                    0
-                  </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
-                    0
-                  </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
-                    0
-                  </td>
-                </tr>
-                <tr>
-                  <td
-                    colSpan="2"
-                    className="p-2 md:p-3 border bg-green-200 text-left"
-                  >
-                    Total Sumbangan :
-                  </td>
-                  <td
-                    colSpan="5"
-                    className="p-2 md:p-3 border bg-green-200 text-left"
-                  >
-                    Rp. 0,-
-                  </td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">{jumlahPns}</td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">{jumlahPppk}</td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">{jumlahNonPns}</td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">{jumlah}</td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">{`Rp. ${jumlahIuran.toLocaleString("id-ID")},-`}</td>
                 </tr>
               </tfoot>
             </table>
+          </div>
+
+          {/* Pagination controls */}
+          <div className="flex justify-end items-center mb-4">
+            <button
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+              className="mr-2 px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className="ml-2 px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
+            >
+              Next
+            </button>
           </div>
         </div>
       </div>

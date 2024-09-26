@@ -411,16 +411,18 @@ function DataAnggota() {
   };
 
   const handleInputChange = (e) => {
-    const { value } = e.target;
-    setFilterCabang(value);
-    setShowDropdownCabang(true);
-    setShowDropdownUnitKerja(false);
+    const value = e.target.value.toLowerCase(); // Convert input to lowercase
+    setFilterCabang(value); // Update the input state
 
-    const filtered = cabang.filter((item) =>
-      item.kecamatan.toLowerCase().includes(value.toLowerCase())
+    // Filter the cabang based on the input value
+    const filtered = cabang.filter(item =>
+      item.kecamatan.toLowerCase().includes(value) // Check for substring match
     );
-    setFilteredCabang(filtered);
+
+    setFilteredCabang(filtered); // Update filteredCabang state
+    setShowDropdownCabang(filtered.length > 0); // Show dropdown if there are matches
   };
+
 
   const handleInputChangeUnit = (e) => {
     const { value } = e.target;
@@ -488,7 +490,7 @@ function DataAnggota() {
                       placeholder="Cari Cabang..."
                       value={filterCabang}
                       onChange={handleInputChange}
-                      className="shadow appearance-none border rounded w-44 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                      className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
                     />
                     {showDropdownCabang && filteredCabang.length > 0 && (
                       <div className="absolute left-0 mt-10 w-full bg-white border rounded shadow-lg z-10 max-h-40 overflow-y-auto">
@@ -503,18 +505,6 @@ function DataAnggota() {
                         ))}
                       </div>
                     )}
-                    <select
-                      className="shadow appearance-none border rounded w-44 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
-                      value={selectedCabang}
-                      onChange={handleSelectChange}
-                    >
-                      <option value="">Pilih Cabang</option>
-                      {cabang.map((item) => (
-                        <option key={item.id} value={item.kecamatan}>
-                          {item.kecamatan}
-                        </option>
-                      ))}
-                    </select>
                   </div>
 
                   <div className="flex flex-col md:flex">
@@ -541,7 +531,7 @@ function DataAnggota() {
                         </div>
                       )}
                     </div>
-                    <select
+                    {/* <select
                       className="shadow appearance-none border rounded w-44 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
                       value={selectedUnitKerja}
                       onChange={handleSelectChangeUnit}
@@ -553,11 +543,11 @@ function DataAnggota() {
                           {item.unitKerja}
                         </option>
                       ))}
-                    </select>
+                    </select> */}
                   </div>
                 </>
                 <select
-                  className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline lg:mt-12"
+                  className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
                 >
@@ -568,15 +558,15 @@ function DataAnggota() {
                   <option>Keluar</option>
                 </select>
 
-                <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto lg:mt-12">
+                <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
                   Jumlah Anggota : {jumlahAnggota}
                 </p>
               </div>
-              <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto lg:mt-12">
+              <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
                 Data Anggota
               </p>
               <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
-                <div className="space-x-2 w-full flex md:block lg:mt-12">
+                <div className="space-x-2 w-full flex md:block">
                   <label htmlFor="maxItems" className="mr-2">
                     Tampilkan:
                   </label>
