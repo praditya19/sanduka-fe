@@ -340,6 +340,16 @@ const cekNpaList = async (npaList) => {
   }
 };
 
+const getHistoryByNpa = async (npa) => {
+  try {
+    const response = await axiosClient.get(`/api/history/npa/${npa}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching history for NPA ${npa}:`, error);
+    throw error;
+  }
+};
+
 // Bantuan
 const getAdminBantuan = () =>
   axiosClient.get("/api/register-admin/admins-per-cabang");
@@ -491,4 +501,5 @@ export default {
   getSaldoOrganisasi,
   getFormDaspen,
   getRekapAnggotaByCabang,
+  getHistoryByNpa,
 };

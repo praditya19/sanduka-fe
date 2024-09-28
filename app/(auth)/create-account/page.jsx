@@ -903,22 +903,33 @@ const Page = () => {
               </div>
 
               <div className="w-full">
-                <Label className="flex flex-col sm:flex-row items-start sm:items-center">
+              <Label className="block text-sm font-medium mb-3">
                   Pangkat Golongan
-                  <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
-                    *Bila Tidak Ada, Isi Tanda (-)
-                  </span>
                 </Label>
-                <Input
-                  className="mt-2 sm:mt-2"
-                  type="text"
-                  id="pangkatGolongan"
-                  placeholder="Tuliskan Golongan"
-                  {...register("pangkatGolongan", { required: true })}
+                <Controller
+                  name="pangkatGolongan"
+                  control={control}
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Golongan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {golonganJabatan.map((item) => (
+                            <SelectItem key={item.id} value={item.golongan}>
+                              {item.golongan}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
-                {errors.pangkatGolongan && (
+               {errors.pangkatGolongan && (
                   <span className="text-red-500 text-sm">
-                    Pangkat/Golongan is required
+                    Pangkat Golongan is required
                   </span>
                 )}
               </div>
@@ -938,6 +949,8 @@ const Page = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
+                          <SelectItem value="SMA">SMA</SelectItem>
+                          <SelectItem value="SMK">SMK</SelectItem>
                           <SelectItem value="DIPLOMA">DIPLOMA</SelectItem>
                           <SelectItem value="SARJANA">SARJANA</SelectItem>
                           <SelectItem value="MAGISTER">MAGISTER</SelectItem>
@@ -947,9 +960,9 @@ const Page = () => {
                     </Select>
                   )}
                 />
-                {errors.ijazah && (
+                {errors.pendidikanTerakhir && (
                   <span className="text-red-500 text-sm">
-                    Ijazah is required
+                    Pendidikan Terakhir is required
                   </span>
                 )}
               </div>
@@ -976,7 +989,7 @@ const Page = () => {
                     </Select>
                   )}
                 />
-                {errors.sertifikat && (
+                {errors.sertifikatPendidik && (
                   <span className="text-red-500 text-sm">
                     Sertifikat Pendidik is required
                   </span>
@@ -994,7 +1007,7 @@ const Page = () => {
                   max={today}
                   {...register("mulaiJadiAnggotaPgri", { required: true })}
                 />
-                {errors.mulaiJadianggota && (
+                {errors.mulaiJadiAnggotaPgri && (
                   <span className="text-red-500 text-sm">
                     Mulai jadi anggota PGRI is required
                   </span>
@@ -1012,21 +1025,18 @@ const Page = () => {
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Pilih Golongan" />
+                        <SelectValue placeholder="Sertifikat" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          {golonganJabatan.map((item) => (
-                            <SelectItem key={item.id} value={item.golongan}>
-                              {item.golongan}
-                            </SelectItem>
-                          ))}
+                          <SelectItem value="PENDIDIK">Pendidik</SelectItem>
+                          <SelectItem value="TENAGAPENDIDIK">Tenaga Pendidik</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
                   )}
                 />
-                {errors.golongan && (
+                {errors.golonganJabatan && (
                   <span className="text-red-500 text-sm">
                     Pangkat/Golongan is required
                   </span>

@@ -30,12 +30,12 @@ const Page = () => {
   const [cabangOptions, setCabangOptions] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
+  const [bulanOptions, setBulanOptions] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
 
   useEffect(() => {
     GlobalApi.getCabang()
       .then((response) => {
-        console.log("Fetched cabang data:", response.data); // Log the fetched data
         setCabangOptions(response.data);
         setLoading(false); // Set loading to false once data is fetched
       })
@@ -45,26 +45,25 @@ const Page = () => {
       });
   }, []);
 
-  const months = [
-    { value: "01", label: "Januari" },
-    { value: "02", label: "Februari" },
-    { value: "03", label: "Maret" },
-    { value: "04", label: "April" },
-    { value: "05", label: "Mei" },
-    { value: "06", label: "Juni" },
-    { value: "07", label: "Juli" },
-    { value: "08", label: "Agustus" },
-    { value: "09", label: "September" },
-    { value: "10", label: "Oktober" },
-    { value: "11", label: "November" },
-    { value: "12", label: "Desember" },
-  ];
+  // Mengambil data bulan dari API
+  const fetchBulan = async () => {
+    try {
+      const response = await GlobalApi.getBulan(); // Mengambil data bulan dari API
+      setBulanOptions(response.data); // Menyimpan data bulan ke state
+    } catch (error) {
+      console.error("Error fetching bulan:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchBulan(); // Memanggil fetchBulan saat komponen di-render
+  }, []);
 
   const years = Array.from(new Array(11), (v, i) => i + 2020); // Generate years from 2020
 
   const handlePrint = () => {
     window.print();
-  };  
+  };
 
   const fetchData = async () => {
     try {
@@ -120,7 +119,7 @@ const Page = () => {
   }
 
   const filteredData = data.filter((item) => {
-    // Filter based on search term (if applicable)
+    // Filter berdasarkan search term
     const matchesSearchTerm =
       (item.npaDetail.namaLengkap &&
         item.npaDetail.namaLengkap
@@ -128,28 +127,38 @@ const Page = () => {
           .includes(filter.toLowerCase())) ||
       (item.cabang && item.cabang.toLowerCase().includes(filter.toLowerCase()));
 
-    // Filter based on selected cabang
+    // Filter berdasarkan cabang yang dipilih
     const matchesCabang = selectedCabang
       ? item.cabang &&
         item.cabang.toLowerCase() === selectedCabang.toLowerCase()
       : true;
 
-    // Filter based on selected month (using the date column)
+    // Filter berdasarkan bulan yang dipilih
     const matchesMonth = selectedMonth
       ? new Date(item.tanggal).getMonth() + 1 === parseInt(selectedMonth, 10)
       : true;
 
-    // Filter based on selected year (using the date column)
+    // Filter berdasarkan tahun yang dipilih
     const matchesYear = selectedYear
       ? new Date(item.tanggal).getFullYear() === parseInt(selectedYear, 10)
       : true;
 
-    // Apply all filters
+    // Menerapkan semua filter
     return matchesSearchTerm && matchesCabang && matchesMonth && matchesYear;
   });
 
   const handleEdit = (item) => {
-    alert(`Editing: ${item.data}`);
+    // Ambil nilai NPA dari item.npaDetail.npaPgri
+    const npa = item.npaDetail.npaPgri;
+  
+    // Log NPA ke console
+    console.log(`NPA yang dituju: ${npa}`);
+  
+    // Simpan NPA ke Session Storage
+    sessionStorage.setItem('npa', npa); // Simpan NPA ke Session Storage
+  
+    // Navigasi ke halaman detail tanpa query parameter
+    router.push(`/history-data/detail`);
   };
 
   const toggleSidebar = () => {
@@ -228,9 +237,9 @@ const Page = () => {
                       className="p-2 border rounded w-full"
                     >
                       <option value="">Pilih Bulan</option>
-                      {months.map((month) => (
-                        <option key={month.value} value={month.value}>
-                          {month.label}
+                      {bulanOptions.map((bulan) => (
+                        <option key={bulan.angkaBulan} value={bulan.angkaBulan}>
+                          {bulan.namaBulan}
                         </option>
                       ))}
                     </select>
@@ -261,17 +270,22 @@ const Page = () => {
                 <Table className="w-full table-auto mb-8">
                   <TableHeader className="p-2 md:p-3 border bg-green-300">
                     <TableRow>
-                      {["No", "Date", "Data", "Cabang", "Detail", "Keterangan"].map(
-                        (header, idx) => (
-                          <TableHead
-                            key={header}
-                            rowSpan="2"
-                            className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                          >
-                            {header}
-                          </TableHead>
-                        )
-                      )}
+                      {[
+                        "No",
+                        "Date",
+                        "Data",
+                        "Cabang",
+                        "Detail",
+                        "Keterangan",
+                      ].map((header, idx) => (
+                        <TableHead
+                          key={header}
+                          rowSpan="2"
+                          className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                        >
+                          {header}
+                        </TableHead>
+                      ))}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -322,13 +336,13 @@ const Page = () => {
                             {item.uraian}
                           </TableCell>
                           <TableCell className="text-center border">
-                            <button
-                              onClick={() => handleEdit(item)}
-                              className="px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                            >
-                              Detail
-                            </button>
-                          </TableCell>
+  <button
+    onClick={() => handleEdit(item)}
+    className="px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+  >
+    Detail
+  </button>
+</TableCell>
                         </TableRow>
                       );
                     })}
