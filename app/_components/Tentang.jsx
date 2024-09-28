@@ -78,8 +78,8 @@ function Tentang() {
               </h4>
             </div>
             <p className="text-gray-700 text-base text-justify">
-            Pengurus Cabang melaporkan kematian anggotanya secara online
-            melalui aplikasi sanduka.
+              Pengurus Cabang melaporkan kematian anggotanya secara online
+              melalui aplikasi sanduka.
             </p>
           </div>
         </div>

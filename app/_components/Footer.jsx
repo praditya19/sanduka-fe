@@ -125,9 +125,7 @@ const Footer = () => {
                 className="mr-2"
               />
               <Link href="#" aria-label="Google Play" className="text-white">
-                <span className="hidden md:inline">
-                  Google Play Store
-                </span>
+                <span className="hidden md:inline">Google Play Store</span>
                 <span className="md:hidden">Google Play Store</span>
               </Link>
             </div>
