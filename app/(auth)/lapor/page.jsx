@@ -1,16 +1,10 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
-import {
-  faArrowLeft,
-  faBell,
-  faSearch,
-} from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
@@ -40,7 +34,9 @@ const FormStep1 = ({
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null); // Assuming you have a way to get the user ID
-  const today = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
+  const today = new Date();
+  today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+  const formattedDate = today.toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
   const [silaporData, setSilaporData] = useState(null); // Tambahkan useState
 
   useEffect(() => {
@@ -183,10 +179,6 @@ const FormStep1 = ({
     setIsUnitKerjaDisabled(false);
   };
 
-  const handleBackClick = () => {
-    router.back();
-  };
-
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
@@ -265,15 +257,9 @@ const FormStep1 = ({
     </div>
   );
 
-  const profileImageUrl = "/profile.png";
-
   return (
     <div>
-      {isMobile ? (
-        <HeaderMobile />
-      ) : (
-        <HeaderHome />
-      )}
+      {isMobile ? <HeaderMobile /> : <HeaderHome />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
@@ -301,7 +287,7 @@ const FormStep1 = ({
                       id="date"
                       placeholder="tanggal"
                       className="text-sm"
-                      value={today} // Set the default value here
+                      value={formattedDate} // Set the default value here
                       disabled // Make sure it's disabled
                     />
                   </div>
@@ -483,8 +469,7 @@ const Resume = ({
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [pelaporData, setPelaporData] = useState(null);
-  const [profileImageUrl, setProfileImageUrl] = useState("/profile.png");
-  const router = useRouter();
+  const profileImageUrl = "/profile.png";
 
   // Functions for Fetching Data
   const getAnggotaById = async () => {
@@ -555,10 +540,6 @@ const Resume = ({
     setIsMobile(window.innerWidth <= 768);
   };
 
-  const handleBackClick = () => {
-    router.back();
-  };
-
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
@@ -590,11 +571,7 @@ const Resume = ({
 
   return (
     <div>
-      {isMobile ? (
-       <HeaderMobile />
-      ) : (
-        <HeaderHome />
-      )}
+      {isMobile ? <HeaderMobile /> : <HeaderHome />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
@@ -614,11 +591,15 @@ const Resume = ({
               </Label>
               <div className="flex flex-col items-center gap-2">
                 <Image
-                  src={`data:image/jpeg;base64,${profileImageUrl}`}
+                  src={
+                    profileImageUrl.startsWith("data:image")
+                      ? profileImageUrl
+                      : "/profile.png"
+                  }
                   alt="foto Anggota"
                   className="w-24 h-36 object-cover rounded-full border-4 border-gray-200 shadow-md"
-                  width={110} // Adjust width in pixels (36 * 4 = 144px, matching w-36)
-                  height={110} // Adjust height in pixels (36 * 4 = 144px, matching h-36)
+                  width={110} // Adjust width in pixels
+                  height={110} // Adjust height in pixels
                 />
                 <div className="flex flex-col items-center gap-1 text-gray-700">
                   <Label className="block text-sm font-medium text-center">
@@ -654,11 +635,15 @@ const Resume = ({
                   <Label className="block text-sm font-medium text-center">
                     No HP:{" "}
                     <Link
-                      href=""
-                      target="blank"
-                      className="text-blue-600 font-semibold"
+                      href={`https://wa.me/${
+                        formData?.nomorHp?.startsWith("+62")
+                          ? formData.nomorHp.replace("+62", "62")
+                          : formData?.nomorHp || "" // Fallback to an empty string if nomorHp is undefined
+                      }`}
+                      className="text-blue-500"
                     >
-                      {formData.nomorHp} (WhatsApp)
+                      {formatPhoneNumber(formData.nomorHp)} (WhatsApp)
+                      {/* Display formatted number */}
                     </Link>
                   </Label>
                   <Label className="block text-sm font-medium text-center">
@@ -700,10 +685,14 @@ const Resume = ({
                   <Label className="block text-sm font-medium text-center">
                     No HP:{" "}
                     <Link
-                      href={`tel:${formData.nomorHpPelapor}`}
+                      href={`https://wa.me/${
+                        formData?.nomorHp?.startsWith("+62")
+                          ? formData.nomorHp.replace("+62", "62")
+                          : formData?.nomorHp || "" // Fallback to an empty string if nomorHp is undefined
+                      }`}
                       className="text-blue-500"
                     >
-                      {pelaporData?.nomorHp} (WhatsApp)
+                      {formatPhoneNumber(formData.nomorHp)} (WhatsApp)
                     </Link>
                   </Label>
                 </div>

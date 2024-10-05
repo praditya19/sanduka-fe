@@ -10,12 +10,15 @@ import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 export default function DataUtama() {
   const [activeTab, setActiveTab] = useState("iuran-pgri");
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
+
+  const [data, setData] = useState([]); // State untuk menampung data dari API
 
   const handleBackClick = () => {
     router.back();
@@ -43,6 +46,37 @@ export default function DataUtama() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+   // Memanggil GlobalApi berdasarkan tab yang aktif
+   useEffect(() => {
+    const fetchData = async () => {
+      let response;
+      if (activeTab === "iuran-pgri") {
+        response = await GlobalApi.getIuranByFilter("Iuran PGRI");
+        sessionStorage.setItem("iuranPGRIData", JSON.stringify(response)); // Store in session storage
+      } else if (activeTab === "daspen") {
+        response = await GlobalApi.getIuranByFilter("Daspen");
+        sessionStorage.setItem("daspenData", JSON.stringify(response)); // Store in session storage
+      } else if (activeTab === "derap") {
+        response = await GlobalApi.getIuranByFilter("Derap");
+        sessionStorage.setItem("derapData", JSON.stringify(response)); // Store in session storage
+      } else if (activeTab === "kalender") {
+        response = await GlobalApi.getIuranByFilter("Kalender");
+        sessionStorage.setItem("kalenderData", JSON.stringify(response)); // Store in session storage
+      }
+      setData(response); // Set data yang diterima dari API
+      // console.log(`Data for ${activeTab}:`, response); // Hapus log ini untuk tidak menampilkan data ke console
+    };
+  
+    // Check session storage before fetching data
+    const storedData = sessionStorage.getItem(`${activeTab}Data`);
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      setData(parsedData); // Use data from session storage
+    } else {
+      fetchData();
+    }
+  }, [activeTab]);
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
@@ -73,39 +107,28 @@ export default function DataUtama() {
           }`}
         >
           <div className="min-h-screen bg-gray-50 px-4 md:px-6 py-6">
-            <nav className="container mt-12">
+          <nav className="container mt-12">
               <ul className="flex flex-wrap space-x-4 md:space-x-6">
-                <NavItem
-                  isActive={activeTab === "iuran-pgri"}
-                  onClick={() => handleTabChange("iuran-pgri")}
-                >
+                <NavItem isActive={activeTab === "iuran-pgri"} onClick={() => handleTabChange("iuran-pgri")}>
                   Iuran PGRI
                 </NavItem>
-                <NavItem
-                  isActive={activeTab === "daspen"}
-                  onClick={() => handleTabChange("daspen")}
-                >
+                <NavItem isActive={activeTab === "daspen"} onClick={() => handleTabChange("daspen")}>
                   Daspen
                 </NavItem>
-                <NavItem
-                  isActive={activeTab === "derap"}
-                  onClick={() => handleTabChange("derap")}
-                >
+                <NavItem isActive={activeTab === "derap"} onClick={() => handleTabChange("derap")}>
                   Derap
                 </NavItem>
-                <NavItem
-                  isActive={activeTab === "kalender"}
-                  onClick={() => handleTabChange("kalender")}
-                >
+                <NavItem isActive={activeTab === "kalender"} onClick={() => handleTabChange("kalender")}>
                   Kalender
                 </NavItem>
               </ul>
             </nav>
 
-            {activeTab === "iuran-pgri" && <IuranPgri />}
-            {activeTab === "daspen" && <Daspen />}
-            {activeTab === "derap" && <Derap />}
-            {activeTab === "kalender" && <Kalender />}
+            {/* Render components based on active tab */}
+            {activeTab === "iuran-pgri" && <IuranPgri data={data} />}
+            {activeTab === "daspen" && <Daspen data={data} />}
+            {activeTab === "derap" && <Derap data={data} />}
+            {activeTab === "kalender" && <Kalender data={data} />}
           </div>
         </div>
       </div>

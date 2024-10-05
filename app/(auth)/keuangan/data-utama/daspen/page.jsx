@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import toast, { Toaster } from "react-hot-toast";
 
 const PROVINSI_PERCENTAGE = 0.895;
 const CABANG_PERCENTAGE = 0.065;
@@ -28,33 +29,7 @@ export default function Daspen() {
   const [perolehanCabang, setPerolehanCabang] = useState(0);
   const [perolehanKabupaten, setPerolehanKabupaten] = useState(0);
   const [perolehanProvinsi, setPerolehanProvinsi] = useState(0);
-  const [tableData, setTableData] = useState([
-    {
-      No: 1,
-      CabangKhusus: "",
-      KatagoriI: { Anggota: 0, Sumbangan: 0 },
-      KatagoriII: { Anggota: 0, Sumbangan: 0 },
-      KatagoriIII: { Anggota: 0, Sumbangan: 0 },
-      Total: { Anggota: 0, Sumbangan: 0 },
-    },
-    {
-      No: 2,
-      CabangKhusus: "BANGSRI",
-      KatagoriI: { Anggota: 10, Sumbangan: 105000 },
-      KatagoriII: { Anggota: 0, Sumbangan: 0 },
-      KatagoriIII: { Anggota: 0, Sumbangan: 0 },
-      Total: { Anggota: 10, Sumbangan: 105000 },
-    },
-    {
-      No: 3,
-      CabangKhusus: "BATEALIT",
-      KatagoriI: { Anggota: 0, Sumbangan: 0 },
-      KatagoriII: { Anggota: 0, Sumbangan: 0 },
-      KatagoriIII: { Anggota: 0, Sumbangan: 0 },
-      Total: { Anggota: 0, Sumbangan: 0 },
-    },
-  ]);
-
+  const [tableData, setTableData] = useState([]);
   const [bulanList, setBulanList] = useState([]); // State untuk menyimpan daftar bulan
   const [selectedBulan, setSelectedBulan] = useState(""); // State untuk bulan yang dipilih
 
@@ -62,7 +37,36 @@ export default function Daspen() {
   const startYear = 2020;
 
   const [cabangList, setCabangList] = useState([]);
-  const [selectedCabang, setSelectedCabang] = useState('');
+  const [selectedCabang, setSelectedCabang] = useState("");
+
+  const [newCabangList, setNewCabangList] = useState([]);
+  const [selectedBulanBaru, setSelectedBulanBaru] = useState("");
+  const [newSelectedYear, setNewSelectedYear] = useState(
+    new Date().getFullYear()
+  );
+
+  // Function to fetch data based on selected filters
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await GlobalApi.getTableDaspen(
+        selectedBulanBaru,
+        newSelectedYear,
+        newCabangList
+      );
+      setTableData(data);
+    };
+
+    if (selectedBulanBaru && newSelectedYear) {
+      // Cek apakah bulan dan tahun sudah dipilih
+      fetchData();
+    }
+  }, [selectedBulanBaru, newSelectedYear, newCabangList]);
+
+  useEffect(() => {
+    if (!selectedBulanBaru || !newSelectedYear) {
+      setTableData([]); // Atau setDataSumbangan(null) jika lebih sesuai
+    }
+  }, [selectedBulanBaru, newSelectedYear]);
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -77,13 +81,16 @@ export default function Daspen() {
     fetchCabangData();
   }, []);
 
-    // Generate an array of years from startYear to currentYear
-    const years = Array.from({ length: currentYear - startYear + 1 }, (_, index) => startYear + index);
+  // Generate an array of years from startYear to currentYear
+  const years = Array.from(
+    { length: currentYear - startYear + 1 },
+    (_, index) => startYear + index
+  );
 
-    const [selectedYear, setSelectedYear] = useState(currentYear); // Set default to current year
+  const [selectedYear, setSelectedYear] = useState(currentYear); // Set default to current year
 
-   // Ambil data bulan dari API
-   useEffect(() => {
+  // Ambil data bulan dari API
+  useEffect(() => {
     const fetchBulan = async () => {
       try {
         const response = await GlobalApi.getBulan();
@@ -96,42 +103,39 @@ export default function Daspen() {
     fetchBulan(); // Panggil fungsi ketika komponen pertama kali dimuat
   }, []);
 
-  // Fungsi untuk menangani perubahan pilihan bulan
-  const handleBulanChange = (e) => {
-    setSelectedBulan(e.target.value); // Set bulan yang dipilih
-  };
-  
   // Ambil data dari database ketika komponen di-mount
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await GlobalApi.getFormDaspen(); // Memanggil API
-        // Mengambil nilai dari respons API
-        if (data.length > 0) {
-          const { kuota, kategori1, kategori2, kategori3 } = data[0];
-          setKuota(Number(kuota)); // Pastikan kuota adalah angka
-          setKatagori1(Number(kategori1)); // Pastikan kategori1 adalah angka
-          setKatagori2(Number(kategori2)); // Pastikan kategori2 adalah angka
-          setKatagori3(Number(kategori3)); // Pastikan kategori3 adalah angka
-        }
-      } catch (error) {
-        console.error("Error fetching form daspen:", error);
-      }
-    };
+    const storedData = sessionStorage.getItem("daspenData");
 
-    fetchData();
+    if (storedData) {
+      const data = JSON.parse(storedData);
+
+      // Assuming data is an array and you want the first item
+      const firstItem = data[0];
+
+      // Check if the first item exists and set values accordingly
+      if (firstItem) {
+        setKuota(Number(firstItem.pb)); // Use Number() to convert to a number
+        setKatagori1(Number(firstItem.propinsi));
+        setKatagori2(Number(firstItem.kabupaten));
+        setKatagori3(Number(firstItem.cabang));
+      }
+    } 
   }, []);
 
-    // Perhitungan otomatis ketika kuota atau kategori lainnya berubah
-    useEffect(() => {
-      setKatagori1Lainnya(kuota * katagori1);
-      setKatagori2Lainnya(kuota * katagori2);
-      setKatagori3Lainnya(kuota * katagori3);
-    }, [kuota, katagori1, katagori2, katagori3]);
+  // Perhitungan otomatis ketika kuota atau kategori lainnya berubah
+  useEffect(() => {
+    setKatagori1Lainnya(kuota * katagori1);
+    setKatagori2Lainnya(kuota * katagori2);
+    setKatagori3Lainnya(kuota * katagori3);
+  }, [kuota, katagori1, katagori2, katagori3]);
 
   // Hitung total target dan perolehan provinsi, cabang, kabupaten
   useEffect(() => {
-    const total = katagori1Lainnya * kat1 + katagori2Lainnya * kat2 + katagori3Lainnya * kat3;
+    const total =
+      katagori1Lainnya * kat1 +
+      katagori2Lainnya * kat2 +
+      katagori3Lainnya * kat3;
     setTotalTarget(total);
 
     const provinsi = total * PROVINSI_PERCENTAGE;
@@ -144,23 +148,73 @@ export default function Daspen() {
     setPerolehanKabupaten(kabupaten);
   }, [kat1, kat2, kat3, katagori1, katagori2, katagori3]);
 
-  // Reset form ke nilai default
-  const handleReset = () => {
-    setKuota(700);
-    setKatagori1(0);
-    setKatagori2(0);
-    setKatagori3(0);
-    setKat1(0);
-    setKat2(0);
-    setKat3(0);
-    setTotalTarget(0);
-    setPerolehanCabang(0);
-    setPerolehanKabupaten(0);
-    setPerolehanProvinsi(0);
+  const handleSubmit = async (event) => {
+    event.preventDefault(); // Prevent page reload
+
+    // Prepare the payload with form data
+    const payload = {
+      kategori1: katagori1,
+      kategori2: katagori2,
+      kategori3: katagori3,
+      kuota: kuota,
+      bulan: selectedBulan,
+      tahun: selectedYear,
+    };
+
+    try {
+      // Send data to the API endpoint
+      const result = await GlobalApi.createDaspenData(payload);
+
+      // Show success message
+      toast.success("Data berhasil disimpan!");
+    } catch (error) {
+      // Handle error
+      toast.error(`Gagal menyimpan data: ${error.message}`);
+    }
   };
 
-  const handleSubmit = () => {
-    // Logika untuk submit form
+  const handleSubmitTarget = async (event) => {
+    event.preventDefault();
+
+    const payload = {
+      bulan: selectedBulan, // "September"
+      tahun: selectedYear, // "2024"
+      cabang: selectedCabang, // "BANGSRI"
+      kategori1: kat1, // Mapping to "kategori1" expected by the backend
+      kategori2: kat2, // Mapping to "kategori2" expected by the backend
+      kategori3: kat3, // Mapping to "kategori3" expected by the backend
+    };
+
+    try {
+      const result = await GlobalApi.createTargetDaspen(payload);
+      toast.success("Data berhasil disimpan!");
+      handleReset();
+    } catch (error) {
+      console.error("Error creating data target daspen:", error);
+      toast.error("Gagal menyimpan data target: " + error.message);
+    }
+  };
+
+  // Reset form ke nilai default
+  const handleReset = () => {
+    // Retrieve data from sessionStorage
+    const storedData = JSON.parse(sessionStorage.getItem("daspenData"));
+
+    if (storedData && storedData.length > 0) {
+      const daspen = storedData[0]; // Assuming you want to reset based on the first object in daspenData
+
+      // Set form fields based on daspenData
+      setKuota(parseInt(daspen.pb)); // Set Kuota
+      setKatagori1(parseInt(daspen.propinsi)); // Set Kategori I
+      setKatagori2(parseInt(daspen.kabupaten)); // Set Kategori II
+      setKatagori3(parseInt(daspen.cabang)); // Set Kategori III
+    } else {
+      // If no data is found, you can reset fields to default values or keep them unchanged
+      setKatagori1(0);
+      setKatagori2(0);
+      setKatagori3(0);
+      setKuota(0);
+    }
   };
 
   useEffect(() => {
@@ -230,12 +284,12 @@ export default function Daspen() {
       )}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-
         <div
           className={`flex-1 transition-all duration-300 ease-in-out ${
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
+          <Toaster />
           <div className="container mx-auto p-6 bg-gray-50 rounded-lg shadow-lg mt-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-lg shadow-md">
@@ -276,11 +330,11 @@ export default function Daspen() {
                     </div>
                     <div className="flex flex-col w-1/2 mt-7">
                       <Input
-                           type="number"
-                           id="katagori1-2"
-                           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                           value={katagori1} // Nilai awal dari database bisa diubah oleh user
-                           onChange={(e) => setKatagori1(parseInt(e.target.value))}
+                        type="number"
+                        id="katagori1-2"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                        value={katagori1} // Nilai awal dari database bisa diubah oleh user
+                        onChange={(e) => setKatagori1(parseInt(e.target.value))}
                       />
                     </div>
                   </div>
@@ -303,11 +357,11 @@ export default function Daspen() {
                     </div>
                     <div className="flex flex-col w-1/2 mt-7">
                       <Input
-                         type="number"
-                         id="katagori2-2"
-                         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                         value={katagori2} // Nilai awal dari database bisa diubah oleh user
-                         onChange={(e) => setKatagori2(parseInt(e.target.value))}
+                        type="number"
+                        id="katagori2-2"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                        value={katagori2} // Nilai awal dari database bisa diubah oleh user
+                        onChange={(e) => setKatagori2(parseInt(e.target.value))}
                       />
                     </div>
                   </div>
@@ -330,87 +384,103 @@ export default function Daspen() {
                     </div>
                     <div className="flex flex-col w-1/2 mt-7">
                       <Input
-                       type="number"
-                       id="katagori3-2"
-                       className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                       value={katagori3} // Nilai awal dari database bisa diubah oleh user
-                       onChange={(e) => setKatagori3(parseInt(e.target.value))}
+                        type="number"
+                        id="katagori3-2"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                        value={katagori3} // Nilai awal dari database bisa diubah oleh user
+                        onChange={(e) => setKatagori3(parseInt(e.target.value))}
                       />
                     </div>
                   </div>
+                  <div className="mt-8 flex justify-center space-x-4">
+                    <Button
+                      className="bg-blue-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-blue-600 transition duration-150 ease-in-out"
+                      onClick={handleSubmit}
+                    >
+                      Submit
+                    </Button>
+                    <Button
+                      className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-gray-600 transition duration-150 ease-in-out"
+                      onClick={handleReset}
+                    >
+                      Reset
+                    </Button>
+                  </div>
                 </div>
               </div>
+
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-5 text-center">
                   Inputan Manual Target Daspen
                 </h2>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div className="flex flex-col">
-      <Label
-        htmlFor="bulan"
-        className="block text-gray-700 text-sm font-semibold mb-2"
-      >
-        Bulan
-      </Label>
-      <select
-        id="bulan"
-        value={selectedBulan}
-        onChange={(e) => setSelectedBulan(e.target.value)}
-        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-      >
-        {/* Dynamically populate options */}
-        {bulanList.map((bulan) => (
-          <option key={bulan.id} value={bulan.angkaBulan}>
-            {bulan.namaBulan}
-          </option>
-        ))}
-      </select>
-    </div>
-    <div className="flex flex-col">
-      <Label
-        htmlFor="tahun"
-        className="block text-gray-700 text-sm font-semibold mb-2"
-      >
-        Tahun
-      </Label>
-      <select
-        id="tahun"
-        value={selectedYear}
-        onChange={(e) => setSelectedYear(e.target.value)}
-        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-      >
-        {/* Map through years array to create options */}
-        {years.map((year) => (
-          <option key={year} value={year}>
-            {year}
-          </option>
-        ))}
-      </select>
-    </div>
+                    <div className="flex flex-col">
+                      <Label
+                        htmlFor="bulan"
+                        className="block text-gray-700 text-sm font-semibold mb-2"
+                      >
+                        Bulan
+                      </Label>
+                      <select
+                        id="bulan"
+                        value={selectedBulan}
+                        onChange={(e) => setSelectedBulan(e.target.value)} // Mengatur bulan yang dipilih
+                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                      >
+                        {/* Dynamically populate options */}
+                        {bulanList.map((bulan) => (
+                          <option key={bulan.id} value={bulan.namaBulan}>
+                            {bulan.namaBulan}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <Label
+                        htmlFor="tahun"
+                        className="block text-gray-700 text-sm font-semibold mb-2"
+                      >
+                        Tahun
+                      </Label>
+                      <select
+                        id="tahun"
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(e.target.value)}
+                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                      >
+                        {/* Map through years array to create options */}
+                        {years.map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                  <div className="flex flex-col">
-      <Label
-        htmlFor="cabang"
-        className="block text-gray-700 text-sm font-semibold mb-2"
-      >
-        Cabang
-      </Label>
-      <select
-        id="cabang"
-        value={selectedCabang}
-        onChange={(e) => setSelectedCabang(e.target.value)}
-        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-      >
-        <option value="" >Select Cabang</option>
-        {cabangList.map((cabang) => (
-          <option key={cabang.id} value={cabang.kecamatan}>
-            {cabang.kecamatan} {/* Displaying kecamatan from the response */}
-          </option>
-        ))}
-      </select>
-    </div>
+                    <div className="flex flex-col">
+                      <Label
+                        htmlFor="cabang"
+                        className="block text-gray-700 text-sm font-semibold mb-2"
+                      >
+                        Cabang
+                      </Label>
+                      <select
+                        id="cabang"
+                        value={selectedCabang}
+                        onChange={(e) => setSelectedCabang(e.target.value)}
+                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                      >
+                        <option value="">Select Cabang</option>
+                        {cabangList.map((cabang) => (
+                          <option key={cabang.id} value={cabang.kecamatan}>
+                            {cabang.kecamatan}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                     <div className="flex flex-col">
                       <Label
                         htmlFor="kat1"
@@ -526,7 +596,7 @@ export default function Daspen() {
                   <div className="mt-8 flex justify-center space-x-4">
                     <Button
                       className="bg-blue-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-blue-600 transition duration-150 ease-in-out"
-                      onClick={handleSubmit}
+                      onClick={handleSubmitTarget}
                     >
                       Submit
                     </Button>
@@ -544,18 +614,51 @@ export default function Daspen() {
             <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
               <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
                 <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-                  <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                    <option>Tampil Semua</option>
+                  {/* Filter Cabang */}
+                  <select
+                    className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                    id="newCabangTable"
+                    value={newCabangList}
+                    onChange={(e) => setNewCabangList(e.target.value)}
+                  >
+                    <option value="">Pilih Cabang Baru</option>
+                    {cabangList.map((cabang) => (
+                      <option key={cabang.id} value={cabang.kecamatan}>
+                        {cabang.kecamatan}
+                      </option>
+                    ))}
                   </select>
-                  <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                    <option>Juli</option>
-                    <option>Agustus</option>
-                    <option>September</option>
+
+                  {/* Filter Bulan */}
+                  <select
+                    className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="bulanTableBaru"
+                    value={selectedBulanBaru}
+                    onChange={(e) => setSelectedBulanBaru(e.target.value)}
+                  >
+                    <option value="">Pilih Bulan</option>
+                    {/* Dynamically populate options */}
+                    {bulanList.map((bulan) => (
+                      <option key={bulan.id} value={bulan.namaBulan}>
+                        {bulan.namaBulan}
+                      </option>
+                    ))}
                   </select>
-                  <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                    <option>2023</option>
-                    <option>2024</option>
-                    <option>2025</option>
+
+                  {/* Filter Tahun */}
+                  <select
+                    className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                    id="tahunTable"
+                    value={newSelectedYear}
+                    onChange={(e) => setNewSelectedYear(e.target.value)}
+                  >
+                    <option value="">Pilih Tahun</option>
+                    {/* Map through years array to create options */}
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
@@ -573,41 +676,41 @@ export default function Daspen() {
                   <tr>
                     <th
                       scope="col"
-                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
                     >
                       No
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
                     >
                       Cabang/Khusus
                     </th>
                     <th
                       scope="col"
                       colSpan={2}
-                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-center"
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm text-center"
                     >
                       Katagori I
                     </th>
                     <th
                       scope="col"
                       colSpan={2}
-                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-center"
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm text-center"
                     >
                       Katagori II
                     </th>
                     <th
                       scope="col"
                       colSpan={2}
-                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-center"
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm text-center"
                     >
                       Katagori III
                     </th>
                     <th
                       scope="col"
                       colSpan={2}
-                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-center"
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm text-center"
                     >
                       Total
                     </th>
@@ -615,149 +718,125 @@ export default function Daspen() {
                   <tr>
                     <th
                       scope="col"
-                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
                     ></th>
                     <th
                       scope="col"
-                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
                     ></th>
                     <th
                       scope="col"
-                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
                     >
                       Anggota
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
                     >
                       Sumbangan
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
                     >
                       Anggota
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
                     >
                       Sumbangan
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
                     >
                       Anggota
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
                     >
                       Sumbangan
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
                     >
                       Anggota
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700"
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
                     >
                       Sumbangan
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {tableData.map((row, index) => (
-                    <tr
-                      key={row.No}
-                      className={`border-b dark:bg-gray-800 dark:border-gray-700 ${
-                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                      }`}
-                    >
-                      <td className="px-6 py-4">{row.No}</td>
-                      <td className="px-6 py-4">{row.CabangKhusus}</td>
-                      <td className="px-6 py-4">
-                        {row.KatagoriI.Anggota.toLocaleString("en-US")}
-                      </td>
-                      <td className="px-6 py-4">
-                        {row.KatagoriI.Sumbangan.toLocaleString("en-US")}
-                      </td>
-                      <td className="px-6 py-4">
-                        {row.KatagoriII.Anggota.toLocaleString("en-US")}
-                      </td>
-                      <td className="px-6 py-4">
-                        {row.KatagoriII.Sumbangan.toLocaleString("en-US")}
-                      </td>
-                      <td className="px-6 py-4">
-                        {row.KatagoriIII.Anggota.toLocaleString("en-US")}
-                      </td>
-                      <td className="px-6 py-4">
-                        {row.KatagoriIII.Sumbangan.toLocaleString("en-US")}
-                      </td>
-                      <td className="px-6 py-4">
-                        {row.Total.Anggota.toLocaleString("en-US")}
-                      </td>
-                      <td className="px-6 py-4">
-                        {row.Total.Sumbangan.toLocaleString("en-US")}
+                  {tableData.length > 0 ? (
+                    tableData.map((row, index) => (
+                      <tr
+                        className="transition duration-200 ease-in-out"
+                        key={index}
+                      >
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {index + 1}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {row["Cabang/Khusus"] || "-"}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {(row["Anggota Kategori I"] ?? 0).toLocaleString(
+                            "en-US"
+                          )}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {(row["Sumbangan Kategori I"] ?? 0).toLocaleString(
+                            "en-US"
+                          )}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {(row["Anggota Kategori II"] ?? 0).toLocaleString(
+                            "en-US"
+                          )}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {(row["Sumbangan Kategori II"] ?? 0).toLocaleString(
+                            "en-US"
+                          )}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {(row["Anggota Kategori III"] ?? 0).toLocaleString(
+                            "en-US"
+                          )}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {(row["Sumbangan Kategori III"] ?? 0).toLocaleString(
+                            "en-US"
+                          )}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {(row["Anggota Total"] ?? 0).toLocaleString("en-US")}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {(row["Sumbangan Total"] ?? 0).toLocaleString(
+                            "en-US"
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="10"
+                        className="text-center py-4 border text-black"
+                      >
+                        Tidak ada data
                       </td>
                     </tr>
-                  ))}
-                  <tr className="bg-gray-100 border-t dark:bg-gray-800 dark:border-gray-700">
-                    <td
-                      colSpan={2}
-                      className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700"
-                    >
-                      Jumlah
-                    </td>
-                    <td className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700">
-                      {tableData
-                        .reduce((acc, row) => acc + row.KatagoriI.Anggota, 0)
-                        .toLocaleString("en-US")}
-                    </td>
-                    <td className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700">
-                      {tableData
-                        .reduce((acc, row) => acc + row.KatagoriI.Sumbangan, 0)
-                        .toLocaleString("en-US")}
-                    </td>
-                    <td className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700">
-                      {tableData
-                        .reduce((acc, row) => acc + row.KatagoriII.Anggota, 0)
-                        .toLocaleString("en-US")}
-                    </td>
-                    <td className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700">
-                      {tableData
-                        .reduce((acc, row) => acc + row.KatagoriII.Sumbangan, 0)
-                        .toLocaleString("en-US")}
-                    </td>
-                    <td className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700">
-                      {tableData
-                        .reduce((acc, row) => acc + row.KatagoriIII.Anggota, 0)
-                        .toLocaleString("en-US")}
-                    </td>
-                    <td className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700">
-                      {tableData
-                        .reduce(
-                          (acc, row) => acc + row.KatagoriIII.Sumbangan,
-                          0
-                        )
-                        .toLocaleString("en-US")}
-                    </td>
-                    <td className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700">
-                      {tableData
-                        .reduce((acc, row) => acc + row.Total.Anggota, 0)
-                        .toLocaleString("en-US")}
-                    </td>
-                    <td className="px-6 py-4 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700">
-                      {tableData
-                        .reduce((acc, row) => acc + row.Total.Sumbangan, 0)
-                        .toLocaleString("en-US")}
-                    </td>
-                  </tr>
+                  )}
                 </tbody>
               </table>
             </div>
