@@ -11,6 +11,7 @@ import {
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
@@ -114,52 +115,6 @@ export default function Home() {
     }
   }, [token, router]);
 
-  // header
-  const [notificationCount, setNotificationCount] = useState(2);
-  const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] =
-    useState(false);
-  const audioRef = useRef(null);
-
-  const profileImageUrl = "/profile.png";
-
-  const handleNotificationClick = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      setIsNotificationSoundPlaying(false);
-    }
-    setNotificationCount(0);
-  };
-
-  useEffect(() => {
-    if (notificationCount > 0 && !isNotificationSoundPlaying) {
-      const playNotificationSound = () => {
-        const audio = new Audio("/sound-notification.wav");
-        audioRef.current = audio;
-
-        audio
-          .play()
-          .then(() => {
-            setIsNotificationSoundPlaying(true);
-          })
-          .catch((error) => {
-            console.error("Error playing sound:", error);
-          });
-
-        audio.onended = () => {
-          setIsNotificationSoundPlaying(false);
-        };
-      };
-
-      playNotificationSound();
-    }
-  }, [notificationCount, isNotificationSoundPlaying]);
-  // end
-
-  const handleBackClick = () => {
-    router.back();
-  };
-
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
@@ -181,55 +136,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      {isMobile ? (
-        <header className="bg-teal-500 text-white text-lg font-bold py-1.5 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-          <div className="flex justify-between w-full">
-            {/* Left Section: Back Button and Title */}
-            <div className="flex items-center">
-              <FontAwesomeIcon
-                icon={faArrowLeft}
-                size="sm"
-                onClick={handleBackClick}
-                className="cursor-pointer text-black mr-4"
-              />
-              <Link href="/home">
-                <Image src="/sanduka.png" width={70} height={60} alt="logo" />
-              </Link>
-            </div>
-            {/* Right Section: Notifications, Search, and Profile */}
-            <div className="flex space-x-6 items-center">
-              <button onClick={handleNotificationClick} className="relative">
-                <FontAwesomeIcon
-                  icon={faBell}
-                  className="w-5 h-5 text-gray-700"
-                />
-                {notificationCount > 0 && (
-                  <span className="absolute top-0 right-0 inline-flex items-center justify-center w-3 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
-                    {notificationCount}
-                  </span>
-                )}
-              </button>
-              <Link href="/anggota/pencarian-anggota">
-                <FontAwesomeIcon
-                  icon={faSearch}
-                  className="w-5 h-5 text-gray-700"
-                />
-              </Link>
-              <Link href="/update-profile">
-                <Image
-                  src={profileImageUrl}
-                  alt="Profile"
-                  width={30}
-                  height={30}
-                  className="rounded-full cursor-pointer"
-                />
-              </Link>
-            </div>
-          </div>
-        </header>
-      ) : (
-        <HeaderHome />
-      )}
+     {isMobile ? <HeaderMobile /> : <HeaderHome />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 

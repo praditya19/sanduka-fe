@@ -6,20 +6,124 @@ import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
-import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
+import GlobalApi from "@/app/_utils/GlobalApi";
+import toast, { Toaster } from "react-hot-toast";
 
 function KalenderForm() {
-  const [provinsi, setProvinsi] = useState(7175);
-  const [kabupaten, setKabupaten] = useState(4825);
-  const [cabang, setCabang] = useState(4000);
+  const [provinsi, setProvinsi] = useState(0);
+  const [kabupaten, setKabupaten] = useState(0);
+  const [cabang, setCabang] = useState(0);
   const [totalHarga, setTotalHarga] = useState(0);
   const [totalHargaAkhir, setTotalHargaAkhir] = useState(0);
   const [jumlahPesanan, setJumlahPesanan] = useState(0);
   const [setorProvinsi, setSetorProvinsi] = useState(0);
   const [untukKabupaten, setUntukKabupaten] = useState(0);
   const [untukCabang, setUntukCabang] = useState(0);
+  const [selectedBulan, setSelectedBulan] = useState("");
   const [jenisCabang, setJenisCabang] = useState("");
+  const [tableData, setTableData] = useState([]);
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [cabangList, setCabangList] = useState([]);
+  const currentYear = new Date().getFullYear();
+  const startYear = 2020;
+  const [newCabangList, setNewCabangList] = useState([]);
+  const [selectedBulanBaru, setSelectedBulanBaru] = useState("");
+  const [newSelectedYear, setNewSelectedYear] = useState(
+    new Date().getFullYear()
+  );
+  const [bulanList, setBulanList] = useState([]);
+
+  // Function to fetch data based on selected filters
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // If month and year are selected, fetch data
+        if (selectedBulanBaru && newSelectedYear) {
+          const data = await GlobalApi.getTableKalender(
+            selectedBulanBaru,
+            newSelectedYear,
+            newCabangList // Use newCabangList directly as a string
+          );
+          setTableData(data); // Save the fetched data to state
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData(); // Fetch data whenever the filters change
+  }, [selectedBulanBaru, newSelectedYear, newCabangList]);
+
+  // Effect to clear table data if month or year is not selected
+  useEffect(() => {
+    if (!selectedBulanBaru || !newSelectedYear) {
+      setTableData([]); // Clear table data
+    }
+  }, [selectedBulanBaru, newSelectedYear]);
+
+  const years = Array.from(
+    { length: currentYear - startYear + 1 },
+    (_, index) => startYear + index
+  );
+
+  const getCurrentMonthAndYear = () => {
+    const now = new Date(); // Get the current date
+    const month = now.toLocaleString("id-ID", { month: "long" }); // Get the month in Indonesian
+    const year = now.getFullYear(); // Get the full year
+
+    return { month, year }; // Return as an object
+  };
+
+  useEffect(() => {
+    const { month, year } = getCurrentMonthAndYear();
+    setSelectedBulan(month);
+    setSelectedYear(year);
+  }, []);
+
+  useEffect(() => {
+    const fetchBulan = async () => {
+      try {
+        const response = await GlobalApi.getBulan();
+        setBulanList(response.data); // Simpan data bulan dari API ke state
+      } catch (error) {
+        console.error("Error fetching bulan:", error);
+      }
+    };
+
+    fetchBulan(); // Panggil fungsi ketika komponen pertama kali dimuat
+  }, []);
+
+  useEffect(() => {
+    const fetchCabangData = async () => {
+      try {
+        const response = await GlobalApi.getCabang();
+        setCabangList(response.data); // Assuming the response data is an array
+      } catch (error) {
+        console.error("Error fetching cabang data:", error);
+      }
+    };
+
+    fetchCabangData();
+  }, []);
+
+  useEffect(() => {
+    const storedData = sessionStorage.getItem("kalenderData");
+
+    if (storedData) {
+      const data = JSON.parse(storedData);
+      const firstItem = data[0];
+
+      if (firstItem) {
+        setProvinsi(firstItem.propinsi);
+        setKabupaten(firstItem.kabupaten);
+        setCabang(firstItem.cabang);
+        // Optionally, set totalHarga if needed
+        // setTotalHarga(firstItem.totalHarga || 0); // Adjust this based on your data structure
+      }
+    }
+  }, []);
 
   const handleProvinsiChange = (e) => {
     setProvinsi(e.target.value);
@@ -39,6 +143,69 @@ function KalenderForm() {
 
   const handleJenisCabangChange = (e) => {
     setJenisCabang(e.target.value);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault(); // Prevent page reload
+
+    // Prepare the first payload with form data for the first API
+    const payload1 = {
+      pb: "", // This is empty in the provided format, you can adjust if necessary
+      propinsi: provinsi, // Assuming 'provinsi' holds the category for 'propinsi'
+      kabupaten: kabupaten, // Assuming 'kabupaten' holds the category for 'kabupaten'
+      cabang: selectedCabang, // Assuming 'cabang' holds the value for 'cabang'
+      sanduka: "", // This is empty in the provided format, adjust if needed
+      bulan: selectedBulan, // Assuming 'selectedBulan' holds the selected month
+      tahun: selectedYear, // Assuming 'selectedYear' holds the selected year
+    };
+
+    // Prepare the second payload for the second API
+    const payload2 = {
+      cabang: selectedCabang, // Assuming 'cabang' holds the value for 'cabang'
+      jumlah: jumlahPesanan, // Assuming 'jumlahPesanan' holds the number for 'jumlah'
+      bulan: selectedBulan, // Using the same month as in the first payload
+      tahun: selectedYear, // Using the same year as in the first payload
+    };
+
+    try {
+      // Send data to the first API endpoint
+      const result1 = await GlobalApi.createKalenderData(payload1);
+
+      // Send data to the second API endpoint with the second payload
+      const result2 = await GlobalApi.createTargetKalender(payload2); // Change this to your second API function
+
+      // Show success message for both submissions
+      toast.success("Data berhasil disimpan!");
+
+      // Reload the page without changing the route
+      setTimeout(() => {
+        window.location.reload(); // Reloads the current page
+      }, 1500); // Optional delay for showing toast message
+    } catch (error) {
+      // Handle error for both submissions
+      toast.error(`Gagal menyimpan data: ${error.message}`);
+    }
+  };
+
+  // Ambil data dari sessionStorage
+  const kalenderData = JSON.parse(sessionStorage.getItem("kalenderData"));
+
+  // Jika ada data, ambil nilai cabang, kabupaten, dan propinsi dari derapData
+  const firstItem = kalenderData
+    ? kalenderData[0]
+    : { cabang: 0, kabupaten: 0, propinsi: 0 };
+
+  const calculateTotal = (jumlah, cabang, kabupaten, propinsi) => {
+    const cabangMultiplier = cabang || 0;
+    const kabupatenMultiplier = kabupaten || 0;
+    const propinsiMultiplier = propinsi || 0;
+
+    const resultCabang = jumlah * cabangMultiplier;
+    const resultKabupaten = jumlah * kabupatenMultiplier;
+    const resultProvinsi = jumlah * propinsiMultiplier;
+
+    // Mengembalikan hasil penjumlahan
+    return resultCabang + resultKabupaten + resultProvinsi;
   };
 
   const calculateTotalHarga = () => {
@@ -64,10 +231,27 @@ function KalenderForm() {
   };
 
   const resetForm = () => {
-    setProvinsi(5700);
-    setKabupaten(9500);
-    setCabang(1350);
-    setTotalHarga(0);
+    const storedData = sessionStorage.getItem("kalenderData");
+
+    if (storedData) {
+      const data = JSON.parse(storedData);
+      const firstItem = data[0];
+
+      if (firstItem) {
+        setProvinsi(firstItem.propinsi || 0);
+        setKabupaten(firstItem.kabupaten || 0);
+        setCabang(firstItem.cabang || 0);
+        setTotalHarga(firstItem.totalHarga || 0); // If totalHarga is stored
+      }
+    } else {
+      // If no data found, reset to defaults
+      setProvinsi(0);
+      setKabupaten(0);
+      setCabang(0);
+      setTotalHarga(0);
+    }
+
+    // Reset all the displayed values to 0
     setJumlahPesanan(0);
     setSetorProvinsi(0);
     setUntukKabupaten(0);
@@ -81,6 +265,14 @@ function KalenderForm() {
       calculateTotalHarga();
       e.preventDefault();
     }
+  };
+
+  const formatRupiah = (value) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(value);
   };
 
   useEffect(() => {
@@ -134,19 +326,19 @@ function KalenderForm() {
         </header>
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-        <div className="container mx-auto flex items-center justify-between">
-          {/* Back Button and Title */}
-          <div className="flex items-center">
-            <FontAwesomeIcon
-              icon={faArrowLeft}
-              size="sm"
-              onClick={handleBackClick}
-              className="cursor-pointer mr-4"
-            />
-            <h1 className="text-base">Kalender</h1>
+          <div className="container mx-auto flex items-center justify-between">
+            {/* Back Button and Title */}
+            <div className="flex items-center">
+              <FontAwesomeIcon
+                icon={faArrowLeft}
+                size="sm"
+                onClick={handleBackClick}
+                className="cursor-pointer mr-4"
+              />
+              <h1 className="text-base">Kalender</h1>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
       )}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -156,6 +348,7 @@ function KalenderForm() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
+          <Toaster />
           <div className="container mx-auto p-6 mt-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="p-8 rounded-lg shadow-lg border border-gray-200 bg-white">
@@ -214,30 +407,30 @@ function KalenderForm() {
                     </div>
                   ))}
 
-                  <div className="flex items-center mb-4">
+                  <div className="flex flex-col lg:flex-row items-center mb-4">
                     <Label
                       htmlFor="jumlahPesanan"
-                      className="block text-gray-800 text-lg font-semibold mb-2 lg:mb-0 w-full"
+                      className="block text-gray-800 text-lg font-semibold mb-2 lg:mb-0 w-full lg:w-auto mr-8"
                     >
                       Jumlah Pesanan
                     </Label>
                     <select
-                      id="jenisCabang"
-                      className="w-2/4 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out ml-14"
-                      value={jenisCabang}
-                      onChange={handleJenisCabangChange}
+                      id="selectCabang" // ganti ID untuk menghindari konflik
+                      value={selectedCabang}
+                      className="w-full lg:w-1/3 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out mt-2 lg:mt-0 lg:ml-4"
+                      onChange={(e) => setSelectedCabang(e.target.value)} // simpan kecamatan atau sesuaikan dengan id atau data lain yang diinginkan
                     >
-                      <option></option>
-                      <option value="1">Cabang 1</option>
-                      <option value="2">Cabang 2</option>
-                      <option value="3">Cabang 3</option>
-                      <option value="4">Cabang 4</option>
-                      <option value="5">Cabang 5</option>
+                      <option value="">Pilih Cabang</option>
+                      {cabangList.map((cabang) => (
+                        <option key={cabang.id} value={cabang.kecamatan}>
+                          {cabang.kecamatan}
+                        </option>
+                      ))}
                     </select>
                     <Input
                       type="number"
                       id="jumlahPesananInput"
-                      className="w-2/4 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out ml-4"
+                      className="w-full lg:w-1/3 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out mt-2 lg:mt-0 lg:ml-4"
                       value={jumlahPesanan}
                       onChange={handleJumlahPesananChange}
                       onKeyPress={handleKeyPress}
@@ -246,8 +439,14 @@ function KalenderForm() {
 
                   <div className="flex justify-center space-x-4 mt-6">
                     <Button
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
+                      className="bg-green-700 hover:bg-green-900 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
                       onClick={calculateTotalHarga}
+                    >
+                      Hitung
+                    </Button>
+                    <Button
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
+                      onClick={handleSubmit}
                     >
                       Simpan
                     </Button>
@@ -307,22 +506,49 @@ function KalenderForm() {
             <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
               <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
                 <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-                  <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                    <option>Tampil Semua</option>
+                  <select
+                    className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                    id="newCabangTable"
+                    value={newCabangList}
+                    onChange={(e) => setNewCabangList(e.target.value)}
+                  >
+                    <option value="">Pilih Cabang Baru</option>
+                    {cabangList.map((cabang) => (
+                      <option key={cabang.id} value={cabang.kecamatan}>
+                        {cabang.kecamatan}
+                      </option>
+                    ))}
                   </select>
-                  <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                    <option>Juli</option>
-                    <option>Agustus</option>
-                    <option>September</option>
+                  <select
+                    className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="bulanTableBaru"
+                    value={selectedBulanBaru}
+                    onChange={(e) => setSelectedBulanBaru(e.target.value)}
+                  >
+                    <option value="">Pilih Bulan</option>
+                    {bulanList.map((bulan) => (
+                      <option key={bulan.id} value={bulan.namaBulan}>
+                        {bulan.namaBulan}
+                      </option>
+                    ))}
                   </select>
-                  <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                    <option>2023</option>
-                    <option>2024</option>
-                    <option>2025</option>
+                  <select
+                    className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                    id="tahunTable"
+                    value={newSelectedYear}
+                    onChange={(e) => setNewSelectedYear(e.target.value)}
+                  >
+                    <option value="">Pilih Tahun</option>
+                    {/* Map through years array to create options */}
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-                  Transaksi Juli 2024
+                  Transaksi {selectedBulanBaru} {newSelectedYear}
                 </h1>
                 <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out mt-3 mr-6 w-24">
                   Cetak
@@ -334,27 +560,58 @@ function KalenderForm() {
               <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
                   <tr>
-                    <th scope="col" className="px-6 py-3">
+                    <th scope="col" className="px-6 py-3 text-center">
                       No
                     </th>
-                    <th scope="col" className="px-6 py-3">
+                    <th scope="col" className="px-6 py-3 text-center">
                       Cabang Khusus
                     </th>
-                    <th scope="col" className="px-6 py-3">
+                    <th scope="col" className="px-6 py-3 text-center">
                       Pesanan
                     </th>
-                    <th scope="col" className="px-6 py-3">
+                    <th scope="col" className="px-6 py-3 text-center">
                       Total
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                    <td className="px-6 py-4">1</td>
-                    <td className="px-6 py-4">Jumlah</td>
-                    <td className="px-6 py-4">0</td>
-                    <td className="px-6 py-4">0</td>
-                  </tr>
+                  {tableData.length > 0 ? (
+                    tableData.map((item, index) => (
+                      <tr
+                        key={item.id}
+                        className="border px-2 py-2 text-sm text-black"
+                      >
+                        <td className="px-6 py-4 border text-sm text-gray-800 text-center">
+                          {index + 1}
+                        </td>
+                        <td className="px-4 py-4 border text-sm text-gray-800">
+                          {item.cabang}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {item.jumlah}
+                        </td>
+                        <td className="px-6 py-4 text-center border text-sm text-gray-800">
+                          {formatRupiah(
+                            calculateTotal(
+                              item.jumlah,
+                              parseInt(firstItem.cabang),
+                              parseInt(firstItem.kabupaten),
+                              parseInt(firstItem.propinsi)
+                            )
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                      <td className="border px-6 py-4 text-center text-sm text-black"></td>
+                      <td className="border px-6 py-4 text-sm text-black">
+                        Jumlah
+                      </td>
+                      <td className="border px-6 py-4 text-sm text-black">0</td>
+                      <td className="border px-6 py-4 text-sm text-black">0</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

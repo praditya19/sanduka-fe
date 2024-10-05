@@ -419,6 +419,17 @@ const getCalculateSandukaAll = async (bulan, tahun) => {
 
 // KEUANGAN
 // Home start
+const getTableIuran = async (bulan, tahun, cabang) => {
+  try {
+    const response = await axiosClient.get(`/api/iuran/total-sumbangan?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`);
+    console.log("Data total sumbangan:", response.data); // Cetak data ke console
+    return response.data; // Kembalikan data yang didapat dari API
+  } catch (error) {
+    console.error("Error fetching total sumbangan:", error);
+    throw error;
+  }
+};
+
 const getSaldoSanduka = async () => {
   try {
     const response = await axiosClient.get("/api/sanduka/saldo-sanduka");
@@ -441,17 +452,130 @@ const getSaldoOrganisasi = async () => {
   }
 };
 // end
-// DASPEN start
-const getFormDaspen = async () => {
+// START IURAN PGRI
+const getIuranByFilter = async (iuran) => {
   try {
-    const response = await axiosClient.get("/api/tabel-daspen");
-    return response.data; // Kembalikan data dari API
+    const response = await axiosClient.get(`/api/defaultIuran/filter?iuran=${iuran}`);
+    return response.data;
   } catch (error) {
-    console.error("Error fetching tabel daspen:", error);
+    console.error("Error fetching iuran by filter:", error);
+    throw error;
+  }
+};  
+
+const createIuranData = async (payload) => {
+  try {
+    const response = await axiosClient.post("/api/iuran", payload);
+    return response.data; // Kembalikan data yang didapat dari API
+  } catch (error) {
+    console.error("Error creating iuran data:", error);
+    throw error; // Lemparkan error untuk ditangani di tempat lain
+  }
+};
+
+const createTargetIuaran = async (payload) => {
+  try {
+    const response = await axiosClient.post("/api/target-sanduka", payload);
+    return response.data; // Kembalikan data yang didapat dari API
+  } catch (error) {
+    console.error("Error creating target iuran data:", error);
+    throw error; // Lemparkan error untuk ditangani di tempat lain
+  }
+};
+// END
+// DASPEN start (Sumbangan Daspen)
+const createDaspenData = async (payload) => {
+  try {
+    const response = await axiosClient.post("/api/tabel-daspen", payload);
+    return response.data; // Return the data from the response
+  } catch (error) {
+    console.error("Error creating daspen data:", error);
+    throw error; // Throw the error to handle it elsewhere
+  }
+};
+// (Target Daspen)
+  const createTargetDaspen = async (payload) => {
+    try {
+      const response = await axiosClient.post("/api/target-daspen", payload);
+      return response.data; // Return the data from the response
+    } catch (error) {
+      console.error("Error creating data target daspen :", error);
+      throw error; // Throw the error to handle it elsewhere
+    }
+};
+// Table Daspen
+const getTableDaspen = async (bulan, tahun, cabang) => {
+  try {
+    const response = await axiosClient.get(`/api/target-daspen/summary?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`);
+    console.log("Data total sumbangan:", response.data); // Cetak data ke console
+    return response.data; // Kembalikan data yang didapat dari API
+  } catch (error) {
+    console.error("Error fetching total sumbangan:", error);
     throw error;
   }
 };
 // end
+// Star Derap
+const createDerapData = async (payload) => {
+  try {
+    const response = await axiosClient.post("/api/derap", payload);
+    return response.data; // Return the data from the response
+  } catch (error) {
+    console.error("Error creating derap data:", error);
+    throw error; // Throw the error to handle it elsewhere
+  }
+};
+const createTargetDerap = async (payload) => {
+  try {
+    const response = await axiosClient.post("/api/target-derap", payload);
+    return response.data; // Return the data from the response
+  } catch (error) {
+    console.error("Error creating target derap data:", error);
+    throw error; // Throw the error to handle it elsewhere
+  }
+};
+const getTableDerap = async (bulan, tahun, cabang) => {
+  try {
+    const response = await axiosClient.get(`/api/target-derap/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`);
+    console.log("Data total Derap:", response.data); // Cetak data ke console
+    return response.data; // Kembalikan data yang didapat dari API
+  } catch (error) {
+    console.error("Error fetching total sumbangan:", error);
+    throw error;
+  }
+};
+// End
+// Start Kalender
+const createKalenderData = async (payload) => {
+  try {
+    const response = await axiosClient.post("/api/kalender", payload);
+    return response.data; // Return the data from the response
+  } catch (error) {
+    console.error("Error creating derap data:", error);
+    throw error; // Throw the error to handle it elsewhere
+  }
+};
+const createTargetKalender = async (payload) => {
+  try {
+    const response = await axiosClient.post("/api/target-kalender", payload);
+    return response.data; // Return the data from the response
+  } catch (error) {
+    console.error("Error creating target derap data:", error);
+    throw error; // Throw the error to handle it elsewhere
+  }
+};
+const getTableKalender = async (bulan, tahun, cabang) => {
+  try {
+    const response = await axiosClient.get(`/api/target-kalender/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`);
+    console.log("Data total Kalender:", response.data); // Cetak data ke console
+    return response.data; // Kembalikan data yang didapat dari API
+  } catch (error) {
+    console.error("Error fetching total Kalender:", error);
+    throw error;
+  }
+};
+// END
+// REKAP ANGGOTA
 // start
 const getRekapAnggotaByCabang = async (cabang) => {
   try {
@@ -461,8 +585,14 @@ const getRekapAnggotaByCabang = async (cabang) => {
     console.error("Error fetching rekap anggota:", error);
     throw error;
   }
-};  
+};
 // end
+
+//Start Pensiun
+const getAllPensiun = (page = 0, size = 10) => {
+  return axiosClient.get(`/api/pensiun?page=${page}&size=${size}`);
+};
+// ENd
 
 // Export all functions
 export default {
@@ -499,7 +629,20 @@ export default {
   getCalculateSandukaAll,
   getSaldoSanduka,
   getSaldoOrganisasi,
-  getFormDaspen,
   getRekapAnggotaByCabang,
   getHistoryByNpa,
+  createIuranData,
+  createDaspenData,
+  getAllPensiun,
+  getIuranByFilter,
+  createTargetDaspen,
+  createDerapData,
+  createTargetDerap,
+  createTargetIuaran,
+  getTableIuran,
+  getTableDaspen,
+  getTableDerap,
+  getTableKalender,
+  createKalenderData,
+  createTargetKalender,
 };

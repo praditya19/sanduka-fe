@@ -150,13 +150,13 @@ const Page = () => {
   const handleEdit = (item) => {
     // Ambil nilai NPA dari item.npaDetail.npaPgri
     const npa = item.npaDetail.npaPgri;
-  
+
     // Log NPA ke console
     console.log(`NPA yang dituju: ${npa}`);
-  
+
     // Simpan NPA ke Session Storage
-    sessionStorage.setItem('npa', npa); // Simpan NPA ke Session Storage
-  
+    sessionStorage.setItem("npa", npa); // Simpan NPA ke Session Storage
+
     // Navigasi ke halaman detail tanpa query parameter
     router.push(`/history-data/detail`);
   };
@@ -336,13 +336,13 @@ const Page = () => {
                             {item.uraian}
                           </TableCell>
                           <TableCell className="text-center border">
-  <button
-    onClick={() => handleEdit(item)}
-    className="px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-  >
-    Detail
-  </button>
-</TableCell>
+                            <button
+                              onClick={() => handleEdit(item)}
+                              className="px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            >
+                              Detail
+                            </button>
+                          </TableCell>
                         </TableRow>
                       );
                     })}

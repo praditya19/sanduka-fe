@@ -21,10 +21,19 @@ const HeaderHome = () => {
     try {
       const userId = sessionStorage.getItem("userId");
       const response = await GlobalApi.getUserById(userId);
-      const decodedString = atob(response.foto);
+      
+      // Cek apakah foto ada
+      if (response.foto) {
+        const decodedString = atob(response.foto);
       setProfileImageUrl(decodedString);
+      } else {
+        // Jika tidak ada foto, set ke default
+        setProfileImageUrl("/profile.png");
+      }
     } catch (error) {
       console.error("Error Saat Mendapatkan Foto:", error);
+      // Jika terjadi error, set ke default
+      setProfileImageUrl("/profile.png");
     }
   };
 
