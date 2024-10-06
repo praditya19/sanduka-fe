@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -30,15 +30,12 @@ function StatusAnggota() {
   const [maxItems, setMaxItems] = useState(10);
   const [filterCabang, setFilterCabang] = useState('');
   const [filterUnitKerja, setFilterUnitKerja] = useState('');
-  const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
-  const [selectedUnitKerja, setSelectedUnitKerja] = useState("-- Unit Kerja --");
   const [selectedStatus, setSelectedStatus] = useState("Semua");
   const [selectedTingkat, setSelectedTingkat] = useState('');
   const [anggota, setAnggota] = useState([]);
   const [cabang, setCabang] = useState([]);
   const [unitKerja, setUnitKerja] = useState([]);
   const [itemsPerPage, setItemsPerPage] = useState(10); // Default to 10 items per page
-  const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "ascending" });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
@@ -54,6 +51,231 @@ function StatusAnggota() {
   const [filteredCabang, setFilteredCabang] = useState([]);
   const [isPopupVisible, setPopupVisible] = useState(false);
   const [fotoBase64, setFotoBase64] = useState("");
+
+  const [rekapData, setRekapData] = useState([]);
+
+  const [cabangList, setCabangList] = useState([]);
+  const [filteredCabangList, setFilteredCabangList] = useState([]);
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [showCabangDropdown, setShowCabangDropdown] = useState(false);
+
+  const [unitKerjaList, setUnitKerjaList] = useState([]);
+  // const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
+  const [unitKerjaInput, setUnitKerjaInput] = useState("");
+  const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  // const totalPages = Math.ceil(rekapData.length / maxItems);
+
+  const cabangRef = useRef(null);
+  const unitKerjaRef = useRef(null);
+
+  const [originalRekapData, setOriginalRekapData] = useState([]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (cabangRef.current && !cabangRef.current.contains(event.target)) {
+        setShowCabangDropdown(false);
+      }
+      if (
+        unitKerjaRef.current &&
+        !unitKerjaRef.current.contains(event.target)
+      ) {
+        setShowUnitKerjaDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const fetchRekapData = async (cabang) => {
+    try {
+      const data = await GlobalApi.getRekapAnggotaByCabang(cabang);
+      setRekapData(data);
+      setOriginalRekapData(data); // Simpan data asli saat mengambil data
+    } catch (error) {
+      console.error("Error fetching rekap data:", error);
+    }
+  };
+
+  // Fetch cabang data
+  useEffect(() => {
+    const fetchCabangData = async () => {
+      try {
+        const response = await GlobalApi.getCabang();
+        setCabangList(response.data);
+        setFilteredCabangList(response.data);
+      } catch (error) {
+        console.error("Error fetching cabang data:", error);
+      }
+    };
+    fetchCabangData();
+  }, []);
+
+  // Fetch unit kerja data
+  useEffect(() => {
+    const fetchUnitKerjaData = async () => {
+      try {
+        const response = await GlobalApi.getUnitKerja();
+        setUnitKerjaList(response.data);
+      } catch (error) {
+        console.error("Error fetching unit kerja data:", error);
+      }
+    };
+    fetchUnitKerjaData();
+  }, []);
+
+  // Filter unit kerja berdasarkan cabang yang dipilih
+  useEffect(() => {
+    if (selectedCabang) {
+      console.log("Selected Cabang:", selectedCabang);
+
+      const filtered = unitKerjaList.filter((unitKerja) => {
+        return (
+          unitKerja.cabang &&
+          unitKerja.cabang.toLowerCase().includes(selectedCabang.toLowerCase())
+        );
+      });
+
+      console.log("Filtered Unit Kerja:", filtered);
+      setFilteredUnitKerja(filtered);
+    } else {
+      setFilteredUnitKerja([]); // Kosongkan jika tidak ada cabang yang dipilih
+    }
+  }, [selectedCabang, unitKerjaList]);
+
+  const handleInputChange = (e) => {
+    const input = e.target.value;
+    setSelectedCabang(input);
+    
+    // Filter cabang berdasarkan input
+    const filtered = cabangList.filter((cabang) =>
+      cabang.kecamatan.toLowerCase().includes(input.toLowerCase())
+    );
+    setFilteredCabangList(filtered);
+    
+    // Tampilkan dropdown meskipun input kosong
+    setShowCabangDropdown(true);
+    
+    // Jika input kosong, tampilkan semua cabang
+    if (input === "") {
+      setFilteredCabangList(cabangList); // Tampilkan semua cabang jika input kosong
+    }
+  };
+
+  const handleSelectCabang = async (cabang) => {
+    setSelectedCabang(cabang.kecamatan);
+    setShowCabangDropdown(false);
+
+    // Fetch rekap data based on selected cabang
+    await fetchRekapData(cabang.kecamatan);
+
+    // Now filter the unit kerja based on the selected cabang
+    const filtered = unitKerjaList.filter(
+      (unitKerja) =>
+        unitKerja.cabang &&
+        unitKerja.cabang.toLowerCase() === cabang.kecamatan.toLowerCase()
+    );
+    setFilteredUnitKerja(filtered);
+  };
+
+  const handleUnitKerjaFocus = () => {
+    if (selectedCabang) {
+      // Jika input kosong, tampilkan semua unit kerja terkait cabang
+      // if (unitKerjaInput) {
+      //   const filtered = unitKerjaList.filter((unitKerja) =>
+      //     unitKerja.cabang &&
+      //     unitKerja.cabang.toLowerCase() === selectedCabang.toLowerCase()
+      //   );
+      //   setFilteredUnitKerja(filtered);
+      // }
+      setShowUnitKerjaDropdown(true); // Tampilkan dropdown
+    }
+  };
+
+  const handleUnitKerjaChange = (e) => {
+    const input = e.target.value;
+    setUnitKerjaInput(input);
+  
+    // Filter unit kerja berdasarkan input dan cabang
+    const filteredUnitKerja = unitKerjaList.filter(
+      (unitKerja) =>
+        unitKerja.cabang &&
+        unitKerja.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
+        unitKerja.unitKerja.toLowerCase().startsWith(input.toLowerCase())
+    );
+  
+    // Tampilkan dropdown jika ada hasil filter
+    setShowUnitKerjaDropdown(filteredUnitKerja.length > 0);
+    setFilteredUnitKerja(filteredUnitKerja);
+  
+    // Filter data rekap berdasarkan input unit kerja
+    const rekapFilteredByUnitKerja = originalRekapData.filter(
+      (item) =>
+        item.alamatKerja &&
+        item.alamatKerja.toLowerCase().includes(input.toLowerCase())
+    );
+  
+    // Jika input kosong, kembalikan data tabel ke data awal
+    if (input === "") {
+      setRekapData(originalRekapData);
+    } else {
+      setRekapData(rekapFilteredByUnitKerja);
+    }
+  };
+  
+
+  const handleUnitKerjaSelect = (unitKerja) => {
+    setSelectedUnitKerja(unitKerja.unitKerja);
+    setUnitKerjaInput(unitKerja.unitKerja);
+    setShowUnitKerjaDropdown(false);
+  
+    // Update rekapData berdasarkan unit kerja yang dipilih
+    const filteredRekapData = originalRekapData.filter(
+      (item) => item.alamatKerja === unitKerja.unitKerja
+    );
+    setRekapData(filteredRekapData);
+  };
+
+  useEffect(() => {
+    if (!unitKerjaInput && selectedCabang) {
+      fetchRekapData(selectedCabang); // Fetch kembali data berdasarkan cabang yang dipilih
+    }
+  }, [unitKerjaInput, selectedCabang]);
+
+  useEffect(() => {
+    if (!token) {
+      router.push("/sign-in");
+    }
+  }, [token, router]);
+
+  useEffect(() => {
+    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+    setIsSidebarOpen(sidebarState);
+  }, []);
+
+  const toggleSidebar = () => {
+    const newSidebarState = !isSidebarOpen;
+    setIsSidebarOpen(newSidebarState);
+    localStorage.setItem("isSidebarOpen", newSidebarState);
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     if (selectedCabang) {
@@ -390,10 +612,6 @@ function StatusAnggota() {
     setIsUnitKerjaEnabled(true);
   };
 
-  const handleUnitKerjaChange = () => {
-    setIsUnitKerjaEnabled(true);
-  };
-
   const handlePindahCabangClick = () => {
     if (isCabangEnabled) {
       alert("Anggota berpindah cabang");
@@ -413,15 +631,9 @@ function StatusAnggota() {
     }
   };
 
-  const handleBackClick = () => {
-    router.back();
-  };
-
-  const toggleSidebar = () => {
-    const newSidebarState = !isSidebarOpen;
-    setIsSidebarOpen(newSidebarState);
-    localStorage.setItem("isSidebarOpen", newSidebarState);
-  };
+  // const handleBackClick = () => {
+  //   router.back();
+  // };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -443,18 +655,10 @@ function StatusAnggota() {
     return age;
   };
 
-  const handleExpand = (index) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
-  };
-
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
 
-  const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value));
-    setCurrentPage(1);
-  };
 
   const handleKeluarAnggotaClick = () => {
     setPopupVisible(true);
@@ -467,39 +671,6 @@ function StatusAnggota() {
 
   const handleCancel = () => {
     setPopupVisible(false);
-  };
-
-  const handleInputChange = (e) => {
-    setFilterCabang(e.target.value);
-    setShowDropdown(true);
-  };
-
-  const handleInputChangeUnit = (e) => {
-    setFilterUnitKerja(e.target.value);
-    setShowDropdown(true);
-  };
-
-  const handleSelectChange = (e) => {
-    setSelectedCabang(e.target.value);
-    setFilterCabang(e.target.value);
-    setShowDropdown(false);
-  };
-
-  const handleSelectChangeUnit = (e) => {
-    setSelectedUnitKerja(e.target.value);
-    setFilterUnitKerja(e.target.value);
-    setShowDropdown(false);
-  };
-
-  const handleOptionClick = (kecamatan) => {
-    setSelectedCabang(kecamatan);
-    setFilterCabang(kecamatan);
-    setShowDropdown(false);
-  };
-
-  const handleOptionClickUnit = (unitKerja) => {
-    setSelectedUnitKerja(unitKerja);
-    setFilterUnitKerja(unitKerja);
   };
 
   const filteredMembersData = selectedCabang === "-- Cabang --"
@@ -592,82 +763,61 @@ function StatusAnggota() {
               </div>
             ))}
           </div>
-          <div className="mb-4 mx-4">
+          <div className="mb-4">
             <div className="flex flex-wrap items-start mt-2 justify-between">
               <div className="flex flex-wrap items-center space-x-2">
-                <div className="relative flex flex-col md:flex">
-                  <input
-                    type="text"
-                    placeholder="Cari Cabang..."
-                    value={filterCabang}
-                    onChange={handleInputChange}
-                    className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                  />
-                  {showDropdown && filteredCabang.length > 0 && (
-                    <div className="absolute left-0 mt-10 w-full bg-white border rounded shadow-lg z-10">
-                      {filteredCabang.map((item) => (
-                        <div
-                          key={item.id}
-                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                          onClick={() => handleOptionClick(item.kecamatan)}
-                        >
-                          {item.kecamatan}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <select
-                    className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
-                    value={selectedCabang}
-                    onChange={handleSelectChange}
-                  >
-                    <option value="">Pilih Cabang</option>
-                    {cabang.map(item => (
-                      <option key={item.id} value={item.kecamatan}>
-                        {item.kecamatan}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex flex-col md:flex">
-                  <div className="relative">
+              <div className="relative flex flex-col md:flex ml-2">
                     <input
                       type="text"
-                      placeholder="Cari Unit Kerja..."
-                      value={filterUnitKerja}
-                      onChange={handleInputChangeUnit}
-                      className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                      value={selectedCabang}
+                      onFocus={() => setShowCabangDropdown(true)}
+                      onChange={handleInputChange}
+                      className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                      placeholder="Pilih Cabang"
                     />
-                    {showDropdown && filteredUnitKerja.length > 0 && (
-                      <div className="absolute left-0 mt-1 w-full bg-white border rounded shadow-lg z-10">
-                        {filteredUnitKerja.map((item) => (
-                          <div
-                            key={item.id}
+                    {showCabangDropdown && filteredCabangList.length > 0 && (
+                      <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-12 max-h-40 overflow-y-auto">
+                        {filteredCabangList.map((cabang) => (
+                          <li
+                            key={cabang.id}
+                            onClick={() => handleSelectCabang(cabang)}
                             className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                            onClick={() => handleOptionClickUnit(item.unitKerja)}
                           >
-                            {item.unitKerja}
-                          </div>
+                            {cabang.kecamatan}
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     )}
                   </div>
-                  <select
-                    className="shadow appearance-none border rounded w-40 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
-                    value={selectedUnitKerja}
-                    onChange={handleSelectChangeUnit}
-                  >
-                    <option value="">Pilih Unit Kerja</option>
-                    {unitKerja.map(item => (
-                      <option key={item.id} value={item.unitKerja}>
-                        {item.unitKerja}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+
+                  <div className="flex flex-col md:flex">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={unitKerjaInput}
+                        onFocus={handleUnitKerjaFocus}
+                        onChange={handleUnitKerjaChange}
+                        placeholder="Pilih Unit Kerja"
+                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
+                        disabled={!selectedCabang}
+                      />
+                      {showUnitKerjaDropdown && filteredUnitKerja.length > 0 && (
+                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-12 max-h-40 overflow-y-auto">
+                          {filteredUnitKerja.map((unitKerja) => (
+                            <li
+                              key={unitKerja.id}
+                              onClick={() => handleUnitKerjaSelect(unitKerja)}
+                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                            >
+                              {unitKerja.unitKerja}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
                 <select
-                  className="shadow appearance-none border rounded w-full md:w-44 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline lg:mt-12 md:mb-0"
+                  className="shadow appearance-none border rounded w-full md:w-44 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline md:mb-0"
                   value={selectedTingkat}
                   onChange={(e) => setSelectedTingkat(e.target.value)}
                 >
@@ -679,7 +829,7 @@ function StatusAnggota() {
                   <option value="SMA_SMK_MA">SMA/SMK/MA</option>
                   <option value="PERGURUAN_TINGGI">Perguruan Tinggi</option>
                 </select>
-                <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto lg:mt-12">
+                <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
                   Jumlah Anggota : {jumlahAnggota}
                 </p>
               </div>

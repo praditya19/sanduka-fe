@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Modal from "react-modal";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -27,10 +27,9 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 
 function DataAnggota() {
   const [maxItems, setMaxItems] = useState(10);
-  const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
+  const [selectedCabang, setSelectedCabang] = useState("");
   const [filterCabang, setFilterCabang] = useState('');
   const [filterUnitKerja, setFilterUnitKerja] = useState('');
-  const [selectedUnitKerja, setSelectedUnitKerja] = useState("-- Unit Kerja --");
   const [selectedStatus, setSelectedStatus] = useState("Semua");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "ascending" });
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,21 +39,229 @@ function DataAnggota() {
   const [unitKerja, setUnitKerja] = useState([]);
   const [isCabangEnabled, setIsCabangEnabled] = useState(false);
   const [isUnitKerjaEnabled, setIsUnitKerjaEnabled] = useState(false);
-  const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [expandedIndex, setExpandedIndex] = useState(null);
-  const [itemsPerPage, setItemsPerPage] = useState(10); // Default to 10 items per page
-  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [isPopupVisible, setPopupVisible] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [showDropdownCabang, setShowDropdownCabang] = useState(false);
-  const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
+  // const [showDropdown, setShowDropdown] = useState(false);
+  // const [showDropdownCabang, setShowDropdownCabang] = useState(false);
+  // const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
   const [filteredCabang, setFilteredCabang] = useState([]);
   const [fotoBase64, setFotoBase64] = useState("");
+
+  const [rekapData, setRekapData] = useState([]);
+
+  const [cabangList, setCabangList] = useState([]);
+  const [filteredCabangList, setFilteredCabangList] = useState([]);
+  const [showCabangDropdown, setShowCabangDropdown] = useState(false);
+
+  const [unitKerjaList, setUnitKerjaList] = useState([]);
+  const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
+  const [unitKerjaInput, setUnitKerjaInput] = useState("");
+  const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const cabangRef = useRef(null);
+  const unitKerjaRef = useRef(null);
+
+  const [originalRekapData, setOriginalRekapData] = useState([]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (cabangRef.current && !cabangRef.current.contains(event.target)) {
+        setShowCabangDropdown(false);
+      }
+      if (
+        unitKerjaRef.current &&
+        !unitKerjaRef.current.contains(event.target)
+      ) {
+        setShowUnitKerjaDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const fetchRekapData = async (cabang) => {
+    try {
+      const data = await GlobalApi.getRekapAnggotaByCabang(cabang);
+      setRekapData(data);
+      setOriginalRekapData(data); // Simpan data asli saat mengambil data
+    } catch (error) {
+      console.error("Error fetching rekap data:", error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchCabangData = async () => {
+      try {
+        const response = await GlobalApi.getCabang();
+        setCabangList(response.data);
+        setFilteredCabangList(response.data);
+      } catch (error) {
+        console.error("Error fetching cabang data:", error);
+      }
+    };
+    fetchCabangData();
+  }, []);
+
+  useEffect(() => {
+    const fetchUnitKerjaData = async () => {
+      try {
+        const response = await GlobalApi.getUnitKerja();
+        setUnitKerjaList(response.data);
+      } catch (error) {
+        console.error("Error fetching unit kerja data:", error);
+      }
+    };
+    fetchUnitKerjaData();
+  }, []);
+
+  useEffect(() => {
+    if (selectedCabang) {
+      console.log("Selected Cabang:", selectedCabang);
+
+      const filtered = unitKerjaList.filter((unitKerja) => {
+        return (
+          unitKerja.cabang &&
+          unitKerja.cabang.toLowerCase().includes(selectedCabang.toLowerCase())
+        );
+      });
+
+      console.log("Filtered Unit Kerja:", filtered);
+      setFilteredUnitKerja(filtered);
+    } else {
+      setFilteredUnitKerja([]);
+    }
+  }, [selectedCabang, unitKerjaList]);
+
+  const handleInputChange = (e) => {
+    const input = e.target.value;
+    setSelectedCabang(input);
+
+    const filtered = cabangList.filter((cabang) =>
+      cabang.kecamatan.toLowerCase().includes(input.toLowerCase())
+    );
+    setFilteredCabangList(filtered);
+
+    setShowCabangDropdown(true);
+
+    if (input === "") {
+      setFilteredCabangList(cabangList);
+    }
+  };
+
+  const handleSelectCabang = async (cabang) => {
+    setSelectedCabang(cabang.kecamatan);
+    setShowCabangDropdown(false);
+
+    await fetchRekapData(cabang.kecamatan);
+
+    const filtered = unitKerjaList.filter(
+      (unitKerja) =>
+        unitKerja.cabang &&
+        unitKerja.cabang.toLowerCase() === cabang.kecamatan.toLowerCase()
+    );
+    setFilteredUnitKerja(filtered);
+  };
+
+  const handleUnitKerjaFocus = () => {
+    if (selectedCabang) {
+      // Jika input kosong, tampilkan semua unit kerja terkait cabang
+      // if (unitKerjaInput) {
+      //   const filtered = unitKerjaList.filter((unitKerja) =>
+      //     unitKerja.cabang &&
+      //     unitKerja.cabang.toLowerCase() === selectedCabang.toLowerCase()
+      //   );
+      //   setFilteredUnitKerja(filtered);
+      // }
+      setShowUnitKerjaDropdown(true); // Tampilkan dropdown
+    }
+  };
+
+  const handleUnitKerjaChange = (e) => {
+    const input = e.target.value;
+    setUnitKerjaInput(input);
+
+    const filteredUnitKerja = unitKerjaList.filter(
+      (unitKerja) =>
+        unitKerja.cabang &&
+        unitKerja.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
+        unitKerja.unitKerja.toLowerCase().startsWith(input.toLowerCase())
+    );
+
+    // Tampilkan dropdown jika ada hasil filter
+    setShowUnitKerjaDropdown(filteredUnitKerja.length > 0);
+    setFilteredUnitKerja(filteredUnitKerja);
+
+
+    const rekapFilteredByUnitKerja = originalRekapData.filter(
+      (item) =>
+        item.alamatKerja &&
+        item.alamatKerja.toLowerCase().includes(input.toLowerCase())
+    );
+
+    if (input === "") {
+      setRekapData(originalRekapData);
+    } else {
+      setRekapData(rekapFilteredByUnitKerja);
+    }
+  };
+
+
+  const handleUnitKerjaSelect = (unitKerja) => {
+    setSelectedUnitKerja(unitKerja.unitKerja);
+    setUnitKerjaInput(unitKerja.unitKerja);
+    setShowUnitKerjaDropdown(false);
+
+    const filteredRekapData = originalRekapData.filter(
+      (item) => item.alamatKerja === unitKerja.unitKerja
+    );
+    setRekapData(filteredRekapData);
+  };
+
+  useEffect(() => {
+    if (!unitKerjaInput && selectedCabang) {
+      fetchRekapData(selectedCabang);
+    }
+  }, [unitKerjaInput, selectedCabang]);
+
+  useEffect(() => {
+    if (!token) {
+      router.push("/sign-in");
+    }
+  }, [token, router]);
+
+  useEffect(() => {
+    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+    setIsSidebarOpen(sidebarState);
+  }, []);
+
+  const toggleSidebar = () => {
+    const newSidebarState = !isSidebarOpen;
+    setIsSidebarOpen(newSidebarState);
+    localStorage.setItem("isSidebarOpen", newSidebarState);
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     if (selectedCabang) {
@@ -103,7 +310,7 @@ function DataAnggota() {
   const fetchAnggota = async () => {
     try {
       const page = 0; // Or the page number you want to fetch
-      const size = 50; // Or the number of items per page you want to fetch
+      const size = 100; // Or the number of items per page you want to fetch
       const response = await GlobalApi.getAllAnggota(page, size);
       const fotoBase64Array = [];
 
@@ -136,7 +343,7 @@ function DataAnggota() {
 
     } catch (error) {
       console.error("Error fetching anggota:", error);
-      setAnggota([]); // Optionally, set to an empty array if there's an error
+      setAnggota([]);
     }
   };
 
@@ -271,9 +478,9 @@ function DataAnggota() {
       const statusFilter =
         selectedStatus === "Semua" || item.anggota === selectedStatus;
       const cabangFilter =
-        selectedCabang === "-- Cabang --" || item.cabang === selectedCabang;
+        selectedCabang === "" || item.cabang === selectedCabang;
       const unitKerjaFilter =
-        selectedUnitKerja === "-- Unit Kerja --" || item.unitKerja === selectedUnitKerja;
+        selectedUnitKerja === "" || item.unitKerja === selectedUnitKerja;
 
       const searchCabangFilter = item.cabang.toLowerCase().includes(filterCabang.toLowerCase());
       const searchUnitKerjaFilter = item.unitKerja.toLowerCase().includes(filterUnitKerja.toLowerCase());
@@ -301,10 +508,6 @@ function DataAnggota() {
     setIsUnitKerjaEnabled(true);
   };
 
-  const handleUnitKerjaChange = () => {
-    setIsUnitKerjaEnabled(true);
-  };
-
   const handlePindahCabangClick = () => {
     if (isCabangEnabled) {
       alert("Anggota berpindah cabang");
@@ -324,15 +527,9 @@ function DataAnggota() {
     }
   };
 
-  const handleBackClick = () => {
-    router.back();
-  };
-
-  const toggleSidebar = () => {
-    const newSidebarState = !isSidebarOpen;
-    setIsSidebarOpen(newSidebarState);
-    localStorage.setItem("isSidebarOpen", newSidebarState);
-  };
+  // const handleBackClick = () => {
+  //   router.back();
+  // };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -392,11 +589,6 @@ function DataAnggota() {
     setCurrentPage(pageNumber);
   };
 
-  const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value));
-    setCurrentPage(1);
-  };
-
   const handleKeluarAnggotaClick = () => {
     setPopupVisible(true);
   };
@@ -410,57 +602,6 @@ function DataAnggota() {
     setPopupVisible(false);
   };
 
-  const handleInputChange = (e) => {
-    const value = e.target.value.toLowerCase(); // Convert input to lowercase
-    setFilterCabang(value); // Update the input state
-
-    // Filter the cabang based on the input value
-    const filtered = cabang.filter(item =>
-      item.kecamatan.toLowerCase().includes(value) // Check for substring match
-    );
-
-    setFilteredCabang(filtered); // Update filteredCabang state
-    setShowDropdownCabang(filtered.length > 0); // Show dropdown if there are matches
-  };
-
-
-  const handleInputChangeUnit = (e) => {
-    const { value } = e.target;
-    setFilterUnitKerja(value);
-    setShowDropdownUnitKerja(true);
-    setShowDropdownCabang(false);
-
-    const filtered = unitKerja.filter((item) =>
-      item.unitKerja.toLowerCase().includes(value.toLowerCase())
-    );
-    setFilteredUnitKerja(filtered);
-  };
-
-  const handleSelectChange = (e) => {
-    const { value } = e.target;
-    setSelectedCabang(value);
-    setShowDropdownCabang(false);
-
-    setFilterUnitKerja('');
-    setFilteredUnitKerja([]);
-  };
-
-  const handleSelectChangeUnit = (e) => {
-    const { value } = e.target;
-    setSelectedUnitKerja(value);
-    setShowDropdownUnitKerja(false);
-  };
-
-  const handleOptionClick = (kecamatan) => {
-    setSelectedCabang(kecamatan);
-    setFilterCabang(kecamatan);
-    setShowDropdown(false);
-  };
-
-  const handleOptionClickUnit = (unitKerja) => {
-    setSelectedUnitKerja(unitKerja);
-    setFilterUnitKerja(unitKerja);
-  };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -487,23 +628,24 @@ function DataAnggota() {
                   <div className="relative flex flex-col md:flex ml-2">
                     <input
                       type="text"
-                      placeholder="Cari Cabang..."
-                      value={filterCabang}
+                      value={selectedCabang}
+                      onFocus={() => setShowCabangDropdown(true)}
                       onChange={handleInputChange}
-                      className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                      className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                      placeholder="Pilih Cabang"
                     />
-                    {showDropdownCabang && filteredCabang.length > 0 && (
-                      <div className="absolute left-0 mt-10 w-full bg-white border rounded shadow-lg z-10 max-h-40 overflow-y-auto">
-                        {filteredCabang.map((item) => (
-                          <div
-                            key={item.id}
+                    {showCabangDropdown && filteredCabangList.length > 0 && (
+                      <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-12 max-h-40 overflow-y-auto">
+                        {filteredCabangList.map((cabang) => (
+                          <li
+                            key={cabang.id}
+                            onClick={() => handleSelectCabang(cabang)}
                             className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                            onClick={() => handleSelectChange({ target: { value: item.kecamatan } })}
                           >
-                            {item.kecamatan}
-                          </div>
+                            {cabang.kecamatan}
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     )}
                   </div>
 
@@ -511,39 +653,27 @@ function DataAnggota() {
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder="Cari Unit Kerja..."
-                        value={filterUnitKerja}
-                        onChange={handleInputChangeUnit}
-                        className="shadow appearance-none border rounded w-44 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                        disabled={!selectedCabang} // Disable when no cabang is selected
+                        value={unitKerjaInput}
+                        onFocus={handleUnitKerjaFocus}
+                        onChange={handleUnitKerjaChange}
+                        placeholder="Pilih Unit Kerja"
+                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
+                        disabled={!selectedCabang}
                       />
-                      {showDropdownUnitKerja && filteredUnitKerja.length > 0 && (
-                        <div className="absolute left-0 mt-1 w-full bg-white border rounded shadow-lg z-10 max-h-40 overflow-y-auto">
-                          {filteredUnitKerja.map((item) => (
-                            <div
-                              key={item.id}
+                      {showUnitKerjaDropdown && filteredUnitKerja.length > 0 && (
+                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-12 max-h-40 overflow-y-auto">
+                          {filteredUnitKerja.map((unitKerja) => (
+                            <li
+                              key={unitKerja.id}
+                              onClick={() => handleUnitKerjaSelect(unitKerja)}
                               className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                              onClick={() => handleSelectChangeUnit({ target: { value: item.unitKerja } })}
                             >
-                              {item.unitKerja}
-                            </div>
+                              {unitKerja.unitKerja}
+                            </li>
                           ))}
-                        </div>
+                        </ul>
                       )}
                     </div>
-                    {/* <select
-                      className="shadow appearance-none border rounded w-44 md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
-                      value={selectedUnitKerja}
-                      onChange={handleSelectChangeUnit}
-                      disabled={!selectedCabang} // Disable when no cabang is selected
-                    >
-                      <option value="">Pilih Unit Kerja</option>
-                      {unitKerja.map((item) => (
-                        <option key={item.id} value={item.unitKerja}>
-                          {item.unitKerja}
-                        </option>
-                      ))}
-                    </select> */}
                   </div>
                 </>
                 <select
@@ -562,9 +692,9 @@ function DataAnggota() {
                   Jumlah Anggota : {jumlahAnggota}
                 </p>
               </div>
-              <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
+              {/* <p className="text-center font-bold py-2 px-2 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
                 Data Anggota
-              </p>
+              </p> */}
               <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
                 <div className="space-x-2 w-full flex md:block">
                   <label htmlFor="maxItems" className="mr-2">
@@ -731,7 +861,7 @@ function DataAnggota() {
                             <Button
                               className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
                               title="Edit Data"
-                              onClick={() => router.push('/anggota/edit-anggota')}
+                              onClick={() => router.push(`/anggota/edit-anggota?id=${item.id}`)} // Dynamically pass the item's id
                             >
                               <FaEdit className="w-4 h-4" />
                             </Button>
@@ -789,7 +919,7 @@ function DataAnggota() {
                                 <Button
                                   className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
                                   title="Edit Data"
-                                  onClick={() => router.push('/anggota/edit-anggota')}
+                                  onClick={() => router.push(`/anggota/edit-anggota?id=${item.id}`)} // Dynamically pass the item's id
                                 >
                                   <FaEdit className="w-4 h-4" />
                                 </Button>
