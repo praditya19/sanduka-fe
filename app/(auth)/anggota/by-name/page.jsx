@@ -13,24 +13,31 @@ import {
 } from "react-icons/fa";
 import { Input } from "@/components/ui/input";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowLeft, faBars, faTimes } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowLeft,
+  faBars,
+  faTimes,
+} from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import SinkronData from "@/app/(auth)/singkron-data/page"
-
+import SinkronData from "@/app/(auth)/singkron-data/page";
 
 function DataAnggota() {
   const [maxItems, setMaxItems] = useState(10);
   const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
-  const [selectedUnitKerja, setSelectedUnitKerja] = useState("-- Unit Kerja --");
+  const [selectedUnitKerja, setSelectedUnitKerja] =
+    useState("-- Unit Kerja --");
   const [selectedStatus, setSelectedStatus] = useState("Semua");
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "ascending" });
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: "ascending",
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
-  const [filterCabang, setFilterCabang] = useState('');
-  const [filterUnitKerja, setFilterUnitKerja] = useState('');
+  const [filterCabang, setFilterCabang] = useState("");
+  const [filterUnitKerja, setFilterUnitKerja] = useState("");
   const [anggota, setAnggota] = useState([]);
   const [cabang, setCabang] = useState([]);
   const [unitKerja, setUnitKerja] = useState([]);
@@ -51,7 +58,7 @@ function DataAnggota() {
 
   useEffect(() => {
     if (selectedCabang) {
-      const filtered = unitKerja.filter(uk => uk.cabang === selectedCabang);
+      const filtered = unitKerja.filter((uk) => uk.cabang === selectedCabang);
       setFilteredUnitKerja(filtered);
     } else {
       setFilteredUnitKerja([]);
@@ -95,7 +102,7 @@ function DataAnggota() {
 
   const fetchAnggota = async () => {
     try {
-      const page = 0; // Or the page number you want to fetch
+      const page = 0;
       const size = 50; // Or the number of items per page you want to fetch
       const response = await GlobalApi.getAllAnggota(page, size);
       setAnggota(response.data.content || []); // Use response.data.content if it's a Page object
@@ -177,10 +184,11 @@ function DataAnggota() {
               </style>
             </head>
             <body>
-              <div class="title">Data Anggota ${selectedCabang === "-- Cabang --"
-        ? "Cabang"
-        : `Unit Kerja ${selectedCabang}`
-      }</div>
+              <div class="title">Data Anggota ${
+                selectedCabang === "-- Cabang --"
+                  ? "Cabang"
+                  : `Unit Kerja ${selectedCabang}`
+              }</div>
               <table>
                 <thead>
                   <tr class="header-row">
@@ -193,22 +201,25 @@ function DataAnggota() {
                 </thead>
                 <tbody>
                   ${groupedData
-        .slice(0, maxItems)
-        .map(
-          (group, index) => `
+                    .slice(0, maxItems)
+                    .map(
+                      (group, index) => `
                     <tr>
                       <td rowspan="${group.items.length + 1}">${index + 1}</td>
-                      <td rowspan="${group.items.length + 1}">${group.kerja
-            }</td>
-                      <td rowspan="${group.items.length + 1}">${group.jumlah
-            }</td>
+                      <td rowspan="${group.items.length + 1}">${
+                        group.kerja
+                      }</td>
+                      <td rowspan="${group.items.length + 1}">${
+                        group.jumlah
+                      }</td>
                     </tr>
                     ${group.items
-              .map(
-                (item, subIndex) => `
+                      .map(
+                        (item, subIndex) => `
                       <tr>
-                        <td>${subIndex + 1}. <span class="font-bold">${item.namaLengkap
-                  }</span> / ${item.npaPgri}</td>
+                        <td>${subIndex + 1}. <span class="font-bold">${
+                          item.namaLengkap
+                        }</span> / ${item.npaPgri}</td>
                         <td class="vertical-text">
                             <div>KTA Digital : ${item.anggota}</div>
                             <div>Daspen : ${item.pgri}</div>
@@ -216,11 +227,11 @@ function DataAnggota() {
                         </td>
                       </tr>
                     `
-              )
-              .join("")}
+                      )
+                      .join("")}
                   `
-        )
-        .join("")}
+                    )
+                    .join("")}
                 </tbody>
               </table>
             </body>
@@ -240,7 +251,7 @@ function DataAnggota() {
     if (sortConfig && sortConfig.key) {
       sortableItems.sort((a, b) => {
         const key = sortConfig.key;
-        const direction = sortConfig.direction === 'ascending' ? 1 : -1;
+        const direction = sortConfig.direction === "ascending" ? 1 : -1;
 
         if (a[key] < b[key]) return direction * -1;
         if (a[key] > b[key]) return direction;
@@ -258,16 +269,32 @@ function DataAnggota() {
       const cabangFilter =
         selectedCabang === "-- Cabang --" || item.cabang === selectedCabang;
       const unitKerjaFilter =
-        selectedUnitKerja === "-- Unit Kerja --" || item.unitKerja === selectedUnitKerja;
+        selectedUnitKerja === "-- Unit Kerja --" ||
+        item.unitKerja === selectedUnitKerja;
 
-      const searchCabangFilter = item.cabang.toLowerCase().includes(filterCabang.toLowerCase());
-      const searchUnitKerjaFilter = item.unitKerja.toLowerCase().includes(filterUnitKerja.toLowerCase());
+      const searchCabangFilter = item.cabang
+        .toLowerCase()
+        .includes(filterCabang.toLowerCase());
+      const searchUnitKerjaFilter = item.unitKerja
+        .toLowerCase()
+        .includes(filterUnitKerja.toLowerCase());
 
-      return statusFilter && cabangFilter && unitKerjaFilter &&
+      return (
+        statusFilter &&
+        cabangFilter &&
+        unitKerjaFilter &&
         (filterCabang ? searchCabangFilter : true) &&
-        (filterUnitKerja ? searchUnitKerjaFilter : true);
+        (filterUnitKerja ? searchUnitKerjaFilter : true)
+      );
     });
-  }, [sortedData, selectedStatus, selectedCabang, selectedUnitKerja, filterCabang, filterUnitKerja]);
+  }, [
+    sortedData,
+    selectedStatus,
+    selectedCabang,
+    selectedUnitKerja,
+    filterCabang,
+    filterUnitKerja,
+  ]);
 
   // Move the `groupedData` calculation here
   const groupedData = useMemo(() => {
@@ -343,8 +370,10 @@ function DataAnggota() {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-  const currentData = groupedData.slice((currentPage - 1) * maxItems, currentPage * maxItems);
-
+  const currentData = groupedData.slice(
+    (currentPage - 1) * maxItems,
+    currentPage * maxItems
+  );
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -364,7 +393,6 @@ function DataAnggota() {
   const handlePageClick = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
-
 
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(Number(e.target.value));
@@ -445,8 +473,9 @@ function DataAnggota() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <SinkronData />
 
@@ -454,343 +483,389 @@ function DataAnggota() {
             <div>
               <Button
                 onClick={toggleSidebar}
-                className={`p-2 rounded-md text-black ${isSidebarOpen ? 'bg-black' : 'bg-transparent'
-                  } transition-colors duration-300 hover:bg-gray-500 focus:outline-none fixed top-5 sm:top-1 left-2 sm:left-4 z-50`}
+                className={`p-2 rounded-md text-black ${
+                  isSidebarOpen ? "bg-black" : "bg-transparent"
+                } transition-colors duration-300 hover:bg-gray-500 focus:outline-none fixed top-5 sm:top-1 left-2 sm:left-4 z-50`}
               >
                 <FontAwesomeIcon
                   icon={isSidebarOpen ? faTimes : faBars}
                   size="lg"
-                  className={`text-black ${isSidebarOpen ? 'text-white' : 'text-black'
-                    }`}
+                  className={`text-black ${
+                    isSidebarOpen ? "text-white" : "text-black"
+                  }`}
                 />
               </Button>
             </div>
           )}
           {/* <div className="container mx-auto p-6 bg-white shadow-md rounded-lg"> */}
-            <div className="mb-4 -mt-40 ">
-              <div className="flex flex-wrap items-start mt-40 justify-between">
-                <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
-                  <div className="relative flex flex-col md:flex">
+          <div className="mb-4 -mt-40 ">
+            <div className="flex flex-wrap items-start mt-40 justify-between">
+              <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
+                <div className="relative flex flex-col md:flex">
+                  <input
+                    type="text"
+                    placeholder="Cari Cabang..."
+                    value={filterCabang}
+                    onChange={handleInputChange}
+                    className="shadow appearance-none border rounded w-full md:w-40 py-2 md:px-3 px-20 md:text-start text-center text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                  />
+                  {showDropdown && filteredCabang.length > 0 && (
+                    <div className="absolute left-0 mt-10 w-full bg-white border rounded shadow-lg z-10">
+                      {filteredCabang.map((item) => (
+                        <div
+                          key={item.id}
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                          onClick={() => handleOptionClick(item.kecamatan)}
+                        >
+                          {item.kecamatan}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <select
+                    className="shadow appearance-none border rounded w-full md:w-40 py-2 md:px-3 px-20 md:text-start text-center text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
+                    value={selectedCabang}
+                    onChange={handleSelectChange}
+                  >
+                    <option value="">Pilih Cabang</option>
+                    {cabang.map((item) => (
+                      <option key={item.id} value={item.kecamatan}>
+                        {item.kecamatan}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col md:flex">
+                  <div className="relative">
                     <input
                       type="text"
-                      placeholder="Cari Cabang..."
-                      value={filterCabang}
-                      onChange={handleInputChange}
+                      placeholder="Cari Unit Kerja..."
+                      value={filterUnitKerja}
+                      onChange={handleInputChangeUnit}
                       className="shadow appearance-none border rounded w-full md:w-40 py-2 md:px-3 px-20 md:text-start text-center text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
                     />
-                    {showDropdown && filteredCabang.length > 0 && (
-                      <div className="absolute left-0 mt-10 w-full bg-white border rounded shadow-lg z-10">
-                        {filteredCabang.map((item) => (
+                    {showDropdown && filteredUnitKerja.length > 0 && (
+                      <div className="absolute left-0 mt-1 w-full bg-white border rounded shadow-lg z-10">
+                        {filteredUnitKerja.map((item) => (
                           <div
                             key={item.id}
                             className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                            onClick={() => handleOptionClick(item.kecamatan)}
+                            onClick={() =>
+                              handleOptionClickUnit(item.unitKerja)
+                            }
                           >
-                            {item.kecamatan}
+                            {item.unitKerja}
                           </div>
                         ))}
                       </div>
                     )}
-                    <select
-                      className="shadow appearance-none border rounded w-full md:w-40 py-2 md:px-3 px-20 md:text-start text-center text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
-                      value={selectedCabang}
-                      onChange={handleSelectChange}
-                    >
-                      <option value="">Pilih Cabang</option>
-                      {cabang.map(item => (
-                        <option key={item.id} value={item.kecamatan}>
-                          {item.kecamatan}
-                        </option>
-                      ))}
-                    </select>
                   </div>
-
-                  <div className="flex flex-col md:flex">
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="Cari Unit Kerja..."
-                        value={filterUnitKerja}
-                        onChange={handleInputChangeUnit}
-                        className="shadow appearance-none border rounded w-full md:w-40 py-2 md:px-3 px-20 md:text-start text-center text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                      />
-                      {showDropdown && filteredUnitKerja.length > 0 && (
-                        <div className="absolute left-0 mt-1 w-full bg-white border rounded shadow-lg z-10">
-                          {filteredUnitKerja.map((item) => (
-                            <div
-                              key={item.id}
-                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                              onClick={() => handleOptionClickUnit(item.unitKerja)}
-                            >
-                              {item.unitKerja}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <select
-                      className="shadow appearance-none border rounded w-full md:w-40 py-2 md:px-3 px-20 md:text-start text-center text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
-                      value={selectedUnitKerja}
-                      onChange={handleSelectChangeUnit}
-                    >
-                      <option value="">Pilih Unit Kerja</option>
-                      {unitKerja.map(item => (
-                        <option key={item.id} value={item.unitKerja}>
-                          {item.unitKerja}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mt-12 md:mb-0">
-                    <option>Semua</option>
+                  <select
+                    className="shadow appearance-none border rounded w-full md:w-40 py-2 md:px-3 px-20 md:text-start text-center text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 mt-2"
+                    value={selectedUnitKerja}
+                    onChange={handleSelectChangeUnit}
+                  >
+                    <option value="">Pilih Unit Kerja</option>
+                    {unitKerja.map((item) => (
+                      <option key={item.id} value={item.unitKerja}>
+                        {item.unitKerja}
+                      </option>
+                    ))}
                   </select>
                 </div>
-                <p className="text-center text-xl font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto mt-12">
-                  Data Anggota By Name
-                </p>
-                <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
-                  <div className="space-x-2 w-full flex md:block mt-12 md:mt-1">
-                    <label htmlFor="maxItems" className="mr-2">
-                      Tampilkan:
-                    </label>
-                    <select
-                      id="maxItems"
-                      value={maxItems}
-                      onChange={(e) => setMaxItems(parseInt(e.target.value))}
-                      className="shadow appearance-none border rounded w-full md:w-20 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={15}>15</option>
-                      <option value={20}>20</option>
-                    </select>
-                    <Button
-                      className="px-8 mt-2 md:mt-0"
-                      variant="outline"
-                      onClick={handlePrint}
-                    >
-                      Cetak
-                    </Button>
-                  </div>
+                <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mt-12 md:mb-0">
+                  <option>Semua</option>
+                </select>
+              </div>
+              <p className="text-center text-xl font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto mt-12">
+                Data Anggota By Name
+              </p>
+              <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
+                <div className="space-x-2 w-full flex md:block mt-12 md:mt-1">
+                  <label htmlFor="maxItems" className="mr-2">
+                    Tampilkan:
+                  </label>
+                  <select
+                    id="maxItems"
+                    value={maxItems}
+                    onChange={(e) => setMaxItems(parseInt(e.target.value))}
+                    className="shadow appearance-none border rounded w-full md:w-20 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={15}>15</option>
+                    <option value={20}>20</option>
+                  </select>
+                  <Button
+                    className="px-8 mt-2 md:mt-0"
+                    variant="outline"
+                    onClick={handlePrint}
+                  >
+                    Cetak
+                  </Button>
                 </div>
               </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="container w-full table-auto mb-8">
-                <thead>
-                  <tr>
-                    <th
-                      className="p-2 md:p-3 border text-white bg-teal-700"
-                      rowSpan="2"
-                    >
-                      No
-                    </th>
-                    <th
-                      className="p-2 md:p-3 border text-white bg-teal-700"
-                      rowSpan="2"
-                    >
-                      Unit Kerja
-                      {/* {selectedCabang === "-- Cabang --" ? "Cabang" : `Unit Kerja ${selectedCabang}`} */}
-                    </th>
-                    <th
-                      className="p-2 md:p-3 border text-white bg-teal-700"
-                      rowSpan="2"
-                    >
-                      Jumlah
-                    </th>
-                    <th
-                      className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden"
-                      rowSpan="2"
-                    >
-                      Nama
-                    </th>
-                    <th
-                      className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden"
-                      colSpan="3"
-                    >
-                      Keterangan
-                    </th>
-                    <th
-                      className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden"
-                      rowSpan="2"
-                    >
-                      Aksi
-                    </th>
-                  </tr>
-                  <tr>
-                    <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
-                      KTA Digital
-                    </th>
-                    <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
-                      Daspen
-                    </th>
-                    <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
-                      Sanduka
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentData.map((group, groupIndex) => {
-                    const globalIndex = (currentPage - 1) * maxItems + groupIndex + 1;
+          </div>
+          <div className="overflow-x-auto">
+            <table className="container w-full table-auto mb-8">
+              <thead>
+                <tr>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    rowSpan="2"
+                  >
+                    No
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    rowSpan="2"
+                  >
+                    Unit Kerja
+                    {/* {selectedCabang === "-- Cabang --" ? "Cabang" : `Unit Kerja ${selectedCabang}`} */}
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    rowSpan="2"
+                  >
+                    Jumlah
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden"
+                    rowSpan="2"
+                  >
+                    Nama
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden"
+                    colSpan="3"
+                  >
+                    Keterangan
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden"
+                    rowSpan="2"
+                  >
+                    Aksi
+                  </th>
+                </tr>
+                <tr>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
+                    KTA Digital
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
+                    Daspen
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
+                    Sanduka
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentData.map((group, groupIndex) => {
+                  const globalIndex =
+                    (currentPage - 1) * maxItems + groupIndex + 1;
 
-                    return (
-                      <React.Fragment key={groupIndex}>
-                        {/* Main row */}
-                        <tr>
-                          <td className="p-2 md:p-3 border text-center">
-                            <div className="flex justify-center items-center">
-                              {globalIndex}
+                  return (
+                    <React.Fragment key={groupIndex}>
+                      {/* Main row */}
+                      <tr>
+                        <td className="p-2 md:p-3 border text-center">
+                          <div className="flex justify-center items-center">
+                            {globalIndex}
+                            <Button
+                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
+                              onClick={() => handleExpand(groupIndex)}
+                            >
+                              <FaPlus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                        {/* <td className="border text-center text-sm">{globalIndex}</td> */}
+                        <td className="border text-center text-sm">
+                          {group.kerja}
+                        </td>
+                        <td className="border text-center text-sm">
+                          {group.jumlah}
+                        </td>
+                        <td className="border md:table-cell hidden">
+                          {group.items.map((item, itemIndex) => (
+                            <div
+                              key={itemIndex}
+                              className={`mb-1 py-6 pl-2 ${
+                                itemIndex < group.items.length - 1
+                                  ? "border-b border-dashed"
+                                  : ""
+                              }`}
+                            >
+                              {itemIndex + 1}.{" "}
+                              <span className="font-bold text-sm">
+                                {item.namaLengkap}
+                              </span>{" "}
+                              / {item.npaPgri}
+                            </div>
+                          ))}
+                        </td>
+                        <td className="border text-center md:table-cell hidden">
+                          {group.items.map((item, itemIndex) => (
+                            <div
+                              key={itemIndex}
+                              className={`mb-1 pl-2 py-6 ${
+                                itemIndex < group.items.length - 1
+                                  ? "border-b border-dashed"
+                                  : ""
+                              }`}
+                            >
+                              <div className="text-sm">{item.anggota}</div>
+                            </div>
+                          ))}
+                        </td>
+                        <td className="border text-center md:table-cell hidden">
+                          {group.items.map((item, itemIndex) => (
+                            <div
+                              key={itemIndex}
+                              className={`mb-1 pl-2 py-6 ${
+                                itemIndex < group.items.length - 1
+                                  ? "border-b border-dashed"
+                                  : ""
+                              }`}
+                            >
+                              <div>{item.pgri}</div>
+                            </div>
+                          ))}
+                        </td>
+                        <td className="border text-center md:table-cell hidden">
+                          {group.items.map((item, itemIndex) => (
+                            <div
+                              key={itemIndex}
+                              className={`mb-1 pl-2 py-6 ${
+                                itemIndex < group.items.length - 1
+                                  ? "border-b border-dashed"
+                                  : ""
+                              }`}
+                            >
+                              <div>Aktif</div>
+                            </div>
+                          ))}
+                        </td>
+                        <td className="p-2 md:p-3 border md:table-cell hidden">
+                          {group.items.map((item, itemIndex) => (
+                            <div
+                              key={itemIndex}
+                              className={`mb-1 pl-2 py-2 ${
+                                itemIndex < group.items.length - 1
+                                  ? "border-b border-dashed"
+                                  : ""
+                              }`}
+                            >
                               <Button
-                                className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
-                                onClick={() => handleExpand(groupIndex)}
+                                href="#"
+                                className="text-white bg-blue-500 p-2 border rounded-md mx-1"
                               >
-                                <FaPlus className="w-4 h-4" />
+                                <FaEdit className="w-4 h-4" title="Edit Data" />
+                              </Button>
+                              <Button
+                                className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md mx-1"
+                                title="Mutasi"
+                                onClick={() => openModal(item)}
+                              >
+                                <FaExchangeAlt className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                href="#"
+                                className="text-white bg-red-500 p-2 border rounded-md mx-1"
+                              >
+                                <FaExclamationTriangle
+                                  className="w-4 h-4"
+                                  title="Lapor"
+                                />
+                              </Button>
+                              <Button
+                                href={`https://wa.me/${item.nomorHp}`}
+                                className="text-white bg-green-500 p-2 border rounded-md mx-1"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <FaWhatsapp className="w-4 h-4" title="WA" />
                               </Button>
                             </div>
-                          </td>
-                          {/* <td className="border text-center text-sm">{globalIndex}</td> */}
-                          <td className="border text-center text-sm">{group.kerja}</td>
-                          <td className="border text-center text-sm">{group.jumlah}</td>
-                          <td className="border md:table-cell hidden">
+                          ))}
+                        </td>
+                      </tr>
+
+                      {/* Mobile View Row Expansion */}
+                      {expandedIndex === groupIndex && (
+                        <tr className="md:hidden">
+                          <td colSpan="7" className="p-2 border">
                             {group.items.map((item, itemIndex) => (
                               <div
                                 key={itemIndex}
-                                className={`mb-1 py-6 pl-2 ${itemIndex < group.items.length - 1 ? "border-b border-dashed" : ""
-                                  }`}
+                                className={`mb-1 py-6 pl-2 ${
+                                  itemIndex < group.items.length - 1
+                                    ? "border-b border-dashed"
+                                    : ""
+                                }`}
                               >
                                 {itemIndex + 1}.{" "}
-                                <span className="font-bold text-sm">{item.namaLengkap}</span> /{" "}
-                                {item.npaPgri}
-                              </div>
-                            ))}
-                          </td>
-                          <td className="border text-center md:table-cell hidden">
-                            {group.items.map((item, itemIndex) => (
-                              <div
-                                key={itemIndex}
-                                className={`mb-1 pl-2 py-6 ${itemIndex < group.items.length - 1 ? "border-b border-dashed" : ""
-                                  }`}
-                              >
-                                <div className="text-sm">{item.anggota}</div>
-                              </div>
-                            ))}
-                          </td>
-                          <td className="border text-center md:table-cell hidden">
-                            {group.items.map((item, itemIndex) => (
-                              <div
-                                key={itemIndex}
-                                className={`mb-1 pl-2 py-6 ${itemIndex < group.items.length - 1 ? "border-b border-dashed" : ""
-                                  }`}
-                              >
-                                <div>{item.pgri}</div>
-                              </div>
-                            ))}
-                          </td>
-                          <td className="border text-center md:table-cell hidden">
-                            {group.items.map((item, itemIndex) => (
-                              <div
-                                key={itemIndex}
-                                className={`mb-1 pl-2 py-6 ${itemIndex < group.items.length - 1 ? "border-b border-dashed" : ""
-                                  }`}
-                              >
-                                <div>Aktif</div>
-                              </div>
-                            ))}
-                          </td>
-                          <td className="p-2 md:p-3 border md:table-cell hidden">
-                            {group.items.map((item, itemIndex) => (
-                              <div
-                                key={itemIndex}
-                                className={`mb-1 pl-2 py-2 ${itemIndex < group.items.length - 1 ? "border-b border-dashed" : ""
-                                  }`}
-                              >
-                                <Button href="#" className="text-white bg-blue-500 p-2 border rounded-md mx-1">
-                                  <FaEdit className="w-4 h-4" title="Edit Data" />
-                                </Button>
-                                <Button
-                                  className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md mx-1"
-                                  title="Mutasi"
-                                  onClick={() => openModal(item)}
-                                >
-                                  <FaExchangeAlt className="w-4 h-4" />
-                                </Button>
-                                <Button href="#" className="text-white bg-red-500 p-2 border rounded-md mx-1">
-                                  <FaExclamationTriangle className="w-4 h-4" title="Lapor" />
-                                </Button>
-                                <Button
-                                  href={`https://wa.me/${item.nomorHp}`}
-                                  className="text-white bg-green-500 p-2 border rounded-md mx-1"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  <FaWhatsapp className="w-4 h-4" title="WA" />
-                                </Button>
+                                <span className="font-bold text-sm">
+                                  {item.namaLengkap}
+                                </span>{" "}
+                                / {item.npaPgri}
                               </div>
                             ))}
                           </td>
                         </tr>
-
-                        {/* Mobile View Row Expansion */}
-                        {expandedIndex === groupIndex && (
-                          <tr className="md:hidden">
-                            <td colSpan="7" className="p-2 border">
-                              {group.items.map((item, itemIndex) => (
-                                <div
-                                  key={itemIndex}
-                                  className={`mb-1 py-6 pl-2 ${itemIndex < group.items.length - 1 ? "border-b border-dashed" : ""
-                                    }`}
-                                >
-                                  {itemIndex + 1}.{" "}
-                                  <span className="font-bold text-sm">{item.namaLengkap}</span> /{" "}
-                                  {item.npaPgri}
-                                </div>
-                              ))}
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-              <div className="flex justify-end items-center mb-4">
-                {totalItems > maxItems && (
-                  <>
-                    <Button
-                      onClick={handlePreviousPage}
-                      disabled={currentPage === 1}
-                      className="mr-2"
-                    >
-                      Previous
-                    </Button>
-                    <div className="flex items-center">
-                      {totalPages > 1 && (
-                        <ul className="flex space-x-1">
-                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
-                            <li key={number}>
-                              <Button
-                                onClick={() => handlePageClick(number)}
-                                className={`mx-1 px-4 py-2 border rounded-md ${currentPage === number ? "bg-blue-500 text-white" : "bg-white text-black"}`}
-                              >
-                                {number}
-                              </Button>
-                            </li>
-                          ))}
-                        </ul>
                       )}
-                    </div>
-                    <Button
-                      onClick={handleNextPage}
-                      disabled={currentPage === totalPages}
-                      className="ml-2"
-                    >
-                      Next
-                    </Button>
-                  </>
-                )}
-              </div>
-
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+            <div className="flex justify-end items-center mb-4">
+              {totalItems > maxItems && (
+                <>
+                  <Button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="mr-2"
+                  >
+                    Previous
+                  </Button>
+                  <div className="flex items-center">
+                    {totalPages > 1 && (
+                      <ul className="flex space-x-1">
+                        {Array.from(
+                          { length: totalPages },
+                          (_, i) => i + 1
+                        ).map((number) => (
+                          <li key={number}>
+                            <Button
+                              onClick={() => handlePageClick(number)}
+                              className={`mx-1 px-4 py-2 border rounded-md ${
+                                currentPage === number
+                                  ? "bg-blue-500 text-white"
+                                  : "bg-white text-black"
+                              }`}
+                            >
+                              {number}
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <Button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="ml-2"
+                  >
+                    Next
+                  </Button>
+                </>
+              )}
             </div>
+          </div>
           {/* </div> */}
 
           {/* Modal for Mutation Actions */}
@@ -851,7 +926,9 @@ function DataAnggota() {
                   className="w-full bg-teal-700 hover:bg-teal-500"
                   onClick={() => handlePindahCabangClick()}
                 >
-                  {isCabangEnabled ? "Konfirmasi Pindah Cabang" : "Pindah Cabang"}
+                  {isCabangEnabled
+                    ? "Konfirmasi Pindah Cabang"
+                    : "Pindah Cabang"}
                 </Button>
                 <Button
                   className="w-full bg-teal-700 hover:bg-teal-500"

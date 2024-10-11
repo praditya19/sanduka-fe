@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "https://886f-103-90-210-146.ngrok-free.app",
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
@@ -264,7 +264,9 @@ const submitReport = async (reportData) => {
 
 const getRekapAnggota = async (cabang) => {
   try {
-    const response = await axiosClient.get(`/api/rekap-anggota/by-cabang?cabang=${cabang}`);
+    const response = await axiosClient.get(
+      `/api/rekap-anggota/by-cabang?cabang=${cabang}`
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching rekap anggota:", error);
@@ -393,20 +395,23 @@ const getCalculateSandukaAll = async (bulan, tahun) => {
   try {
     // Dapatkan bulan dan tahun saat ini jika tidak diberikan
     const today = new Date();
-    const currentMonth = today.toLocaleString('default', { month: 'long' }); // e.g., "September"
+    const currentMonth = today.toLocaleString("default", { month: "long" }); // e.g., "September"
     const currentYear = today.getFullYear(); // e.g., 2024
 
     // Gunakan bulan dan tahun saat ini jika bulan atau tahun tidak diberikan
-    const xbulan = bulan || currentMonth; 
+    const xbulan = bulan || currentMonth;
     const xtahun = tahun || currentYear;
 
     // Lakukan request ke API dengan parameter bulan dan tahun yang telah diset
-    const response = await axiosClient.get("/api/calculate-sanduka/cabang-all", {
-      params: {
-        xbulan: xbulan, // Parameter bulan
-        xtahun: xtahun, // Parameter tahun
-      },
-    });
+    const response = await axiosClient.get(
+      "/api/calculate-sanduka/cabang-all",
+      {
+        params: {
+          xbulan: xbulan, // Parameter bulan
+          xtahun: xtahun, // Parameter tahun
+        },
+      }
+    );
 
     // Kembalikan data jika sukses
     return response.data;
@@ -421,7 +426,14 @@ const getCalculateSandukaAll = async (bulan, tahun) => {
 // Home start
 const getTableIuran = async (bulan, tahun, cabang) => {
   try {
+<<<<<<< HEAD
     const response = await axiosClient.get(`/api/iuran/total-sumbangan?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`);
+=======
+    const response = await axiosClient.get(
+      `/api/iuran/total-sumbangan?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
+    );
+    console.log("Data total sumbangan:", response.data); // Cetak data ke console
+>>>>>>> 2d6ff8d9a48e2b2d2d1dbd7248880ff9365e5dfa
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching total sumbangan:", error);
@@ -461,13 +473,15 @@ const getTotalAnggota = async () => {
 };
 const getIuranByFilter = async (iuran) => {
   try {
-    const response = await axiosClient.get(`/api/defaultIuran/filter?iuran=${iuran}`);
+    const response = await axiosClient.get(
+      `/api/defaultIuran/filter?iuran=${iuran}`
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching iuran by filter:", error);
     throw error;
   }
-};  
+};
 
 const createIuranData = async (payload) => {
   try {
@@ -500,19 +514,26 @@ const createDaspenData = async (payload) => {
   }
 };
 // (Target Daspen)
-  const createTargetDaspen = async (payload) => {
-    try {
-      const response = await axiosClient.post("/api/target-daspen", payload);
-      return response.data; // Return the data from the response
-    } catch (error) {
-      console.error("Error creating data target daspen :", error);
-      throw error; // Throw the error to handle it elsewhere
-    }
+const createTargetDaspen = async (payload) => {
+  try {
+    const response = await axiosClient.post("/api/target-daspen", payload);
+    return response.data; // Return the data from the response
+  } catch (error) {
+    console.error("Error creating data target daspen :", error);
+    throw error; // Throw the error to handle it elsewhere
+  }
 };
 // Table Daspen
 const getTableDaspen = async (bulan, tahun, cabang) => {
   try {
+<<<<<<< HEAD
     const response = await axiosClient.get(`/api/target-daspen/summary?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`);
+=======
+    const response = await axiosClient.get(
+      `/api/target-daspen/summary?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
+    );
+    console.log("Data total sumbangan:", response.data); // Cetak data ke console
+>>>>>>> 2d6ff8d9a48e2b2d2d1dbd7248880ff9365e5dfa
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching total sumbangan:", error);
@@ -541,7 +562,14 @@ const createTargetDerap = async (payload) => {
 };
 const getTableDerap = async (bulan, tahun, cabang) => {
   try {
+<<<<<<< HEAD
     const response = await axiosClient.get(`/api/target-derap/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`);
+=======
+    const response = await axiosClient.get(
+      `/api/target-derap/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
+    );
+    console.log("Data total Derap:", response.data); // Cetak data ke console
+>>>>>>> 2d6ff8d9a48e2b2d2d1dbd7248880ff9365e5dfa
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching total sumbangan:", error);
@@ -570,7 +598,14 @@ const createTargetKalender = async (payload) => {
 };
 const getTableKalender = async (bulan, tahun, cabang) => {
   try {
+<<<<<<< HEAD
     const response = await axiosClient.get(`/api/target-kalender/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`);
+=======
+    const response = await axiosClient.get(
+      `/api/target-kalender/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
+    );
+    console.log("Data total Kalender:", response.data); // Cetak data ke console
+>>>>>>> 2d6ff8d9a48e2b2d2d1dbd7248880ff9365e5dfa
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching total Kalender:", error);
@@ -631,7 +666,9 @@ const getDataLapor = async () => {
 // start
 const getRekapAnggotaByCabang = async (cabang) => {
   try {
-    const response = await axiosClient.get(`/api/rekap-anggota/by-cabang?cabang=${cabang}`);
+    const response = await axiosClient.get(
+      `/api/rekap-anggota/by-cabang?cabang=${cabang}`
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching rekap anggota:", error);
@@ -697,9 +734,13 @@ export default {
   getTableKalender,
   createKalenderData,
   createTargetKalender,
+<<<<<<< HEAD
   getTotalAnggota,
   getTablePemasukanSanduka,
   createPembayaranSanduka,
   getDataLapor,
   getRekapLaporSanduka,
 };
+=======
+};
+>>>>>>> 2d6ff8d9a48e2b2d2d1dbd7248880ff9365e5dfa
