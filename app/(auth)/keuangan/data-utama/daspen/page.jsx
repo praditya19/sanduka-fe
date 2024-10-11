@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
@@ -32,7 +32,7 @@ export default function Daspen() {
   const [tableData, setTableData] = useState([]);
   const [bulanList, setBulanList] = useState([]); // State untuk menyimpan daftar bulan
   const [selectedBulan, setSelectedBulan] = useState(""); // State untuk bulan yang dipilih
-
+  const tableRef = useRef();
   const currentYear = new Date().getFullYear();
   const startYear = 2020;
 
@@ -102,6 +102,20 @@ export default function Daspen() {
 
     fetchBulan(); // Panggil fungsi ketika komponen pertama kali dimuat
   }, []);
+
+  const printTable = () => {
+    const printContent = tableRef.current;
+    const originalContent = document.body.innerHTML;
+    
+    // Temporarily replace body content with table content
+    document.body.innerHTML = printContent.innerHTML;
+
+    window.print(); // Trigger the print dialog
+
+    // Restore the original content after printing
+    document.body.innerHTML = originalContent;
+    window.location.reload(); // Refresh the page to re-apply React events
+  };
 
   // Ambil data dari database ketika komponen di-mount
   useEffect(() => {
@@ -664,13 +678,14 @@ export default function Daspen() {
                 <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
                   Transaksi Juli 2024
                 </h1>
-                <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out mt-3 mr-6 w-24">
+                <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out mt-3 mr-6 w-24"
+                onClick={printTable}>
                   Cetak
                 </Button>
               </div>
             </div>
 
-            <div className="overflow-x-auto">
+            <div ref={tableRef} className="overflow-x-auto">
               <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
                   <tr>

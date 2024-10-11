@@ -422,7 +422,6 @@ const getCalculateSandukaAll = async (bulan, tahun) => {
 const getTableIuran = async (bulan, tahun, cabang) => {
   try {
     const response = await axiosClient.get(`/api/iuran/total-sumbangan?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`);
-    console.log("Data total sumbangan:", response.data); // Cetak data ke console
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching total sumbangan:", error);
@@ -433,7 +432,6 @@ const getTableIuran = async (bulan, tahun, cabang) => {
 const getSaldoSanduka = async () => {
   try {
     const response = await axiosClient.get("/api/sanduka/saldo-sanduka");
-    console.log("Data saldo sanduka:", response.data); // Cetak data ke console
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching saldo sanduka:", error);
@@ -444,7 +442,6 @@ const getSaldoSanduka = async () => {
 const getSaldoOrganisasi = async () => {
   try {
     const response = await axiosClient.get("/api/sanduka/saldo-organisasi");
-    console.log("Data saldo organisasi:", response.data); // Cetak data ke console
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching saldo organisasi:", error);
@@ -453,6 +450,15 @@ const getSaldoOrganisasi = async () => {
 };
 // end
 // START IURAN PGRI
+const getTotalAnggota = async () => {
+  try {
+    const response = await axiosClient.get("/api/iuran/total-anggota");
+    return response.data; // Kembalikan data yang didapat dari API
+  } catch (error) {
+    console.error("Error fetching total anggota:", error);
+    throw error;
+  }
+};
 const getIuranByFilter = async (iuran) => {
   try {
     const response = await axiosClient.get(`/api/defaultIuran/filter?iuran=${iuran}`);
@@ -507,7 +513,6 @@ const createDaspenData = async (payload) => {
 const getTableDaspen = async (bulan, tahun, cabang) => {
   try {
     const response = await axiosClient.get(`/api/target-daspen/summary?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`);
-    console.log("Data total sumbangan:", response.data); // Cetak data ke console
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching total sumbangan:", error);
@@ -537,7 +542,6 @@ const createTargetDerap = async (payload) => {
 const getTableDerap = async (bulan, tahun, cabang) => {
   try {
     const response = await axiosClient.get(`/api/target-derap/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`);
-    console.log("Data total Derap:", response.data); // Cetak data ke console
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching total sumbangan:", error);
@@ -567,7 +571,6 @@ const createTargetKalender = async (payload) => {
 const getTableKalender = async (bulan, tahun, cabang) => {
   try {
     const response = await axiosClient.get(`/api/target-kalender/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`);
-    console.log("Data total Kalender:", response.data); // Cetak data ke console
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching total Kalender:", error);
@@ -575,6 +578,55 @@ const getTableKalender = async (bulan, tahun, cabang) => {
   }
 };
 // END
+
+// Sanduka
+// Pemasukan & Pengeluaran Sanduka
+const getTablePemasukanSanduka = async (month, year) => {
+  try {
+    const response = await axiosClient.get(`/api/uang-masuk-keluar/tabel?month=${month}&year=${year}`);
+    return response.data; // Kembalikan data yang didapat dari API
+  } catch (error) {
+    console.error("Error fetching Uang Masuk Keluar:", error);
+    throw error;
+  }
+};
+const createPembayaranSanduka = async (payload) => {
+  try {
+    const response = await axiosClient.post("/api/uang-masuk-keluar", payload);
+    return response.data; // Return the data from the response
+  } catch (error) {
+    console.error("Error creating pembayaran sanduka data:", error);
+    throw error; // Throw the error to handle it elsewhere
+  }
+};
+// Rekap Lapor Sanduka
+const getRekapLaporSanduka = async () => {
+  try {
+    const response = await axiosClient.get("/api/rekap-lapor-sanduka/diterima"); // Ganti dengan endpoint yang sesuai
+    console.log("Data Rekap Lapor berhasil diambil:", response.data); // Munculkan data di konsol
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching Data Lapor:", error);
+    throw error;
+  }
+};
+// end
+// Data Lapor
+const getDataLapor = async () => {
+  try {
+    const response = await axiosClient.get("/api/notifikasi/data-terlapor"); // Ganti dengan endpoint yang sesuai
+    console.log("Data Lapor berhasil diambil:", response.data); // Munculkan data di konsol
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching Data Lapor:", error);
+    throw error;
+  }
+};
+
+// end
+// END
+
+
 // REKAP ANGGOTA
 // start
 const getRekapAnggotaByCabang = async (cabang) => {
@@ -645,4 +697,9 @@ export default {
   getTableKalender,
   createKalenderData,
   createTargetKalender,
+  getTotalAnggota,
+  getTablePemasukanSanduka,
+  createPembayaranSanduka,
+  getDataLapor,
+  getRekapLaporSanduka,
 };

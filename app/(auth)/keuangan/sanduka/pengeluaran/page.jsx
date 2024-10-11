@@ -3,116 +3,204 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
-import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
+import GlobalApi from "@/app/_utils/GlobalApi";
+import toast, { Toaster } from "react-hot-toast";
 
 function Pengeluaran() {
+  const tableRef = useRef();
+  const [transactions, setTransactions] = useState([]);
+  const [bulanList, setBulanList] = useState([]);
+  const currentYear = new Date().getFullYear();
+  const startYear = 2020;
+  const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
+  const [selectedBulan, setSelectedBulan] = useState("");
   const [formValues, setFormValues] = useState({
     noBukti: "",
-    tanggalTransaksi: "01/03/2020",
-    posPenerimaan: "Sumbangan Sanduka",
-    jenisPenerimaan: "Bank",
+    tanggalTransaksi: "", // Automatically set current date
+    posPenerimaan: "",
+    jenisPenerimaan: "",
     cabang: "",
     setoranBulan: "",
     nominal: "",
+    bulanSantunan: "", // Make sure to add this if needed
+    yangMeninggal: "", // Add this if it's required
+    namaPenerima: "", // Add this if it's required
     keterangan: "",
   });
-  const [transactions, setTransactions] = useState([
-    {
-      id: 1,
-      date: "Senin, 01/07/2024",
-      noBukti: "01-0000001",
-      description: "Saldo Awal",
-      debit: "302946650",
-      credit: "",
-      balance: "302946650",
-      checked: false,
-    },
-    {
-      id: 2,
-      date: "Senin, 15/07/2024",
-      noBukti: "11-0000184",
-      description: "Santunan -atas nama KUSNIATI (DONOROJO) diterima",
-      debit: "",
-      credit: "2500000",
-      balance: "300446650",
-      checked: false,
-    },
-    {
-      id: 3,
-      date: "Senin, 15/07/2024",
-      noBukti: "11-0000186",
-      description: "Santunan -atas nama NUNIK LUDFIANA HADI (TAHUNAN) diterima",
-      debit: "",
-      credit: "2500000",
-      balance: "297946650",
-      checked: false,
-    },
-    {
-      id: 4,
-      date: "Senin, 15/07/2024",
-      noBukti: "11-0000187",
-      description: "Santunan -atas nama NUR KHALIM (KALINYAMATAN) diterima",
-      debit: "",
-      credit: "2500000",
-      balance: "295446650",
-      checked: false,
-    },
-    {
-      id: 5,
-      date: "Senin, 15/07/2024",
-      noBukti: "11-0000188",
-      description:
-        "Santunan -atas nama SUHARTO (CABSUS DINAS PENDIDIKAN) diterima",
-      debit: "",
-      credit: "2500000",
-      balance: "292946650",
-      checked: false,
-    },
-    {
-      id: 6,
-      date: "Senin, 15/07/2024",
-      noBukti: "11-0000189",
-      description: "Santunan -atas nama UTSIYAH PUJI RAHAYU (JEPARA) diterima",
-      debit: "",
-      credit: "2500000",
-      balance: "290446650",
-      checked: false,
-    },
-    {
-      id: 7,
-      date: "Selasa, 16/07/2024",
-      noBukti: "11-0000185",
-      description: "Santunan -atas nama MARDJONO (PECANGAAN) diterima",
-      debit: "",
-      credit: "2500000",
-      balance: "287946650",
-      checked: false,
-    },
-  ]);
+
+  const [filteredNames, setFilteredNames] = useState([]);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const dropdownRef = useRef(null);
+
   const [selectAll, setSelectAll] = useState(false);
   const handleChange = (e) => {
-    setFormValues({
-      ...formValues,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      [name]: value,
+    }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formValues);
+    try {
+      const dataToSend = {
+        noBukti: formValues.noBukti,
+        tanggalTransaksi: formValues.tanggalTransaksi,
+        posTransaksi: formValues.posPenerimaan, // posPenerimaan mengacu pada posTransaksi di data yang dikirim
+        masukKe: formValues.jenisPenerimaan, // jenisPenerimaan mengacu pada masukKe
+        cabang: formValues.cabang,
+        bulan: formValues.setoranBulan, // Use the month directly
+        debet: formValues.nominal,
+        kredit: formValues.nominal, // Anda bisa menyesuaikan ini
+        bulanSantunan: formValues.bulanSantunan,
+        yangMeninggal: formValues.yangMeninggal, // Contoh, bisa diganti sesuai input lain
+        namaPenerima: formValues.namaPenerima, // Contoh, bisa diganti sesuai input lain
+        keterangan: formValues.keterangan,
+        jenisPembayaran: "Sanduka",
+      };
+
+      const response = await GlobalApi.createPembayaranSanduka(dataToSend);
+      toast.success("Data berhasil disimpan!");
+      // setTimeout(() => {
+      //   window.location.reload(); // Reloads the current page
+      // }, 1500);
+      // Reset form atau lakukan aksi lain setelah berhasil submit
+    } catch (error) {
+      toast.error(`Gagal menyimpan data: ${error.message}`);
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      if (selectedBulan && newSelectedYear) {
+        // Ensure both filters are selected
+        const data = await GlobalApi.getTablePemasukanSanduka(
+          selectedBulan,
+          newSelectedYear
+        );
+        setTransactions(data); // Set fetched data into transactions state
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  // Fetch data whenever selectedBulan or newSelectedYear changes
+  useEffect(() => {
+    fetchData();
+  }, [selectedBulan, newSelectedYear]);
+
+  useEffect(() => {
+    // Get the current date
+    const today = new Date();
+
+    // Format the date as "Tanggal Bulan Tahun"
+    const options = { day: "numeric", month: "long", year: "numeric" };
+    const formattedDate = today.toLocaleDateString("id-ID", options); // Use 'id-ID' for Indonesian locale
+
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      tanggalTransaksi: formattedDate,
+    }));
+  }, []);
+
+  const handleBulanChange = (e) => {
+    setSelectedBulan(e.target.value);
+  };
+
+  const years = Array.from(
+    { length: currentYear - startYear + 1 },
+    (_, index) => startYear + index
+  );
+
+  useEffect(() => {
+    const fetchBulan = async () => {
+      try {
+        const response = await GlobalApi.getBulan();
+        setBulanList(response.data); // Simpan data bulan dari API ke state
+      } catch (error) {
+        console.error("Error fetching bulan:", error);
+      }
+    };
+
+    fetchBulan(); // Panggil fungsi ketika komponen pertama kali dimuat
+  }, []);
+
+  const handleSearch = async (e) => {
+    const value = e.target.value;
+    setFormValues((prevValues) => ({ ...prevValues, yangMeninggal: value }));
+
+    if (value === "") {
+      setFilteredNames([]);
+      setIsDropdownVisible(false); // Sembunyikan dropdown jika input kosong
+      return;
+    }
+
+    try {
+      const response = await GlobalApi.searchUsers(value);
+      const allNames = response.data;
+
+      const filtered = allNames.filter((data) =>
+        data.namaLengkap.toLowerCase().includes(value.toLowerCase())
+      );
+
+      setFilteredNames(filtered);
+      setIsDropdownVisible(true); // Tampilkan dropdown jika ada hasil pencarian
+    } catch (error) {
+      console.error("Error fetching names:", error);
+    }
+  };
+
+  const printTable = () => {
+    const printContent = tableRef.current;
+    const originalContent = document.body.innerHTML;
+    
+    // Temporarily replace body content with table content
+    document.body.innerHTML = printContent.innerHTML;
+
+    window.print(); // Trigger the print dialog
+
+    // Restore the original content after printing
+    document.body.innerHTML = originalContent;
+    window.location.reload(); // Refresh the page to re-apply React events
+  };
+
+  useEffect(() => {
+    // Function to handle clicks outside the dropdown
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownVisible(false); // Hide dropdown when clicking outside
+      }
+    };
+
+    // Add event listener to the document to capture clicks outside the dropdown
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Cleanup event listener when component is unmounted
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleSelectName = (selectedName) => {
+    setFormValues((prevFormValues) => ({
+      ...prevFormValues,
+      yangMeninggal: selectedName,
+    }));
+    setFilteredNames([]); // Clear the dropdown after selection
   };
 
   const handleReset = () => {
     setFormValues({
       noBukti: "",
-      tanggalTransaksi: "01/03/2020",
-      posPenerimaan: "Sumbangan Sanduka",
-      jenisPenerimaan: "Bank",
+      posPenerimaan: "",
+      jenisPenerimaan: "",
       cabang: "",
       setoranBulan: "",
       nominal: "",
@@ -216,10 +304,10 @@ function Pengeluaran() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
-    
-    return (
+
+  return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-    {isMobile ? (
+      {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
             {/* Back Button and Title */}
@@ -236,19 +324,19 @@ function Pengeluaran() {
         </header>
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-        <div className="container mx-auto flex items-center justify-between">
-          {/* Back Button and Title */}
-          <div className="flex items-center">
-            <FontAwesomeIcon
-              icon={faArrowLeft}
-              size="sm"
-              onClick={handleBackClick}
-              className="cursor-pointer mr-4"
-            />
-            <h1 className="text-base">Pengeluaran Sanduka</h1>
+          <div className="container mx-auto flex items-center justify-between">
+            {/* Back Button and Title */}
+            <div className="flex items-center">
+              <FontAwesomeIcon
+                icon={faArrowLeft}
+                size="sm"
+                onClick={handleBackClick}
+                className="cursor-pointer mr-4"
+              />
+              <h1 className="text-base">Pengeluaran Sanduka</h1>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
       )}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -258,6 +346,7 @@ function Pengeluaran() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
+          <Toaster />
           <div className="container mx-auto p-6">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
               <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
@@ -278,8 +367,6 @@ function Pengeluaran() {
                     name="noBukti"
                     value={formValues.noBukti}
                     onChange={handleChange}
-                    placeholder="No Bukti Otomatis"
-                    readOnly
                   />
                 </div>
                 <div className="flex flex-col">
@@ -292,9 +379,11 @@ function Pengeluaran() {
                   <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="tanggalTransaksi"
-                    type="date"
+                    type="text"
                     name="tanggalTransaksi"
                     value={formValues.tanggalTransaksi}
+                    onChange={handleChange}
+                    readOnly
                   />
                 </div>
                 <div className="flex flex-col">
@@ -311,6 +400,7 @@ function Pengeluaran() {
                     value={formValues.posPenerimaan}
                     onChange={handleChange}
                   >
+                    <option value="">Pilih</option>
                     <option value="sumbangan sanduka">
                       Pengeluaran Sanduka
                     </option>
@@ -327,12 +417,13 @@ function Pengeluaran() {
                   </Label>
                   <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="tanggalTransaksi"
+                    id="namaPenerima"
                     type="text"
-                    name="tanggalTransaksi"
-                    value={formValues.tanggalTransaksi}
+                    name="namaPenerima"
+                    value={formValues.namaPenerima}
+                    onChange={handleChange}
                   />
-                  <Button>Kwitansi</Button>
+                  <Button className="mt-2">Kwitansi</Button>
                 </div>
                 <div className="flex flex-col">
                   <Label
@@ -343,30 +434,56 @@ function Pengeluaran() {
                   </Label>
                   <select
                     className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-5"
-                    id="cabang"
-                    name="cabang"
-                    value={formValues.cabang}
+                    id="bulan"
+                    name="bulan"
+                    value={formValues.bulan}
                     onChange={handleChange}
                   >
-                    <option>-- Bulan Lapor --</option>
+                    <option>Bulan Lapor</option>
+                    {bulanList.map((bulan) => (
+                      <option key={bulan.angkaBulan} value={bulan.namaBulan}>
+                        {bulan.namaBulan}
+                      </option>
+                    ))}
                   </select>
+                  <div className="relative" ref={dropdownRef}>
+                    <input
+                      type="text"
+                      className="mb-5 w-full shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent "
+                      id="yangMeninggal"
+                      name="yangMeninggal"
+                      value={formValues.yangMeninggal}
+                      onChange={handleSearch}
+                      placeholder="Cari nama yang meninggal"
+                    />
+
+                    {filteredNames.length > 0 && isDropdownVisible && (
+                      <ul className="absolute z-10 shadow-lg bg-white border border-gray-300 rounded-md w-full max-h-48 overflow-y-auto -mt-3">
+                        {filteredNames.map((name) => (
+                          <li
+                            key={name.id}
+                            className="px-4 py-2 hover:bg-blue-100 cursor-pointer"
+                            onClick={() => handleSelectName(name.namaLengkap)} // Select the name from dropdown
+                          >
+                            {name.namaLengkap}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                   <select
                     className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-5"
-                    id="cabang"
-                    name="cabang"
-                    value={formValues.cabang}
+                    id="tahun"
+                    name="tahun"
+                    value={formValues.bulan}
                     onChange={handleChange}
                   >
-                    <option>-- Nama Yang Meninggal --</option>
-                  </select>
-                  <select
-                    className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-5"
-                    id="cabang"
-                    name="cabang"
-                    value={formValues.cabang}
-                    onChange={handleChange}
-                  >
-                    <option>-- Tahun Lapor --</option>
+                    <option value="">Tahun Lapor</option>
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="flex flex-col">
@@ -422,73 +539,97 @@ function Pengeluaran() {
             <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
               <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
                 <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-                  <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                    <option>Juli</option>
-                    <option>Agustus</option>
-                    <option>September</option>
+                  <select
+                    className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                    value={selectedBulan}
+                    onChange={handleBulanChange}
+                  >
+                    <option value="">Pilih Bulan</option>
+                    {bulanList.map((bulan) => (
+                      <option key={bulan.angkaBulan} value={bulan.id}>
+                        {bulan.namaBulan}
+                      </option>
+                    ))}
                   </select>
-                  <select className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                    <option>2023</option>
-                    <option>2024</option>
-                    <option>2025</option>
+                  <select
+                    className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                    id="tahunTable"
+                    value={newSelectedYear}
+                    onChange={(e) => setNewSelectedYear(e.target.value)}
+                  >
+                    <option value="">Pilih Tahun</option>
+                    {/* Map through years array to create options */}
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-                  Transaksi Juli 2024
+                  Transaksi {selectedBulan} {newSelectedYear}
                 </h1>
                 <div className="flex justify-center space-x-4 mt-5 mr-10">
                   <Input
                     type="checkbox"
                     className="form-checkbox h-4 w-4 mt-3"
-                    checked={selectAll}
+                    // checked={selectAll}
                     onChange={handleSelectAll}
                   />
                   <Button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300">
                     Hapus
                   </Button>
-                  <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                  <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+                   onClick={printTable}>
                     Cetak
                   </Button>
                 </div>
               </div>
             </div>
 
-            <div className="overflow-x-auto">
+            <div ref={tableRef} className="overflow-x-auto">
               <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <thead className="text-sm text-black uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
                   <tr className="bg-gray-200 text-black text-center">
-                    <th className="px-6 py-3 font-semibold">No</th>
-                    <th className="px-6 py-3 font-semibold">Tgl Transaksi</th>
-                    <th className="px-6 py-3 font-semibold">No. Bukti</th>
-                    <th className="px-6 py-3 font-semibold">Uraian</th>
-                    <th className="px-6 py-3 font-semibold">Debet</th>
-                    <th className="px-6 py-3 font-semibold">Kredit</th>
-                    <th className="px-6 py-3 font-semibold">Saldo</th>
-                    <th className="px-6 py-3 font-semibold">Action</th>
+                    <th className="px-6 py-3 text-sm">No</th>
+                    <th className="px-6 py-3 text-sm">Tgl Transaksi</th>
+                    <th className="px-6 py-3 text-sm">No. Bukti</th>
+                    <th className="px-6 py-3 text-sm">Uraian</th>
+                    <th className="px-6 py-3 text-sm">Debet</th>
+                    <th className="px-6 py-3 text-sm">Kredit</th>
+                    <th className="px-6 py-3 text-sm">Saldo</th>
+                    <th className="px-6 py-3 text-sm">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.map((transaction) => (
+                  {transactions.map((transaction, index) => (
                     <tr
-                      key={transaction.id}
+                      key={index}
                       className={`border-b text-black text-center ${
                         transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
                       }`}
                     >
-                      <td className="px-6 py-4">{transaction.id}</td>
-                      <td className="px-6 py-4">{transaction.date}</td>
-                      <td className="px-6 py-4">{transaction.noBukti}</td>
-                      <td className="px-6 py-4">{transaction.description}</td>
-                      <td className="px-6 py-4">
-                        {formatCurrency(parseNumber(transaction.debit))}
+                      <td className="px-6 py-4 text-sm">{index + 1}</td>
+                      <td className="px-6 py-4 text-sm">
+                        {transaction["Tgl Transaksi"]}
                       </td>
-                      <td className="px-6 py-4">
-                        {formatCurrency(parseNumber(transaction.credit))}
+                      <td className="px-6 py-4 text-sm">{transaction["No. Bukti"]}</td>
+                      <td className="px-6 py-4 text-sm">{transaction["Uraian"]}</td>
+                      <td className="px-6 py-4 text-sm">
+                        {formatCurrency(transaction["Debet"])}
                       </td>
-                      <td className="px-6 py-4">
-                        {formatCurrency(parseNumber(transaction.balance))}
+                      <td className="px-6 py-4 text-sm">
+                        {formatCurrency(transaction["Kredit"])}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-sm">
+                        {formatCurrency(
+                          transaction["Debet"] && transaction["Kredit"]
+                            ? Number(transaction["Debet"]) -
+                                Number(transaction["Kredit"])
+                            : transaction["Debet"] || transaction["Kredit"]
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
                         <div className="flex items-center space-x-2">
                           <Input
                             type="checkbox"
@@ -503,16 +644,37 @@ function Pengeluaran() {
                       </td>
                     </tr>
                   ))}
-                  <tr className="bg-gray-200 font-bold text-black text-center">
+                  <tr className="bg-gray-200 text-base text-black text-center">
                     <td className="px-6 py-4 text-left" colSpan="4">
                       TOTAL
                     </td>
-                    <td className="px-6 py-4">{formatCurrency(totalDebit)}</td>
-                    <td className="px-6 py-4">{formatCurrency(totalCredit)}</td>
-                    <td className="px-6 py-4">
-                      {formatCurrency(totalBalance)}
+                    <td className="px-6 py-4 text-sm">
+                      {/* Implementasikan logika untuk menghitung total debet jika diperlukan */}
+                      {formatCurrency(transactions.reduce(
+                        (total, transaction) =>
+                          total + Number(transaction["Debet"] || 0),
+                        0
+                      ))}
                     </td>
-                    <td className="px-6 py-4"></td>
+                    <td className="px-6 py-4 text-sm">
+                      {/* Implementasikan logika untuk menghitung total kredit jika diperlukan */}
+                      {formatCurrency(transactions.reduce(
+                        (total, transaction) =>
+                          total + Number(transaction["Kredit"] || 0),
+                        0
+                      ))}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      {/* Implementasikan logika untuk menghitung total saldo jika diperlukan */}
+                      {formatCurrency(transactions.reduce(
+                        (total, transaction) =>
+                          total +
+                          (Number(transaction["Debet"]) -
+                            Number(transaction["Kredit"] || 0)),
+                        0
+                      ))}
+                    </td>
+                    <td className="px-6 py-4 text-sm"></td>
                   </tr>
                 </tbody>
               </table>

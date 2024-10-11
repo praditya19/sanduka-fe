@@ -12,10 +12,12 @@ import toast, { Toaster } from "react-hot-toast";
 
 export default function Iuran() {
   // State variables
+  const [totalAnggota, setTotalAnggota] = useState(null);
   const [iuranPB, setIuranPB] = useState("");
   const [iuranProvinsi, setIuranProvinsi] = useState("");
   const [iuranKabupaten, setIuranKabupaten] = useState("");
   const [iuranCabang, setIuranCabang] = useState("");
+  const [bulan, setBulan] = useState("");
   const [totalIuran, setTotalIuran] = useState("");
   const [sumbanganSanduka, setSumbanganSanduka] = useState("");
   const [totalSumbangan, setTotalSumbangan] = useState("");
@@ -39,6 +41,15 @@ export default function Iuran() {
 
   const currentYear = new Date().getFullYear();
   const startYear = 2020;
+
+  useEffect(() => {
+    const fetchTotalAnggota = async () => {
+      const response = await GlobalApi.getTotalAnggota(); // Memanggil API
+      setTotalAnggota(response); // Jika hanya ada 7231 di respons
+    };
+
+    fetchTotalAnggota(); // Panggil fungsi fetch
+  }, []);
 
   // Function to fetch data based on selected filters
   useEffect(() => {
@@ -105,11 +116,11 @@ export default function Iuran() {
   useEffect(() => {
     // Mengatur bulan dan tahun otomatis saat komponen dimuat
     const currentDate = new Date();
-    const currentMonth = currentDate.toLocaleString("default", {
+    const currentMonth = new Intl.DateTimeFormat("id-ID", {
       month: "long",
-    }); // Nama bulan
+    }).format(currentDate); // Nama bulan dalam bahasa Indonesia
     const currentYear = currentDate.getFullYear(); // Tahun
-    setBulanList(currentMonth);
+    setBulan(currentMonth);
     setTahun(currentYear);
   }, []);
 
@@ -494,7 +505,7 @@ export default function Iuran() {
 
                 <div className="bg-white p-4 rounded-lg shadow-md">
                   <h3 className="text-lg font-bold mb-2">
-                    Jumlah Anggota: 6938
+                    Jumlah Anggota: {totalAnggota}
                   </h3>
                   <h3 className="text-lg font-bold mb-2">
                     Setor Provinsi: Rp. 8.325.600

@@ -1,13 +1,12 @@
 "use client";
-import ReportCard from "@/app/_components/ReportCard";
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "@/app/_components/Sidebar";
+import Link from "next/link";
 
-
-export default function LaporCabang() {
+export default function Lapor() {
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
     setIsSidebarOpen(sidebarState);
@@ -15,7 +14,7 @@ export default function LaporCabang() {
 
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const router = useRouter();
+    const router = useRouter();
 
   const handleBackClick = () => {
     router.back();
@@ -52,7 +51,7 @@ export default function LaporCabang() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Pemasukan Sanduka</h1>
+              <h1 className="text-base">Laporan</h1>
             </div>
           </div>
         </header>
@@ -67,7 +66,7 @@ export default function LaporCabang() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Pemasukan Sanduka</h1>
+              <h1 className="text-base">Laporan</h1>
             </div>
           </div>
         </header>
@@ -80,14 +79,46 @@ export default function LaporCabang() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-            <h1 className="text-3xl font-bold text-green-700 mb-8 text-center mt-4">
-              DATA LAPOR
-            </h1>
-            <ReportCard />
+          <div className="container mx-auto p-6">
+            <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
+              <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
+                LAPORAN ORGANISASI
+              </h2>
+              <div className="grid grid-cols-2 gap-4">
+                <NavItem href="/keuangan/organisasi/lapor/target-realisasi">
+                  Target dan Realisasi
+                </NavItem>
+                <NavItem href="/keuangan/organisasi/lapor/lapor-pengeluaran">
+                  Laporan Pengeluaran
+                </NavItem>
+                <NavItem href="/keuangan/organisasi/lapor/lapor-pemasukan">
+                  Laporan Pemasukan
+                </NavItem>
+                <NavItem href="/keuangan/organisasi/lapor/laporan-pengeluaran-tahunan">
+                  Laporan Pengeluaran Tahunan
+                </NavItem>
+                <NavItem href="/keuangan/organisasi/lapor/laporan-pemasukan-tahunan">
+                  Laporan Pemasukan Tahunan
+                </NavItem>
+                <NavItem href="/keuangan/organisasi/lapor/laporan-akhir">
+                  Laporan Akhir (Saldo)
+                </NavItem>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function NavItem({ children, href }) {
+  return (
+    <Link
+      href={href}
+      className="bg-teal-600 text-white font-bold py-4 rounded flex items-center justify-center px-4 transform transition-transform duration-300 hover:scale-105"
+    >
+      {children}
+    </Link>
   );
 }
