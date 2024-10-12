@@ -82,25 +82,25 @@ export default function Lapor() {
           <div className="container mx-auto p-6">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
               <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
-                LAPORAN ORGANISASI
+                LAPORAN SANDUKA
               </h2>
               <div className="grid grid-cols-2 gap-4">
-                <NavItem href="/keuangan/organisasi/lapor/target-realisasi">
+                <NavItem href="/keuangan/sanduka/laporan/target-realisasi">
                   Target dan Realisasi
                 </NavItem>
-                <NavItem href="/keuangan/organisasi/lapor/lapor-pengeluaran">
+                <NavItem href="/keuangan/sanduka/laporan/lapor-pengeluaran">
                   Laporan Pengeluaran
                 </NavItem>
-                <NavItem href="/keuangan/organisasi/lapor/lapor-pemasukan">
+                <NavItem href="/keuangan/sanduka/laporan/lapor-pemasukan">
                   Laporan Pemasukan
                 </NavItem>
-                <NavItem href="/keuangan/organisasi/lapor/laporan-pengeluaran-tahunan">
+                <NavItem href="/keuangan/sanduka/laporan/laporan-pengeluaran-tahunan">
                   Laporan Pengeluaran Tahunan
                 </NavItem>
-                <NavItem href="/keuangan/organisasi/lapor/laporan-pemasukan-tahunan">
+                <NavItem href="/keuangan/sanduka/laporan/laporan-pemasukan-tahunan">
                   Laporan Pemasukan Tahunan
                 </NavItem>
-                <NavItem href="/keuangan/organisasi/lapor/laporan-akhir">
+                <NavItem href="/keuangan/sanduka/laporan/laporan-akhir">
                   Laporan Akhir (Saldo)
                 </NavItem>
               </div>

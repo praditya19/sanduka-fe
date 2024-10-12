@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: "https://886f-103-90-210-146.ngrok-free.app",
+  baseURL: "http://localhost:8080",
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
@@ -426,14 +426,9 @@ const getCalculateSandukaAll = async (bulan, tahun) => {
 // Home start
 const getTableIuran = async (bulan, tahun, cabang) => {
   try {
-<<<<<<< HEAD
-    const response = await axiosClient.get(`/api/iuran/total-sumbangan?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`);
-=======
     const response = await axiosClient.get(
       `/api/iuran/total-sumbangan?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
     );
-    console.log("Data total sumbangan:", response.data); // Cetak data ke console
->>>>>>> 2d6ff8d9a48e2b2d2d1dbd7248880ff9365e5dfa
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching total sumbangan:", error);
@@ -526,14 +521,9 @@ const createTargetDaspen = async (payload) => {
 // Table Daspen
 const getTableDaspen = async (bulan, tahun, cabang) => {
   try {
-<<<<<<< HEAD
-    const response = await axiosClient.get(`/api/target-daspen/summary?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`);
-=======
     const response = await axiosClient.get(
       `/api/target-daspen/summary?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
     );
-    console.log("Data total sumbangan:", response.data); // Cetak data ke console
->>>>>>> 2d6ff8d9a48e2b2d2d1dbd7248880ff9365e5dfa
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching total sumbangan:", error);
@@ -562,14 +552,9 @@ const createTargetDerap = async (payload) => {
 };
 const getTableDerap = async (bulan, tahun, cabang) => {
   try {
-<<<<<<< HEAD
-    const response = await axiosClient.get(`/api/target-derap/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`);
-=======
     const response = await axiosClient.get(
       `/api/target-derap/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
     );
-    console.log("Data total Derap:", response.data); // Cetak data ke console
->>>>>>> 2d6ff8d9a48e2b2d2d1dbd7248880ff9365e5dfa
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching total sumbangan:", error);
@@ -598,14 +583,9 @@ const createTargetKalender = async (payload) => {
 };
 const getTableKalender = async (bulan, tahun, cabang) => {
   try {
-<<<<<<< HEAD
-    const response = await axiosClient.get(`/api/target-kalender/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`);
-=======
     const response = await axiosClient.get(
       `/api/target-kalender/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
     );
-    console.log("Data total Kalender:", response.data); // Cetak data ke console
->>>>>>> 2d6ff8d9a48e2b2d2d1dbd7248880ff9365e5dfa
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching total Kalender:", error);
@@ -618,7 +598,9 @@ const getTableKalender = async (bulan, tahun, cabang) => {
 // Pemasukan & Pengeluaran Sanduka
 const getTablePemasukanSanduka = async (month, year) => {
   try {
-    const response = await axiosClient.get(`/api/uang-masuk-keluar/tabel?month=${month}&year=${year}`);
+    const response = await axiosClient.get(
+      `/api/uang-masuk-keluar/tabel?month=${month}&year=${year}`
+    );
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching Uang Masuk Keluar:", error);
@@ -635,9 +617,19 @@ const createPembayaranSanduka = async (payload) => {
   }
 };
 // Rekap Lapor Sanduka
-const getRekapLaporSanduka = async () => {
+const getRekapLaporDiterima = async () => {
   try {
     const response = await axiosClient.get("/api/rekap-lapor-sanduka/diterima"); // Ganti dengan endpoint yang sesuai
+    console.log("Data Rekap Lapor berhasil diambil:", response.data); // Munculkan data di konsol
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching Data Lapor:", error);
+    throw error;
+  }
+};
+const getRekapLaporBelom = async () => {
+  try {
+    const response = await axiosClient.get("/api/rekap-lapor-sanduka/belom-diterima"); // Ganti dengan endpoint yang sesuai
     console.log("Data Rekap Lapor berhasil diambil:", response.data); // Munculkan data di konsol
     return response.data;
   } catch (error) {
@@ -657,10 +649,51 @@ const getDataLapor = async () => {
     throw error;
   }
 };
-
 // end
-// END
+// Laporan Sanduka (TARGET DAN REALISASI)
+const getTableTargetRealisasi = async (
+  tahun,
+  bulan,
+  inputKecamatan,
+  bulanuangmasuk
+) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/target-kalender/tabel?bulan=${bulan}&tahun=${tahun}&inputKecamatan=${inputKecamatan}&bulanuangmasuk${bulanuangmasuk}`
+    );
+    return response.data; // Kembalikan data yang didapat dari API
+  } catch (error) {
+    console.error("Error fetching total Kalender:", error);
+    throw error;
+  }
+};
+// (Laporan Pemasukan Tahunan)
+const getLaporanPemasukanTahunan = async (tahun) => {
+  try {
+    const response = await axiosClient.get(
+      `api/laporan-pemasukan-tahunan?tahun=${tahun}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching laporan pemasukan tahunan:", error);
+    throw error;
+  }
+};
+// (Laporan Pengeluaran Tahunan)
+const getLaporanPengeluaranTahunan = async (year) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/laporan-pengeluaran-tahunan?year=${year}`
+    );
+    const data = response.data;
+    return data;
+  } catch (error) {
+    console.error("Error fetching laporan pengeluaran tahunan:", error);
+    throw error;
+  }
+};
 
+// END
 
 // REKAP ANGGOTA
 // start
@@ -734,13 +767,13 @@ export default {
   getTableKalender,
   createKalenderData,
   createTargetKalender,
-<<<<<<< HEAD
   getTotalAnggota,
   getTablePemasukanSanduka,
   createPembayaranSanduka,
   getDataLapor,
-  getRekapLaporSanduka,
+  getRekapLaporDiterima,
+  getRekapLaporBelom,
+  getTableTargetRealisasi,
+  getLaporanPemasukanTahunan,
+  getLaporanPengeluaranTahunan,
 };
-=======
-};
->>>>>>> 2d6ff8d9a48e2b2d2d1dbd7248880ff9365e5dfa

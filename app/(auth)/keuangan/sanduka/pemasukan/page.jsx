@@ -14,9 +14,9 @@ import toast, { Toaster } from "react-hot-toast";
 function Pemasukan() {
   const tableRef = useRef();
   const [transactions, setTransactions] = useState([]);
-  const [bulanList, setBulanList] = useState([]); // State untuk menyimpan data bulan
+  const [bulanList, setBulanList] = useState([]);
   const [cabangList, setCabangList] = useState([]);
-  const [selectedBulan, setSelectedBulan] = useState(""); // State untuk menyimpan bulan yang dipilih
+  const [selectedBulan, setSelectedBulan] = useState("");
   const currentYear = new Date().getFullYear();
   const startYear = 2020;
   const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
