@@ -2,7 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
@@ -34,6 +34,7 @@ function KalenderForm() {
     new Date().getFullYear()
   );
   const [bulanList, setBulanList] = useState([]);
+  const tableRef = useRef();
 
   // Function to fetch data based on selected filters
   useEffect(() => {
@@ -139,6 +140,20 @@ function KalenderForm() {
 
   const handleJumlahPesananChange = (e) => {
     setJumlahPesanan(e.target.value);
+  };
+
+  const printTable = () => {
+    const printContent = tableRef.current;
+    const originalContent = document.body.innerHTML;
+    
+    // Temporarily replace body content with table content
+    document.body.innerHTML = printContent.innerHTML;
+
+    window.print(); // Trigger the print dialog
+
+    // Restore the original content after printing
+    document.body.innerHTML = originalContent;
+    window.location.reload(); // Refresh the page to re-apply React events
   };
 
   const handleJenisCabangChange = (e) => {
@@ -550,13 +565,14 @@ function KalenderForm() {
                 <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
                   Transaksi {selectedBulanBaru} {newSelectedYear}
                 </h1>
-                <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out mt-3 mr-6 w-24">
+                <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out mt-3 mr-6 w-24"
+                 onClick={printTable}>
                   Cetak
                 </Button>
               </div>
             </div>
 
-            <div className="overflow-x-auto">
+            <div ref={tableRef} className="overflow-x-auto">
               <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
                   <tr>

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ const FormStep1 = ({
   setPelaporData,
   onNext,
 }) => {
+  const tableRef = useRef();
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredNames, setFilteredNames] = useState([]);
   const [cabangOptions, setCabangOptions] = useState([]);
@@ -38,6 +39,8 @@ const FormStep1 = ({
   today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
   const formattedDate = today.toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
   const [silaporData, setSilaporData] = useState(null); // Tambahkan useState
+  const dropdownRef = useRef(null);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -130,6 +133,12 @@ const FormStep1 = ({
     setSearchTerm(value);
     setFormData((prevFormData) => ({ ...prevFormData, memberName: value }));
 
+    if (value === "") {
+      setFilteredNames([]);
+      setIsDropdownVisible(false); // Sembunyikan dropdown jika input kosong
+      return;
+    }
+
     try {
       const response = await GlobalApi.searchUsers(value);
       const allNames = response.data;
@@ -139,6 +148,7 @@ const FormStep1 = ({
       );
 
       setFilteredNames(filtered);
+      setIsDropdownVisible(true);
     } catch (error) {
       console.error("Error fetching names:", error);
     }
@@ -184,6 +194,23 @@ const FormStep1 = ({
     setIsSidebarOpen(newSidebarState);
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
+
+  useEffect(() => {
+    // Function to handle clicks outside the dropdown
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownVisible(false); // Hide dropdown when clicking outside
+      }
+    };
+
+    // Add event listener to the document to capture clicks outside the dropdown
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Cleanup event listener when component is unmounted
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Corrected FilterSection usage of Dropdown components
   const FilterSection = ({
@@ -379,7 +406,7 @@ const FormStep1 = ({
                         ))}
                       </select>
                     </div>
-                    <div className="w-full flex flex-col items-start mt-3 relative">
+                    <div className="w-full flex flex-col items-start mt-3 relative" ref={dropdownRef}>
                       <Label className="block text-sm font-medium mb-1">
                         Nama Anggota
                       </Label>
@@ -393,8 +420,8 @@ const FormStep1 = ({
                         className="text-sm"
                       />
                       {/* Render dropdown list of filtered names */}
-                      {filteredNames.length > 0 && (
-                        <ul className="absolute left-0 w-full mt-16 bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                      {filteredNames.length > 0 && isDropdownVisible && (
+                        <ul className="absolute left-0 w-full mt-[70px] bg-white border border-gray-300 rounded-md shadow-lg z-10">
                           {filteredNames.map((data) => (
                             <li
                               key={data.id} // Use a unique key based on user ID
@@ -509,6 +536,12 @@ const Resume = ({
     }
   };
 
+  const toggleSidebar = () => {
+    const newSidebarState = !isSidebarOpen;
+    setIsSidebarOpen(newSidebarState);
+    localStorage.setItem("isSidebarOpen", newSidebarState);
+  };
+
   // Utility Functions
   const formatPhoneNumber = (number) => {
     if (number && number.startsWith("+62")) {
@@ -538,12 +571,6 @@ const Resume = ({
   // Event Handlers
   const handleResize = () => {
     setIsMobile(window.innerWidth <= 768);
-  };
-
-  const toggleSidebar = () => {
-    const newSidebarState = !isSidebarOpen;
-    setIsSidebarOpen(newSidebarState);
-    localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
   useEffect(() => {

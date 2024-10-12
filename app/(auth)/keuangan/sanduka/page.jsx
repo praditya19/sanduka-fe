@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Pemasukan from "../sanduka/pemasukan/page";
 import Pengeluaran from "./pengeluaran/page";
-import Kalender from "../data-utama/kalender/page";
+import Laporan from "../sanduka/laporan/page";
 import { useRouter } from "next/navigation";
 import { faArrowLeft, faBars } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -150,17 +150,17 @@ export default function Sanduka() {
               )}
             </li>
             <NavItem
-              isActive={activeTab === "kalender"}
-              onClick={() => handleTabChange("kalender")}
+              isActive={activeTab === "laporan"}
+              onClick={() => handleTabChange("laporan")}
             >
-              Kalender
+              Laporan
             </NavItem>
           </ul>
         </nav>
 
         {activeTab === "pemasukan" && <Pemasukan />}
         {activeTab === "pengeluaran" && <Pengeluaran />}
-        {activeTab === "kalender" && <Kalender />}
+        {activeTab === "laporan" && <Laporan />}
       </div>
     </div>
   );

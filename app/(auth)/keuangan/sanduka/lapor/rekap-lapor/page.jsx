@@ -1,71 +1,168 @@
-"use client"
+"use client";
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFilter, faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/app/_components/Sidebar";
-
-const data = [
-  {
-    id: 1,
-    dateLapor: "10:57:25am, Jumat, 28/10/2022",
-    pelapor: "ZAKARIA",
-    nik: "12320800057",
-    dataMeninggal: "Suryawan Adi Wibowo",
-    detail:
-      "Jepara, 17-06-1984\n 45 Tahun\n SMAN 1 TAHUNAN\n Demaan RT 01/RW 01 Jepara",
-    cabang: "JEPARA",
-    keterangan: "Meninggal hari, Selasa, 20-09-2022, Meninggal sakit Jantung",
-    diterimakan: "Rabu, 19/10/2022 Istri Almarhu\nSebesar Rp.2.500.000",
-  },
-  {
-    id: 2,
-    dateLapor: "10:57:25am, Jumat, 28/10/2022",
-    pelapor: "ZAKARIA",
-    nik: "12320800057",
-    dataMeninggal: "Suarto",
-    detail:
-      "Jepara, 17-06-1984\n 45 Tahun\n SMAN 1 TAHUNAN\n Demaan RT 01/RW 01 Jepara",
-    cabang: "JEPARA",
-    keterangan: "Meninggal hari, Selasa, 20-09-2022, Meninggal sakit Jantung",
-    diterimakan: "Rabu, 19/10/2022 Istri Almarhu\nSebesar Rp.2.500.000",
-  },
-  {
-    id: 3,
-    dateLapor: "10:57:25am, Jumat, 28/10/2022",
-    pelapor: "ZAKARIA",
-    nik: "12320800057",
-    dataMeninggal: "Santoso",
-    detail:
-      "Jepara, 17-06-1984\n 45 Tahun\n SMAN 1 TAHUNAN\n Demaan RT 01/RW 01 Jepara",
-    cabang: "JEPARA",
-    keterangan: "Meninggal hari, Selasa, 20-09-2022, Meninggal sakit Jantung",
-    diterimakan: "",
-  },
-];
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 const Page = () => {
   const [filter, setFilter] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [dataLapor, setDataLapor] = useState([]);
+  const [dataLaporDiterima, setDataLaporDiterima] = useState([]);
+  const [dataLaporBelum, setDataLaporBelum] = useState([]);
+  const [displayedDataLapor, setDisplayedDataLapor] = useState([]);
+  const [bulanList, setBulanList] = useState([]);
+  const [selectedBulan, setSelectedBulan] = useState("");
+  const [cabangList, setCabangList] = useState([]);
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const currentYear = new Date().getFullYear();
+  const startYear = 2020;
+  const [selectedYear, setSelectedYear] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
 
-  const handleFilterChange = (event) => {
-    setFilter(event.target.value);
+  // Diterima
+  useEffect(() => {
+    const fetchDataDiterima = async () => {
+      try {
+        const response = await GlobalApi.getRekapLaporDiterima();
+        const fetchedDataDiterima = response || []; // Gunakan response.data jika API mengembalikan data di bawah `data`
+        setDataLaporDiterima(fetchedDataDiterima); // Store data Diterima
+      } catch (error) {
+        console.error("Error fetching data lapor diterima:", error);
+      }
+    };
+
+    fetchDataDiterima();
+  }, []);
+  // Belum Diterima
+  useEffect(() => {
+    const fetchDataBelum = async () => {
+      try {
+        const response = await GlobalApi.getRekapLaporBelom();
+        const fetchedDataBelum = response || []; // Gunakan response.data jika API mengembalikan data di bawah `data`
+        setDataLaporBelum(fetchedDataBelum); // Store data Belum
+      } catch (error) {
+        console.error("Error fetching data lapor belum:", error);
+      }
+    };
+
+    fetchDataBelum();
+  }, []);
+
+  useEffect(() => {
+    const fetchCabangData = async () => {
+      try {
+        const response = await GlobalApi.getCabang();
+        setCabangList(response.data); // Assuming the response data is an array
+      } catch (error) {
+        console.error("Error fetching cabang data:", error);
+      }
+    };
+
+    fetchCabangData();
+  }, []);
+
+  useEffect(() => {
+    const fetchBulan = async () => {
+      try {
+        const response = await GlobalApi.getBulan();
+        setBulanList(response.data); // Simpan data bulan dari API ke state
+      } catch (error) {
+        console.error("Error fetching bulan:", error);
+      }
+    };
+
+    fetchBulan(); // Panggil fungsi ketika komponen pertama kali dimuat
+  }, []);
+
+  const years = Array.from(
+    { length: currentYear - startYear + 1 },
+    (_, index) => startYear + index
+  );
+
+  // Filter
+  // Fungsi untuk menangani perubahan pilihan cabang
+  const handleCabangChange = (e) => {
+    setSelectedCabang(e.target.value);
   };
 
-  const toggleFilters = () => {
-    setShowFilters(!showFilters);
+  const handleBulanChange = (e) => {
+    setSelectedBulan(e.target.value); // Angka bulan
   };
 
-  const filteredData = data.filter((item) => {
-    if (filter === "Belum") {
-      return !item.diterimakan;
-    } else if (filter === "Sudah") {
-      return item.diterimakan;
+  const handleYearChange = (e) => {
+    setSelectedYear(e.target.value); // Menyimpan nilai tahun yang dipilih
+  };
+
+  useEffect(() => {
+    if (filterStatus === "Terima") {
+      setDisplayedDataLapor(dataLaporDiterima); // Set data diterima
+    } else if (filterStatus === "Belum") {
+      setDisplayedDataLapor(dataLaporBelum); // Set data belum
     } else {
-      return true;
+      setDisplayedDataLapor([]); // Kosongkan jika tidak ada filter
     }
-  });
+  }, [filterStatus, dataLaporDiterima, dataLaporBelum]);
+
+  useEffect(() => {
+    // Menggabungkan semua filter status, cabang, bulan, dan tahun
+    const filterData = () => {
+      let filteredData = [];
+  
+      if (filterStatus === "Terima") {
+        filteredData = dataLaporDiterima;
+      } else if (filterStatus === "Belum") {
+        filteredData = dataLaporBelum;
+      } else {
+        filteredData = [...dataLaporDiterima, ...dataLaporBelum]; // Tampilkan semua data jika filterStatus kosong
+      }
+  
+      const finalFilteredData = filteredData.filter((item) => {
+        // Filter Cabang
+        const isCabangMatch = selectedCabang ? item.Cabang === selectedCabang : true;
+  
+        // Ekstrak tanggal lapor
+        let monthFromData = null;
+        let yearFromData = null;
+        if (item.Date_lapor) {
+          const dateMatch = item.Date_lapor.match(/\b\d{2}-\d{2}-\d{4}\b/);
+          if (dateMatch) {
+            const dateParts = dateMatch[0].split("-");
+            monthFromData = dateParts[1]; // Bulan
+            yearFromData = dateParts[2];  // Tahun
+          }
+        }
+  
+        // Filter Bulan dan Tahun
+        const isBulanMatch = selectedBulan ? monthFromData === selectedBulan : true;
+        const isYearMatch = selectedYear ? yearFromData === selectedYear : true;
+  
+        // Hasil akhir dari filter gabungan
+        return isCabangMatch && isBulanMatch && isYearMatch;
+      });
+  
+      setDisplayedDataLapor(finalFilteredData);
+    };
+  
+    filterData();
+  }, [filterStatus, selectedCabang, selectedBulan, selectedYear, dataLaporDiterima, dataLaporBelum]);
+
+  const handlePrint = () => {
+    const printContent = document.getElementById("table-to-print").innerHTML; // Ambil elemen tabel
+    const originalContent = document.body.innerHTML; // Simpan konten asli halaman
+
+    // Ganti konten halaman dengan hanya tabel
+    document.body.innerHTML = printContent;
+
+    window.print(); // Panggil fungsi cetak
+
+    // Kembalikan konten halaman ke aslinya setelah mencetak
+    document.body.innerHTML = originalContent;
+    window.location.reload(); // Reload halaman untuk memastikan tampilan kembali normal
+  };
 
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -146,7 +243,7 @@ const Page = () => {
                 REKAP LAPOR SANDUKA
               </h1>
               <div className="flex items-end ml-auto sm:hidden">
-                <button onClick={toggleFilters} className="text-white">
+                <button className="text-white">
                   <FontAwesomeIcon icon={faFilter} size="lg" />
                 </button>
               </div>
@@ -155,38 +252,71 @@ const Page = () => {
                   showFilters ? "block" : "hidden"
                 } sm:relative sm:w-auto sm:p-0 sm:bg-transparent`}
               >
-                <select className="bg-white p-2 rounded border w-full sm:w-auto">
-                  <option>-- Cabang --</option>
-                </select>
-                <select className="bg-white p-2 rounded border w-full sm:w-auto">
-                  <option>-- Bulan --</option>
-                </select>
-                <select className="bg-white p-2 rounded border w-full sm:w-auto">
-                  <option>-- Tahun --</option>
+                <select
+                  className="bg-white p-2 rounded border w-full sm:w-auto"
+                  id="cabang"
+                  name="cabang"
+                  value={selectedCabang}
+                  onChange={handleCabangChange}
+                >
+                  <option value="">-- Cabang --</option>
+                  {cabangList.map((cabang) => (
+                    <option key={cabang.id} value={cabang.kecamatan}>
+                      {cabang.kecamatan}
+                    </option>
+                  ))}
                 </select>
                 <select
                   className="bg-white p-2 rounded border w-full sm:w-auto"
-                  value={filter}
-                  onChange={handleFilterChange}
+                  id="bulan"
+                  name="bulan"
+                  value={selectedBulan}
+                  onChange={handleBulanChange} // Update ini
                 >
-                  <option value="">-- Status --</option>
-                  <option value="Belum">Belum</option>
-                  <option value="Sudah">Terima</option>
+                  <option value="">-- Bulan --</option>
+                  {bulanList.map((bulan) => (
+                    <option key={bulan.angkaBulan} value={bulan.angkaBulan}>
+                      {bulan.namaBulan}
+                    </option>
+                  ))}
                 </select>
-                <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300 w-full sm:w-auto">
+                <select
+                  className="bg-white p-2 rounded border w-full sm:w-auto"
+                  id="tahun"
+                  name="tahun"
+                  value={selectedYear}
+                  onChange={handleYearChange} // Pastikan handler untuk tahun diaktifkan
+                >
+                  <option value="">-- Tahun --</option>
+                  {years.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className="bg-white p-2 rounded border w-full sm:w-auto"
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                >
+                  <option value="Terima">Terima</option>
+                  <option value="Belum">Belum</option>
+                </select>
+                <Button
+                  className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300 w-full sm:w-auto"
+                  onClick={handlePrint}
+                >
                   Cetak
                 </Button>
               </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white">
+            <div id="table-to-print" className="overflow-x-auto">
+              <table className="min-w-full bg-white text-sm">
                 <thead className="bg-teal-700 text-white">
                   <tr>
                     <th className="py-2 px-3 text-center">No</th>
                     <th className="py-2 px-3 text-center">Date lapor</th>
-                    <th className="py-2 px-3 text-center">
-                      Data Meninggal Belum
-                    </th>
+                    <th className="py-2 px-3 text-center">Data Meninggal</th>
                     <th className="py-2 px-3 text-center">Cabang</th>
                     <th className="py-2 px-3 text-center">Keterangan</th>
                     <th className="py-2 px-3 text-center">Diterimakan</th>
@@ -196,56 +326,57 @@ const Page = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredData.map((item, index) => (
-                    <tr key={item.id} className="border-t">
-                      <td className="py-2 px-3 text-center">{index + 1}</td>
-                      <td className="py-2 px-3 ">
-                        {item.dateLapor}
-                        <br />
-                        {item.pelapor}
-                        <br />
-                        {item.nik}
-                      </td>
-                      <td className="py-2 px-3 ">
-                        {item.dataMeninggal}
-                        <br />
-                        {item.detail}
-                      </td>
-                      <td className="py-2 px-3 text-center">{item.cabang}</td>
-                      <td className="py-2 px-3 text-center">
-                        {item.keterangan}
-                      </td>
-                      <td className="py-2 px-3 text-center">
-                        {item.diterimakan}
-                      </td>
-                      <td className="py-2 px-3 ">
-                        <button className="bg-blue-500 text-white p-2 rounded mb-2">
-                          Kwitansi
-                        </button>
-                        <button className="bg-blue-500 text-white p-2 rounded">
-                          Edit
-                        </button>
-                      </td>
-                      <td className="py-2 px-3 text-center">
-                        <button className="bg-gray-200 p-2 rounded border">
-                          View
-                        </button>
-                      </td>
-                      <td className="py-2 px-3 text-center">
-                        <input
-                          type="file"
-                          className="hidden"
-                          id={`file-upload-${item.id}`}
-                        />
-                        <label
-                          htmlFor={`file-upload-${item.id}`}
-                          className="bg-green-500 text-white p-2 rounded cursor-pointer"
-                        >
-                          Browse...
-                        </label>
+                  {Array.isArray(displayedDataLapor) &&
+                  displayedDataLapor.length > 0 ? (
+                    displayedDataLapor.map((item, index) => (
+                      <tr key={index} className="border-t">
+                        <td className="py-2 px-3 text-center">{index + 1}</td>
+                        <td className="py-2 px-3">
+                          {item.Date_lapor ? item.Date_lapor : "N/A"}
+                        </td>
+                        <td className="py-2 px-3">{item.Data_Meninggal}</td>
+                        <td className="py-2 px-3 text-center">{item.Cabang}</td>
+                        <td className="py-2 px-3 text-center">
+                          {item.Keterangan}
+                        </td>
+                        <td className="py-2 px-3 text-center">
+                          Diterimakan (Sesuaikan jika ada)
+                        </td>
+                        <td className="py-2 px-3 space-x-2">
+                          <button className="bg-blue-500 text-white p-2 rounded mb-2">
+                            Kwitansi
+                          </button>
+                          <button className="bg-blue-500 text-white p-2 rounded">
+                            Edit
+                          </button>
+                        </td>
+                        <td className="py-2 px-3 text-center">
+                          <button className="bg-gray-200 p-2 rounded border">
+                            View
+                          </button>
+                        </td>
+                        <td className="py-2 px-3 text-center">
+                          <input
+                            type="file"
+                            className="hidden"
+                            id={`file-upload-${index}`}
+                          />
+                          <label
+                            htmlFor={`file-upload-${index}`}
+                            className="bg-green-500 text-white p-2 rounded cursor-pointer"
+                          >
+                            Browse...
+                          </label>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="9" className="text-center py-2">
+                        No data available
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>

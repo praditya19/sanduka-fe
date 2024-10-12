@@ -65,7 +65,7 @@ export default function DataUtama() {
         sessionStorage.setItem("kalenderData", JSON.stringify(response)); // Store in session storage
       }
       setData(response); // Set data yang diterima dari API
-      // console.log(`Data for ${activeTab}:`, response); // Hapus log ini untuk tidak menampilkan data ke console
+      
     };
   
     // Check session storage before fetching data
