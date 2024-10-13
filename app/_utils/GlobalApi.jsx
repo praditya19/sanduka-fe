@@ -629,7 +629,9 @@ const getRekapLaporDiterima = async () => {
 };
 const getRekapLaporBelom = async () => {
   try {
-    const response = await axiosClient.get("/api/rekap-lapor-sanduka/belom-diterima"); // Ganti dengan endpoint yang sesuai
+    const response = await axiosClient.get(
+      "/api/rekap-lapor-sanduka/belom-diterima"
+    ); // Ganti dengan endpoint yang sesuai
     console.log("Data Rekap Lapor berhasil diambil:", response.data); // Munculkan data di konsol
     return response.data;
   } catch (error) {
