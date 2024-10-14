@@ -17,10 +17,55 @@ const Page = () => {
   const [dataRealisasi, setDataRealisasi] = useState([]); // State untuk menyimpan data
   const currentYear = new Date().getFullYear();
   const startYear = 2020;
-
+  const [originalData, setOriginalData] = useState([]); // State untuk menyimpan data asli
   const router = useRouter();
-  const [selectAll, setSelectAll] = useState(false);
 
+  // Fungsi untuk fetch data realisasi
+  const fetchData = async (bulan, tahun) => {
+    if (bulan && tahun) {
+      try {
+        const monthMap = {
+          Januari: "01",
+          Februari: "02",
+          Maret: "03",
+          April: "04",
+          Mei: "05",
+          Juni: "06",
+          Juli: "07",
+          Agustus: "08",
+          September: "09",
+          Oktober: "10",
+          November: "11",
+          Desember: "12",
+        };
+
+        const bulanAngka = monthMap[bulan];
+        const bulanuangmasuk = `${bulanAngka}/${tahun}`;
+
+        // Panggil API tanpa parameter cabang
+        const data = await GlobalApi.getTableTargetRealisasi(
+          tahun,
+          bulanAngka,
+          "", // Kirimkan string kosong untuk cabang
+          bulanuangmasuk
+        );
+        // Set data realisasi ke state
+        setDataRealisasi(data); // Simpan semua data ke state
+        setOriginalData(data);
+      } catch (error) {
+        console.error("Error fetching data realisasi:", error);
+      }
+    }
+  };
+
+  // useEffect untuk fetch data realisasi setiap kali state bulan atau tahun berubah
+  useEffect(() => {
+    if (selectedBulan && selectedYear) {
+      fetchData(selectedBulan, selectedYear); // Hanya kirim bulan dan tahun
+    }
+  }, [selectedBulan, selectedYear]);
+
+  // useEffect untuk fetch data cabang
   useEffect(() => {
     const fetchCabangData = async () => {
       try {
@@ -34,6 +79,7 @@ const Page = () => {
     fetchCabangData();
   }, []);
 
+  // useEffect untuk fetch data bulan
   useEffect(() => {
     const fetchBulan = async () => {
       try {
@@ -47,42 +93,49 @@ const Page = () => {
     fetchBulan();
   }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (selectedBulan && selectedYear && selectedCabang) {
-        try {
-          const bulanuangmasuk = `${selectedBulan}/${selectedYear}`;
-          const data = await GlobalApi.getTableTargetRealisasi(
-            selectedYear,
-            selectedBulan,
-            selectedCabang,
-            bulanuangmasuk
-          );
-          setDataRealisasi(data);
-        } catch (error) {
-          console.error("Error fetching data realisasi:", error);
-        }
-      }
-    };
-
-    fetchData();
-  }, [selectedBulan, selectedYear, selectedCabang]);
-
+  // Data untuk tahun (years range)
   const years = Array.from(
     { length: currentYear - startYear + 1 },
     (_, index) => startYear + index
   );
 
+  // useEffect untuk filter data berdasarkan selectedCabang
+  useEffect(() => {
+    if (selectedCabang) {
+      const filteredData = originalData.filter(
+        (item) => item.cabang === selectedCabang
+      );
+      setDataRealisasi(filteredData); // Update state dengan data yang difilter
+    } else {
+      setDataRealisasi(originalData); // Tampilkan kembali data asli jika cabang dikosongkan
+    }
+  }, [selectedCabang]); // Jalankan filter setiap kali selectedCabang berubah
+
+  // Handle perubahan cabang
   const handleCabangChange = (e) => {
-    setSelectedCabang(e.target.value);
+    const selectedCabang = e.target.value;
+    setSelectedCabang(selectedCabang);
   };
 
+  // Handle perubahan bulan
   const handleBulanChange = (e) => {
-    setSelectedBulan(e.target.value);
+    const selectedBulan = e.target.value;
+    setSelectedBulan(selectedBulan);
   };
 
+  // Handle perubahan tahun
   const handleYearChange = (e) => {
-    setSelectedYear(e.target.value);
+    const selectedYear = e.target.value;
+    setSelectedYear(selectedYear);
+  };
+
+  // Format untuk tampilan dalam rupiah
+  const formatRupiah = (value) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(value);
   };
 
   const [isMobile, setIsMobile] = useState(false);
@@ -176,11 +229,11 @@ const Page = () => {
                     <select
                       className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                       value={selectedBulan}
-                      onChange={(e) => handleBulanChange(e.target.value)}
+                      onChange={handleBulanChange}
                     >
                       <option value="">-- Bulan --</option>
                       {bulanList.map((bulan) => (
-                        <option key={bulan.angkaBulan} value={bulan.angkaBulan}>
+                        <option key={bulan.angkaBulan} value={bulan.namaBulan}>
                           {bulan.namaBulan}
                         </option>
                       ))}
@@ -214,56 +267,108 @@ const Page = () => {
               </div>
 
               <div ref={tableRef} className="overflow-x-auto">
-                <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <table className="min-w-full text-sm text-center text-gray-500 dark:text-gray-400">
                   <thead className="text-sm text-black uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
-                    <tr className="bg-gray-200 text-black text-center">
-                      <th className="px-6 py-3 text-sm">No</th>
-                      <th className="px-6 py-3 text-sm">Tgl Transaksi</th>
-                      <th className="px-6 py-3 text-sm">No. Bukti</th>
-                      <th className="px-6 py-3 text-sm">Uraian</th>
-                      <th className="px-6 py-3 text-sm">Debet</th>
-                      <th className="px-6 py-3 text-sm">Kredit</th>
-                      <th className="px-6 py-3 text-sm">Saldo</th>
-                      <th className="px-6 py-3 text-sm">Action</th>
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      >
+                        No
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      >
+                        Cabang/Khusus
+                      </th>
+                      <th
+                        scope="col"
+                        colSpan={2}
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm text-center"
+                      >
+                        Sanduka
+                      </th>
+                      <th
+                        scope="col"
+                        colSpan={2}
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm text-center"
+                      >
+                        Realisasi
+                      </th>
+                      <th
+                        scope="col"
+                        colSpan={2}
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm text-center"
+                      >
+                        Selisih
+                      </th>
+                    </tr>
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      ></th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      ></th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      >
+                        Anggota
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      >
+                        Nominal
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      >
+                        Nominal
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      >
+                        Lebih
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      >
+                        Kurang
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {dataRealisasi.length > 0 ? (
-                      dataRealisasi.map((item, index) => (
+                      dataRealisasi.map((row, index) => (
                         <tr
                           key={index}
-                          className={`border-b text-black text-center`}
+                          className="border-b text-black text-center"
                         >
                           <td className="px-6 py-4 text-sm">{index + 1}</td>
+                          <td className="px-6 py-4 text-sm">{row.cabang}</td>
                           <td className="px-6 py-4 text-sm">
-                            {item.TglTransaksi || "N/A"}
+                            {row.jumlahAnggota}
                           </td>
-                          <td className="px-6 py-4 text-sm">
-                            {item.NoBukti || "N/A"}
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            {item.Uraian || "N/A"}
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            {item.Debet || "N/A"}
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            {item.Kredit || "N/A"}
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            {item.Saldo || "N/A"}
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            <button className="bg-blue-500 text-white px-4 py-2 rounded">
-                              Action
-                            </button>
-                          </td>
+                          <td className="px-6 py-4 text-sm">{row.target}</td>
+                          <td className="px-6 py-4 text-sm">{formatRupiah(row.realisasi)}</td>
+                          <td className="px-6 py-4 text-sm">{formatRupiah(row.selisih)}</td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="8" className="text-center py-4">
-                          No data available
+                        <td
+                          colSpan={6}
+                          className="px-6 py-4 text-center text-sm"
+                        >
+                          Tidak ada data yang ditemukan
                         </td>
                       </tr>
                     )}
