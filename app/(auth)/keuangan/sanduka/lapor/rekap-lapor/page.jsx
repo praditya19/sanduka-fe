@@ -329,24 +329,24 @@ const Page = () => {
                   {Array.isArray(displayedDataLapor) &&
                   displayedDataLapor.length > 0 ? (
                     displayedDataLapor.map((item, index) => (
-                      <tr key={index} className="border-t">
-                        <td className="py-2 px-3 text-center">{index + 1}</td>
-                        <td className="py-2 px-3">
+                      <tr key={index} className="border-t text-sm">
+                        <td className="py-2 px-3 text-center text-sm">{index + 1}</td>
+                        <td className="py-2 px-3 text-sm">
                           {item.Date_lapor ? item.Date_lapor : "N/A"}
                         </td>
-                        <td className="py-2 px-3">{item.Data_Meninggal}</td>
-                        <td className="py-2 px-3 text-center">{item.Cabang}</td>
-                        <td className="py-2 px-3 text-center">
+                        <td className="py-2 px-3 text-sm">{item.Data_Meninggal}</td>
+                        <td className="py-2 px-3 text-center text-sm">{item.Cabang}</td>
+                        <td className="py-2 px-3 text-center text-sm">
                           {item.Keterangan}
                         </td>
-                        <td className="py-2 px-3 text-center">
+                        <td className="py-2 px-3 text-center text-sm">
                           Diterimakan (Sesuaikan jika ada)
                         </td>
-                        <td className="py-2 px-3 space-x-2">
+                        <td className="py-2 px-3 space-x-2 text-sm">
                           <button className="bg-blue-500 text-white p-2 rounded mb-2">
                             Kwitansi
                           </button>
-                          <button className="bg-blue-500 text-white p-2 rounded">
+                          <button className="bg-blue-500 text-white p-2 rounded text-sm">
                             Edit
                           </button>
                         </td>

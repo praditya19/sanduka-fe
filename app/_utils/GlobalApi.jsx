@@ -620,7 +620,6 @@ const createPembayaranSanduka = async (payload) => {
 const getRekapLaporDiterima = async () => {
   try {
     const response = await axiosClient.get("/api/rekap-lapor-sanduka/diterima"); // Ganti dengan endpoint yang sesuai
-    console.log("Data Rekap Lapor berhasil diambil:", response.data); // Munculkan data di konsol
     return response.data;
   } catch (error) {
     console.error("Error fetching Data Lapor:", error);
@@ -632,7 +631,6 @@ const getRekapLaporBelom = async () => {
     const response = await axiosClient.get(
       "/api/rekap-lapor-sanduka/belom-diterima"
     ); // Ganti dengan endpoint yang sesuai
-    console.log("Data Rekap Lapor berhasil diambil:", response.data); // Munculkan data di konsol
     return response.data;
   } catch (error) {
     console.error("Error fetching Data Lapor:", error);
@@ -661,11 +659,37 @@ const getTableTargetRealisasi = async (
 ) => {
   try {
     const response = await axiosClient.get(
-      `/api/target-kalender/tabel?bulan=${bulan}&tahun=${tahun}&inputKecamatan=${inputKecamatan}&bulanuangmasuk${bulanuangmasuk}`
+      `/api/laporan-target-realisasi?bulan=${bulan}&tahun=${tahun}&inputKecamatan=${inputKecamatan}&bulanuangmasuk=${bulanuangmasuk}`
+      // Pastikan '=' ditambahkan di sini
     );
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
-    console.error("Error fetching total Kalender:", error);
+    console.error("Error fetching total Target Realisasi:", error);
+    throw error;
+  }
+};
+// (Laporan Pemasukan SANDUKA)
+const getLaporanPemasukan = async (bulan) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/laporan-pemasukan-sanduka?bulan=${bulan}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching laporan pemasukan sanduka:", error);
+    throw error;
+  }
+};
+
+// (Laporan Pengeluaran SANDUKA)
+const getLaporanPengeluaran = async (tanggal) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/laporan-pengeluaran-sanduka?tanggal=${tanggal}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching laporan pengeluaran sanduka:", error);
     throw error;
   }
 };
@@ -778,4 +802,6 @@ export default {
   getTableTargetRealisasi,
   getLaporanPemasukanTahunan,
   getLaporanPengeluaranTahunan,
+  getLaporanPemasukan,
+  getLaporanPengeluaran,
 };
