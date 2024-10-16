@@ -1,16 +1,90 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/app/_components/Sidebar";
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 const Page = () => {
-  const [selectAll, setSelectAll] = useState(false);
+  const tableRef = useRef();
+  const currentYear = new Date().getFullYear();
+  const startYear = 2020;
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [data, setData] = useState([]);
 
-  const handleSelectAll = (e) => {
-    setSelectAll(e.target.checked);
+  // Fungsi untuk memanggil data dari API berdasarkan tahun yang dipilih
+  const fetchData = async (year) => {
+    try {
+      const response = await GlobalApi.getLaporanPengeluaranTahunan(year); // Panggil API dengan tahun yang dipilih
+      setData(response); // Asumsi response berisi array data dari API
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  // Gunakan useEffect untuk set default bulan dan tahun sesuai waktu sekarang
+  useEffect(() => {
+    const currentDate = new Date();
+
+    // Mendapatkan bulan saat ini (0 = Januari, jadi tambahkan 1 untuk membuatnya lebih manusiawi)
+    const currentBulan = (currentDate.getMonth() + 1)
+      .toString()
+      .padStart(2, "0");
+
+    // Mendapatkan tahun saat ini
+    const currentYear = currentDate.getFullYear().toString();
+
+    // Set bulan dan tahun saat ini sebagai default
+    setSelectedBulan(currentBulan);
+    setSelectedYear(currentYear);
+
+    // Lakukan fetch data untuk bulan dan tahun saat ini
+    fetchData(currentBulan, currentYear);
+  }, []);
+
+  // Fetch data ketika tahun berubah atau komponen pertama kali di-mount
+  useEffect(() => {
+    if (selectedYear) {
+      fetchData(selectedYear); // Panggil fetch data dengan tahun yang dipilih
+    }
+  }, [selectedYear]); // Akan dijalankan setiap kali selectedYear berubah
+
+  const handleYearChange = (e) => {
+    setSelectedYear(e.target.value); // Update tahun yang dipilih
+  };
+
+  const years = Array.from(
+    { length: currentYear - startYear + 1 },
+    (_, index) => startYear + index
+  );
+
+  const formatRupiah = (value) => {
+    // Ubah value menjadi integer jika ada koma atau titik
+    const numberValue = parseInt(value.toString().replace(/,/g, ""));
+
+    // Format angka ke dalam bentuk rupiah
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(numberValue);
+  };
+
+  const printTable = () => {
+    const printContent = tableRef.current;
+    const originalContent = document.body.innerHTML;
+
+    // Temporarily replace body content with table content
+    document.body.innerHTML = printContent.innerHTML;
+
+    window.print(); // Trigger the print dialog
+
+    // Restore the original content after printing
+    document.body.innerHTML = originalContent;
+    window.location.reload(); // Refresh the page to re-apply React events
   };
 
   useEffect(() => {
@@ -58,7 +132,9 @@ const Page = () => {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Laporan Pengeluaran Tahunan Organisasi</h1>
+              <h1 className="text-base">
+                Laporan Pengeluaran Tahunan Organisasi
+              </h1>
             </div>
           </div>
         </header>
@@ -73,7 +149,9 @@ const Page = () => {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Laporan Pengeluaran Tahunan Organisasi</h1>
+              <h1 className="text-base">
+                Laporan Pengeluaran Tahunan Organisasi
+              </h1>
             </div>
           </div>
         </header>
@@ -95,20 +173,23 @@ const Page = () => {
               <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
                 <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
                   <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5 w-full sm:w-auto">
-                    <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                      <option>Juli</option>
-                      <option>Agustus</option>
-                      <option>September</option>
-                    </select>
-                    <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                      <option>2021</option>
-                      <option>2024</option>
-                      <option>2025</option>
+                    <select
+                      className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                      id="tahun"
+                      name="tahun"
+                      value={selectedYear}
+                      onChange={handleYearChange} // Pastikan handler untuk tahun diaktifkan
+                    >
+                      {years.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="flex-1 flex justify-center">
                     <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-                      Transaksi Maret 2021
+                      LAPORAN PENGELUARAN TAHUN {selectedYear}
                     </h1>
                   </div>
                   <div className="flex justify-center space-x-4 mt-0 sm:mt-3 mr-0 sm:mr-10">
@@ -117,6 +198,42 @@ const Page = () => {
                     </Button>
                   </div>
                 </div>
+              </div>
+              <div ref={tableRef} className="overflow-x-auto">
+                <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                  <thead className="text-sm text-black uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
+                    <tr className="bg-gray-200 text-black text-center">
+                      <th className="px-6 py-3 text-sm">No</th>
+                      <th className="px-6 py-3 text-sm">Bulan</th>
+                      <th className="px-6 py-3 text-sm">Pemasukan</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data && data.length > 0 ? (
+                      data.map((item, index) => (
+                        <tr
+                          key={index}
+                          className="border-b text-black text-center"
+                        >
+                          <td className="px-6 py-4 text-sm">{index + 1}</td>
+                          <td className="px-6 py-4 text-sm">{item.bulan}</td>
+                          <td className="px-6 py-4 text-sm">
+                            {formatRupiah(item.pengeluaran)}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="3"
+                          className="px-6 py-4 text-center text-sm"
+                        >
+                          Tidak ada data yang tersedia.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

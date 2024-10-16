@@ -1,18 +1,155 @@
-"use client"
-import React, { useState, useEffect } from "react";
-import { Button } from '@/components/ui/button';
+"use client";
+import React, { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "@/app/_components/Sidebar";
-
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 const Page = () => {
+  const tableRef = useRef();
+  const [bulanList, setBulanList] = useState([]);
+  const [cabangList, setCabangList] = useState([]);
+  const [selectedBulan, setSelectedBulan] = useState("");
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [dataRealisasi, setDataRealisasi] = useState([]); // State untuk menyimpan data
+  const currentYear = new Date().getFullYear();
+  const startYear = 2020;
+  const [originalData, setOriginalData] = useState([]); // State untuk menyimpan data asli
   const router = useRouter();
-  const [selectAll, setSelectAll] = useState(false);
 
-  const handleSelectAll = (e) => {
-    setSelectAll(e.target.checked);
+  // Fungsi untuk fetch data realisasi
+  const fetchData = async (bulan, tahun) => {
+    if (bulan && tahun) {
+      try {
+        const monthMap = {
+          Januari: "01",
+          Februari: "02",
+          Maret: "03",
+          April: "04",
+          Mei: "05",
+          Juni: "06",
+          Juli: "07",
+          Agustus: "08",
+          September: "09",
+          Oktober: "10",
+          November: "11",
+          Desember: "12",
+        };
+
+        const bulanAngka = monthMap[bulan];
+        const bulanuangmasuk = `${bulanAngka}/${tahun}`;
+
+        // Panggil API tanpa parameter cabang
+        const data = await GlobalApi.getTableTargetRealisasi(
+          tahun,
+          bulanAngka,
+          "", // Kirimkan string kosong untuk cabang
+          bulanuangmasuk
+        );
+        // Set data realisasi ke state
+        setDataRealisasi(data); // Simpan semua data ke state
+        setOriginalData(data);
+      } catch (error) {
+        console.error("Error fetching data realisasi:", error);
+      }
+    }
+  };
+
+  // useEffect untuk fetch data realisasi setiap kali state bulan atau tahun berubah
+  useEffect(() => {
+    if (selectedBulan && selectedYear) {
+      fetchData(selectedBulan, selectedYear); // Hanya kirim bulan dan tahun
+    }
+  }, [selectedBulan, selectedYear]);
+
+  // useEffect untuk fetch data cabang
+  useEffect(() => {
+    const fetchCabangData = async () => {
+      try {
+        const response = await GlobalApi.getCabang();
+        setCabangList(response.data);
+      } catch (error) {
+        console.error("Error fetching cabang data:", error);
+      }
+    };
+
+    fetchCabangData();
+  }, []);
+
+  // useEffect untuk fetch data bulan
+  useEffect(() => {
+    const fetchBulan = async () => {
+      try {
+        const response = await GlobalApi.getBulan();
+        setBulanList(response.data);
+      } catch (error) {
+        console.error("Error fetching bulan data:", error);
+      }
+    };
+
+    fetchBulan();
+  }, []);
+
+  // Data untuk tahun (years range)
+  const years = Array.from(
+    { length: currentYear - startYear + 1 },
+    (_, index) => startYear + index
+  );
+
+  const printTable = () => {
+    const printContent = tableRef.current;
+    const originalContent = document.body.innerHTML;
+
+    // Temporarily replace body content with table content
+    document.body.innerHTML = printContent.innerHTML;
+
+    window.print(); // Trigger the print dialog
+
+    // Restore the original content after printing
+    document.body.innerHTML = originalContent;
+    window.location.reload(); // Refresh the page to re-apply React events
+  };
+
+  // useEffect untuk filter data berdasarkan selectedCabang
+  useEffect(() => {
+    if (selectedCabang) {
+      const filteredData = originalData.filter(
+        (item) => item.cabang === selectedCabang
+      );
+      setDataRealisasi(filteredData); // Update state dengan data yang difilter
+    } else {
+      setDataRealisasi(originalData); // Tampilkan kembali data asli jika cabang dikosongkan
+    }
+  }, [selectedCabang]); // Jalankan filter setiap kali selectedCabang berubah
+
+  // Handle perubahan cabang
+  const handleCabangChange = (e) => {
+    const selectedCabang = e.target.value;
+    setSelectedCabang(selectedCabang);
+  };
+
+  // Handle perubahan bulan
+  const handleBulanChange = (e) => {
+    const selectedBulan = e.target.value;
+    setSelectedBulan(selectedBulan);
+  };
+
+  // Handle perubahan tahun
+  const handleYearChange = (e) => {
+    const selectedYear = e.target.value;
+    setSelectedYear(selectedYear);
+  };
+
+  // Format untuk tampilan dalam rupiah
+  const formatRupiah = (value) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(value);
   };
 
   useEffect(() => {
@@ -87,47 +224,188 @@ const Page = () => {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-    <div className="container mx-auto p-6">
-      <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
-        <h2 className="bg-blue-500 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
-          TARGET DAN REALISASI
-        </h2>
+          <div className="container mx-auto p-6">
+            <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
+              <h2 className="bg-blue-500 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
+                TARGET DAN REALISASI
+              </h2>
 
-        <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
-          <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
-            <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5 w-full sm:w-auto">
-              <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                <option>-- Cabang --</option>
-                <option>Bangsri</option>
-                <option>Kedung</option>
-              </select>
-              <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                <option>Juli</option>
-                <option>Agustus</option>
-                <option>September</option>
-              </select>
-              <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                <option>2021</option>
-                <option>2024</option>
-                <option>2025</option>
-              </select>
-            </div>
-            <div className="flex-1 flex justify-center">
-              <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-              Transaksi Maret 2021
-              </h1>
-            </div>
-            <div className="flex justify-center space-x-4 mt-0 sm:mt-3 mr-0 sm:mr-10">
-              <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300">
-                Cetak
-              </Button>
+              <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
+                <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
+                  <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5 w-full sm:w-auto">
+                    <select
+                      className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                      id="cabang"
+                      name="cabang"
+                      value={selectedCabang}
+                      onChange={handleCabangChange}
+                    >
+                      <option value="">-- Cabang --</option>
+                      {cabangList.map((cabang) => (
+                        <option key={cabang.id} value={cabang.kecamatan}>
+                          {cabang.kecamatan}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                      value={selectedBulan}
+                      onChange={handleBulanChange}
+                    >
+                      <option value="">-- Bulan --</option>
+                      {bulanList.map((bulan) => (
+                        <option key={bulan.angkaBulan} value={bulan.namaBulan}>
+                          {bulan.namaBulan}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                      id="tahun"
+                      name="tahun"
+                      value={selectedYear}
+                      onChange={handleYearChange} // Pastikan handler untuk tahun diaktifkan
+                    >
+                      <option value="">-- Tahun --</option>
+                      {years.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex-1 flex justify-center">
+                    <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
+                      Transaksi {selectedBulan} {selectedYear}
+                    </h1>
+                  </div>
+                  <div className="flex justify-center space-x-4 mt-0 sm:mt-3 mr-0 sm:mr-10">
+                    <Button
+                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+                      onClick={printTable}
+                    >
+                      Cetak
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <div ref={tableRef} className="overflow-x-auto">
+                <table className="min-w-full text-sm text-center text-gray-500 dark:text-gray-400">
+                  <thead className="text-sm text-black uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      >
+                        No
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      >
+                        Cabang/Khusus
+                      </th>
+                      <th
+                        scope="col"
+                        colSpan={2}
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm text-center"
+                      >
+                        Sanduka
+                      </th>
+                      <th
+                        scope="col"
+                        colSpan={2}
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm text-center"
+                      >
+                        Realisasi
+                      </th>
+                      <th
+                        scope="col"
+                        colSpan={2}
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm text-center"
+                      >
+                        Selisih
+                      </th>
+                    </tr>
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      ></th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      ></th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      >
+                        Anggota
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      >
+                        Nominal
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      >
+                        Nominal
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      >
+                        Lebih
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      >
+                        Kurang
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dataRealisasi.length > 0 ? (
+                      dataRealisasi.map((row, index) => (
+                        <tr
+                          key={index}
+                          className="border-b text-black text-center"
+                        >
+                          <td className="px-6 py-4 text-sm">{index + 1}</td>
+                          <td className="px-6 py-4 text-sm">{row.cabang}</td>
+                          <td className="px-6 py-4 text-sm">
+                            {row.jumlahAnggota}
+                          </td>
+                          <td className="px-6 py-4 text-sm">{row.target}</td>
+                          <td className="px-6 py-4 text-sm">
+                            {formatRupiah(row.realisasi)}
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            {formatRupiah(row.selisih)}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="px-6 py-4 text-center text-sm"
+                        >
+                          Tidak ada data yang ditemukan
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    </div>
-    </div>
     </div>
   );
 };

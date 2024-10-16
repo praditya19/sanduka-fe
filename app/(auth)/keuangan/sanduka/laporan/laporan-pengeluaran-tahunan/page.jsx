@@ -66,12 +66,6 @@ const Page = () => {
     window.location.reload(); // Refresh the page to re-apply React events
   };
 
-  const [selectAll, setSelectAll] = useState(false);
-
-  const handleSelectAll = (e) => {
-    setSelectAll(e.target.checked);
-  };
-
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
     setIsSidebarOpen(sidebarState);
