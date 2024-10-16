@@ -32,6 +32,7 @@ import Image from "next/image";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import { useRouter } from "next/navigation";
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 const icons = [
   { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
@@ -180,7 +181,9 @@ export default function IconGrid() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const itemsPerPage = 5; // Define itemsPerPage here
+  const itemsPerPage = 5;
+  const [anggotaMeninggal, setAnggotaMeninggal] = useState([]);
+  const [fotoBase64, setFotoBase64] = useState([]);
 
   const handleNext = () => {
     if (currentIndex + itemsPerPage < dataArray.length) {
@@ -214,6 +217,19 @@ export default function IconGrid() {
     }
   }, [token, router]);
 
+  useEffect(() => {
+    const fetchAnggotaMeninggal = async () => {
+      try {
+        const data = await GlobalApi.getAnggotaMeninggal();
+        setAnggotaMeninggal(data);
+      } catch (error) {
+        console.error("Error fetching anggota meninggal:", error);
+      }
+    };
+
+    fetchAnggotaMeninggal();
+  }, []);
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -231,9 +247,8 @@ export default function IconGrid() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="flex-1 mt-14">
             {isMobile ? (
@@ -381,9 +396,8 @@ export default function IconGrid() {
 
         {/* Pembatas with Title */}
         <div
-          className={`w-full flex flex-col items-center my-4 ${
-            isSidebarOpen ? "ml-32" : "ml-0"
-          }`}
+          className={`w-full flex flex-col items-center my-4 ${isSidebarOpen ? "ml-32" : "ml-0"
+            }`}
         >
           <hr className="mt-2 border-gray-300 w-full" />
           <h5 className="text-lg sm:text-xl font-semibold text-gray-800 mt-4 text-center">
@@ -393,9 +407,8 @@ export default function IconGrid() {
 
         {/* Card anggota meninggal */}
         <div
-          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${
-            isSidebarOpen ? "ml-32" : "ml-0"
-          }`}
+          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${isSidebarOpen ? "ml-32" : "ml-0"
+            }`}
         >
           {/* Left Arrow Button - Only Visible on Larger Screens */}
           <button
@@ -407,7 +420,7 @@ export default function IconGrid() {
 
           {/* Data Grid with Horizontal Scroll for Mobile */}
           <div className="flex mx-auto sm:mx-44 space-x-4 overflow-x-auto w-full px-4 lg:px-0 lg:grid lg:grid-cols-5 lg:gap-4 lg:overflow-hidden">
-            {dataArray
+            {anggotaMeninggal
               .slice(currentIndex, currentIndex + itemsPerPage)
               .map((currentData, index) => (
                 <button // Card dalam button
@@ -416,17 +429,17 @@ export default function IconGrid() {
                 >
                   <Image
                     className="ml-10 sm:ml-16 h-20 w-20 object-cover"
-                    src={currentData.img}
+                    src="/profile.png"
                     alt="Profile Image"
                     width={100}
                     height={100}
                   />
                   <div className="p-4">
                     <h2 className="text-base font-semibold text-gray-800">
-                      {currentData.name}
+                      {currentData.namaLengkap}
                     </h2>
                     <p className="text-sm text-gray-600 mb-2">
-                      {currentData.id}
+                      {currentData.npaPgri}
                     </p>
                     <div className="text-sm text-gray-600 space-y-1">
                       <div className="flex items-center">
@@ -434,21 +447,25 @@ export default function IconGrid() {
                           icon={faCalendarAlt}
                           className="text-gray-600"
                         />
-                        <span className="ml-2">{currentData.dateOfDeath}</span>
+                        <span className="ml-2">
+                          {Array.isArray(currentData.waktuMeninggalTerlapor) && currentData.waktuMeninggalTerlapor.length === 3 ? (
+                            `${String(currentData.waktuMeninggalTerlapor[2]).padStart(2, '0')}-${String(currentData.waktuMeninggalTerlapor[1]).padStart(2, '0')}-${currentData.waktuMeninggalTerlapor[0]}`
+                          ) : 'Tanggal tidak valid'}
+                        </span>
                       </div>
                       <div className="flex items-center">
                         <FontAwesomeIcon
                           icon={faUserTie}
                           className="text-gray-600"
                         />
-                        <span className="ml-2">{currentData.position}</span>
+                        <span className="ml-2">{currentData.jabatan}</span>
                       </div>
                       <div className="flex items-center">
                         <FontAwesomeIcon
                           icon={faHome}
                           className="text-gray-600"
                         />
-                        <span className="ml-2">{currentData.address}</span>
+                        <span className="ml-2">{currentData.unitKerja}</span>
                       </div>
                     </div>
                   </div>

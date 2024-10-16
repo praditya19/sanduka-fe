@@ -8,31 +8,26 @@ import GlobalApi from "../_utils/GlobalApi";
 
 const HeaderHome = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(2);
-  const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] =
-    useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [previousNotificationCount, setPreviousNotificationCount] = useState(0); // Track previous count
+  const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] = useState(false);
   const audioRef = useRef(null);
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); // State for toggling profile menu
-  const profileMenuRef = useRef(null); // Ref for profile menu
-
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
   const [profileImageUrl, setProfileImageUrl] = useState("/profile.png");
 
   const getAnggotaById = async () => {
     try {
       const userId = sessionStorage.getItem("userId");
       const response = await GlobalApi.getUserById(userId);
-      
-      // Cek apakah foto ada
       if (response.foto) {
         const decodedString = atob(response.foto);
-      setProfileImageUrl(decodedString);
+        setProfileImageUrl(decodedString);
       } else {
-        // Jika tidak ada foto, set ke default
         setProfileImageUrl("/profile.png");
       }
     } catch (error) {
       console.error("Error Saat Mendapatkan Foto:", error);
-      // Jika terjadi error, set ke default
       setProfileImageUrl("/profile.png");
     }
   };
@@ -43,6 +38,7 @@ const HeaderHome = () => {
       audioRef.current.currentTime = 0;
       setIsNotificationSoundPlaying(false);
     }
+    setPreviousNotificationCount(notificationCount); // Update previous count to the current count
     setNotificationCount(0);
   };
 
@@ -51,43 +47,49 @@ const HeaderHome = () => {
   };
 
   const handleClickOutside = (event) => {
-    if (
-      profileMenuRef.current &&
-      !profileMenuRef.current.contains(event.target)
-    ) {
+    if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
       setIsProfileMenuOpen(false);
     }
   };
 
   const handleLogout = () => {
     sessionStorage.removeItem("userId");
-    window.location.href = "/"; // Redirect to login or home page
+    window.location.href = "/";
   };
 
   useEffect(() => {
+    const fetchNotificationCount = async () => {
+      try {
+        const count = await GlobalApi.getNotifikasi();
+        setNotificationCount(count);
+      } catch (error) {
+        console.error("Error fetching notification count:", error);
+        setNotificationCount(0);
+      }
+    };
+
+    fetchNotificationCount();
+    const intervalId = setInterval(fetchNotificationCount, 60000); // Refresh every minute
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
     getAnggotaById();
-    if (notificationCount > 0 && !isNotificationSoundPlaying) {
+
+    // Play notification sound only if new notifications are greater than previous ones
+    if (notificationCount > previousNotificationCount && !isNotificationSoundPlaying) {
       const playNotificationSound = () => {
         const audio = new Audio("/sound-notification.wav");
         audioRef.current = audio;
-
-        audio
-          .play()
-          .then(() => {
-            setIsNotificationSoundPlaying(true);
-          })
-          .catch((error) => {
-            console.error("Error playing sound:", error);
-          });
-
-        audio.onended = () => {
-          setIsNotificationSoundPlaying(false);
-        };
+        audio.play()
+          .then(() => setIsNotificationSoundPlaying(true))
+          .catch((error) => console.error("Error playing sound:", error));
+        audio.onended = () => setIsNotificationSoundPlaying(false);
       };
-
       playNotificationSound();
     }
-  }, [notificationCount, isNotificationSoundPlaying]);
+  }, [notificationCount, previousNotificationCount, isNotificationSoundPlaying]);
 
   useEffect(() => {
     if (isProfileMenuOpen) {
@@ -95,7 +97,6 @@ const HeaderHome = () => {
     } else {
       document.removeEventListener("mousedown", handleClickOutside);
     }
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -115,10 +116,7 @@ const HeaderHome = () => {
             <ul className="flex space-x-6 items-center">
               <li className="relative">
                 <button onClick={handleNotificationClick} className="relative">
-                  <FontAwesomeIcon
-                    icon={faBell}
-                    className="w-5 h-5 text-gray-700"
-                  />
+                  <FontAwesomeIcon icon={faBell} className="w-5 h-5 text-gray-700" />
                   {notificationCount > 0 && (
                     <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
                       {notificationCount}
@@ -128,17 +126,11 @@ const HeaderHome = () => {
               </li>
               <li>
                 <Link href="/anggota/pencarian-anggota">
-                  <FontAwesomeIcon
-                    icon={faSearch}
-                    className="w-5 h-5 text-gray-700"
-                  />
+                  <FontAwesomeIcon icon={faSearch} className="w-5 h-5 text-gray-700" />
                 </Link>
               </li>
               <li className="relative" ref={profileMenuRef}>
-                <button
-                  onClick={toggleProfileMenu}
-                  className="flex items-center focus:outline-none"
-                >
+                <button onClick={toggleProfileMenu} className="flex items-center focus:outline-none">
                   <Image
                     src={`data:image/jpeg;base64,${profileImageUrl}`}
                     width={30}
@@ -149,16 +141,10 @@ const HeaderHome = () => {
                 </button>
                 {isProfileMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                    <Link
-                      href="/update-profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
+                    <Link href="/update-profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                       Edit Profile
                     </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
+                    <button onClick={handleLogout} className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                       Logout
                     </button>
                   </div>
@@ -169,18 +155,13 @@ const HeaderHome = () => {
         </div>
       </div>
 
+      {/* Mobile menu */}
       <div className={`${isOpen ? "block" : "hidden"} md:hidden`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <ul className="flex flex-col space-y-1">
             <li className="relative">
-              <button
-                onClick={handleNotificationClick}
-                className="relative w-full text-left"
-              >
-                <FontAwesomeIcon
-                  icon={faBell}
-                  className="w-5 h-5 text-gray-700"
-                />
+              <button onClick={handleNotificationClick} className="relative w-full text-left">
+                <FontAwesomeIcon icon={faBell} className="w-5 h-5 text-gray-700" />
                 {notificationCount > 0 && (
                   <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
                     {notificationCount}
@@ -190,10 +171,7 @@ const HeaderHome = () => {
             </li>
             <li>
               <Link href="/anggota/pencarian-anggota">
-                <FontAwesomeIcon
-                  icon={faSearch}
-                  className="w-5 h-5 text-gray-700"
-                />
+                <FontAwesomeIcon icon={faSearch} className="w-5 h-5 text-gray-700" />
               </Link>
             </li>
             <li className="relative flex justify-end">
