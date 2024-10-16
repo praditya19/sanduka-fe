@@ -742,6 +742,27 @@ const getAllPensiun = (page = 0, size = 10) => {
 };
 // ENd
 
+//Notifikasi
+const getNotifikasi = async (count) => {
+  try {
+    const response = await axiosClient.get("/api/notifikasi/count");
+    return response.data;
+  } catch (error) {
+    console.error("Error creating notifikasi data:", error);
+    throw error;
+  }
+};
+
+const getAnggotaMeninggal = async () => {
+  try {
+    const response = await axiosClient.get("/api/notifikasi/data-terlapor");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching anggota meninggal data:", error);
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -804,4 +825,6 @@ export default {
   getLaporanPengeluaranTahunan,
   getLaporanPemasukan,
   getLaporanPengeluaran,
+  getNotifikasi,
+  getAnggotaMeninggal,
 };
