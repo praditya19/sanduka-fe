@@ -23,27 +23,6 @@ const Page = () => {
       console.error("Error fetching data:", error);
     }
   };
-
-  // Gunakan useEffect untuk set default bulan dan tahun sesuai waktu sekarang
-  useEffect(() => {
-    const currentDate = new Date();
-
-    // Mendapatkan bulan saat ini (0 = Januari, jadi tambahkan 1 untuk membuatnya lebih manusiawi)
-    const currentBulan = (currentDate.getMonth() + 1)
-      .toString()
-      .padStart(2, "0");
-
-    // Mendapatkan tahun saat ini
-    const currentYear = currentDate.getFullYear().toString();
-
-    // Set bulan dan tahun saat ini sebagai default
-    setSelectedBulan(currentBulan);
-    setSelectedYear(currentYear);
-
-    // Lakukan fetch data untuk bulan dan tahun saat ini
-    fetchData(currentBulan, currentYear);
-  }, []);
-
   // Fetch data ketika tahun berubah atau komponen pertama kali di-mount
   useEffect(() => {
     if (selectedYear) {
@@ -193,7 +172,8 @@ const Page = () => {
                     </h1>
                   </div>
                   <div className="flex justify-center space-x-4 mt-0 sm:mt-3 mr-0 sm:mr-10">
-                    <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                    <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+                    onClick={printTable}>
                       Cetak
                     </Button>
                   </div>
