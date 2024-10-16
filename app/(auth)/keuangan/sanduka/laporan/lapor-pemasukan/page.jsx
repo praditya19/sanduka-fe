@@ -29,6 +29,26 @@ const Page = () => {
     }
   };
 
+  // Gunakan useEffect untuk set default bulan dan tahun sesuai waktu sekarang
+  useEffect(() => {
+    const currentDate = new Date();
+
+    // Mendapatkan bulan saat ini (0 = Januari, jadi tambahkan 1 untuk membuatnya lebih manusiawi)
+    const currentBulan = (currentDate.getMonth() + 1)
+      .toString()
+      .padStart(2, "0");
+
+    // Mendapatkan tahun saat ini
+    const currentYear = currentDate.getFullYear().toString();
+
+    // Set bulan dan tahun saat ini sebagai default
+    setSelectedBulan(currentBulan);
+    setSelectedYear(currentYear);
+
+    // Lakukan fetch data untuk bulan dan tahun saat ini
+    fetchData(currentBulan, currentYear);
+  }, []);
+
   useEffect(() => {
     if (selectedBulan && selectedYear) {
       fetchData(); // Panggil fetchData ketika bulan atau tahun berubah
@@ -65,6 +85,20 @@ const Page = () => {
     { length: currentYear - startYear + 1 },
     (_, index) => startYear + index
   );
+
+  const printTable = () => {
+    const printContent = tableRef.current;
+    const originalContent = document.body.innerHTML;
+
+    // Temporarily replace body content with table content
+    document.body.innerHTML = printContent.innerHTML;
+
+    window.print(); // Trigger the print dialog
+
+    // Restore the original content after printing
+    document.body.innerHTML = originalContent;
+    window.location.reload(); // Refresh the page to re-apply React events
+  };
 
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -142,7 +176,7 @@ const Page = () => {
           <div className="container mx-auto p-6">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
               <h2 className="bg-blue-500 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
-                LAPORAN PEMASUKAN Sanduka
+                LAPORAN PEMASUKAN SANDUKA
               </h2>
 
               <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
@@ -153,7 +187,6 @@ const Page = () => {
                       value={selectedBulan}
                       onChange={handleBulanChange}
                     >
-                      <option value="">-- Bulan --</option>
                       {bulanList.map((bulan) => (
                         <option key={bulan.angkaBulan} value={bulan.angkaBulan}>
                           {bulan.namaBulan}
@@ -167,7 +200,6 @@ const Page = () => {
                       value={selectedYear}
                       onChange={handleYearChange} // Pastikan handler untuk tahun diaktifkan
                     >
-                      <option value="">-- Tahun --</option>
                       {years.map((year) => (
                         <option key={year} value={year}>
                           {year}
@@ -177,11 +209,14 @@ const Page = () => {
                   </div>
                   <div className="flex-1 flex justify-center">
                     <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-                      Transaksi {selectedBulan} {selectedYear}
+                      Transaksi Bulan {selectedBulan} {selectedYear}
                     </h1>
                   </div>
                   <div className="flex justify-center space-x-4 mt-0 sm:mt-3 mr-0 sm:mr-10">
-                    <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                    <Button
+                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+                      onClick={printTable}
+                    >
                       Cetak
                     </Button>
                   </div>

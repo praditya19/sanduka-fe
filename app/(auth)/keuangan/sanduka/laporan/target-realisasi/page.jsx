@@ -99,6 +99,20 @@ const Page = () => {
     (_, index) => startYear + index
   );
 
+  const printTable = () => {
+    const printContent = tableRef.current;
+    const originalContent = document.body.innerHTML;
+
+    // Temporarily replace body content with table content
+    document.body.innerHTML = printContent.innerHTML;
+
+    window.print(); // Trigger the print dialog
+
+    // Restore the original content after printing
+    document.body.innerHTML = originalContent;
+    window.location.reload(); // Refresh the page to re-apply React events
+  };
+
   // useEffect untuk filter data berdasarkan selectedCabang
   useEffect(() => {
     if (selectedCabang) {
@@ -259,7 +273,10 @@ const Page = () => {
                     </h1>
                   </div>
                   <div className="flex justify-center space-x-4 mt-0 sm:mt-3 mr-0 sm:mr-10">
-                    <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                    <Button
+                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+                      onClick={printTable}
+                    >
                       Cetak
                     </Button>
                   </div>
@@ -358,8 +375,12 @@ const Page = () => {
                             {row.jumlahAnggota}
                           </td>
                           <td className="px-6 py-4 text-sm">{row.target}</td>
-                          <td className="px-6 py-4 text-sm">{formatRupiah(row.realisasi)}</td>
-                          <td className="px-6 py-4 text-sm">{formatRupiah(row.selisih)}</td>
+                          <td className="px-6 py-4 text-sm">
+                            {formatRupiah(row.realisasi)}
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            {formatRupiah(row.selisih)}
+                          </td>
                         </tr>
                       ))
                     ) : (
