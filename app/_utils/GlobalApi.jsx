@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "https://4a58-180-246-83-101.ngrok-free.app",
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
