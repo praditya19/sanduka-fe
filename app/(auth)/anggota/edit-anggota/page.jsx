@@ -17,7 +17,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from 'next/navigation';
 import { AiOutlineInfoCircle } from 'react-icons/ai'; // Information icon from react-icons
 
 const MapComponent = dynamic(() => import("../../../_components/MapComponent"), {
@@ -25,6 +25,8 @@ const MapComponent = dynamic(() => import("../../../_components/MapComponent"), 
 });
 
 const Page = () => {
+  const searchParams = useSearchParams(); // Get search parameters
+  const id = searchParams.get('id');
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [error, setError] = useState("");
@@ -62,45 +64,56 @@ const Page = () => {
   const [statusSekolah, setStatusSekolah] = useState("");
   const [statusPegawai, setStatusPegawai] = useState("");
   const [pangkatGolongan, setPangkatGolongan] = useState("");
+  const [tahunDiangkat, setTahunDiangkat] = useState("");
   const [pendidikanTerakhir, setPendidikanTerakhir] = useState("");
   const [sertifikatPendidik, setSertifikatPendidik] = useState("");
-  const router = useRouter();
+  const [mulaiJadiAnggotaPgri, setMulaiJadiAnggotaPgri] = useState("");
+  const isCabangValid = Array.isArray(cabang) && cabang.length > 0;
+  // const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
 
-  const getAnggotaById = async () => {
-    try {
-      const userId = sessionStorage.getItem("userId");
-      const response = await GlobalApi.getUserById(userId);
-      console.log(response);
+  const nextStep = () => {
+    setStep(step + 1);
+  };
 
-      // Ensure that these fields exist in the response and set them in the state
-      setNamaLengkap(response.namaLengkap || "");
-      setPassword(response.password || "");
-      setEmail(response.email || "");
-      setNpaPgri(response.npaPgri || "");
-      setTempatLahir(response.tempatLahir || "");
-      setTanggalLahir(response.tanggalLahir || "");
-      setNip(response.nip || "");
-      setNik(response.nik || "");
-      setJenisKelamin(response.jenisKelamin || "");
-      setAgama(response.agama || "");
-      setGolonganDarah(response.golonganDarah || "");
-      setAlamat(response.alamat || "");
-      setKodePos(response.kodePos || "");
-      setNomorHp(response.nomorHp || "");
-      setNamaSuamiIstri(response.namaSuamiIstri || "");
-      setNamaAnak(response.namaAnak || "");
-      setCabang(response.cabang || "");
-      setTingkatSekolah(response.tingkatSekolah || "");
-      setStatusSekolah(response.statusSekolah || "");
-      setStatusPegawai(response.statusPegawai || "");
-      setPangkatGolongan(response.pangkatGolongan || "");
-      setPendidikanTerakhir(response.pendidikanTerakhir || "");
-      setSertifikatPendidik(response.sertifikatPendidik || "");
+  const prevStep = () => {
+    setStep(step - 1);
+  };
+
+  const getAnggotaById = async (userId) => {
+    try {
+      const response = await GlobalApi.getUserById(userId);
+      if (response) {
+        setNamaLengkap(response.namaLengkap || '');
+        setPassword(response.password || '');
+        setEmail(response.email || '');
+        setNpaPgri(response.npaPgri || '');
+        setTempatLahir(response.tempatLahir || '');
+        setTanggalLahir(response.tanggalLahir || '');
+        setNip(response.nip || '');
+        setNik(response.nik || '');
+        setJenisKelamin(response.jenisKelamin || '');
+        setAgama(response.agama || '');
+        setGolonganDarah(response.golonganDarah || '');
+        setAlamat(response.alamat || '');
+        setKodePos(response.kodePos || '');
+        setNomorHp(response.nomorHp || '');
+        setNamaSuamiIstri(response.namaSuamiIstri || '');
+        setNamaAnak(response.namaAnak || '');
+        setCabang(response.cabang || '');
+        setTingkatSekolah(response.tingkatSekolah || '');
+        setStatusSekolah(response.statusSekolah || '');
+        setStatusPegawai(response.statusPegawai || '');
+        setPangkatGolongan(response.pangkatGolongan || '');
+        setTahunDiangkat(response.tahunDiangkat || '');
+        setMulaiJadiAnggotaPgri(response.mulaiJadiAnggotaPgri || '');
+        setPendidikanTerakhir(response.pendidikanTerakhir || '');
+        setSertifikatPendidik(response.sertifikatPendidik || '');
+      }
     } catch (error) {
-      console.error("Error Saat Mendapatkan Data:", error);
+      console.error('Error Saat Mendapatkan Data:', error);
     }
   };
 
@@ -113,10 +126,14 @@ const Page = () => {
 
   const handleCabangChange = (value) => {
     setSelectedCabang(value);
-    updateUnitKerja(value);
+    const filtered = unitKerja.filter(item => item.cabang === value);
+    setFilteredUnitKerja(filtered);
   };
 
-  const [formattedDate, setFormattedDate] = useState("");
+  // const [formattedDate, setFormattedDate] = useState("");
+  const [formattedTanggalLahir, setFormattedTanggalLahir] = useState('');
+  const [formattedTahunDiangkat, setFormattedTahunDiangkat] = useState('');
+  const [formattedMulai, setFormattedMulaiJadiAnggotaPgri] = useState('');
 
   const convertToDateString = (arr) => {
     const [year, month, day] = arr;
@@ -140,9 +157,20 @@ const Page = () => {
   };
 
   useEffect(() => {
-    const formatted = convertToDateString(tanggalLahir);
-    setFormattedDate(formatted);
-  }, [tanggalLahir]);
+    if (id) {
+      getAnggotaById(id);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    const formattedLahir = convertToDateString(tanggalLahir);
+    const formattedDiangkat = convertToDateString(tahunDiangkat);
+    const formattedMulai = convertToDateString(mulaiJadiAnggotaPgri);
+
+    setFormattedTanggalLahir(formattedLahir);
+    setFormattedTahunDiangkat(formattedDiangkat);
+    setFormattedMulaiJadiAnggotaPgri(formattedMulai);
+  }, [tanggalLahir, tahunDiangkat, mulaiJadiAnggotaPgri]);
 
   useEffect(() => {
     const currentDate = new Date().toISOString().split("T")[0];
@@ -160,12 +188,28 @@ const Page = () => {
 
   const fetchData = async () => {
     try {
-      const response = await GlobalApi.getCabang();
-      setCabang(response.data);
+      const response = await GlobalApi.getCabang(); // Call your API here
+      console.log(response); // Check if the response is correct
+      setCabang(response); // Ensure this is an array
     } catch (error) {
-      console.error("Error fetching recipes:", error);
+      console.error("Error fetching cabang:", error);
     }
   };
+
+  useEffect(() => {
+    // Fetch cabang data from an API or database
+    const fetchCabang = async () => {
+      try {
+        const response = await GlobalApi.getCabang();
+        if (response && Array.isArray(response.data)) {
+          setCabang(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching cabang:", error);
+      }
+    };
+    fetchCabang();
+  }, []);
 
   const fetchJabatan = async () => {
     try {
@@ -188,9 +232,11 @@ const Page = () => {
   const fetchUnitKerja = async () => {
     try {
       const response = await GlobalApi.getUnitKerja();
-      setUnitKerja(response.data);
+      if (response && Array.isArray(response.data)) {
+        setUnitKerja(response.data);
+      }
     } catch (error) {
-      console.error("Error fetching recipes:", error);
+      console.error("Error fetching unit kerja:", error);
     }
   };
 
@@ -249,9 +295,59 @@ const Page = () => {
   //   setNamesanak(newNamesanak);
   // };
 
+  const handleSubmit = async (e) => {
+    // Ensure e is an event object, passed automatically when the form is submitted
+    if (e && e.preventDefault) {
+      e.preventDefault(); // Prevent the default form submission behavior
+    } // Prevent the default form submission behavior
+
+    const updatedData = {
+      id,
+      namaLengkap,
+      password,
+      email,
+      npaPgri,
+      tempatLahir,
+      tanggalLahir,
+      nip,
+      nik,
+      jenisKelamin,
+      agama,
+      golonganDarah,
+      alamat,
+      kodePos,
+      nomorHp,
+      namaSuamiIstri,
+      namaAnak,
+      cabang,
+      tingkatSekolah,
+      statusSekolah,
+      statusPegawai,
+      pangkatGolongan,
+      tahunDiangkat,
+      mulaiJadiAnggotaPgri,
+      pendidikanTerakhir,
+      sertifikatPendidik,
+      // Include other fields here...
+    };
+
+    try {
+      const response = await GlobalApi.updateUserById(updatedData);
+      if (response.success) {
+        alert('Data berhasil diperbarui!');
+        // Optionally redirect or update the UI
+      } else {
+        alert('Gagal memperbarui data.');
+      }
+    } catch (error) {
+      console.error('Error Saat Memperbarui Data:', error);
+    }
+  };
+
+
   const {
     register,
-    handleSubmit,
+    // handleSubmit,
     formState: { errors },
     control,
   } = useForm({
@@ -292,19 +388,19 @@ const Page = () => {
     }
   };
 
-  const nextStep = () => {
-    if (!selectedFile) {
-      setError("Harap unggah gambar sebelum melanjutkan.");
-      return;
-    }
+  // const nextStep = () => {
+  //   if (!selectedFile) {
+  //     setError("Harap unggah gambar sebelum melanjutkan.");
+  //     return;
+  //   }
 
-    setStep(step + 1);
-    setError("");
-  };
+  //   setStep(step + 1);
+  //   setError("");
+  // };
 
-  const prevStep = () => {
-    setStep(step - 1);
-  };
+  // const prevStep = () => {
+  //   setStep(step - 1);
+  // };
 
   const handleChange = (index, event) => {
     const updatedNames = [...namaAnak];
@@ -401,9 +497,11 @@ const Page = () => {
                     </span>
                   </Label>
                   <Input
-                    type="password"
+                    type="text"
                     id="password"
                     placeholder="contoh:Kat45and!"
+                    value={password} // Bind the nip value from state
+                    onChange={(e) => setPassword(e.target.value)}
                   // {...register("password", { required: true })}
                   />
                   {/* {errors.password && (
@@ -488,7 +586,7 @@ const Page = () => {
                     type="text"
                     id="namaLengkap"
                     placeholder="Sesuai Dengan KTP"
-                    value={namaLengkap} // Bind the nip value from state
+                    value={namaLengkap}
                     onChange={(e) => setNamaLengkap(e.target.value)}
                   // {...register("namaLengkap", { required: true })}
                   />
@@ -526,8 +624,8 @@ const Page = () => {
                   <Input
                     type="date"
                     id="tanggalLahir"
-                    value={formattedDate} // Bind the formatted date string
-                    onChange={(e) => setFormattedDate(e.target.value)}
+                    value={formattedTanggalLahir} // Bind to formatted tanggalLahir state
+                    onChange={(e) => setFormattedTanggalLahir(e.target.value)} // Update formatted tanggalLahir
                   // {...register("tanggalLahir", { required: true })}
                   />
                   {/* {errors.tanggalLahir && (
@@ -546,7 +644,7 @@ const Page = () => {
                     control={control}
                     value={jenisKelamin}
                     onChange={(e) => setJenisKelamin(e.target.value)}
-                    rules={{ required: true }}
+                    // rules={{ required: true }}
                     render={({ field }) => (
                       <Select
                         value={jenisKelamin}
@@ -577,7 +675,7 @@ const Page = () => {
                   <Controller
                     name="agama"
                     control={control}
-                    rules={{ required: true }}
+                    // rules={{ required: true }}
                     render={({ field }) => (
                       <Select
                         value={agama}
@@ -618,7 +716,7 @@ const Page = () => {
                   <Controller
                     name="golonganDarah"
                     control={control}
-                    rules={{ required: true }}
+                    // rules={{ required: true }}
                     render={({ field }) => (
                       <Select
                         value={golonganDarah}
@@ -722,7 +820,7 @@ const Page = () => {
                     </span>
                   </Label>
                   <Input
-                    type="number"
+                    type="text"
                     id="nomorHp"
                     placeholder="Nomor Handphone Aktif"
                     value={nomorHp}
@@ -757,7 +855,6 @@ const Page = () => {
                   )} */}
                 </div>
                 <div className="w-full">
-                  {/* Safely map over namaAnak if it is an array */}
                   {Array.isArray(namaAnak) && namaAnak.map((name, index) => (
                     <div key={index} className="mb-3 flex items-center">
                       <div className="flex-1">
@@ -803,7 +900,7 @@ const Page = () => {
                 )}
               </div>
               <div className="w-full flex justify-end mt-8">
-                <Button type="submit">Next</Button>
+                <Button type="submit" onClick={nextStep}>Next</Button>
               </div>
             </form>
           </div>
@@ -832,27 +929,31 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select
-                      value={cabang}
-                      onChange={(e) => setCabang(e.target.value)}
-                    // value={field.value}
-                    // onValueChange={(value) => {
-                    //   field.onChange(value);
-                    //   handleCabangChange(value);
-                    // }}
+                      value={field.cabang}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        handleCabangChange(value);
+                      }}
+                    // value={cabang}
+                    // onChange={(e) => setCabang(e.target.value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Pilih Cabang" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          {cabang.map((item) => (
-                            <SelectItem
-                              key={item.idKecamatan}
-                              value={item.kecamatan}
-                            >
-                              {item.kecamatan}
-                            </SelectItem>
-                          ))}
+                          {isCabangValid ? (
+                            cabang.map((item) => (
+                              <SelectItem
+                                key={item.idKecamatan}
+                                value={item.kecamatan}
+                              >
+                                {item.kecamatan}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-data">Data Cabang tidak tersedia</SelectItem>
+                          )}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -875,10 +976,8 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select
-                      value={unitKerja}
-                      onChange={(e) => setUnitKerja(e.target.value)}
-                      // value={field.value}
-                      // onValueChange={field.onChange}
+                      value={field.value}
+                      onValueChange={field.onChange}
                       disabled={!selectedCabang}
                     >
                       <SelectTrigger>
@@ -913,10 +1012,10 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select
-                      value={jabatan}
-                      onChange={(e) => setJabatan(e.target.value)}
-                    // value={field.value}
-                    // onValueChange={field.onChange}
+                      // value={jabatan}
+                      // onChange={(e) => setJabatan(e.target.value)}
+                      value={field.value}
+                      onValueChange={field.onChange}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Pilih Jabatan" />
@@ -1047,18 +1146,20 @@ const Page = () => {
               </div>
               <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
-                  Tahun Diangkat PNS/P3K/GTT/GTY
+                  Tahun Diangkat
                 </Label>
                 <Input
                   type="date"
                   id="tahunDiangkat"
-                  placeholder="dd/mm/yyyy"
-                  max={today}
-                  {...register("tahunDiangkat", { required: true })}
+                  value={formattedTahunDiangkat}
+                  onChange={(e) => setFormattedTahunDiangkat(e.target.value)}
+                // {...register("tahunDiangkat", { required: true })}
                 />
-                {errors.tmt && (
-                  <span className="text-red-500 text-sm">TMT is required</span>
-                )}
+                {/* {errors.tahhunDiangkat && (
+        <span className="text-red-500 text-sm">
+          Tahun Diangkat is required
+        </span>
+      )} */}
               </div>
 
               <div className="w-full">
@@ -1161,15 +1262,17 @@ const Page = () => {
                 <Input
                   type="date"
                   id="mulaiJadiAnggotaPgri"
-                  placeholder="dd/mm/yyyy"
+                  value={formattedMulai}
+                  onChange={(e) => setFormattedMulaiJadiAnggotaPgri(e.target.value)}
+                  // placeholder="dd/mm/yyyy"
                   max={today}
-                  {...register("mulaiJadiAnggotaPgri", { required: true })}
+                // {...register("mulaiJadiAnggotaPgri", { required: true })}
                 />
-                {errors.mulaiJadianggota && (
+                {/* {errors.mulaiJadianggota && (
                   <span className="text-red-500 text-sm">
                     Mulai jadi anggota PGRI is required
                   </span>
-                )}
+                )} */}
               </div>
 
               <div className="w-full">
@@ -1237,7 +1340,7 @@ const Page = () => {
                   type="submit"
                   className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
                 >
-                  Submit
+                  Update
                 </Button>
               </div>
             </form>

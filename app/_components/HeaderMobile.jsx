@@ -10,9 +10,9 @@ import { useRouter } from "next/navigation";
 const HeaderMobile = () => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
-  const [notificationCount, setNotificationCount] = useState(2);
-  const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] =
-    useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [previousNotificationCount, setPreviousNotificationCount] = useState(0); // Track previous count
+  const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] = useState(false);
   const audioRef = useRef(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); // State for toggling profile menu
   const profileMenuRef = useRef(null); // Ref for profile menu
@@ -29,7 +29,7 @@ const HeaderMobile = () => {
       console.error("Error Saat Mendapatkan Foto:", error);
     }
   };
-    
+
   const handleBackClick = () => {
     router.back();
   };
@@ -60,6 +60,40 @@ const HeaderMobile = () => {
     sessionStorage.removeItem("userId");
     window.location.href = "/"; // Redirect to login or home page
   };
+
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      try {
+        const count = await GlobalApi.getNotifikasi();
+        setNotificationCount(count);
+      } catch (error) {
+        console.error("Error fetching notification count:", error);
+        setNotificationCount(0);
+      }
+    };
+
+    fetchNotificationCount();
+    const intervalId = setInterval(fetchNotificationCount, 60000); // Refresh every minute
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    getAnggotaById();
+
+    // Play notification sound only if new notifications are greater than previous ones
+    if (notificationCount > previousNotificationCount && !isNotificationSoundPlaying) {
+      const playNotificationSound = () => {
+        const audio = new Audio("/sound-notification.wav");
+        audioRef.current = audio;
+        audio.play()
+          .then(() => setIsNotificationSoundPlaying(true))
+          .catch((error) => console.error("Error playing sound:", error));
+        audio.onended = () => setIsNotificationSoundPlaying(false);
+      };
+      playNotificationSound();
+    }
+  }, [notificationCount, previousNotificationCount, isNotificationSoundPlaying]);
 
   useEffect(() => {
     getAnggotaById();
@@ -115,10 +149,10 @@ const HeaderMobile = () => {
         </div>
         {/* Right Section: Notifications, Search, and Profile */}
         <div className="flex space-x-6 items-center relative">
-          <button onClick={handleNotificationClick} className="relative">
+          <button onClick={handleNotificationClick} className="relative w-full text-left">
             <FontAwesomeIcon icon={faBell} className="w-5 h-5 text-gray-700" />
             {notificationCount > 0 && (
-              <span className="absolute top-0 right-0 inline-flex items-center justify-center w-3 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+              <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
                 {notificationCount}
               </span>
             )}
