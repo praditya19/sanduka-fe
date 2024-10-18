@@ -494,7 +494,7 @@ const createTargetIuaran = async (payload) => {
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error creating target iuran data:", error);
-    throw error; // Lemparkan error untuk ditangani di tempat lain
+    throw error;
   }
 };
 // END
