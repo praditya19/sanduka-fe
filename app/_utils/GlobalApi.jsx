@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "https://4a58-180-246-83-101.ngrok-free.app",
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
@@ -520,7 +520,7 @@ const createTargetIuaran = async (payload) => {
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error creating target iuran data:", error);
-    throw error; // Lemparkan error untuk ditangani di tempat lain
+    throw error;
   }
 };
 // END
