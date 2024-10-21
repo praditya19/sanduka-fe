@@ -390,6 +390,32 @@ const getCalculateSanduka = async (bulan, tahun, cabang) => {
   }
 };
 
+// Sinkronisasi
+const uploadFile = async (formData) => {
+  try {
+    const response = await axiosClient.post("/api/files/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data", // Pastikan menggunakan tipe konten yang sesuai
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    throw error;
+  }
+};
+
+const getAllFiles = async () => {
+  try {
+    const response = await axiosClient.get('/api/files/all');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching files:', error);
+    throw error;
+  }
+};
+
 // Fungsi untuk mengambil semua data dari calculate-sanduka/cabang-all
 const getCalculateSandukaAll = async (bulan, tahun) => {
   try {
@@ -827,4 +853,6 @@ export default {
   getLaporanPengeluaran,
   getNotifikasi,
   getAnggotaMeninggal,
+  uploadFile,
+  getAllFiles,
 };
