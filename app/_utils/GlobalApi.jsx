@@ -780,6 +780,7 @@ const getNotifikasi = async (count) => {
   }
 };
 
+
 const getAnggotaMeninggal = async () => {
   try {
     const response = await axiosClient.get("/api/notifikasi/data-terlapor");
