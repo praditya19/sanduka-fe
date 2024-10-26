@@ -408,10 +408,10 @@ const uploadFile = async (formData) => {
 
 const getAllFiles = async () => {
   try {
-    const response = await axiosClient.get('/api/files/all');
+    const response = await axiosClient.get("/api/files/all");
     return response.data;
   } catch (error) {
-    console.error('Error fetching files:', error);
+    console.error("Error fetching files:", error);
     throw error;
   }
 };
@@ -523,6 +523,7 @@ const createTargetIuaran = async (payload) => {
     throw error;
   }
 };
+
 // END
 // DASPEN start (Sumbangan Daspen)
 const createDaspenData = async (payload) => {
@@ -778,6 +779,7 @@ const getNotifikasi = async (count) => {
     throw error;
   }
 };
+
 
 const getAnggotaMeninggal = async () => {
   try {
