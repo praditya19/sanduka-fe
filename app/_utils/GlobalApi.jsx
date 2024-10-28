@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: "https://63da-103-90-210-146.ngrok-free.app",
+  baseURL: "https://1c48-103-90-210-146.ngrok-free.app",
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
@@ -97,6 +97,17 @@ const getUserById = async (userId) => {
     }
   }
 };
+// Update DATA
+const updateUserById = async (id, data) => {
+  try {
+    const response = await axiosClient.put(`/api/auth/user/${id}`, data);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating user:", error);
+    throw error;
+  }
+};
+
 
 // Verifikasi Anggota
 const getUnverifiedUsers = (
@@ -857,4 +868,5 @@ export default {
   getAnggotaMeninggal,
   uploadFile,
   getAllFiles,
+  updateUserById,
 };

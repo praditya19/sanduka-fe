@@ -28,10 +28,13 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 function DataAnggota() {
   const [maxItems, setMaxItems] = useState(10);
   const [selectedCabang, setSelectedCabang] = useState("");
-  const [filterCabang, setFilterCabang] = useState('');
-  const [filterUnitKerja, setFilterUnitKerja] = useState('');
+  const [filterCabang, setFilterCabang] = useState("");
+  const [filterUnitKerja, setFilterUnitKerja] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("Semua");
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "ascending" });
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: "ascending",
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
   const [anggota, setAnggota] = useState([]);
@@ -201,7 +204,6 @@ function DataAnggota() {
     setShowUnitKerjaDropdown(filteredUnitKerja.length > 0);
     setFilteredUnitKerja(filteredUnitKerja);
 
-
     const rekapFilteredByUnitKerja = originalRekapData.filter(
       (item) =>
         item.alamatKerja &&
@@ -214,7 +216,6 @@ function DataAnggota() {
       setRekapData(rekapFilteredByUnitKerja);
     }
   };
-
 
   const handleUnitKerjaSelect = (unitKerja) => {
     setSelectedUnitKerja(unitKerja.unitKerja);
@@ -265,11 +266,11 @@ function DataAnggota() {
 
   useEffect(() => {
     if (selectedCabang) {
-      const filtered = unitKerja.filter(uk => uk.cabang === selectedCabang);
+      const filtered = unitKerja.filter((uk) => uk.cabang === selectedCabang);
       setFilteredUnitKerja(filtered);
     } else {
       setFilteredUnitKerja([]);
-    };
+    }
 
     setFilteredCabang(
       cabang.filter((item) =>
@@ -318,7 +319,6 @@ function DataAnggota() {
 
       if (fetchedData && fetchedData.length > 0) {
         fetchedData.forEach((item) => {
-          console.log('test', item)
           if (item.foto) {
             try {
               const decodedString = atob(item.foto);
@@ -340,7 +340,6 @@ function DataAnggota() {
       // setTotalPages(response.data.totalPages || 0);
       setLoading(false);
       setAnggota(fetchedData || []); // Use response.data.content if it's a Page object
-
     } catch (error) {
       console.error("Error fetching anggota:", error);
       setAnggota([]);
@@ -365,7 +364,8 @@ function DataAnggota() {
     }
   };
 
-  const formatCurrency = (amount) => `Rp ${parseInt(amount).toLocaleString("id-ID")}`;
+  const formatCurrency = (amount) =>
+    `Rp ${parseInt(amount).toLocaleString("id-ID")}`;
 
   const handlePrint = () => {
     const filteredDataForPrint = filteredData;
@@ -400,7 +400,8 @@ function DataAnggota() {
             </thead>
             <tbody>
               ${filteredDataForPrint
-        .map((item, index) => `
+                .map(
+                  (item, index) => `
                     <tr>
                       <td>${index + 1}</td>
                       <td></td>
@@ -413,21 +414,30 @@ function DataAnggota() {
                         <div>${item.tempatLahir},</div>
                         <div>${formatDate(item.tanggalLahir)}</div>
                         <div>${calculateAge(item.tanggalLahir)} Tahun</div>
-                        <div>${calculateRetirementDate(item.tanggalLahir, item.statusPegawai)}</div>
+                        <div>${calculateRetirementDate(
+                          item.tanggalLahir,
+                          item.statusPegawai
+                        )}</div>
                       </td>
                       <td>
                         <div>${item.cabang},</div>
                         <div>${item.unitKerja}</div>
-                        <div>Anggota: ${item.tahunDiangkat ? item.tahunDiangkat : '-'}</div>
+                        <div>Anggota: ${
+                          item.tahunDiangkat ? item.tahunDiangkat : "-"
+                        }</div>
                         <div>
-                          ${item.pangkatGolongan} || ${formatCurrency(item.iuran)}
+                          ${item.pangkatGolongan} || ${formatCurrency(
+                    item.iuran
+                  )}
                         </div>
                       </td>
                       <td>
                         <div>${item.status}</div>
                       </td>
                     </tr>
-                  `).join("")}
+                  `
+                )
+                .join("")}
             </tbody>
           </table>
         </body>
@@ -447,7 +457,7 @@ function DataAnggota() {
     if (sortConfig && sortConfig.key) {
       sortableItems.sort((a, b) => {
         const key = sortConfig.key;
-        const direction = sortConfig.direction === 'ascending' ? 1 : -1;
+        const direction = sortConfig.direction === "ascending" ? 1 : -1;
 
         if (a[key] < b[key]) return direction * -1;
         if (a[key] > b[key]) return direction;
@@ -460,7 +470,11 @@ function DataAnggota() {
 
   const requestSort = (key) => {
     let direction = "ascending";
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === "ascending") {
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === "ascending"
+    ) {
       direction = "descending";
     }
     setSortConfig({ key, direction });
@@ -482,14 +496,29 @@ function DataAnggota() {
       const unitKerjaFilter =
         selectedUnitKerja === "" || item.unitKerja === selectedUnitKerja;
 
-      const searchCabangFilter = item.cabang.toLowerCase().includes(filterCabang.toLowerCase());
-      const searchUnitKerjaFilter = item.unitKerja.toLowerCase().includes(filterUnitKerja.toLowerCase());
+      const searchCabangFilter = item.cabang
+        .toLowerCase()
+        .includes(filterCabang.toLowerCase());
+      const searchUnitKerjaFilter = item.unitKerja
+        .toLowerCase()
+        .includes(filterUnitKerja.toLowerCase());
 
-      return statusFilter && cabangFilter && unitKerjaFilter &&
+      return (
+        statusFilter &&
+        cabangFilter &&
+        unitKerjaFilter &&
         (filterCabang ? searchCabangFilter : true) &&
-        (filterUnitKerja ? searchUnitKerjaFilter : true);
+        (filterUnitKerja ? searchUnitKerjaFilter : true)
+      );
     });
-  }, [sortedData, selectedStatus, selectedCabang, selectedUnitKerja, filterCabang, filterUnitKerja]);
+  }, [
+    sortedData,
+    selectedStatus,
+    selectedCabang,
+    selectedUnitKerja,
+    filterCabang,
+    filterUnitKerja,
+  ]);
 
   const jumlahAnggota = filteredData.length;
 
@@ -533,8 +562,8 @@ function DataAnggota() {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
   };
@@ -544,7 +573,10 @@ function DataAnggota() {
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDifference = today.getMonth() - birthDate.getMonth();
-    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+    if (
+      monthDifference < 0 ||
+      (monthDifference === 0 && today.getDate() < birthDate.getDate())
+    ) {
       age--;
     }
     return age;
@@ -552,13 +584,21 @@ function DataAnggota() {
 
   const calculateRetirementDate = (birthDateString, employmentType) => {
     const birthDate = new Date(birthDateString);
-    const retirementAge = employmentType === 'PNS' ? 60 : 58;
+    const retirementAge = employmentType === "PNS" ? 60 : 58;
     const retirementYear = birthDate.getFullYear() + retirementAge;
-    const retirementDate = new Date(retirementYear, birthDate.getMonth(), birthDate.getDate());
+    const retirementDate = new Date(
+      retirementYear,
+      birthDate.getMonth(),
+      birthDate.getDate()
+    );
 
     const formattedRetirementDate = retirementDate
-      .toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })
-      .replace(/\//g, '-');
+      .toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+      .replace(/\//g, "-");
 
     return formattedRetirementDate;
   };
@@ -602,24 +642,20 @@ function DataAnggota() {
     setPopupVisible(false);
   };
 
-
   if (loading) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      {isMobile ? (
-        <HeaderMobile />
-      ) : (
-        <HeaderHome />
-      )}
+      {isMobile ? <HeaderMobile /> : <HeaderHome />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="mb-4">
             <div className="flex flex-wrap items-start mt-14 justify-between">
@@ -660,19 +696,20 @@ function DataAnggota() {
                         className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
                         disabled={!selectedCabang}
                       />
-                      {showUnitKerjaDropdown && filteredUnitKerja.length > 0 && (
-                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-12 max-h-40 overflow-y-auto">
-                          {filteredUnitKerja.map((unitKerja) => (
-                            <li
-                              key={unitKerja.id}
-                              onClick={() => handleUnitKerjaSelect(unitKerja)}
-                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                            >
-                              {unitKerja.unitKerja}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
+                      {showUnitKerjaDropdown &&
+                        filteredUnitKerja.length > 0 && (
+                          <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-12 max-h-40 overflow-y-auto">
+                            {filteredUnitKerja.map((unitKerja) => (
+                              <li
+                                key={unitKerja.id}
+                                onClick={() => handleUnitKerjaSelect(unitKerja)}
+                                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                              >
+                                {unitKerja.unitKerja}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                     </div>
                   </div>
                 </>
@@ -803,7 +840,7 @@ function DataAnggota() {
                           <div className="flex justify-center items-center">
                             {globalIndex}
                             <Button
-                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"  // `lg:hidden` makes the button hidden on screens larger than the "lg" size
+                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden" // `lg:hidden` makes the button hidden on screens larger than the "lg" size
                               onClick={() => handleExpand(index)}
                             >
                               <FaPlus className="w-4 h-4" />
@@ -824,34 +861,47 @@ function DataAnggota() {
                           )}
                         </td>
                         <td className="p-2 md:p-3 border">
-                          <div className="font-bold text-sm">{item.namaLengkap}</div>
+                          <div className="font-bold text-sm">
+                            {item.namaLengkap}
+                          </div>
                           <div className="text-sm">{item.npaPgri}</div>
                           <div className="text-sm">{item.jabatan}</div>
                         </td>
                         <td className="p-2 md:p-3 border md:table-cell hidden">
                           <div className="text-sm">{item.tempatLahir},</div>
-                          <div className="text-sm">{formatDate(item.tanggalLahir)}</div>
-                          <div className="text-sm">{calculateAge(item.tanggalLahir)} Tahun</div>
                           <div className="text-sm">
-                            Pensiun : {calculateRetirementDate(item.tanggalLahir, item.statusPegawai)}
+                            {formatDate(item.tanggalLahir)}
+                          </div>
+                          <div className="text-sm">
+                            {calculateAge(item.tanggalLahir)} Tahun
+                          </div>
+                          <div className="text-sm">
+                            Pensiun :{" "}
+                            {calculateRetirementDate(
+                              item.tanggalLahir,
+                              item.statusPegawai
+                            )}
                           </div>
                         </td>
                         <td className="p-2 md:p-3 border md:table-cell hidden">
                           <div className="text-sm">{item.cabang},</div>
                           <div className="text-sm">{item.unitKerja}</div>
                           <div className="text-sm">
-                            Anggota: {item.tahunDiangkat ? item.tahunDiangkat : '-'}
+                            Anggota:{" "}
+                            {item.tahunDiangkat ? item.tahunDiangkat : "-"}
                           </div>
                           <div className="text-sm">
-                            {item.pangkatGolongan} || {formatCurrency(item.iuran)}
+                            {item.pangkatGolongan} ||{" "}
+                            {formatCurrency(item.iuran)}
                           </div>
                         </td>
                         <td className="p-2 text-center md:p-3 border md:table-cell hidden">
                           <div
-                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
-                              ? "bg-red-200 text-red-900"
-                              : "bg-green-200 text-green-900"
-                              }`}
+                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${
+                              item.status === "BUKAN ANGGOTA"
+                                ? "bg-red-200 text-red-900"
+                                : "bg-green-200 text-green-900"
+                            }`}
                           >
                             {item.status === "ANGGOTA" ? "Aktif" : item.status}
                           </div>
@@ -861,7 +911,14 @@ function DataAnggota() {
                             <Button
                               className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
                               title="Edit Data"
-                              onClick={() => router.push(`/anggota/edit-anggota?id=${item.id}`)} // Dynamically pass the item's id
+                              onClick={() => {
+                                // Simpan id item ke sessionStorage
+                                sessionStorage.setItem("anggotaId", item.id);
+                                // Pindahkan ke halaman edit anggota
+                                router.push(
+                                  `/anggota/edit-anggota?id=${item.id}`
+                                );
+                              }}
                             >
                               <FaEdit className="w-4 h-4" />
                             </Button>
@@ -897,29 +954,49 @@ function DataAnggota() {
                         <td colSpan="7" className="p-2 border">
                           {expandedIndex === index && (
                             <div className="mt-2">
-                              <div className="font-bold">{item.namaLengkap}</div>
+                              <div className="font-bold">
+                                {item.namaLengkap}
+                              </div>
                               <div>{item.npaPgri}</div>
                               <div>{item.tugas}</div>
-                              <div>{item.tempatLahir}, {formatDate(item.tanggalLahir)}</div>
+                              <div>
+                                {item.tempatLahir},{" "}
+                                {formatDate(item.tanggalLahir)}
+                              </div>
                               <div>{calculateAge(item.tanggalLahir)} Tahun</div>
-                              <div>Prediksi Pensiun: {calculateRetirementDate(item.tanggalLahir, item.statusPegawai)}</div>
+                              <div>
+                                Prediksi Pensiun:{" "}
+                                {calculateRetirementDate(
+                                  item.tanggalLahir,
+                                  item.statusPegawai
+                                )}
+                              </div>
                               <div>{item.cabang},</div>
                               <div>{item.unitKerja}</div>
                               <div>Anggota: {item.gabung}</div>
-                              <div>{item.golongan}/{formatCurrency(item.iuran)}</div>
+                              <div>
+                                {item.golongan}/{formatCurrency(item.iuran)}
+                              </div>
                               <div
-                                className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${item.status === "BUKAN ANGGOTA"
-                                  ? "bg-red-200 text-red-900"
-                                  : "bg-green-200 text-green-900"
-                                  }`}
+                                className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${
+                                  item.status === "BUKAN ANGGOTA"
+                                    ? "bg-red-200 text-red-900"
+                                    : "bg-green-200 text-green-900"
+                                }`}
                               >
-                                {item.status === "ANGGOTA" ? "Aktif" : item.status}
+                                {item.status === "ANGGOTA"
+                                  ? "Aktif"
+                                  : item.status}
                               </div>
                               <div className="flex justify-center space-x-2 mt-2">
                                 <Button
                                   className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
                                   title="Edit Data"
-                                  onClick={() => router.push(`/anggota/edit-anggota?id=${item.id}`)} // Dynamically pass the item's id
+                                  onClick={() =>
+                                    router.push(
+                                      `/anggota/edit-anggota?id=${item.id}`
+                                    )
+                                  } // Dynamically pass the item's id
                                 >
                                   <FaEdit className="w-4 h-4" />
                                 </Button>
@@ -991,10 +1068,11 @@ function DataAnggota() {
                           <li key={number}>
                             <Button
                               onClick={() => handlePageClick(number)}
-                              className={`mx-1 px-4 py-2 border rounded-md ${currentPage === number
-                                ? "bg-blue-500 text-white"
-                                : "bg-white text-black"
-                                }`}
+                              className={`mx-1 px-4 py-2 border rounded-md ${
+                                currentPage === number
+                                  ? "bg-blue-500 text-white"
+                                  : "bg-white text-black"
+                              }`}
                             >
                               {number}
                             </Button>
@@ -1073,7 +1151,9 @@ function DataAnggota() {
                   className="w-full bg-teal-700 hover:bg-teal-500"
                   onClick={() => handlePindahCabangClick()}
                 >
-                  {isCabangEnabled ? "Konfirmasi Pindah Cabang" : "Pindah Cabang"}
+                  {isCabangEnabled
+                    ? "Konfirmasi Pindah Cabang"
+                    : "Pindah Cabang"}
                 </Button>
                 <Button
                   className="w-full bg-teal-700 hover:bg-teal-500"
