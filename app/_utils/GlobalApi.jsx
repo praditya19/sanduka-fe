@@ -108,7 +108,6 @@ const updateUserById = async (id, data) => {
   }
 };
 
-
 // Verifikasi Anggota
 const getUnverifiedUsers = (
   page = 0,
@@ -521,7 +520,7 @@ const createIuranData = async (payload) => {
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error creating iuran data:", error);
-    throw error; // Lemparkan error untuk ditangani di tempat lain
+    throw error;
   }
 };
 
@@ -790,7 +789,6 @@ const getNotifikasi = async (count) => {
     throw error;
   }
 };
-
 
 const getAnggotaMeninggal = async () => {
   try {
