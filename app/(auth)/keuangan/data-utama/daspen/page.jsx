@@ -303,7 +303,26 @@ export default function Daspen() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <Toaster />
+           <Toaster
+          toastOptions={{
+            style: {
+              fontSize: "1.25rem", // Ukuran font yang lebih besar
+              padding: "16px", // Menambah padding jika diperlukan
+            },
+            success: {
+              style: {
+                background: "white", // Warna background hijau untuk pesan sukses
+                color: "black",
+              },
+            },
+            error: {
+              style: {
+                background: "#f44336", // Warna background merah untuk pesan error
+                color: "#fff",
+              },
+            },
+          }}
+        />
           <div className="container mx-auto p-6 bg-gray-50 rounded-lg shadow-lg mt-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-lg shadow-md">

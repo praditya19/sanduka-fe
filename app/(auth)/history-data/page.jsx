@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -14,6 +14,7 @@ import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import { Input } from "@/components/ui/input";
 
 const Page = () => {
   const [filter, setFilter] = useState("");
@@ -28,10 +29,38 @@ const Page = () => {
   const { token } = useAuth();
 
   const [cabangOptions, setCabangOptions] = useState([]);
-  const [selectedCabang, setSelectedCabang] = useState("");
+
   const [selectedMonth, setSelectedMonth] = useState("");
   const [bulanOptions, setBulanOptions] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [filteredCabangOptions, setFilteredCabangOptions] =
+    useState(cabangOptions);
+  const [showDropdownCabang, setShowDropdownCabang] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const handleInputChange = (e) => {
+    setSelectedCabang(e.target.value);
+    const filtered = cabangOptions.filter((option) =>
+      option.kecamatan.toLowerCase().includes(e.target.value.toLowerCase())
+    );
+    setFilteredCabangOptions(filtered);
+    setShowDropdownCabang(true);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdownCabang(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     GlobalApi.getCabang()
@@ -214,21 +243,38 @@ const Page = () => {
             <div className="rounded-md flex flex-col py-4">
               <div className="container px-2">
                 <div className="w-full flex items-center justify-between mb-4">
-                  <div className="flex w-2/3 space-x-2">
+                  <div ref={dropdownRef} className="flex w-2/3 space-x-2">
                     {/* Cabang Dropdown */}
-                    <select
+                    <Input
+                      type="text"
                       value={selectedCabang}
-                      onChange={(e) => setSelectedCabang(e.target.value)}
+                      onChange={handleInputChange}
+                      onFocus={() => setShowDropdownCabang(true)}
+                      onBlur={() =>
+                        setTimeout(() => setShowDropdownCabang(false), 200)
+                      }
                       className="p-2 border rounded w-full"
-                    >
-                      <option value="">Semua Cabang</option>
-                      {cabangOptions.map((option) => (
-                        <option key={option.id} value={option.kecamatan}>
-                          {option.kecamatan}{" "}
-                          {/* Pastikan properti ini sesuai dengan kolom 'cabang' */}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Cari Cabang"
+                    />
+
+                    {/* Dropdown pilihan Cabang */}
+                    {showDropdownCabang && filteredCabangOptions.length > 0 && (
+                      <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 left-10 max-h-48 overflow-y-auto w-1/5">
+                        {filteredCabangOptions.map((option) => (
+                          <li
+                            key={option.id}
+                            className="p-2 cursor-pointer hover:bg-gray-100"
+                            onMouseDown={(e) => e.preventDefault()} // Prevent blur on click
+                            onClick={() => {
+                              setSelectedCabang(option.kecamatan);
+                              setShowDropdownCabang(false);
+                            }}
+                          >
+                            {option.kecamatan}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
 
                     {/* Month Dropdown */}
                     <select

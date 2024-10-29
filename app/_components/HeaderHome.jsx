@@ -53,9 +53,9 @@ const HeaderHome = () => {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem("userId");
-    window.location.href = "/";
-  };
+    sessionStorage.clear(); // Menghapus semua item di sessionStorage
+    window.location.href = "/"; // Redirect ke halaman utama atau halaman login
+};
 
   useEffect(() => {
     const fetchNotificationCount = async () => {

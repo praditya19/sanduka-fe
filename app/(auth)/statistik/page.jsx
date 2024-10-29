@@ -57,12 +57,20 @@ const Page = () => {
         const bulanResponse = await GlobalApi.getBulan();
         if (bulanResponse?.data) {
           setBulanOptions(bulanResponse.data); // Set bulan options
+
+          // Dapatkan bulan saat ini
+          const currentMonthIndex = new Date().getMonth(); // Indeks bulan (0-11)
+          const currentMonth = bulanResponse.data[currentMonthIndex]?.namaBulan; // Ambil nama bulan saat ini
+
+          if (currentMonth) {
+            setSelectedBulan(currentMonth); // Set bulan yang dipilih
+          }
         } else {
           console.error("Unexpected data format", bulanResponse);
         }
 
         // Generate year options dynamically, e.g., from 2020 to 2030
-        const tahunArray = Array.from(
+        const tahunArray = Array.from(  
           { length: 11 },
           (_, index) => 2020 + index
         );
@@ -316,9 +324,6 @@ const Page = () => {
                         value={selectedBulan}
                         className="p-2 border border-gray-300 rounded-md mb-2 w-40"
                       >
-                        <option value="" >
-                          Pilih Bulan
-                        </option>
                         {Array.isArray(bulanOptions) &&
                           bulanOptions.map((bulan) => (
                             <option key={bulan.id} value={bulan.namaBulan}>

@@ -354,7 +354,26 @@ function Pengeluaran() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <Toaster />
+           <Toaster
+          toastOptions={{
+            style: {
+              fontSize: "1.25rem", // Ukuran font yang lebih besar
+              padding: "16px", // Menambah padding jika diperlukan
+            },
+            success: {
+              style: {
+                background: "white", // Warna background hijau untuk pesan sukses
+                color: "black",
+              },
+            },
+            error: {
+              style: {
+                background: "#f44336", // Warna background merah untuk pesan error
+                color: "#fff",
+              },
+            },
+          }}
+        />
           <div className="container mx-auto p-6 mt-8">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
               <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
