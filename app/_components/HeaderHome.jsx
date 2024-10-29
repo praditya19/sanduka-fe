@@ -10,7 +10,8 @@ const HeaderHome = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [previousNotificationCount, setPreviousNotificationCount] = useState(0); // Track previous count
-  const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] = useState(false);
+  const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] =
+    useState(false);
   const audioRef = useRef(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
@@ -47,7 +48,10 @@ const HeaderHome = () => {
   };
 
   const handleClickOutside = (event) => {
-    if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+    if (
+      profileMenuRef.current &&
+      !profileMenuRef.current.contains(event.target)
+    ) {
       setIsProfileMenuOpen(false);
     }
   };
@@ -55,7 +59,7 @@ const HeaderHome = () => {
   const handleLogout = () => {
     sessionStorage.clear(); // Menghapus semua item di sessionStorage
     window.location.href = "/"; // Redirect ke halaman utama atau halaman login
-};
+  };
 
   useEffect(() => {
     const fetchNotificationCount = async () => {
@@ -78,18 +82,26 @@ const HeaderHome = () => {
     getAnggotaById();
 
     // Play notification sound only if new notifications are greater than previous ones
-    if (notificationCount > previousNotificationCount && !isNotificationSoundPlaying) {
+    if (
+      notificationCount > previousNotificationCount &&
+      !isNotificationSoundPlaying
+    ) {
       const playNotificationSound = () => {
         const audio = new Audio("/sound-notification.wav");
         audioRef.current = audio;
-        audio.play()
+        audio
+          .play()
           .then(() => setIsNotificationSoundPlaying(true))
           .catch((error) => console.error("Error playing sound:", error));
         audio.onended = () => setIsNotificationSoundPlaying(false);
       };
       playNotificationSound();
     }
-  }, [notificationCount, previousNotificationCount, isNotificationSoundPlaying]);
+  }, [
+    notificationCount,
+    previousNotificationCount,
+    isNotificationSoundPlaying,
+  ]);
 
   useEffect(() => {
     if (isProfileMenuOpen) {
@@ -103,7 +115,7 @@ const HeaderHome = () => {
   }, [isProfileMenuOpen]);
 
   return (
-    <nav className="bg-white shadow-md fixed top-0 inset-x-0 z-50">
+    <nav className="bg-teal-500 shadow-md fixed top-0 inset-x-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-12">
           <div className="flex items-center pl-4">
@@ -116,7 +128,10 @@ const HeaderHome = () => {
             <ul className="flex space-x-6 items-center">
               <li className="relative">
                 <button onClick={handleNotificationClick} className="relative">
-                  <FontAwesomeIcon icon={faBell} className="w-5 h-5 text-gray-700" />
+                  <FontAwesomeIcon
+                    icon={faBell}
+                    className="w-5 h-5 text-gray-700"
+                  />
                   {notificationCount > 0 && (
                     <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
                       {notificationCount}
@@ -126,25 +141,41 @@ const HeaderHome = () => {
               </li>
               <li>
                 <Link href="/anggota/pencarian-anggota">
-                  <FontAwesomeIcon icon={faSearch} className="w-5 h-5 text-gray-700" />
+                  <FontAwesomeIcon
+                    icon={faSearch}
+                    className="w-5 h-5 text-gray-700"
+                  />
                 </Link>
               </li>
               <li className="relative" ref={profileMenuRef}>
-                <button onClick={toggleProfileMenu} className="flex items-center focus:outline-none">
+                <button
+                  onClick={toggleProfileMenu}
+                  className="flex items-center focus:outline-none"
+                >
                   <Image
-                    src={`data:image/jpeg;base64,${profileImageUrl}`}
+                    src={
+                      profileImageUrl
+                        ? "/profile.png"
+                        : `data:image/jpeg;base64,${profileImageUrl}`
+                    }
                     width={30}
                     height={30}
-                    alt="Anggota Foto"
+                    alt="Foto Profile"
                     className="rounded-full"
                   />
                 </button>
                 {isProfileMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                    <Link href="/update-profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    <Link
+                      href="/update-profile"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
                       Edit Profile
                     </Link>
-                    <button onClick={handleLogout} className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
                       Logout
                     </button>
                   </div>
@@ -160,8 +191,14 @@ const HeaderHome = () => {
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <ul className="flex flex-col space-y-1">
             <li className="relative">
-              <button onClick={handleNotificationClick} className="relative w-full text-left">
-                <FontAwesomeIcon icon={faBell} className="w-5 h-5 text-gray-700" />
+              <button
+                onClick={handleNotificationClick}
+                className="relative w-full text-left"
+              >
+                <FontAwesomeIcon
+                  icon={faBell}
+                  className="w-5 h-5 text-gray-700"
+                />
                 {notificationCount > 0 && (
                   <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
                     {notificationCount}
@@ -171,7 +208,10 @@ const HeaderHome = () => {
             </li>
             <li>
               <Link href="/anggota/pencarian-anggota">
-                <FontAwesomeIcon icon={faSearch} className="w-5 h-5 text-gray-700" />
+                <FontAwesomeIcon
+                  icon={faSearch}
+                  className="w-5 h-5 text-gray-700"
+                />
               </Link>
             </li>
             <li className="relative flex justify-end">
