@@ -517,7 +517,11 @@ const DataTable = ({
                 {!isMobile && (
                   <td className="py-2 px-4 border-b">
                     <Image
-                      src={`data:image/jpeg;base64,${fotoBase64[index]}`}
+                      src={
+                        fotoBase64
+                          ? "/profile.png"
+                          : `data:image/jpeg;base64,${fotoBase64[index]}`
+                      }
                       width={50}
                       height={50}
                       alt="Anggota Foto"
@@ -688,7 +692,11 @@ const PopupDetail = ({
       <div className="flex flex-col space-y-4 sm:space-y-6">
         <div className="flex justify-center">
           <Image
-            src={`data:image/png;base64,${fotoBase64}`}
+            src={
+              fotoBase64
+                ? "/profile.png"
+                : `data:image/jpeg;base64,${fotoBase64}`
+            }
             width={80}
             height={80}
             alt="Anggota Foto"
