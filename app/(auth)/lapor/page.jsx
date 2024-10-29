@@ -41,6 +41,10 @@ const FormStep1 = ({
   const [silaporData, setSilaporData] = useState(null); // Tambahkan useState
   const dropdownRef = useRef(null);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const [queryCabang, setQueryCabang] = useState("");
+  const [showDropdownCabang, setShowDropdownCabang] = useState(false);
+  const [queryUnit, setQueryUnit] = useState("");
+  const [showDropdownUnit, setShowDropdownUnit] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -75,6 +79,11 @@ const FormStep1 = ({
       window.removeEventListener("resize", handleResize);
     };
   }, [token, router]);
+
+  // Filtered options berdasarkan input query
+  const filteredCabangOptions = cabangOptions.filter((cabang) =>
+    cabang.kecamatan.toLowerCase().includes(queryCabang.toLowerCase())
+  );
 
   useEffect(() => {
     const fetchPelaporData = async () => {
@@ -134,7 +143,8 @@ const FormStep1 = ({
     setFormData((prevFormData) => ({ ...prevFormData, memberName: value }));
 
     if (value === "") {
-      setFilteredNames([]);
+      set
+      Names([]);
       setIsDropdownVisible(false); // Sembunyikan dropdown jika input kosong
       return;
     }
@@ -177,13 +187,12 @@ const FormStep1 = ({
     }));
   };
 
-  const handleCabangFilterChange = (e) => {
-    const selectedCabang = e.target.value;
-    setCabangFilter(selectedCabang);
-    setFormData((prev) => ({ ...prev, branch: selectedCabang }));
+  const handleCabangFilterChange = (inputValue) => {
+    setCabangFilter(inputValue);
+    setFormData((prev) => ({ ...prev, branch: inputValue }));
 
     const filtered = unitKerjaOptions.filter(
-      (unit) => unit.cabang === selectedCabang
+      (unit) => unit.cabang === inputValue
     );
     setFilteredUnitKerja(filtered);
     setIsUnitKerjaDisabled(false);
@@ -371,42 +380,95 @@ const FormStep1 = ({
                       <Label className="block text-sm font-medium mb-1">
                         Cabang / Khusus
                       </Label>
-                      <select
-                        value={cabangFilter}
-                        onChange={handleCabangFilterChange}
-                        className="p-2 border rounded w-full"
-                      >
-                        <option value="">Pilih Cabang</option>
-                        {cabangOptions.map((cabang) => (
-                          <option
-                            key={cabang.idKecamatan}
-                            value={cabang.kecamatan}
-                          >
-                            {cabang.kecamatan}
-                          </option>
-                        ))}
-                      </select>
+                      <input
+                        type="text"
+                        className="border rounded-lg p-2 w-full bg-white shadow-sm"
+                        placeholder="Pilih Cabang"
+                        value={queryCabang}
+                        onChange={(e) => {
+                          setQueryCabang(e.target.value);
+                          handleCabangFilterChange(e.target.value);
+                          setShowDropdownCabang(true);
+                        }}
+                        onFocus={() => setShowDropdownCabang(true)}
+                        onBlur={() =>
+                          setTimeout(() => setShowDropdownCabang(false), 200)
+                        }
+                      />
+                      {showDropdownCabang && (
+                        <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[4.5%] max-h-48 overflow-y-auto ">
+                          {cabangOptions
+                            .filter((cabang) =>
+                              cabang.kecamatan
+                                .toLowerCase()
+                                .includes(queryCabang.toLowerCase())
+                            )
+                            .map((cabang) => (
+                              <li
+                                key={cabang.idKecamatan}
+                                className="p-2 cursor-pointer hover:bg-gray-100"
+                                onClick={() => {
+                                  setQueryCabang(cabang.kecamatan);
+                                  handleCabangFilterChange(cabang.kecamatan);
+                                  setShowDropdownCabang(false);
+                                }}
+                              >
+                                {cabang.kecamatan}
+                              </li>
+                            ))}
+                        </ul>
+                      )}
                     </div>
                     <div className="w-full flex flex-col items-start mt-3">
                       <Label className="block text-sm font-medium mb-1">
                         Unit Kerja
                       </Label>
-                      <select
+                      <input
+                        type="text"
                         className="border rounded-lg p-2 w-full bg-white shadow-sm"
-                        name="unit"
-                        value={formData.unit}
-                        onChange={handleChange}
-                        disabled={isUnitKerjaDisabled} // Disable based on state
-                      >
-                        <option value="">Pilih Unit Kerja</option>
-                        {filteredUnitKerja.map((unit) => (
-                          <option key={unit.id} value={unit.unitKerja}>
-                            {unit.unitKerja}
-                          </option>
-                        ))}
-                      </select>
+                        placeholder="Pilih Unit Kerja"
+                        value={formData.unit || ""}
+                        onChange={(e) => {
+                          const unitValue = e.target.value;
+                          setFormData((prev) => ({ ...prev, unit: unitValue }));
+                          setShowDropdownUnit(true);
+                        }}
+                        onFocus={() => setShowDropdownUnit(true)}
+                        onBlur={() =>
+                          setTimeout(() => setShowDropdownUnit(false), 200)
+                        }
+                        disabled={isUnitKerjaDisabled}
+                      />
+                      {showDropdownUnit && (
+                        <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[4.5%] max-h-48 overflow-y-auto ">
+                          {filteredUnitKerja
+                            .filter((unit) =>
+                              unit.unitKerja
+                                .toLowerCase()
+                                .includes(formData.unit?.toLowerCase() || "")
+                            )
+                            .map((unit) => (
+                              <li
+                                key={unit.id}
+                                className="p-2 cursor-pointer hover:bg-gray-100"
+                                onClick={() => {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    unit: unit.unitKerja,
+                                  }));
+                                  setShowDropdownUnit(false);
+                                }}
+                              >
+                                {unit.unitKerja}
+                              </li>
+                            ))}
+                        </ul>
+                      )}
                     </div>
-                    <div className="w-full flex flex-col items-start mt-3 relative" ref={dropdownRef}>
+                    <div
+                      className="w-full flex flex-col items-start mt-3 relative"
+                      ref={dropdownRef}
+                    >
                       <Label className="block text-sm font-medium mb-1">
                         Nama Anggota
                       </Label>
@@ -607,7 +669,26 @@ const Resume = ({
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <Toaster />
+           <Toaster
+          toastOptions={{
+            style: {
+              fontSize: "1.25rem", // Ukuran font yang lebih besar
+              padding: "16px", // Menambah padding jika diperlukan
+            },
+            success: {
+              style: {
+                background: "white", // Warna background hijau untuk pesan sukses
+                color: "black",
+              },
+            },
+            error: {
+              style: {
+                background: "#f44336", // Warna background merah untuk pesan error
+                color: "#fff",
+              },
+            },
+          }}
+        />
           <div className="flex justify-center mt-3">
             <h1 className="text-xl font-semibold text-gray-800">Resume</h1>
           </div>

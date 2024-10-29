@@ -356,7 +356,26 @@ export default function Iuran() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <Toaster />
+           <Toaster
+          toastOptions={{
+            style: {
+              fontSize: "1.25rem", // Ukuran font yang lebih besar
+              padding: "16px", // Menambah padding jika diperlukan
+            },
+            success: {
+              style: {
+                background: "white", // Warna background hijau untuk pesan sukses
+                color: "black",
+              },
+            },
+            error: {
+              style: {
+                background: "#f44336", // Warna background merah untuk pesan error
+                color: "#fff",
+              },
+            },
+          }}
+        />
           <div className="container mx-auto p-6 bg-gray-50 rounded-lg shadow-lg mt-10">
             <Button
               className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"

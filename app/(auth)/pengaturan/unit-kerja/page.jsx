@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import HeaderHome from "@/app/_components/HeaderHome";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
@@ -10,11 +10,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const AddUnitForm = () => {
-  const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
+  const [selectedCabang, setSelectedCabang] = useState("");
   const [unitKerja, setUnitKerja] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [cabang, setCabang] = useState([]);
+  const [filteredCabang, setFilteredCabang] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false); // State for controlling dropdown visibility
+  const dropdownRef = useRef(null); // Reference for dropdown
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -51,6 +54,18 @@ const AddUnitForm = () => {
     }
   }, [token, router]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -84,9 +99,44 @@ const AddUnitForm = () => {
     }
   };
 
+  const handleCabangChange = (e) => {
+    const searchValue = e.target.value;
+    setSelectedCabang(searchValue);
+    setShowDropdown(true); // Show dropdown on input change
+
+    const filtered = cabang.filter((item) =>
+      item.kecamatan.toLowerCase().includes(searchValue.toLowerCase())
+    );
+    setFilteredCabang(filtered);
+  };
+
+  const handleCabangSelect = (cabangName) => {
+    setSelectedCabang(cabangName);
+    setShowDropdown(false); // Hide dropdown on cabang selection
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6 mt-4 sm:mt-0 ml-4 sm:ml-0">
-      <Toaster />
+       <Toaster
+          toastOptions={{
+            style: {
+              fontSize: "1.25rem", // Ukuran font yang lebih besar
+              padding: "16px", // Menambah padding jika diperlukan
+            },
+            success: {
+              style: {
+                background: "white", // Warna background hijau untuk pesan sukses
+                color: "black",
+              },
+            },
+            error: {
+              style: {
+                background: "#f44336", // Warna background merah untuk pesan error
+                color: "#fff",
+              },
+            },
+          }}
+        />
       {isMobile ? (
        <HeaderMobile />
       ) : (
@@ -141,18 +191,34 @@ const AddUnitForm = () => {
                 >
                   Cabang
                 </label>
-                <select
-                  className="shadow appearance-none border rounded w-full md:w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                  value={selectedCabang}
-                  onChange={(e) => setSelectedCabang(e.target.value)}
-                >
-                  <option value="">-- Cabang --</option>
-                  {cabang.map((item) => (
-                    <option key={item.id} value={item.kecamatan}>
-                      {item.kecamatan}
-                    </option>
-                  ))}
-                </select>
+                <input
+        type="text"
+        value={selectedCabang}
+        onChange={handleCabangChange}
+        placeholder="Cari cabang..."
+        onFocus={() => setShowDropdown(true)} // Show dropdown when input is focused
+        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2"
+      />
+      {showDropdown && selectedCabang && (
+        <div
+          ref={dropdownRef}
+          className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 max-h-48 overflow-y-auto"
+        >
+          {filteredCabang.length > 0 ? (
+            filteredCabang.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => handleCabangSelect(item.kecamatan)}
+                className="cursor-pointer hover:bg-gray-200 p-1"
+              >
+                {item.kecamatan}
+              </div>
+            ))
+          ) : (
+            <div className="text-gray-500">Cabang tidak ditemukan</div>
+          )}
+        </div>
+      )}
               </div>
               <div className="mb-6">
                 <label
