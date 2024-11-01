@@ -377,21 +377,23 @@ export default function IconGrid() {
           </div>
 
           <div className="px-6 mt-5 sm:px-12 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-2">
-            {icons.map((item, index) => (
-              <Link key={index} href={item.href}>
-                <div className="flex flex-col items-center bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 hover:shadow-xl cursor-pointer">
-                  <FontAwesomeIcon
-                    icon={item.icon}
-                    size="2x"
-                    className={`mb-2 ${item.color}`}
-                  />
-                  <span className="text-xs font-normal text-gray-700 text-center whitespace-nowrap">
-                    {item.label}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
+  {icons.map((item, index) => (
+    <Link key={index} href={item.href}>
+      <div className="flex flex-col items-center cursor-pointer transition duration-300 transform hover:scale-105 hover:shadow-xl 
+                      p-7 sm:p-4 sm:bg-white sm:rounded-lg sm:shadow-lg">
+        <FontAwesomeIcon
+          icon={item.icon}
+          size="2x"
+          className={`mb-2 ${item.color}`}
+        />
+        <span className="text-xs font-normal text-gray-700 text-center whitespace-nowrap">
+          {item.label}
+        </span>
+      </div>
+    </Link>
+  ))}
+</div>
+
         </div>
 
         {/* Pembatas with Title */}

@@ -1,7 +1,8 @@
 import axios from "axios";
+import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "https://ea10-103-90-210-146.ngrok-free.app",
+  baseURL: "http://localhost:8080",
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
@@ -97,13 +98,25 @@ const getUserById = async (userId) => {
     }
   }
 };
+
 // Update DATA
-const updateUserById = async (id, data) => {
+const updateUserById = async (userId, formData) => {
   try {
-    const response = await axiosClient.put(`/api/auth/user/${id}`, data);
+    const response = await axiosClient.put(`/api/auth/user/${userId}`, formData);
     return response.data;
   } catch (error) {
     console.error("Error updating user:", error);
+    throw error;
+  }
+};
+
+// Keanggotaan
+const updateVerified = async (userId) => {
+  try {
+    const response = await axios.post(`/api/auth/user/5279/verify`);
+    return response.data;
+  } catch (error) {
+    console.error("Error updateVerfied user:", error);;
     throw error;
   }
 };
@@ -867,4 +880,5 @@ export default {
   uploadFile,
   getAllFiles,
   updateUserById,
+  updateVerified,
 };

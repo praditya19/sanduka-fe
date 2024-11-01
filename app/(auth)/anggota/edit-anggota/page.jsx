@@ -33,22 +33,25 @@ const Page = () => {
   const id = searchParams.get("id");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
-  const [error, setError] = useState("");
   const [isClient, setIsClient] = useState(false);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  // const [cabang, setCabang] = useState("");
   const [cabang, setCabang] = useState([]);
   const [jabatan, setJabatan] = useState([]);
   const [golonganJabatan, setGolonganJabatan] = useState([]);
   const [valueGolonganJabatan, setValueGolonganJabatan] = useState("");
   const [unitKerja, setUnitKerja] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
-  const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
+  const [query, setQuery] = useState(""); // Menyimpan teks input dari pengguna
+  const [showDropdown, setShowDropdown] = useState(false); // Menyembunyikan/memperlihatkan dropdown
+  // const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [isCabangValid, setIsCabangValid] = useState(false);
   const [base64String, setBase64String] = useState("");
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
+  const [queryUnitKerja, setQueryUnitKerja] = useState("");
+  const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
+  const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [today, setToday] = useState("");
   // const isCabangValid = Array.isArray(cabang) && cabang.length > 0;
   // Update DATA
@@ -75,18 +78,22 @@ const Page = () => {
   const [pendidikanTerakhir, setPendidikanTerakhir] = useState("");
   const [sertifikatPendidik, setSertifikatPendidik] = useState("");
   const [mengajar, setMengajar] = useState("");
-  const [pesertaSanduka, setPesertaSanduka] = useState("");
-  const [pesertaDaspen, setPesertaDaspen] = useState("");
-  const [pesertaKtaDigital, setPesertaKtaDigital] = useState("");
   const [isVerified, setIsVerified] = useState("");
-  const [valueCabang, setValueCabang] = useState(""); // State untuk cabang yang dipilih
   const [valueUnitKerja, setValueUnitKerja] = useState(""); // State untuk unit kerja yang dipilih
   const [valueJabatan, setValueJabatan] = useState(""); // State untuk jabatan yang dipilih
   const [foto, setFoto] = useState("");
+  const [preview, setPreview] = useState(null);
+  const [base64Image, setBase64Image] = useState("");
+  const [error, setError] = useState("");
+  const [pesertaSanduka, setPesertaSanduka] = useState(false);
+  const [pesertaDaspen, setPesertaDaspen] = useState(false);
+  const [pesertaKtaDigital, setPesertaKtaDigital] = useState(false);
   // END
+  const [isPasswordInfoOpen, setIsPasswordInfoOpen] = useState(false);
+  const [isLocationInfoOpen, setIsLocationInfoOpen] = useState(false);
   const [formattedMulaiJadiAnggota, setFormattedMulaiJadiAnggota] =
     useState(""); // State untuk mulai jadi anggota PGRI
-  const [tahunDiangkat, setTahunDiangkat] = useState(""); // State untuk tahun diangkat
+  const [tahunDiangkat, setTahunDiangkat] = useState([]); // State untuk tahun diangkat
   const [formattedTahunDiangkat, setFormattedTahunDiangkat] = useState(""); // Deklarasi state untuk tahun diangkat yang diformat
   const [tanggalLahir, setTanggalLahir] = useState(""); // State untuk tanggal lahir
   const [formattedTanggalLahir, setFormattedTanggalLahir] = useState(""); // Deklarasi state untuk tanggal lahir yang diformat
@@ -109,7 +116,7 @@ const Page = () => {
     nomorHp: "",
     namaSuamiIstri: "",
     namaAnak: [], // Jika ini adalah array
-    foto: "",
+    foto: null,
     cabang: "",
     unitKerja: "",
     jabatan: "",
@@ -135,64 +142,118 @@ const Page = () => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value, // Menyesuaikan dengan key dari input
+      [name]: value,
     }));
   };
 
   // Fungsi onSubmit
   const onSubmit = async (e) => {
     e.preventDefault(); // Mencegah refresh halaman
-    const data = {
-      email,
-      password,
-      npaPgri,
-      nip,
-      nik,
-      namaLengkap,
-      tempatLahir,
-      tanggalLahir,
-      jenisKelamin,
-      agama,
-      golonganDarah,
-      alamat,
-      latitude,
-      longitude,
-      kodePos,
-      nomorHp,
-      namaSuamiIstri,
-      namaAnak,
-      foto,
-      cabang: valueCabang, // Pastikan valueCabang berasal dari state cabang yang dipilih
-      unitKerja: valueUnitKerja, // Pastikan valueUnitKerja berasal dari state unit kerja yang dipilih
-      jabatan: valueJabatan, // Pastikan valueJabatan berasal dari state jabatan yang dipilih
-      tingkatSekolah,
-      statusSekolah,
-      statusPegawai,
-      tahunDiangkat: tahunDiangkat,
-      pangkatGolongan,
-      pendidikanTerakhir,
-      sertifikatPendidik,
-      mulaiJadiAnggotaPgri: formattedMulaiJadiAnggota,
-      golonganJabatan: valueGolonganJabatan,
-      mengajar,
+
+    // Validasi format tanggal menjadi yyyy-MM-dd
+    const formatTanggal = (tanggal) => {
+      const date = new Date(tanggal);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
     };
 
-    console.log("Data yang akan dikirim:", data); // Debugging
+    // Pastikan tanggal dalam format yang benar
+    const formattedTanggalLahir = formatTanggal(tanggalLahir);
+    const formattedTahunDiangkat = formatTanggal(tahunDiangkat);
+    const formattedMulaiJadiAnggota = formatTanggal(mulaiJadiAnggotaPgri);
+
+    // Membuat FormData dan menambahkan data
+    const formData = new FormData();
+    formData.append("email", email);
+    formData.append("password", password);
+    formData.append("npaPgri", npaPgri);
+    formData.append("nip", nip);
+    formData.append("nik", nik);
+    formData.append("namaLengkap", namaLengkap);
+    formData.append("tempatLahir", tempatLahir);
+    formData.append("tanggalLahir", formattedTanggalLahir); // tanggal dalam format yyyy-MM-dd
+    formData.append("jenisKelamin", jenisKelamin);
+    formData.append("agama", agama);
+    formData.append("golonganDarah", golonganDarah);
+    formData.append("alamat", alamat);
+    formData.append("latitude", latitude);
+    formData.append("longitude", longitude);
+    formData.append("kodePos", kodePos);
+    formData.append("nomorHp", nomorHp);
+    formData.append("namaSuamiIstri", namaSuamiIstri);
+
+    // Tambahkan foto jika ada
+    if (selectedFile) {
+      formData.append("foto", selectedFile);
+    }
+
+    formData.append("cabang", selectedCabang);
+    formData.append("unitKerja", selectedUnitKerja);
+    formData.append("jabatan", valueJabatan);
+    formData.append("tingkatSekolah", tingkatSekolah);
+    formData.append("statusSekolah", statusSekolah);
+    formData.append("statusPegawai", statusPegawai);
+    formData.append("tahunDiangkat", formattedTahunDiangkat); // tanggal dalam format yyyy-MM-dd
+    formData.append("pangkatGolongan", pangkatGolongan);
+    formData.append("pendidikanTerakhir", pendidikanTerakhir);
+    formData.append("sertifikatPendidik", sertifikatPendidik);
+    formData.append("mulaiJadiAnggotaPgri", formattedMulaiJadiAnggota); // tanggal dalam format yyyy-MM-dd
+    formData.append("golonganJabatan", valueGolonganJabatan);
+    formData.append("mengajar", mengajar);
+    // Tambahkan nilai kepesertaan ke formData
+    formData.append("pesertaSanduka", pesertaSanduka ? "Ya" : "");
+    formData.append("pesertaDaspen", pesertaDaspen ? "Ya" : "");
+    formData.append("pesertaKtaDigital", pesertaKtaDigital ? "Ya" : "");
 
     try {
-      const response = await GlobalApi.updateUserById(anggotaId, data);
-      // Tangani respons dari server
+      // Mengirim request ke server menggunakan GlobalApi
+      const response = await GlobalApi.updateUserById(anggotaId, formData);
+      toast.success("Data Anda Berhasi Diupdate!");
     } catch (error) {
-      console.error("Error updating data:", error);
+      console.error("Update gagal:", error);
     }
   };
 
+  const handleCloseLocationInfo = () => {
+    setIsLocationInfoOpen(false);
+  };
+
   const nextStep = () => {
-    setStep(step + 1);
+    if (!latitude || !longitude) {
+      setIsLocationInfoOpen(true); // Tampilkan modal informasi
+    } else {
+      setStep(step + 1); // Lanjutkan ke langkah selanjutnya
+    }
+  };
+
+  const handleOpenPasswordInfo = () => {
+    setIsPasswordInfoOpen(true);
+    setIsLocationInfoOpen(false); // Menutup modal lokasi jika terbuka
+  };
+
+  const handleClosePasswordInfo = () => {
+    setIsPasswordInfoOpen(false);
   };
 
   const prevStep = () => {
     setStep(step - 1);
+  };
+
+  // Fungsi untuk memfilter data cabang berdasarkan input
+  const filteredOptions = cabang
+    .filter((item) =>
+      item.kecamatan.toLowerCase().includes(query.toLowerCase())
+    )
+    .slice(0, 5); // Batasi hasil hingga 5 item
+
+  // Filter unit kerja berdasarkan query
+  const handleUnitKerjaChange = (value) => {
+    const filtered = unitKerja.filter((item) =>
+      item.unitKerja.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredUnitKerja(filtered); // Set filtered unit kerja
   };
 
   const getAnggotaById = async () => {
@@ -206,11 +267,12 @@ const Page = () => {
 
     try {
       const response = await GlobalApi.getUserById(userId);
-      console.log("Data user yang diambil:", response);
+
       if (response) {
         setNamaLengkap(response.namaLengkap || "");
         setPassword(response.password || "");
         setEmail(response.email || "");
+        setValue("email", response.email || "");
         setNpaPgri(response.npaPgri || "");
         setTempatLahir(response.tempatLahir || "");
         setTanggalLahir(response.tanggalLahir || ""); // Simpan nilai mentah
@@ -228,18 +290,15 @@ const Page = () => {
         setNomorHp(response.nomorHp || "");
         setNamaSuamiIstri(response.namaSuamiIstri || "");
         setNamaAnak(response.namaAnak || "");
+        setLatitude(response.latitude || null);
+        setLongitude(response.longitude || null);
 
         // Set data Cabang dan Unit Kerja
-        setUnitKerja(Array.isArray(response.data) ? response.data : []); // Pastikan untuk selalu mengatur ke array
-        setCabang(response.cabang);
+        setSelectedUnitKerja(response.unitKerja || "");
+        setQueryUnitKerja(response.unitKerja || "");
+        setSelectedCabang(response.cabang);
         setValue("cabang", response.cabang || "");
-        setValue("unitKerja", response.unitKerja || "");
-
-        // Update kondisi Cabang dan filter Unit Kerja
-        if (response.cabang) {
-          setIsCabangValid(true);
-          handleCabangChange(response.cabang);
-        }
+        setValue("unitKerja", response.unitKerja || ""); // Set nilai unit kerja pada form
 
         setTingkatSekolah(response.tingkatSekolah || "");
         setValue("tingkatSekolah", response.tingkatSekolah);
@@ -253,11 +312,17 @@ const Page = () => {
         setPendidikanTerakhir(response.pendidikanTerakhir || "");
         setValue("pendidikanTerakhir", response.pendidikanTerakhir);
         setSertifikatPendidik(response.sertifikatPendidik || "");
-        setGolonganJabatan(response.golonganJabatan);
+        setValueGolonganJabatan(response.golonganJabatan);
         setValue("golonganJabatan", response.golonganJabatan);
         setJabatan(response.jabatan);
         setValue("jabatan", response.jabatan);
         setValueJabatan(response.jabatan);
+        setMengajar(response.mengajar);
+        setValue("mengajar", response.mengajar || "");
+        // Atur status kepesertaan berdasarkan nilai yang diterima
+        setPesertaSanduka(response.pesertaSanduka === "Ya");
+        setPesertaDaspen(response.pesertaDaspen === "Ya");
+        setPesertaKtaDigital(response.pesertaKtaDigital === "Ya");
       }
     } catch (error) {
       console.error("Error Saat Mendapatkan Data:", error);
@@ -325,6 +390,8 @@ const Page = () => {
       reader.onloadend = () => {
         const base64String = reader.result.split(",")[1];
         setBase64String(base64String);
+
+        // Menampilkan base64String ke konsol
       };
       reader.readAsDataURL(file);
     } else {
@@ -392,10 +459,9 @@ const Page = () => {
     const fetchCabang = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        console.log("Data dari API cabang:", response.data);
+
         if (Array.isArray(response.data)) {
           setCabang(response.data);
-          console.log("State cabang setelah setCabang:", response.data);
         } else {
           console.error("Data fetched is not an array:", response.data);
         }
@@ -413,7 +479,7 @@ const Page = () => {
   const fetchJabatan = async () => {
     try {
       const response = await GlobalApi.getJabatan(); // Ambil data jabatan dari API
-      console.log("Respons dari API jabatan:", response.data);
+
       setJabatan(response.data || []); // Simpan data jabatan ke state
     } catch (error) {
       console.error("Error fetching jabatan:", error);
@@ -429,7 +495,7 @@ const Page = () => {
   const fetchGolonganJabatan = async () => {
     try {
       const response = await GlobalApi.getGolonganJabatan(); // Ambil data golongan jabatan dari API
-      console.log("Respons dari API golongan jabatan:", response.data);
+
       setGolonganJabatan(response.data || []); // Simpan data golongan jabatan ke state
     } catch (error) {
       console.error("Error fetching golongan jabatan:", error);
@@ -441,15 +507,12 @@ const Page = () => {
     fetchGolonganJabatan();
   }, []);
 
-  useEffect(() => {
-    console.log("State golonganJabatan:", golonganJabatan); // Log state setelah API dipanggil
-  }, [golonganJabatan]);
+  useEffect(() => {}, [golonganJabatan]);
 
   useEffect(() => {
     const fetchUnitKerja = async () => {
       try {
         const response = await GlobalApi.getUnitKerja(); // API untuk mendapatkan unit kerja
-        console.log("Respons dari API unit kerja:", response); // Log respons API
         setUnitKerja(response.data || []); // Pastikan response.data adalah array
       } catch (error) {
         console.error("Error fetching unit kerja:", error);
@@ -490,7 +553,7 @@ const Page = () => {
   };
 
   return (
-    <div className="max-w-screen-lg mx-auto px-4 py-6">
+    <div className="w-full mx-auto px-4 py-6 bg-slate-200">
       <div className="container mx-auto max-w-screen-lg sm:max-w-full md:max-w-screen-lg px-4">
         <Toaster />
         <div>
@@ -550,12 +613,22 @@ const Page = () => {
                         *Harap Diingat
                       </span>
                     </Label>
-                    <Input
-                      type="email"
-                      id="email"
-                      placeholder="Email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                    <Controller
+                      name="email"
+                      control={control}
+                      defaultValue={email}
+                      render={({ field: { onChange, value } }) => (
+                        <Input
+                          type="email"
+                          id="email"
+                          placeholder="Email"
+                          value={value}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            onChange(e.target.value);
+                          }}
+                        />
+                      )}
                     />
                   </div>
 
@@ -565,14 +638,43 @@ const Page = () => {
                       <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
                         *Harap Diingat
                       </span>
+                      <AiOutlineInfoCircle
+                        className="inline-block ml-2 text-red-500 cursor-pointer"
+                        size={20}
+                        onClick={handleOpenPasswordInfo}
+                      />
                     </Label>
                     <Input
                       type="text"
                       id="password"
-                      placeholder="contoh:Kat45and!"
-                      value={password} // Bind the nip value from state
+                      placeholder="contoh: Kat45and!"
+                      value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
+
+                    {/* Modal Informasi Password */}
+                    {isPasswordInfoOpen && (
+                      <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+                        <div className="bg-white p-4 rounded-lg shadow-lg">
+                          <h2 className="text-lg font-semibold">
+                            Informasi Password
+                          </h2>
+                          <p className="mt-2">
+                            Pastikan password Anda kuat dan mudah diingat!
+                            password yang berhasil di buat maka secara otomatis
+                            akan di hash supaya lebih aman
+                          </p>
+                          <div className="flex justify-end mt-6">
+                            <button
+                              onClick={handleClosePasswordInfo}
+                              className="mt-4 px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+                            >
+                              Close
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -810,7 +912,7 @@ const Page = () => {
                       {loading ? "Mendapatkan Lokasi..." : "Get Location"}
                     </Button>
                     <AiOutlineInfoCircle
-                      className="inline-block ml-2 text-blue-500 cursor-pointer"
+                      className="inline-block ml-2 text-red-500 cursor-pointer"
                       size={20}
                       onClick={handleOpenModal}
                     />
@@ -822,12 +924,14 @@ const Page = () => {
                           <p className="mt-2">
                             Mohon Get Location Ketika Anda Berada Dirumah
                           </p>
-                          <button
-                            onClick={handleCloseModal}
-                            className="mt-4 px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600"
-                          >
-                            Close
-                          </button>
+                          <div className="flex justify-end mt-6">
+                            <button
+                              onClick={handleCloseModal}
+                              className="mt-4 px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+                            >
+                              Close
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -924,6 +1028,25 @@ const Page = () => {
                 <div className="w-full flex justify-end mt-8">
                   <Button onClick={nextStep}>Next</Button>
                 </div>
+                {/* Modal Informasi Lokasi */}
+                {isLocationInfoOpen && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+                    <div className="bg-white p-4 rounded-lg shadow-lg">
+                      <h2 className="text-lg font-semibold">Informasi</h2>
+                      <p className="mt-2">
+                        Sebelum melanjutkan ke halaman selanjutnya, harap
+                        melakukan Get Location terlebih dahulu dengan cara
+                        mengklik button yang ada pada form alamat.
+                      </p>
+                      <button
+                        onClick={handleCloseLocationInfo}
+                        className="mt-4 px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             {step === 2 && (
@@ -943,32 +1066,51 @@ const Page = () => {
                   <Controller
                     name="cabang"
                     control={control}
-                    defaultValue={cabang} // Atur defaultValue menjadi string kosong
+                    defaultValue={cabang}
                     render={({ field: { onChange, value } }) => (
-                      <Select
-                        value={value}
-                        onValueChange={(e) => {
-                          onChange(e); // Update nilai form
-                          handleCabangChange(e); // Memanggil fungsi untuk memfilter unit kerja
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih Cabang" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            {Array.isArray(cabang) &&
-                              cabang.map((item) => (
-                                <SelectItem
+                      <div className="relative">
+                        <input
+                          type="text"
+                          className="border rounded-lg p-2 w-56 bg-white shadow-sm"
+                          placeholder="Pilih Cabang"
+                          value={query || value}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setQuery(value); // Update nilai input
+                            onChange(value); // Update nilai form
+                            setSelectedCabang(e);
+                            setShowDropdown(true); // Tampilkan dropdown
+                          }}
+                          onFocus={() => setShowDropdown(true)}
+                          onBlur={() =>
+                            setTimeout(() => setShowDropdown(false), 200)
+                          } // Delay untuk menutup dropdown
+                        />
+                        {showDropdown && (
+                          <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 max-h-48 overflow-y-auto w-full">
+                            {filteredOptions.length > 0 ? (
+                              filteredOptions.map((item) => (
+                                <li
                                   key={item.idKecamatan}
-                                  value={item.kecamatan}
+                                  className="p-2 cursor-pointer hover:bg-gray-100"
+                                  onClick={() => {
+                                    setQuery(item.kecamatan); // Set nilai input dengan cabang yang dipilih
+                                    setSelectedCabang(item.kecamatan); // Set pilihan cabang ke state
+                                    handleCabangChange(item.kecamatan); // Memanggil fungsi untuk memfilter unit kerja
+                                    setShowDropdown(false); // Sembunyikan dropdown
+                                  }}
                                 >
                                   {item.kecamatan}
-                                </SelectItem>
-                              ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
+                                </li>
+                              ))
+                            ) : (
+                              <li className="p-2 text-gray-500">
+                                No results found
+                              </li>
+                            )}
+                          </ul>
+                        )}
+                      </div>
                     )}
                   />
                 </div>
@@ -980,35 +1122,53 @@ const Page = () => {
                   <Controller
                     name="unitKerja"
                     control={control}
-                    defaultValue={unitKerja} // Nilai default akan ditimpa oleh setValue setelah data diambil
-                    render={({ field: { onChange, value } }) => (
-                      <Select
-                        value={value}
-                        onValueChange={(e) => {
-                          onChange(e); // Update nilai form
-                          setUnitKerja(e); // Simpan unit kerja yang dipilih
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih Unit Kerja" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
+                    defaultValue={selectedUnitKerja}
+                    render={({ field: { onChange } }) => (
+                      <div className="relative">
+                        <input
+                          type="text"
+                          className="border rounded-lg p-2 w-56 bg-white shadow-sm"
+                          placeholder="Pilih Unit Kerja"
+                          value={queryUnitKerja} // Gunakan queryUnitKerja untuk menampilkan nilai yang dipilih
+                          onChange={(e) => {
+                            const inputValue = e.target.value;
+                            setQueryUnitKerja(inputValue); // Update query state
+                            handleUnitKerjaChange(inputValue); // Panggil fungsi filter unit kerja
+                            setShowDropdownUnitKerja(true); // Menampilkan dropdown saat mengetik
+                          }}
+                          onFocus={() => setShowDropdownUnitKerja(true)}
+                          onBlur={() =>
+                            setTimeout(
+                              () => setShowDropdownUnitKerja(false),
+                              200
+                            )
+                          } // Penundaan untuk menutup dropdown
+                        />
+                        {showDropdownUnitKerja && (
+                          <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 max-h-48 overflow-y-auto w-full">
                             {filteredUnitKerja.length > 0 ? (
                               filteredUnitKerja.map((item) => (
-                                <SelectItem
+                                <li
                                   key={item.id}
-                                  value={item.unitKerja}
+                                  className="p-2 cursor-pointer hover:bg-gray-100"
+                                  onClick={() => {
+                                    setQueryUnitKerja(item.unitKerja); // Update input dengan pilihan
+                                    onChange(item.unitKerja); // Update nilai form
+                                    setSelectedUnitKerja(item.unitKerja); // Update state selected unit kerja
+                                    setShowDropdownUnitKerja(false); // Sembunyikan dropdown
+                                  }}
                                 >
                                   {item.unitKerja}
-                                </SelectItem>
+                                </li>
                               ))
                             ) : (
-                              <p>Unit kerja tidak tersedia.</p>
+                              <li className="p-2 text-gray-500">
+                                Unit kerja tidak tersedia.
+                              </li>
                             )}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
+                          </ul>
+                        )}
+                      </div>
                     )}
                   />
                 </div>
@@ -1020,13 +1180,12 @@ const Page = () => {
                   <Controller
                     name="jabatan"
                     control={control}
-                    defaultValue={valueJabatan} // Nilai default akan ditimpa oleh setValue setelah data diambil
+                    defaultValue={jabatan}
                     render={({ field: { onChange, value } }) => (
                       <Select
-                        value={value}
+                        value={value} // Pastikan value sudah terisi
                         onValueChange={(e) => {
                           onChange(e); // Update nilai form
-                          setValueJabatan(e); // Simpan jabatan yang dipilih
                         }}
                       >
                         <SelectTrigger>
@@ -1308,13 +1467,81 @@ const Page = () => {
                       *Mata Pelajaran
                     </span>
                   </Label>
-                  <Input
-                    className="mt-2 sm:mt-2"
-                    type="text"
-                    id="mengajar"
-                    placeholder="Mengajar"
-                    value={mengajar}
-                    onChange={(e) => setMengajar(e.target.value)}
+                  <Controller
+                    name="mengajar"
+                    control={control}
+                    defaultValue={mengajar}
+                    render={({ field: { onChange, value } }) => (
+                      <Input
+                        className="mt-2 sm:mt-2"
+                        type="text"
+                        id="mengajar"
+                        placeholder="Mengajar"
+                        value={value} // sesuaikan value agar dapat diatur oleh react-hook-form
+                        onChange={(e) => {
+                          setMengajar(e.target.value);
+                          onChange(e.target.value); // pastikan onChange react-hook-form dipanggil
+                        }}
+                      />
+                    )}
+                  />
+                </div>
+
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3">
+                    Kepesertaan Anggota
+                    <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                      *Terdaftar
+                    </span>
+                  </Label>
+                  <Controller
+                    name="Opsi"
+                    control={control}
+                    defaultValue={[]}
+                    render={({ field: { onChange, value } }) => (
+                      <div className="mt-2 sm:mt-2">
+                        {[
+                          {
+                            label: "Peserta Sanduka",
+                            status: pesertaSanduka,
+                            setStatus: setPesertaSanduka,
+                          },
+                          {
+                            label: "Peserta Daspen",
+                            status: pesertaDaspen,
+                            setStatus: setPesertaDaspen,
+                          },
+                          {
+                            label: "Peserta KTA Digital",
+                            status: pesertaKtaDigital,
+                            setStatus: setPesertaKtaDigital,
+                          },
+                        ].map((option) => (
+                          <label
+                            key={option.label}
+                            className="flex items-center space-x-2"
+                          >
+                            <input
+                              type="checkbox"
+                              value={option.label}
+                              checked={option.status}
+                              disabled={option.status} // Disabled jika sudah "Ya"
+                              onChange={(e) => {
+                                // Update opsi dan status checkbox
+                                const newValue = e.target.checked
+                                  ? [...value, option.label]
+                                  : value.filter((val) => val !== option.label);
+
+                                // Set status sesuai dengan apakah checkbox dicentang
+                                option.setStatus(e.target.checked);
+                                onChange(newValue); // Panggil onChange untuk react-hook-form
+                              }}
+                            />
+                            <span>{option.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
                   />
                 </div>
 
