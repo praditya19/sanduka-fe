@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -11,8 +11,15 @@ import {
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { useAuth } from "@/app/AuthContext";
 import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
 
 const DataTable = () => {
+  const dropdownRef = useRef(null);
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredOptions, setFilteredOptions] = useState([]);
+
   const [detailFilter, setDetailFilter] = useState("");
   const [cabangFilter, setCabangFilter] = useState("");
   const [cabangOptions, setCabangOptions] = useState([]);
@@ -22,14 +29,19 @@ const DataTable = () => {
   const { token } = useAuth();
   const router = useRouter();
 
-  const fetchCabangData = async () => {
-    try {
-      const response = await GlobalApi.getCabang();
-      setCabangOptions(response.data);
-    } catch (error) {
-      console.error("Error fetching cabang data:", error); // Log error for debugging
-    }
-  };
+  useEffect(() => {
+    const fetchCabangData = async () => {
+      try {
+        const response = await GlobalApi.getCabang();
+        setCabangOptions(response.data);
+        setFilteredOptions(response.data);
+      } catch (error) {
+        console.error("Error fetching cabang data:", error);
+      }
+    };
+
+    fetchCabangData();
+  }, []);
 
   const fetchAnggotaData = async () => {
     try {
@@ -48,12 +60,35 @@ const DataTable = () => {
     }
   };
 
+  const handleInputChange = (event) => {
+    const value = event.target.value;
+    setSearchTerm(value);
+
+    const filtered = cabangOptions.filter((option) =>
+      option.kecamatan.toLowerCase().includes(value.toLowerCase())
+    );
+
+    setFilteredOptions(filtered);
+    setShowDropdown(value.length > 0);
+
+    // Jika input kosong, reset selectedCabang
+    if (value.trim() === "") {
+      setSelectedCabang("");
+    }
+  };
+
+  const handleOptionClick = (option) => {
+    const cabangTerpilih = option ? option.kecamatan : ''; // Jika kosong, set sebagai string kosong
+    setSelectedCabang(cabangTerpilih); // Set cabang terpilih
+    setShowDropdown(false); // Menyembunyikan dropdown setelah memilih opsi
+    setSearchTerm(''); // Reset search term
+  };
+
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
     } else {
       setLoading(true); // Start loading data
-      fetchCabangData();
       fetchAnggotaData();
     }
   }, [token, router]);
@@ -62,7 +97,8 @@ const DataTable = () => {
     return <div>Loading...</div>;
   }
 
-  if (error) { // Show generic error message if there's an error
+  if (error) {
+    // Show generic error message if there's an error
     return <div>Something went wrong. Please try again later.</div>;
   }
 
@@ -91,19 +127,55 @@ const DataTable = () => {
               <option value="Pensiun">Anggota Pensiun</option>
               <option value="Meninggal">Anggota Meninggal</option>
             </select>
-            <select
-              value={cabangFilter}
-              onChange={(e) => setCabangFilter(e.target.value)}
-              a
-              className="p-2 border rounded max-w-sm w-full"
-            >
-              <option>Pilih Cabang</option>
-              {cabangOptions.map((cabang) => (
-                <option key={cabang.idKecamatan} value={cabang.kecamatan}>
-                  {cabang.kecamatan}
-                </option>
-              ))}
-            </select>
+            <div className="relative" ref={dropdownRef}>
+              {/* Input readonly untuk menampilkan cabang terpilih */}
+              <Input
+                type="text"
+                placeholder="Cabang terpilih"
+                value={selectedCabang}
+                readOnly
+                className="p-2 border border-gray-300 rounded-md mb-2 w-64"
+                onClick={() => setShowDropdown(!showDropdown)} // Toggle dropdown saat input di-click
+              />
+
+              {showDropdown && (
+                <div className="absolute w-64 bg-white border border-gray-300 rounded-md max-h-48 shadow-lg z-10">
+                  {/* Input pencarian di dalam dropdown */}
+                  <Input
+                    type="text"
+                    placeholder="Cari atau ketik Cabang..."
+                    value={searchTerm}
+                    onChange={handleInputChange}
+                    className="p-2 border-b border-gray-300 w-full"
+                    autoFocus // Fokus otomatis pada input pencarian saat dropdown muncul
+                  />
+
+                  <ul className="max-h-40 overflow-y-auto">
+                    {/* Opsi untuk menghapus pilihan cabang */}
+                    <li
+                      className="p-2 hover:bg-blue-100 cursor-pointer text-gray-700 font-semibold"
+                      onClick={() => handleOptionClick(null)} // Kosongkan pilihan
+                    >
+                      Kosongkan Pilihan
+                    </li>
+
+                    {filteredOptions.length > 0 ? (
+                      filteredOptions.map((option, index) => (
+                        <li
+                          key={index}
+                          className="p-2 hover:bg-blue-100 cursor-pointer"
+                          onClick={() => handleOptionClick(option)}
+                        >
+                          {option.kecamatan}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="p-2 text-gray-500">Tidak ada hasil</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
           <Table className="w-full table-auto mb-8 text-sm">
             <TableHeader className="p-2 md:p-3 border bg-teal-700 ">

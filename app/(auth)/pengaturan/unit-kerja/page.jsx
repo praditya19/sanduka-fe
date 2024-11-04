@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
@@ -8,8 +8,10 @@ import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "@/app/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Input } from "@/components/ui/input";
 
 const AddUnitForm = () => {
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedCabang, setSelectedCabang] = useState("");
   const [unitKerja, setUnitKerja] = useState("");
   const [isMobile, setIsMobile] = useState(false);
@@ -70,8 +72,13 @@ const AddUnitForm = () => {
     return <div>Loading...</div>;
   }
 
-  const handleBackClick = () => {
-    router.back();
+  const handleSearchChange = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
+    const filtered = cabang.filter((item) =>
+      item.kecamatan.toLowerCase().includes(value)
+    );
+    setFilteredCabang(filtered);
   };
 
   const toggleSidebar = () => {
@@ -87,7 +94,7 @@ const AddUnitForm = () => {
         unitKerja: unitKerja,
       };
       const response = await GlobalApi.addUnitKerja(payload);
-      setSelectedCabang("-- Cabang --");
+      setSelectedCabang("");
       setUnitKerja("");
 
       toast.success("Unit Kerja berhasil ditambahkan!");
@@ -100,48 +107,45 @@ const AddUnitForm = () => {
   };
 
   const handleCabangChange = (e) => {
-    const searchValue = e.target.value;
-    setSelectedCabang(searchValue);
-    setShowDropdown(true); // Show dropdown on input change
-
-    const filtered = cabang.filter((item) =>
-      item.kecamatan.toLowerCase().includes(searchValue.toLowerCase())
-    );
-    setFilteredCabang(filtered);
+    const value = e.target.value;
+    setSelectedCabang(value);
+    setShowDropdown(true); // Keep dropdown open
+    console.log("Cabang yang diketik:", e.target.value); // Memastikan value berasal dari e.target.value
   };
 
-  const handleCabangSelect = (cabangName) => {
-    setSelectedCabang(cabangName);
-    setShowDropdown(false); // Hide dropdown on cabang selection
+  const handleCabangSelect = (kecamatan) => {
+    setSelectedCabang(kecamatan);
+    setShowDropdown(false);
+  };
+
+  const handleFocus = () => {
+    setFilteredCabang(cabang); // Menampilkan semua data cabang ketika input difokuskan
+    setShowDropdown(true);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6 mt-4 sm:mt-0 ml-4 sm:ml-0">
-       <Toaster
-          toastOptions={{
+      <Toaster
+        toastOptions={{
+          style: {
+            fontSize: "1.25rem", // Ukuran font yang lebih besar
+            padding: "16px", // Menambah padding jika diperlukan
+          },
+          success: {
             style: {
-              fontSize: "1.25rem", // Ukuran font yang lebih besar
-              padding: "16px", // Menambah padding jika diperlukan
+              background: "white", // Warna background hijau untuk pesan sukses
+              color: "black",
             },
-            success: {
-              style: {
-                background: "white", // Warna background hijau untuk pesan sukses
-                color: "black",
-              },
+          },
+          error: {
+            style: {
+              background: "#f44336", // Warna background merah untuk pesan error
+              color: "#fff",
             },
-            error: {
-              style: {
-                background: "#f44336", // Warna background merah untuk pesan error
-                color: "#fff",
-              },
-            },
-          }}
-        />
-      {isMobile ? (
-       <HeaderMobile />
-      ) : (
-        <HeaderHome />
-      )}
+          },
+        }}
+      />
+      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
@@ -151,7 +155,7 @@ const AddUnitForm = () => {
           }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-          <nav className="mt-6">
+            <nav className="mt-6">
               <ul className="flex flex-wrap space-x-4 md:space-x-6">
                 <li>
                   <Link
@@ -159,7 +163,6 @@ const AddUnitForm = () => {
                     className="text-gray-700 hover:text-teal-600"
                   >
                     User
-
                   </Link>
                 </li>
                 <li>
@@ -175,7 +178,7 @@ const AddUnitForm = () => {
                     href="/pengaturan/tambah"
                     className="text-gray-700 hover:text-teal-600"
                   >
-                    Tambah
+                    Tambah Cabang
                   </Link>
                 </li>
               </ul>
@@ -191,34 +194,43 @@ const AddUnitForm = () => {
                 >
                   Cabang
                 </label>
-                <input
-        type="text"
-        value={selectedCabang}
-        onChange={handleCabangChange}
-        placeholder="Cari cabang..."
-        onFocus={() => setShowDropdown(true)} // Show dropdown when input is focused
-        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2"
-      />
-      {showDropdown && selectedCabang && (
-        <div
-          ref={dropdownRef}
-          className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 max-h-48 overflow-y-auto"
-        >
-          {filteredCabang.length > 0 ? (
-            filteredCabang.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => handleCabangSelect(item.kecamatan)}
-                className="cursor-pointer hover:bg-gray-200 p-1"
-              >
-                {item.kecamatan}
-              </div>
-            ))
-          ) : (
-            <div className="text-gray-500">Cabang tidak ditemukan</div>
-          )}
-        </div>
-      )}
+                <Input
+                  readOnly
+                  type="text"
+                  value={selectedCabang}
+                  onChange={handleCabangChange}
+                  placeholder="Tentukan Cabang"
+                  onFocus={handleFocus} // Show dropdown when input is focused
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2"
+                />
+                {showDropdown && (
+                  <div className=" w-auto" ref={dropdownRef}>
+                    <Input
+                      type="text"
+                      value={searchTerm}
+                      onChange={handleSearchChange} // Function to filter cabang
+                      placeholder="Cari cabang..."
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2"
+                    />
+                    <div className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 max-h-48 overflow-y-auto">
+                      {filteredCabang.length > 0 ? (
+                        filteredCabang.map((item) => (
+                          <div
+                            key={item.id}
+                            onClick={() => handleCabangSelect(item.kecamatan)}
+                            className="cursor-pointer hover:bg-gray-200 p-1"
+                          >
+                            {item.kecamatan}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-gray-500">
+                          Cabang tidak ditemukan
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="mb-6">
                 <label

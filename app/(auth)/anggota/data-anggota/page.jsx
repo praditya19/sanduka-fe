@@ -59,36 +59,47 @@ function DataAnggota() {
   const [showDropdownUnit, setShowDropdownUnit] = useState(false);
   const [formData, setFormData] = useState({ unit: "" });
   const [isUnitKerjaDisabled, setIsUnitKerjaDisabled] = useState(true);
-  const [selectedCabang, setSelectedCabang] = useState(""); // Pastikan cabang yang dipilih tersimpan dengan benar
+  const [selectedCabang, setSelectedCabang] = useState("");
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [allUnitKerja, setAllUnitKerja] = useState([]);
   const [cabangOptions, setCabangOptions] = useState([]); // Data Cabang
   const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
   const [showCabangDropdown, setShowCabangDropdown] = useState(true);
-
+  const [searchUnit, setSearchUnit] = useState("");
   const [unitKerjaList, setUnitKerjaList] = useState([]);
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [unitKerjaInput, setUnitKerjaInput] = useState("");
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
 
   const [originalRekapData, setOriginalRekapData] = useState([]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (cabangRef.current && !cabangRef.current.contains(event.target)) {
-        setShowCabangDropdown(false);
-      }
-      if (
-        unitKerjaRef.current &&
-        !unitKerjaRef.current.contains(event.target)
-      ) {
-        setShowUnitKerjaDropdown(false);
+      // Cek apakah klik di luar area dropdown dan input pencarian
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdownCabang(false);
       }
     };
 
+    // Pasang event listener pada document
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Bersihkan event listener saat komponen tidak digunakan
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleClickOutside = (event) => {
+    if (unitKerjaRef.current && !unitKerjaRef.current.contains(event.target)) {
+      setShowDropdownUnit(false);
+    }
+  };
+
+  // Menambahkan event listener saat komponen dimount
+  useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -132,56 +143,42 @@ function DataAnggota() {
 
   useEffect(() => {
     if (selectedCabang) {
-      // Filter unit kerja hanya berdasarkan cabang yang dipilih
       const units = allUnitKerja.filter(
         (unit) => unit.cabang.toLowerCase() === selectedCabang.toLowerCase()
       );
-      setFilteredUnitKerja(units); // Update unit kerja berdasarkan cabang terpilih
-      setIsUnitKerjaDisabled(false); // Aktifkan input Unit Kerja
+      setFilteredUnitKerja(units);
+      setIsUnitKerjaDisabled(false);
     } else {
-      setFilteredUnitKerja([]); // Kosongkan jika cabang tidak dipilih
+      setFilteredUnitKerja([]);
       setIsUnitKerjaDisabled(true);
     }
   }, [selectedCabang, allUnitKerja]);
 
-
-  const handleInputChange = (e) => {
-    const input = e.target.value;
-    setSelectedCabang(input);
-
-    const filtered = cabangList.filter((cabang) =>
-      cabang.kecamatan.toLowerCase().includes(input.toLowerCase())
-    );
-    setFilteredCabangList(filtered);
-
-    setShowCabangDropdown(true);
-
-    if (input === "") {
-      setFilteredCabangList(cabangList);
-    }
+  const handleCabangSelect = (cabang) => {
+    setSelectedCabang(cabang.kecamatan);
+    setShowDropdownCabang(false);
+    // Anda dapat melakukan tindakan lain saat cabang dipilih
   };
 
   const handleSelectCabang = async (cabang) => {
     setSelectedCabang(cabang.kecamatan);
-    console.log("Cabang yang dipilih:", cabang.kecamatan);
     setShowDropdownCabang(false);
 
     await fetchRekapData(cabang.kecamatan);
 
     const filtered = unitKerjaList.filter(
-        (unitKerja) =>
-            unitKerja.cabang &&
-            unitKerja.cabang.toLowerCase() === cabang.kecamatan.toLowerCase()
+      (unitKerja) =>
+        unitKerja.cabang &&
+        unitKerja.cabang.toLowerCase() === cabang.kecamatan.toLowerCase()
     );
     setFilteredUnitKerja(filtered);
-    setShowDropdownUnit(true); // Menampilkan dropdown unit kerja
     setIsUnitKerjaDisabled(false); // Pastikan input unit kerja aktif
-};
+  };
 
   const handleUnitKerjaChange = (e) => {
     const unitValue = e.target.value;
     setFormData((prev) => ({ ...prev, unit: unitValue }));
-  
+
     const filteredUnits = allUnitKerja.filter(
       (unit) =>
         unit.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
@@ -530,19 +527,6 @@ function DataAnggota() {
     }
   };
 
-  const handleUnitKerjaClick = () => {
-    if (isUnitKerjaEnabled) {
-      alert("Anggota berpindah Unit Kerja");
-      setIsUnitKerjaEnabled(false);
-    } else {
-      handleUnitKerjaChange();
-    }
-  };
-
-  // const handleBackClick = () => {
-  //   router.back();
-  // };
-
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const day = String(date.getDate()).padStart(2, "0");
@@ -625,14 +609,6 @@ function DataAnggota() {
     setPopupVisible(false);
   };
 
-  const handleUnitKerjaBlur = () => {
-    setTimeout(() => {
-        if (dropdownRef.current && !dropdownRef.current.contains(document.activeElement)) {
-            setShowDropdownUnit(false);
-        }
-    }, 200);
-};
-
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -653,71 +629,138 @@ function DataAnggota() {
               <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
                 <>
                   <div
+                    ref={dropdownRef}
                     className="relative flex flex-col md:flex ml-2"
                   >
-                    <input
-        type="text"
-        placeholder="Pilih Cabang"
-        value={selectedCabang}
-        onChange={handleCabangChange}
-        onFocus={() => setShowDropdownCabang(true)}
-        onBlur={() => setTimeout(() => setShowDropdownCabang(false), 200)}
-        className="border rounded-lg p-2 w-full bg-white shadow-sm"
-      />
-      {showDropdownCabang && (
-        <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-10 w-full max-h-48 overflow-y-auto ">
-          {filteredCabangOptions.map((cabang) => (
-            <li
-              key={cabang.id}
-              className="p-2 cursor-pointer hover:bg-gray-100"
-              onClick={() => {
-                handleSelectCabang(cabang)
-                setSelectedCabang(cabang.kecamatan);
-                setShowDropdownCabang(false);
-              }}
-            >
-              {cabang.kecamatan}
-            </li>
-          ))}
-        </ul>
-      )}
+                    <Input
+                      type="text"
+                      placeholder="Pilih Cabang"
+                      value={selectedCabang}
+                      readOnly
+                      onFocus={() => {
+                        setShowDropdownCabang(true);
+                        setFilteredCabangOptions(cabangOptions); // Pastikan cabangOptions sudah didefinisikan dan berisi data cabang
+                      }}
+                      className="border rounded-lg p-2 w-full bg-white shadow-sm"
+                    />
 
+                    {showDropdownCabang && (
+                      <div className="absolute mt-9">
+                        <Input
+                          type="text"
+                          onChange={(e) => handleCabangChange(e)}
+                          className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-2"
+                          placeholder="Cari Cabang"
+                        />
+
+                        {filteredCabangOptions.length > 0 && (
+                          <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-48 overflow-y-auto mt-1 shadow-sm">
+                            <li
+                              key="clear"
+                              onClick={() => {
+                                setSelectedCabang(""); // Menghilangkan cabang yang sudah dipilih
+                                setShowDropdownCabang(false);
+                              }}
+                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                            >
+                              {"Pilih Cabang"}{" "}
+                              {/* Teks untuk menghapus pilihan */}
+                            </li>
+
+                            {/* Daftar cabang yang difilter */}
+                            {filteredCabangOptions.map((cabang) => (
+                              <li
+                                key={cabang.id}
+                                onClick={() => {
+                                  handleSelectCabang(cabang);
+                                  setSelectedCabang(cabang.kecamatan);
+                                  setShowDropdownCabang(false);
+                                  console.log(
+                                    "Cabang dipilih:",
+                                    cabang.kecamatan
+                                  ); // Debug log
+                                }}
+                                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                              >
+                                {cabang.kecamatan}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-col md:flex">
-                    <div className="relative" >
-                    <input
-  type="text"
-  className="border rounded-lg p-2 w-full bg-white shadow-sm mt-2"
-  placeholder="Pilih Unit Kerja"
-  value={formData.unit}
-  onChange={handleUnitKerjaChange}
-  onFocus={() => setShowDropdownUnit(true)}
-  onBlur={() => setTimeout(() => setShowDropdownUnit(false), 200)}
-  disabled={isUnitKerjaDisabled}
-/>
+                    <div className="relative" ref={unitKerjaRef}>
+                      <Input
+                        type="text"
+                        className="border rounded-lg p-2 w-full bg-white shadow-sm mt-2"
+                        placeholder="Pilih Unit Kerja"
+                        readOnly
+                        value={formData.unit} // Tetap simpan nilai unit kerja yang dipilih
+                        onChange={handleUnitKerjaChange}
+                        onFocus={() => {
+                          setShowDropdownUnit(true);
+                          setSearchUnit(""); // Kosongkan hanya input pencarian
+                        }}
+                        disabled={isUnitKerjaDisabled}
+                      />
 
-{/* Dropdown pilihan Unit Kerja */}
-{showDropdownUnit && filteredUnitKerja.length > 0 && (
-  <ul
-    className="absolute z-10 border rounded-lg bg-white shadow-sm mt-2 max-h-48 overflow-y-auto w-full"
-    onMouseDown={(e) => e.preventDefault()} // Menjaga dropdown agar tidak tertutup saat memilih
-  >
-    {filteredUnitKerja.map((unit) => (
-      <li
-        key={unit.id}
-        className="p-2 cursor-pointer hover:bg-gray-100"
-        onClick={() => {
-          setFormData((prev) => ({ ...prev, unit: unit.unitKerja }));
-          setShowDropdownUnit(false);
-        }}
-      >
-        {unit.unitKerja}
-      </li>
-    ))}
-  </ul>
-)}
+                      {showDropdownUnit && (
+                        <div className="absolute mt-0 w-full">
+                          <Input
+                            type="text"
+                            value={searchUnit} // Gunakan state pencarian
+                            onChange={(e) => {
+                              setSearchUnit(e.target.value); // Update state pencarian
+                              handleUnitKerjaChange(e); // Pastikan fungsi ini tetap memproses perubahan
+                            }}
+                            placeholder="Cari Unit Kerja"
+                            className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-0"
+                          />
+                          <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto">
+                            {/* Pilihan kosong */}
+                            <li
+                              onClick={() => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  unit: "", // Setel unit kerja ke nilai kosong
+                                }));
+                                setShowDropdownUnit(false); // Tutup dropdown
+                                setSearchUnit(""); // Kosongkan input pencarian setelah memilih opsi kosong
+                              }}
+                              className="p-2 cursor-pointer hover:bg-gray-100"
+                            >
+                              Pilihan Kosong
+                            </li>
 
+                            {/* Daftar unit kerja yang difilter */}
+                            {filteredUnitKerja.length > 0 ? (
+                              filteredUnitKerja.map((unit) => (
+                                <li
+                                  key={unit.id}
+                                  onClick={() => {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      unit: unit.unitKerja, // Simpan nilai unit kerja yang dipilih
+                                    }));
+                                    setShowDropdownUnit(false);
+                                    setSearchUnit(""); // Kosongkan input pencarian setelah memilih unit
+                                  }}
+                                  className="p-2 cursor-pointer hover:bg-gray-100"
+                                >
+                                  {unit.unitKerja}
+                                </li>
+                              ))
+                            ) : (
+                              <li className="px-4 py-2 text-gray-500 cursor-default">
+                                Tidak ada hasil
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </>
@@ -836,207 +879,267 @@ function DataAnggota() {
                 </tr>
               </thead>
               <tbody>
-  {currentData.map((item, index) => {
-    const globalIndex = index + 1; // Update index calculation for globalIndex
-    return (
-      <React.Fragment key={index}>
-        <tr className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-          <td className="p-2 md:p-3 border text-center">
-            <div className="flex justify-center items-center">
-              {globalIndex}
-              <Button
-                className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
-                onClick={() => handleExpand(index)}
-              >
-                <FaPlus className="w-4 h-4" />
-              </Button>
-            </div>
-          </td>
-          <td className="p-2 md:p-3 border">
-            {fotoBase64[index] ? (
-              <Image
-                src={`data:image/jpeg;base64,${fotoBase64[index]}`}
-                className="rounded-full mx-auto"
-                width={100}
-                height={100}
-                alt="Belum ada Foto"
-              />
-            ) : (
-              <span>Belum ada foto</span>
-            )}
-          </td>
-          <td className="p-2 md:p-3 border">
-            <div className="font-bold text-sm">{item.namaLengkap}</div>
-            <div className="text-sm">{item.npaPgri}</div>
-            <div className="text-sm">{item.jabatan}</div>
-          </td>
-          <td className="p-2 md:p-3 border md:table-cell hidden">
-            <div className="text-sm">{item.tempatLahir},</div>
-            <div className="text-sm">{formatDate(item.tanggalLahir)}</div>
-            <div className="text-sm">{calculateAge(item.tanggalLahir)} Tahun</div>
-            <div className="text-sm">
-              Pensiun : {calculateRetirementDate(item.tanggalLahir, item.statusPegawai)}
-            </div>
-          </td>
-          <td className="p-2 md:p-3 border md:table-cell hidden">
-            <div className="text-sm">{item.cabang},</div>
-            <div className="text-sm">{item.unitKerja}</div>
-            <div className="text-sm">Anggota: {item.tahunDiangkat ? item.tahunDiangkat : "-"}</div>
-            <div className="text-sm">{item.pangkatGolongan} || {formatCurrency(item.iuran)}</div>
-          </td>
-          <td className="p-2 text-center md:p-3 border md:table-cell hidden">
-            <div
-              className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${
-                item.status === "BUKAN ANGGOTA" ? "bg-red-200 text-red-900" : "bg-green-200 text-green-900"
-              }`}
-            >
-              {item.role === "USER" ? "Aktif" : item.status_keanggotaan}
-            </div>
-          </td>
-          <td className="p-2 md:p-3 border md:table-cell hidden">
-            <div className="flex justify-center space-x-2">
-              <Button
-                className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
-                title="Edit Data"
-                onClick={() => {
-                  sessionStorage.setItem("anggotaId", item.id);
-                  router.push(`/anggota/edit-anggota?id=${item.id}`);
-                }}
-              >
-                <FaEdit className="w-4 h-4" />
-              </Button>
-              <Button
-                className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
-                title="Mutasi"
-                onClick={() => openModal(item)}
-              >
-                <FaExchangeAlt className="w-4 h-4" />
-              </Button>
-              <Link href="#" className="text-white bg-red-500 p-2 border rounded-md">
-                <FaExclamationTriangle className="w-4 h-4" title="Lapor" />
-              </Link>
-              <Link
-                href={`https://wa.me/${item.nomorHp}`}
-                className="text-white bg-green-500 p-2 border rounded-md"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FaWhatsapp className="w-4 h-4" title="WA" />
-              </Link>
-            </div>
-          </td>
-        </tr>
-        {/* Mobile View Row Expansion */}
-        <tr className="md:hidden">
-          <td colSpan="7" className="p-2 border">
-            {expandedIndex === index && (
-              <div className="mt-2">
-                <div className="font-bold">{item.namaLengkap}</div>
-                <div>{item.npaPgri}</div>
-                <div>{item.tugas}</div>
-                <div>
-                  {item.tempatLahir}, {formatDate(item.tanggalLahir)}
-                </div>
-                <div>{calculateAge(item.tanggalLahir)} Tahun</div>
-                <div>
-                  Prediksi Pensiun: {calculateRetirementDate(item.tanggalLahir, item.statusPegawai)}
-                </div>
-                <div>{item.cabang},</div>
-                <div>{item.unitKerja}</div>
-                <div>Anggota: {item.gabung}</div>
-                <div>{item.golongan}/{formatCurrency(item.iuran)}</div>
-                <div
-                  className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${
-                    item.status === "BUKAN ANGGOTA" ? "bg-red-200 text-red-900" : "bg-green-200 text-green-900"
-                  }`}
-                >
-                  {item.status === "ANGGOTA" ? "Aktif" : item.status}
-                </div>
-                <div className="flex justify-center space-x-2 mt-2">
-                  <Button
-                    className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
-                    title="Edit Data"
-                    onClick={() => router.push(`/anggota/edit-anggota?id=${item.id}`)}
-                  >
-                    <FaEdit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
-                    title="Mutasi"
-                    onClick={() => openModal(item)}
-                  >
-                    <FaExchangeAlt className="w-4 h-4" />
-                  </Button>
-                  <Link href="#" className="text-white bg-red-500 p-2 border rounded-md">
-                    <FaExclamationTriangle className="w-4 h-4" title="Lapor" />
-                  </Link>
-                  <Link
-                    href={`https://wa.me/${item.nomorHp}`}
-                    className="text-white bg-green-500 p-2 border rounded-md"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <FaWhatsapp className="w-4 h-4" title="WA" />
-                  </Link>
-                </div>
-              </div>
-            )}
-          </td>
-        </tr>
-      </React.Fragment>
-    );
-  })}
-</tbody>
-
+                {currentData.map((item, index) => {
+                  const globalIndex = index + 1; // Update index calculation for globalIndex
+                  return (
+                    <React.Fragment key={index}>
+                      <tr
+                        className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                      >
+                        <td className="p-2 md:p-3 border text-center">
+                          <div className="flex justify-center items-center">
+                            {globalIndex}
+                            <Button
+                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
+                              onClick={() => handleExpand(index)}
+                            >
+                              <FaPlus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                        <td className="p-2 md:p-3 border">
+                          {fotoBase64[index] ? (
+                            <Image
+                              src={`data:image/jpeg;base64,${fotoBase64[index]}`}
+                              className="rounded-full mx-auto"
+                              width={100}
+                              height={100}
+                              alt="Belum ada Foto"
+                            />
+                          ) : (
+                            <span>Belum ada foto</span>
+                          )}
+                        </td>
+                        <td className="p-2 md:p-3 border">
+                          <div className="font-bold text-sm">
+                            {item.namaLengkap}
+                          </div>
+                          <div className="text-sm">{item.npaPgri}</div>
+                          <div className="text-sm">{item.jabatan}</div>
+                        </td>
+                        <td className="p-2 md:p-3 border md:table-cell hidden">
+                          <div className="text-sm">{item.tempatLahir},</div>
+                          <div className="text-sm">
+                            {formatDate(item.tanggalLahir)}
+                          </div>
+                          <div className="text-sm">
+                            {calculateAge(item.tanggalLahir)} Tahun
+                          </div>
+                          <div className="text-sm">
+                            Pensiun :{" "}
+                            {calculateRetirementDate(
+                              item.tanggalLahir,
+                              item.statusPegawai
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-2 md:p-3 border md:table-cell hidden">
+                          <div className="text-sm">{item.cabang},</div>
+                          <div className="text-sm">{item.unitKerja}</div>
+                          <div className="text-sm">
+                            Anggota:{" "}
+                            {item.tahunDiangkat ? item.tahunDiangkat : "-"}
+                          </div>
+                          <div className="text-sm">
+                            {item.pangkatGolongan} ||{" "}
+                            {formatCurrency(item.iuran)}
+                          </div>
+                        </td>
+                        <td className="p-2 text-center md:p-3 border md:table-cell hidden">
+                          <div
+                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${
+                              item.status === "BUKAN ANGGOTA"
+                                ? "bg-red-200 text-red-900"
+                                : "bg-green-200 text-green-900"
+                            }`}
+                          >
+                            {item.role === "USER"
+                              ? "Aktif"
+                              : item.status_keanggotaan}
+                          </div>
+                        </td>
+                        <td className="p-2 md:p-3 border md:table-cell hidden">
+                          <div className="flex justify-center space-x-2">
+                            <Button
+                              className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                              title="Edit Data"
+                              onClick={() => {
+                                sessionStorage.setItem("anggotaId", item.id);
+                                router.push(
+                                  `/anggota/edit-anggota?id=${item.id}`
+                                );
+                              }}
+                            >
+                              <FaEdit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                              title="Mutasi"
+                              onClick={() => openModal(item)}
+                            >
+                              <FaExchangeAlt className="w-4 h-4" />
+                            </Button>
+                            <Link
+                              href="#"
+                              className="text-white bg-red-500 p-2 border rounded-md"
+                            >
+                              <FaExclamationTriangle
+                                className="w-4 h-4"
+                                title="Lapor"
+                              />
+                            </Link>
+                            <Link
+                              href={`https://wa.me/${item.nomorHp}`}
+                              className="text-white bg-green-500 p-2 border rounded-md"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <FaWhatsapp className="w-4 h-4" title="WA" />
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                      {/* Mobile View Row Expansion */}
+                      <tr className="md:hidden">
+                        <td colSpan="7" className="p-2 border">
+                          {expandedIndex === index && (
+                            <div className="mt-2">
+                              <div className="font-bold">
+                                {item.namaLengkap}
+                              </div>
+                              <div>{item.npaPgri}</div>
+                              <div>{item.tugas}</div>
+                              <div>
+                                {item.tempatLahir},{" "}
+                                {formatDate(item.tanggalLahir)}
+                              </div>
+                              <div>{calculateAge(item.tanggalLahir)} Tahun</div>
+                              <div>
+                                Prediksi Pensiun:{" "}
+                                {calculateRetirementDate(
+                                  item.tanggalLahir,
+                                  item.statusPegawai
+                                )}
+                              </div>
+                              <div>{item.cabang},</div>
+                              <div>{item.unitKerja}</div>
+                              <div>Anggota: {item.gabung}</div>
+                              <div>
+                                {item.golongan}/{formatCurrency(item.iuran)}
+                              </div>
+                              <div
+                                className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${
+                                  item.status === "BUKAN ANGGOTA"
+                                    ? "bg-red-200 text-red-900"
+                                    : "bg-green-200 text-green-900"
+                                }`}
+                              >
+                                {item.status === "ANGGOTA"
+                                  ? "Aktif"
+                                  : item.status}
+                              </div>
+                              <div className="flex justify-center space-x-2 mt-2">
+                                <Button
+                                  className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                                  title="Edit Data"
+                                  onClick={() =>
+                                    router.push(
+                                      `/anggota/edit-anggota?id=${item.id}`
+                                    )
+                                  }
+                                >
+                                  <FaEdit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                  title="Mutasi"
+                                  onClick={() => openModal(item)}
+                                >
+                                  <FaExchangeAlt className="w-4 h-4" />
+                                </Button>
+                                <Link
+                                  href="#"
+                                  className="text-white bg-red-500 p-2 border rounded-md"
+                                >
+                                  <FaExclamationTriangle
+                                    className="w-4 h-4"
+                                    title="Lapor"
+                                  />
+                                </Link>
+                                <Link
+                                  href={`https://wa.me/${item.nomorHp}`}
+                                  className="text-white bg-green-500 p-2 border rounded-md"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <FaWhatsapp className="w-4 h-4" title="WA" />
+                                </Link>
+                              </div>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
             </table>
             <div className="flex justify-end items-center mb-4">
-        {totalItems > itemsPerPage && (
-          <>
-            <Button onClick={handlePreviousPage} disabled={currentPage === 1} className="mr-2">
-              Previous
-            </Button>
-            <div className="flex items-center">
-              {totalPages > 1 && (
-                <ul className="flex space-x-1">
-                  {(() => {
-                    let startPage = Math.max(1, currentPage - 1);
-                    let endPage = Math.min(totalPages, currentPage + 1);
+              {totalItems > itemsPerPage && (
+                <>
+                  <Button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="mr-2"
+                  >
+                    Previous
+                  </Button>
+                  <div className="flex items-center">
+                    {totalPages > 1 && (
+                      <ul className="flex space-x-1">
+                        {(() => {
+                          let startPage = Math.max(1, currentPage - 1);
+                          let endPage = Math.min(totalPages, currentPage + 1);
 
-                    if (currentPage === 1) {
-                      endPage = Math.min(3, totalPages);
-                    } else if (currentPage === totalPages) {
-                      startPage = Math.max(totalPages - 2, 1);
-                    } else if (totalPages - currentPage < 2) {
-                      startPage = Math.max(totalPages - 2, 1);
-                    }
+                          if (currentPage === 1) {
+                            endPage = Math.min(3, totalPages);
+                          } else if (currentPage === totalPages) {
+                            startPage = Math.max(totalPages - 2, 1);
+                          } else if (totalPages - currentPage < 2) {
+                            startPage = Math.max(totalPages - 2, 1);
+                          }
 
-                    return Array.from(
-                      { length: endPage - startPage + 1 },
-                      (_, i) => startPage + i
-                    );
-                  })().map((number) => (
-                    <li key={number}>
-                      <Button
-                        onClick={() => handlePageClick(number)}
-                        className={`mx-1 px-4 py-2 border rounded-md ${
-                          currentPage === number
-                            ? "bg-blue-500 text-white"
-                            : "bg-white text-black"
-                        }`}
-                      >
-                        {number}
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
+                          return Array.from(
+                            { length: endPage - startPage + 1 },
+                            (_, i) => startPage + i
+                          );
+                        })().map((number) => (
+                          <li key={number}>
+                            <Button
+                              onClick={() => handlePageClick(number)}
+                              className={`mx-1 px-4 py-2 border rounded-md ${
+                                currentPage === number
+                                  ? "bg-blue-500 text-white"
+                                  : "bg-white text-black"
+                              }`}
+                            >
+                              {number}
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <Button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="ml-2"
+                  >
+                    Next
+                  </Button>
+                </>
               )}
             </div>
-            <Button onClick={handleNextPage} disabled={currentPage === totalPages} className="ml-2">
-              Next
-            </Button>
-          </>
-        )}
-      </div>
           </div>
 
           {/* Modal for Mutation Actions */}
@@ -1099,13 +1202,7 @@ function DataAnggota() {
                 >
                   {isCabangEnabled
                     ? "Konfirmasi Pindah Cabang"
-                    : "Pindah Cabang"}
-                </Button>
-                <Button
-                  className="w-full bg-teal-700 hover:bg-teal-500"
-                  onClick={() => handleUnitKerjaClick()}
-                >
-                  {isUnitKerjaEnabled ? "Konfirmasi Unit Kerja" : "Unit Kerja"}
+                    : "Pindah Cabang dan Unit Kerja"}
                 </Button>
                 <Button
                   className="w-full bg-teal-700 hover:bg-teal-500"

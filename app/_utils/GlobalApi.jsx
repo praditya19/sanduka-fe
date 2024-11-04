@@ -768,8 +768,19 @@ const getLaporanPengeluaranTahunan = async (year) => {
     throw error;
   }
 };
-
 // END
+// Saldo Akhir Sanduka
+const getSaldoAkhir = async (month, year) => {
+  try {
+    const response = await axiosClient.get(`/api/laporan-akhir`, {
+      params: { month, year },
+    });
+    return response.data
+  } catch (error) {
+    console.error('Error fatching saldo akhir:', error);
+    throw error;
+  }
+}
 
 // REKAP ANGGOTA
 // start
@@ -881,4 +892,5 @@ export default {
   getAllFiles,
   updateUserById,
   updateVerified,
+  getSaldoAkhir,
 };

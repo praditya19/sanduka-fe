@@ -6,7 +6,7 @@ import Link from "next/link";
 import { faFilePdf } from "@fortawesome/free-solid-svg-icons";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 
@@ -48,7 +48,7 @@ const page = () => {
       {isMobile ? (
         <HeaderMobile />
       ) : (
-        <HeaderHome />
+        <HeaderMenu />
       )}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />

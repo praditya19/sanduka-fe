@@ -3,6 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { useRouter } from "next/navigation";
 import { faBell, faSearch } from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "../_utils/GlobalApi";
 
@@ -31,6 +33,11 @@ const HeaderHome = () => {
       console.error("Error Saat Mendapatkan Foto:", error);
       setProfileImageUrl("/profile.png");
     }
+  };
+
+  const router = useRouter();
+  const handleBackClick = () => {
+    router.back();
   };
 
   const handleNotificationClick = () => {
@@ -119,6 +126,12 @@ const HeaderHome = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-12">
           <div className="flex items-center">
+          <FontAwesomeIcon
+                icon={faArrowLeft}
+                size="sm"
+                onClick={handleBackClick}
+                className="cursor-pointer mr-4 -ml-20"
+              />
             <Link href="/home">
               <Image src="/sanduka.png" width={70} height={60} alt="logo" />
             </Link>

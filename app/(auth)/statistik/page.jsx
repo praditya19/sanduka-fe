@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -16,7 +16,7 @@ import {
 import Seldata from "../statistik/Seldata/page";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
@@ -36,7 +36,7 @@ const Page = () => {
   const [selectedCabang, setSelectedCabang] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [bulanOptions, setBulanOptions] = useState([]);
-
+  const dropdownRef = useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
   const { token } = useAuth();
@@ -70,7 +70,7 @@ const Page = () => {
         }
 
         // Generate year options dynamically, e.g., from 2020 to 2030
-        const tahunArray = Array.from(  
+        const tahunArray = Array.from(
           { length: 11 },
           (_, index) => 2020 + index
         );
@@ -97,6 +97,12 @@ const Page = () => {
 
     fetchCabangData();
   }, []);
+
+  const handleCabangClick = () => {
+    setSearchTerm(""); // Reset search term saat dropdown dibuka
+    setFilteredOptions(cabangOptions); // Set filteredOptions ke semua cabang
+    setShowDropdown(true); // Menampilkan dropdown
+  };
 
   // Effect for fetching data based on selected filters
   useEffect(() => {
@@ -143,6 +149,22 @@ const Page = () => {
     fetchData();
   }, [selectedBulan, selectedTahun, selectedCabang, searchTerm]); // Tambahkan searchTerm sebagai dependency
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false); // Menyembunyikan dropdown jika klik di luar
+      }
+    };
+
+    // Tambahkan event listener saat komponen di-mount
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Hapus event listener saat komponen di-unmount
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Handle input changes for search
   const handleInputChange = (event) => {
     const value = event.target.value;
@@ -162,14 +184,9 @@ const Page = () => {
   };
 
   const handleOptionClick = (option) => {
-    // Jika user mengklik cabang yang sama, reset selectedCabang
-    if (selectedCabang === option.kecamatan) {
-      setSelectedCabang(""); // Hapus pilihan cabang
-    } else {
-      setSelectedCabang(option.kecamatan);
-    }
-    setSearchTerm(option.kecamatan);
-    setShowDropdown(false);
+    setSelectedCabang(option ? option.kecamatan : ''); // Set kosong jika pilih opsi reset
+    setShowDropdown(false); // Menyembunyikan dropdown setelah memilih opsi
+    setSearchTerm(''); // Reset search term
   };
 
   const handleBulanChange = (event) => {
@@ -216,7 +233,7 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      {isMobile ? <HeaderMobile /> : <HeaderHome />}
+      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
@@ -283,37 +300,52 @@ const Page = () => {
                 <div className="flex mb-4">
                   <div className="w-full flex space-x-4">
                     {/* Input for searching cabang */}
-                    <div className="relative">
+                    <div className="relative" ref={dropdownRef}>
                       <Input
                         type="text"
-                        placeholder="Cari atau ketik Cabang..."
-                        value={searchTerm}
-                        onChange={handleInputChange}
-                        className="p-2 border border-gray-300 rounded-md mb-2"
-                        onFocus={() => setShowDropdown(true)} // Show dropdown on focus
-                        onBlur={() =>
-                          setTimeout(() => setShowDropdown(false), 200)
-                        } // Hide dropdown on blur
+                        placeholder="Cabang terpilih"
+                        value={selectedCabang}
+                        readOnly
+                        className="p-2 border border-gray-300 rounded-md mb-2 w-64"
+                        onClick={handleCabangClick} // Panggil fungsi untuk menangani klik
                       />
 
                       {showDropdown && (
-                        <ul className="absolute w-64 bg-white border border-gray-300 rounded-md max-h-48 overflow-y-auto shadow-lg z-10">
-                          {filteredOptions.length > 0 ? (
-                            filteredOptions.map((option, index) => (
-                              <li
-                                key={index}
-                                className="p-2 hover:bg-blue-100 cursor-pointer"
-                                onClick={() => handleOptionClick(option)}
-                              >
-                                {option.kecamatan}
-                              </li>
-                            ))
-                          ) : (
-                            <li className="p-2 text-gray-500">
-                              Tidak ada hasil
+                        <div className="absolute w-64 bg-white border border-gray-300 rounded-md max-h-48 shadow-lg z-10">
+                          <Input
+                            type="text"
+                            placeholder="Cari atau ketik Cabang..."
+                            value={searchTerm}
+                            onChange={handleInputChange}
+                            className="p-2 border-b border-gray-300 w-full"
+                            autoFocus // Fokus otomatis pada input pencarian saat dropdown muncul
+                          />
+
+                          <ul className="max-h-40 overflow-y-auto">
+                            <li
+                              className="p-2 hover:bg-blue-100 cursor-pointer text-gray-700 font-semibold"
+                              onClick={() => handleOptionClick(null)} // Kosongkan pilihan
+                            >
+                              Kosongkan Pilihan
                             </li>
-                          )}
-                        </ul>
+
+                            {filteredOptions.length > 0 ? (
+                              filteredOptions.map((option, index) => (
+                                <li
+                                  key={index}
+                                  className="p-2 hover:bg-blue-100 cursor-pointer"
+                                  onClick={() => handleOptionClick(option)}
+                                >
+                                  {option.kecamatan}
+                                </li>
+                              ))
+                            ) : (
+                              <li className="p-2 text-gray-500">
+                                Tidak ada hasil
+                              </li>
+                            )}
+                          </ul>
+                        </div>
                       )}
                     </div>
 
@@ -340,9 +372,7 @@ const Page = () => {
                         onChange={handleTahunChange}
                         className="p-2 border border-gray-300 rounded-md mb-2 w-40"
                       >
-                        <option value="" >
-                          Pilih Tahun
-                        </option>
+                        <option value="">Pilih Tahun</option>
                         {tahunOptions.map((tahun) => (
                           <option key={tahun} value={tahun}>
                             {tahun}
