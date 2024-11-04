@@ -2,7 +2,7 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "https://7a69-103-90-210-146.ngrok-free.app",
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
@@ -102,7 +102,10 @@ const getUserById = async (userId) => {
 // Update DATA
 const updateUserById = async (userId, formData) => {
   try {
-    const response = await axiosClient.put(`/api/auth/user/${userId}`, formData);
+    const response = await axiosClient.put(
+      `/api/auth/user/${userId}`,
+      formData
+    );
     return response.data;
   } catch (error) {
     console.error("Error updating user:", error);
@@ -116,7 +119,7 @@ const updateVerified = async (userId) => {
     const response = await axios.post(`/api/auth/user/5279/verify`);
     return response.data;
   } catch (error) {
-    console.error("Error updateVerfied user:", error);;
+    console.error("Error updateVerfied user:", error);
     throw error;
   }
 };
@@ -775,12 +778,12 @@ const getSaldoAkhir = async (month, year) => {
     const response = await axiosClient.get(`/api/laporan-akhir`, {
       params: { month, year },
     });
-    return response.data
+    return response.data;
   } catch (error) {
-    console.error('Error fatching saldo akhir:', error);
+    console.error("Error fatching saldo akhir:", error);
     throw error;
   }
-}
+};
 
 // REKAP ANGGOTA
 // start
