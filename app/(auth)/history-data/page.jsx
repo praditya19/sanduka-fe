@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useRouter } from "next/navigation";
-import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
@@ -30,49 +30,71 @@ const Page = () => {
 
   const [cabangOptions, setCabangOptions] = useState([]);
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredOptions, setFilteredOptions] = useState([]);
+
   const [selectedMonth, setSelectedMonth] = useState("");
   const [bulanOptions, setBulanOptions] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedCabang, setSelectedCabang] = useState("");
-  const [filteredCabangOptions, setFilteredCabangOptions] =
-    useState(cabangOptions);
-  const [showDropdownCabang, setShowDropdownCabang] = useState(false);
   const dropdownRef = useRef(null);
 
-  const handleInputChange = (e) => {
-    setSelectedCabang(e.target.value);
+  // Filter Cabang
+  useEffect(() => {
+    const fetchCabangData = async () => {
+      try {
+        const response = await GlobalApi.getCabang();
+        setCabangOptions(response.data);
+        setFilteredOptions(response.data);
+      } catch (error) {
+        console.error("Error fetching cabang data:", error);
+      }
+    };
+
+    fetchCabangData();
+  }, []);
+  const handleInputChange = (event) => {
+    const value = event.target.value;
+    setSearchTerm(value);
+
     const filtered = cabangOptions.filter((option) =>
-      option.kecamatan.toLowerCase().includes(e.target.value.toLowerCase())
+      option.kecamatan.toLowerCase().includes(value.toLowerCase())
     );
-    setFilteredCabangOptions(filtered);
-    setShowDropdownCabang(true);
+
+    setFilteredOptions(filtered);
+    // Menampilkan dropdown hanya jika input tidak kosong
+    setShowDropdown(value.length > 0);
   };
 
-  // Close dropdown when clicking outside
+  const handleOptionClick = (option) => {
+    setSelectedCabang(option ? option.kecamatan : ""); // Set kosong jika pilih opsi reset
+    setShowDropdown(false); // Menyembunyikan dropdown setelah memilih opsi
+    setSearchTerm(""); // Reset search term
+  };
+
+  const handleCabangClick = () => {
+    setSearchTerm(""); // Reset search term saat dropdown dibuka
+    setFilteredOptions(cabangOptions); // Set filteredOptions ke semua cabang
+    setShowDropdown(true); // Menampilkan dropdown
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdownCabang(false);
+        setShowDropdown(false); // Menyembunyikan dropdown jika klik di luar
       }
     };
+
+    // Tambahkan event listener saat komponen di-mount
     document.addEventListener("mousedown", handleClickOutside);
+
+    // Hapus event listener saat komponen di-unmount
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  useEffect(() => {
-    GlobalApi.getCabang()
-      .then((response) => {
-        setCabangOptions(response.data);
-        setLoading(false); // Set loading to false once data is fetched
-      })
-      .catch((error) => {
-        console.error("Error fetching cabang options:", error);
-        setLoading(false);
-      });
-  }, []);
+  // End
 
   // Mengambil data bulan dari API
   const fetchBulan = async () => {
@@ -230,7 +252,7 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      {isMobile ? <HeaderMobile /> : <HeaderHome />}
+      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
@@ -243,38 +265,56 @@ const Page = () => {
             <div className="rounded-md flex flex-col py-4">
               <div className="container px-2">
                 <div className="w-full flex items-center justify-between mb-4">
-                  <div ref={dropdownRef} className="flex w-2/3 space-x-2">
+                  <div className="flex w-2/3 space-x-2 relative">
                     {/* Cabang Dropdown */}
-                    <Input
-                      type="text"
-                      value={selectedCabang}
-                      onChange={handleInputChange}
-                      onFocus={() => setShowDropdownCabang(true)}
-                      onBlur={() =>
-                        setTimeout(() => setShowDropdownCabang(false), 200)
-                      }
-                      className="p-2 border rounded w-full"
-                      placeholder="Cari Cabang"
-                    />
+                    <div className="relative" ref={dropdownRef}>
+                      <Input
+                        type="text"
+                        placeholder="Cabang terpilih"
+                        value={selectedCabang}
+                        readOnly
+                        className="p-2 border border-gray-300 rounded-md mb-2 w-64"
+                        onClick={handleCabangClick} // Panggil fungsi untuk menangani klik
+                      />
 
-                    {/* Dropdown pilihan Cabang */}
-                    {showDropdownCabang && filteredCabangOptions.length > 0 && (
-                      <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 left-10 max-h-48 overflow-y-auto w-1/5">
-                        {filteredCabangOptions.map((option) => (
-                          <li
-                            key={option.id}
-                            className="p-2 cursor-pointer hover:bg-gray-100"
-                            onMouseDown={(e) => e.preventDefault()} // Prevent blur on click
-                            onClick={() => {
-                              setSelectedCabang(option.kecamatan);
-                              setShowDropdownCabang(false);
-                            }}
-                          >
-                            {option.kecamatan}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                      {showDropdown && (
+                        <div className="absolute w-64 bg-white border border-gray-300 rounded-md max-h-48 shadow-lg z-10">
+                          <Input
+                            type="text"
+                            placeholder="Cari atau ketik Cabang..."
+                            value={searchTerm}
+                            onChange={handleInputChange}
+                            className="p-2 border-b border-gray-300 w-full"
+                            autoFocus // Fokus otomatis pada input pencarian saat dropdown muncul
+                          />
+
+                          <ul className="max-h-40 overflow-y-auto">
+                            <li
+                              className="p-2 hover:bg-blue-100 cursor-pointer text-gray-700 font-semibold"
+                              onClick={() => handleOptionClick(null)} // Kosongkan pilihan
+                            >
+                              Kosongkan Pilihan
+                            </li>
+
+                            {filteredOptions.length > 0 ? (
+                              filteredOptions.map((option, index) => (
+                                <li
+                                  key={index}
+                                  className="p-2 hover:bg-blue-100 cursor-pointer"
+                                  onClick={() => handleOptionClick(option)}
+                                >
+                                  {option.kecamatan}
+                                </li>
+                              ))
+                            ) : (
+                              <li className="p-2 text-gray-500">
+                                Tidak ada hasil
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Month Dropdown */}
                     <select

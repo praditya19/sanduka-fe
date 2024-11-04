@@ -7,7 +7,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
@@ -111,7 +111,7 @@ const TemanUnitKerja = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      {isMobile ? <HeaderMobile /> : <HeaderHome />}
+      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 

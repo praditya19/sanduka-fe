@@ -83,9 +83,12 @@ function Pemasukan() {
           selectedBulan,
           newSelectedYear
         );
+        console.log(data); // Log the fetched data to the console
         setTransactions(data); // Set fetched data into transactions state
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error fetching data:", error); // Log any errors that occur
+    }
   };
 
   // Fetch data whenever selectedBulan or newSelectedYear changes
@@ -298,26 +301,26 @@ function Pemasukan() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-           <Toaster
-          toastOptions={{
-            style: {
-              fontSize: "1.25rem", // Ukuran font yang lebih besar
-              padding: "16px", // Menambah padding jika diperlukan
-            },
-            success: {
+          <Toaster
+            toastOptions={{
               style: {
-                background: "white", // Warna background hijau untuk pesan sukses
-                color: "black",
+                fontSize: "1.25rem", // Ukuran font yang lebih besar
+                padding: "16px", // Menambah padding jika diperlukan
               },
-            },
-            error: {
-              style: {
-                background: "#f44336", // Warna background merah untuk pesan error
-                color: "#fff",
+              success: {
+                style: {
+                  background: "white", // Warna background hijau untuk pesan sukses
+                  color: "black",
+                },
               },
-            },
-          }}
-        />
+              error: {
+                style: {
+                  background: "#f44336", // Warna background merah untuk pesan error
+                  color: "#fff",
+                },
+              },
+            }}
+          />
           <div className="container mx-auto p-6">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
               <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
@@ -552,91 +555,80 @@ function Pemasukan() {
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.map((transaction, index) => (
-                    <tr
-                      key={index}
-                      className={`border-b text-black text-center ${
-                        transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
-                      }`}
-                    >
-                      <td className="px-6 py-4 text-sm">{index + 1}</td>
-                      <td className="px-6 py-4 text-sm">
-                        {transaction["Tgl Transaksi"]}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {transaction["No. Bukti"]}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {transaction["Uraian"]}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {formatCurrency(transaction["Debet"])}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {formatCurrency(transaction["Kredit"])}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {formatCurrency(
-                          transaction["Debet"] && transaction["Kredit"]
-                            ? Number(transaction["Debet"]) -
-                                Number(transaction["Kredit"])
-                            : transaction["Debet"] || transaction["Kredit"]
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <div className="flex items-center space-x-2">
-                          <Input
-                            type="checkbox"
-                            className="form-checkbox h-4 w-4"
-                            checked={transaction.checked}
-                            onChange={() => handleCheck(transaction.id)}
-                          />
-                          <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">
-                            Edit
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  <tr className="bg-gray-200 text-base text-black text-center">
-                    <td className="px-6 py-4 text-left" colSpan="4">
-                      TOTAL
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      {/* Implementasikan logika untuk menghitung total debet jika diperlukan */}
-                      {formatCurrency(
-                        transactions.reduce(
-                          (total, transaction) =>
-                            total + Number(transaction["Debet"] || 0),
-                          0
-                        )
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      {/* Implementasikan logika untuk menghitung total kredit jika diperlukan */}
-                      {formatCurrency(
-                        transactions.reduce(
-                          (total, transaction) =>
-                            total + Number(transaction["Kredit"] || 0),
-                          0
-                        )
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      {/* Implementasikan logika untuk menghitung total saldo jika diperlukan */}
-                      {formatCurrency(
-                        transactions.reduce(
-                          (total, transaction) =>
-                            total +
-                            (Number(transaction["Debet"]) -
-                              Number(transaction["Kredit"] || 0)),
-                          0
-                        )
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm"></td>
-                  </tr>
-                </tbody>
+  {transactions.map((transaction, index) =>
+    transaction.tglTransaksi ? ( // Check if tglTransaksi is not null
+      <tr
+        key={index}
+        className={`border-b text-black text-center ${
+          transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
+        }`}
+      >
+        <td className="px-6 py-4 text-sm">{index + 1}</td>
+        <td className="px-6 py-4 text-sm">{transaction.tglTransaksi}</td>
+        <td className="px-6 py-4 text-sm">{transaction.noBukti}</td>
+        <td className="px-6 py-4 text-sm">{transaction.uraian}</td>
+        <td className="px-6 py-4 text-sm">{formatCurrency(transaction.debet || 0)}</td>
+        <td className="px-6 py-4 text-sm">{formatCurrency(transaction.kredit || 0)}</td>
+        <td className="px-6 py-4 text-sm">{formatCurrency(transaction.saldo || 0)}</td>
+        <td className="px-6 py-4 text-sm">
+          <div className="flex items-center space-x-2">
+            <Input
+              type="checkbox"
+              className="form-checkbox h-4 w-4"
+              checked={transaction.checked}
+              onChange={() => handleCheck(transaction.id)}
+            />
+            <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+              Edit
+            </Button>
+          </div>
+        </td>
+      </tr>
+    ) : null // Skip rendering if tglTransaksi is null
+  )}
+
+  {/* Row for TOTAL */}
+  <tr className="bg-gray-200 text-base text-black text-center">
+  <td className="px-6 py-4 text-left" colSpan="4">
+    TOTAL
+  </td>
+  <td className="px-6 py-4 text-sm">
+    {formatCurrency(
+      transactions.reduce(
+        (total, transaction) => {
+          const debet = Number(transaction.debet);
+          return debet ;
+        },
+        0
+      )
+    )}
+  </td>
+  <td className="px-6 py-4 text-sm">
+    {formatCurrency(
+      transactions.reduce(
+        (total, transaction) => {
+          const kredit = Number(transaction.kredit);
+          return kredit;
+        },
+        0
+      )
+    )}
+  </td>
+  <td className="px-6 py-4 text-sm">
+    {formatCurrency(
+      transactions.reduce(
+        (total, transaction) => {
+          const saldo = Number(transaction.saldo);
+          return saldo  ;
+        },
+        0
+      )
+    )}
+  </td>
+  <td className="px-6 py-4 text-sm"></td>
+</tr>
+</tbody>
+
               </table>
             </div>
           </div>

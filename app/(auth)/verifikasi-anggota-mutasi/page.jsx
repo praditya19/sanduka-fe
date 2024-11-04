@@ -14,7 +14,7 @@ import {
   faMinusCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
-import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/app/_components/Sidebar";
@@ -227,7 +227,7 @@ const VerifikasiAnggotaMutasi = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
       <Toaster />
-      {isMobile ? <HeaderMobile /> : <HeaderHome />}
+      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <div
@@ -550,7 +550,7 @@ const DataTable = ({
                     </td>
 
                     <td className="px-4 py-2 border-b">
-                      <a
+                      {/* <a
                         href={`https://wa.me/${item.nomorHp}`}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -572,7 +572,7 @@ const DataTable = ({
                         size="lg"
                         className="text-red-500 mr-4 cursor-pointer"
                         onClick={() => handleRejectUserClick(item.id)}
-                      />
+                      /> */}
                       <FontAwesomeIcon
                         icon={faUser}
                         size="lg"
@@ -702,6 +702,20 @@ const PopupDetail = ({
             alt="Anggota Foto"
             className="rounded-full"
           />
+          
+        </div>
+        <div>
+
+        {!selectedRow.isVerified && (
+                <Badge variant="destructive" className="flex items-center mr-4 w-1/3">
+                  <FontAwesomeIcon
+                    icon={faTimesCircle}
+                    className="mr-2 text-white w-1/3" 
+                    size="lg"
+                  />
+                  <span>Belum Terverifikasi</span>
+                </Badge>
+              )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700 mb-4">
           <div>
@@ -745,19 +759,10 @@ const PopupDetail = ({
           <div>
             <p className="font-medium text-gray-600 mr-4">Status:</p>
             <div className="flex items-center">
-              {!selectedRow.isVerified && (
-                <Badge variant="destructive" className="flex items-center mr-4">
-                  <FontAwesomeIcon
-                    icon={faTimesCircle}
-                    className="mr-2 text-white"
-                    size="lg"
-                  />
-                  <span>Belum Terverifikasi</span>
-                </Badge>
-              )}
+             
               <FontAwesomeIcon
                 icon={faCheckCircle}
-                size="lg"
+                size="2xl"
                 className="text-green-500 cursor-pointer"
                 onClick={() => {
                   handleVerifyUserClick(selectedRow.id);
@@ -765,7 +770,7 @@ const PopupDetail = ({
               />
               <FontAwesomeIcon
                 icon={faTimesCircle}
-                size="lg"
+                size="2xl"
                 className="text-red-500 cursor-pointer ml-3"
                 onClick={() => {
                   handleRejectUserClick(selectedRow.id);

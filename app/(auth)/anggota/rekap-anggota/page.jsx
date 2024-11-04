@@ -1,74 +1,41 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import { Input } from "@/components/ui/input";
 
 function RekapAnggota() {
   const [maxItems, setMaxItems] = useState(10);
   const { token } = useAuth();
   const router = useRouter();
   const [rekapData, setRekapData] = useState([]);
-
-  const [cabangList, setCabangList] = useState([]);
+  const [originalCabangList, setOriginalCabangList] = useState([]);
   const [filteredCabangList, setFilteredCabangList] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
   const [showCabangDropdown, setShowCabangDropdown] = useState(false);
-
   const [unitKerjaList, setUnitKerjaList] = useState([]);
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [unitKerjaInput, setUnitKerjaInput] = useState("");
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
-
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(rekapData.length / maxItems);
-
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
-
   const [originalRekapData, setOriginalRekapData] = useState([]);
 
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (cabangRef.current && !cabangRef.current.contains(event.target)) {
-        setShowCabangDropdown(false);
-      }
-      if (
-        unitKerjaRef.current &&
-        !unitKerjaRef.current.contains(event.target)
-      ) {
-        setShowUnitKerjaDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const fetchRekapData = async (cabang) => {
-    try {
-      const data = await GlobalApi.getRekapAnggotaByCabang(cabang);
-      setRekapData(data);
-      setOriginalRekapData(data); // Simpan data asli saat mengambil data
-    } catch (error) {
-      console.error("Error fetching rekap data:", error);
-    }
-  };
-
+  //  Filter Cabang dan Unit Kerja
   // Fetch cabang data
   useEffect(() => {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setCabangList(response.data);
-        setFilteredCabangList(response.data);
+        setOriginalCabangList(response.data); // Simpan semua cabang ke originalCabangList
+        setFilteredCabangList(response.data); // Atur filter cabang awal
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -89,42 +56,53 @@ function RekapAnggota() {
     fetchUnitKerjaData();
   }, []);
 
-  // Filter unit kerja berdasarkan cabang yang dipilih
-  useEffect(() => {
+  const handleUnitKerjaFocus = () => {
     if (selectedCabang) {
-      console.log("Selected Cabang:", selectedCabang);
-
-      const filtered = unitKerjaList.filter((unitKerja) => {
-        return (
-          unitKerja.cabang &&
-          unitKerja.cabang.toLowerCase().includes(selectedCabang.toLowerCase())
-        );
-      });
-
-      console.log("Filtered Unit Kerja:", filtered);
-      setFilteredUnitKerja(filtered);
-    } else {
-      setFilteredUnitKerja([]); // Kosongkan jika tidak ada cabang yang dipilih
+      setShowUnitKerjaDropdown(true); // Tampilkan dropdown
     }
-  }, [selectedCabang, unitKerjaList]);
+  };
 
-  const handleInputChange = (e) => {
+  const handleCabangClick = () => {
+    setFilteredCabangList(originalCabangList); // Reset ke daftar asli saat dropdown dibuka
+    setShowCabangDropdown(true); // Tampilkan dropdown
+  };
+
+  const handleUnitKerjaChange = (e) => {
     const input = e.target.value;
-    setSelectedCabang(input);
-    
-    // Filter cabang berdasarkan input
-    const filtered = cabangList.filter((cabang) =>
-      cabang.kecamatan.toLowerCase().includes(input.toLowerCase())
+    setUnitKerjaInput(input);
+
+    // Filter unit kerja berdasarkan input dan cabang
+    const filteredUnitKerja = unitKerjaList.filter(
+      (unitKerja) =>
+        unitKerja.cabang &&
+        unitKerja.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
+        unitKerja.unitKerja.toLowerCase().startsWith(input.toLowerCase())
+    );
+
+    // Tampilkan dropdown jika ada hasil filter
+    setShowUnitKerjaDropdown(filteredUnitKerja.length > 0);
+    setFilteredUnitKerja(filteredUnitKerja);
+
+    // Filter data rekap berdasarkan input unit kerja
+    const rekapFilteredByUnitKerja = originalRekapData.filter(
+      (item) =>
+        item.alamatKerja &&
+        item.alamatKerja.toLowerCase().includes(input.toLowerCase())
+    );
+
+    // Jika input kosong, kembalikan data tabel ke data awal
+    if (input === "") {
+      setRekapData(originalRekapData);
+    } else {
+      setRekapData(rekapFilteredByUnitKerja);
+    }
+  };
+
+  const handleCabangSearch = (query) => {
+    const filtered = originalCabangList.filter((cabang) =>
+      cabang.kecamatan.toLowerCase().includes(query.toLowerCase())
     );
     setFilteredCabangList(filtered);
-    
-    // Tampilkan dropdown meskipun input kosong
-    setShowCabangDropdown(true);
-    
-    // Jika input kosong, tampilkan semua cabang
-    if (input === "") {
-      setFilteredCabangList(cabangList); // Tampilkan semua cabang jika input kosong
-    }
   };
 
   const handleSelectCabang = async (cabang) => {
@@ -133,7 +111,7 @@ function RekapAnggota() {
 
     // Fetch rekap data based on selected cabang
     await fetchRekapData(cabang.kecamatan);
-
+    console.log("Cabang yang dipilih:", cabang.kecamatan);
     // Now filter the unit kerja based on the selected cabang
     const filtered = unitKerjaList.filter(
       (unitKerja) =>
@@ -143,57 +121,33 @@ function RekapAnggota() {
     setFilteredUnitKerja(filtered);
   };
 
-  const handleUnitKerjaFocus = () => {
-    if (selectedCabang) {
-      // Jika input kosong, tampilkan semua unit kerja terkait cabang
-      // if (unitKerjaInput) {
-      //   const filtered = unitKerjaList.filter((unitKerja) =>
-      //     unitKerja.cabang &&
-      //     unitKerja.cabang.toLowerCase() === selectedCabang.toLowerCase()
-      //   );
-      //   setFilteredUnitKerja(filtered);
-      // }
-      setShowUnitKerjaDropdown(true); // Tampilkan dropdown
-    }
-  };
-
-  const handleUnitKerjaChange = (e) => {
-    const input = e.target.value;
-    setUnitKerjaInput(input);
-  
-    // Filter unit kerja berdasarkan input dan cabang
-    const filteredUnitKerja = unitKerjaList.filter(
-      (unitKerja) =>
-        unitKerja.cabang &&
-        unitKerja.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
-        unitKerja.unitKerja.toLowerCase().startsWith(input.toLowerCase())
-    );
-  
-    // Tampilkan dropdown jika ada hasil filter
-    setShowUnitKerjaDropdown(filteredUnitKerja.length > 0);
-    setFilteredUnitKerja(filteredUnitKerja);
-  
-    // Filter data rekap berdasarkan input unit kerja
-    const rekapFilteredByUnitKerja = originalRekapData.filter(
-      (item) =>
-        item.alamatKerja &&
-        item.alamatKerja.toLowerCase().includes(input.toLowerCase())
-    );
-  
-    // Jika input kosong, kembalikan data tabel ke data awal
-    if (input === "") {
-      setRekapData(originalRekapData);
+  const handleUnitKerjaSearch = (searchTerm) => {
+    // Jika searchTerm kosong, set filteredUnitKerja dengan semua unit kerja yang sesuai dengan selectedCabang
+    if (searchTerm === "") {
+      const allFiltered = unitKerjaList.filter(
+        (unitKerja) => unitKerja.cabang === selectedCabang
+      );
+      setFilteredUnitKerja(allFiltered);
     } else {
-      setRekapData(rekapFilteredByUnitKerja);
+      // Jika ada input, filter berdasarkan input dan cabang yang dipilih
+      const filtered = unitKerjaList.filter(
+        (unitKerja) =>
+          unitKerja.unitKerja
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) &&
+          unitKerja.cabang === selectedCabang // Memfilter berdasarkan cabang
+      );
+      setFilteredUnitKerja(filtered);
     }
+
+    setShowUnitKerjaDropdown(true); // Menjaga dropdown tetap terbuka
   };
-  
 
   const handleUnitKerjaSelect = (unitKerja) => {
     setSelectedUnitKerja(unitKerja.unitKerja);
     setUnitKerjaInput(unitKerja.unitKerja);
     setShowUnitKerjaDropdown(false);
-  
+    console.log("Unit kerja yang dipilih:", unitKerja);
     // Update rekapData berdasarkan unit kerja yang dipilih
     const filteredRekapData = originalRekapData.filter(
       (item) => item.alamatKerja === unitKerja.unitKerja
@@ -202,10 +156,50 @@ function RekapAnggota() {
   };
 
   useEffect(() => {
-    if (!unitKerjaInput && selectedCabang) {
-      fetchRekapData(selectedCabang); // Fetch kembali data berdasarkan cabang yang dipilih
+    const handleClickOutside = (event) => {
+      if (
+        unitKerjaRef.current &&
+        !unitKerjaRef.current.contains(event.target)
+      ) {
+        setShowUnitKerjaDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (cabangRef.current && !cabangRef.current.contains(event.target)) {
+        setShowCabangDropdown(false);
+      }
+      if (
+        unitKerjaRef.current &&
+        !unitKerjaRef.current.contains(event.target)
+      ) {
+        setShowUnitKerjaDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+  // end
+
+  const fetchRekapData = async (cabang) => {
+    try {
+      const data = await GlobalApi.getRekapAnggotaByCabang(cabang);
+      setRekapData(data);
+      setOriginalRekapData(data); // Simpan data asli saat mengambil data
+    } catch (error) {
+      console.error("Error fetching rekap data:", error);
     }
-  }, [unitKerjaInput, selectedCabang]);
+  };
 
   useEffect(() => {
     if (!token) {
@@ -258,72 +252,104 @@ function RekapAnggota() {
 
   const jumlahPns = rekapData.reduce((acc, curr) => acc + curr.totalPns, 0);
   const jumlahPppk = rekapData.reduce((acc, curr) => acc + curr.totalPppk, 0);
-  const jumlahNonPns = rekapData.reduce((acc, curr) => acc + curr.totalNonPns, 0);
+  const jumlahNonPns = rekapData.reduce(
+    (acc, curr) => acc + curr.totalNonPns,
+    0
+  );
 
   // Correct the syntax here by accessing `curr` directly
-  const jumlah = rekapData.reduce((acc, curr) => acc + (curr.totalPns + curr.totalPppk + curr.totalNonPns), 0);
+  const jumlah = rekapData.reduce(
+    (acc, curr) => acc + (curr.totalPns + curr.totalPppk + curr.totalNonPns),
+    0
+  );
 
   const jumlahIuran = rekapData.reduce((acc, curr) => acc + curr.totalIuran, 0);
 
-
-
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      {isMobile ? <HeaderMobile /> : <HeaderHome />}
+      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"}`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="mb-4 mx-12">
             <div className="flex flex-wrap items-start mt-14 justify-between">
               <div className="flex flex-wrap items-center space-x-2">
                 <div className="flex flex-col relative w-64" ref={cabangRef}>
-                  <input
+                  <Input
                     type="text"
                     value={selectedCabang}
-                    onFocus={() => setShowCabangDropdown(true)}
-                    onChange={handleInputChange}
+                    readOnly
+                    onClick={handleCabangClick} // Tambahkan onClick untuk menampilkan dropdown
                     className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
                     placeholder="Pilih Cabang"
                   />
-                  {showCabangDropdown && filteredCabangList.length > 0 && (
-                    <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-12 max-h-40 overflow-y-auto">
-                      {filteredCabangList.map((cabang) => (
-                        <li
-                          key={cabang.id} // Unique key for each cabang
-                          onClick={() => handleSelectCabang(cabang)}
-                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                        >
-                          {cabang.kecamatan}
-                        </li>
-                      ))}
-                    </ul>
+                  {showCabangDropdown && (
+                    <div className="absolute mt-9">
+                      <Input
+                        type="text"
+                        onChange={(e) => handleCabangSearch(e.target.value)} // Function untuk memfilter cabang
+                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-2"
+                        placeholder="Cari Cabang"
+                      />
+                      {filteredCabangList.length > 0 && (
+                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto">
+                          {filteredCabangList.map((cabang) => (
+                            <li
+                              key={cabang.id} // Unique key for each cabang
+                              onClick={() => handleSelectCabang(cabang)}
+                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                            >
+                              {cabang.kecamatan}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   )}
                 </div>
+
                 <div className="flex flex-col relative w-64" ref={unitKerjaRef}>
-                  <input
+                  <Input
                     type="text"
                     value={unitKerjaInput}
                     onFocus={handleUnitKerjaFocus}
                     onChange={handleUnitKerjaChange}
                     placeholder="Pilih Unit Kerja"
+                    readOnly
                     className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
                     disabled={!selectedCabang}
                   />
-                  {showUnitKerjaDropdown && filteredUnitKerja.length > 0 && (
-                    <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-12 max-h-40 overflow-y-auto">
-                      {filteredUnitKerja.map((unitKerja) => (
-                        <li
-                          key={unitKerja.id}
-                          onClick={() => handleUnitKerjaSelect(unitKerja)}
-                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                        >
-                          {unitKerja.unitKerja}
-                        </li>
-                      ))}
-                    </ul>
+                  {showUnitKerjaDropdown && (
+                    <div className="absolute mt-9 w-full">
+                      <Input
+                        type="text"
+                        onChange={(e) => handleUnitKerjaSearch(e.target.value)}
+                        placeholder="Cari Unit Kerja"
+                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-2"
+                      />
+                      <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto">
+                        {filteredUnitKerja.length > 0 ? (
+                          filteredUnitKerja.map((unitKerja) => (
+                            <li
+                              key={unitKerja.id}
+                              onClick={() => handleUnitKerjaSelect(unitKerja)}
+                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                            >
+                              {unitKerja.unitKerja}
+                            </li>
+                          ))
+                        ) : (
+                          <li className="px-4 py-2 text-gray-500 cursor-default">
+                            Tidak ada hasil
+                          </li>
+                        )}
+                      </ul>
+                    </div>
                   )}
                 </div>
               </div>
@@ -358,16 +384,47 @@ function RekapAnggota() {
             <table className="container w-full table-auto mb-8">
               <thead>
                 <tr>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">No</th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Unit Kerja</th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700" colSpan="3">Status Anggota</th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Jumlah</th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Iuran</th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    rowSpan="2"
+                  >
+                    No
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    rowSpan="2"
+                  >
+                    Unit Kerja
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    colSpan="3"
+                  >
+                    Status Anggota
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    rowSpan="2"
+                  >
+                    Jumlah
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    rowSpan="2"
+                  >
+                    TOTAL
+                  </th>
                 </tr>
                 <tr>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">PNS</th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">PPPK</th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">Non PNS</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                    PGRI
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                    Sanduka
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                    Daspen
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -409,14 +466,27 @@ function RekapAnggota() {
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan="2" className="p-2 md:p-3 border bg-green-200 text-left">
+                  <td
+                    colSpan="2"
+                    className="p-2 md:p-3 border bg-green-200 text-left"
+                  >
                     Jumlah :
                   </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">{jumlahPns}</td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">{jumlahPppk}</td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">{jumlahNonPns}</td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">{jumlah}</td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">{`Rp. ${jumlahIuran.toLocaleString("id-ID")},-`}</td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">
+                    {jumlahPns}
+                  </td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">
+                    {jumlahPppk}
+                  </td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">
+                    {jumlahNonPns}
+                  </td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">
+                    {jumlah}
+                  </td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">{`Rp. ${jumlahIuran.toLocaleString(
+                    "id-ID"
+                  )},-`}</td>
                 </tr>
               </tfoot>
             </table>

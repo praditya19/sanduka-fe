@@ -50,7 +50,7 @@ const icons = [
   },
   {
     icon: faUbuntu,
-    label: "Rekap Anggota",
+    label: "Rekap By Nominal",
     href: "/anggota/rekap-anggota",
     color: "text-gray-500",
   },
@@ -247,10 +247,19 @@ export default function IconGrid() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
+          {/* image */}
           <div className="flex-1 mt-14">
+            <img
+              src="https://images.pexels.com/photos/346529/pexels-photo-346529.jpeg?cs=srgb&dl=pexels-bri-schneiter-28802-346529.jpg&fm=jpg" // Ganti dengan path gambar yang sesuai
+              alt="Deskripsi gambar" // Deskripsi gambar untuk aksesibilitas
+              className="w-full h-96 -mt-6 object-cover" // Sesuaikan kelas Tailwind CSS untuk styling
+            />
+          </div>
+          <div className="flex-1 ">
             {isMobile ? (
               <div className="w-full border mt-10 overflow-x-auto">
                 <div className="flex space-x-4 px-4">
@@ -301,7 +310,7 @@ export default function IconGrid() {
                 </div>
               </div>
             ) : (
-              <div className="w-full mt-12">
+              <div className="w-full -mt-12">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 px-12">
                   {/* Lapor Meninggal */}
                   <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105">
@@ -377,29 +386,31 @@ export default function IconGrid() {
           </div>
 
           <div className="px-6 mt-5 sm:px-12 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-2">
-  {icons.map((item, index) => (
-    <Link key={index} href={item.href}>
-      <div className="flex flex-col items-center cursor-pointer transition duration-300 transform hover:scale-105 hover:shadow-xl 
-                      p-7 sm:p-4 sm:bg-white sm:rounded-lg sm:shadow-lg">
-        <FontAwesomeIcon
-          icon={item.icon}
-          size="2x"
-          className={`mb-2 ${item.color}`}
-        />
-        <span className="text-xs font-normal text-gray-700 text-center whitespace-nowrap">
-          {item.label}
-        </span>
-      </div>
-    </Link>
-  ))}
-</div>
-
+            {icons.map((item, index) => (
+              <Link key={index} href={item.href}>
+                <div
+                  className="flex flex-col items-center cursor-pointer transition duration-300 transform hover:scale-105 hover:shadow-xl 
+                      p-7 sm:p-4 sm:bg-white sm:rounded-lg sm:shadow-lg"
+                >
+                  <FontAwesomeIcon
+                    icon={item.icon}
+                    size="2x"
+                    className={`mb-2 ${item.color}`}
+                  />
+                  <span className="text-xs font-normal text-gray-700 text-center whitespace-nowrap">
+                    {item.label}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
 
         {/* Pembatas with Title */}
         <div
-          className={`w-full flex flex-col items-center my-4 ${isSidebarOpen ? "ml-32" : "ml-0"
-            }`}
+          className={` flex flex-col items-center my-4 ${
+            isSidebarOpen ? "ml-32" : "ml-0"
+          }`}
         >
           <hr className="mt-2 border-gray-300 w-full" />
           <h5 className="text-lg sm:text-xl font-semibold text-gray-800 mt-4 text-center">
@@ -408,11 +419,11 @@ export default function IconGrid() {
         </div>
 
         {/* Card anggota meninggal */}
-        <div
+        {/* <div
           className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${isSidebarOpen ? "ml-32" : "ml-0"
             }`}
         >
-          {/* Left Arrow Button - Only Visible on Larger Screens */}
+          
           <button
             onClick={handlePrev}
             className="hidden text-red-500 lg:block absolute left-32 top-1/2 transform -translate-y-1/2 z-10 bg-gray-100 p-2 rounded-full shadow-md hover:bg-gray-300"
@@ -420,14 +431,14 @@ export default function IconGrid() {
             <FontAwesomeIcon icon={faChevronLeft} />
           </button>
 
-          {/* Data Grid with Horizontal Scroll for Mobile */}
+          
           <div className="flex mx-auto sm:mx-44 space-x-4 overflow-x-auto w-full px-4 lg:px-0 lg:grid lg:grid-cols-5 lg:gap-4 lg:overflow-hidden">
             {anggotaMeninggal
               .slice(currentIndex, currentIndex + itemsPerPage)
               .map((currentData, index) => (
-                <button // Card dalam button
+                <button 
                   key={index}
-                  className="min-w-[45%] sm:min-w-[30%]  bg-white rounded-lg shadow-lg overflow-hidden" // Ubah min-w untuk desktop
+                  className="min-w-[45%] sm:min-w-[30%]  bg-white rounded-lg shadow-lg overflow-hidden" 
                 >
                   <Image
                     className="ml-10 sm:ml-16 h-20 w-20 object-cover"
@@ -475,14 +486,14 @@ export default function IconGrid() {
               ))}
           </div>
 
-          {/* Right Arrow Button - Only Visible on Larger Screens */}
+         
           <button
             onClick={handleNext}
             className="hidden text-red-500 lg:block absolute right-32 top-1/2 transform -translate-y-1/2 z-10 bg-gray-100 p-2 rounded-full shadow-md hover:bg-gray-300"
           >
             <FontAwesomeIcon icon={faChevronRight} />
           </button>
-        </div>
+        </div> */}
       </div>
 
       {isMobile && <FooterMobile />}

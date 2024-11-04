@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
@@ -235,7 +235,7 @@ const Page = () => {
       {isMobile ? (
        <HeaderMobile />
       ) : (
-        <HeaderHome />
+        <HeaderMenu />
       )}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -270,7 +270,7 @@ const Page = () => {
                     href="/pengaturan/tambah"
                     className="text-gray-700 hover:text-teal-600"
                   >
-                    Tambah
+                     Tambah Cabang
                   </Link>
                 </li>
               </ul>

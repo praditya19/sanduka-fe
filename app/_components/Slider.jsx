@@ -20,7 +20,7 @@ const Slider = () => {
     {
       id: 1,
       imageUrl:
-        "https://www.blibli.com/friends-backend/wp-content/uploads/2023/08/B800788-Cover-Pantai-yang-Ada-di-Kalimantan.jpg",
+       "https://media.suara.com/pictures/653x366/2023/01/16/86458-ilustrasi-pantai-unsplashderek-oulasin.jpg",
       title: "APA ITU SANDUKA?",
       description:
         "Sanduka adalah santunan duka cita bagi anggota PGRI Aktif yang terdaftar di dalam database keanggotaan PGRI Kabupaten Jepara sebagai wujud solidaritas.",
@@ -28,7 +28,7 @@ const Slider = () => {
     {
       id: 2,
       imageUrl:
-        "https://media.suara.com/pictures/653x366/2023/01/16/86458-ilustrasi-pantai-unsplashderek-oulasin.jpg",
+      "https://media.suara.com/pictures/653x366/2023/01/16/86458-ilustrasi-pantai-unsplashderek-oulasin.jpg",
       title: "BERAPA SUMBANGAN ANGGOTA?",
       description:
         "Berdasarkan surat keputusan Pengurus PGRI Kabupaten Jepara nomor :034/SK/PGRI JPR/XXII/2020 tentang Teknis Pelaksanaan Dana Setia Kawan Duka PGRI Kabupaten Jepara, sumbangan Sanduka ditetapkan sebesar Rp. 3000 tiap anggota, dibayarkan tiap bulan, bersamaan dengan iuran anggota PGRI.",
@@ -36,7 +36,7 @@ const Slider = () => {
     {
       id: 3,
       imageUrl:
-        "https://www.blibli.com/friends-backend/wp-content/uploads/2023/08/B800788-Cover-Pantai-yang-Ada-di-Kalimantan.jpg",
+       "https://media.suara.com/pictures/653x366/2023/01/16/86458-ilustrasi-pantai-unsplashderek-oulasin.jpg",
       title: " BERAPA SANTUNAN YANG DITERIMA?",
       description:
         "Sesuai keputusan bersama Pengurus PGRI Kabupaten Jepara dan Pengurus Cabang se-Kabupaten Jepara, maka disepakati sebesar Rp.2.500.000,- dengan kuota 5 orang tiap bulan dan apabila anggota meninggal lebih daripada kuota akan diperhitungkan pada bulan berikutnya.",

@@ -136,6 +136,7 @@ const Page = () => {
   const handleCloseModal = () => setIsModalOpen(false);
 
   const anggotaId = sessionStorage.getItem("anggotaId");
+  const userID = sessionStorage.getItem("userId");
 
   // Fungsi handleChange
   const handleChange = (e) => {
@@ -149,8 +150,20 @@ const Page = () => {
   // Fungsi onSubmit
   const onSubmit = async (e) => {
     e.preventDefault(); // Mencegah refresh halaman
-
-    // Validasi format tanggal menjadi yyyy-MM-dd
+  
+    // Ambil ID dari sessionStorage
+    const anggotaId = sessionStorage.getItem("anggotaId");
+    const userId = sessionStorage.getItem("userId");
+  
+    // Prioritaskan anggotaId, jika tidak ada gunakan userId
+    const id = anggotaId || userId;
+  
+    if (!id) {
+      console.error("User ID atau Anggota ID tidak ditemukan atau tidak valid.");
+      return; // Hentikan eksekusi jika id tidak valid
+    }
+  
+    // Fungsi untuk memformat tanggal ke yyyy-MM-dd
     const formatTanggal = (tanggal) => {
       const date = new Date(tanggal);
       const year = date.getFullYear();
@@ -158,12 +171,12 @@ const Page = () => {
       const day = String(date.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
     };
-
+  
     // Pastikan tanggal dalam format yang benar
     const formattedTanggalLahir = formatTanggal(tanggalLahir);
     const formattedTahunDiangkat = formatTanggal(tahunDiangkat);
     const formattedMulaiJadiAnggota = formatTanggal(mulaiJadiAnggotaPgri);
-
+  
     // Membuat FormData dan menambahkan data
     const formData = new FormData();
     formData.append("email", email);
@@ -183,12 +196,12 @@ const Page = () => {
     formData.append("kodePos", kodePos);
     formData.append("nomorHp", nomorHp);
     formData.append("namaSuamiIstri", namaSuamiIstri);
-
+  
     // Tambahkan foto jika ada
     if (selectedFile) {
       formData.append("foto", selectedFile);
     }
-
+  
     formData.append("cabang", selectedCabang);
     formData.append("unitKerja", selectedUnitKerja);
     formData.append("jabatan", valueJabatan);
@@ -202,19 +215,21 @@ const Page = () => {
     formData.append("mulaiJadiAnggotaPgri", formattedMulaiJadiAnggota); // tanggal dalam format yyyy-MM-dd
     formData.append("golonganJabatan", valueGolonganJabatan);
     formData.append("mengajar", mengajar);
+  
     // Tambahkan nilai kepesertaan ke formData
     formData.append("pesertaSanduka", pesertaSanduka ? "Ya" : "");
     formData.append("pesertaDaspen", pesertaDaspen ? "Ya" : "");
     formData.append("pesertaKtaDigital", pesertaKtaDigital ? "Ya" : "");
-
+  
     try {
       // Mengirim request ke server menggunakan GlobalApi
-      const response = await GlobalApi.updateUserById(anggotaId, formData);
-      toast.success("Data Anda Berhasi Diupdate!");
+      const response = await GlobalApi.updateUserById(id, formData);
+      toast.success("Data Anda Berhasil Diupdate!");
     } catch (error) {
       console.error("Update gagal:", error);
     }
   };
+  
 
   const handleCloseLocationInfo = () => {
     setIsLocationInfoOpen(false);
@@ -257,17 +272,19 @@ const Page = () => {
   };
 
   const getAnggotaById = async () => {
-    // Ambil userId dari sessionStorage
-    const userId = sessionStorage.getItem("anggotaId");
-
-    if (!userId) {
-      console.error("User ID tidak ditemukan atau tidak valid.");
-      return; // Hentikan eksekusi jika userId tidak valid
+    const anggotaId = sessionStorage.getItem("anggotaId");
+    const userId = sessionStorage.getItem("userId");
+  
+    const id = anggotaId || userId;
+  
+    if (!id) {
+      console.error("User ID atau Anggota ID tidak ditemukan atau tidak valid.");
+      return; // Hentikan eksekusi jika id tidak valid
     }
-
+  
     try {
-      const response = await GlobalApi.getUserById(userId);
-
+      const response = await GlobalApi.getUserById(id);
+  
       if (response) {
         setNamaLengkap(response.namaLengkap || "");
         setPassword(response.password || "");
@@ -292,14 +309,14 @@ const Page = () => {
         setNamaAnak(response.namaAnak || "");
         setLatitude(response.latitude || null);
         setLongitude(response.longitude || null);
-
+  
         // Set data Cabang dan Unit Kerja
         setSelectedUnitKerja(response.unitKerja || "");
         setQueryUnitKerja(response.unitKerja || "");
         setSelectedCabang(response.cabang);
         setValue("cabang", response.cabang || "");
         setValue("unitKerja", response.unitKerja || ""); // Set nilai unit kerja pada form
-
+  
         setTingkatSekolah(response.tingkatSekolah || "");
         setValue("tingkatSekolah", response.tingkatSekolah);
         setStatusSekolah(response.statusSekolah || "");
@@ -319,6 +336,7 @@ const Page = () => {
         setValueJabatan(response.jabatan);
         setMengajar(response.mengajar);
         setValue("mengajar", response.mengajar || "");
+        
         // Atur status kepesertaan berdasarkan nilai yang diterima
         setPesertaSanduka(response.pesertaSanduka === "Ya");
         setPesertaDaspen(response.pesertaDaspen === "Ya");
@@ -423,10 +441,20 @@ const Page = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      const anggotaId = sessionStorage.getItem("anggotaId");
+      const userId = sessionStorage.getItem("userId");
+  
+      const id = anggotaId || userId;
+  
+      if (!id) {
+        console.error("User ID atau Anggota ID tidak ditemukan atau tidak valid.");
+        return; // Hentikan eksekusi jika id tidak valid
+      }
+  
       try {
-        const response = await GlobalApi.getUserById(anggotaId); // Ganti dengan API untuk mengambil data anggota
+        const response = await GlobalApi.getUserById(id); // Panggil API dengan ID yang ditemukan
         const data = response.data;
-
+  
         // Mengatur nilai default untuk tahunDiangkat
         if (data.tahunDiangkat) {
           const formattedDate = new Date(data.tahunDiangkat)
@@ -435,7 +463,7 @@ const Page = () => {
           setTahunDiangkat(formattedDate); // Set ke state
           setValue("tahunDiangkat", formattedDate); // Set ke form
         }
-
+  
         // Mengatur nilai default untuk mulaiJadiAnggotaPgri
         if (data.mulaiJadiAnggotaPgri) {
           const formattedDate = new Date(data.mulaiJadiAnggotaPgri)
@@ -444,15 +472,16 @@ const Page = () => {
           setFormattedMulaiJadiAnggota(formattedDate); // Set ke state
           setValue("mulaiJadiAnggotaPgri", formattedDate); // Set ke form
         }
-
+  
         // Set nilai lainnya ke form jika perlu
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
     };
-
+  
     fetchData();
-  }, [setValue, anggotaId]); // Tambahkan anggotaId ke array dependensi
+  }, [setValue]); 
+  
 
   useEffect(() => {
     // Fetch cabang data from an API or database

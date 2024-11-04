@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
-import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
@@ -25,6 +25,7 @@ const FormStep1 = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredNames, setFilteredNames] = useState([]);
   const [cabangOptions, setCabangOptions] = useState([]);
+  const [selectedCabang, setSelectedCabang] = useState("");
   const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [cabangFilter, setCabangFilter] = useState("");
@@ -137,13 +138,26 @@ const FormStep1 = ({
     return number; // Return the number as is if it doesn't start with +62
   };
 
+  const handleCabangSelect = (cabang) => {
+    setQueryCabang(""); // Kosongkan input pencarian
+    setSelectedCabang(cabang.kecamatan); // Set cabang yang dipilih
+    setShowDropdownCabang(false); // Menyembunyikan dropdown
+
+    // Filter unit kerja berdasarkan cabang yang dipilih
+    const unitsForSelectedCabang = unitKerjaOptions.filter(
+      (unit) => unit.cabang === cabang.kecamatan // Memfilter berdasarkan nama cabang
+    );
+
+    setFilteredUnitKerja(unitsForSelectedCabang); // Set unit kerja yang difilter
+  };
+
   const handleSearch = async (e) => {
     const value = e.target.value;
     setSearchTerm(value);
     setFormData((prevFormData) => ({ ...prevFormData, memberName: value }));
 
     if (value === "") {
-      set
+      set;
       Names([]);
       setIsDropdownVisible(false); // Sembunyikan dropdown jika input kosong
       return;
@@ -205,21 +219,40 @@ const FormStep1 = ({
   };
 
   useEffect(() => {
-    // Function to handle clicks outside the dropdown
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownVisible(false); // Hide dropdown when clicking outside
+      const dropdownCabang = document.getElementById("dropdownCabang");
+      const inputCabang = document.getElementById("cabangInput");
+      const dropdownUnit = document.getElementById("dropdownUnit");
+      const inputUnit = document.getElementById("searchInput");
+
+      const isClickOutsideCabang =
+        dropdownCabang &&
+        !dropdownCabang.contains(event.target) &&
+        inputCabang &&
+        !inputCabang.contains(event.target);
+      
+      const isClickOutsideUnit =
+        dropdownUnit &&
+        !dropdownUnit.contains(event.target) &&
+        inputUnit &&
+        !inputUnit.contains(event.target);
+
+      if (isClickOutsideCabang) {
+        setShowDropdownCabang(false);
+      }
+
+      if (isClickOutsideUnit) {
+        setShowDropdownUnit(false);
       }
     };
 
-    // Add event listener to the document to capture clicks outside the dropdown
     document.addEventListener("mousedown", handleClickOutside);
-
-    // Cleanup event listener when component is unmounted
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  //  setShowDropdownUnit(false);  const inputUnit = document.getElementById("searchUnit");
 
   // Corrected FilterSection usage of Dropdown components
   const FilterSection = ({
@@ -295,7 +328,7 @@ const FormStep1 = ({
 
   return (
     <div>
-      {isMobile ? <HeaderMobile /> : <HeaderHome />}
+      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
@@ -376,93 +409,104 @@ const FormStep1 = ({
                     <h2 className="text-xl font-bold mb-4 pt-4 text-gray-800">
                       Data Anggota Meninggal
                     </h2>
-                    <div className="w-full flex flex-col items-start">
+                    <div className="w-full flex flex-col items-start relative">
                       <Label className="block text-sm font-medium mb-1">
                         Cabang / Khusus
                       </Label>
-                      <input
+                      <Input
+                        id="cabangInput"
                         type="text"
-                        className="border rounded-lg p-2 w-full bg-white shadow-sm"
+                        className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
                         placeholder="Pilih Cabang"
-                        value={queryCabang}
-                        onChange={(e) => {
-                          setQueryCabang(e.target.value);
-                          handleCabangFilterChange(e.target.value);
-                          setShowDropdownCabang(true);
-                        }}
-                        onFocus={() => setShowDropdownCabang(true)}
-                        onBlur={() =>
-                          setTimeout(() => setShowDropdownCabang(false), 200)
-                        }
+                        value={queryCabang || selectedCabang} // Menampilkan cabang yang sudah dipilih
+                        readOnly
+                        onClick={() => setShowDropdownCabang(true)} // Menampilkan dropdown
                       />
+
                       {showDropdownCabang && (
-                        <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[4.5%] max-h-48 overflow-y-auto ">
-                          {cabangOptions
-                            .filter((cabang) =>
-                              cabang.kecamatan
-                                .toLowerCase()
-                                .includes(queryCabang.toLowerCase())
-                            )
-                            .map((cabang) => (
-                              <li
-                                key={cabang.idKecamatan}
-                                className="p-2 cursor-pointer hover:bg-gray-100"
-                                onClick={() => {
-                                  setQueryCabang(cabang.kecamatan);
-                                  handleCabangFilterChange(cabang.kecamatan);
-                                  setShowDropdownCabang(false);
-                                }}
-                              >
-                                {cabang.kecamatan}
-                              </li>
-                            ))}
-                        </ul>
+                        <div
+                           id="dropdownCabang"
+                          className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[14.5%] w-full"
+                        >
+                          <Input
+                            type="text"
+                            className="border-b p-2 w-full bg-white"
+                            placeholder="Cari Cabang"
+                            value={queryCabang} // Input pencarian
+                            onChange={(e) => {
+                              setQueryCabang(e.target.value);
+                            }}
+                            autoFocus
+                          />
+                          <ul className="max-h-48 overflow-y-auto">
+                            {cabangOptions
+                              .filter((cabang) =>
+                                cabang.kecamatan
+                                  .toLowerCase()
+                                  .includes(queryCabang.toLowerCase())
+                              )
+                              .map((cabang) => (
+                                <li
+                                  key={cabang.idKecamatan}
+                                  className="p-2 cursor-pointer hover:bg-gray-100"
+                                  onClick={() => handleCabangSelect(cabang)} // Menggunakan fungsi untuk memilih cabang
+                                >
+                                  {cabang.kecamatan}
+                                </li>
+                              ))}
+                          </ul>
+                        </div>
                       )}
                     </div>
+
                     <div className="w-full flex flex-col items-start mt-3">
                       <Label className="block text-sm font-medium mb-1">
                         Unit Kerja
                       </Label>
-                      <input
+                      <Input
                         type="text"
-                        className="border rounded-lg p-2 w-full bg-white shadow-sm"
+                        className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-not-allowed"
                         placeholder="Pilih Unit Kerja"
                         value={formData.unit || ""}
-                        onChange={(e) => {
-                          const unitValue = e.target.value;
-                          setFormData((prev) => ({ ...prev, unit: unitValue }));
-                          setShowDropdownUnit(true);
-                        }}
-                        onFocus={() => setShowDropdownUnit(true)}
-                        onBlur={() =>
-                          setTimeout(() => setShowDropdownUnit(false), 200)
-                        }
-                        disabled={isUnitKerjaDisabled}
+                        readOnly // Membuat input menjadi readonly
+                        onClick={() => setShowDropdownUnit(true)} // Menampilkan dropdown saat diklik
                       />
-                      {showDropdownUnit && (
-                        <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[4.5%] max-h-48 overflow-y-auto ">
-                          {filteredUnitKerja
-                            .filter((unit) =>
-                              unit.unitKerja
-                                .toLowerCase()
-                                .includes(formData.unit?.toLowerCase() || "")
-                            )
-                            .map((unit) => (
-                              <li
-                                key={unit.id}
-                                className="p-2 cursor-pointer hover:bg-gray-100"
-                                onClick={() => {
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    unit: unit.unitKerja,
-                                  }));
-                                  setShowDropdownUnit(false);
-                                }}
-                              >
-                                {unit.unitKerja}
-                              </li>
-                            ))}
-                        </ul>
+
+                      {showDropdownUnit && filteredUnitKerja.length > 0 && (
+                        <div className="relative"    id="dropdownUnit">
+                          <Input
+                            id="searchInput" 
+                            type="text"
+                            className="border-b p-2 w-[244%] bg-white mb-1"
+                            placeholder="Cari Unit Kerja"
+                            value={queryUnit}
+                            onChange={(e) => setQueryUnit(e.target.value)}
+                            autoFocus
+                          />
+                          <ul className="absolute z-10 border rounded-lg bg-white shadow-sm max-h-48 overflow-y-auto w-[244%]">
+                            {filteredUnitKerja
+                              .filter((unit) =>
+                                unit.unitKerja
+                                  .toLowerCase()
+                                  .includes(queryUnit.toLowerCase() || "")
+                              )
+                              .map((unit) => (
+                                <li
+                                  key={unit.id}
+                                  className="p-2 cursor-pointer hover:bg-gray-100"
+                                  onClick={() => {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      unit: unit.unitKerja,
+                                    }));
+                                    setShowDropdownUnit(false);
+                                  }}
+                                >
+                                  {unit.unitKerja}
+                                </li>
+                              ))}
+                          </ul>
+                        </div>
                       )}
                     </div>
                     <div
@@ -660,7 +704,7 @@ const Resume = ({
 
   return (
     <div>
-      {isMobile ? <HeaderMobile /> : <HeaderHome />}
+      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
@@ -669,152 +713,142 @@ const Resume = ({
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-           <Toaster
-          toastOptions={{
-            style: {
-              fontSize: "1.25rem", // Ukuran font yang lebih besar
-              padding: "16px", // Menambah padding jika diperlukan
-            },
-            success: {
+          <Toaster
+            toastOptions={{
               style: {
-                background: "white", // Warna background hijau untuk pesan sukses
-                color: "black",
+                fontSize: "1.25rem", // Ukuran font yang lebih besar
+                padding: "16px", // Menambah padding jika diperlukan
               },
-            },
-            error: {
-              style: {
-                background: "#f44336", // Warna background merah untuk pesan error
-                color: "#fff",
+              success: {
+                style: {
+                  background: "white", // Warna background hijau untuk pesan sukses
+                  color: "black",
+                },
               },
-            },
-          }}
-        />
-          <div className="flex justify-center mt-3">
-            <h1 className="text-xl font-semibold text-gray-800">Resume</h1>
-          </div>
-          <div className="relative max-w-xl mx-auto bg-white shadow-lg rounded-2xl overflow-hidden my-4 border border-gray-300">
-            <div className="flex flex-col items-center gap-4 bg-gray-50 p-4 rounded-lg shadow-lg">
-              <Label className="block text-xl font-bold text-gray-700 mb-4">
-                ANGGOTA MENINGGAL
-              </Label>
-              <div className="flex flex-col items-center gap-2">
-                <Image
-                  src={
-                    profileImageUrl.startsWith("data:image")
-                      ? profileImageUrl
-                      : "/profile.png"
-                  }
-                  alt="foto Anggota"
-                  className="w-24 h-36 object-cover rounded-full border-4 border-gray-200 shadow-md"
-                  width={110} // Adjust width in pixels
-                  height={110} // Adjust height in pixels
-                />
-                <div className="flex flex-col items-center gap-1 text-gray-700">
-                  <Label className="block text-sm font-medium text-center">
-                    {formData.id}
-                  </Label>
-                  <Label className="block text-sm font-medium text-center">
-                    {formData.namaLengkap}
-                  </Label>
-                  <Label className="block text-sm font-medium text-center">
-                    {formData.npaPgri}
-                  </Label>
-                  <Label className="block text-sm font-medium mb-1">
-                    {calculateAge(formData.tanggalLahir)} tahun
-                  </Label>
-                  <Label className="block text-sm font-medium text-center">
-                    {formData.cabang}
-                  </Label>
-                  <Label className="block text-sm font-medium text-center">
-                    {formData.unitKerja}
-                  </Label>
-                  <Label className="block text-sm font-medium text-center">
-                    {formData.jabatan}
-                  </Label>
-                  <Label className="block text-sm font-medium text-center">
-                    Alamat rumah: {formData.alamat}
-                  </Label>
-                  <Label className="block text-sm font-medium text-center">
-                    Tanggal Meninggal: {formData.deathDate}
-                  </Label>
-                  <Label className="block text-sm font-medium text-center">
-                    Keterangan: {formData.description}
-                  </Label>
-                  <Label className="block text-sm font-medium text-center">
-                    No HP:{" "}
-                    <Link
-                      href={`https://wa.me/${
-                        formData?.nomorHp?.startsWith("+62")
-                          ? formData.nomorHp.replace("+62", "62")
-                          : formData?.nomorHp || "" // Fallback to an empty string if nomorHp is undefined
-                      }`}
-                      className="text-blue-500"
-                    >
-                      {formatPhoneNumber(formData.nomorHp)} (WhatsApp)
-                      {/* Display formatted number */}
-                    </Link>
-                  </Label>
-                  <Label className="block text-sm font-medium text-center">
-                    Maps alamat yang meninggal:{" "}
-                    <Link
-                      href={`https://www.google.com/maps?q=${formData.latitude},${formData.longitude}`}
-                      className="text-blue-600 font-semibold"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Lihat di Google Maps
-                    </Link>
-                  </Label>
+              error: {
+                style: {
+                  background: "#f44336", // Warna background merah untuk pesan error
+                  color: "#fff",
+                },
+              },
+            }}
+          />
+          <div className="bg-gray-300 pt-9">
+            <div className="relative max-w-xl mx-auto bg-white shadow-lg rounded-2xl overflow-hidden my-4 border border-gray-300">
+              <div className="flex flex-col items-center gap-4 bg-gray-50 p-4 rounded-lg shadow-lg">
+                <Label className="block text-xl font-bold text-gray-700 mb-2">
+                  ANGGOTA MENINGGAL
+                </Label>
+                <div className="flex flex-col items-center gap-2">
+                  <Image
+                    src={
+                      profileImageUrl.startsWith("data:image")
+                        ? profileImageUrl
+                        : "/profile.png"
+                    }
+                    alt="foto Anggota"
+                    className="w-24 h-36 object-cover rounded-full border-4 border-gray-200 shadow-md"
+                    width={110} // Adjust width in pixels
+                    height={110} // Adjust height in pixels
+                  />
+                  <div className="flex flex-col items-center gap-1 text-gray-700">
+                    <Label className="block text-sm font-medium text-center">
+                      {formData.namaLengkap}
+                    </Label>
+                    <Label className="block text-sm font-medium mb-1">
+                      {calculateAge(formData.tanggalLahir)} tahun
+                    </Label>
+                    <Label className="block text-sm font-medium text-center">
+                      {formData.cabang}
+                    </Label>
+                    <Label className="block text-sm font-medium text-center">
+                      {formData.unitKerja}
+                    </Label>
+                    <Label className="block text-sm font-medium text-center">
+                      {formData.jabatan}
+                    </Label>
+                    <Label className="block text-sm font-medium text-center">
+                      Alamat rumah: {formData.alamat}
+                    </Label>
+                    <Label className="block text-sm font-medium text-center">
+                      Tanggal Meninggal: {formData.deathDate}
+                    </Label>
+                    <Label className="block text-sm font-medium text-center">
+                      Keterangan: {formData.description}
+                    </Label>
+                    <Label className="block text-sm font-medium text-center">
+                      No HP:{" "}
+                      <Link
+                        href={`https://wa.me/${
+                          formData?.nomorHp?.startsWith("+62")
+                            ? formData.nomorHp.replace("+62", "62")
+                            : formData?.nomorHp || "" // Fallback to an empty string if nomorHp is undefined
+                        }`}
+                        className="text-blue-500"
+                      >
+                        {formatPhoneNumber(formData.nomorHp)} (WhatsApp)
+                        {/* Display formatted number */}
+                      </Link>
+                    </Label>
+                    <Label className="block text-sm font-medium text-center">
+                      Maps alamat yang meninggal:{" "}
+                      <Link
+                        href={`https://www.google.com/maps?q=${formData.latitude},${formData.longitude}`}
+                        className="text-blue-600 font-semibold"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Lihat di Google Maps
+                      </Link>
+                    </Label>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex flex-col items-center gap-4 p-4">
-              <Label className="block text-xl font-semibold text-red-600">
-                Pelapor
-              </Label>
-              <div className="rounded-lg w-full flex justify-center">
-                <div className="flex flex-col items-center gap-1">
-                  <Label className="block text-sm font-medium text-center">
-                    {pelaporData?.namaLengkap}
-                  </Label>
-                  <Label className="block text-sm font-medium text-center">
-                    {pelaporData?.npaPgri}
-                  </Label>
-                  <Label className="block text-sm font-medium text-center">
-                    {pelaporData?.cabang}
-                  </Label>
-                  <Label className="block text-sm font-medium text-center">
-                    {pelaporData?.unitKerja}
-                  </Label>
-                  <Label className="block text-sm font-medium text-center">
-                    {pelaporData?.jabatan}
-                  </Label>
-                  <Label className="block text-sm font-medium text-center">
-                    No HP:{" "}
-                    <Link
-                      href={`https://wa.me/${
-                        formData?.nomorHp?.startsWith("+62")
-                          ? formData.nomorHp.replace("+62", "62")
-                          : formData?.nomorHp || "" // Fallback to an empty string if nomorHp is undefined
-                      }`}
-                      className="text-blue-500"
-                    >
-                      {formatPhoneNumber(formData.nomorHp)} (WhatsApp)
-                    </Link>
-                  </Label>
+              <div className="flex flex-col items-center gap-4 p-4">
+                <Label className="block text-xl font-semibold text-red-600">
+                  Pelapor
+                </Label>
+                <div className="rounded-lg w-full flex justify-center">
+                  <div className="flex flex-col items-center gap-1">
+                    <Label className="block text-sm font-medium text-center">
+                      {pelaporData?.namaLengkap}
+                    </Label>
+                    <Label className="block text-sm font-medium text-center">
+                      {pelaporData?.cabang}
+                    </Label>
+                    <Label className="block text-sm font-medium text-center">
+                      {pelaporData?.unitKerja}
+                    </Label>
+                    <Label className="block text-sm font-medium text-center">
+                      {pelaporData?.jabatan}
+                    </Label>
+                    <Label className="block text-sm font-medium text-center">
+                      No HP:{" "}
+                      <Link
+                        href={`https://wa.me/${
+                          formData?.nomorHp?.startsWith("+62")
+                            ? formData.nomorHp.replace("+62", "62")
+                            : formData?.nomorHp || "" // Fallback to an empty string if nomorHp is undefined
+                        }`}
+                        className="text-blue-500"
+                      >
+                        {formatPhoneNumber(formData.nomorHp)} (WhatsApp)
+                      </Link>
+                    </Label>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex justify-center p-2">
-              <Button type="button" onClick={onPrev} className="mr-2">
-                Previous
-              </Button>
-              <Button type="button" onClick={onSubmit} className="ml-2">
-                {/* onSubmit used here */}
-                Submit
-              </Button>
+              <div className="flex justify-center p-2">
+                <Button type="button" onClick={onPrev} className="mr-2">
+                  Previous
+                </Button>
+                <Button type="button" onClick={onSubmit} className="ml-2">
+                  {/* onSubmit used here */}
+                  Submit
+                </Button>
+              </div>
             </div>
           </div>
         </div>
