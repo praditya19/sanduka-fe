@@ -288,7 +288,7 @@ const Page = () => {
                                   unoptimized={true}
                                 />
                               </td>
-                              {/* Data Lapor */}
+
                               <td className="border px-4 py-2">
                                 <div className="text-xs">
                                   {item.namaPelapor}
@@ -309,7 +309,7 @@ const Page = () => {
                                   {item.nomorHpPelapor}
                                 </div>
                               </td>
-                              {/* Data Meninggal */}
+
                               <td className="border px-4 py-2">
                                 <div className="text-xs">
                                   {item.namaAnggotaTerlapor}
@@ -326,7 +326,7 @@ const Page = () => {
                                   {item.unitKerjaTerlapor}
                                 </div>
                               </td>
-                              {/* Hidden columns on mobile */}
+
                               <td className="border px-4 py-2 text-center hidden lg:table-cell">
                                 <div className="text-xs">
                                   {item.cabangKhususTerlapor ||
@@ -341,7 +341,7 @@ const Page = () => {
                                 Diterimakan (Sesuaikan jika ada)
                               </td>
                             </tr>
-                            {/* Expanded Row for mobile */}
+
                             {expandedIndex === index && (
                               <tr className="lg:hidden bg-gray-100">
                                 <td colSpan="4" className="border px-4 py-2">
