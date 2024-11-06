@@ -18,7 +18,8 @@ import dynamic from "next/dynamic";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
-import { AiOutlineInfoCircle } from "react-icons/ai"; // Information icon from react-icons
+import { AiOutlineInfoCircle } from "react-icons/ai";
+import { useRouter } from "next/navigation";
 
 const MapComponent = dynamic(
   () => import("../../../_components/MapComponent"),
@@ -28,6 +29,7 @@ const MapComponent = dynamic(
 );
 
 const Page = () => {
+  const router = useRouter();
   const { control, handleSubmit, setValue } = useForm();
   const searchParams = useSearchParams(); // Get search parameters
   const id = searchParams.get("id");
@@ -150,19 +152,21 @@ const Page = () => {
   // Fungsi onSubmit
   const onSubmit = async (e) => {
     e.preventDefault(); // Mencegah refresh halaman
-  
+
     // Ambil ID dari sessionStorage
     const anggotaId = sessionStorage.getItem("anggotaId");
     const userId = sessionStorage.getItem("userId");
-  
+
     // Prioritaskan anggotaId, jika tidak ada gunakan userId
     const id = anggotaId || userId;
-  
+
     if (!id) {
-      console.error("User ID atau Anggota ID tidak ditemukan atau tidak valid.");
+      console.error(
+        "User ID atau Anggota ID tidak ditemukan atau tidak valid."
+      );
       return; // Hentikan eksekusi jika id tidak valid
     }
-  
+
     // Fungsi untuk memformat tanggal ke yyyy-MM-dd
     const formatTanggal = (tanggal) => {
       const date = new Date(tanggal);
@@ -171,12 +175,12 @@ const Page = () => {
       const day = String(date.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
     };
-  
+
     // Pastikan tanggal dalam format yang benar
     const formattedTanggalLahir = formatTanggal(tanggalLahir);
     const formattedTahunDiangkat = formatTanggal(tahunDiangkat);
     const formattedMulaiJadiAnggota = formatTanggal(mulaiJadiAnggotaPgri);
-  
+
     // Membuat FormData dan menambahkan data
     const formData = new FormData();
     formData.append("email", email);
@@ -196,12 +200,12 @@ const Page = () => {
     formData.append("kodePos", kodePos);
     formData.append("nomorHp", nomorHp);
     formData.append("namaSuamiIstri", namaSuamiIstri);
-  
+
     // Tambahkan foto jika ada
     if (selectedFile) {
       formData.append("foto", selectedFile);
     }
-  
+
     formData.append("cabang", selectedCabang);
     formData.append("unitKerja", selectedUnitKerja);
     formData.append("jabatan", valueJabatan);
@@ -215,21 +219,25 @@ const Page = () => {
     formData.append("mulaiJadiAnggotaPgri", formattedMulaiJadiAnggota); // tanggal dalam format yyyy-MM-dd
     formData.append("golonganJabatan", valueGolonganJabatan);
     formData.append("mengajar", mengajar);
-  
+
     // Tambahkan nilai kepesertaan ke formData
     formData.append("pesertaSanduka", pesertaSanduka ? "Ya" : "");
     formData.append("pesertaDaspen", pesertaDaspen ? "Ya" : "");
     formData.append("pesertaKtaDigital", pesertaKtaDigital ? "Ya" : "");
-  
+
     try {
       // Mengirim request ke server menggunakan GlobalApi
       const response = await GlobalApi.updateUserById(id, formData);
       toast.success("Data Anda Berhasil Diupdate!");
-    } catch (error) {
+
+      // Arahkan ke halaman /anggota/data-anggota setelah 2 detik
+      setTimeout(() => {
+          router.push('/anggota/data-anggota');
+      }, 2000); // Menggunakan delay 2 detik sebelum redirect
+  } catch (error) {
       console.error("Update gagal:", error);
     }
   };
-  
 
   const handleCloseLocationInfo = () => {
     setIsLocationInfoOpen(false);
@@ -274,17 +282,19 @@ const Page = () => {
   const getAnggotaById = async () => {
     const anggotaId = sessionStorage.getItem("anggotaId");
     const userId = sessionStorage.getItem("userId");
-  
+
     const id = anggotaId || userId;
-  
+
     if (!id) {
-      console.error("User ID atau Anggota ID tidak ditemukan atau tidak valid.");
+      console.error(
+        "User ID atau Anggota ID tidak ditemukan atau tidak valid."
+      );
       return; // Hentikan eksekusi jika id tidak valid
     }
-  
+
     try {
       const response = await GlobalApi.getUserById(id);
-  
+
       if (response) {
         setNamaLengkap(response.namaLengkap || "");
         setPassword(response.password || "");
@@ -309,14 +319,14 @@ const Page = () => {
         setNamaAnak(response.namaAnak || "");
         setLatitude(response.latitude || null);
         setLongitude(response.longitude || null);
-  
+
         // Set data Cabang dan Unit Kerja
         setSelectedUnitKerja(response.unitKerja || "");
         setQueryUnitKerja(response.unitKerja || "");
         setSelectedCabang(response.cabang);
         setValue("cabang", response.cabang || "");
         setValue("unitKerja", response.unitKerja || ""); // Set nilai unit kerja pada form
-  
+
         setTingkatSekolah(response.tingkatSekolah || "");
         setValue("tingkatSekolah", response.tingkatSekolah);
         setStatusSekolah(response.statusSekolah || "");
@@ -336,7 +346,7 @@ const Page = () => {
         setValueJabatan(response.jabatan);
         setMengajar(response.mengajar);
         setValue("mengajar", response.mengajar || "");
-        
+
         // Atur status kepesertaan berdasarkan nilai yang diterima
         setPesertaSanduka(response.pesertaSanduka === "Ya");
         setPesertaDaspen(response.pesertaDaspen === "Ya");
@@ -443,18 +453,20 @@ const Page = () => {
     const fetchData = async () => {
       const anggotaId = sessionStorage.getItem("anggotaId");
       const userId = sessionStorage.getItem("userId");
-  
+
       const id = anggotaId || userId;
-  
+
       if (!id) {
-        console.error("User ID atau Anggota ID tidak ditemukan atau tidak valid.");
+        console.error(
+          "User ID atau Anggota ID tidak ditemukan atau tidak valid."
+        );
         return; // Hentikan eksekusi jika id tidak valid
       }
-  
+
       try {
         const response = await GlobalApi.getUserById(id); // Panggil API dengan ID yang ditemukan
         const data = response.data;
-  
+
         // Mengatur nilai default untuk tahunDiangkat
         if (data.tahunDiangkat) {
           const formattedDate = new Date(data.tahunDiangkat)
@@ -463,7 +475,7 @@ const Page = () => {
           setTahunDiangkat(formattedDate); // Set ke state
           setValue("tahunDiangkat", formattedDate); // Set ke form
         }
-  
+
         // Mengatur nilai default untuk mulaiJadiAnggotaPgri
         if (data.mulaiJadiAnggotaPgri) {
           const formattedDate = new Date(data.mulaiJadiAnggotaPgri)
@@ -472,16 +484,15 @@ const Page = () => {
           setFormattedMulaiJadiAnggota(formattedDate); // Set ke state
           setValue("mulaiJadiAnggotaPgri", formattedDate); // Set ke form
         }
-  
+
         // Set nilai lainnya ke form jika perlu
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
     };
-  
+
     fetchData();
-  }, [setValue]); 
-  
+  }, [setValue]);
 
   useEffect(() => {
     // Fetch cabang data from an API or database
@@ -570,6 +581,10 @@ const Page = () => {
       setError("Geolocation is not supported by this browser.");
       setLoading(false);
     }
+  };
+
+  const handleBackClick = () => {
+    router.push("/anggota/data-anggota"); // Mengarahkan ke halaman data anggota
   };
 
   const handleRemoveInput = (index) => {
@@ -1054,7 +1069,14 @@ const Page = () => {
                     </div>
                   )}
                 </div>
-                <div className="w-full flex justify-end mt-8">
+                <div className="col-span-1 sm:col-span-2 flex justify-between mt-4">
+                  <Button
+                    type="button" // Menambahkan type button untuk mencegah submit
+                    className="text-white bg-gray-400 hover:bg-gray-500 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
+                    onClick={() => router.push("/anggota/data-anggota")} // Arahkan ke halaman data anggota
+                  >
+                    Kembali
+                  </Button>
                   <Button onClick={nextStep}>Next</Button>
                 </div>
                 {/* Modal Informasi Lokasi */}

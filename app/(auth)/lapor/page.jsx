@@ -230,7 +230,7 @@ const FormStep1 = ({
         !dropdownCabang.contains(event.target) &&
         inputCabang &&
         !inputCabang.contains(event.target);
-      
+
       const isClickOutsideUnit =
         dropdownUnit &&
         !dropdownUnit.contains(event.target) &&
@@ -425,7 +425,7 @@ const FormStep1 = ({
 
                       {showDropdownCabang && (
                         <div
-                           id="dropdownCabang"
+                          id="dropdownCabang"
                           className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[14.5%] w-full"
                         >
                           <Input
@@ -473,9 +473,9 @@ const FormStep1 = ({
                       />
 
                       {showDropdownUnit && filteredUnitKerja.length > 0 && (
-                        <div className="relative"    id="dropdownUnit">
+                        <div className="relative" id="dropdownUnit">
                           <Input
-                            id="searchInput" 
+                            id="searchInput"
                             type="text"
                             className="border-b p-2 w-[244%] bg-white mb-1"
                             placeholder="Cari Unit Kerja"

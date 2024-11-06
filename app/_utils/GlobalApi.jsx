@@ -102,7 +102,10 @@ const getUserById = async (userId) => {
 // Update DATA
 const updateUserById = async (userId, formData) => {
   try {
-    const response = await axiosClient.put(`/api/auth/user/${userId}`, formData);
+    const response = await axiosClient.put(
+      `/api/auth/user/${userId}`,
+      formData
+    );
     return response.data;
   } catch (error) {
     console.error("Error updating user:", error);
@@ -116,7 +119,7 @@ const updateVerified = async (userId) => {
     const response = await axios.post(`/api/auth/user/5279/verify`);
     return response.data;
   } catch (error) {
-    console.error("Error updateVerfied user:", error);;
+    console.error("Error updateVerfied user:", error);
     throw error;
   }
 };
@@ -775,12 +778,12 @@ const getSaldoAkhir = async (month, year) => {
     const response = await axiosClient.get(`/api/laporan-akhir`, {
       params: { month, year },
     });
-    return response.data
+    return response.data;
   } catch (error) {
-    console.error('Error fatching saldo akhir:', error);
+    console.error("Error fatching saldo akhir:", error);
     throw error;
   }
-}
+};
 
 // REKAP ANGGOTA
 // start
@@ -823,6 +826,45 @@ const getAnggotaMeninggal = async () => {
     throw error;
   }
 };
+
+// Mutasi
+const keluarAnggota = async (anggotaId) => {
+  try {
+    const response = await axiosClient.put(
+      `api/mutasi-anggota/${anggotaId}/keluar`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error saat mengeluarkan anggota: ", error);
+    throw error;
+  }
+};
+
+const pensiunAnggota = async (anggotaId) => {
+  try {
+    const response = await axiosClient.put(
+      `api/mutasi-anggota/${anggotaId}/pensiun`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error saat mengeluarkan anggota: ", error);
+    throw error;
+  }
+};
+
+const mutasiCabangUnitKerja = async (idAnggota, cabang, unitKerja) => {
+  try {
+      const url = `/api/mutasi-anggota/${idAnggota}/update-cabang-unitkerja?cabang=${encodeURIComponent(cabang)}&unitKerja=${encodeURIComponent(unitKerja)}`;
+      const response = await axiosClient.put(url);
+      return response.data; // Kembalikan data response
+  } catch (error) {
+      console.error("Error saat memutasikan anggota:", error);
+      console.error("Response data:", error.response?.data); // Log response data jika ada error
+      throw error; // Lempar kembali error untuk ditangani di tempat lain
+  }
+};
+
+
 
 // Export all functions
 export default {
@@ -893,4 +935,7 @@ export default {
   updateUserById,
   updateVerified,
   getSaldoAkhir,
+  keluarAnggota,
+  pensiunAnggota,
+  mutasiCabangUnitKerja,
 };

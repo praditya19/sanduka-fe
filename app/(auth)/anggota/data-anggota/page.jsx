@@ -18,7 +18,7 @@ import {
 } from "react-icons/fa";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import toast, { Toaster } from "react-hot-toast";
 import HeaderHome from "@/app/_components/HeaderHome";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
@@ -38,9 +38,6 @@ function DataAnggota() {
   const [currentItem, setCurrentItem] = useState(null);
   const [anggota, setAnggota] = useState([]);
   const [cabang, setCabang] = useState([]);
-  const [unitKerja, setUnitKerja] = useState([]);
-  const [isCabangEnabled, setIsCabangEnabled] = useState(false);
-  const [isUnitKerjaEnabled, setIsUnitKerjaEnabled] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [isMobile, setIsMobile] = useState(false);
@@ -48,12 +45,24 @@ function DataAnggota() {
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [isPopupVisible, setPopupVisible] = useState(false);
+  const [popupVisibleKeluar, setPopupVisibleKeluar] = useState(false);
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [popupCabangUnit, setPopupCabangUnit] = useState(false);
   const dropdownRef = useRef(null);
-  const [filteredCabang, setFilteredCabang] = useState([]);
   const [fotoBase64, setFotoBase64] = useState("");
 
   const [rekapData, setRekapData] = useState([]);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
+  
+
+
+  const [searchCabang, setSearchCabang] = useState("");
+  const [showDropdownCabangUnit, setShowDropdownCabangUnit] = useState(false);
+  const [listCabang, setListCabang] = useState([]);
 
   const [showDropdownCabang, setShowDropdownCabang] = useState(false);
   const [showDropdownUnit, setShowDropdownUnit] = useState(false);
@@ -62,18 +71,50 @@ function DataAnggota() {
   const [selectedCabang, setSelectedCabang] = useState("");
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [allUnitKerja, setAllUnitKerja] = useState([]);
-  const [cabangOptions, setCabangOptions] = useState([]); // Data Cabang
+  const [cabangOptions, setCabangOptions] = useState([]);
   const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
   const [showCabangDropdown, setShowCabangDropdown] = useState(true);
   const [searchUnit, setSearchUnit] = useState("");
-  const [unitKerjaList, setUnitKerjaList] = useState([]);
-  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [unitKerjaInput, setUnitKerjaInput] = useState("");
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const unitKerjaRef = useRef(null);
 
   const [originalRekapData, setOriginalRekapData] = useState([]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Cek apakah klik di luar area dropdown dan input pencarian
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownVisible(false);
+      }
+    };
+
+    // Pasang event listener pada document
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Bersihkan event listener saat komponen tidak digunakan
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Cek apakah klik di luar area dropdown dan input pencarian
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdownCabangUnit(false);
+      }
+    };
+
+    // Pasang event listener pada document
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Bersihkan event listener saat komponen tidak digunakan
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -110,7 +151,7 @@ function DataAnggota() {
     try {
       const data = await GlobalApi.getRekapAnggotaByCabang(cabang);
       setRekapData(data);
-      setOriginalRekapData(data); // Simpan data asli saat mengambil data
+      setOriginalRekapData(data);
     } catch (error) {
       console.error("Error fetching rekap data:", error);
     }
@@ -120,6 +161,7 @@ function DataAnggota() {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
+        setListCabang(response.data);
         setCabangOptions(response.data);
         setFilteredCabangOptions(response.data);
       } catch (error) {
@@ -134,6 +176,7 @@ function DataAnggota() {
       try {
         const response = await GlobalApi.getUnitKerja();
         setAllUnitKerja(response.data);
+        setUnitKerjaOptions(response.data);
       } catch (error) {
         console.error("Error fetching unit kerja data:", error);
       }
@@ -155,24 +198,9 @@ function DataAnggota() {
   }, [selectedCabang, allUnitKerja]);
 
   const handleCabangSelect = (cabang) => {
+    console.log("cabang yang dipilih:", cabang.kecamatan);
     setSelectedCabang(cabang.kecamatan);
     setShowDropdownCabang(false);
-    // Anda dapat melakukan tindakan lain saat cabang dipilih
-  };
-
-  const handleSelectCabang = async (cabang) => {
-    setSelectedCabang(cabang.kecamatan);
-    setShowDropdownCabang(false);
-
-    await fetchRekapData(cabang.kecamatan);
-
-    const filtered = unitKerjaList.filter(
-      (unitKerja) =>
-        unitKerja.cabang &&
-        unitKerja.cabang.toLowerCase() === cabang.kecamatan.toLowerCase()
-    );
-    setFilteredUnitKerja(filtered);
-    setIsUnitKerjaDisabled(false); // Pastikan input unit kerja aktif
   };
 
   const handleUnitKerjaChange = (e) => {
@@ -192,6 +220,7 @@ function DataAnggota() {
     setSelectedUnitKerja(unitKerja.unitKerja);
     setUnitKerjaInput(unitKerja.unitKerja);
     setShowUnitKerjaDropdown(false);
+    console.log(unitKerja.unitKerja);
 
     const filteredRekapData = originalRekapData.filter(
       (item) => item.alamatKerja === unitKerja.unitKerja
@@ -236,25 +265,6 @@ function DataAnggota() {
   }, []);
 
   useEffect(() => {
-    if (selectedCabang) {
-      const filtered = unitKerja.filter((uk) => uk.cabang === selectedCabang);
-      setFilteredUnitKerja(filtered);
-    } else {
-      setFilteredUnitKerja([]);
-    }
-
-    setFilteredCabang(
-      cabang.filter((item) =>
-        item.kecamatan.toLowerCase().includes(filterCabang.toLowerCase())
-      )
-    );
-
-    setFilteredUnitKerja(
-      unitKerja.filter((item) =>
-        item.unitKerja.toLowerCase().includes(filterUnitKerja.toLowerCase())
-      )
-    );
-
     fetchAnggota();
     fetchData();
     fetchUnitKerja();
@@ -306,7 +316,6 @@ function DataAnggota() {
         console.warn("No data found.");
       }
 
-      // setAnggotaData(fetchedData || []);
       setFotoBase64(fotoBase64Array);
       // setTotalPages(response.data.totalPages || 0);
       setLoading(false);
@@ -504,27 +513,13 @@ function DataAnggota() {
   };
 
   const handleCabangChange = (e) => {
-    const cabangValue = e.target.value;
-    setSelectedCabang(cabangValue);
-
-    // Filter cabang berdasarkan input pengguna
-    const filteredCabang = cabangOptions.filter(
-      (cabang) =>
-        cabang.kecamatan &&
-        cabang.kecamatan.toLowerCase().includes(cabangValue.toLowerCase())
+    const value = e.target.value;
+    setSearchCabang(value);
+    // Filter cabangOptions berdasarkan input search
+    const filtered = cabangOptions.filter((cabang) =>
+      cabang.kecamatan.toLowerCase().includes(value.toLowerCase())
     );
-    setFilteredCabangOptions(filteredCabang);
-    setShowDropdownCabang(true);
-  };
-
-  const handlePindahCabangClick = () => {
-    if (isCabangEnabled) {
-      alert("Anggota berpindah cabang");
-      setIsCabangEnabled(false);
-      setIsUnitKerjaEnabled(false);
-    } else {
-      handleCabangChange();
-    }
+    setFilteredCabangOptions(filtered);
   };
 
   const formatDate = (dateString) => {
@@ -596,18 +591,60 @@ function DataAnggota() {
     setCurrentPage(pageNumber);
   };
 
-  const handleKeluarAnggotaClick = () => {
+  const handlePopupKeluar = () => {
+    setPopupVisibleKeluar(true);
+  };
+
+  const handleKeluarAnggota = async () => {
+    try {
+      const anggotaId = sessionStorage.getItem("anggotaId"); // Ambil ID anggota dari sessionStorage
+      await GlobalApi.keluarAnggota(anggotaId); // Panggil API dengan anggotaId
+      setPopupVisibleKeluar(false); // Tutup popup setelah berhasil
+      toast.success("Anggota berhasil dihapus!", {
+        autoClose: 3000, // Waktu tampilan dalam milidetik
+      });
+    } catch (error) {
+      console.error("Gagal mengeluarkan anggota:", error);
+      toast.error("Gagal menghapus anggota.", {
+        autoClose: 3000,
+      });
+    }
+  };
+
+  const handleCancelKeluar = () => {
+    setPopupVisibleKeluar(false);
+  };
+
+  const handlePopup = () => {
     setPopupVisible(true);
   };
 
-  const handleConfirm = () => {
-    alert("Anggota dikeluarkan");
-    setPopupVisible(false);
+  const handlePensiunAnggota = async () => {
+    try {
+      const anggotaId = sessionStorage.getItem("anggotaId");
+      await GlobalApi.pensiunAnggota(anggotaId);
+      console.log("Anggota berhasil Pensiun!");
+      setPopupVisible(false);
+      toast.success("Anggota berhasil Pensiun!", {
+        autoClose: 3000,
+      });
+    } catch (error) {
+      console.error("Gagal mengeluarkan anggota:", error);
+      toast.error("Gagal pensiun anggota.", {
+        autoClose: 3000,
+      });
+    }
   };
 
-  const handleCancel = () => {
-    setPopupVisible(false);
+  const handlePindahCabangUnit = () => {
+    router.push('/anggota/data-anggota/mutasiCabangUnit'); // Arahkan ke rute baru
   };
+  
+  const handleEditClick = () => {
+    // Arahkan ke halaman edit anggota
+    router.push("/anggota/edit-anggota");
+  };
+  
 
   if (loading) {
     return <div>Loading...</div>;
@@ -624,6 +661,27 @@ function DataAnggota() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
+          <Toaster
+            toastOptions={{
+              style: {
+                marginTop: "1%",
+                fontSize: "1.25rem", // Ukuran font yang lebih besar
+                padding: "16px", // Menambah padding jika diperlukan
+              },
+              success: {
+                style: {
+                  background: "white", // Warna background hijau untuk pesan sukses
+                  color: "black",
+                },
+              },
+              error: {
+                style: {
+                  background: "white", // Warna background merah untuk pesan error
+                  color: "black",
+                },
+              },
+            }}
+          />
           <div className="mb-4">
             <div className="flex flex-wrap items-start mt-14 justify-between">
               <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
@@ -639,54 +697,31 @@ function DataAnggota() {
                       readOnly
                       onFocus={() => {
                         setShowDropdownCabang(true);
-                        setFilteredCabangOptions(cabangOptions); // Pastikan cabangOptions sudah didefinisikan dan berisi data cabang
+                        setFilteredCabangOptions(cabangOptions); // Setel cabangOptions saat dropdown dibuka
                       }}
                       className="border rounded-lg p-2 w-full bg-white shadow-sm"
                     />
 
                     {showDropdownCabang && (
-                      <div className="absolute mt-9">
+                      <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
                         <Input
                           type="text"
-                          onChange={(e) => handleCabangChange(e)}
-                          className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-2"
+                          value={searchCabang}
+                          onChange={handleCabangChange}
+                          className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
                           placeholder="Cari Cabang"
                         />
-
-                        {filteredCabangOptions.length > 0 && (
-                          <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-48 overflow-y-auto mt-1 shadow-sm">
+                        <ul className="max-h-48 overflow-y-auto">
+                          {filteredCabangOptions.map((cabang) => (
                             <li
-                              key="clear"
-                              onClick={() => {
-                                setSelectedCabang(""); // Menghilangkan cabang yang sudah dipilih
-                                setShowDropdownCabang(false);
-                              }}
-                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                              key={cabang.idKecamatan}
+                              className="p-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleCabangSelect(cabang)}
                             >
-                              {"Pilih Cabang"}{" "}
-                              {/* Teks untuk menghapus pilihan */}
+                              {cabang.kecamatan}
                             </li>
-
-                            {/* Daftar cabang yang difilter */}
-                            {filteredCabangOptions.map((cabang) => (
-                              <li
-                                key={cabang.id}
-                                onClick={() => {
-                                  handleSelectCabang(cabang);
-                                  setSelectedCabang(cabang.kecamatan);
-                                  setShowDropdownCabang(false);
-                                  console.log(
-                                    "Cabang dipilih:",
-                                    cabang.kecamatan
-                                  ); // Debug log
-                                }}
-                                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                              >
-                                {cabang.kecamatan}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
+                          ))}
+                        </ul>
                       </div>
                     )}
                   </div>
@@ -961,13 +996,14 @@ function DataAnggota() {
                         <td className="p-2 md:p-3 border md:table-cell hidden">
                           <div className="flex justify-center space-x-2">
                             <Button
+                             type="button"
                               className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
                               title="Edit Data"
                               onClick={() => {
+                                // Simpan ID ke sessionStorage
                                 sessionStorage.setItem("anggotaId", item.id);
-                                router.push(
-                                  `/anggota/edit-anggota?id=${item.id}`
-                                );
+                                // Panggil fungsi untuk mengarahkan ke halaman edit
+                                handleEditClick();
                               }}
                             >
                               <FaEdit className="w-4 h-4" />
@@ -975,7 +1011,11 @@ function DataAnggota() {
                             <Button
                               className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
                               title="Mutasi"
-                              onClick={() => openModal(item)}
+                               type="button"
+                              onClick={() => {
+                                sessionStorage.setItem("anggotaId", item.id);
+                                openModal(item);
+                              }}
                             >
                               <FaExchangeAlt className="w-4 h-4" />
                             </Button>
@@ -1162,91 +1202,120 @@ function DataAnggota() {
               </div>
               <div className="flex flex-col items-center gap-2">
                 <div className="w-full flex justify-center mb-2">
-                  <img
-                    src={currentItem?.photo || "default-photo-url"}
-                    alt="Anggota"
-                    className="w-32 h-32 object-cover rounded-full border border-gray-300"
+                  <Image
+                    src={
+                      fotoBase64
+                        ? "/profile.png"
+                        : `data:image/jpeg;base64,${fotoBase64}`
+                    }
+                    width={80}
+                    height={80}
+                    alt="Anggota Foto"
+                    className="rounded-full"
                   />
                 </div>
-                <div className="flex flex-col items-center mb-2">
-                  <Input
-                    className="block text-sm font-medium w-full text-center"
-                    placeholder="Nama"
-                    value={currentItem?.namaLengkap || ""}
-                    disabled
-                  />
-                  <Input
-                    className="block text-sm font-medium mt-2 text-center"
-                    placeholder="NPA"
-                    value={currentItem?.npaPgri || ""}
-                    disabled
-                  />
-                  <Input
-                    className="block text-sm font-medium mt-2 text-center"
-                    placeholder="Cabang"
-                    value={currentItem?.cabang || ""}
-                    disabled={!isCabangEnabled}
-                  />
-                  <Input
-                    className="block text-sm font-medium mt-2 text-center"
-                    placeholder="Unit Kerja"
-                    value={currentItem?.unitKerja || ""}
-                    disabled={!isUnitKerjaEnabled}
-                  />
+                <div className="grid grid-cols-2 gap-4 justify-around">
+                  <div className="flex flex-col text-left">
+                    <p className="font-medium text-gray-600 justify-start ">
+                      Nama Lengkap:
+                    </p>
+                    <p className="text-sm">{currentItem?.namaLengkap || ""}</p>
+                    <p className="font-medium text-gray-600 mt-3">Cabang:</p>
+                    <p className="text-sm">{currentItem?.cabang || ""}</p>
+                  </div>
+
+                  <div className="flex flex-col text-left ">
+                    <p className="font-medium text-gray-600">NPA:</p>
+                    <p className=" text-sm">{currentItem?.npaPgri || ""}</p>
+                    <p className="font-medium text-gray-600 text-left mt-3">
+                      Unit Kerja:
+                    </p>
+                    <p className="ml-0 text-sm">
+                      {currentItem?.unitKerja || ""}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 mt-4">
+                <div>
                 <Button
-                  className="w-full bg-teal-700 hover:bg-teal-500"
-                  onClick={() => handlePindahCabangClick()}
-                >
-                  {isCabangEnabled
-                    ? "Konfirmasi Pindah Cabang"
-                    : "Pindah Cabang dan Unit Kerja"}
-                </Button>
-                <Button
-                  className="w-full bg-teal-700 hover:bg-teal-500"
-                  onClick={handleKeluarAnggotaClick}
-                >
-                  Keluar Anggota
-                </Button>
-                <Button
-                  className="w-full bg-teal-700 hover:bg-teal-500"
-                  onClick={() => alert("Tidak Jelas")}
-                >
-                  Pensiun
-                </Button>
+            className="w-full bg-teal-700 hover:bg-teal-500"
+            onClick={handlePindahCabangUnit} // Menambahkan event handler
+        >
+            Pindah Cabang dan Unit Kerja
+        </Button>
+               
+                </div>
+                <div>
+                  <Button
+                    className="w-full bg-teal-700 hover:bg-teal-500"
+                    onClick={handlePopupKeluar}
+                  >
+                    Keluar Anggota
+                  </Button>
 
-                {isPopupVisible && (
-                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-4 rounded-lg shadow-lg">
-                      <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold">Keluar Anggota</h2>
-                        <button
-                          className=" text-xl font-bold text-gray-700 hover:text-red-500 focus:outline-none"
-                          onClick={handleCancel}
-                        >
-                          x
-                        </button>
-                      </div>
-                      <p>Apakah Anggota dikeluarkan?</p>
-                      <div className="flex justify-end mt-4 space-x-2">
-                        <Button
-                          className="bg-green-500 hover:bg-green-400 text-white px-4 py-2 rounded"
-                          onClick={handleConfirm}
-                        >
-                          Ya
-                        </Button>
-                        <Button
-                          className="bg-red-500 hover:bg-red-400 text-white px-4 py-2 rounded"
-                          onClick={handleCancel}
-                        >
-                          Tidak
-                        </Button>
+                  {popupVisibleKeluar && (
+                    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+                      <div className="bg-white rounded-lg p-6 w-2/5 text-center shadow-lg">
+                        <h2 className="text-lg font-semibold text-gray-800">
+                          Apakah Anda yakin?
+                        </h2>
+                        <p className="text-gray-600 mt-2 mb-4">
+                          Apakah Anda yakin akan menghapus anggota ini?
+                        </p>
+                        <div className="flex justify-center gap-4">
+                          <button
+                            onClick={handleKeluarAnggota}
+                            className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                          >
+                            Ya, Saya Yakin
+                          </button>
+                          <button
+                            onClick={handleCancelKeluar}
+                            className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition duration-200"
+                          >
+                            Batal
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
+                <div>
+                  <Button
+                    className="w-full bg-teal-700 hover:bg-teal-500"
+                    onClick={handlePopup}
+                  >
+                    Pensiun
+                  </Button>
+                  {popupVisible && (
+                    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+                      <div className="bg-white rounded-lg p-6 w-2/5 text-center shadow-lg">
+                        <h2 className="text-lg font-semibold text-gray-800">
+                          Apakah Anda yakin ?
+                        </h2>
+                        <p className="text-gray-600 mt-2 mb-4">
+                          Apakah Anda yakin untuk mengubah anggota menjadi
+                          pensiun?
+                        </p>
+                        <div className="flex justify-center gap-4">
+                          <button
+                            onClick={handlePensiunAnggota}
+                            className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                          >
+                            Ya, Saya Yakin
+                          </button>
+                          <button
+                            onClick={handleCancel}
+                            className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition duration-200"
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </Modal>
