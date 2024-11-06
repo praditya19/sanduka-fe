@@ -827,6 +827,45 @@ const getAnggotaMeninggal = async () => {
   }
 };
 
+// Mutasi
+const keluarAnggota = async (anggotaId) => {
+  try {
+    const response = await axiosClient.put(
+      `api/mutasi-anggota/${anggotaId}/keluar`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error saat mengeluarkan anggota: ", error);
+    throw error;
+  }
+};
+
+const pensiunAnggota = async (anggotaId) => {
+  try {
+    const response = await axiosClient.put(
+      `api/mutasi-anggota/${anggotaId}/pensiun`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error saat mengeluarkan anggota: ", error);
+    throw error;
+  }
+};
+
+const mutasiCabangUnitKerja = async (idAnggota, cabang, unitKerja) => {
+  try {
+      const url = `/api/mutasi-anggota/${idAnggota}/update-cabang-unitkerja?cabang=${encodeURIComponent(cabang)}&unitKerja=${encodeURIComponent(unitKerja)}`;
+      const response = await axiosClient.put(url);
+      return response.data; // Kembalikan data response
+  } catch (error) {
+      console.error("Error saat memutasikan anggota:", error);
+      console.error("Response data:", error.response?.data); // Log response data jika ada error
+      throw error; // Lempar kembali error untuk ditangani di tempat lain
+  }
+};
+
+
+
 // Export all functions
 export default {
   registerUser,
@@ -896,4 +935,7 @@ export default {
   updateUserById,
   updateVerified,
   getSaldoAkhir,
+  keluarAnggota,
+  pensiunAnggota,
+  mutasiCabangUnitKerja,
 };
