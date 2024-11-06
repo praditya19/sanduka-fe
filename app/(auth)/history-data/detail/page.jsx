@@ -1,9 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation"; // Pastikan ini diimpor
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"; // Jika menggunakan FontAwesome
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons"; // Jika menggunakan FontAwesome
 import GlobalApi from "@/app/_utils/GlobalApi";
+import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
 import {
   Table,
   TableBody,
@@ -12,23 +13,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 
 const Page = () => {
-  const router = useRouter(); // Inisialisasi router
+  const router = useRouter();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const npa = sessionStorage.getItem("npa"); // Ambil NPA dari Session Storage
+  const npa = sessionStorage.getItem("npa");
+  const [expandedIndex, setExpandedIndex] = useState(null);
 
-  // Panggil data berdasarkan NPA
   useEffect(() => {
     const fetchData = async () => {
       if (npa) {
-        // Pastikan NPA tidak kosong
         try {
           setLoading(true);
-          const result = await GlobalApi.getHistoryByNpa(npa); // Panggil API dengan NPA
-          setData(result); // Mengisi data yang diambil dari API
+          const result = await GlobalApi.getHistoryByNpa(npa);
+          setData(result);
         } catch (err) {
           setError(err.message);
         } finally {
@@ -38,18 +39,21 @@ const Page = () => {
     };
 
     fetchData();
-  }, [npa]); // Hanya akan dipanggil ketika `npa` berubah
+  }, [npa]);
+
+  const handleExpand = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
 
   return (
     <div className="p-4">
       <div className="flex justify-between items-center bg-teal-600 py-4 rounded-lg shadow-md">
-        <button 
-          className="ml-6 text-white" 
-          onClick={() => router.back()} // Kembali ke halaman sebelumnya
-        >
-          <FontAwesomeIcon icon={faArrowLeft} size="lg" /> {/* Ikon panah */}
+        <button className="ml-6 text-white" onClick={() => router.back()}>
+          <FontAwesomeIcon icon={faArrowLeft} size="lg" />
         </button>
-        <h1 className="text-2xl font-semibold text-white text-center flex-grow">Detail</h1>
+        <h1 className="text-2xl font-semibold text-white text-center flex-grow">
+          Detail
+        </h1>
       </div>
       {loading ? (
         <div className="text-center my-4">Loading...</div>
@@ -69,50 +73,96 @@ const Page = () => {
                   "Tahun",
                   "Cabang ke 2",
                   "User",
-                ].map((header) => (
+                ].map((header, idx) => (
                   <TableHead
                     key={header}
-                    className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                    className={`border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white ${
+                      idx > 2 ? "hidden lg:table-cell" : ""
+                    }`}
                   >
                     {header}
                   </TableHead>
                 ))}
+                <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white lg:hidden">
+                  Actions
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.map((item, index) => (
-                <TableRow
-                  key={index}
-                  className={`hover:bg-gray-100 transition duration-200 ${
-                    index % 2 === 0 ? "bg-gray-200" : "bg-white"
-                  }`}
-                >
-                  <TableCell className="text-center border border-gray-300 p-2">
-                    {item.hari}, {item.tanggal}, {item.jam}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 p-2">
-                    <div className="font-semibold">{item.nama}</div>
-                    <div className="text-gray-600">{item.npa}</div>
-                  </TableCell>
-                  <TableCell className="text-center border border-gray-300 p-2">
-                    {item.cabang}
-                  </TableCell>
-                  <TableCell className="border border-gray-300 p-2">
-                    {item.uraian}
-                  </TableCell>
-                  <TableCell className="border text-center border-gray-300 p-2">
-                    {item.bulan}
-                  </TableCell>
-                  <TableCell className="border text-center border-gray-300 p-2">
-                    {item.tahun}
-                  </TableCell>
-                  <TableCell className="border text-center border-gray-300 p-2">
-                    {item.cabang_ke_2}
-                  </TableCell>
-                  <TableCell className="border text-center border-gray-300 p-2">
-                    {item.user}
-                  </TableCell>
-                </TableRow>
+                <>
+                  <TableRow
+                    key={index}
+                    className={`hover:bg-gray-100 transition duration-200 ${
+                      index % 2 === 0 ? "bg-gray-200" : "bg-white"
+                    }`}
+                  >
+                    <TableCell className="text-center border border-gray-300 p-2">
+                      {item.hari}, {item.tanggal}, {item.jam}
+                    </TableCell>
+                    <TableCell className="border border-gray-300 p-2">
+                      <div className="font-semibold">{item.nama}</div>
+                      <div className="text-gray-600">{item.npa}</div>
+                    </TableCell>
+                    <TableCell className="text-center border border-gray-300 p-2">
+                      {item.cabang}
+                    </TableCell>
+                    <TableCell className="border border-gray-300 p-2 hidden lg:table-cell">
+                      {item.uraian}
+                    </TableCell>
+                    <TableCell className="border text-center border-gray-300 p-2 hidden lg:table-cell">
+                      {item.bulan}
+                    </TableCell>
+                    <TableCell className="border text-center border-gray-300 p-2 hidden lg:table-cell">
+                      {item.tahun}
+                    </TableCell>
+                    <TableCell className="border text-center border-gray-300 p-2 hidden lg:table-cell">
+                      {item.cabang_ke_2}
+                    </TableCell>
+                    <TableCell className="border text-center border-gray-300 p-2 hidden lg:table-cell">
+                      {item.user}
+                    </TableCell>
+
+                    <TableCell className="text-center border border-gray-300 p-2 lg:hidden">
+                      <Button
+                        className="text-blue-500"
+                        onClick={() => handleExpand(index)}
+                      >
+                        {expandedIndex === index ? (
+                          <FaMinusCircle />
+                        ) : (
+                          <FaPlusCircle />
+                        )}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+
+                  {expandedIndex === index && (
+                    <TableRow className="bg-gray-100 lg:hidden">
+                      <TableCell
+                        colSpan="4"
+                        className="border border-gray-300 p-4 text-sm"
+                      >
+                        <div>
+                          <strong>Uraian:</strong> {item.uraian ?? "-"}
+                        </div>
+                        <div>
+                          <strong>Bulan:</strong> {item.bulan ?? "-"}
+                        </div>
+                        <div>
+                          <strong>Tahun:</strong> {item.tahun ?? "-"}
+                        </div>
+                        <div>
+                          <strong>Cabang ke 2:</strong>{" "}
+                          {item.cabang_ke_2 ?? "-"}
+                        </div>
+                        <div>
+                          <strong>User:</strong> {item.user ?? "-"}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </>
               ))}
             </TableBody>
           </Table>

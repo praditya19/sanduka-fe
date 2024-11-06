@@ -2,7 +2,7 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "https://116f-36-80-157-107.ngrok-free.app",
+  baseURL: "http://localhost:8080",
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
@@ -854,17 +854,17 @@ const pensiunAnggota = async (anggotaId) => {
 
 const mutasiCabangUnitKerja = async (idAnggota, cabang, unitKerja) => {
   try {
-      const url = `/api/mutasi-anggota/${idAnggota}/update-cabang-unitkerja?cabang=${encodeURIComponent(cabang)}&unitKerja=${encodeURIComponent(unitKerja)}`;
-      const response = await axiosClient.put(url);
-      return response.data; // Kembalikan data response
+    const url = `/api/mutasi-anggota/${idAnggota}/update-cabang-unitkerja?cabang=${encodeURIComponent(
+      cabang
+    )}&unitKerja=${encodeURIComponent(unitKerja)}`;
+    const response = await axiosClient.put(url);
+    return response.data; // Kembalikan data response
   } catch (error) {
-      console.error("Error saat memutasikan anggota:", error);
-      console.error("Response data:", error.response?.data); // Log response data jika ada error
-      throw error; // Lempar kembali error untuk ditangani di tempat lain
+    console.error("Error saat memutasikan anggota:", error);
+    console.error("Response data:", error.response?.data); // Log response data jika ada error
+    throw error; // Lempar kembali error untuk ditangani di tempat lain
   }
 };
-
-
 
 // Export all functions
 export default {

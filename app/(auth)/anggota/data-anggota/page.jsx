@@ -5,9 +5,9 @@ import Modal from "react-modal";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  FaPlus,
+  FaPlusCircle,
+  FaMinusCircle,
   FaEdit,
   FaExchangeAlt,
   FaExclamationTriangle,
@@ -47,23 +47,15 @@ function DataAnggota() {
   const [loading, setLoading] = useState(true);
   const [popupVisibleKeluar, setPopupVisibleKeluar] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
-  const [popupCabangUnit, setPopupCabangUnit] = useState(false);
   const dropdownRef = useRef(null);
   const [fotoBase64, setFotoBase64] = useState("");
-
   const [rekapData, setRekapData] = useState([]);
-
-  const [searchTerm, setSearchTerm] = useState("");
   const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
-  
-
-
   const [searchCabang, setSearchCabang] = useState("");
   const [showDropdownCabangUnit, setShowDropdownCabangUnit] = useState(false);
   const [listCabang, setListCabang] = useState([]);
-
   const [showDropdownCabang, setShowDropdownCabang] = useState(false);
   const [showDropdownUnit, setShowDropdownUnit] = useState(false);
   const [formData, setFormData] = useState({ unit: "" });
@@ -73,7 +65,6 @@ function DataAnggota() {
   const [allUnitKerja, setAllUnitKerja] = useState([]);
   const [cabangOptions, setCabangOptions] = useState([]);
   const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
-  const [showCabangDropdown, setShowCabangDropdown] = useState(true);
   const [searchUnit, setSearchUnit] = useState("");
   const [unitKerjaInput, setUnitKerjaInput] = useState("");
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
@@ -84,16 +75,11 @@ function DataAnggota() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Cek apakah klik di luar area dropdown dan input pencarian
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownVisible(false);
       }
     };
-
-    // Pasang event listener pada document
     document.addEventListener("mousedown", handleClickOutside);
-
-    // Bersihkan event listener saat komponen tidak digunakan
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -101,16 +87,11 @@ function DataAnggota() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Cek apakah klik di luar area dropdown dan input pencarian
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdownCabangUnit(false);
       }
     };
-
-    // Pasang event listener pada document
     document.addEventListener("mousedown", handleClickOutside);
-
-    // Bersihkan event listener saat komponen tidak digunakan
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -118,16 +99,11 @@ function DataAnggota() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Cek apakah klik di luar area dropdown dan input pencarian
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdownCabang(false);
       }
     };
-
-    // Pasang event listener pada document
     document.addEventListener("mousedown", handleClickOutside);
-
-    // Bersihkan event listener saat komponen tidak digunakan
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -138,8 +114,6 @@ function DataAnggota() {
       setShowDropdownUnit(false);
     }
   };
-
-  // Menambahkan event listener saat komponen dimount
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
@@ -212,20 +186,8 @@ function DataAnggota() {
         unit.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
         unit.unitKerja.toLowerCase().includes(unitValue.toLowerCase())
     );
-    setFilteredUnitKerja(filteredUnits); // Update daftar unit kerja terfilter
+    setFilteredUnitKerja(filteredUnits);
     setShowDropdownUnit(true);
-  };
-
-  const handleUnitKerjaSelect = (unitKerja) => {
-    setSelectedUnitKerja(unitKerja.unitKerja);
-    setUnitKerjaInput(unitKerja.unitKerja);
-    setShowUnitKerjaDropdown(false);
-    console.log(unitKerja.unitKerja);
-
-    const filteredRekapData = originalRekapData.filter(
-      (item) => item.alamatKerja === unitKerja.unitKerja
-    );
-    setRekapData(filteredRekapData);
   };
 
   useEffect(() => {
@@ -291,8 +253,8 @@ function DataAnggota() {
 
   const fetchAnggota = async () => {
     try {
-      const page = 0; // Or the page number you want to fetch
-      const size = 100; // Or the number of items per page you want to fetch
+      const page = 0;
+      const size = 100;
       const response = await GlobalApi.getAllAnggota(page, size);
       const fotoBase64Array = [];
 
@@ -317,9 +279,8 @@ function DataAnggota() {
       }
 
       setFotoBase64(fotoBase64Array);
-      // setTotalPages(response.data.totalPages || 0);
       setLoading(false);
-      setAnggota(fetchedData || []); // Use response.data.content if it's a Page object
+      setAnggota(fetchedData || []);
     } catch (error) {
       console.error("Error fetching anggota:", error);
       setAnggota([]);
@@ -430,7 +391,7 @@ function DataAnggota() {
   };
 
   const sortedData = useMemo(() => {
-    if (!Array.isArray(anggota)) return []; // Ensure it's an array
+    if (!Array.isArray(anggota)) return [];
 
     let sortableItems = [...anggota];
 
@@ -515,7 +476,6 @@ function DataAnggota() {
   const handleCabangChange = (e) => {
     const value = e.target.value;
     setSearchCabang(value);
-    // Filter cabangOptions berdasarkan input search
     const filtered = cabangOptions.filter((cabang) =>
       cabang.kecamatan.toLowerCase().includes(value.toLowerCase())
     );
@@ -597,11 +557,10 @@ function DataAnggota() {
 
   const handleKeluarAnggota = async () => {
     try {
-      const anggotaId = sessionStorage.getItem("anggotaId"); // Ambil ID anggota dari sessionStorage
-      await GlobalApi.keluarAnggota(anggotaId); // Panggil API dengan anggotaId
-      setPopupVisibleKeluar(false); // Tutup popup setelah berhasil
+      const anggotaId = sessionStorage.getItem("anggotaId");
+      setPopupVisibleKeluar(false);
       toast.success("Anggota berhasil dihapus!", {
-        autoClose: 3000, // Waktu tampilan dalam milidetik
+        autoClose: 3000,
       });
     } catch (error) {
       console.error("Gagal mengeluarkan anggota:", error);
@@ -637,14 +596,12 @@ function DataAnggota() {
   };
 
   const handlePindahCabangUnit = () => {
-    router.push('/anggota/data-anggota/mutasiCabangUnit'); // Arahkan ke rute baru
+    router.push("/anggota/data-anggota/mutasiCabangUnit");
   };
-  
+
   const handleEditClick = () => {
-    // Arahkan ke halaman edit anggota
     router.push("/anggota/edit-anggota");
   };
-  
 
   if (loading) {
     return <div>Loading...</div>;
@@ -665,18 +622,18 @@ function DataAnggota() {
             toastOptions={{
               style: {
                 marginTop: "1%",
-                fontSize: "1.25rem", // Ukuran font yang lebih besar
-                padding: "16px", // Menambah padding jika diperlukan
+                fontSize: "1.25rem",
+                padding: "16px",
               },
               success: {
                 style: {
-                  background: "white", // Warna background hijau untuk pesan sukses
+                  background: "white",
                   color: "black",
                 },
               },
               error: {
                 style: {
-                  background: "white", // Warna background merah untuk pesan error
+                  background: "white",
                   color: "black",
                 },
               },
@@ -697,7 +654,7 @@ function DataAnggota() {
                       readOnly
                       onFocus={() => {
                         setShowDropdownCabang(true);
-                        setFilteredCabangOptions(cabangOptions); // Setel cabangOptions saat dropdown dibuka
+                        setFilteredCabangOptions(cabangOptions);
                       }}
                       className="border rounded-lg p-2 w-full bg-white shadow-sm"
                     />
@@ -733,11 +690,11 @@ function DataAnggota() {
                         className="border rounded-lg p-2 w-full bg-white shadow-sm mt-2"
                         placeholder="Pilih Unit Kerja"
                         readOnly
-                        value={formData.unit} // Tetap simpan nilai unit kerja yang dipilih
+                        value={formData.unit}
                         onChange={handleUnitKerjaChange}
                         onFocus={() => {
                           setShowDropdownUnit(true);
-                          setSearchUnit(""); // Kosongkan hanya input pencarian
+                          setSearchUnit("");
                         }}
                         disabled={isUnitKerjaDisabled}
                       />
@@ -746,24 +703,23 @@ function DataAnggota() {
                         <div className="absolute mt-0 w-full">
                           <Input
                             type="text"
-                            value={searchUnit} // Gunakan state pencarian
+                            value={searchUnit}
                             onChange={(e) => {
-                              setSearchUnit(e.target.value); // Update state pencarian
-                              handleUnitKerjaChange(e); // Pastikan fungsi ini tetap memproses perubahan
+                              setSearchUnit(e.target.value);
+                              handleUnitKerjaChange(e);
                             }}
                             placeholder="Cari Unit Kerja"
                             className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-0"
                           />
                           <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto">
-                            {/* Pilihan kosong */}
                             <li
                               onClick={() => {
                                 setFormData((prev) => ({
                                   ...prev,
-                                  unit: "", // Setel unit kerja ke nilai kosong
+                                  unit: "",
                                 }));
-                                setShowDropdownUnit(false); // Tutup dropdown
-                                setSearchUnit(""); // Kosongkan input pencarian setelah memilih opsi kosong
+                                setShowDropdownUnit(false);
+                                setSearchUnit("");
                               }}
                               className="p-2 cursor-pointer hover:bg-gray-100"
                             >
@@ -778,10 +734,10 @@ function DataAnggota() {
                                   onClick={() => {
                                     setFormData((prev) => ({
                                       ...prev,
-                                      unit: unit.unitKerja, // Simpan nilai unit kerja yang dipilih
+                                      unit: unit.unitKerja,
                                     }));
                                     setShowDropdownUnit(false);
-                                    setSearchUnit(""); // Kosongkan input pencarian setelah memilih unit
+                                    setSearchUnit("");
                                   }}
                                   className="p-2 cursor-pointer hover:bg-gray-100"
                                 >
@@ -915,7 +871,7 @@ function DataAnggota() {
               </thead>
               <tbody>
                 {currentData.map((item, index) => {
-                  const globalIndex = index + 1; // Update index calculation for globalIndex
+                  const globalIndex = index + 1;
                   return (
                     <React.Fragment key={index}>
                       <tr
@@ -928,7 +884,11 @@ function DataAnggota() {
                               className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
                               onClick={() => handleExpand(index)}
                             >
-                              <FaPlus className="w-4 h-4" />
+                              {expandedIndex === index ? (
+                                <FaMinusCircle />
+                              ) : (
+                                <FaPlusCircle />
+                              )}
                             </Button>
                           </div>
                         </td>
@@ -996,13 +956,11 @@ function DataAnggota() {
                         <td className="p-2 md:p-3 border md:table-cell hidden">
                           <div className="flex justify-center space-x-2">
                             <Button
-                             type="button"
+                              type="button"
                               className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
                               title="Edit Data"
                               onClick={() => {
-                                // Simpan ID ke sessionStorage
                                 sessionStorage.setItem("anggotaId", item.id);
-                                // Panggil fungsi untuk mengarahkan ke halaman edit
                                 handleEditClick();
                               }}
                             >
@@ -1011,7 +969,7 @@ function DataAnggota() {
                             <Button
                               className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
                               title="Mutasi"
-                               type="button"
+                              type="button"
                               onClick={() => {
                                 sessionStorage.setItem("anggotaId", item.id);
                                 openModal(item);
@@ -1039,7 +997,7 @@ function DataAnggota() {
                           </div>
                         </td>
                       </tr>
-                      {/* Mobile View Row Expansion */}
+
                       <tr className="md:hidden">
                         <td colSpan="7" className="p-2 border">
                           {expandedIndex === index && (
@@ -1064,9 +1022,7 @@ function DataAnggota() {
                               <div>{item.cabang},</div>
                               <div>{item.unitKerja}</div>
                               <div>Anggota: {item.gabung}</div>
-                              <div>
-                                {item.golongan}/{formatCurrency(item.iuran)}
-                              </div>
+                              <div>{item.golongan}</div>
                               <div
                                 className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${
                                   item.status === "BUKAN ANGGOTA"
@@ -1074,9 +1030,9 @@ function DataAnggota() {
                                     : "bg-green-200 text-green-900"
                                 }`}
                               >
-                                {item.status === "ANGGOTA"
+                                {item.role === "USER"
                                   ? "Aktif"
-                                  : item.status}
+                                  : item.status_keanggotaan}
                               </div>
                               <div className="flex justify-center space-x-2 mt-2">
                                 <Button
@@ -1238,13 +1194,12 @@ function DataAnggota() {
               </div>
               <div className="space-y-2 mt-4">
                 <div>
-                <Button
-            className="w-full bg-teal-700 hover:bg-teal-500"
-            onClick={handlePindahCabangUnit} // Menambahkan event handler
-        >
-            Pindah Cabang dan Unit Kerja
-        </Button>
-               
+                  <Button
+                    className="w-full bg-teal-700 hover:bg-teal-500"
+                    onClick={handlePindahCabangUnit}
+                  >
+                    Pindah Cabang dan Unit Kerja
+                  </Button>
                 </div>
                 <div>
                   <Button

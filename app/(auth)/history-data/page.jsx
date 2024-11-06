@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -8,13 +8,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import HeaderMenu from "@/app/_components/HeaderMenu";
+import HeaderHome from "@/app/_components/HeaderHome";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import { Input } from "@/components/ui/input";
 
 const Page = () => {
   const [filter, setFilter] = useState("");
@@ -27,90 +27,39 @@ const Page = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { token } = useAuth();
-
+  const [expandedIndex, setExpandedIndex] = useState(null);
   const [cabangOptions, setCabangOptions] = useState([]);
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredOptions, setFilteredOptions] = useState([]);
-
+  const [selectedCabang, setSelectedCabang] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [bulanOptions, setBulanOptions] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [selectedCabang, setSelectedCabang] = useState("");
-  const dropdownRef = useRef(null);
 
-  // Filter Cabang
   useEffect(() => {
-    const fetchCabangData = async () => {
-      try {
-        const response = await GlobalApi.getCabang();
+    GlobalApi.getCabang()
+      .then((response) => {
         setCabangOptions(response.data);
-        setFilteredOptions(response.data);
-      } catch (error) {
-        console.error("Error fetching cabang data:", error);
-      }
-    };
-
-    fetchCabangData();
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching cabang options:", error);
+        setLoading(false);
+      });
   }, []);
-  const handleInputChange = (event) => {
-    const value = event.target.value;
-    setSearchTerm(value);
 
-    const filtered = cabangOptions.filter((option) =>
-      option.kecamatan.toLowerCase().includes(value.toLowerCase())
-    );
-
-    setFilteredOptions(filtered);
-    // Menampilkan dropdown hanya jika input tidak kosong
-    setShowDropdown(value.length > 0);
-  };
-
-  const handleOptionClick = (option) => {
-    setSelectedCabang(option ? option.kecamatan : ""); // Set kosong jika pilih opsi reset
-    setShowDropdown(false); // Menyembunyikan dropdown setelah memilih opsi
-    setSearchTerm(""); // Reset search term
-  };
-
-  const handleCabangClick = () => {
-    setSearchTerm(""); // Reset search term saat dropdown dibuka
-    setFilteredOptions(cabangOptions); // Set filteredOptions ke semua cabang
-    setShowDropdown(true); // Menampilkan dropdown
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false); // Menyembunyikan dropdown jika klik di luar
-      }
-    };
-
-    // Tambahkan event listener saat komponen di-mount
-    document.addEventListener("mousedown", handleClickOutside);
-
-    // Hapus event listener saat komponen di-unmount
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-  // End
-
-  // Mengambil data bulan dari API
   const fetchBulan = async () => {
     try {
-      const response = await GlobalApi.getBulan(); // Mengambil data bulan dari API
-      setBulanOptions(response.data); // Menyimpan data bulan ke state
+      const response = await GlobalApi.getBulan();
+      setBulanOptions(response.data);
     } catch (error) {
       console.error("Error fetching bulan:", error);
     }
   };
 
   useEffect(() => {
-    fetchBulan(); // Memanggil fetchBulan saat komponen di-render
+    fetchBulan();
   }, []);
 
-  const years = Array.from(new Array(11), (v, i) => i + 2020); // Generate years from 2020
+  const years = Array.from(new Array(11), (v, i) => i + 2020);
 
   const handlePrint = () => {
     window.print();
@@ -170,7 +119,6 @@ const Page = () => {
   }
 
   const filteredData = data.filter((item) => {
-    // Filter berdasarkan search term
     const matchesSearchTerm =
       (item.npaDetail.namaLengkap &&
         item.npaDetail.namaLengkap
@@ -178,37 +126,26 @@ const Page = () => {
           .includes(filter.toLowerCase())) ||
       (item.cabang && item.cabang.toLowerCase().includes(filter.toLowerCase()));
 
-    // Filter berdasarkan cabang yang dipilih
     const matchesCabang = selectedCabang
       ? item.cabang &&
         item.cabang.toLowerCase() === selectedCabang.toLowerCase()
       : true;
 
-    // Filter berdasarkan bulan yang dipilih
     const matchesMonth = selectedMonth
       ? new Date(item.tanggal).getMonth() + 1 === parseInt(selectedMonth, 10)
       : true;
 
-    // Filter berdasarkan tahun yang dipilih
     const matchesYear = selectedYear
       ? new Date(item.tanggal).getFullYear() === parseInt(selectedYear, 10)
       : true;
 
-    // Menerapkan semua filter
     return matchesSearchTerm && matchesCabang && matchesMonth && matchesYear;
   });
 
   const handleEdit = (item) => {
-    // Ambil nilai NPA dari item.npaDetail.npaPgri
     const npa = item.npaDetail.npaPgri;
-
-    // Log NPA ke console
     console.log(`NPA yang dituju: ${npa}`);
-
-    // Simpan NPA ke Session Storage
-    sessionStorage.setItem("npa", npa); // Simpan NPA ke Session Storage
-
-    // Navigasi ke halaman detail tanpa query parameter
+    sessionStorage.setItem("npa", npa);
     router.push(`/history-data/detail`);
   };
 
@@ -235,6 +172,10 @@ const Page = () => {
     });
   };
 
+  const handleExpand = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
   const calculateAge = (birthDate) => {
     const today = new Date();
     const birth = new Date(birthDate);
@@ -252,7 +193,7 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
+      {isMobile ? <HeaderMobile /> : <HeaderHome />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
@@ -265,58 +206,20 @@ const Page = () => {
             <div className="rounded-md flex flex-col py-4">
               <div className="container px-2">
                 <div className="w-full flex items-center justify-between mb-4">
-                  <div className="flex w-2/3 space-x-2 relative">
-                    {/* Cabang Dropdown */}
-                    <div className="relative" ref={dropdownRef}>
-                      <Input
-                        type="text"
-                        placeholder="Cabang terpilih"
-                        value={selectedCabang}
-                        readOnly
-                        className="p-2 border border-gray-300 rounded-md mb-2 w-64"
-                        onClick={handleCabangClick} // Panggil fungsi untuk menangani klik
-                      />
+                  <div className="flex w-2/3 space-x-2">
+                    <select
+                      value={selectedCabang}
+                      onChange={(e) => setSelectedCabang(e.target.value)}
+                      className="p-2 border rounded w-full"
+                    >
+                      <option value="">Semua Cabang</option>
+                      {cabangOptions.map((option) => (
+                        <option key={option.id} value={option.kecamatan}>
+                          {option.kecamatan}{" "}
+                        </option>
+                      ))}
+                    </select>
 
-                      {showDropdown && (
-                        <div className="absolute w-64 bg-white border border-gray-300 rounded-md max-h-48 shadow-lg z-10">
-                          <Input
-                            type="text"
-                            placeholder="Cari atau ketik Cabang..."
-                            value={searchTerm}
-                            onChange={handleInputChange}
-                            className="p-2 border-b border-gray-300 w-full"
-                            autoFocus // Fokus otomatis pada input pencarian saat dropdown muncul
-                          />
-
-                          <ul className="max-h-40 overflow-y-auto">
-                            <li
-                              className="p-2 hover:bg-blue-100 cursor-pointer text-gray-700 font-semibold"
-                              onClick={() => handleOptionClick(null)} // Kosongkan pilihan
-                            >
-                              Kosongkan Pilihan
-                            </li>
-
-                            {filteredOptions.length > 0 ? (
-                              filteredOptions.map((option, index) => (
-                                <li
-                                  key={index}
-                                  className="p-2 hover:bg-blue-100 cursor-pointer"
-                                  onClick={() => handleOptionClick(option)}
-                                >
-                                  {option.kecamatan}
-                                </li>
-                              ))
-                            ) : (
-                              <li className="p-2 text-gray-500">
-                                Tidak ada hasil
-                              </li>
-                            )}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Month Dropdown */}
                     <select
                       value={selectedMonth}
                       onChange={(e) => setSelectedMonth(e.target.value)}
@@ -330,7 +233,6 @@ const Page = () => {
                       ))}
                     </select>
 
-                    {/* Year Dropdown */}
                     <select
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(e.target.value)}
@@ -353,9 +255,9 @@ const Page = () => {
                   </button>
                 </div>
 
-                <Table className="w-full table-auto mb-8">
-                  <TableHeader className="p-2 md:p-3 border bg-green-300">
-                    <TableRow>
+                <table className="w-full table-auto mb-8">
+                  <thead className="p-2 md:p-3 border bg-green-300">
+                    <tr>
                       {[
                         "No",
                         "Date",
@@ -364,34 +266,43 @@ const Page = () => {
                         "Detail",
                         "Keterangan",
                       ].map((header, idx) => (
-                        <TableHead
+                        <th
                           key={header}
                           rowSpan="2"
-                          className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                          className={`border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white ${
+                            idx > 2 ? "hidden lg:table-cell" : ""
+                          }`}
                         >
                           {header}
-                        </TableHead>
+                        </th>
                       ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredData.map((item, index) => {
-                      return (
-                        <TableRow
-                          key={index}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredData.map((item, index) => (
+                      <React.Fragment key={index}>
+                        <tr
                           className={
                             index % 2 === 0 ? "bg-gray-200" : "bg-white"
                           }
                         >
-                          <TableCell className="text-center border">
+                          <td className="text-center border">
                             {index + 1 + page * size}
-                          </TableCell>
-                          <TableCell className="border">
-                            {`${item.hari}, ${formatDate(item.tanggal)}, ${
-                              item.jam
-                            }`}
-                          </TableCell>
-                          <TableCell className="border">
+                            <button
+                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden ml-2"
+                              onClick={() => handleExpand(index)}
+                            >
+                              {expandedIndex === index ? (
+                                <FaMinusCircle className="w-4 h-4" />
+                              ) : (
+                                <FaPlusCircle className="w-4 h-4" />
+                              )}
+                            </button>
+                          </td>
+                          <td className="border">{`${item.hari}, ${formatDate(
+                            item.tanggal
+                          )}, ${item.jam}`}</td>
+                          <td className="border">
                             {item.npaDetail ? (
                               <div>
                                 <div>{item.npaDetail.namaLengkap ?? "-"},</div>
@@ -414,28 +325,49 @@ const Page = () => {
                             ) : (
                               "-"
                             )}
-                          </TableCell>
-                          <TableCell className="text-center border">
+                          </td>
+
+                          <td className="text-center border hidden lg:table-cell">
                             {item.cabang}
-                          </TableCell>
-                          <TableCell className="border">
+                          </td>
+                          <td className="border hidden lg:table-cell">
                             {item.uraian}
-                          </TableCell>
-                          <TableCell className="text-center border">
+                          </td>
+                          <td className="text-center border hidden lg:table-cell">
                             <button
                               onClick={() => handleEdit(item)}
                               className="px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                             >
                               Detail
                             </button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                          </td>
+                        </tr>
 
-                {/* Pagination Controls */}
+                        {expandedIndex === index && (
+                          <tr className="bg-gray-100 lg:hidden">
+                            <td colSpan="6" className="border px-4 py-2">
+                              <div>
+                                <strong>Cabang:</strong> {item.cabang ?? "-"}
+                              </div>
+                              <div className="mt-2">
+                                <strong>Detail:</strong> {item.uraian ?? "-"}
+                              </div>
+                              <div className="mt-2">
+                                <button
+                                  onClick={() => handleEdit(item)}
+                                  className="ml-2 px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                >
+                                  Detail
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+
                 <div className="flex flex-col md:flex-row justify-between text-sm mt-4 items-center space-y-2 md:space-y-0 md:space-x-2">
                   <span className="text-center md:text-left">
                     Showing {page * size + 1} to{" "}

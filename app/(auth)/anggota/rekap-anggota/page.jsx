@@ -7,6 +7,8 @@ import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Input } from "@/components/ui/input";
+import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
 
 function RekapAnggota() {
   const [maxItems, setMaxItems] = useState(10);
@@ -27,15 +29,14 @@ function RekapAnggota() {
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
   const [originalRekapData, setOriginalRekapData] = useState([]);
+  const [expandedIndex, setExpandedIndex] = useState(null);
 
-  //  Filter Cabang dan Unit Kerja
-  // Fetch cabang data
   useEffect(() => {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setOriginalCabangList(response.data); // Simpan semua cabang ke originalCabangList
-        setFilteredCabangList(response.data); // Atur filter cabang awal
+        setOriginalCabangList(response.data);
+        setFilteredCabangList(response.data);
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -43,7 +44,6 @@ function RekapAnggota() {
     fetchCabangData();
   }, []);
 
-  // Fetch unit kerja data
   useEffect(() => {
     const fetchUnitKerjaData = async () => {
       try {
@@ -58,20 +58,19 @@ function RekapAnggota() {
 
   const handleUnitKerjaFocus = () => {
     if (selectedCabang) {
-      setShowUnitKerjaDropdown(true); // Tampilkan dropdown
+      setShowUnitKerjaDropdown(true);
     }
   };
 
   const handleCabangClick = () => {
-    setFilteredCabangList(originalCabangList); // Reset ke daftar asli saat dropdown dibuka
-    setShowCabangDropdown(true); // Tampilkan dropdown
+    setFilteredCabangList(originalCabangList);
+    setShowCabangDropdown(true);
   };
 
   const handleUnitKerjaChange = (e) => {
     const input = e.target.value;
     setUnitKerjaInput(input);
 
-    // Filter unit kerja berdasarkan input dan cabang
     const filteredUnitKerja = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang &&
@@ -79,18 +78,15 @@ function RekapAnggota() {
         unitKerja.unitKerja.toLowerCase().startsWith(input.toLowerCase())
     );
 
-    // Tampilkan dropdown jika ada hasil filter
     setShowUnitKerjaDropdown(filteredUnitKerja.length > 0);
     setFilteredUnitKerja(filteredUnitKerja);
 
-    // Filter data rekap berdasarkan input unit kerja
     const rekapFilteredByUnitKerja = originalRekapData.filter(
       (item) =>
         item.alamatKerja &&
         item.alamatKerja.toLowerCase().includes(input.toLowerCase())
     );
 
-    // Jika input kosong, kembalikan data tabel ke data awal
     if (input === "") {
       setRekapData(originalRekapData);
     } else {
@@ -109,10 +105,7 @@ function RekapAnggota() {
     setSelectedCabang(cabang.kecamatan);
     setShowCabangDropdown(false);
 
-    // Fetch rekap data based on selected cabang
     await fetchRekapData(cabang.kecamatan);
-    console.log("Cabang yang dipilih:", cabang.kecamatan);
-    // Now filter the unit kerja based on the selected cabang
     const filtered = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang &&
@@ -122,25 +115,23 @@ function RekapAnggota() {
   };
 
   const handleUnitKerjaSearch = (searchTerm) => {
-    // Jika searchTerm kosong, set filteredUnitKerja dengan semua unit kerja yang sesuai dengan selectedCabang
     if (searchTerm === "") {
       const allFiltered = unitKerjaList.filter(
         (unitKerja) => unitKerja.cabang === selectedCabang
       );
       setFilteredUnitKerja(allFiltered);
     } else {
-      // Jika ada input, filter berdasarkan input dan cabang yang dipilih
       const filtered = unitKerjaList.filter(
         (unitKerja) =>
           unitKerja.unitKerja
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) &&
-          unitKerja.cabang === selectedCabang // Memfilter berdasarkan cabang
+          unitKerja.cabang === selectedCabang
       );
       setFilteredUnitKerja(filtered);
     }
 
-    setShowUnitKerjaDropdown(true); // Menjaga dropdown tetap terbuka
+    setShowUnitKerjaDropdown(true);
   };
 
   const handleUnitKerjaSelect = (unitKerja) => {
@@ -148,7 +139,6 @@ function RekapAnggota() {
     setUnitKerjaInput(unitKerja.unitKerja);
     setShowUnitKerjaDropdown(false);
     console.log("Unit kerja yang dipilih:", unitKerja);
-    // Update rekapData berdasarkan unit kerja yang dipilih
     const filteredRekapData = originalRekapData.filter(
       (item) => item.alamatKerja === unitKerja.unitKerja
     );
@@ -246,7 +236,10 @@ function RekapAnggota() {
     }
   };
 
-  // Determine the start and end index of the items to display based on the current page
+  const handleExpand = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
   const startIndex = (currentPage - 1) * maxItems;
   const paginatedData = rekapData.slice(startIndex, startIndex + maxItems);
 
@@ -257,7 +250,6 @@ function RekapAnggota() {
     0
   );
 
-  // Correct the syntax here by accessing `curr` directly
   const jumlah = rekapData.reduce(
     (acc, curr) => acc + (curr.totalPns + curr.totalPppk + curr.totalNonPns),
     0
@@ -403,16 +395,16 @@ function RekapAnggota() {
                     Status Anggota
                   </th>
                   <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell"
                     rowSpan="2"
                   >
                     Jumlah
                   </th>
                   <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell"
                     rowSpan="2"
                   >
-                    TOTAL
+                    Iuran
                   </th>
                 </tr>
                 <tr>
@@ -430,27 +422,59 @@ function RekapAnggota() {
               <tbody>
                 {rekapData.length > 0 && selectedCabang ? ( // Tampilkan tabel hanya jika ada data dan filter yang dipilih
                   rekapData.map((item, index) => (
-                    <tr key={item.id}>
-                      <td className="p-2 md:p-3 border text-center">
-                        {index + 1}
-                      </td>
-                      <td className="p-2 md:p-3 border">{item.alamatKerja}</td>
-                      <td className="p-2 md:p-3 border text-center">
-                        {item.totalPns}
-                      </td>
-                      <td className="p-2 md:p-3 border text-center">
-                        {item.totalPppk}
-                      </td>
-                      <td className="p-2 md:p-3 border text-center">
-                        {item.totalNonPns}
-                      </td>
-                      <td className="p-2 md:p-3 border text-center">
-                        {item.jumlah}
-                      </td>
-                      <td className="p-2 md:p-3 border text-center">
-                        {item.totalIuran}
-                      </td>
-                    </tr>
+                    <>
+                      <tr key={item.id}>
+                        <td className="p-2 md:p-3 border text-center">
+                          <div className="flex justify-center items-center">
+                            {index + 1}
+
+                            <Button
+                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
+                              onClick={() => handleExpand(index)}
+                            >
+                              {expandedIndex === index ? (
+                                <FaMinusCircle />
+                              ) : (
+                                <FaPlusCircle />
+                              )}
+                            </Button>
+                          </div>
+                        </td>
+                        <td className="p-2 md:p-3 border">
+                          {item.alamatKerja}
+                        </td>
+                        <td className="p-2 md:p-3 border text-center">
+                          {item.totalPns}
+                        </td>
+                        <td className="p-2 md:p-3 border text-center">
+                          {item.totalPppk}
+                        </td>
+                        <td className="p-2 md:p-3 border text-center">
+                          {item.totalNonPns}
+                        </td>
+
+                        <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                          {item.jumlah}
+                        </td>
+                        <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                          {item.totalIuran}
+                        </td>
+                      </tr>
+
+                      {expandedIndex === index && (
+                        <tr className="lg:hidden bg-gray-100">
+                          <td colSpan="5" className="p-2 md:p-3 border text-sm">
+                            <div>
+                              <strong>Jumlah:</strong> {item.jumlah}
+                            </div>
+                            <div>
+                              <strong>Iuran:</strong> Rp.{" "}
+                              {item.totalIuran.toLocaleString("id-ID")},-
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   ))
                 ) : (
                   <tr>
@@ -459,8 +483,12 @@ function RekapAnggota() {
                     <td className="p-2 md:p-3 border text-center">0</td>
                     <td className="p-2 md:p-3 border text-center">0</td>
                     <td className="p-2 md:p-3 border text-center">0</td>
-                    <td className="p-2 md:p-3 border text-center">0</td>
-                    <td className="p-2 md:p-3 border text-center">0</td>
+                    <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                      0
+                    </td>
+                    <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                      0
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -481,18 +509,17 @@ function RekapAnggota() {
                   <td className="p-2 md:p-3 border bg-green-200 text-center">
                     {jumlahNonPns}
                   </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
+                  <td className="p-2 md:p-3 border bg-green-200 text-center hidden lg:table-cell">
                     {jumlah}
                   </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">{`Rp. ${jumlahIuran.toLocaleString(
-                    "id-ID"
-                  )},-`}</td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center hidden lg:table-cell">
+                    Rp. {jumlahIuran.toLocaleString("id-ID")},-
+                  </td>
                 </tr>
               </tfoot>
             </table>
           </div>
 
-          {/* Pagination controls */}
           <div className="flex justify-end items-center mb-4">
             <button
               onClick={handlePreviousPage}

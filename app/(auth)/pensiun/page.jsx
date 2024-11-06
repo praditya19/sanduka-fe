@@ -6,6 +6,8 @@ import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
 
 const Page = () => {
   const [pensiunList, setPensiunList] = useState([]);
@@ -13,17 +15,17 @@ const Page = () => {
   const [error, setError] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [expandedIndex, setExpandedIndex] = useState(null);
 
   const router = useRouter();
   const { token } = useAuth();
 
   const [selectedMonth, setSelectedMonth] = useState("");
-  const [selectedYear, setSelectedYear] = useState(""); // State untuk tahun
+  const [selectedYear, setSelectedYear] = useState("");
   const [bulanOptions, setBulanOptions] = useState([]);
-  const [yearOptions, setYearOptions] = useState([]); // State untuk opsi tahun
+  const [yearOptions, setYearOptions] = useState([]);
   const [filteredPensiunList, setFilteredPensiunList] = useState([]);
 
-  // Mengambil data bulan dari API saat komponen pertama kali dimuat
   useEffect(() => {
     const fetchBulan = async () => {
       try {
@@ -37,35 +39,33 @@ const Page = () => {
     fetchBulan();
   }, []);
 
-  // Fungsi untuk menangani perubahan bulan yang dipilih
   const handleMonthChange = (e) => {
     const month = e.target.value;
     setSelectedMonth(month);
-    applyFilters(month, selectedYear); // Terapkan filter saat bulan berubah
+    applyFilters(month, selectedYear);
   };
 
-  // Fungsi untuk menangani perubahan tahun yang dipilih
   const handleYearChange = (e) => {
     const year = e.target.value;
     setSelectedYear(year);
-    applyFilters(selectedMonth, year); // Terapkan filter saat tahun berubah
+    applyFilters(selectedMonth, year);
   };
 
-  // Ambil data pensiun
   useEffect(() => {
     const fetchPensiunData = async () => {
       try {
         const response = await GlobalApi.getAllPensiun();
         setPensiunList(response.data.content);
-        setFilteredPensiunList(response.data.content); // Set daftar pensiun awal
+        setFilteredPensiunList(response.data.content);
 
-        // Ambil daftar tahun unik dari kolom prediksiPensiun
         const years = Array.from(
-          new Set(response.data.content.map((pensiun) =>
-            new Date(pensiun.prediksiPensiun).getFullYear()
-          ))
+          new Set(
+            response.data.content.map((pensiun) =>
+              new Date(pensiun.prediksiPensiun).getFullYear()
+            )
+          )
         );
-        setYearOptions(years); // Set opsi tahun
+        setYearOptions(years);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -76,19 +76,18 @@ const Page = () => {
     fetchPensiunData();
   }, []);
 
-  // Fungsi untuk menerapkan filter berdasarkan bulan dan tahun
   const applyFilters = (month, year) => {
     const filteredList = pensiunList.filter((pensiun) => {
       const pensiunDate = new Date(pensiun.prediksiPensiun);
-      const pensiunMonth = pensiunDate.getMonth() + 1; // Mendapatkan bulan (0-11 menjadi 1-12)
-      const pensiunYear = pensiunDate.getFullYear(); // Mendapatkan tahun
+      const pensiunMonth = pensiunDate.getMonth() + 1;
+      const pensiunYear = pensiunDate.getFullYear();
       return (
-        (!month || pensiunMonth === parseInt(month)) && // Filter berdasarkan bulan jika dipilih
-        (!year || pensiunYear === parseInt(year)) // Filter berdasarkan tahun jika dipilih
+        (!month || pensiunMonth === parseInt(month)) &&
+        (!year || pensiunYear === parseInt(year))
       );
     });
 
-    setFilteredPensiunList(filteredList); // Update daftar pensiun yang terfilter
+    setFilteredPensiunList(filteredList);
   };
 
   const formatDate = (dateString) => {
@@ -97,20 +96,17 @@ const Page = () => {
     return date.toLocaleDateString("id-ID", options);
   };
 
-  // Cek token saat komponen dimuat
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
     }
   }, [token, router]);
 
-  // Mengatur status sidebar dari localStorage
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
     setIsSidebarOpen(sidebarState);
   }, []);
 
-  // Menangani perubahan ukuran layar
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -133,6 +129,10 @@ const Page = () => {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
+  const handleExpand = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
@@ -147,7 +147,6 @@ const Page = () => {
           <div className="min-h-screen bg-gray-100 p-4">
             <div className="w-full flex items-center justify-between mb-4 mt-16">
               <div className="flex w-full space-x-2">
-                {/* Bulan Dropdown */}
                 <select
                   value={selectedMonth}
                   onChange={handleMonthChange}
@@ -161,7 +160,6 @@ const Page = () => {
                   ))}
                 </select>
 
-                {/* Tahun Dropdown */}
                 <select
                   value={selectedYear}
                   onChange={handleYearChange}
@@ -176,10 +174,7 @@ const Page = () => {
                 </select>
               </div>
 
-              {/* Tombol Cetak */}
-              <button
-                className="p-2 px-4 bg-blue-500 text-white rounded w-full md:w-auto transition duration-300 hover:bg-blue-700"
-              >
+              <button className="p-2 px-4 bg-blue-500 text-white rounded w-full md:w-auto transition duration-300 hover:bg-blue-700">
                 Cetak
               </button>
             </div>
@@ -195,48 +190,95 @@ const Page = () => {
                     <tr>
                       <th className="py-2 px-3 text-center">No.</th>
                       <th className="py-2 px-3 text-center">Foto</th>
-                      <th className="py-2 px-3 text-center">
+                      <th className="py-2 px-3 text-center hidden lg:table-cell">
                         Prediksi Pensiun
                       </th>
                       <th className="py-2 px-3 text-center">Data Anggota</th>
-                      <th className="py-2 px-3 text-center">Keanggotaan</th>
-                      <th className="py-2 px-3 text-center">Cabang</th>
-                      <th className="py-2 px-3 text-center">Status</th>
+                      <th className="py-2 px-3 text-center hidden lg:table-cell">
+                        Keanggotaan
+                      </th>
+                      <th className="py-2 px-3 text-center hidden lg:table-cell">
+                        Cabang
+                      </th>
+                      <th className="py-2 px-3 text-center hidden lg:table-cell">
+                        Status
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredPensiunList.map((pensiun, index) => (
-                      <tr key={pensiun.id} className="border-t">
-                        <td className="py-2 px-3 text-center">{index + 1}</td>
-                        <td className="py-2 px-3 text-center">
-                          <img
-                            src={pensiun.fotoUrl}
-                            alt="Foto"
-                            className="w-10 h-10 rounded-full"
-                          />
-                        </td>
-                        <td className="py-2 px-3 text-center">
-                          {formatDate(pensiun.prediksiPensiun)}
-                        </td>
-                        <td className="py-2 px-3 text-center">
-                          <div>{pensiun.namaLengkap}</div>
-                          <div>{pensiun.npa}</div>
-                          <div>{pensiun.tempatLahir}</div>
-                          <div>{formatDate(pensiun.tanggalLahir)}</div>
-                        </td>
-                        <td className="py-2 px-3 text-center">
-                          <div>{pensiun.jabatan}</div>
-                          <div>{pensiun.unitKerja}</div>
-                          <div>Usia: {pensiun.usia}</div>
-                          <div>{pensiun.cabang}</div>
-                        </td>
-                        <td className="py-2 px-3 text-center">
-                          {pensiun.cabang}
-                        </td>
-                        <td className="py-2 px-3 text-center">
-                          {pensiun.status}
-                        </td>
-                      </tr>
+                      <>
+                        <tr key={pensiun.id} className="border-t">
+                          <td className="py-2 px-3 text-center">
+                            {index + 1}
+                            <Button
+                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
+                              onClick={() => handleExpand(index)}
+                            >
+                              {expandedIndex === index ? (
+                                <FaMinusCircle />
+                              ) : (
+                                <FaPlusCircle />
+                              )}
+                            </Button>
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <img
+                              src={pensiun.fotoUrl}
+                              alt="Foto"
+                              className="w-10 h-10 rounded-full"
+                            />
+                          </td>
+
+                          <td className="py-2 px-3 text-center hidden lg:table-cell">
+                            {formatDate(pensiun.prediksiPensiun)}
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <div>{pensiun.namaLengkap}</div>
+                            <div>{pensiun.npa}</div>
+                            <div>{pensiun.tempatLahir}</div>
+                            <div>{formatDate(pensiun.tanggalLahir)}</div>
+                          </td>
+                          <td className="py-2 px-3 text-center hidden lg:table-cell">
+                            <div>{pensiun.jabatan}</div>
+                            <div>{pensiun.unitKerja}</div>
+                            <div>Usia: {pensiun.usia}</div>
+                          </td>
+                          <td className="py-2 px-3 text-center hidden lg:table-cell">
+                            {pensiun.cabang}
+                          </td>
+                          <td className="py-2 px-3 text-center hidden lg:table-cell">
+                            {pensiun.status}
+                          </td>
+                        </tr>
+
+                        {expandedIndex === index && (
+                          <tr className="bg-gray-100 lg:hidden">
+                            <td
+                              colSpan="3"
+                              className="py-2 px-3 text-sm border-t"
+                            >
+                              <div>
+                                <strong>Prediksi Pensiun:</strong>{" "}
+                                {formatDate(pensiun.prediksiPensiun)}
+                              </div>
+                              <div>
+                                <strong>Keanggotaan:</strong> {pensiun.jabatan},{" "}
+                                {pensiun.unitKerja}
+                              </div>
+                              <div>
+                                <strong>Usia:</strong> {pensiun.usia}
+                              </div>
+                              <div>
+                                <strong>Cabang ke-2:</strong> {pensiun.cabang}
+                              </div>
+                              <div>
+                                <strong>Status:</strong> {pensiun.status}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </>
                     ))}
                   </tbody>
                 </table>
