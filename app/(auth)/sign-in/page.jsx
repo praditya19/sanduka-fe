@@ -15,12 +15,13 @@ import { useAuth } from "@/app/AuthContext";
 function SignIn() {
   const [npaPgri, setNpaPgri] = useState("");
   const [tanggalLahir, setTanggalLahir] = useState("");
+  const [password, setPassword] = useState("");
   const [loader, setLoader] = useState(false);
   const [error, setError] = useState("");
   const [isVerified, setIsVerified] = useState(false);
-
+  const [activeTab, setActiveTab] = useState("login");
   const router = useRouter();
-  const { setToken, setUserId } = useAuth(); // Assuming you have a setUserId method
+  const { setToken, setUserId } = useAuth();
 
   const onSignIn = async () => {
     setLoader(true);
@@ -44,14 +45,13 @@ function SignIn() {
       const response = await GlobalApi.login(loginData);
       console.log(response);
       setToken(response.token);
-      sessionStorage.setItem("userId", response.id); // Store user ID in session storage
+      sessionStorage.setItem("userId", response.id);
       sessionStorage.setItem("unitKerja", response.unitKerja);
       sessionStorage.setItem("nama", response.namaLengkap);
 
-      const nama = sessionStorage.getItem("nama"); // Retrieve name from session storage
+      const nama = sessionStorage.getItem("nama");
       toast.success(`Selamat Datang ${nama}`);
 
-      // Menampilkan data sessionStorage di console
       console.log("Data tersimpan di sessionStorage:");
       console.log("userId:", sessionStorage.getItem("userId"));
       console.log("unitKerja:", sessionStorage.getItem("unitKerja"));
@@ -71,70 +71,144 @@ function SignIn() {
   }
 
   return (
-    <div className="flex items-baseline justify-center my-20">
-      <div className="flex flex-col items-center justify-center p-10 bg-gray-100 border border-gray-200 rounded-lg shadow-md">
-        <Toaster
-          toastOptions={{
+    <div className="flex items-baseline justify-center my-9">
+      <Toaster
+        toastOptions={{
+          style: {
+            fontSize: "1.25rem",
+            padding: "16px",
+          },
+          success: {
             style: {
-              fontSize: "1.25rem", // Ukuran font yang lebih besar
-              padding: "16px", // Menambah padding jika diperlukan
+              background: "white",
+              color: "black",
             },
-            success: {
-              style: {
-                background: "white", // Warna background hijau untuk pesan sukses
-                color: "black",
-              },
+          },
+          error: {
+            style: {
+              background: "#f44336",
+              color: "#fff",
             },
-            error: {
-              style: {
-                background: "#f44336", // Warna background merah untuk pesan error
-                color: "#fff",
-              },
-            },
-          }}
-        />
+          },
+        }}
+      />
+      <div className="flex flex-col items-center justify-center p-10 bg-gray-100 border border-gray-200 rounded-lg shadow-md w-[40%]">
         <Image src="/sanduka.png" width={200} height={200} alt="logo" />
         <h2 className="font-bold text-3xl mt-4">Masuk ke Akun</h2>
         <h2 className="text-gray-500 mt-2 text-center">
-          Masukkan NPA PGRI dan Tanggal Lahir Anda untuk Masuk
+          Masukkan NPA PGRI dan{" "}
+          {activeTab === "login" ? "Tanggal Lahir" : "Password"} Anda untuk
+          Masuk
         </h2>
-        <div className="w-full max-w-md mt-6">
+
+        {/* Tab Navigation */}
+        <div className="flex space-x-4 mt-4">
+          <button
+            className={`rounded-md p-2 ${
+              activeTab === "login"
+                ? "bg-teal-500 text-white"
+                : "bg-white text-teal-500"
+            }`}
+            onClick={() => setActiveTab("login")}
+          >
+            Anggota
+          </button>
+          <button
+            className={`rounded-md p-2 ${
+              activeTab === "password"
+                ? "bg-teal-500 text-white"
+                : "bg-white text-teal-500"
+            }`}
+            onClick={() => setActiveTab("password")}
+          >
+            Admin & Super Admin
+          </button>
+        </div>
+
+        <div className="w-full max-w-lg mt-6">
           {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
-          <div className="mb-6">
-            <Label htmlFor="npaPgri" className="block text-sm">
-              NPA PGRI
-            </Label>
-            <Input
-              id="npaPgri"
-              placeholder="123456"
-              value={npaPgri}
-              onChange={(e) => setNpaPgri(e.target.value)}
-              className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-            />
-          </div>
-          <div className="mb-6">
-            <Label htmlFor="tanggalLahir" className="block text-sm">
-              Tanggal Lahir
-            </Label>
-            <Input
-              id="tanggalLahir"
-              placeholder="21082024"
-              value={tanggalLahir}
-              onChange={(e) => setTanggalLahir(e.target.value)}
-              className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-            />
-          </div>
+
+          {/* Form sesuai tab yang aktif */}
+          {activeTab === "login" && (
+            <div>
+              <div className="mb-6">
+                <Label htmlFor="npaPgri" className="block text-sm">
+                  NPA PGRI
+                </Label>
+                <Input
+                  id="npaPgri"
+                  placeholder="123456"
+                  value={npaPgri}
+                  onChange={(e) => setNpaPgri(e.target.value)}
+                  className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                />
+              </div>
+
+              <div className="mb-6">
+                <Label htmlFor="tanggalLahir" className="block text-sm">
+                  Tanggal Lahir
+                </Label>
+                <Input
+                  id="tanggalLahir"
+                  placeholder="21082024"
+                  value={tanggalLahir}
+                  onChange={(e) => setTanggalLahir(e.target.value)}
+                  className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                />
+              </div>
+            </div>
+          )}
+
+          {activeTab === "password" && (
+            <div>
+              <div className="mb-6">
+                <Label htmlFor="npaPgri" className="block text-sm">
+                  NPA PGRI
+                </Label>
+                <Input
+                  id="npaPgri"
+                  placeholder="123456"
+                  value={npaPgri}
+                  onChange={(e) => setNpaPgri(e.target.value)}
+                  className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                />
+              </div>
+
+              <div className="mb-6">
+                <Label htmlFor="password" className="block text-sm">
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  placeholder="********"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  type="password"
+                  className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                />
+              </div>
+            </div>
+          )}
+
           <ReCAPTCHA
             sitekey="6Lfcxy4qAAAAACy6hmLpVgTejZFZG3xGjn0xOVmd"
             onChange={onChange}
           />
+
           <Button
             onClick={onSignIn}
-            disabled={!npaPgri || !tanggalLahir || loader || !isVerified}
+            disabled={
+              !npaPgri ||
+              (activeTab === "login" && !tanggalLahir) ||
+              (activeTab === "password" && !password) ||
+              loader ||
+              !isVerified
+            }
             className="w-full mt-4"
           >
             {loader ? <LoaderIcon className="animate-spin mr-2" /> : "Masuk"}
           </Button>
+
           <p className="mt-4 text-sm text-center text-gray-600">
             Belum punya akun?
             <Link

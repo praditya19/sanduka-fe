@@ -136,22 +136,32 @@ const Page = () => {
       const response = await GlobalApi.cekNpa(npaValue);
 
       if (response) {
-        toast.success(
-          <div>
-            Anda sudah terdaftar. Silakan cek{" "}
-            <a
-              href="https://ktadigitalpgri.org"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 underline"
-            >
-              ktadigitalpgri.org
-            </a>{" "}
-            untuk melihat NPA yang baru dan melakukan login di sanduka.
-          </div>
+        const updatedData = {
+          cabang: response.cabang,
+          email: response.email,
+          foto: response.foto,
+          jabatan: response.jabatan,
+          namaLengkap: response.namaLengkap,
+          noHp: response.noHp,
+          npaPgri: response.npaPgri,
+          password: response.password,
+          role: response.role,
+        };
+
+        const updateResponse = await GlobalApi.updateRegisUser(
+          response.id,
+          updatedData
         );
+        console.log(
+          "Data berhasil diperbarui dan dikirim ke database:",
+          updateResponse
+        );
+
+        toast.success("Data Anda telah disinkronkan!");
       } else {
-        toast.info("Anda belum terdaftar, silakan melakukan registrasi");
+        toast.error(
+          "Data dengan NPA PGRI tidak ditemukan. Silakan registrasi."
+        );
       }
     } catch (error) {
       console.error("Error saat mengecek NPA:", error.message);
