@@ -183,7 +183,7 @@ export default function IconGrid() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const itemsPerPage = 5;
   const [anggotaMeninggal, setAnggotaMeninggal] = useState([]);
-  const [fotoBase64, setFotoBase64] = useState([]);
+  const [role, setRole] = useState(null);
 
   const handleNext = () => {
     if (currentIndex + itemsPerPage < dataArray.length) {
@@ -227,6 +227,9 @@ export default function IconGrid() {
       }
     };
 
+    const userRole = sessionStorage.getItem("role");
+    setRole(userRole);
+
     fetchAnggotaMeninggal();
   }, []);
 
@@ -239,6 +242,19 @@ export default function IconGrid() {
     setIsSidebarOpen(newSidebarState);
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
+
+  const filteredIcons =
+    role === "USER"
+      ? icons.filter((item) =>
+          [
+            "Lapor",
+            "Teman Unit",
+            "Ketentuan",
+            "Bantuan",
+            "Data Anggota",
+          ].includes(item.label)
+        )
+      : icons;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -254,9 +270,9 @@ export default function IconGrid() {
           {/* image */}
           <div className="flex-1 mt-14">
             <img
-              src="https://images.pexels.com/photos/346529/pexels-photo-346529.jpeg?cs=srgb&dl=pexels-bri-schneiter-28802-346529.jpg&fm=jpg" 
-              alt="Deskripsi gambar" 
-              className="w-full h-96 -mt-6 object-cover" 
+              src="https://images.pexels.com/photos/346529/pexels-photo-346529.jpeg?cs=srgb&dl=pexels-bri-schneiter-28802-346529.jpg&fm=jpg"
+              alt="Deskripsi gambar"
+              className="w-full h-96 -mt-6 object-cover"
             />
           </div>
           <div className="flex-1 ">
@@ -386,11 +402,11 @@ export default function IconGrid() {
           </div>
 
           <div className="px-6 mt-5 sm:px-12 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-2">
-            {icons.map((item, index) => (
+            {filteredIcons.map((item, index) => (
               <Link key={index} href={item.href}>
                 <div
                   className="flex flex-col items-center cursor-pointer transition duration-300 transform hover:scale-105 hover:shadow-xl 
-                      p-7 sm:p-4 sm:bg-white sm:rounded-lg sm:shadow-lg"
+                    p-7 sm:p-4 sm:bg-white sm:rounded-lg sm:shadow-lg"
                 >
                   <FontAwesomeIcon
                     icon={item.icon}
@@ -420,10 +436,10 @@ export default function IconGrid() {
 
         {/* Card anggota meninggal */}
         <div
-          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${isSidebarOpen ? "ml-32" : "ml-0"
-            }`}
+          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${
+            isSidebarOpen ? "ml-32" : "ml-0"
+          }`}
         >
-          
           <button
             onClick={handlePrev}
             className="hidden text-red-500 lg:block absolute left-32 top-1/2 transform -translate-y-1/2 z-10 bg-gray-100 p-2 rounded-full shadow-md hover:bg-gray-300"
@@ -431,14 +447,13 @@ export default function IconGrid() {
             <FontAwesomeIcon icon={faChevronLeft} />
           </button>
 
-          
           <div className="flex mx-auto sm:mx-44 space-x-4 overflow-x-auto w-full px-4 lg:px-0 lg:grid lg:grid-cols-5 lg:gap-4 lg:overflow-hidden">
             {anggotaMeninggal
               .slice(currentIndex, currentIndex + itemsPerPage)
               .map((currentData, index) => (
-                <button 
+                <button
                   key={index}
-                  className="min-w-[45%] sm:min-w-[30%]  bg-white rounded-lg shadow-lg overflow-hidden" 
+                  className="min-w-[45%] sm:min-w-[30%]  bg-white rounded-lg shadow-lg overflow-hidden"
                 >
                   <Image
                     className="ml-10 sm:ml-16 h-20 w-20 object-cover"
@@ -461,9 +476,16 @@ export default function IconGrid() {
                           className="text-gray-600"
                         />
                         <span className="ml-2">
-                          {Array.isArray(currentData.waktuMeninggalTerlapor) && currentData.waktuMeninggalTerlapor.length === 3 ? (
-                            `${String(currentData.waktuMeninggalTerlapor[2]).padStart(2, '0')}-${String(currentData.waktuMeninggalTerlapor[1]).padStart(2, '0')}-${currentData.waktuMeninggalTerlapor[0]}`
-                          ) : 'Tanggal tidak valid'}
+                          {Array.isArray(currentData.waktuMeninggalTerlapor) &&
+                          currentData.waktuMeninggalTerlapor.length === 3
+                            ? `${String(
+                                currentData.waktuMeninggalTerlapor[2]
+                              ).padStart(2, "0")}-${String(
+                                currentData.waktuMeninggalTerlapor[1]
+                              ).padStart(2, "0")}-${
+                                currentData.waktuMeninggalTerlapor[0]
+                              }`
+                            : "Tanggal tidak valid"}
                         </span>
                       </div>
                       <div className="flex items-center">
@@ -486,7 +508,6 @@ export default function IconGrid() {
               ))}
           </div>
 
-         
           <button
             onClick={handleNext}
             className="hidden text-red-500 lg:block absolute right-32 top-1/2 transform -translate-y-1/2 z-10 bg-gray-100 p-2 rounded-full shadow-md hover:bg-gray-300"

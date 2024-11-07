@@ -1,8 +1,8 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation"; 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"; 
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons"; 
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
 import {
@@ -21,7 +21,6 @@ const Page = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const npa = sessionStorage.getItem("npa");
-  const [expandedIndex, setExpandedIndex] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,10 +39,6 @@ const Page = () => {
 
     fetchData();
   }, [npa]);
-
-  const handleExpand = (index) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
-  };
 
   return (
     <div className="p-4">

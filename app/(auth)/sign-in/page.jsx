@@ -43,18 +43,14 @@ function SignIn() {
       };
 
       const response = await GlobalApi.login(loginData);
-      console.log(response);
       setToken(response.token);
       sessionStorage.setItem("userId", response.id);
       sessionStorage.setItem("unitKerja", response.unitKerja);
       sessionStorage.setItem("nama", response.namaLengkap);
+      sessionStorage.setItem("role", response.role);
 
       const nama = sessionStorage.getItem("nama");
       toast.success(`Selamat Datang ${nama}`);
-
-      console.log("Data tersimpan di sessionStorage:");
-      console.log("userId:", sessionStorage.getItem("userId"));
-      console.log("unitKerja:", sessionStorage.getItem("unitKerja"));
 
       setTimeout(() => {
         router.push("/home");
