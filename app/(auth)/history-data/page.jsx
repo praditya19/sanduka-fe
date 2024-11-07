@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -8,13 +8,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import HeaderMenu from "@/app/_components/HeaderMenu";
+import HeaderHome from "@/app/_components/HeaderHome";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import { Input } from "@/components/ui/input";
 
 const Page = () => {
   const [filter, setFilter] = useState("");
@@ -27,36 +27,26 @@ const Page = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { token } = useAuth();
-
+  const [expandedIndex, setExpandedIndex] = useState(null);
   const [cabangOptions, setCabangOptions] = useState([]);
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredOptions, setFilteredOptions] = useState([]);
-
+  const [selectedCabang, setSelectedCabang] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [bulanOptions, setBulanOptions] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [selectedCabang, setSelectedCabang] = useState("");
-  const dropdownRef = useRef(null);
 
   useEffect(() => {
-    const fetchCabangData = async () => {
-      try {
-        const response = await GlobalApi.getCabang();
+    GlobalApi.getCabang()
+      .then((response) => {
         setCabangOptions(response.data);
-        setFilteredOptions(response.data);
-      } catch (error) {
-        console.error("Error fetching cabang data:", error);
-      }
-    };
-
-    fetchCabangData();
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching cabang options:", error);
+        setLoading(false);
+      });
   }, []);
-  const handleInputChange = (event) => {
-    const value = event.target.value;
-    setSearchTerm(value);
 
+<<<<<<< HEAD
     const filtered = cabangOptions.filter((option) =>
       option.kecamatan.toLowerCase().includes(value.toLowerCase())
     );
@@ -91,6 +81,8 @@ const Page = () => {
     };
   }, []);
 
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
   const fetchBulan = async () => {
     try {
       const response = await GlobalApi.getBulan();
@@ -189,9 +181,14 @@ const Page = () => {
 
   const handleEdit = (item) => {
     const npa = item.npaDetail.npaPgri;
+<<<<<<< HEAD
 
     sessionStorage.setItem("npa", npa);
 
+=======
+    console.log(`NPA yang dituju: ${npa}`);
+    sessionStorage.setItem("npa", npa);
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     router.push(`/history-data/detail`);
   };
 
@@ -218,6 +215,10 @@ const Page = () => {
     });
   };
 
+  const handleExpand = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
   const calculateAge = (birthDate) => {
     const today = new Date();
     const birth = new Date(birthDate);
@@ -235,7 +236,7 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
+      {isMobile ? <HeaderMobile /> : <HeaderHome />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
@@ -248,6 +249,7 @@ const Page = () => {
             <div className="rounded-md flex flex-col py-4">
               <div className="container px-2">
                 <div className="w-full flex items-center justify-between mb-4">
+<<<<<<< HEAD
                   <div className="flex w-2/3 space-x-2 relative">
               
                     <div className="relative" ref={dropdownRef}>
@@ -300,6 +302,22 @@ const Page = () => {
                     </div>
 
                  
+=======
+                  <div className="flex w-2/3 space-x-2">
+                    <select
+                      value={selectedCabang}
+                      onChange={(e) => setSelectedCabang(e.target.value)}
+                      className="p-2 border rounded w-full"
+                    >
+                      <option value="">Semua Cabang</option>
+                      {cabangOptions.map((option) => (
+                        <option key={option.id} value={option.kecamatan}>
+                          {option.kecamatan}{" "}
+                        </option>
+                      ))}
+                    </select>
+
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                     <select
                       value={selectedMonth}
                       onChange={(e) => setSelectedMonth(e.target.value)}
@@ -313,7 +331,10 @@ const Page = () => {
                       ))}
                     </select>
 
+<<<<<<< HEAD
                  
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                     <select
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(e.target.value)}
@@ -336,9 +357,9 @@ const Page = () => {
                   </button>
                 </div>
 
-                <Table className="w-full table-auto mb-8">
-                  <TableHeader className="p-2 md:p-3 border bg-green-300">
-                    <TableRow>
+                <table className="w-full table-auto mb-8">
+                  <thead className="p-2 md:p-3 border bg-green-300">
+                    <tr>
                       {[
                         "No",
                         "Date",
@@ -347,34 +368,43 @@ const Page = () => {
                         "Detail",
                         "Keterangan",
                       ].map((header, idx) => (
-                        <TableHead
+                        <th
                           key={header}
                           rowSpan="2"
-                          className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                          className={`border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white ${
+                            idx > 2 ? "hidden lg:table-cell" : ""
+                          }`}
                         >
                           {header}
-                        </TableHead>
+                        </th>
                       ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredData.map((item, index) => {
-                      return (
-                        <TableRow
-                          key={index}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredData.map((item, index) => (
+                      <React.Fragment key={index}>
+                        <tr
                           className={
                             index % 2 === 0 ? "bg-gray-200" : "bg-white"
                           }
                         >
-                          <TableCell className="text-center border">
+                          <td className="text-center border">
                             {index + 1 + page * size}
-                          </TableCell>
-                          <TableCell className="border">
-                            {`${item.hari}, ${formatDate(item.tanggal)}, ${
-                              item.jam
-                            }`}
-                          </TableCell>
-                          <TableCell className="border">
+                            <button
+                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden ml-2"
+                              onClick={() => handleExpand(index)}
+                            >
+                              {expandedIndex === index ? (
+                                <FaMinusCircle className="w-4 h-4" />
+                              ) : (
+                                <FaPlusCircle className="w-4 h-4" />
+                              )}
+                            </button>
+                          </td>
+                          <td className="border">{`${item.hari}, ${formatDate(
+                            item.tanggal
+                          )}, ${item.jam}`}</td>
+                          <td className="border">
                             {item.npaDetail ? (
                               <div>
                                 <div>{item.npaDetail.namaLengkap ?? "-"},</div>
@@ -397,28 +427,53 @@ const Page = () => {
                             ) : (
                               "-"
                             )}
-                          </TableCell>
-                          <TableCell className="text-center border">
+                          </td>
+
+                          <td className="text-center border hidden lg:table-cell">
                             {item.cabang}
-                          </TableCell>
-                          <TableCell className="border">
+                          </td>
+                          <td className="border hidden lg:table-cell">
                             {item.uraian}
-                          </TableCell>
-                          <TableCell className="text-center border">
+                          </td>
+                          <td className="text-center border hidden lg:table-cell">
                             <button
                               onClick={() => handleEdit(item)}
                               className="px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                             >
                               Detail
                             </button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                          </td>
+                        </tr>
 
+                        {expandedIndex === index && (
+                          <tr className="bg-gray-100 lg:hidden">
+                            <td colSpan="6" className="border px-4 py-2">
+                              <div>
+                                <strong>Cabang:</strong> {item.cabang ?? "-"}
+                              </div>
+                              <div className="mt-2">
+                                <strong>Detail:</strong> {item.uraian ?? "-"}
+                              </div>
+                              <div className="mt-2">
+                                <button
+                                  onClick={() => handleEdit(item)}
+                                  className="ml-2 px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                >
+                                  Detail
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+
+<<<<<<< HEAD
           
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                 <div className="flex flex-col md:flex-row justify-between text-sm mt-4 items-center space-y-2 md:space-y-0 md:space-x-2">
                   <span className="text-center md:text-left">
                     Showing {page * size + 1} to{" "}

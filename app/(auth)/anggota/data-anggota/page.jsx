@@ -5,9 +5,9 @@ import Modal from "react-modal";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  FaPlus,
+  FaPlusCircle,
+  FaMinusCircle,
   FaEdit,
   FaExchangeAlt,
   FaExclamationTriangle,
@@ -47,20 +47,23 @@ function DataAnggota() {
   const [loading, setLoading] = useState(true);
   const [popupVisibleKeluar, setPopupVisibleKeluar] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
-  const [popupCabangUnit, setPopupCabangUnit] = useState(false);
   const dropdownRef = useRef(null);
   const [fotoBase64, setFotoBase64] = useState("");
-
   const [rekapData, setRekapData] = useState([]);
+<<<<<<< HEAD
 
   const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
 
+=======
+  const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
   const [searchCabang, setSearchCabang] = useState("");
   const [showDropdownCabangUnit, setShowDropdownCabangUnit] = useState(false);
   const [listCabang, setListCabang] = useState([]);
-
   const [showDropdownCabang, setShowDropdownCabang] = useState(false);
   const [showDropdownUnit, setShowDropdownUnit] = useState(false);
   const [formData, setFormData] = useState({ unit: "" });
@@ -70,7 +73,6 @@ function DataAnggota() {
   const [allUnitKerja, setAllUnitKerja] = useState([]);
   const [cabangOptions, setCabangOptions] = useState([]);
   const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
-  const [showCabangDropdown, setShowCabangDropdown] = useState(true);
   const [searchUnit, setSearchUnit] = useState("");
   const [unitKerjaInput, setUnitKerjaInput] = useState("");
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
@@ -85,9 +87,13 @@ function DataAnggota() {
         setIsDropdownVisible(false);
       }
     };
+<<<<<<< HEAD
 
     document.addEventListener("mousedown", handleClickOutside);
 
+=======
+    document.addEventListener("mousedown", handleClickOutside);
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -99,9 +105,13 @@ function DataAnggota() {
         setShowDropdownCabangUnit(false);
       }
     };
+<<<<<<< HEAD
 
     document.addEventListener("mousedown", handleClickOutside);
 
+=======
+    document.addEventListener("mousedown", handleClickOutside);
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -113,9 +123,13 @@ function DataAnggota() {
         setShowDropdownCabang(false);
       }
     };
+<<<<<<< HEAD
 
     document.addEventListener("mousedown", handleClickOutside);
 
+=======
+    document.addEventListener("mousedown", handleClickOutside);
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -126,7 +140,10 @@ function DataAnggota() {
       setShowDropdownUnit(false);
     }
   };
+<<<<<<< HEAD
 
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
@@ -202,6 +219,7 @@ function DataAnggota() {
     setShowDropdownUnit(true);
   };
 
+<<<<<<< HEAD
   const handleUnitKerjaSelect = (unitKerja) => {
     setSelectedUnitKerja(unitKerja.unitKerja);
     setUnitKerjaInput(unitKerja.unitKerja);
@@ -213,6 +231,8 @@ function DataAnggota() {
     setRekapData(filteredRekapData);
   };
 
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
   useEffect(() => {
     if (!unitKerjaInput && selectedCabang) {
       fetchRekapData(selectedCabang);
@@ -302,7 +322,10 @@ function DataAnggota() {
       }
 
       setFotoBase64(fotoBase64Array);
+<<<<<<< HEAD
 
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
       setLoading(false);
       setAnggota(fetchedData || []);
     } catch (error) {
@@ -500,7 +523,10 @@ function DataAnggota() {
   const handleCabangChange = (e) => {
     const value = e.target.value;
     setSearchCabang(value);
+<<<<<<< HEAD
 
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     const filtered = cabangOptions.filter((cabang) =>
       cabang.kecamatan.toLowerCase().includes(value.toLowerCase())
     );
@@ -583,7 +609,10 @@ function DataAnggota() {
   const handleKeluarAnggota = async () => {
     try {
       const anggotaId = sessionStorage.getItem("anggotaId");
+<<<<<<< HEAD
       await GlobalApi.keluarAnggota(anggotaId);
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
       setPopupVisibleKeluar(false);
       toast.success("Anggota berhasil dihapus!", {
         autoClose: 3000,
@@ -916,7 +945,11 @@ function DataAnggota() {
                               className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
                               onClick={() => handleExpand(index)}
                             >
-                              <FaPlus className="w-4 h-4" />
+                              {expandedIndex === index ? (
+                                <FaMinusCircle />
+                              ) : (
+                                <FaPlusCircle />
+                              )}
                             </Button>
                           </div>
                         </td>
@@ -989,7 +1022,10 @@ function DataAnggota() {
                               title="Edit Data"
                               onClick={() => {
                                 sessionStorage.setItem("anggotaId", item.id);
+<<<<<<< HEAD
 
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                                 handleEditClick();
                               }}
                             >
@@ -1051,9 +1087,7 @@ function DataAnggota() {
                               <div>{item.cabang},</div>
                               <div>{item.unitKerja}</div>
                               <div>Anggota: {item.gabung}</div>
-                              <div>
-                                {item.golongan}/{formatCurrency(item.iuran)}
-                              </div>
+                              <div>{item.golongan}</div>
                               <div
                                 className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${
                                   item.status === "BUKAN ANGGOTA"
@@ -1061,9 +1095,9 @@ function DataAnggota() {
                                     : "bg-green-200 text-green-900"
                                 }`}
                               >
-                                {item.status === "ANGGOTA"
+                                {item.role === "USER"
                                   ? "Aktif"
-                                  : item.status}
+                                  : item.status_keanggotaan}
                               </div>
                               <div className="flex justify-center space-x-2 mt-2">
                                 <Button

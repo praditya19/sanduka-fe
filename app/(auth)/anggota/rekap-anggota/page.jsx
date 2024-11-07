@@ -7,6 +7,8 @@ import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Input } from "@/components/ui/input";
+import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
 
 function RekapAnggota() {
   const [maxItems, setMaxItems] = useState(10);
@@ -27,7 +29,11 @@ function RekapAnggota() {
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
   const [originalRekapData, setOriginalRekapData] = useState([]);
+<<<<<<< HEAD
   const [totalSumbanganPerCabang, setTotalSumbanganPerCabang] = useState(0);
+=======
+  const [expandedIndex, setExpandedIndex] = useState(null);
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -35,6 +41,7 @@ function RekapAnggota() {
         const response = await GlobalApi.getCabang();
         setOriginalCabangList(response.data);
         setFilteredCabangList(response.data);
+<<<<<<< HEAD
 
         const defaultCabang = response.data.find(
           (cabang) => cabang.kecamatan === "BANGSRI"
@@ -49,6 +56,8 @@ function RekapAnggota() {
           );
           setFilteredUnitKerja(filteredUnitKerja);
         }
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -83,6 +92,25 @@ function RekapAnggota() {
     const input = e.target.value;
     setUnitKerjaInput(input);
 
+<<<<<<< HEAD
+=======
+    const filteredUnitKerja = unitKerjaList.filter(
+      (unitKerja) =>
+        unitKerja.cabang &&
+        unitKerja.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
+        unitKerja.unitKerja.toLowerCase().startsWith(input.toLowerCase())
+    );
+
+    setShowUnitKerjaDropdown(filteredUnitKerja.length > 0);
+    setFilteredUnitKerja(filteredUnitKerja);
+
+    const rekapFilteredByUnitKerja = originalRekapData.filter(
+      (item) =>
+        item.alamatKerja &&
+        item.alamatKerja.toLowerCase().includes(input.toLowerCase())
+    );
+
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     if (input === "") {
       const allFiltered = unitKerjaList.filter(
         (unitKerja) => unitKerja.cabang === selectedCabang
@@ -122,7 +150,10 @@ function RekapAnggota() {
     setShowCabangDropdown(false);
 
     await fetchRekapData(cabang.kecamatan);
+<<<<<<< HEAD
 
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     const filtered = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang &&
@@ -155,6 +186,7 @@ function RekapAnggota() {
     setSelectedUnitKerja(unitKerja.unitKerja);
     setUnitKerjaInput(unitKerja.unitKerja);
     setShowUnitKerjaDropdown(false);
+<<<<<<< HEAD
 
     if (unitKerja.unitKerja === "") {
       setRekapData(originalRekapData);
@@ -164,6 +196,13 @@ function RekapAnggota() {
       );
       setRekapData(filteredRekapData);
     }
+=======
+    console.log("Unit kerja yang dipilih:", unitKerja);
+    const filteredRekapData = originalRekapData.filter(
+      (item) => item.alamatKerja === unitKerja.unitKerja
+    );
+    setRekapData(filteredRekapData);
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
   };
 
   useEffect(() => {
@@ -261,6 +300,7 @@ function RekapAnggota() {
     }
   };
 
+<<<<<<< HEAD
   const formatCurrency = (value) => {
     if (value === "-") return "-";
     return new Intl.NumberFormat("id-ID", {
@@ -270,6 +310,28 @@ function RekapAnggota() {
     }).format(value);
   };
 
+=======
+  const handleExpand = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
+  const startIndex = (currentPage - 1) * maxItems;
+  const paginatedData = rekapData.slice(startIndex, startIndex + maxItems);
+
+  const jumlahPns = rekapData.reduce((acc, curr) => acc + curr.totalPns, 0);
+  const jumlahPppk = rekapData.reduce((acc, curr) => acc + curr.totalPppk, 0);
+  const jumlahNonPns = rekapData.reduce(
+    (acc, curr) => acc + curr.totalNonPns,
+    0
+  );
+
+  const jumlah = rekapData.reduce(
+    (acc, curr) => acc + (curr.totalPns + curr.totalPppk + curr.totalNonPns),
+    0
+  );
+
+  const jumlahIuran = rekapData.reduce((acc, curr) => acc + curr.totalIuran, 0);
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
@@ -422,11 +484,21 @@ function RekapAnggota() {
                   </th>
                   <th
                     className="p-2 md:p-3 border text-white bg-teal-700"
+<<<<<<< HEAD
+=======
+                    colSpan="3"
+                  >
+                    Status Anggota
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell"
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                     rowSpan="2"
                   >
                     Jumlah
                   </th>
                   <th
+<<<<<<< HEAD
                     className="p-2 md:p-3 border text-white bg-teal-700"
                     colSpan="3"
                   >
@@ -435,9 +507,12 @@ function RekapAnggota() {
                   
                   <th
                     className="p-2 md:p-3 border text-white bg-teal-700"
+=======
+                    className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell"
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                     rowSpan="2"
                   >
-                    TOTAL
+                    Iuran
                   </th>
                 </tr>
                 <tr>
@@ -455,6 +530,7 @@ function RekapAnggota() {
               <tbody>
                 {rekapData.length > 0 && selectedCabang ? (
                   rekapData.map((item, index) => (
+<<<<<<< HEAD
                     <tr key={item.id}>
                       <td className="p-2 md:p-3 border text-center">
                         {index + 1}
@@ -476,6 +552,61 @@ function RekapAnggota() {
                         {formatCurrency(item.totalSumbangan)}
                       </td>
                     </tr>
+=======
+                    <>
+                      <tr key={item.id}>
+                        <td className="p-2 md:p-3 border text-center">
+                          <div className="flex justify-center items-center">
+                            {index + 1}
+
+                            <Button
+                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
+                              onClick={() => handleExpand(index)}
+                            >
+                              {expandedIndex === index ? (
+                                <FaMinusCircle />
+                              ) : (
+                                <FaPlusCircle />
+                              )}
+                            </Button>
+                          </div>
+                        </td>
+                        <td className="p-2 md:p-3 border">
+                          {item.alamatKerja}
+                        </td>
+                        <td className="p-2 md:p-3 border text-center">
+                          {item.totalPns}
+                        </td>
+                        <td className="p-2 md:p-3 border text-center">
+                          {item.totalPppk}
+                        </td>
+                        <td className="p-2 md:p-3 border text-center">
+                          {item.totalNonPns}
+                        </td>
+
+                        <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                          {item.jumlah}
+                        </td>
+                        <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                          {item.totalIuran}
+                        </td>
+                      </tr>
+
+                      {expandedIndex === index && (
+                        <tr className="lg:hidden bg-gray-100">
+                          <td colSpan="5" className="p-2 md:p-3 border text-sm">
+                            <div>
+                              <strong>Jumlah:</strong> {item.jumlah}
+                            </div>
+                            <div>
+                              <strong>Iuran:</strong> Rp.{" "}
+                              {item.totalIuran.toLocaleString("id-ID")},-
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                   ))
                 ) : (
                   <tr>
@@ -484,8 +615,12 @@ function RekapAnggota() {
                     <td className="p-2 md:p-3 border text-center">0</td>
                     <td className="p-2 md:p-3 border text-center">0</td>
                     <td className="p-2 md:p-3 border text-center">0</td>
-                    <td className="p-2 md:p-3 border text-center">0</td>
-                    <td className="p-2 md:p-3 border text-center">0</td>
+                    <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                      0
+                    </td>
+                    <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                      0
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -503,7 +638,22 @@ function RekapAnggota() {
         ? `Rp. ${parseInt(totalSumbanganPerCabang).toLocaleString("id-ID")},-`
         : "Data tidak tersedia"}
                   </td>
+<<<<<<< HEAD
                  
+=======
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">
+                    {jumlahPppk}
+                  </td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center">
+                    {jumlahNonPns}
+                  </td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center hidden lg:table-cell">
+                    {jumlah}
+                  </td>
+                  <td className="p-2 md:p-3 border bg-green-200 text-center hidden lg:table-cell">
+                    Rp. {jumlahIuran.toLocaleString("id-ID")},-
+                  </td>
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                 </tr>
               </tfoot>
             </table>

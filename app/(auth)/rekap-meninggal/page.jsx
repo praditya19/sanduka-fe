@@ -9,19 +9,20 @@ import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import Image from "next/image";
+import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
 
 const Page = () => {
-  // 1. State Management
   const [filter, setFilter] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [data, setData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10); // Items per page
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(true); // New state for loading
+  const [loading, setLoading] = useState(true);
+  const [expandedIndex, setExpandedIndex] = useState(null);
 
   const router = useRouter();
   const { token } = useAuth();
@@ -29,7 +30,6 @@ const Page = () => {
   const profileImageUrl = "/profile.png";
   const [fotoBase64, setFotoBase64] = useState([]);
 
-  // Combined useEffect
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
@@ -41,7 +41,6 @@ const Page = () => {
 
           const fotoBase64Array = [];
 
-          // Loop through data to decode Base64 images
           if (fetchedData && fetchedData.length > 0) {
             fetchedData.forEach((item) => {
               if (item.foto) {
@@ -56,14 +55,11 @@ const Page = () => {
                 fotoBase64Array.push(null);
               }
             });
-
-            // Tambahkan ini untuk menampilkan array foto yang sudah di decode ke base64
-            console.log("Decoded Base64 Images:", fotoBase64Array);
           } else {
             console.warn("No data found.");
           }
 
-          setFotoBase64(fotoBase64Array); // Set all decoded images
+          setFotoBase64(fotoBase64Array);
           setLoading(false);
         } catch (error) {
           console.error("Failed to fetch data:", error.message);
@@ -74,7 +70,7 @@ const Page = () => {
         setIsMobile(window.innerWidth <= 768);
       };
 
-      fetchData(); // Fetch data
+      fetchData();
       handleResize();
 
       window.addEventListener("resize", handleResize);
@@ -85,11 +81,8 @@ const Page = () => {
     }
   }, [itemsPerPage, token, router]);
 
-  // Handle filtering data
   useEffect(() => {
     let filtered = data;
-
-    // 1. Filter by search input
     if (filter) {
       const lowercasedFilter = filter.toLowerCase();
       filtered = filtered.filter(
@@ -102,15 +95,13 @@ const Page = () => {
       );
     }
 
-    // 2. Filter by month
     if (selectedMonth) {
       filtered = filtered.filter((item) => {
-        const itemMonth = new Date(item.waktuMeninggalTerlapor).getMonth() + 1; // getMonth returns 0-11
+        const itemMonth = new Date(item.waktuMeninggalTerlapor).getMonth() + 1;
         return itemMonth === parseInt(selectedMonth);
       });
     }
 
-    // 3. Filter by year
     if (selectedYear) {
       filtered = filtered.filter((item) => {
         const itemYear = new Date(item.waktuMeninggalTerlapor).getFullYear();
@@ -121,16 +112,14 @@ const Page = () => {
     setFilteredData(filtered);
   }, [filter, selectedMonth, selectedYear, data]);
 
-  // Pagination logic
   const currentData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // 3. Pagination Management
   const getVisiblePages = () => {
     const startPage = Math.max(1, currentPage - 1);
-    const endPage = Math.min(totalPages, startPage + 2); // Show max 3 pages
+    const endPage = Math.min(totalPages, startPage + 2);
     return Array.from(
       { length: endPage - startPage + 1 },
       (_, i) => startPage + i
@@ -141,6 +130,10 @@ const Page = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
     localStorage.setItem("isSidebarOpen", newSidebarState);
+  };
+
+  const handleExpand = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
   };
 
   return (
@@ -247,13 +240,13 @@ const Page = () => {
                         <th className="border border-gray-300 p-2 text-center font-bold uppercase">
                           Data Meninggal
                         </th>
-                        <th className="border border-gray-300 p-2 text-center font-bold uppercase">
+                        <th className="border border-gray-300 p-2 text-center font-bold uppercase hidden lg:table-cell">
                           Cabang
                         </th>
-                        <th className="border border-gray-300 p-2 text-center font-bold uppercase">
+                        <th className="border border-gray-300 p-2 text-center font-bold uppercase hidden lg:table-cell">
                           Keterangan
                         </th>
-                        <th className="border border-gray-300 p-2 text-center font-bold uppercase">
+                        <th className="border border-gray-300 p-2 text-center font-bold uppercase hidden lg:table-cell">
                           Diterimakan
                         </th>
                       </tr>
@@ -261,83 +254,115 @@ const Page = () => {
                     <tbody>
                       {currentData.length > 0 ? (
                         currentData.map((item, index) => (
-                          <tr
-                            key={item.id}
-                            className={
-                              index % 2 === 0 ? "bg-gray-200" : "bg-white"
-                            }
-                          >
-                            <td className="text-center border px-4 py-2">
-                              {(currentPage - 1) * itemsPerPage + index + 1}
-                            </td>
-                            <td className="border px-4 py-2">
-                              <Image
-                                src={
-                                  fotoBase64[index]
-                                    ? `data:image/jpeg;base64,${fotoBase64[index]}` // Ensure the format is correct
-                                    : profileImageUrl // Fallback image if no Base64 image is available
-                                }
-                                alt={`Foto ${item.namaPelapor || "User"}`}
-                                width={50}
-                                height={50}
-                                className="rounded"
-                                unoptimized={true} // Base64 images might not need optimization
-                                onError={(e) => {
-                                  console.error("Image failed to load:", e);
-                                  // You could set a state here to show a different fallback
-                                }}
-                              />
-                            </td>
-                            {/* Data Lapor */}
-                            <td className="border px-4 py-2">
-                              <div className="text-xs">{item.namaPelapor}</div>
-                              <div className="text-xs">
-                                {item.jabatanPelapor ||
-                                  "Jabatan tidak tersedia"}
-                              </div>
-                              <div className="text-xs">
-                                {item.tanggalPelaporan
-                                  ? item.tanggalPelaporan.join("-")
-                                  : "Tanggal tidak tersedia"}
-                              </div>
-                              <div className="text-xs">
-                                {item.cabangPelapor}
-                              </div>
-                              <div className="text-xs">
-                                {item.nomorHpPelapor}
-                              </div>
-                            </td>
-                            {/* Data Meninggal */}
-                            <td className="border px-4 py-2">
-                              <div className="text-xs">
-                                {item.namaAnggotaTerlapor}
-                              </div>
-                              <div className="text-xs">
-                                {item.cabangKhususTerlapor}
-                              </div>
-                              <div className="text-xs">
-                                {item.waktuMeninggalTerlapor
-                                  ? item.waktuMeninggalTerlapor.join("-")
-                                  : "Waktu tidak tersedia"}
-                              </div>
-                              <div className="text-xs">
-                                {item.unitKerjaTerlapor}
-                              </div>
-                            </td>
-                            <td className="border text-center px-4 py-2">
-                              <div className="text-xs">
-                                {item.cabangKhususTerlapor ||
-                                  "Cabang tidak tersedia"}
-                              </div>
-                            </td>
-                            <td className="border px-4 py-2">
-                              {item.keteranganTerlapor ||
-                                "Keterangan tidak tersedia"}
-                            </td>
-                            <td className="border text-center px-4 py-2">
-                              Diterimakan (Sesuaikan jika ada)
-                            </td>
-                          </tr>
+                          <React.Fragment key={item.id}>
+                            {/* Main Row */}
+                            <tr
+                              className={
+                                index % 2 === 0 ? "bg-gray-200" : "bg-white"
+                              }
+                            >
+                              <td className="text-center border px-4 py-2">
+                                {(currentPage - 1) * itemsPerPage + index + 1}
+                                <button
+                                  onClick={() => handleExpand(index)}
+                                  className="ml-2 text-blue-500 lg:hidden"
+                                >
+                                  {expandedIndex === index ? (
+                                    <FaMinusCircle />
+                                  ) : (
+                                    <FaPlusCircle />
+                                  )}
+                                </button>
+                              </td>
+                              <td className="border px-4 py-2">
+                                <Image
+                                  src={
+                                    fotoBase64[index]
+                                      ? `data:image/jpeg;base64,${fotoBase64[index]}`
+                                      : profileImageUrl
+                                  }
+                                  alt={`Foto ${item.namaPelapor || "User"}`}
+                                  width={50}
+                                  height={50}
+                                  className="rounded"
+                                  unoptimized={true}
+                                />
+                              </td>
+
+                              <td className="border px-4 py-2">
+                                <div className="text-xs">
+                                  {item.namaPelapor}
+                                </div>
+                                <div className="text-xs">
+                                  {item.jabatanPelapor ||
+                                    "Jabatan tidak tersedia"}
+                                </div>
+                                <div className="text-xs">
+                                  {item.tanggalPelaporan
+                                    ? item.tanggalPelaporan.join("-")
+                                    : "Tanggal tidak tersedia"}
+                                </div>
+                                <div className="text-xs">
+                                  {item.cabangPelapor}
+                                </div>
+                                <div className="text-xs">
+                                  {item.nomorHpPelapor}
+                                </div>
+                              </td>
+
+                              <td className="border px-4 py-2">
+                                <div className="text-xs">
+                                  {item.namaAnggotaTerlapor}
+                                </div>
+                                <div className="text-xs">
+                                  {item.cabangKhususTerlapor}
+                                </div>
+                                <div className="text-xs">
+                                  {item.waktuMeninggalTerlapor
+                                    ? item.waktuMeninggalTerlapor.join("-")
+                                    : "Waktu tidak tersedia"}
+                                </div>
+                                <div className="text-xs">
+                                  {item.unitKerjaTerlapor}
+                                </div>
+                              </td>
+
+                              <td className="border px-4 py-2 text-center hidden lg:table-cell">
+                                <div className="text-xs">
+                                  {item.cabangKhususTerlapor ||
+                                    "Cabang tidak tersedia"}
+                                </div>
+                              </td>
+                              <td className="border px-4 py-2 hidden lg:table-cell">
+                                {item.keteranganTerlapor ||
+                                  "Keterangan tidak tersedia"}
+                              </td>
+                              <td className="border text-center px-4 py-2 hidden lg:table-cell">
+                                Diterimakan (Sesuaikan jika ada)
+                              </td>
+                            </tr>
+
+                            {expandedIndex === index && (
+                              <tr className="lg:hidden bg-gray-100">
+                                <td colSpan="4" className="border px-4 py-2">
+                                  <div className="text-xs">
+                                    <strong>Cabang:</strong>{" "}
+                                    {item.cabangKhususTerlapor ||
+                                      "Cabang tidak tersedia"}
+                                  </div>
+                                  <div className="text-xs">
+                                    <strong>Keterangan:</strong>{" "}
+                                    {item.keteranganTerlapor ||
+                                      "Keterangan tidak tersedia"}
+                                  </div>
+                                  <div className="text-xs">
+                                    <strong>Diterimakan:</strong> Diterimakan
+                                    (Sesuaikan jika ada)
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
                         ))
                       ) : (
                         <tr>
