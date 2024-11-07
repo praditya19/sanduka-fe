@@ -27,23 +27,35 @@ function RekapAnggota() {
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
   const [originalRekapData, setOriginalRekapData] = useState([]);
+  const [totalSumbanganPerCabang, setTotalSumbanganPerCabang] = useState(0);
 
-  //  Filter Cabang dan Unit Kerja
-  // Fetch cabang data
   useEffect(() => {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setOriginalCabangList(response.data); // Simpan semua cabang ke originalCabangList
-        setFilteredCabangList(response.data); // Atur filter cabang awal
+        setOriginalCabangList(response.data);
+        setFilteredCabangList(response.data);
+
+        const defaultCabang = response.data.find(
+          (cabang) => cabang.kecamatan === "BANGSRI"
+        );
+        if (defaultCabang) {
+          setSelectedCabang("BANGSRI");
+          await fetchRekapData("BANGSRI");
+
+          const filteredUnitKerja = unitKerjaList.filter(
+            (unitKerja) =>
+              unitKerja.cabang && unitKerja.cabang.toLowerCase() === "bangsri"
+          );
+          setFilteredUnitKerja(filteredUnitKerja);
+        }
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
     };
     fetchCabangData();
-  }, []);
+  }, [unitKerjaList]);
 
-  // Fetch unit kerja data
   useEffect(() => {
     const fetchUnitKerjaData = async () => {
       try {
@@ -58,42 +70,42 @@ function RekapAnggota() {
 
   const handleUnitKerjaFocus = () => {
     if (selectedCabang) {
-      setShowUnitKerjaDropdown(true); // Tampilkan dropdown
+      setShowUnitKerjaDropdown(true);
     }
   };
 
   const handleCabangClick = () => {
-    setFilteredCabangList(originalCabangList); // Reset ke daftar asli saat dropdown dibuka
-    setShowCabangDropdown(true); // Tampilkan dropdown
+    setFilteredCabangList(originalCabangList);
+    setShowCabangDropdown(true);
   };
 
   const handleUnitKerjaChange = (e) => {
     const input = e.target.value;
     setUnitKerjaInput(input);
 
-    // Filter unit kerja berdasarkan input dan cabang
-    const filteredUnitKerja = unitKerjaList.filter(
-      (unitKerja) =>
-        unitKerja.cabang &&
-        unitKerja.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
-        unitKerja.unitKerja.toLowerCase().startsWith(input.toLowerCase())
-    );
-
-    // Tampilkan dropdown jika ada hasil filter
-    setShowUnitKerjaDropdown(filteredUnitKerja.length > 0);
-    setFilteredUnitKerja(filteredUnitKerja);
-
-    // Filter data rekap berdasarkan input unit kerja
-    const rekapFilteredByUnitKerja = originalRekapData.filter(
-      (item) =>
-        item.alamatKerja &&
-        item.alamatKerja.toLowerCase().includes(input.toLowerCase())
-    );
-
-    // Jika input kosong, kembalikan data tabel ke data awal
     if (input === "") {
+      const allFiltered = unitKerjaList.filter(
+        (unitKerja) => unitKerja.cabang === selectedCabang
+      );
+      setFilteredUnitKerja(allFiltered);
       setRekapData(originalRekapData);
     } else {
+      const filteredUnitKerja = unitKerjaList.filter(
+        (unitKerja) =>
+          unitKerja.cabang &&
+          unitKerja.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
+          unitKerja.unitKerja.toLowerCase().startsWith(input.toLowerCase())
+      );
+
+      setShowUnitKerjaDropdown(filteredUnitKerja.length > 0);
+      setFilteredUnitKerja(filteredUnitKerja);
+
+      const rekapFilteredByUnitKerja = originalRekapData.filter(
+        (item) =>
+          item.alamatKerja &&
+          item.alamatKerja.toLowerCase().includes(input.toLowerCase())
+      );
+
       setRekapData(rekapFilteredByUnitKerja);
     }
   };
@@ -109,10 +121,8 @@ function RekapAnggota() {
     setSelectedCabang(cabang.kecamatan);
     setShowCabangDropdown(false);
 
-    // Fetch rekap data based on selected cabang
     await fetchRekapData(cabang.kecamatan);
-    console.log("Cabang yang dipilih:", cabang.kecamatan);
-    // Now filter the unit kerja based on the selected cabang
+
     const filtered = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang &&
@@ -122,37 +132,38 @@ function RekapAnggota() {
   };
 
   const handleUnitKerjaSearch = (searchTerm) => {
-    // Jika searchTerm kosong, set filteredUnitKerja dengan semua unit kerja yang sesuai dengan selectedCabang
     if (searchTerm === "") {
       const allFiltered = unitKerjaList.filter(
         (unitKerja) => unitKerja.cabang === selectedCabang
       );
       setFilteredUnitKerja(allFiltered);
     } else {
-      // Jika ada input, filter berdasarkan input dan cabang yang dipilih
       const filtered = unitKerjaList.filter(
         (unitKerja) =>
           unitKerja.unitKerja
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) &&
-          unitKerja.cabang === selectedCabang // Memfilter berdasarkan cabang
+          unitKerja.cabang === selectedCabang
       );
       setFilteredUnitKerja(filtered);
     }
 
-    setShowUnitKerjaDropdown(true); // Menjaga dropdown tetap terbuka
+    setShowUnitKerjaDropdown(true);
   };
 
   const handleUnitKerjaSelect = (unitKerja) => {
     setSelectedUnitKerja(unitKerja.unitKerja);
     setUnitKerjaInput(unitKerja.unitKerja);
     setShowUnitKerjaDropdown(false);
-    console.log("Unit kerja yang dipilih:", unitKerja);
-    // Update rekapData berdasarkan unit kerja yang dipilih
-    const filteredRekapData = originalRekapData.filter(
-      (item) => item.alamatKerja === unitKerja.unitKerja
-    );
-    setRekapData(filteredRekapData);
+
+    if (unitKerja.unitKerja === "") {
+      setRekapData(originalRekapData);
+    } else {
+      const filteredRekapData = originalRekapData.filter(
+        (item) => item.alamatKerja === unitKerja.unitKerja
+      );
+      setRekapData(filteredRekapData);
+    }
   };
 
   useEffect(() => {
@@ -189,17 +200,21 @@ function RekapAnggota() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-  // end
 
   const fetchRekapData = async (cabang) => {
     try {
       const data = await GlobalApi.getRekapAnggotaByCabang(cabang);
-      setRekapData(data);
-      setOriginalRekapData(data); // Simpan data asli saat mengambil data
+      setRekapData(data.data);
+      setOriginalRekapData(data.data);
+      setTotalSumbanganPerCabang(data.totalSumbanganPerCabang);
     } catch (error) {
       console.error("Error fetching rekap data:", error);
     }
   };
+
+  useEffect(() => {
+    console.log("Total Sumbangan Per Cabang State:", totalSumbanganPerCabang);
+  }, [totalSumbanganPerCabang]);
 
   useEffect(() => {
     if (!token) {
@@ -246,24 +261,15 @@ function RekapAnggota() {
     }
   };
 
-  // Determine the start and end index of the items to display based on the current page
-  const startIndex = (currentPage - 1) * maxItems;
-  const paginatedData = rekapData.slice(startIndex, startIndex + maxItems);
+  const formatCurrency = (value) => {
+    if (value === "-") return "-";
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(value);
+  };
 
-  const jumlahPns = rekapData.reduce((acc, curr) => acc + curr.totalPns, 0);
-  const jumlahPppk = rekapData.reduce((acc, curr) => acc + curr.totalPppk, 0);
-  const jumlahNonPns = rekapData.reduce(
-    (acc, curr) => acc + curr.totalNonPns,
-    0
-  );
-
-  // Correct the syntax here by accessing `curr` directly
-  const jumlah = rekapData.reduce(
-    (acc, curr) => acc + (curr.totalPns + curr.totalPppk + curr.totalNonPns),
-    0
-  );
-
-  const jumlahIuran = rekapData.reduce((acc, curr) => acc + curr.totalIuran, 0);
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
@@ -284,23 +290,32 @@ function RekapAnggota() {
                     type="text"
                     value={selectedCabang}
                     readOnly
-                    onClick={handleCabangClick} // Tambahkan onClick untuk menampilkan dropdown
+                    onClick={handleCabangClick}
                     className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
                     placeholder="Pilih Cabang"
                   />
                   {showCabangDropdown && (
-                    <div className="absolute mt-9">
+                    <div className="absolute mt-9 w-full">
                       <Input
                         type="text"
-                        onChange={(e) => handleCabangSearch(e.target.value)} // Function untuk memfilter cabang
+                        onChange={(e) => handleCabangSearch(e.target.value)}
                         className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-2"
-                        placeholder="Cari Cabang"
+                        placeholder="Cari atau ketik Cabang..."
+                        autoFocus
                       />
                       {filteredCabangList.length > 0 && (
-                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto">
+                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto mt-1">
+                          <li
+                            onClick={() =>
+                              handleSelectCabang({ kecamatan: "" })
+                            }
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                          >
+                            Pilih Cabang
+                          </li>
                           {filteredCabangList.map((cabang) => (
                             <li
-                              key={cabang.id} // Unique key for each cabang
+                              key={cabang.id}
                               onClick={() => handleSelectCabang(cabang)}
                               className="px-4 py-2 cursor-pointer hover:bg-gray-200"
                             >
@@ -329,10 +344,19 @@ function RekapAnggota() {
                       <Input
                         type="text"
                         onChange={(e) => handleUnitKerjaSearch(e.target.value)}
-                        placeholder="Cari Unit Kerja"
+                        placeholder="Cari atau ketik Unit Kerja..."
+                        autoFocus
                         className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-2"
                       />
-                      <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto">
+                      <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto mt-1">
+                        <li
+                          onClick={() =>
+                            handleUnitKerjaSelect({ unitKerja: "" })
+                          }
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                        >
+                          Pilih Unit Kerja
+                        </li>
                         {filteredUnitKerja.length > 0 ? (
                           filteredUnitKerja.map((unitKerja) => (
                             <li
@@ -370,7 +394,7 @@ function RekapAnggota() {
                     <option value={20}>20</option>
                   </select>
                   <button
-                    onClick={() => window.print()} // Fungsi untuk mencetak halaman
+                    onClick={() => window.print()}
                     className="p-2 px-4 bg-blue-500 text-white rounded w-full md:w-auto"
                   >
                     Cetak
@@ -398,16 +422,17 @@ function RekapAnggota() {
                   </th>
                   <th
                     className="p-2 md:p-3 border text-white bg-teal-700"
-                    colSpan="3"
-                  >
-                    Status Anggota
-                  </th>
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
                     rowSpan="2"
                   >
                     Jumlah
                   </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700"
+                    colSpan="3"
+                  >
+                    Status Anggota
+                  </th>
+                  
                   <th
                     className="p-2 md:p-3 border text-white bg-teal-700"
                     rowSpan="2"
@@ -428,7 +453,7 @@ function RekapAnggota() {
                 </tr>
               </thead>
               <tbody>
-                {rekapData.length > 0 && selectedCabang ? ( // Tampilkan tabel hanya jika ada data dan filter yang dipilih
+                {rekapData.length > 0 && selectedCabang ? (
                   rekapData.map((item, index) => (
                     <tr key={item.id}>
                       <td className="p-2 md:p-3 border text-center">
@@ -436,19 +461,19 @@ function RekapAnggota() {
                       </td>
                       <td className="p-2 md:p-3 border">{item.alamatKerja}</td>
                       <td className="p-2 md:p-3 border text-center">
-                        {item.totalPns}
+                        {item.totalCount}
                       </td>
                       <td className="p-2 md:p-3 border text-center">
-                        {item.totalPppk}
+                        {item.pesertaKtaDigitalCount}
                       </td>
                       <td className="p-2 md:p-3 border text-center">
-                        {item.totalNonPns}
+                        {item.pesertaSandukaCount}
                       </td>
                       <td className="p-2 md:p-3 border text-center">
-                        {item.jumlah}
+                        {item.pesertaDaspenCount}
                       </td>
                       <td className="p-2 md:p-3 border text-center">
-                        {item.totalIuran}
+                        {formatCurrency(item.totalSumbangan)}
                       </td>
                     </tr>
                   ))
@@ -472,27 +497,18 @@ function RekapAnggota() {
                   >
                     Jumlah :
                   </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
-                    {jumlahPns}
+                  <td className="p-2 md:p-3 border bg-green-200 text-center"
+                  colSpan="5">
+                    {totalSumbanganPerCabang
+        ? `Rp. ${parseInt(totalSumbanganPerCabang).toLocaleString("id-ID")},-`
+        : "Data tidak tersedia"}
                   </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
-                    {jumlahPppk}
-                  </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
-                    {jumlahNonPns}
-                  </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
-                    {jumlah}
-                  </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">{`Rp. ${jumlahIuran.toLocaleString(
-                    "id-ID"
-                  )},-`}</td>
+                 
                 </tr>
               </tfoot>
             </table>
           </div>
 
-          {/* Pagination controls */}
           <div className="flex justify-end items-center mb-4">
             <button
               onClick={handlePreviousPage}

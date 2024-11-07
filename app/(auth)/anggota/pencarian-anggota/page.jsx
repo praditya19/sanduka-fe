@@ -33,17 +33,16 @@ function PencarianAnggota() {
   const [anggota, setAnggota] = useState([]);
   const [cabang, setCabang] = useState([]);
   const [unitKerja, setUnitKerja] = useState([]);
-  const [isCabangEnabled, setIsCabangEnabled] = useState(false);
-  const [isUnitKerjaEnabled, setIsUnitKerjaEnabled] = useState(false);
+
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [selectedNama, setSelectedNama] = useState("");
+
   const [searchQuery, setSearchQuery] = useState("");
-  const [query, setQuery] = useState('');
+ 
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [fotoBase64, setFotoBase64] = useState("");
@@ -57,17 +56,7 @@ function PencarianAnggota() {
       setFilteredUnitKerja([]);
     };
 
-    // setFilteredCabang(
-    //   cabang.filter((item) =>
-    //     item.kecamatan.toLowerCase().includes(filterCabang.toLowerCase())
-    //   )
-    // );
-
-    // setFilteredUnitKerja(
-    //   unitKerja.filter((item) =>
-    //     item.unitKerja.toLowerCase().includes(filterUnitKerja.toLowerCase())
-    //   )
-    // );
+  
 
     fetchAnggota();
     fetchData();
@@ -104,7 +93,7 @@ function PencarianAnggota() {
 
       if (fetchedData && fetchedData.length > 0) {
         fetchedData.forEach((item) => {
-          console.log('test', item)
+
           if (item.foto) {
             try {
               const decodedString = atob(item.foto);
@@ -254,7 +243,7 @@ function PencarianAnggota() {
   };
 
   const sortedData = useMemo(() => {
-    if (!Array.isArray(anggota)) return []; // Ensure it's an array
+    if (!Array.isArray(anggota)) return [];
 
     let sortableItems = [...anggota];
 
@@ -313,7 +302,7 @@ function PencarianAnggota() {
 
       return statusFilter && cabangFilter && unitKerjaFilter && searchFilter;
     });
-  }, [sortedData, selectedStatus, selectedCabang, selectedUnitKerja, searchQuery]); // Updated dependency array
+  }, [sortedData, selectedStatus, selectedCabang, selectedUnitKerja, searchQuery]); 
 
   const jumlahAnggota = filteredData.length;
 
@@ -404,7 +393,7 @@ function PencarianAnggota() {
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
+      
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -578,14 +567,14 @@ function PencarianAnggota() {
                             <div className="flex justify-center items-center">
                               {globalIndex}
                               <Button
-                                className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"  // `lg:hidden` makes the button hidden on screens larger than the "lg" size
+                                className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"  
                                 onClick={() => handleExpand(index)}
                               >
                                 <FaPlus className="w-4 h-4" />
                               </Button>
                             </div>
                           </td>
-                          {/* <td className="p-2 md:p-3 border text-center">{index + 1}</td> */}
+                   
                           <td className="p-2 md:p-3 border">
                             {fotoBase64[index] ? (
                               <Image
@@ -651,7 +640,7 @@ function PencarianAnggota() {
                             </div>
                           </td>
                         </tr>
-                        {/* Mobile View Row Expansion */}
+                    
                         {expandedIndex === index && (
                           <tr className="md:hidden">
                             <td colSpan="7" className="p-2 border">
@@ -706,7 +695,7 @@ function PencarianAnggota() {
                     <div className="flex items-center">
                       {totalPages > 1 && (
                         <ul className="flex space-x-1">
-                          {/* Calculate the range of pages to display */}
+                      
                           {(() => {
                             let startPage = Math.max(1, currentPage - 1);
                             let endPage = Math.min(totalPages, currentPage + 1);
@@ -751,7 +740,7 @@ function PencarianAnggota() {
               </div>
             </div>
 
-            {/* Modal for Mutation Actions */}
+         
             <Modal
               isOpen={isModalOpen}
               onRequestClose={closeModal}

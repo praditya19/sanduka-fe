@@ -16,7 +16,7 @@ function GaleriKegiatan() {
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveIndex((prevIndex) => (prevIndex + 1) % galleryItems.length);
-    }, 3000); // Change image every 3 seconds
+    }, 3000); 
 
     return () => clearInterval(interval);
   }, []);

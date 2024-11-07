@@ -12,7 +12,7 @@ const ComingSoon = () => {
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const targetDate = new Date("2024-12-01T00:00:00Z"); // Set your target date here
+      const targetDate = new Date("2024-12-01T00:00:00Z"); 
       const now = new Date();
       const difference = targetDate - now;
 
@@ -69,7 +69,7 @@ const ComingSoon = () => {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              // Handle subscription here
+             
               alert("Subscribed!");
             }}
             className="flex flex-col sm:flex-row items-center justify-center"

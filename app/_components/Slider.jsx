@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 
-// Fungsi untuk membagi teks menjadi beberapa baris
+
 const splitTextIntoLines = (text, maxWordsPerLine) => {
   const words = text.split(" ");
   const lines = [];
@@ -53,13 +53,13 @@ const Slider = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setFade(true); // Start fade out
+      setFade(true); 
       setTimeout(() => {
         setCurrentSlide((prevSlide) =>
           prevSlide === sliderList.length - 1 ? 0 : prevSlide + 1
         );
-        setFade(false); // Start fade in
-      }, 500); // Duration matches the fade-out transition
+        setFade(false); 
+      }, 500); 
     }, 3000);
     return () => clearInterval(interval);
   }, [sliderList]);
@@ -86,7 +86,7 @@ const Slider = () => {
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      {/* Slider */}
+      
       <div
         className="absolute inset-0 flex transition-transform duration-1000 ease-in-out z-10"
         style={{ transform: `translateX(-${currentSlide * 100}%)` }}
@@ -104,7 +104,7 @@ const Slider = () => {
         ))}
       </div>
 
-      {/* SVG Overlay */}
+      
       <div
         className={`absolute top-[-33%] inset-x-0 z-30 w-full h-full lg:w-screen lg:left-[-35%] lg:top-0`}
       >
@@ -115,12 +115,12 @@ const Slider = () => {
         />
       </div>
 
-      {/* Text Content */}
+     
       <div
         className={`relative z-30 text-white  py-64 px-20 max-w-7xl mx-auto transition-all duration-500 transform rounded-lg ${
           fade ? "opacity-0 translate-y-8" : "opacity-100 translate-y-0"
         } ${sliderList[currentSlide].textBackgroundColor} 
-    md:top-0 top-[-30%] -left-12 sm:-left-14`} // Menambahkan class untuk top di layar HP
+    md:top-0 top-[-30%] -left-12 sm:-left-14`} 
       >
         <h1
           className={`text-xl md:text-3xl font-bold mb-2 transition-all duration-500 transform ${
@@ -143,7 +143,7 @@ const Slider = () => {
         )}
       </div>
 
-      {/* Navigation Buttons */}
+
       <button
         className="absolute top-1/2 left-0 transform -translate-y-1/2 text-white p-4 rounded-full opacity-70 hover:opacity-100 text-3xl z-40"
         onClick={prevSlide}

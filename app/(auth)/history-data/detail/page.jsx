@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation"; // Pastikan ini diimpor
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"; // Jika menggunakan FontAwesome
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons"; // Jika menggunakan FontAwesome
+import { useRouter } from "next/navigation"; 
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons"; 
 import GlobalApi from "@/app/_utils/GlobalApi";
 import {
   Table,
@@ -14,21 +14,21 @@ import {
 } from "@/components/ui/table";
 
 const Page = () => {
-  const router = useRouter(); // Inisialisasi router
+  const router = useRouter(); 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const npa = sessionStorage.getItem("npa"); // Ambil NPA dari Session Storage
+  const npa = sessionStorage.getItem("npa"); 
 
-  // Panggil data berdasarkan NPA
+
   useEffect(() => {
     const fetchData = async () => {
       if (npa) {
-        // Pastikan NPA tidak kosong
+       
         try {
           setLoading(true);
-          const result = await GlobalApi.getHistoryByNpa(npa); // Panggil API dengan NPA
-          setData(result); // Mengisi data yang diambil dari API
+          const result = await GlobalApi.getHistoryByNpa(npa); 
+          setData(result); 
         } catch (err) {
           setError(err.message);
         } finally {
@@ -38,16 +38,16 @@ const Page = () => {
     };
 
     fetchData();
-  }, [npa]); // Hanya akan dipanggil ketika `npa` berubah
+  }, [npa]); 
 
   return (
     <div className="p-4">
       <div className="flex justify-between items-center bg-teal-600 py-4 rounded-lg shadow-md">
         <button 
           className="ml-6 text-white" 
-          onClick={() => router.back()} // Kembali ke halaman sebelumnya
+          onClick={() => router.back()} 
         >
-          <FontAwesomeIcon icon={faArrowLeft} size="lg" /> {/* Ikon panah */}
+          <FontAwesomeIcon icon={faArrowLeft} size="lg" /> 
         </button>
         <h1 className="text-2xl font-semibold text-white text-center flex-grow">Detail</h1>
       </div>

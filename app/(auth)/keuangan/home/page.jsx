@@ -86,15 +86,15 @@ export default function Home() {
     }
   };
 
-  // Mengambil data saat komponen pertama kali di-render
+
   useEffect(() => {
     fetchSaldoOrganisasi();
   }, []);
 
   useEffect(() => {
     const date = new Date();
-    const options = { year: "numeric", month: "long", day: "numeric" }; // Format: Juli 2024
-    const formattedDate = date.toLocaleDateString("id-ID", options); // Bahasa Indonesia
+    const options = { year: "numeric", month: "long", day: "numeric" };
+    const formattedDate = date.toLocaleDateString("id-ID", options); 
 
     setCurrentDate(formattedDate);
   }, []);

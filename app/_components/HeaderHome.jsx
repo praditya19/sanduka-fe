@@ -9,7 +9,7 @@ import GlobalApi from "../_utils/GlobalApi";
 const HeaderHome = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
-  const [previousNotificationCount, setPreviousNotificationCount] = useState(0); // Track previous count
+  const [previousNotificationCount, setPreviousNotificationCount] = useState(0); 
   const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] =
     useState(false);
   const audioRef = useRef(null);
@@ -39,7 +39,7 @@ const HeaderHome = () => {
       audioRef.current.currentTime = 0;
       setIsNotificationSoundPlaying(false);
     }
-    setPreviousNotificationCount(notificationCount); // Update previous count to the current count
+    setPreviousNotificationCount(notificationCount); 
     setNotificationCount(0);
   };
 
@@ -57,8 +57,8 @@ const HeaderHome = () => {
   };
 
   const handleLogout = () => {
-    sessionStorage.clear(); // Menghapus semua item di sessionStorage
-    window.location.href = "/"; // Redirect ke halaman utama atau halaman login
+    sessionStorage.clear(); 
+    window.location.href = "/"; 
   };
 
   useEffect(() => {
@@ -73,7 +73,7 @@ const HeaderHome = () => {
     };
 
     fetchNotificationCount();
-    const intervalId = setInterval(fetchNotificationCount, 60000); // Refresh every minute
+    const intervalId = setInterval(fetchNotificationCount, 60000); 
 
     return () => clearInterval(intervalId);
   }, []);
@@ -81,7 +81,7 @@ const HeaderHome = () => {
   useEffect(() => {
     getAnggotaById();
 
-    // Play notification sound only if new notifications are greater than previous ones
+    
     if (
       notificationCount > previousNotificationCount &&
       !isNotificationSoundPlaying
@@ -167,16 +167,14 @@ const HeaderHome = () => {
                 {isProfileMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
                     <Link
-                      href={`/anggota/edit-anggota?id=${sessionStorage.getItem(
-                        "userId"
-                      )}`}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      href={`/anggota/edit-anggota`}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
                     >
                       Edit Profile
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
                     >
                       Logout
                     </button>

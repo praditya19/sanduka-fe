@@ -121,7 +121,7 @@ const page = () => {
   const handleCancelCabangUnit = () => {
     setShowDropdownCabangUnit(false);
     setIsDropdownVisible(false);
-    router.back(); // Kembali ke halaman sebelumnya saat membatalkan
+    router.back(); 
   };
 
   const handleSaveCabangUnit = async () => {
@@ -138,15 +138,18 @@ const page = () => {
       toast.success(`Data disimpan: Cabang: ${cabang}, Unit Kerja: ${selectedUnitKerja}`);
       setShowDropdownCabangUnit(false);
       setIsDropdownVisible(false);
-  
-        setTimeout(() => {
-            router.back();
-        }, 2000); // Menggunakan delay 2 detik sebelum redirect
+    
+      setTimeout(() => {
+        router.back();
+      }, 2000); 
     } catch (error) {
       console.error("Error saat memutasikan anggota:", error);
       console.error("Response data:", error.response?.data);
-      alert("Terjadi kesalahan saat menyimpan data, silakan coba lagi.");
+      
+      toast.error(`Terjadi kesalahan: ${error?.response?.data?.message || "Silakan coba lagi."}`);
+      
     }
+    
   };
 
   return (
@@ -175,7 +178,7 @@ const page = () => {
       <div className="bg-white p-4 rounded shadow-lg w-2/4">
         <h2 className="text-lg font-bold">Pindah Cabang dan Unit Kerja</h2>
 
-        {/* Input dan dropdown untuk Cabang */}
+        
         <div className="mb-4" ref={dropdownRef}>
           <label className="block mb-1">Cabang:</label>
           <Input
@@ -211,7 +214,7 @@ const page = () => {
           )}
         </div>
 
-        {/* Input dan dropdown untuk Unit Kerja */}
+      
         <div className="mb-4" ref={unitKerjaRef}>
           <label className="block mb-1">Unit Kerja:</label>
           <Input
@@ -255,7 +258,7 @@ const page = () => {
           )}
         </div>
 
-        {/* Tombol Simpan dan Batal */}
+     
         <div className="flex justify-end">
           <Button
             type="button"

@@ -12,7 +12,7 @@ function LayananKami() {
         Layanan Kami
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8 justify-center">
-        {/* Registrasi Card */}
+       
         <Link
           href="/create-account/syarat-ketentuan"
           className="bg-white rounded-lg shadow-lg p-4 transition-transform duration-300 transform hover:scale-105 hover:shadow-2xl flex flex-col items-center justify-center text-center border border-gray-200 w-full"
@@ -31,7 +31,7 @@ function LayananKami() {
           </div>
         </Link>
 
-        {/* Cari Anggota Card */}
+    
         <Link
           href="/anggota/cari-anggota"
           className="bg-white rounded-lg shadow-lg p-4 transition-transform duration-300 transform hover:scale-105 hover:shadow-2xl flex flex-col items-center justify-center text-center border border-gray-200 w-full"
@@ -50,7 +50,7 @@ function LayananKami() {
           </div>
         </Link>
 
-        {/* Bantuan Card */}
+      
         <Link
           href="/bantuan"
           className="bg-white rounded-lg shadow-lg p-4 transition-transform duration-300 transform hover:scale-105 hover:shadow-2xl flex flex-col items-center justify-center text-center border border-gray-200 w-full"

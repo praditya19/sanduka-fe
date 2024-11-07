@@ -254,9 +254,9 @@ export default function IconGrid() {
           {/* image */}
           <div className="flex-1 mt-14">
             <img
-              src="https://images.pexels.com/photos/346529/pexels-photo-346529.jpeg?cs=srgb&dl=pexels-bri-schneiter-28802-346529.jpg&fm=jpg" // Ganti dengan path gambar yang sesuai
-              alt="Deskripsi gambar" // Deskripsi gambar untuk aksesibilitas
-              className="w-full h-96 -mt-6 object-cover" // Sesuaikan kelas Tailwind CSS untuk styling
+              src="https://images.pexels.com/photos/346529/pexels-photo-346529.jpeg?cs=srgb&dl=pexels-bri-schneiter-28802-346529.jpg&fm=jpg" 
+              alt="Deskripsi gambar" 
+              className="w-full h-96 -mt-6 object-cover" 
             />
           </div>
           <div className="flex-1 ">

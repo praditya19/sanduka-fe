@@ -2,7 +2,7 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "https://116f-36-80-157-107.ngrok-free.app",
+  baseURL: "http://localhost:8080",
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
@@ -109,6 +109,35 @@ const updateUserById = async (userId, formData) => {
     return response.data;
   } catch (error) {
     console.error("Error updating user:", error);
+    throw error;
+  }
+};
+
+// Cek NIP
+const getByNIP = async (nip) => {
+  try {
+    const response = await axiosClient.get(`api/files/nip/${nip}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error mendapat data by NIP:", error);
+    throw error;
+  }
+};
+
+const updateRegisUser = async (userId, data) => {
+  try {
+    const response = await axiosClient.post(
+      `/api/files/updateRegisterUser/${userId}`,
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating register user:", error);
     throw error;
   }
 };
@@ -790,7 +819,7 @@ const getSaldoAkhir = async (month, year) => {
 const getRekapAnggotaByCabang = async (cabang) => {
   try {
     const response = await axiosClient.get(
-      `/api/rekap-anggota/by-cabang?cabang=${cabang}`
+      `/api/by-nominal/${cabang}`
     );
     return response.data;
   } catch (error) {
@@ -854,17 +883,17 @@ const pensiunAnggota = async (anggotaId) => {
 
 const mutasiCabangUnitKerja = async (idAnggota, cabang, unitKerja) => {
   try {
-      const url = `/api/mutasi-anggota/${idAnggota}/update-cabang-unitkerja?cabang=${encodeURIComponent(cabang)}&unitKerja=${encodeURIComponent(unitKerja)}`;
-      const response = await axiosClient.put(url);
-      return response.data; // Kembalikan data response
+    const url = `/api/mutasi-anggota/${idAnggota}/update-cabang-unitkerja?cabang=${encodeURIComponent(
+      cabang
+    )}&unitKerja=${encodeURIComponent(unitKerja)}`;
+    const response = await axiosClient.put(url);
+    return response.data; // Kembalikan data response
   } catch (error) {
-      console.error("Error saat memutasikan anggota:", error);
-      console.error("Response data:", error.response?.data); // Log response data jika ada error
-      throw error; // Lempar kembali error untuk ditangani di tempat lain
+    console.error("Error saat memutasikan anggota:", error);
+    console.error("Response data:", error.response?.data); // Log response data jika ada error
+    throw error; // Lempar kembali error untuk ditangani di tempat lain
   }
 };
-
-
 
 // Export all functions
 export default {
@@ -938,4 +967,6 @@ export default {
   keluarAnggota,
   pensiunAnggota,
   mutasiCabangUnitKerja,
+  getByNIP,
+  updateRegisUser,
 };

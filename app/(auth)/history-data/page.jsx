@@ -40,7 +40,6 @@ const Page = () => {
   const [selectedCabang, setSelectedCabang] = useState("");
   const dropdownRef = useRef(null);
 
-  // Filter Cabang
   useEffect(() => {
     const fetchCabangData = async () => {
       try {
@@ -63,54 +62,49 @@ const Page = () => {
     );
 
     setFilteredOptions(filtered);
-    // Menampilkan dropdown hanya jika input tidak kosong
     setShowDropdown(value.length > 0);
   };
 
   const handleOptionClick = (option) => {
-    setSelectedCabang(option ? option.kecamatan : ""); // Set kosong jika pilih opsi reset
-    setShowDropdown(false); // Menyembunyikan dropdown setelah memilih opsi
-    setSearchTerm(""); // Reset search term
+    setSelectedCabang(option ? option.kecamatan : "");
+    setShowDropdown(false);
+    setSearchTerm("");
   };
 
   const handleCabangClick = () => {
-    setSearchTerm(""); // Reset search term saat dropdown dibuka
-    setFilteredOptions(cabangOptions); // Set filteredOptions ke semua cabang
-    setShowDropdown(true); // Menampilkan dropdown
+    setSearchTerm("");
+    setFilteredOptions(cabangOptions);
+    setShowDropdown(true);
   };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false); // Menyembunyikan dropdown jika klik di luar
+        setShowDropdown(false);
       }
     };
 
-    // Tambahkan event listener saat komponen di-mount
     document.addEventListener("mousedown", handleClickOutside);
 
-    // Hapus event listener saat komponen di-unmount
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-  // End
 
-  // Mengambil data bulan dari API
   const fetchBulan = async () => {
     try {
-      const response = await GlobalApi.getBulan(); // Mengambil data bulan dari API
-      setBulanOptions(response.data); // Menyimpan data bulan ke state
+      const response = await GlobalApi.getBulan();
+      setBulanOptions(response.data);
     } catch (error) {
       console.error("Error fetching bulan:", error);
     }
   };
 
   useEffect(() => {
-    fetchBulan(); // Memanggil fetchBulan saat komponen di-render
+    fetchBulan();
   }, []);
 
-  const years = Array.from(new Array(11), (v, i) => i + 2020); // Generate years from 2020
+  const years = Array.from(new Array(11), (v, i) => i + 2020);
 
   const handlePrint = () => {
     window.print();
@@ -170,7 +164,6 @@ const Page = () => {
   }
 
   const filteredData = data.filter((item) => {
-    // Filter berdasarkan search term
     const matchesSearchTerm =
       (item.npaDetail.namaLengkap &&
         item.npaDetail.namaLengkap
@@ -178,37 +171,27 @@ const Page = () => {
           .includes(filter.toLowerCase())) ||
       (item.cabang && item.cabang.toLowerCase().includes(filter.toLowerCase()));
 
-    // Filter berdasarkan cabang yang dipilih
     const matchesCabang = selectedCabang
       ? item.cabang &&
         item.cabang.toLowerCase() === selectedCabang.toLowerCase()
       : true;
 
-    // Filter berdasarkan bulan yang dipilih
     const matchesMonth = selectedMonth
       ? new Date(item.tanggal).getMonth() + 1 === parseInt(selectedMonth, 10)
       : true;
 
-    // Filter berdasarkan tahun yang dipilih
     const matchesYear = selectedYear
       ? new Date(item.tanggal).getFullYear() === parseInt(selectedYear, 10)
       : true;
 
-    // Menerapkan semua filter
     return matchesSearchTerm && matchesCabang && matchesMonth && matchesYear;
   });
 
   const handleEdit = (item) => {
-    // Ambil nilai NPA dari item.npaDetail.npaPgri
     const npa = item.npaDetail.npaPgri;
 
-    // Log NPA ke console
-    console.log(`NPA yang dituju: ${npa}`);
+    sessionStorage.setItem("npa", npa);
 
-    // Simpan NPA ke Session Storage
-    sessionStorage.setItem("npa", npa); // Simpan NPA ke Session Storage
-
-    // Navigasi ke halaman detail tanpa query parameter
     router.push(`/history-data/detail`);
   };
 
@@ -266,7 +249,7 @@ const Page = () => {
               <div className="container px-2">
                 <div className="w-full flex items-center justify-between mb-4">
                   <div className="flex w-2/3 space-x-2 relative">
-                    {/* Cabang Dropdown */}
+              
                     <div className="relative" ref={dropdownRef}>
                       <Input
                         type="text"
@@ -274,7 +257,7 @@ const Page = () => {
                         value={selectedCabang}
                         readOnly
                         className="p-2 border border-gray-300 rounded-md mb-2 w-64"
-                        onClick={handleCabangClick} // Panggil fungsi untuk menangani klik
+                        onClick={handleCabangClick}
                       />
 
                       {showDropdown && (
@@ -285,15 +268,15 @@ const Page = () => {
                             value={searchTerm}
                             onChange={handleInputChange}
                             className="p-2 border-b border-gray-300 w-full"
-                            autoFocus // Fokus otomatis pada input pencarian saat dropdown muncul
+                            autoFocus
                           />
 
                           <ul className="max-h-40 overflow-y-auto">
                             <li
-                              className="p-2 hover:bg-blue-100 cursor-pointer text-gray-700 font-semibold"
-                              onClick={() => handleOptionClick(null)} // Kosongkan pilihan
+                              className="p-2 hover:bg-blue-100 cursor-pointer text-gray-700"
+                              onClick={() => handleOptionClick(null)}
                             >
-                              Kosongkan Pilihan
+                              Pilih Cabang
                             </li>
 
                             {filteredOptions.length > 0 ? (
@@ -316,7 +299,7 @@ const Page = () => {
                       )}
                     </div>
 
-                    {/* Month Dropdown */}
+                 
                     <select
                       value={selectedMonth}
                       onChange={(e) => setSelectedMonth(e.target.value)}
@@ -330,7 +313,7 @@ const Page = () => {
                       ))}
                     </select>
 
-                    {/* Year Dropdown */}
+                 
                     <select
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(e.target.value)}
@@ -435,7 +418,7 @@ const Page = () => {
                   </TableBody>
                 </Table>
 
-                {/* Pagination Controls */}
+          
                 <div className="flex flex-col md:flex-row justify-between text-sm mt-4 items-center space-y-2 md:space-y-0 md:space-x-2">
                   <span className="text-center md:text-left">
                     Showing {page * size + 1} to{" "}

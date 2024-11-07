@@ -40,7 +40,7 @@ const icons = [
   },
   {
     icon: faUbuntu,
-    label: "Rekap Anggota",
+    label: "Rekap By Nominal",
     href: "/anggota/rekap-anggota",
     color: "text-gray-500",
   },

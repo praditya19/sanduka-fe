@@ -45,6 +45,8 @@ const Page = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [userData, setUserData] = useState(null);
 
   const updateUnitKerja = (kecamatan) => {
     const filteredUnitKerja = unitKerja.filter((item) => {
@@ -124,6 +126,36 @@ const Page = () => {
     } else {
       setError("Geolocation is not supported by this browser.");
       setLoading(false);
+    }
+  };
+
+  const handleCekNpaClick = async () => {
+    const npaValue = document.getElementById("npaPgri").value;
+
+    try {
+      const response = await GlobalApi.cekNpa(npaValue);
+
+      if (response) {
+        toast.success(
+          <div>
+            Anda sudah terdaftar. Silakan cek{" "}
+            <a
+              href="https://ktadigitalpgri.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 underline"
+            >
+              ktadigitalpgri.org
+            </a>{" "}
+            untuk melihat NPA yang baru dan melakukan login di sanduka.
+          </div>
+        );
+      } else {
+        toast.info("Anda belum terdaftar, silakan melakukan registrasi");
+      }
+    } catch (error) {
+      console.error("Error saat mengecek NPA:", error.message);
+      toast.error("Terjadi kesalahan. Silakan coba lagi.");
     }
   };
 
@@ -249,23 +281,21 @@ const Page = () => {
                 />
                 <label
                   htmlFor="foto"
-                  className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md bg-white text-center mt-2" // Jarak atas label
+                  className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md bg-white text-center mt-2"
                 >
                   Choose Files
                 </label>
                 <p className="text-red-600 font-bold text-center mt-2">
                   {" "}
-                  {/* Jarak atas untuk teks Wajib */}
                   *Wajib Menggunakan Batik PGRI
                 </p>
                 <p className="text-red-600 text-center">
                   {" "}
-                  {/* Jarak atas untuk teks Maksimal ukuran */}
                   *Maksimal ukuran file unggah 250kb format file (jpg, jpeg,
                   png)
                 </p>
                 {error && (
-                  <p className="text-red-600 text-center mt-2">{error}</p> // Jarak atas untuk error
+                  <p className="text-red-600 text-center mt-2">{error}</p>
                 )}
               </div>
 
@@ -324,6 +354,13 @@ const Page = () => {
                     placeholder="Tuliskan NPA"
                     {...register("npaPgri")}
                   />
+                  <Button
+                    type="button"
+                    onClick={handleCekNpaClick}
+                    className="mt-2 p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+                  >
+                    Cek NPA
+                  </Button>
                   {errors.npaPgri && (
                     <span className="text-red-500 text-sm">
                       NPA is required
@@ -903,7 +940,7 @@ const Page = () => {
               </div>
 
               <div className="w-full">
-              <Label className="block text-sm font-medium mb-3">
+                <Label className="block text-sm font-medium mb-3">
                   Pangkat Golongan
                 </Label>
                 <Controller
@@ -927,7 +964,7 @@ const Page = () => {
                     </Select>
                   )}
                 />
-               {errors.pangkatGolongan && (
+                {errors.pangkatGolongan && (
                   <span className="text-red-500 text-sm">
                     Pangkat Golongan is required
                   </span>
@@ -1030,7 +1067,9 @@ const Page = () => {
                       <SelectContent>
                         <SelectGroup>
                           <SelectItem value="PENDIDIK">Pendidik</SelectItem>
-                          <SelectItem value="TENAGAPENDIDIK">Tenaga Pendidik</SelectItem>
+                          <SelectItem value="TENAGAPENDIDIK">
+                            Tenaga Pendidik
+                          </SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>

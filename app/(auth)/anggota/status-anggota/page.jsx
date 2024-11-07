@@ -19,12 +19,7 @@ import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext.js";
 import GlobalApi from "@/app/_utils/GlobalApi";
 
-// function formatRupiah(angka) {
-//     var reverse = angka.toString().split('').reverse().join(''),
-//         ribuan = reverse.match(/\d{1,3}/g);
-//     ribuan = ribuan.join('.').split('').reverse().join('');
-//     return 'Rp. ' + ribuan;
-// }
+
 
 function StatusAnggota() {
   const [maxItems, setMaxItems] = useState(10);
@@ -33,9 +28,8 @@ function StatusAnggota() {
   const [selectedStatus, setSelectedStatus] = useState("Semua");
   const [selectedTingkat, setSelectedTingkat] = useState("");
   const [anggota, setAnggota] = useState([]);
-  const [cabang, setCabang] = useState([]);
-  const [unitKerja, setUnitKerja] = useState([]);
-  const [itemsPerPage, setItemsPerPage] = useState(10); // Default to 10 items per page
+
+  const [itemsPerPage, setItemsPerPage] = useState(10); 
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: "ascending",
@@ -52,7 +46,6 @@ function StatusAnggota() {
   const [loading, setLoading] = useState(true);
   const [showCabangDropdown, setShowCabangDropdown] = useState(false);
   const [originalCabangList, setOriginalCabangList] = useState([]);
-  const [filteredCabang, setFilteredCabang] = useState([]);
   const [isPopupVisible, setPopupVisible] = useState(false);
   const [fotoBase64, setFotoBase64] = useState("");
 
@@ -62,27 +55,24 @@ function StatusAnggota() {
   const [filteredCabangList, setFilteredCabangList] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
   const [unitKerjaList, setUnitKerjaList] = useState([]);
-  // const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [unitKerjaInput, setUnitKerjaInput] = useState("");
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
-  // const totalPages = Math.ceil(rekapData.length / maxItems);
 
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
 
   const [originalRekapData, setOriginalRekapData] = useState([]);
 
-  // Filter Cabang dan Unit kerja
-  // Fetch cabang data
+
   useEffect(() => {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setOriginalCabangList(response.data); // Simpan semua cabang ke originalCabangList
-        setFilteredCabangList(response.data); // Atur filter cabang awal
+        setOriginalCabangList(response.data);
+        setFilteredCabangList(response.data); 
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -90,7 +80,6 @@ function StatusAnggota() {
     fetchCabangData();
   }, []);
 
-  // Fetch unit kerja data
   useEffect(() => {
     const fetchUnitKerjaData = async () => {
       try {
@@ -105,7 +94,7 @@ function StatusAnggota() {
 
   const handleUnitKerjaFocus = () => {
     if (selectedCabang) {
-      setShowUnitKerjaDropdown(true); // Tampilkan dropdown
+      setShowUnitKerjaDropdown(true); 
     }
   };
 
@@ -113,7 +102,6 @@ function StatusAnggota() {
     const input = e.target.value;
     setUnitKerjaInput(input);
 
-    // Filter unit kerja berdasarkan input dan cabang
     const filteredUnitKerja = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang &&
@@ -121,18 +109,15 @@ function StatusAnggota() {
         unitKerja.unitKerja.toLowerCase().startsWith(input.toLowerCase())
     );
 
-    // Tampilkan dropdown jika ada hasil filter
     setShowUnitKerjaDropdown(filteredUnitKerja.length > 0);
     setFilteredUnitKerja(filteredUnitKerja);
 
-    // Filter data rekap berdasarkan input unit kerja
     const rekapFilteredByUnitKerja = originalRekapData.filter(
       (item) =>
         item.alamatKerja &&
         item.alamatKerja.toLowerCase().includes(input.toLowerCase())
     );
 
-    // Jika input kosong, kembalikan data tabel ke data awal
     if (input === "") {
       setRekapData(originalRekapData);
     } else {
@@ -151,10 +136,7 @@ function StatusAnggota() {
     setSelectedCabang(cabang.kecamatan);
     setShowCabangDropdown(false);
 
-    // Fetch rekap data based on selected cabang
     await fetchRekapData(cabang.kecamatan);
-    console.log("Cabang yang dipilih:", cabang.kecamatan);
-    // Now filter the unit kerja based on the selected cabang
     const filtered = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang &&
@@ -164,32 +146,29 @@ function StatusAnggota() {
   };
 
   const handleUnitKerjaSearch = (searchTerm) => {
-    // Jika searchTerm kosong, set filteredUnitKerja dengan semua unit kerja yang sesuai dengan selectedCabang
     if (searchTerm === "") {
       const allFiltered = unitKerjaList.filter(
         (unitKerja) => unitKerja.cabang === selectedCabang
       );
       setFilteredUnitKerja(allFiltered);
     } else {
-      // Jika ada input, filter berdasarkan input dan cabang yang dipilih
       const filtered = unitKerjaList.filter(
         (unitKerja) =>
-          unitKerja.unitKerja.toLowerCase().includes(searchTerm.toLowerCase()) &&
-          unitKerja.cabang === selectedCabang // Memfilter berdasarkan cabang
+          unitKerja.unitKerja
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) &&
+          unitKerja.cabang === selectedCabang 
       );
       setFilteredUnitKerja(filtered);
     }
-  
-    setShowUnitKerjaDropdown(true); // Menjaga dropdown tetap terbuka
+
+    setShowUnitKerjaDropdown(true); 
   };
-  
 
   const handleUnitKerjaSelect = (unitKerja) => {
     setSelectedUnitKerja(unitKerja.unitKerja);
     setUnitKerjaInput(unitKerja.unitKerja);
     setShowUnitKerjaDropdown(false);
-    console.log("Unit kerja yang dipilih:", unitKerja);
-    // Update rekapData berdasarkan unit kerja yang dipilih
     const filteredRekapData = originalRekapData.filter(
       (item) => item.alamatKerja === unitKerja.unitKerja
     );
@@ -198,7 +177,10 @@ function StatusAnggota() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (unitKerjaRef.current && !unitKerjaRef.current.contains(event.target)) {
+      if (
+        unitKerjaRef.current &&
+        !unitKerjaRef.current.contains(event.target)
+      ) {
         setShowUnitKerjaDropdown(false);
       }
     };
@@ -227,19 +209,17 @@ function StatusAnggota() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-  // end
+
 
   const fetchRekapData = async (cabang) => {
     try {
       const data = await GlobalApi.getRekapAnggotaByCabang(cabang);
       setRekapData(data);
-      setOriginalRekapData(data); // Simpan data asli saat mengambil data
+      setOriginalRekapData(data); 
     } catch (error) {
       console.error("Error fetching rekap data:", error);
     }
   };
-
-  
 
   useEffect(() => {
     if (!token) {
@@ -294,8 +274,8 @@ function StatusAnggota() {
 
   const fetchAnggota = async () => {
     try {
-      const page = 0; // Or the page number you want to fetch
-      const size = 50; // Or the number of items per page you want to fetch
+      const page = 0; 
+      const size = 50; 
       const response = await GlobalApi.getAllAnggota(page, size);
       const fotoBase64Array = [];
 
@@ -303,7 +283,6 @@ function StatusAnggota() {
 
       if (fetchedData && fetchedData.length > 0) {
         fetchedData.forEach((item) => {
-          // console.log("test", item);
           if (item.foto) {
             try {
               const decodedString = atob(item.foto);
@@ -320,14 +299,12 @@ function StatusAnggota() {
         console.warn("No data found.");
       }
 
-      // setAnggotaData(fetchedData || []);
       setFotoBase64(fotoBase64Array);
-      // setTotalPages(response.data.totalPages || 0);
       setLoading(false);
-      setAnggota(fetchedData || []); // Use response.data.content if it's a Page object
+      setAnggota(fetchedData || []); 
     } catch (error) {
       console.error("Error fetching anggota:", error);
-      setAnggota([]); // Optionally, set to an empty array if there's an error
+      setAnggota([]);
     }
   };
 
@@ -401,9 +378,8 @@ function StatusAnggota() {
     PAUD: "PAUD",
   };
 
-  // Fungsi untuk mengubah tingkat menjadi format yang lebih user-friendly
   const formatTingkat = (tingkat) => {
-    return tingkatSekolahMap[tingkat] || tingkat; // Kembalikan nilai yang di-map, jika tidak ada gunakan nilai asli
+    return tingkatSekolahMap[tingkat] || tingkat; 
   };
 
   const categories = [
@@ -509,7 +485,7 @@ function StatusAnggota() {
   };
 
   const sortedData = useMemo(() => {
-    if (!Array.isArray(anggota)) return []; // Ensure it's an array
+    if (!Array.isArray(anggota)) return []; 
 
     let sortableItems = [...anggota];
 
@@ -544,7 +520,6 @@ function StatusAnggota() {
         .toLowerCase()
         .includes(filterUnitKerja.toLowerCase());
 
-      // New: Filter for the selected school level (Tingkat Sekolah)
       const tingkatSekolahFilter =
         selectedTingkat === "" || item.tingkatSekolah === selectedTingkat;
 
@@ -555,7 +530,7 @@ function StatusAnggota() {
         (filterCabang ? searchCabangFilter : true) &&
         (filterUnitKerja ? searchUnitKerjaFilter : true) &&
         tingkatSekolahFilter
-      ); // Apply the school level filter
+      ); 
     });
   }, [
     sortedData,
@@ -577,10 +552,6 @@ function StatusAnggota() {
     setCurrentItem(null);
   };
 
-
-  // const handleBackClick = () => {
-  //   router.back();
-  // };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -629,7 +600,6 @@ function StatusAnggota() {
   const totalItems = filteredMembersData.length;
   const totalPages = Math.ceil(totalItems / maxItems);
 
-  // Functions to handle pagination
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -646,11 +616,9 @@ function StatusAnggota() {
     setCurrentPage(number);
   };
 
-  // Calculate the index range of items to display for the current page
   const startIndex = (currentPage - 1) * maxItems;
   const endIndex = startIndex + maxItems;
 
-  // Paginate the filtered data
   const paginatedMembersData = filteredMembersData.slice(startIndex, endIndex);
 
   if (loading) {
@@ -712,7 +680,7 @@ function StatusAnggota() {
           <div className="mb-4">
             <div className="flex flex-wrap items-start mt-2 justify-between">
               <div className="flex flex-wrap items-center space-x-2">
-              <div className="flex flex-col relative w-64" ref={cabangRef}>
+                <div className="flex flex-col relative w-64" ref={cabangRef}>
                   <Input
                     type="text"
                     value={selectedCabang}
@@ -725,15 +693,24 @@ function StatusAnggota() {
                     <div className="absolute mt-9 w-full">
                       <Input
                         type="text"
-                        onChange={(e) => handleCabangSearch(e.target.value)} // Function untuk memfilter cabang
+                        onChange={(e) => handleCabangSearch(e.target.value)}
                         className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-2"
-                        placeholder="Cari Cabang"
+                        placeholder="Cari atau ketik Cabang..."
+                        autoFocus
                       />
                       {filteredCabangList.length > 0 && (
-                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto">
+                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto mt-1">
+                          <li
+                            onClick={() =>
+                              handleSelectCabang({ kecamatan: "" })
+                            }
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                          >
+                            Pilih Cabang
+                          </li>
                           {filteredCabangList.map((cabang) => (
                             <li
-                              key={cabang.id} // Unique key for each cabang
+                              key={cabang.id}
                               onClick={() => handleSelectCabang(cabang)}
                               className="px-4 py-2 cursor-pointer hover:bg-gray-200"
                             >
@@ -747,44 +724,58 @@ function StatusAnggota() {
                 </div>
 
                 <div className="flex flex-col md:flex">
-                <div className="flex flex-col relative w-64" ref={unitKerjaRef}>
-                  <Input
-                    type="text"
-                    value={unitKerjaInput}
-                    onFocus={handleUnitKerjaFocus}
-                    onChange={handleUnitKerjaChange}
-                    placeholder="Pilih Unit Kerja"
-                    className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
-                    disabled={!selectedCabang}
-                  />
-                  {showUnitKerjaDropdown && (
-                    <div className="absolute mt-9 w-full">
-                      <Input
-                        type="text"
-                        onChange={(e) => handleUnitKerjaSearch(e.target.value)}
-                        placeholder="Cari Unit Kerja"
-                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-2"
-                      />
-                      <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto">
-                        {filteredUnitKerja.length > 0 ? (
-                          filteredUnitKerja.map((unitKerja) => (
-                            <li
-                              key={unitKerja.id}
-                              onClick={() => handleUnitKerjaSelect(unitKerja)}
-                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                            >
-                              {unitKerja.unitKerja}
-                            </li>
-                          ))
-                        ) : (
-                          <li className="px-4 py-2 text-gray-500 cursor-default">
-                            Tidak ada hasil
+                  <div
+                    className="flex flex-col relative w-64"
+                    ref={unitKerjaRef}
+                  >
+                    <Input
+                      type="text"
+                      value={unitKerjaInput}
+                      onFocus={handleUnitKerjaFocus}
+                      onChange={handleUnitKerjaChange}
+                      placeholder="Pilih Unit Kerja"
+                      className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
+                      disabled={!selectedCabang}
+                    />
+                    {showUnitKerjaDropdown && (
+                      <div className="absolute mt-9 w-full">
+                        <Input
+                          type="text"
+                          onChange={(e) =>
+                            handleUnitKerjaSearch(e.target.value)
+                          }
+                          placeholder="Cari atau ketik Unit Kerja..."
+                          autoFocus
+                          className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-2"
+                        />
+                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto mt-1">
+                          <li
+                            onClick={() =>
+                              handleUnitKerjaSelect({ unitKerja: "" })
+                            }
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                          >
+                            Pilih Unit Kerja
                           </li>
-                        )}
-                      </ul>
-                    </div>
-                  )}
-                </div>
+                          {filteredUnitKerja.length > 0 ? (
+                            filteredUnitKerja.map((unitKerja) => (
+                              <li
+                                key={unitKerja.id}
+                                onClick={() => handleUnitKerjaSelect(unitKerja)}
+                                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                              >
+                                {unitKerja.unitKerja}
+                              </li>
+                            ))
+                          ) : (
+                            <li className="px-4 py-2 text-gray-500 cursor-default">
+                              Tidak ada hasil
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <select
                   className="shadow appearance-none border rounded w-full md:w-44 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline md:mb-0"
@@ -842,7 +833,7 @@ function StatusAnggota() {
                         className="ml-1 cursor-pointer"
                         onClick={() => requestSort("index")}
                       >
-                        {/* {getSortDirection("index")} */}
+            
                       </span>
                     </div>
                   </th>
@@ -856,7 +847,7 @@ function StatusAnggota() {
                         className="ml-1 cursor-pointer"
                         onClick={() => requestSort("nama")}
                       >
-                        {/* {getSortDirection("nama")} */}
+                 
                       </span>
                     </div>
                   </th>
@@ -872,7 +863,7 @@ function StatusAnggota() {
                         className="ml-1 cursor-pointer"
                         onClick={() => requestSort("kerja")}
                       >
-                        {/* {getSortDirection("kerja")} */}
+                
                       </span>
                     </div>
                   </th>
@@ -883,7 +874,7 @@ function StatusAnggota() {
                         className="ml-1 cursor-pointer"
                         onClick={() => requestSort("keterangan")}
                       >
-                        {/* {getSortDirection("keterangan")} */}
+                      
                       </span>
                     </div>
                   </th>
@@ -1041,7 +1032,7 @@ function StatusAnggota() {
               )}
             </div>
           </div>
-          {/* Modal for Mutation Actions */}
+      
           <Modal
             isOpen={isModalOpen}
             onRequestClose={closeModal}

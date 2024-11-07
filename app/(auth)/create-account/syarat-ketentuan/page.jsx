@@ -16,7 +16,7 @@ function App() {
     <div className="container mx-auto p-6 bg-gradient-to-r from-blue-500 to-green-500 min-h-screen flex items-center justify-center">
       <div className="flex flex-col items-center justify-center w-full max-w-4xl">
         <div className="bg-white p-8 rounded-2xl shadow-lg w-full relative">
-          {/* Header tetap di posisi atas */}
+     
           <div className=" top-0 bg-white pb-4 z-10">
             <div className="flex items-center justify-center ">
               <Image src="/sanduka.png" width={250} height={200} alt="logo" />
@@ -26,7 +26,7 @@ function App() {
             </h2>
           </div>
 
-          {/* Konten yang dapat digulir */}
+        
           <div className="overflow-y-auto max-h-96 text-justify text-gray-600">
             <p className="mb-6 text-gray-600 text-center">
               Syarat dan Ketentuan ini merupakan bagian dari Syarat dan

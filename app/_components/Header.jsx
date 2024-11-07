@@ -15,7 +15,7 @@ const Header = () => {
 
     window.addEventListener("scroll", handleScroll);
 
-    // Clean up the event listener
+
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -24,12 +24,12 @@ const Header = () => {
   };
 
   const scrollToSection = (sectionId) => (event) => {
-    event.preventDefault(); // Prevent default link behavior
+    event.preventDefault(); 
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
     }
-    handleClick(); // Close the menu if it's open (for mobile view)
+    handleClick(); 
   };
 
   return (
