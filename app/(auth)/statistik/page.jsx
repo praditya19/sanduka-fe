@@ -56,20 +56,18 @@ const Page = () => {
       try {
         const bulanResponse = await GlobalApi.getBulan();
         if (bulanResponse?.data) {
-          setBulanOptions(bulanResponse.data); // Set bulan options
+          setBulanOptions(bulanResponse.data);
 
-          // Dapatkan bulan saat ini
-          const currentMonthIndex = new Date().getMonth(); // Indeks bulan (0-11)
-          const currentMonth = bulanResponse.data[currentMonthIndex]?.namaBulan; // Ambil nama bulan saat ini
+          const currentMonthIndex = new Date().getMonth();
+          const currentMonth = bulanResponse.data[currentMonthIndex]?.namaBulan;
 
           if (currentMonth) {
-            setSelectedBulan(currentMonth); // Set bulan yang dipilih
+            setSelectedBulan(currentMonth);
           }
         } else {
           console.error("Unexpected data format", bulanResponse);
         }
 
-        // Generate year options dynamically, e.g., from 2020 to 2030
         const tahunArray = Array.from(
           { length: 11 },
           (_, index) => 2020 + index
@@ -83,7 +81,6 @@ const Page = () => {
     fetchOptions();
   }, []);
 
-  // Effect for fetching cabang data
   useEffect(() => {
     const fetchCabangData = async () => {
       try {
@@ -99,12 +96,11 @@ const Page = () => {
   }, []);
 
   const handleCabangClick = () => {
-    setSearchTerm(""); // Reset search term saat dropdown dibuka
-    setFilteredOptions(cabangOptions); // Set filteredOptions ke semua cabang
-    setShowDropdown(true); // Menampilkan dropdown
+    setSearchTerm("");
+    setFilteredOptions(cabangOptions);
+    setShowDropdown(true);
   };
 
-  // Effect for fetching data based on selected filters
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -124,9 +120,8 @@ const Page = () => {
               ...result,
             },
           ];
-          setData(dataArray); // Set data untuk cabang yang dipilih
+          setData(dataArray);
         } else if (searchTerm.trim() === "") {
-          // Jika searchTerm kosong, ambil semua data
           result = await GlobalApi.getCalculateSandukaAll(bulan, tahun);
 
           if (typeof result === "object" && result !== null) {
@@ -136,9 +131,9 @@ const Page = () => {
                 ...values,
               })
             );
-            setData(dataArray); // Set data untuk semua cabang
+            setData(dataArray);
           } else {
-            setData([]); // Reset data jika tidak valid
+            setData([]);
           }
         }
       } catch (error) {
@@ -147,25 +142,22 @@ const Page = () => {
     };
 
     fetchData();
-  }, [selectedBulan, selectedTahun, selectedCabang, searchTerm]); // Tambahkan searchTerm sebagai dependency
+  }, [selectedBulan, selectedTahun, selectedCabang, searchTerm]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false); // Menyembunyikan dropdown jika klik di luar
+        setShowDropdown(false);
       }
     };
 
-    // Tambahkan event listener saat komponen di-mount
     document.addEventListener("mousedown", handleClickOutside);
 
-    // Hapus event listener saat komponen di-unmount
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
-  // Handle input changes for search
   const handleInputChange = (event) => {
     const value = event.target.value;
     setSearchTerm(value);
@@ -177,16 +169,15 @@ const Page = () => {
     setFilteredOptions(filtered);
     setShowDropdown(value.length > 0);
 
-    // Jika input kosong, reset selectedCabang
     if (value.trim() === "") {
       setSelectedCabang("");
     }
   };
 
   const handleOptionClick = (option) => {
-    setSelectedCabang(option ? option.kecamatan : ''); // Set kosong jika pilih opsi reset
-    setShowDropdown(false); // Menyembunyikan dropdown setelah memilih opsi
-    setSearchTerm(''); // Reset search term
+    setSelectedCabang(option ? option.kecamatan : "");
+    setShowDropdown(false);
+    setSearchTerm("");
   };
 
   const handleBulanChange = (event) => {
@@ -197,27 +188,23 @@ const Page = () => {
     setSelectedTahun(event.target.value);
   };
 
-  // Effect for checking sidebar state
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
     setIsSidebarOpen(sidebarState);
   }, []);
 
-  // Effect for token validation
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
     }
   }, [token, router]);
 
-  // Toggle sidebar
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  // Effect for handling mobile responsiveness
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -299,7 +286,6 @@ const Page = () => {
                 </div>
                 <div className="flex mb-4">
                   <div className="w-full flex space-x-4">
-                    {/* Input for searching cabang */}
                     <div className="relative" ref={dropdownRef}>
                       <Input
                         type="text"
@@ -307,7 +293,7 @@ const Page = () => {
                         value={selectedCabang}
                         readOnly
                         className="p-2 border border-gray-300 rounded-md mb-2 w-64"
-                        onClick={handleCabangClick} // Panggil fungsi untuk menangani klik
+                        onClick={handleCabangClick} 
                       />
 
                       {showDropdown && (
@@ -318,15 +304,15 @@ const Page = () => {
                             value={searchTerm}
                             onChange={handleInputChange}
                             className="p-2 border-b border-gray-300 w-full"
-                            autoFocus // Fokus otomatis pada input pencarian saat dropdown muncul
+                            autoFocus
                           />
 
                           <ul className="max-h-40 overflow-y-auto">
                             <li
-                              className="p-2 hover:bg-blue-100 cursor-pointer text-gray-700 font-semibold"
-                              onClick={() => handleOptionClick(null)} // Kosongkan pilihan
+                              className="p-2 hover:bg-blue-100 cursor-pointer text-gray-700"
+                              onClick={() => handleOptionClick(null)} 
                             >
-                              Kosongkan Pilihan
+                              Pilih Cabang
                             </li>
 
                             {filteredOptions.length > 0 ? (

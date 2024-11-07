@@ -50,9 +50,17 @@ function DataAnggota() {
   const dropdownRef = useRef(null);
   const [fotoBase64, setFotoBase64] = useState("");
   const [rekapData, setRekapData] = useState([]);
+<<<<<<< HEAD
+
   const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
+
+=======
+  const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
   const [searchCabang, setSearchCabang] = useState("");
   const [showDropdownCabangUnit, setShowDropdownCabangUnit] = useState(false);
   const [listCabang, setListCabang] = useState([]);
@@ -79,7 +87,13 @@ function DataAnggota() {
         setIsDropdownVisible(false);
       }
     };
+<<<<<<< HEAD
+
     document.addEventListener("mousedown", handleClickOutside);
+
+=======
+    document.addEventListener("mousedown", handleClickOutside);
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -91,7 +105,13 @@ function DataAnggota() {
         setShowDropdownCabangUnit(false);
       }
     };
+<<<<<<< HEAD
+
     document.addEventListener("mousedown", handleClickOutside);
+
+=======
+    document.addEventListener("mousedown", handleClickOutside);
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -103,7 +123,13 @@ function DataAnggota() {
         setShowDropdownCabang(false);
       }
     };
+<<<<<<< HEAD
+
     document.addEventListener("mousedown", handleClickOutside);
+
+=======
+    document.addEventListener("mousedown", handleClickOutside);
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -114,6 +140,10 @@ function DataAnggota() {
       setShowDropdownUnit(false);
     }
   };
+<<<<<<< HEAD
+
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
@@ -172,7 +202,6 @@ function DataAnggota() {
   }, [selectedCabang, allUnitKerja]);
 
   const handleCabangSelect = (cabang) => {
-    console.log("cabang yang dipilih:", cabang.kecamatan);
     setSelectedCabang(cabang.kecamatan);
     setShowDropdownCabang(false);
   };
@@ -190,6 +219,20 @@ function DataAnggota() {
     setShowDropdownUnit(true);
   };
 
+<<<<<<< HEAD
+  const handleUnitKerjaSelect = (unitKerja) => {
+    setSelectedUnitKerja(unitKerja.unitKerja);
+    setUnitKerjaInput(unitKerja.unitKerja);
+    setShowUnitKerjaDropdown(false);
+
+    const filteredRekapData = originalRekapData.filter(
+      (item) => item.alamatKerja === unitKerja.unitKerja
+    );
+    setRekapData(filteredRekapData);
+  };
+
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
   useEffect(() => {
     if (!unitKerjaInput && selectedCabang) {
       fetchRekapData(selectedCabang);
@@ -279,6 +322,10 @@ function DataAnggota() {
       }
 
       setFotoBase64(fotoBase64Array);
+<<<<<<< HEAD
+
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
       setLoading(false);
       setAnggota(fetchedData || []);
     } catch (error) {
@@ -476,6 +523,10 @@ function DataAnggota() {
   const handleCabangChange = (e) => {
     const value = e.target.value;
     setSearchCabang(value);
+<<<<<<< HEAD
+
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     const filtered = cabangOptions.filter((cabang) =>
       cabang.kecamatan.toLowerCase().includes(value.toLowerCase())
     );
@@ -558,6 +609,10 @@ function DataAnggota() {
   const handleKeluarAnggota = async () => {
     try {
       const anggotaId = sessionStorage.getItem("anggotaId");
+<<<<<<< HEAD
+      await GlobalApi.keluarAnggota(anggotaId);
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
       setPopupVisibleKeluar(false);
       toast.success("Anggota berhasil dihapus!", {
         autoClose: 3000,
@@ -582,7 +637,6 @@ function DataAnggota() {
     try {
       const anggotaId = sessionStorage.getItem("anggotaId");
       await GlobalApi.pensiunAnggota(anggotaId);
-      console.log("Anggota berhasil Pensiun!");
       setPopupVisible(false);
       toast.success("Anggota berhasil Pensiun!", {
         autoClose: 3000,
@@ -666,9 +720,18 @@ function DataAnggota() {
                           value={searchCabang}
                           onChange={handleCabangChange}
                           className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                          placeholder="Cari Cabang"
+                          placeholder="Cari atau ketik Cabang..."
+                          autoFocus
                         />
                         <ul className="max-h-48 overflow-y-auto">
+                          <li
+                            className="p-2 cursor-pointer hover:bg-gray-100"
+                            onClick={() => {
+                              handleCabangSelect({ kecamatan: "" });
+                            }}
+                          >
+                            Pilih Cabang
+                          </li>
                           {filteredCabangOptions.map((cabang) => (
                             <li
                               key={cabang.idKecamatan}
@@ -700,7 +763,7 @@ function DataAnggota() {
                       />
 
                       {showDropdownUnit && (
-                        <div className="absolute mt-0 w-full">
+                        <div className="absolute mt-1 w-full">
                           <Input
                             type="text"
                             value={searchUnit}
@@ -708,7 +771,8 @@ function DataAnggota() {
                               setSearchUnit(e.target.value);
                               handleUnitKerjaChange(e);
                             }}
-                            placeholder="Cari Unit Kerja"
+                            placeholder="Cari atau ketik Unit Kerja..."
+                            autoFocus
                             className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-0"
                           />
                           <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto">
@@ -726,7 +790,6 @@ function DataAnggota() {
                               Pilihan Kosong
                             </li>
 
-                            {/* Daftar unit kerja yang difilter */}
                             {filteredUnitKerja.length > 0 ? (
                               filteredUnitKerja.map((unit) => (
                                 <li
@@ -771,9 +834,7 @@ function DataAnggota() {
                   Jumlah Anggota : {jumlahAnggota}
                 </p>
               </div>
-              {/* <p className="text-center font-bold py-2 px-2 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
-                Data Anggota
-              </p> */}
+
               <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
                 <div className="space-x-2 w-full flex md:block">
                   <label htmlFor="maxItems" className="mr-2">
@@ -961,6 +1022,10 @@ function DataAnggota() {
                               title="Edit Data"
                               onClick={() => {
                                 sessionStorage.setItem("anggotaId", item.id);
+<<<<<<< HEAD
+
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                                 handleEditClick();
                               }}
                             >
@@ -1138,7 +1203,6 @@ function DataAnggota() {
             </div>
           </div>
 
-          {/* Modal for Mutation Actions */}
           <Modal
             isOpen={isModalOpen}
             onRequestClose={closeModal}

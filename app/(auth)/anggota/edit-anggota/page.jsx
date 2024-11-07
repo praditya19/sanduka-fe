@@ -30,8 +30,8 @@ const MapComponent = dynamic(
 
 const Page = () => {
   const router = useRouter();
-  const { control, handleSubmit, setValue } = useForm();
-  const searchParams = useSearchParams(); // Get search parameters
+  const { control, setValue } = useForm();
+  const searchParams = useSearchParams();
   const id = searchParams.get("id");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
@@ -45,24 +45,22 @@ const Page = () => {
   const [valueGolonganJabatan, setValueGolonganJabatan] = useState("");
   const [unitKerja, setUnitKerja] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
-  const [query, setQuery] = useState(""); // Menyimpan teks input dari pengguna
-  const [showDropdown, setShowDropdown] = useState(false); // Menyembunyikan/memperlihatkan dropdown
-  // const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
-  const [isCabangValid, setIsCabangValid] = useState(false);
+  const [query, setQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
   const [base64String, setBase64String] = useState("");
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [queryUnitKerja, setQueryUnitKerja] = useState("");
   const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [today, setToday] = useState("");
-  // const isCabangValid = Array.isArray(cabang) && cabang.length > 0;
-  // Update DATA
+  const [data, setData] = useState(null);
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [npaPgri, setNpaPgri] = useState("");
   const [nip, setNip] = useState("");
   const [nik, setNik] = useState("");
-  const [namaLengkap, setNamaLengkap] = useState(""); // Kosong untuk nama lengkap
+  const [namaLengkap, setNamaLengkap] = useState("");
   const [tempatLahir, setTempatLahir] = useState("");
   const [jenisKelamin, setJenisKelamin] = useState("");
   const [kodePos, setKodePos] = useState("");
@@ -80,25 +78,24 @@ const Page = () => {
   const [pendidikanTerakhir, setPendidikanTerakhir] = useState("");
   const [sertifikatPendidik, setSertifikatPendidik] = useState("");
   const [mengajar, setMengajar] = useState("");
-  const [isVerified, setIsVerified] = useState("");
-  const [valueUnitKerja, setValueUnitKerja] = useState(""); // State untuk unit kerja yang dipilih
-  const [valueJabatan, setValueJabatan] = useState(""); // State untuk jabatan yang dipilih
+
+  const [valueJabatan, setValueJabatan] = useState("");
   const [foto, setFoto] = useState("");
   const [preview, setPreview] = useState(null);
-  const [base64Image, setBase64Image] = useState("");
+
   const [error, setError] = useState("");
   const [pesertaSanduka, setPesertaSanduka] = useState(false);
   const [pesertaDaspen, setPesertaDaspen] = useState(false);
   const [pesertaKtaDigital, setPesertaKtaDigital] = useState(false);
-  // END
+
   const [isPasswordInfoOpen, setIsPasswordInfoOpen] = useState(false);
   const [isLocationInfoOpen, setIsLocationInfoOpen] = useState(false);
   const [formattedMulaiJadiAnggota, setFormattedMulaiJadiAnggota] =
-    useState(""); // State untuk mulai jadi anggota PGRI
-  const [tahunDiangkat, setTahunDiangkat] = useState([]); // State untuk tahun diangkat
-  const [formattedTahunDiangkat, setFormattedTahunDiangkat] = useState(""); // Deklarasi state untuk tahun diangkat yang diformat
-  const [tanggalLahir, setTanggalLahir] = useState(""); // State untuk tanggal lahir
-  const [formattedTanggalLahir, setFormattedTanggalLahir] = useState(""); // Deklarasi state untuk tanggal lahir yang diformat
+    useState("");
+  const [tahunDiangkat, setTahunDiangkat] = useState([]);
+  const [formattedTahunDiangkat, setFormattedTahunDiangkat] = useState("");
+  const [tanggalLahir, setTanggalLahir] = useState("");
+  const [formattedTanggalLahir, setFormattedTanggalLahir] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -117,7 +114,7 @@ const Page = () => {
     kodePos: "",
     nomorHp: "",
     namaSuamiIstri: "",
-    namaAnak: [], // Jika ini adalah array
+    namaAnak: [],
     foto: null,
     cabang: "",
     unitKerja: "",
@@ -140,7 +137,6 @@ const Page = () => {
   const anggotaId = sessionStorage.getItem("anggotaId");
   const userID = sessionStorage.getItem("userId");
 
-  // Fungsi handleChange
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -149,25 +145,21 @@ const Page = () => {
     }));
   };
 
-  // Fungsi onSubmit
   const onSubmit = async (e) => {
-    e.preventDefault(); // Mencegah refresh halaman
+    e.preventDefault();
 
-    // Ambil ID dari sessionStorage
     const anggotaId = sessionStorage.getItem("anggotaId");
     const userId = sessionStorage.getItem("userId");
 
-    // Prioritaskan anggotaId, jika tidak ada gunakan userId
     const id = anggotaId || userId;
 
     if (!id) {
       console.error(
         "User ID atau Anggota ID tidak ditemukan atau tidak valid."
       );
-      return; // Hentikan eksekusi jika id tidak valid
+      return;
     }
 
-    // Fungsi untuk memformat tanggal ke yyyy-MM-dd
     const formatTanggal = (tanggal) => {
       const date = new Date(tanggal);
       const year = date.getFullYear();
@@ -176,12 +168,10 @@ const Page = () => {
       return `${year}-${month}-${day}`;
     };
 
-    // Pastikan tanggal dalam format yang benar
     const formattedTanggalLahir = formatTanggal(tanggalLahir);
     const formattedTahunDiangkat = formatTanggal(tahunDiangkat);
     const formattedMulaiJadiAnggota = formatTanggal(mulaiJadiAnggotaPgri);
 
-    // Membuat FormData dan menambahkan data
     const formData = new FormData();
     formData.append("email", email);
     formData.append("password", password);
@@ -190,7 +180,7 @@ const Page = () => {
     formData.append("nik", nik);
     formData.append("namaLengkap", namaLengkap);
     formData.append("tempatLahir", tempatLahir);
-    formData.append("tanggalLahir", formattedTanggalLahir); // tanggal dalam format yyyy-MM-dd
+    formData.append("tanggalLahir", formattedTanggalLahir);
     formData.append("jenisKelamin", jenisKelamin);
     formData.append("agama", agama);
     formData.append("golonganDarah", golonganDarah);
@@ -201,7 +191,6 @@ const Page = () => {
     formData.append("nomorHp", nomorHp);
     formData.append("namaSuamiIstri", namaSuamiIstri);
 
-    // Tambahkan foto jika ada
     if (selectedFile) {
       formData.append("foto", selectedFile);
     }
@@ -212,31 +201,52 @@ const Page = () => {
     formData.append("tingkatSekolah", tingkatSekolah);
     formData.append("statusSekolah", statusSekolah);
     formData.append("statusPegawai", statusPegawai);
-    formData.append("tahunDiangkat", formattedTahunDiangkat); // tanggal dalam format yyyy-MM-dd
+    formData.append("tahunDiangkat", formattedTahunDiangkat);
     formData.append("pangkatGolongan", pangkatGolongan);
     formData.append("pendidikanTerakhir", pendidikanTerakhir);
     formData.append("sertifikatPendidik", sertifikatPendidik);
-    formData.append("mulaiJadiAnggotaPgri", formattedMulaiJadiAnggota); // tanggal dalam format yyyy-MM-dd
+    formData.append("mulaiJadiAnggotaPgri", formattedMulaiJadiAnggota);
     formData.append("golonganJabatan", valueGolonganJabatan);
     formData.append("mengajar", mengajar);
 
-    // Tambahkan nilai kepesertaan ke formData
     formData.append("pesertaSanduka", pesertaSanduka ? "Ya" : "");
     formData.append("pesertaDaspen", pesertaDaspen ? "Ya" : "");
     formData.append("pesertaKtaDigital", pesertaKtaDigital ? "Ya" : "");
 
     try {
-      // Mengirim request ke server menggunakan GlobalApi
       const response = await GlobalApi.updateUserById(id, formData);
       toast.success("Data Anda Berhasil Diupdate!");
 
-      // Arahkan ke halaman /anggota/data-anggota setelah 2 detik
       setTimeout(() => {
-          router.push('/anggota/data-anggota');
-      }, 2000); // Menggunakan delay 2 detik sebelum redirect
-  } catch (error) {
+        router.push("/anggota/data-anggota");
+      }, 2000);
+    } catch (error) {
       console.error("Update gagal:", error);
     }
+  };
+
+  const handleConfirmAndSendData = async () => {
+    try {
+      const userId = sessionStorage.getItem("userId");
+      if (!userId) {
+        toast.error("User ID tidak ditemukan di session storage.");
+        return;
+      }
+
+      const response = await GlobalApi.updateRegisUser(userId, data);
+
+      toast.success("Data berhasil disinkronkan!");
+
+      handleClosePopup();
+    } catch (error) {
+      console.error("Error saat mengirim data:", error);
+
+      toast.error("Terjadi kesalahan saat mengirim data.");
+    }
+  };
+
+  const handleBackClick = () => {
+    router.push("/anggota/data-anggota");
   };
 
   const handleCloseLocationInfo = () => {
@@ -245,15 +255,15 @@ const Page = () => {
 
   const nextStep = () => {
     if (!latitude || !longitude) {
-      setIsLocationInfoOpen(true); // Tampilkan modal informasi
+      setIsLocationInfoOpen(true);
     } else {
-      setStep(step + 1); // Lanjutkan ke langkah selanjutnya
+      setStep(step + 1);
     }
   };
 
   const handleOpenPasswordInfo = () => {
     setIsPasswordInfoOpen(true);
-    setIsLocationInfoOpen(false); // Menutup modal lokasi jika terbuka
+    setIsLocationInfoOpen(false);
   };
 
   const handleClosePasswordInfo = () => {
@@ -264,19 +274,17 @@ const Page = () => {
     setStep(step - 1);
   };
 
-  // Fungsi untuk memfilter data cabang berdasarkan input
   const filteredOptions = cabang
     .filter((item) =>
       item.kecamatan.toLowerCase().includes(query.toLowerCase())
     )
-    .slice(0, 5); // Batasi hasil hingga 5 item
+    .slice(0, 5);
 
-  // Filter unit kerja berdasarkan query
   const handleUnitKerjaChange = (value) => {
     const filtered = unitKerja.filter((item) =>
       item.unitKerja.toLowerCase().includes(value.toLowerCase())
     );
-    setFilteredUnitKerja(filtered); // Set filtered unit kerja
+    setFilteredUnitKerja(filtered);
   };
 
   const getAnggotaById = async () => {
@@ -289,7 +297,7 @@ const Page = () => {
       console.error(
         "User ID atau Anggota ID tidak ditemukan atau tidak valid."
       );
-      return; // Hentikan eksekusi jika id tidak valid
+      return;
     }
 
     try {
@@ -302,7 +310,7 @@ const Page = () => {
         setValue("email", response.email || "");
         setNpaPgri(response.npaPgri || "");
         setTempatLahir(response.tempatLahir || "");
-        setTanggalLahir(response.tanggalLahir || ""); // Simpan nilai mentah
+        setTanggalLahir(response.tanggalLahir || "");
         setFormattedTanggalLahir(response.tanggalLahir || "");
         setNip(response.nip || "");
         setNik(response.nik || "");
@@ -319,13 +327,11 @@ const Page = () => {
         setNamaAnak(response.namaAnak || "");
         setLatitude(response.latitude || null);
         setLongitude(response.longitude || null);
-
-        // Set data Cabang dan Unit Kerja
         setSelectedUnitKerja(response.unitKerja || "");
         setQueryUnitKerja(response.unitKerja || "");
         setSelectedCabang(response.cabang);
         setValue("cabang", response.cabang || "");
-        setValue("unitKerja", response.unitKerja || ""); // Set nilai unit kerja pada form
+        setValue("unitKerja", response.unitKerja || "");
 
         setTingkatSekolah(response.tingkatSekolah || "");
         setValue("tingkatSekolah", response.tingkatSekolah);
@@ -347,7 +353,6 @@ const Page = () => {
         setMengajar(response.mengajar);
         setValue("mengajar", response.mengajar || "");
 
-        // Atur status kepesertaan berdasarkan nilai yang diterima
         setPesertaSanduka(response.pesertaSanduka === "Ya");
         setPesertaDaspen(response.pesertaDaspen === "Ya");
         setPesertaKtaDigital(response.pesertaKtaDigital === "Ya");
@@ -360,6 +365,20 @@ const Page = () => {
   useEffect(() => {
     getAnggotaById();
   }, []);
+
+  const handleCekNip = async () => {
+    try {
+      const data = await GlobalApi.getByNIP(nip);
+      setData(data);
+      setIsPopupVisible(true);
+    } catch (error) {
+      console.error("Gagal mengambil data NIP:", error);
+    }
+  };
+
+  const handleClosePopup = () => {
+    setIsPopupVisible(false);
+  };
 
   const convertToDateString = (arr) => {
     const [year, month, day] = arr;
@@ -394,14 +413,13 @@ const Page = () => {
     const formattedMulai = convertToDateString(mulaiJadiAnggotaPgri);
 
     setFormattedTanggalLahir(formattedLahir);
-    setFormattedTahunDiangkat(formattedDiangkat); // Pastikan ini sesuai
+    setFormattedTahunDiangkat(formattedDiangkat);
     setFormattedMulaiJadiAnggota(formattedMulai);
   }, [tanggalLahir, tahunDiangkat, mulaiJadiAnggotaPgri]);
 
   useEffect(() => {
     const currentDate = new Date().toISOString().split("T")[0];
     setToday(currentDate);
-    // setToday(formattedDate);
 
     getAnggotaById();
     updateUnitKerja();
@@ -418,8 +436,6 @@ const Page = () => {
       reader.onloadend = () => {
         const base64String = reader.result.split(",")[1];
         setBase64String(base64String);
-
-        // Menampilkan base64String ke konsol
       };
       reader.readAsDataURL(file);
     } else {
@@ -437,15 +453,14 @@ const Page = () => {
   };
 
   const handleCabangChange = (value) => {
-    setSelectedCabang(value); // Simpan cabang yang dipilih
+    setSelectedCabang(value);
 
-    // Pastikan unitKerja adalah array sebelum memfilter
     if (Array.isArray(unitKerja)) {
-      const filtered = unitKerja.filter((item) => item.cabang === value); // Pastikan ini sesuai dengan field yang ada di unit kerja
-      setFilteredUnitKerja(filtered); // Update unit kerja yang terfilter
+      const filtered = unitKerja.filter((item) => item.cabang === value);
+      setFilteredUnitKerja(filtered);
     } else {
-      console.error("unitKerja is not an array:", unitKerja); // Debugging
-      setFilteredUnitKerja([]); // Reset filteredUnitKerja jika unitKerja bukan array
+      console.error("unitKerja is not an array:", unitKerja);
+      setFilteredUnitKerja([]);
     }
   };
 
@@ -460,32 +475,28 @@ const Page = () => {
         console.error(
           "User ID atau Anggota ID tidak ditemukan atau tidak valid."
         );
-        return; // Hentikan eksekusi jika id tidak valid
+        return;
       }
 
       try {
-        const response = await GlobalApi.getUserById(id); // Panggil API dengan ID yang ditemukan
+        const response = await GlobalApi.getUserById(id);
         const data = response.data;
 
-        // Mengatur nilai default untuk tahunDiangkat
         if (data.tahunDiangkat) {
           const formattedDate = new Date(data.tahunDiangkat)
             .toISOString()
-            .split("T")[0]; // Format ke YYYY-MM-DD
-          setTahunDiangkat(formattedDate); // Set ke state
-          setValue("tahunDiangkat", formattedDate); // Set ke form
+            .split("T")[0];
+          setTahunDiangkat(formattedDate);
+          setValue("tahunDiangkat", formattedDate);
         }
 
-        // Mengatur nilai default untuk mulaiJadiAnggotaPgri
         if (data.mulaiJadiAnggotaPgri) {
           const formattedDate = new Date(data.mulaiJadiAnggotaPgri)
             .toISOString()
-            .split("T")[0]; // Format ke YYYY-MM-DD
-          setFormattedMulaiJadiAnggota(formattedDate); // Set ke state
-          setValue("mulaiJadiAnggotaPgri", formattedDate); // Set ke form
+            .split("T")[0];
+          setFormattedMulaiJadiAnggota(formattedDate);
+          setValue("mulaiJadiAnggotaPgri", formattedDate);
         }
-
-        // Set nilai lainnya ke form jika perlu
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
@@ -495,7 +506,6 @@ const Page = () => {
   }, [setValue]);
 
   useEffect(() => {
-    // Fetch cabang data from an API or database
     const fetchCabang = async () => {
       try {
         const response = await GlobalApi.getCabang();
@@ -518,31 +528,28 @@ const Page = () => {
 
   const fetchJabatan = async () => {
     try {
-      const response = await GlobalApi.getJabatan(); // Ambil data jabatan dari API
+      const response = await GlobalApi.getJabatan();
 
-      setJabatan(response.data || []); // Simpan data jabatan ke state
+      setJabatan(response.data || []);
     } catch (error) {
       console.error("Error fetching jabatan:", error);
     }
   };
 
-  // Panggil fetchJabatan saat komponen dimuat
   useEffect(() => {
     fetchJabatan();
   }, []);
 
-  // Fungsi untuk mengambil data golongan jabatan
   const fetchGolonganJabatan = async () => {
     try {
-      const response = await GlobalApi.getGolonganJabatan(); // Ambil data golongan jabatan dari API
+      const response = await GlobalApi.getGolonganJabatan();
 
-      setGolonganJabatan(response.data || []); // Simpan data golongan jabatan ke state
+      setGolonganJabatan(response.data || []);
     } catch (error) {
       console.error("Error fetching golongan jabatan:", error);
     }
   };
 
-  // Panggil fetchGolonganJabatan saat komponen dimuat
   useEffect(() => {
     fetchGolonganJabatan();
   }, []);
@@ -552,8 +559,8 @@ const Page = () => {
   useEffect(() => {
     const fetchUnitKerja = async () => {
       try {
-        const response = await GlobalApi.getUnitKerja(); // API untuk mendapatkan unit kerja
-        setUnitKerja(response.data || []); // Pastikan response.data adalah array
+        const response = await GlobalApi.getUnitKerja();
+        setUnitKerja(response.data || []);
       } catch (error) {
         console.error("Error fetching unit kerja:", error);
       }
@@ -581,10 +588,6 @@ const Page = () => {
       setError("Geolocation is not supported by this browser.");
       setLoading(false);
     }
-  };
-
-  const handleBackClick = () => {
-    router.push("/anggota/data-anggota"); // Mengarahkan ke halaman data anggota
   };
 
   const handleRemoveInput = (index) => {
@@ -629,18 +632,16 @@ const Page = () => {
                   />
                   <label
                     htmlFor="foto"
-                    className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md bg-white text-center mt-2" // Jarak atas label
+                    className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md bg-white text-center mt-2"
                   >
                     Choose Files
                   </label>
                   <p className="text-red-600 font-bold text-center mt-2">
                     {" "}
-                    {/* Jarak atas untuk teks Wajib */}
                     *Wajib Menggunakan Batik PGRI
                   </p>
                   <p className="text-red-600 text-center">
                     {" "}
-                    {/* Jarak atas untuk teks Maksimal ukuran */}
                     *Maksimal ukuran file unggah 250kb format file (jpg, jpeg,
                     png)
                   </p>
@@ -696,7 +697,6 @@ const Page = () => {
                       onChange={(e) => setPassword(e.target.value)}
                     />
 
-                    {/* Modal Informasi Password */}
                     {isPasswordInfoOpen && (
                       <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
                         <div className="bg-white p-4 rounded-lg shadow-lg">
@@ -736,8 +736,11 @@ const Page = () => {
                       placeholder="Tuliskan NPA"
                       value={npaPgri}
                       onChange={(e) => setNpaPgri(e.target.value)}
+                      maxLength={11}
                     />
+                    
                   </div>
+
                   <div className="w-full">
                     <Label className="block text-sm font-medium mb-3">
                       NIP
@@ -749,9 +752,61 @@ const Page = () => {
                       type="number"
                       id="nip"
                       placeholder="Nomor Induk Pendidik (NIP)"
-                      value={nip} // Bind the nip value from state
+                      value={nip}
                       onChange={(e) => setNip(e.target.value)}
                     />
+                    <Button
+                      type="button"
+                      onClick={handleCekNip}
+                      className="mt-2 p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+                    >
+                      Cek NIP
+                    </Button>
+
+                    {isPopupVisible && (
+                      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                        <div className="bg-white rounded-lg p-6 w-1/2">
+                          <h2 className="text-lg font-semibold mb-4">
+                            Apakah Data Anda Sudah Benar?
+                          </h2>
+                          {data ? (
+                            <div>
+                              <p>
+                                <strong>Nama:</strong> {data.namaAnggota}
+                              </p>
+                              <p>
+                                <strong>Tanggal Lahir:</strong>{" "}
+                                {data.tanggalLahir}
+                              </p>
+                              <p>
+                                <strong>Cabang:</strong> {data.cabang}
+                              </p>
+                              <p>
+                                <strong>Unit Kerja:</strong> {data.unitKerja}
+                              </p>
+                            </div>
+                          ) : (
+                            <p>Data tidak tersedia.</p>
+                          )}
+                          <div className="mt-2 justify-end flex border">
+                            <Button
+                              type="button"
+                              onClick={handleClosePopup}
+                              className="p-2 mr-3 bg-teal-500 w-16 text-white rounded hover:bg-teal-600"
+                            >
+                              Tutup
+                            </Button>
+                            <Button
+                              type="submit"
+                              onClick={handleConfirmAndSendData}
+                              className="p-2 w-16 bg-teal-500 text-white rounded hover:bg-teal-600"
+                            >
+                              Ya
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -767,7 +822,7 @@ const Page = () => {
                       type="number"
                       id="nik"
                       placeholder="16 Digit"
-                      value={nik} // Bind the nip value from state
+                      value={nik}
                       onChange={(e) => setNik(e.target.value)}
                     />
                   </div>
@@ -797,7 +852,7 @@ const Page = () => {
                       type="text"
                       id="tempatLahir"
                       placeholder="Tempat Kelahiran"
-                      value={tempatLahir} // Bind the nip value from state
+                      value={tempatLahir}
                       onChange={(e) => setTempatLahir(e.target.value)}
                     />
                   </div>
@@ -809,23 +864,23 @@ const Page = () => {
                     <Controller
                       name="tanggalLahir"
                       control={control}
-                      defaultValue={formattedTanggalLahir} // Nilai default
+                      defaultValue={formattedTanggalLahir}
                       render={({ field: { onChange, value } }) => (
                         <Input
                           type="date"
                           id="tanggalLahir"
-                          value={value || formattedTanggalLahir} // Sinkronkan dengan nilai state
+                          value={value || formattedTanggalLahir}
                           onChange={(e) => {
-                            const selectedDate = e.target.value; // Ambil nilai dari input
-                            setTanggalLahir(selectedDate); // Update state tanggalLahir
-                            onChange(selectedDate); // Update nilai form control
+                            const selectedDate = e.target.value;
+                            setTanggalLahir(selectedDate);
+                            onChange(selectedDate);
                           }}
                         />
                       )}
                     />
                   </div>
                 </div>
-                {/* formattedTanggalLahir */}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
                   <div className="w-full">
                     <Label className="block text-sm font-medium mb-3">
@@ -837,11 +892,11 @@ const Page = () => {
                       defaultValue={jenisKelamin}
                       render={({ field: { onChange, value } }) => (
                         <Select
-                          value={value} // Gunakan value dari field
+                          value={value}
                           onValueChange={(e) => {
-                            onChange(e); // Update field dengan nilai baru
-                            setJenisKelamin(e); // Update state lokal jika perlu
-                          }} // Ganti onChange dengan onValueChange jika menggunakan Select dari library tertentu
+                            onChange(e);
+                            setJenisKelamin(e);
+                          }}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Pilih Jenis Kelamin" />
@@ -867,14 +922,14 @@ const Page = () => {
                     <Controller
                       name="agama"
                       control={control}
-                      defaultValue={agama} // Pastikan ini diisi dengan nilai dari database
+                      defaultValue={agama}
                       render={({ field: { onChange, value } }) => (
                         <Select
-                          value={value} // Gunakan value dari field
+                          value={value}
                           onValueChange={(e) => {
-                            onChange(e); // Update field dengan nilai baru
-                            setAgama(e); // Update state lokal jika perlu
-                          }} // Ganti onChange dengan onValueChange jika menggunakan Select dari library tertentu
+                            onChange(e);
+                            setAgama(e);
+                          }}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Pilih Agama" />
@@ -904,14 +959,14 @@ const Page = () => {
                     <Controller
                       name="golonganDarah"
                       control={control}
-                      defaultValue={golonganDarah} // Pastikan ini diisi dengan nilai dari database
+                      defaultValue={golonganDarah}
                       render={({ field: { onChange, value } }) => (
                         <Select
-                          value={value} // Gunakan value dari field
+                          value={value}
                           onValueChange={(e) => {
-                            onChange(e); // Update field dengan nilai baru
-                            setGolonganDarah(e); // Update state lokal jika perlu
-                          }} // Ganti onChange dengan onValueChange jika menggunakan Select dari library tertentu
+                            onChange(e);
+                            setGolonganDarah(e);
+                          }}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Pilih Golongan Darah" />
@@ -960,7 +1015,7 @@ const Page = () => {
                       size={20}
                       onClick={handleOpenModal}
                     />
-                    {/* Modal Popup */}
+
                     {isModalOpen && (
                       <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
                         <div className="bg-white p-4 rounded-lg shadow-lg">
@@ -1035,7 +1090,7 @@ const Page = () => {
                             <Input
                               className="block w-full text-sm p-2 mt-2 mb-2 border rounded"
                               type="text"
-                              placeholder={`Tuliskan Nama Anak ${index + 1}`} // Perbaikan di sini
+                              placeholder={`Tuliskan Nama Anak ${index + 1}`}
                               value={name}
                               onChange={(e) => handleChange(index, e)}
                             />
@@ -1071,15 +1126,15 @@ const Page = () => {
                 </div>
                 <div className="col-span-1 sm:col-span-2 flex justify-between mt-4">
                   <Button
-                    type="button" // Menambahkan type button untuk mencegah submit
+                    type="button"
                     className="text-white bg-gray-400 hover:bg-gray-500 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
-                    onClick={() => router.push("/anggota/data-anggota")} // Arahkan ke halaman data anggota
+                    onClick={handleBackClick}
                   >
                     Kembali
                   </Button>
                   <Button onClick={nextStep}>Next</Button>
                 </div>
-                {/* Modal Informasi Lokasi */}
+
                 {isLocationInfoOpen && (
                   <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
                     <div className="bg-white p-4 rounded-lg shadow-lg">
@@ -1127,15 +1182,15 @@ const Page = () => {
                           value={query || value}
                           onChange={(e) => {
                             const value = e.target.value;
-                            setQuery(value); // Update nilai input
-                            onChange(value); // Update nilai form
+                            setQuery(value);
+                            onChange(value);
                             setSelectedCabang(e);
-                            setShowDropdown(true); // Tampilkan dropdown
+                            setShowDropdown(true);
                           }}
                           onFocus={() => setShowDropdown(true)}
                           onBlur={() =>
                             setTimeout(() => setShowDropdown(false), 200)
-                          } // Delay untuk menutup dropdown
+                          }
                         />
                         {showDropdown && (
                           <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 max-h-48 overflow-y-auto w-full">
@@ -1145,10 +1200,10 @@ const Page = () => {
                                   key={item.idKecamatan}
                                   className="p-2 cursor-pointer hover:bg-gray-100"
                                   onClick={() => {
-                                    setQuery(item.kecamatan); // Set nilai input dengan cabang yang dipilih
-                                    setSelectedCabang(item.kecamatan); // Set pilihan cabang ke state
-                                    handleCabangChange(item.kecamatan); // Memanggil fungsi untuk memfilter unit kerja
-                                    setShowDropdown(false); // Sembunyikan dropdown
+                                    setQuery(item.kecamatan);
+                                    setSelectedCabang(item.kecamatan);
+                                    handleCabangChange(item.kecamatan);
+                                    setShowDropdown(false);
                                   }}
                                 >
                                   {item.kecamatan}
@@ -1180,12 +1235,12 @@ const Page = () => {
                           type="text"
                           className="border rounded-lg p-2 w-56 bg-white shadow-sm"
                           placeholder="Pilih Unit Kerja"
-                          value={queryUnitKerja} // Gunakan queryUnitKerja untuk menampilkan nilai yang dipilih
+                          value={queryUnitKerja}
                           onChange={(e) => {
                             const inputValue = e.target.value;
-                            setQueryUnitKerja(inputValue); // Update query state
-                            handleUnitKerjaChange(inputValue); // Panggil fungsi filter unit kerja
-                            setShowDropdownUnitKerja(true); // Menampilkan dropdown saat mengetik
+                            setQueryUnitKerja(inputValue);
+                            handleUnitKerjaChange(inputValue);
+                            setShowDropdownUnitKerja(true);
                           }}
                           onFocus={() => setShowDropdownUnitKerja(true)}
                           onBlur={() =>
@@ -1193,7 +1248,7 @@ const Page = () => {
                               () => setShowDropdownUnitKerja(false),
                               200
                             )
-                          } // Penundaan untuk menutup dropdown
+                          }
                         />
                         {showDropdownUnitKerja && (
                           <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 max-h-48 overflow-y-auto w-full">
@@ -1203,10 +1258,10 @@ const Page = () => {
                                   key={item.id}
                                   className="p-2 cursor-pointer hover:bg-gray-100"
                                   onClick={() => {
-                                    setQueryUnitKerja(item.unitKerja); // Update input dengan pilihan
-                                    onChange(item.unitKerja); // Update nilai form
-                                    setSelectedUnitKerja(item.unitKerja); // Update state selected unit kerja
-                                    setShowDropdownUnitKerja(false); // Sembunyikan dropdown
+                                    setQueryUnitKerja(item.unitKerja);
+                                    onChange(item.unitKerja);
+                                    setSelectedUnitKerja(item.unitKerja);
+                                    setShowDropdownUnitKerja(false);
                                   }}
                                 >
                                   {item.unitKerja}
@@ -1234,9 +1289,9 @@ const Page = () => {
                     defaultValue={jabatan}
                     render={({ field: { onChange, value } }) => (
                       <Select
-                        value={value} // Pastikan value sudah terisi
+                        value={value}
                         onValueChange={(e) => {
-                          onChange(e); // Update nilai form
+                          onChange(e);
                         }}
                       >
                         <SelectTrigger>
@@ -1263,14 +1318,14 @@ const Page = () => {
                   <Controller
                     name="tingkatSekolah"
                     control={control}
-                    defaultValue={tingkatSekolah} // Pastikan ini diisi dengan nilai dari database
+                    defaultValue={tingkatSekolah}
                     render={({ field: { onChange, value } }) => (
                       <Select
-                        value={value} // Gunakan value dari field
+                        value={value}
                         onValueChange={(e) => {
-                          onChange(e); // Update field dengan nilai baru
-                          setTingkatSekolah(e); // Update state lokal jika perlu
-                        }} // Ganti onChange dengan onValueChange jika menggunakan Select dari library tertentu
+                          onChange(e);
+                          setTingkatSekolah(e);
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Pilih Jenjang Sekolah" />
@@ -1300,14 +1355,14 @@ const Page = () => {
                   <Controller
                     name="statusSekolah"
                     control={control}
-                    defaultValue={statusSekolah} // Pastikan ini diisi dengan nilai dari database
+                    defaultValue={statusSekolah}
                     render={({ field: { onChange, value } }) => (
                       <Select
-                        value={value} // Gunakan value dari field
+                        value={value}
                         onValueChange={(e) => {
-                          onChange(e); // Update field dengan nilai baru
-                          setStatusSekolah(e); // Update state lokal jika perlu
-                        }} // Ganti onChange dengan onValueChange jika menggunakan Select dari library tertentu
+                          onChange(e);
+                          setStatusSekolah(e);
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Pilih Status Sekolah" />
@@ -1329,13 +1384,13 @@ const Page = () => {
                   <Controller
                     name="statusPegawai"
                     control={control}
-                    defaultValue={statusPegawai} // Pastikan ini diisi dengan nilai dari database
+                    defaultValue={statusPegawai}
                     render={({ field: { onChange, value } }) => (
                       <Select
-                        value={value} // Gunakan value dari field
+                        value={value}
                         onValueChange={(e) => {
-                          onChange(e); // Update field dengan nilai baru
-                          setStatusPegawai(e); // Update state lokal jika perlu
+                          onChange(e);
+                          setStatusPegawai(e);
                         }}
                       >
                         <SelectTrigger>
@@ -1359,16 +1414,16 @@ const Page = () => {
                   <Controller
                     name="tahunDiangkat"
                     control={control}
-                    defaultValue={formattedTahunDiangkat} // Nilai default
+                    defaultValue={formattedTahunDiangkat}
                     render={({ field: { onChange, value } }) => (
                       <Input
                         type="date"
                         id="tahunDiangkat"
-                        value={value || tahunDiangkat} // Sinkronkan dengan nilai state
+                        value={value || tahunDiangkat}
                         onChange={(e) => {
-                          const selectedDate = e.target.value; // Ambil nilai dari input
-                          setTahunDiangkat(selectedDate); // Update state
-                          onChange(selectedDate); // Update nilai form
+                          const selectedDate = e.target.value;
+                          setTahunDiangkat(selectedDate);
+                          onChange(selectedDate);
                         }}
                       />
                     )}
@@ -1399,13 +1454,13 @@ const Page = () => {
                   <Controller
                     name="pendidikanTerakhir"
                     control={control}
-                    defaultValue={pendidikanTerakhir} // Pastikan ini diisi dengan nilai dari database
+                    defaultValue={pendidikanTerakhir}
                     render={({ field: { onChange, value } }) => (
                       <Select
-                        value={value} // Gunakan value dari field
+                        value={value}
                         onValueChange={(e) => {
-                          onChange(e); // Update field dengan nilai baru
-                          setPendidikanTerakhir(e); // Update state lokal jika perlu
+                          onChange(e);
+                          setPendidikanTerakhir(e);
                         }}
                       >
                         <SelectTrigger>
@@ -1431,13 +1486,13 @@ const Page = () => {
                   <Controller
                     name="sertifikatPendidik"
                     control={control}
-                    defaultValue={sertifikatPendidik} // Pastikan ini diisi dengan nilai dari database
+                    defaultValue={sertifikatPendidik}
                     render={({ field: { onChange, value } }) => (
                       <Select
-                        value={value} // Gunakan value dari field
+                        value={value}
                         onValueChange={(e) => {
-                          onChange(e); // Update field dengan nilai baru
-                          setSertifikatPendidik(e); // Update state lokal jika perlu
+                          onChange(e);
+                          setSertifikatPendidik(e);
                         }}
                       >
                         <SelectTrigger>
@@ -1461,16 +1516,16 @@ const Page = () => {
                   <Controller
                     name="mulaiJadiAnggotaPgri"
                     control={control}
-                    defaultValue={formattedMulaiJadiAnggota} // Nilai default
+                    defaultValue={formattedMulaiJadiAnggota}
                     render={({ field: { onChange, value } }) => (
                       <Input
                         type="date"
                         id="mulaiJadiAnggotaPgri"
-                        value={value || formattedMulaiJadiAnggota} // Sinkronkan dengan nilai state
+                        value={value || formattedMulaiJadiAnggota}
                         onChange={(e) => {
-                          const selectedDate = e.target.value; // Ambil nilai dari input
-                          setFormattedMulaiJadiAnggota(selectedDate); // Update state
-                          onChange(selectedDate); // Update nilai form
+                          const selectedDate = e.target.value;
+                          setFormattedMulaiJadiAnggota(selectedDate);
+                          onChange(selectedDate);
                         }}
                       />
                     )}
@@ -1484,13 +1539,13 @@ const Page = () => {
                   <Controller
                     name="golonganJabatan"
                     control={control}
-                    defaultValue={valueGolonganJabatan} // Nilai default
+                    defaultValue={valueGolonganJabatan}
                     render={({ field: { onChange, value } }) => (
                       <Select
-                        value={value || valueGolonganJabatan} // Gunakan value dari form atau dari state
+                        value={value || valueGolonganJabatan}
                         onValueChange={(e) => {
-                          onChange(e); // Update nilai form
-                          setValueGolonganJabatan(e); // Simpan golongan jabatan yang dipilih
+                          onChange(e);
+                          setValueGolonganJabatan(e);
                         }}
                       >
                         <SelectTrigger>
@@ -1528,10 +1583,10 @@ const Page = () => {
                         type="text"
                         id="mengajar"
                         placeholder="Mengajar"
-                        value={value} // sesuaikan value agar dapat diatur oleh react-hook-form
+                        value={value}
                         onChange={(e) => {
                           setMengajar(e.target.value);
-                          onChange(e.target.value); // pastikan onChange react-hook-form dipanggil
+                          onChange(e.target.value);
                         }}
                       />
                     )}
@@ -1576,16 +1631,14 @@ const Page = () => {
                               type="checkbox"
                               value={option.label}
                               checked={option.status}
-                              disabled={option.status} // Disabled jika sudah "Ya"
+                              disabled={option.status}
                               onChange={(e) => {
-                                // Update opsi dan status checkbox
                                 const newValue = e.target.checked
                                   ? [...value, option.label]
                                   : value.filter((val) => val !== option.label);
 
-                                // Set status sesuai dengan apakah checkbox dicentang
                                 option.setStatus(e.target.checked);
-                                onChange(newValue); // Panggil onChange untuk react-hook-form
+                                onChange(newValue);
                               }}
                             />
                             <span>{option.label}</span>

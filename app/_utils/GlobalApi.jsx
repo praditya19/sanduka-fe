@@ -113,6 +113,35 @@ const updateUserById = async (userId, formData) => {
   }
 };
 
+// Cek NIP
+const getByNIP = async (nip) => {
+  try {
+    const response = await axiosClient.get(`api/files/nip/${nip}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error mendapat data by NIP:", error);
+    throw error;
+  }
+};
+
+const updateRegisUser = async (userId, data) => {
+  try {
+    const response = await axiosClient.post(
+      `/api/files/updateRegisterUser/${userId}`,
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating register user:", error);
+    throw error;
+  }
+};
+
 // Keanggotaan
 const updateVerified = async (userId) => {
   try {
@@ -790,7 +819,7 @@ const getSaldoAkhir = async (month, year) => {
 const getRekapAnggotaByCabang = async (cabang) => {
   try {
     const response = await axiosClient.get(
-      `/api/rekap-anggota/by-cabang?cabang=${cabang}`
+      `/api/by-nominal/${cabang}`
     );
     return response.data;
   } catch (error) {
@@ -938,4 +967,6 @@ export default {
   keluarAnggota,
   pensiunAnggota,
   mutasiCabangUnitKerja,
+  getByNIP,
+  updateRegisUser,
 };

@@ -23,9 +23,10 @@ const DataTable = () => {
   const [detailFilter, setDetailFilter] = useState("");
   const [cabangFilter, setCabangFilter] = useState("");
   const [cabangOptions, setCabangOptions] = useState([]);
-  const [anggotaData, setAnggotaData] = useState([]); // Initialize as an empty array
+  const [anggotaData, setAnggotaData] = useState([]);
+
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false); // Change to a boolean for error state
+  const [error, setError] = useState(false);
   const { token } = useAuth();
   const router = useRouter();
 
@@ -47,15 +48,15 @@ const DataTable = () => {
     try {
       const response = await GlobalApi.getAllAnggota();
       if (Array.isArray(response.data)) {
-        setAnggotaData(response.data); // Ensure the data is an array
+        setAnggotaData(response.data);
       } else {
         console.error("Unexpected data format:", response.data);
-        setAnggotaData([]); // Set to empty array if data format is unexpected
+        setAnggotaData([]);
       }
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching anggota data:", error); // Log error for debugging
-      setError(true); // Set error state to true
+      console.error("Error fetching anggota data:", error);
+      setError(true);
       setLoading(false);
     }
   };
@@ -71,24 +72,37 @@ const DataTable = () => {
     setFilteredOptions(filtered);
     setShowDropdown(value.length > 0);
 
-    // Jika input kosong, reset selectedCabang
     if (value.trim() === "") {
       setSelectedCabang("");
     }
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const handleOptionClick = (option) => {
-    const cabangTerpilih = option ? option.kecamatan : ''; // Jika kosong, set sebagai string kosong
-    setSelectedCabang(cabangTerpilih); // Set cabang terpilih
-    setShowDropdown(false); // Menyembunyikan dropdown setelah memilih opsi
-    setSearchTerm(''); // Reset search term
+    const cabangTerpilih = option ? option.kecamatan : "";
+    setSelectedCabang(cabangTerpilih);
+    setShowDropdown(false);
+    setSearchTerm("");
   };
 
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
     } else {
-      setLoading(true); // Start loading data
+      setLoading(true);
       fetchAnggotaData();
     }
   }, [token, router]);
@@ -98,7 +112,6 @@ const DataTable = () => {
   }
 
   if (error) {
-    // Show generic error message if there's an error
     return <div>Something went wrong. Please try again later.</div>;
   }
 
@@ -128,35 +141,32 @@ const DataTable = () => {
               <option value="Meninggal">Anggota Meninggal</option>
             </select>
             <div className="relative" ref={dropdownRef}>
-              {/* Input readonly untuk menampilkan cabang terpilih */}
               <Input
                 type="text"
                 placeholder="Cabang terpilih"
                 value={selectedCabang}
                 readOnly
                 className="p-2 border border-gray-300 rounded-md mb-2 w-64"
-                onClick={() => setShowDropdown(!showDropdown)} // Toggle dropdown saat input di-click
+                onClick={() => setShowDropdown(!showDropdown)}
               />
 
               {showDropdown && (
                 <div className="absolute w-64 bg-white border border-gray-300 rounded-md max-h-48 shadow-lg z-10">
-                  {/* Input pencarian di dalam dropdown */}
                   <Input
                     type="text"
                     placeholder="Cari atau ketik Cabang..."
                     value={searchTerm}
                     onChange={handleInputChange}
                     className="p-2 border-b border-gray-300 w-full"
-                    autoFocus // Fokus otomatis pada input pencarian saat dropdown muncul
+                    autoFocus
                   />
 
                   <ul className="max-h-40 overflow-y-auto">
-                    {/* Opsi untuk menghapus pilihan cabang */}
                     <li
-                      className="p-2 hover:bg-blue-100 cursor-pointer text-gray-700 font-semibold"
-                      onClick={() => handleOptionClick(null)} // Kosongkan pilihan
+                      className="p-2 hover:bg-blue-100 cursor-pointer text-gray-700"
+                      onClick={() => handleOptionClick(null)}
                     >
-                      Kosongkan Pilihan
+                      Pilih Cabang
                     </li>
 
                     {filteredOptions.length > 0 ? (

@@ -15,12 +15,12 @@ const HeaderMobile = () => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const [notificationCount, setNotificationCount] = useState(0);
-  const [previousNotificationCount, setPreviousNotificationCount] = useState(0); // Track previous count
+  const [previousNotificationCount, setPreviousNotificationCount] = useState(0); 
   const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] =
     useState(false);
   const audioRef = useRef(null);
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); // State for toggling profile menu
-  const profileMenuRef = useRef(null); // Ref for profile menu
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); 
+  const profileMenuRef = useRef(null);
 
   const [profileImageUrl, setProfileImageUrl] = useState("/profile.png");
 
@@ -63,7 +63,7 @@ const HeaderMobile = () => {
 
   const handleLogout = () => {
     sessionStorage.removeItem("userId");
-    window.location.href = "/"; // Redirect to login or home page
+    window.location.href = "/"; 
   };
 
   useEffect(() => {
@@ -78,7 +78,7 @@ const HeaderMobile = () => {
     };
 
     fetchNotificationCount();
-    const intervalId = setInterval(fetchNotificationCount, 60000); // Refresh every minute
+    const intervalId = setInterval(fetchNotificationCount, 60000);
 
     return () => clearInterval(intervalId);
   }, []);
@@ -86,7 +86,6 @@ const HeaderMobile = () => {
   useEffect(() => {
     getAnggotaById();
 
-    // Play notification sound only if new notifications are greater than previous ones
     if (
       notificationCount > previousNotificationCount &&
       !isNotificationSoundPlaying
@@ -196,21 +195,21 @@ const HeaderMobile = () => {
               className="rounded-full cursor-pointer"
               onClick={toggleProfileMenu}
             />
-            {/* Profile Dropdown */}
+       
             {isProfileMenuOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded-md z-10">
-                <Link
-                  href="/update-profile"
-                  className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
-                >
-                  Edit Profile
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100"
-                >
-                  Logout
-                </button>
+               <Link
+                      href={`/anggota/edit-anggota`}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                    >
+                      Edit Profile
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                    >
+                      Logout
+                    </button>
               </div>
             )}
           </div>

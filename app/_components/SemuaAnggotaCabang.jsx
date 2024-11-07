@@ -21,7 +21,6 @@ function Table() {
     { no: 16, cabang: "PECANGAAN", pgri: 404, daspen: 404 },
     { no: 17, cabang: "TAHUNAN", pgri: 378, daspen: 376 },
     { no: 18, cabang: "WELAHAN", pgri: 488, daspen: 485 },
-    // { no: "", cabang: "Jumlah", pgri: 7143, daspen: 5619 },
   ]);
 
   return (

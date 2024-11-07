@@ -38,13 +38,23 @@ function PencarianAnggota() {
   const [anggota, setAnggota] = useState([]);
   const [cabang, setCabang] = useState([]);
   const [unitKerja, setUnitKerja] = useState([]);
+<<<<<<< HEAD
+
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+<<<<<<< HEAD
+
   const [searchQuery, setSearchQuery] = useState("");
+ 
+=======
+  const [searchQuery, setSearchQuery] = useState("");
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [fotoBase64, setFotoBase64] = useState("");
@@ -56,7 +66,13 @@ function PencarianAnggota() {
       setFilteredUnitKerja(filtered);
     } else {
       setFilteredUnitKerja([]);
+<<<<<<< HEAD
+    };
+
+  
+=======
     }
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
 
     fetchAnggota();
     fetchData();
@@ -93,7 +109,11 @@ function PencarianAnggota() {
 
       if (fetchedData && fetchedData.length > 0) {
         fetchedData.forEach((item) => {
+<<<<<<< HEAD
+
+=======
           console.log("test", item);
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
           if (item.foto) {
             try {
               const decodedString = atob(item.foto);
@@ -301,6 +321,9 @@ function PencarianAnggota() {
 
       return statusFilter && cabangFilter && unitKerjaFilter && searchFilter;
     });
+<<<<<<< HEAD
+  }, [sortedData, selectedStatus, selectedCabang, selectedUnitKerja, searchQuery]); 
+=======
   }, [
     sortedData,
     selectedStatus,
@@ -308,6 +331,7 @@ function PencarianAnggota() {
     selectedUnitKerja,
     searchQuery,
   ]);
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
 
   const jumlahAnggota = filteredData.length;
 
@@ -409,7 +433,7 @@ function PencarianAnggota() {
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
+      
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -587,7 +611,11 @@ function PencarianAnggota() {
                             <div className="flex justify-center items-center">
                               {globalIndex}
                               <Button
+<<<<<<< HEAD
+                                className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"  
+=======
                                 className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                                 onClick={() => handleExpand(index)}
                               >
                                 {expandedIndex === index ? (
@@ -598,7 +626,11 @@ function PencarianAnggota() {
                               </Button>
                             </div>
                           </td>
+<<<<<<< HEAD
+                   
+=======
 
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                           <td className="p-2 md:p-3 border">
                             {fotoBase64[index] ? (
                               <Image
@@ -696,7 +728,11 @@ function PencarianAnggota() {
                             </div>
                           </td>
                         </tr>
+<<<<<<< HEAD
+                    
+=======
 
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                         {expandedIndex === index && (
                           <tr className="md:hidden">
                             <td colSpan="7" className="p-2 border">
@@ -791,7 +827,7 @@ function PencarianAnggota() {
                     <div className="flex items-center">
                       {totalPages > 1 && (
                         <ul className="flex space-x-1">
-                          {/* Calculate the range of pages to display */}
+                      
                           {(() => {
                             let startPage = Math.max(1, currentPage - 1);
                             let endPage = Math.min(totalPages, currentPage + 1);
@@ -837,7 +873,7 @@ function PencarianAnggota() {
               </div>
             </div>
 
-            {/* Modal for Mutation Actions */}
+         
             <Modal
               isOpen={isModalOpen}
               onRequestClose={closeModal}

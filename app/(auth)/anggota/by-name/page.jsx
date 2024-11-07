@@ -59,19 +59,16 @@ function DataAnggota() {
   const [loading, setLoading] = useState(true);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [filteredCabang, setFilteredCabang] = useState([]);
+
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [isPopupVisible, setPopupVisible] = useState(false);
 
-  //  Filter Cabang dan Unit Kerja
-  // Fetch cabang data
   useEffect(() => {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setOriginalCabangList(response.data); // Simpan semua cabang ke originalCabangList
-        setFilteredCabangList(response.data); // Atur filter cabang awal
+        setOriginalCabangList(response.data);
+        setFilteredCabangList(response.data);
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -79,7 +76,6 @@ function DataAnggota() {
     fetchCabangData();
   }, []);
 
-  // Fetch unit kerja data
   useEffect(() => {
     const fetchUnitKerjaData = async () => {
       try {
@@ -94,20 +90,19 @@ function DataAnggota() {
 
   const handleUnitKerjaFocus = () => {
     if (selectedCabang) {
-      setShowUnitKerjaDropdown(true); // Tampilkan dropdown
+      setShowUnitKerjaDropdown(true);
     }
   };
 
   const handleCabangClick = () => {
-    setFilteredCabangList(originalCabangList); // Reset ke daftar asli saat dropdown dibuka
-    setShowCabangDropdown(true); // Tampilkan dropdown
+    setFilteredCabangList(originalCabangList);
+    setShowCabangDropdown(true);
   };
 
   const handleUnitKerjaChange = (e) => {
     const input = e.target.value;
     setUnitKerjaInput(input);
 
-    // Filter unit kerja berdasarkan input dan cabang
     const filteredUnitKerja = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang &&
@@ -115,18 +110,15 @@ function DataAnggota() {
         unitKerja.unitKerja.toLowerCase().startsWith(input.toLowerCase())
     );
 
-    // Tampilkan dropdown jika ada hasil filter
     setShowUnitKerjaDropdown(filteredUnitKerja.length > 0);
     setFilteredUnitKerja(filteredUnitKerja);
 
-    // Filter data rekap berdasarkan input unit kerja
     const rekapFilteredByUnitKerja = originalRekapData.filter(
       (item) =>
         item.alamatKerja &&
         item.alamatKerja.toLowerCase().includes(input.toLowerCase())
     );
 
-    // Jika input kosong, kembalikan data tabel ke data awal
     if (input === "") {
       setRekapData(originalRekapData);
     } else {
@@ -145,7 +137,6 @@ function DataAnggota() {
     setSelectedCabang(cabang.kecamatan);
     setShowCabangDropdown(false);
 
-    // Now filter the unit kerja based on the selected cabang
     const filtered = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang &&
@@ -155,33 +146,29 @@ function DataAnggota() {
   };
 
   const handleUnitKerjaSearch = (searchTerm) => {
-    // Jika searchTerm kosong, set filteredUnitKerja dengan semua unit kerja yang sesuai dengan selectedCabang
     if (searchTerm === "") {
       const allFiltered = unitKerjaList.filter(
         (unitKerja) => unitKerja.cabang === selectedCabang
       );
       setFilteredUnitKerja(allFiltered);
     } else {
-      // Jika ada input, filter berdasarkan input dan cabang yang dipilih
       const filtered = unitKerjaList.filter(
         (unitKerja) =>
           unitKerja.unitKerja
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) &&
-          unitKerja.cabang === selectedCabang // Memfilter berdasarkan cabang
+          unitKerja.cabang === selectedCabang
       );
       setFilteredUnitKerja(filtered);
     }
 
-    setShowUnitKerjaDropdown(true); // Menjaga dropdown tetap terbuka
+    setShowUnitKerjaDropdown(true);
   };
 
   const handleUnitKerjaSelect = (unitKerja) => {
     setSelectedUnitKerja(unitKerja.unitKerja);
     setUnitKerjaInput(unitKerja.unitKerja);
     setShowUnitKerjaDropdown(false);
-    console.log("Unit kerja yang dipilih:", unitKerja);
-    // Update rekapData berdasarkan unit kerja yang dipilih
     const filteredRekapData = originalRekapData.filter(
       (item) => item.alamatKerja === unitKerja.unitKerja
     );
@@ -222,7 +209,6 @@ function DataAnggota() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-  // end
 
   useEffect(() => {
     if (!token) {
@@ -248,12 +234,12 @@ function DataAnggota() {
   const fetchAnggota = async () => {
     try {
       const page = 0;
-      const size = 50; // Or the number of items per page you want to fetch
+      const size = 50;
       const response = await GlobalApi.getAllAnggota(page, size);
-      setAnggota(response.data.content || []); // Use response.data.content if it's a Page object
+      setAnggota(response.data.content || []);
     } catch (error) {
       console.error("Error fetching anggota:", error);
-      setAnggota([]); // Optionally, set to an empty array if there's an error
+      setAnggota([]);
     }
   };
 
@@ -371,8 +357,7 @@ function DataAnggota() {
   };
 
   const sortedData = useMemo(() => {
-    if (!Array.isArray(anggota)) return []; // Ensure it's an array
-
+    if (!Array.isArray(anggota)) return [];
     let sortableItems = [...anggota];
 
     if (sortConfig && sortConfig.key) {
@@ -423,7 +408,6 @@ function DataAnggota() {
     filterUnitKerja,
   ]);
 
-  // Move the `groupedData` calculation here
   const groupedData = useMemo(() => {
     const grouped = [];
     const groupByKerja = filteredData.reduce((acc, item) => {
@@ -441,7 +425,6 @@ function DataAnggota() {
     return grouped;
   }, [filteredData]);
 
-  // Now you can safely calculate `totalItems` and `totalPages`
   const totalItems = groupedData.length;
   const totalPages = Math.ceil(totalItems / maxItems);
 
@@ -535,39 +518,6 @@ function DataAnggota() {
     setPopupVisible(false);
   };
 
-  const handleInputChange = (e) => {
-    setFilterCabang(e.target.value);
-    setShowDropdown(true);
-  };
-
-  const handleInputChangeUnit = (e) => {
-    setFilterUnitKerja(e.target.value);
-    setShowDropdown(true);
-  };
-
-  const handleSelectChange = (e) => {
-    setSelectedCabang(e.target.value);
-    setFilterCabang(e.target.value);
-    setShowDropdown(false);
-  };
-
-  const handleSelectChangeUnit = (e) => {
-    setSelectedUnitKerja(e.target.value);
-    setFilterUnitKerja(e.target.value);
-    setShowDropdown(false);
-  };
-
-  const handleOptionClick = (kecamatan) => {
-    setSelectedCabang(kecamatan);
-    setFilterCabang(kecamatan);
-    setShowDropdown(false);
-  };
-
-  const handleOptionClickUnit = (unitKerja) => {
-    setSelectedUnitKerja(unitKerja);
-    setFilterUnitKerja(unitKerja);
-  };
-
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -577,7 +527,6 @@ function DataAnggota() {
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -620,32 +569,41 @@ function DataAnggota() {
               </Button>
             </div>
           )}
-          {/* <div className="container mx-auto p-6 bg-white shadow-md rounded-lg"> */}
+
           <div className="mb-4 -mt-40 ">
             <div className="flex flex-wrap items-start mt-40 justify-between">
               <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
-              <div className="flex flex-col relative w-64" ref={cabangRef}>
+                <div className="flex flex-col relative w-64" ref={cabangRef}>
                   <Input
                     type="text"
                     value={selectedCabang}
                     readOnly
-                    onClick={handleCabangClick} // Tambahkan onClick untuk menampilkan dropdown
+                    onClick={handleCabangClick}
                     className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
                     placeholder="Pilih Cabang"
                   />
                   {showCabangDropdown && (
-                    <div className="absolute mt-9">
+                    <div className="absolute mt-9 w-full">
                       <Input
                         type="text"
-                        onChange={(e) => handleCabangSearch(e.target.value)} // Function untuk memfilter cabang
+                        onChange={(e) => handleCabangSearch(e.target.value)}
                         className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-2"
-                        placeholder="Cari Cabang"
+                        placeholder="Cari atau ketik Cabang..."
+                        autoFocus
                       />
                       {filteredCabangList.length > 0 && (
-                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto">
+                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto mt-1">
+                          <li
+                            onClick={() =>
+                              handleSelectCabang({ kecamatan: "" })
+                            }
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                          >
+                            Pilih Cabang
+                          </li>
                           {filteredCabangList.map((cabang) => (
                             <li
-                              key={cabang.id} // Unique key for each cabang
+                              key={cabang.id}
                               onClick={() => handleSelectCabang(cabang)}
                               className="px-4 py-2 cursor-pointer hover:bg-gray-200"
                             >
@@ -674,10 +632,19 @@ function DataAnggota() {
                       <Input
                         type="text"
                         onChange={(e) => handleUnitKerjaSearch(e.target.value)}
-                        placeholder="Cari Unit Kerja"
+                        placeholder="Cari atau ketik Unit Kerja..."
+                        autoFocus
                         className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-2"
                       />
-                      <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto">
+                      <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto mt-1">
+                        <li
+                          onClick={() =>
+                            handleUnitKerjaSelect({ unitKerja: "" })
+                          }
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                        >
+                          Pilih Unit Kerja
+                        </li>
                         {filteredUnitKerja.length > 0 ? (
                           filteredUnitKerja.map((unitKerja) => (
                             <li
@@ -746,7 +713,6 @@ function DataAnggota() {
                     rowSpan="2"
                   >
                     Unit Kerja
-                    {/* {selectedCabang === "-- Cabang --" ? "Cabang" : `Unit Kerja ${selectedCabang}`} */}
                   </th>
                   <th
                     className="p-2 md:p-3 border text-white bg-teal-700"
@@ -792,7 +758,6 @@ function DataAnggota() {
 
                   return (
                     <React.Fragment key={groupIndex}>
-                      {/* Main row */}
                       <tr>
                         <td className="p-2 md:p-3 border text-center">
                           <div className="flex justify-center items-center">
@@ -805,7 +770,7 @@ function DataAnggota() {
                             </Button>
                           </div>
                         </td>
-                        {/* <td className="border text-center text-sm">{globalIndex}</td> */}
+
                         <td className="border text-center text-sm">
                           {group.kerja}
                         </td>
@@ -917,7 +882,6 @@ function DataAnggota() {
                         </td>
                       </tr>
 
-                      {/* Mobile View Row Expansion */}
                       {expandedIndex === groupIndex && (
                         <tr className="md:hidden">
                           <td colSpan="7" className="p-2 border">
@@ -989,9 +953,7 @@ function DataAnggota() {
               )}
             </div>
           </div>
-          {/* </div> */}
 
-          {/* Modal for Mutation Actions */}
           <Modal
             isOpen={isModalOpen}
             onRequestClose={closeModal}

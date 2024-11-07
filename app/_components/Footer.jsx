@@ -15,7 +15,7 @@ const Footer = () => {
     <div className="bg-green-900 text-white">
       <div className="container mx-auto px-4 lg:px-20 pb-4">
         <div className="flex flex-col lg:flex-row lg:justify-between gap-8">
-          {/* Sanduka Section */}
+          
           <div className="w-full lg:w-1/3">
             <div className="flex ">
               <Image

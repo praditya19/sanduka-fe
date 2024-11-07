@@ -46,6 +46,43 @@ const Page = () => {
       });
   }, []);
 
+<<<<<<< HEAD
+    const filtered = cabangOptions.filter((option) =>
+      option.kecamatan.toLowerCase().includes(value.toLowerCase())
+    );
+
+    setFilteredOptions(filtered);
+    setShowDropdown(value.length > 0);
+  };
+
+  const handleOptionClick = (option) => {
+    setSelectedCabang(option ? option.kecamatan : "");
+    setShowDropdown(false);
+    setSearchTerm("");
+  };
+
+  const handleCabangClick = () => {
+    setSearchTerm("");
+    setFilteredOptions(cabangOptions);
+    setShowDropdown(true);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
   const fetchBulan = async () => {
     try {
       const response = await GlobalApi.getBulan();
@@ -144,8 +181,14 @@ const Page = () => {
 
   const handleEdit = (item) => {
     const npa = item.npaDetail.npaPgri;
+<<<<<<< HEAD
+
+    sessionStorage.setItem("npa", npa);
+
+=======
     console.log(`NPA yang dituju: ${npa}`);
     sessionStorage.setItem("npa", npa);
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     router.push(`/history-data/detail`);
   };
 
@@ -206,6 +249,60 @@ const Page = () => {
             <div className="rounded-md flex flex-col py-4">
               <div className="container px-2">
                 <div className="w-full flex items-center justify-between mb-4">
+<<<<<<< HEAD
+                  <div className="flex w-2/3 space-x-2 relative">
+              
+                    <div className="relative" ref={dropdownRef}>
+                      <Input
+                        type="text"
+                        placeholder="Cabang terpilih"
+                        value={selectedCabang}
+                        readOnly
+                        className="p-2 border border-gray-300 rounded-md mb-2 w-64"
+                        onClick={handleCabangClick}
+                      />
+
+                      {showDropdown && (
+                        <div className="absolute w-64 bg-white border border-gray-300 rounded-md max-h-48 shadow-lg z-10">
+                          <Input
+                            type="text"
+                            placeholder="Cari atau ketik Cabang..."
+                            value={searchTerm}
+                            onChange={handleInputChange}
+                            className="p-2 border-b border-gray-300 w-full"
+                            autoFocus
+                          />
+
+                          <ul className="max-h-40 overflow-y-auto">
+                            <li
+                              className="p-2 hover:bg-blue-100 cursor-pointer text-gray-700"
+                              onClick={() => handleOptionClick(null)}
+                            >
+                              Pilih Cabang
+                            </li>
+
+                            {filteredOptions.length > 0 ? (
+                              filteredOptions.map((option, index) => (
+                                <li
+                                  key={index}
+                                  className="p-2 hover:bg-blue-100 cursor-pointer"
+                                  onClick={() => handleOptionClick(option)}
+                                >
+                                  {option.kecamatan}
+                                </li>
+                              ))
+                            ) : (
+                              <li className="p-2 text-gray-500">
+                                Tidak ada hasil
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                 
+=======
                   <div className="flex w-2/3 space-x-2">
                     <select
                       value={selectedCabang}
@@ -220,6 +317,7 @@ const Page = () => {
                       ))}
                     </select>
 
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                     <select
                       value={selectedMonth}
                       onChange={(e) => setSelectedMonth(e.target.value)}
@@ -233,6 +331,10 @@ const Page = () => {
                       ))}
                     </select>
 
+<<<<<<< HEAD
+                 
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                     <select
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(e.target.value)}
@@ -368,6 +470,10 @@ const Page = () => {
                   </tbody>
                 </table>
 
+<<<<<<< HEAD
+          
+=======
+>>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                 <div className="flex flex-col md:flex-row justify-between text-sm mt-4 items-center space-y-2 md:space-y-0 md:space-x-2">
                   <span className="text-center md:text-left">
                     Showing {page * size + 1} to{" "}

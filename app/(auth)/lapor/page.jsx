@@ -418,27 +418,39 @@ const FormStep1 = ({
                         type="text"
                         className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
                         placeholder="Pilih Cabang"
-                        value={queryCabang || selectedCabang} // Menampilkan cabang yang sudah dipilih
+                        value={queryCabang || selectedCabang} 
                         readOnly
-                        onClick={() => setShowDropdownCabang(true)} // Menampilkan dropdown
+                        onClick={() => setShowDropdownCabang(true)}
                       />
 
                       {showDropdownCabang && (
                         <div
                           id="dropdownCabang"
-                          className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[14.5%] w-full"
+                          className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[10%] w-full"
                         >
                           <Input
                             type="text"
                             className="border-b p-2 w-full bg-white"
-                            placeholder="Cari Cabang"
-                            value={queryCabang} // Input pencarian
+                         placeholder="Cari atau ketik Cabang..."
+                            value={queryCabang}
                             onChange={(e) => {
                               setQueryCabang(e.target.value);
                             }}
                             autoFocus
                           />
                           <ul className="max-h-48 overflow-y-auto">
+                          
+                            <li
+                              className="p-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() =>
+                                handleCabangSelect({
+                                  kecamatan: "",
+                                  idKecamatan: null,
+                                })
+                              }
+                            >
+                              Pilih Cabang
+                            </li>
                             {cabangOptions
                               .filter((cabang) =>
                                 cabang.kecamatan
@@ -468,22 +480,38 @@ const FormStep1 = ({
                         className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-not-allowed"
                         placeholder="Pilih Unit Kerja"
                         value={formData.unit || ""}
-                        readOnly // Membuat input menjadi readonly
-                        onClick={() => setShowDropdownUnit(true)} // Menampilkan dropdown saat diklik
+                        readOnly 
+                        onClick={() => setShowDropdownUnit(true)} 
                       />
 
                       {showDropdownUnit && filteredUnitKerja.length > 0 && (
-                        <div className="relative" id="dropdownUnit">
+                        <div
+                          className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[4.5%] w-[43%]"
+                          id="dropdownUnit"
+                        >
                           <Input
                             id="searchInput"
                             type="text"
-                            className="border-b p-2 w-[244%] bg-white mb-1"
-                            placeholder="Cari Unit Kerja"
+                            className="border-b p-2 w-full bg-white mb-1"
+                            placeholder="Cari atau ketik Unit Kerja..."
                             value={queryUnit}
                             onChange={(e) => setQueryUnit(e.target.value)}
                             autoFocus
                           />
-                          <ul className="absolute z-10 border rounded-lg bg-white shadow-sm max-h-48 overflow-y-auto w-[244%]">
+                          <ul className="absolute z-10 border rounded-lg bg-white shadow-sm max-h-48 overflow-y-auto w-full">
+                       
+                            <li
+                              className="p-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  unit: "",
+                                }));
+                                setShowDropdownUnit(false);
+                              }}
+                            >
+                              Pilih Unit Kerja
+                            </li>
                             {filteredUnitKerja
                               .filter((unit) =>
                                 unit.unitKerja

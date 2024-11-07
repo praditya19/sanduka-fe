@@ -22,7 +22,6 @@ const HelpPage = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [adminCabang, setAdminCabang] = useState([]);
-  // const [profileImageUrl, setProfileImageUrl] = useState("/default-image.jpg");
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { token } = useAuth();
@@ -48,8 +47,7 @@ const HelpPage = () => {
   const fetchData = async () => {
     try {
       const response = await GlobalApi.getAdminBantuan();
-      // const decodedString = atob(response.data.foto);
-      // setProfileImageUrl(decodedString);
+
       setAdminCabang(response.data);
     } catch (error) {
       console.error("Error fetching cabang data:", error);
@@ -93,7 +91,7 @@ const HelpPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(formData);
+
     setFormData({
       name: "",
       email: "",
