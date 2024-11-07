@@ -2,7 +2,7 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "https://0ffe-103-90-210-146.ngrok-free.app",
+  baseURL: "https://22fa-36-80-157-107.ngrok-free.app",
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
@@ -818,9 +818,7 @@ const getSaldoAkhir = async (month, year) => {
 // start
 const getRekapAnggotaByCabang = async (cabang) => {
   try {
-    const response = await axiosClient.get(
-      `/api/by-nominal/${cabang}`
-    );
+    const response = await axiosClient.get(`/api/by-nominal/${cabang}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching rekap anggota:", error);
