@@ -50,17 +50,9 @@ function DataAnggota() {
   const dropdownRef = useRef(null);
   const [fotoBase64, setFotoBase64] = useState("");
   const [rekapData, setRekapData] = useState([]);
-<<<<<<< HEAD
-
   const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
-
-=======
-  const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
-  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
-  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
   const [searchCabang, setSearchCabang] = useState("");
   const [showDropdownCabangUnit, setShowDropdownCabangUnit] = useState(false);
   const [listCabang, setListCabang] = useState([]);
@@ -87,13 +79,7 @@ function DataAnggota() {
         setIsDropdownVisible(false);
       }
     };
-<<<<<<< HEAD
-
     document.addEventListener("mousedown", handleClickOutside);
-
-=======
-    document.addEventListener("mousedown", handleClickOutside);
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -105,13 +91,7 @@ function DataAnggota() {
         setShowDropdownCabangUnit(false);
       }
     };
-<<<<<<< HEAD
-
     document.addEventListener("mousedown", handleClickOutside);
-
-=======
-    document.addEventListener("mousedown", handleClickOutside);
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -123,13 +103,7 @@ function DataAnggota() {
         setShowDropdownCabang(false);
       }
     };
-<<<<<<< HEAD
-
     document.addEventListener("mousedown", handleClickOutside);
-
-=======
-    document.addEventListener("mousedown", handleClickOutside);
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -140,10 +114,6 @@ function DataAnggota() {
       setShowDropdownUnit(false);
     }
   };
-<<<<<<< HEAD
-
-=======
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
@@ -219,20 +189,6 @@ function DataAnggota() {
     setShowDropdownUnit(true);
   };
 
-<<<<<<< HEAD
-  const handleUnitKerjaSelect = (unitKerja) => {
-    setSelectedUnitKerja(unitKerja.unitKerja);
-    setUnitKerjaInput(unitKerja.unitKerja);
-    setShowUnitKerjaDropdown(false);
-
-    const filteredRekapData = originalRekapData.filter(
-      (item) => item.alamatKerja === unitKerja.unitKerja
-    );
-    setRekapData(filteredRekapData);
-  };
-
-=======
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
   useEffect(() => {
     if (!unitKerjaInput && selectedCabang) {
       fetchRekapData(selectedCabang);
@@ -322,10 +278,6 @@ function DataAnggota() {
       }
 
       setFotoBase64(fotoBase64Array);
-<<<<<<< HEAD
-
-=======
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
       setLoading(false);
       setAnggota(fetchedData || []);
     } catch (error) {
@@ -523,10 +475,6 @@ function DataAnggota() {
   const handleCabangChange = (e) => {
     const value = e.target.value;
     setSearchCabang(value);
-<<<<<<< HEAD
-
-=======
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     const filtered = cabangOptions.filter((cabang) =>
       cabang.kecamatan.toLowerCase().includes(value.toLowerCase())
     );
@@ -609,10 +557,6 @@ function DataAnggota() {
   const handleKeluarAnggota = async () => {
     try {
       const anggotaId = sessionStorage.getItem("anggotaId");
-<<<<<<< HEAD
-      await GlobalApi.keluarAnggota(anggotaId);
-=======
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
       setPopupVisibleKeluar(false);
       toast.success("Anggota berhasil dihapus!", {
         autoClose: 3000,
@@ -1022,10 +966,6 @@ function DataAnggota() {
                               title="Edit Data"
                               onClick={() => {
                                 sessionStorage.setItem("anggotaId", item.id);
-<<<<<<< HEAD
-
-=======
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                                 handleEditClick();
                               }}
                             >
