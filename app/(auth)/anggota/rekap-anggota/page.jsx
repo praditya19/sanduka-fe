@@ -29,11 +29,7 @@ function RekapAnggota() {
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
   const [originalRekapData, setOriginalRekapData] = useState([]);
-<<<<<<< HEAD
-  const [totalSumbanganPerCabang, setTotalSumbanganPerCabang] = useState(0);
-=======
   const [expandedIndex, setExpandedIndex] = useState(null);
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -41,23 +37,6 @@ function RekapAnggota() {
         const response = await GlobalApi.getCabang();
         setOriginalCabangList(response.data);
         setFilteredCabangList(response.data);
-<<<<<<< HEAD
-
-        const defaultCabang = response.data.find(
-          (cabang) => cabang.kecamatan === "BANGSRI"
-        );
-        if (defaultCabang) {
-          setSelectedCabang("BANGSRI");
-          await fetchRekapData("BANGSRI");
-
-          const filteredUnitKerja = unitKerjaList.filter(
-            (unitKerja) =>
-              unitKerja.cabang && unitKerja.cabang.toLowerCase() === "bangsri"
-          );
-          setFilteredUnitKerja(filteredUnitKerja);
-        }
-=======
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -92,8 +71,6 @@ function RekapAnggota() {
     const input = e.target.value;
     setUnitKerjaInput(input);
 
-<<<<<<< HEAD
-=======
     const filteredUnitKerja = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang &&
@@ -110,7 +87,6 @@ function RekapAnggota() {
         item.alamatKerja.toLowerCase().includes(input.toLowerCase())
     );
 
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     if (input === "") {
       const allFiltered = unitKerjaList.filter(
         (unitKerja) => unitKerja.cabang === selectedCabang
@@ -150,10 +126,6 @@ function RekapAnggota() {
     setShowCabangDropdown(false);
 
     await fetchRekapData(cabang.kecamatan);
-<<<<<<< HEAD
-
-=======
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
     const filtered = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang &&
@@ -186,23 +158,11 @@ function RekapAnggota() {
     setSelectedUnitKerja(unitKerja.unitKerja);
     setUnitKerjaInput(unitKerja.unitKerja);
     setShowUnitKerjaDropdown(false);
-<<<<<<< HEAD
-
-    if (unitKerja.unitKerja === "") {
-      setRekapData(originalRekapData);
-    } else {
-      const filteredRekapData = originalRekapData.filter(
-        (item) => item.alamatKerja === unitKerja.unitKerja
-      );
-      setRekapData(filteredRekapData);
-    }
-=======
     console.log("Unit kerja yang dipilih:", unitKerja);
     const filteredRekapData = originalRekapData.filter(
       (item) => item.alamatKerja === unitKerja.unitKerja
     );
     setRekapData(filteredRekapData);
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
   };
 
   useEffect(() => {
@@ -300,17 +260,6 @@ function RekapAnggota() {
     }
   };
 
-<<<<<<< HEAD
-  const formatCurrency = (value) => {
-    if (value === "-") return "-";
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(value);
-  };
-
-=======
   const handleExpand = (index) => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
@@ -331,7 +280,6 @@ function RekapAnggota() {
   );
 
   const jumlahIuran = rekapData.reduce((acc, curr) => acc + curr.totalIuran, 0);
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
@@ -484,32 +432,18 @@ function RekapAnggota() {
                   </th>
                   <th
                     className="p-2 md:p-3 border text-white bg-teal-700"
-<<<<<<< HEAD
-=======
                     colSpan="3"
                   >
                     Status Anggota
                   </th>
                   <th
                     className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell"
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                     rowSpan="2"
                   >
                     Jumlah
                   </th>
                   <th
-<<<<<<< HEAD
-                    className="p-2 md:p-3 border text-white bg-teal-700"
-                    colSpan="3"
-                  >
-                    Status Anggota
-                  </th>
-                  
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
-=======
                     className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell"
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                     rowSpan="2"
                   >
                     Iuran
@@ -530,29 +464,6 @@ function RekapAnggota() {
               <tbody>
                 {rekapData.length > 0 && selectedCabang ? (
                   rekapData.map((item, index) => (
-<<<<<<< HEAD
-                    <tr key={item.id}>
-                      <td className="p-2 md:p-3 border text-center">
-                        {index + 1}
-                      </td>
-                      <td className="p-2 md:p-3 border">{item.alamatKerja}</td>
-                      <td className="p-2 md:p-3 border text-center">
-                        {item.totalCount}
-                      </td>
-                      <td className="p-2 md:p-3 border text-center">
-                        {item.pesertaKtaDigitalCount}
-                      </td>
-                      <td className="p-2 md:p-3 border text-center">
-                        {item.pesertaSandukaCount}
-                      </td>
-                      <td className="p-2 md:p-3 border text-center">
-                        {item.pesertaDaspenCount}
-                      </td>
-                      <td className="p-2 md:p-3 border text-center">
-                        {formatCurrency(item.totalSumbangan)}
-                      </td>
-                    </tr>
-=======
                     <>
                       <tr key={item.id}>
                         <td className="p-2 md:p-3 border text-center">
@@ -606,7 +517,6 @@ function RekapAnggota() {
                         </tr>
                       )}
                     </>
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                   ))
                 ) : (
                   <tr>
@@ -638,9 +548,6 @@ function RekapAnggota() {
         ? `Rp. ${parseInt(totalSumbanganPerCabang).toLocaleString("id-ID")},-`
         : "Data tidak tersedia"}
                   </td>
-<<<<<<< HEAD
-                 
-=======
                   <td className="p-2 md:p-3 border bg-green-200 text-center">
                     {jumlahPppk}
                   </td>
@@ -653,7 +560,6 @@ function RekapAnggota() {
                   <td className="p-2 md:p-3 border bg-green-200 text-center hidden lg:table-cell">
                     Rp. {jumlahIuran.toLocaleString("id-ID")},-
                   </td>
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
                 </tr>
               </tfoot>
             </table>
