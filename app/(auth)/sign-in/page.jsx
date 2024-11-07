@@ -42,19 +42,14 @@ function SignIn() {
       };
 
       const response = await GlobalApi.login(loginData);
-      console.log(response);
       setToken(response.token);
-      sessionStorage.setItem("userId", response.id); // Store user ID in session storage
+      sessionStorage.setItem("userId", response.id);
       sessionStorage.setItem("unitKerja", response.unitKerja);
       sessionStorage.setItem("nama", response.namaLengkap);
+      sessionStorage.setItem("role", response.role);
 
       const nama = sessionStorage.getItem("nama"); // Retrieve name from session storage
       toast.success(`Selamat Datang ${nama}`);
-
-      // Menampilkan data sessionStorage di console
-      console.log("Data tersimpan di sessionStorage:");
-      console.log("userId:", sessionStorage.getItem("userId"));
-      console.log("unitKerja:", sessionStorage.getItem("unitKerja"));
 
       setTimeout(() => {
         router.push("/home");

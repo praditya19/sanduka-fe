@@ -114,23 +114,16 @@ const icons = [
 ];
 
 export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
-  const [isDropdownOpen, setIsDropdownOpen] = useState({
-    pengaturan: false,
-  });
-
   const [currentPath, setCurrentPath] = useState(null);
+  const [role, setRole] = useState(null);
 
   useEffect(() => {
     const { pathname } = window.location;
     setCurrentPath(pathname);
-  }, []);
 
-  const toggleDropdown = (menu) => {
-    setIsDropdownOpen((prevState) => ({
-      ...prevState,
-      [menu]: !prevState[menu],
-    }));
-  };
+    const userRole = sessionStorage.getItem("role");
+    setRole(userRole);
+  }, []);
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -146,6 +139,19 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  const filteredIcons =
+    role === "USER"
+      ? icons.filter((item) =>
+          [
+            "Lapor",
+            "Teman Unit",
+            "Ketentuan",
+            "Bantuan",
+            "Data Anggota",
+          ].includes(item.label)
+        )
+      : icons;
 
   return (
     <div className="relative">
@@ -174,7 +180,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
         } overflow-hidden`}
       >
         <div className="flex flex-col space-y-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
-          {icons.map((item, index) => {
+          {filteredIcons.map((item, index) => {
             const isActive = currentPath === item.href;
 
             return (

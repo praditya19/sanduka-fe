@@ -1,15 +1,8 @@
 "use client";
-<<<<<<< HEAD
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons"; 
-=======
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation"; // Pastikan ini diimpor
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"; // Jika menggunakan FontAwesome
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons"; // Jika menggunakan FontAwesome
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
 import {
@@ -23,37 +16,19 @@ import {
 import { Button } from "@/components/ui/button";
 
 const Page = () => {
-<<<<<<< HEAD
-  const router = useRouter(); 
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const npa = sessionStorage.getItem("npa"); 
-
-=======
   const router = useRouter();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const npa = sessionStorage.getItem("npa");
-  const [expandedIndex, setExpandedIndex] = useState(null);
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
 
   useEffect(() => {
     const fetchData = async () => {
       if (npa) {
-<<<<<<< HEAD
-       
-        try {
-          setLoading(true);
-          const result = await GlobalApi.getHistoryByNpa(npa); 
-          setData(result); 
-=======
         try {
           setLoading(true);
           const result = await GlobalApi.getHistoryByNpa(npa);
           setData(result);
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
         } catch (err) {
           setError(err.message);
         } finally {
@@ -63,29 +38,13 @@ const Page = () => {
     };
 
     fetchData();
-<<<<<<< HEAD
-  }, [npa]); 
-=======
   }, [npa]);
-
-  const handleExpand = (index) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
-  };
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
 
   return (
     <div className="p-4">
       <div className="flex justify-between items-center bg-teal-600 py-4 rounded-lg shadow-md">
-<<<<<<< HEAD
-        <button 
-          className="ml-6 text-white" 
-          onClick={() => router.back()} 
-        >
-          <FontAwesomeIcon icon={faArrowLeft} size="lg" /> 
-=======
         <button className="ml-6 text-white" onClick={() => router.back()}>
           <FontAwesomeIcon icon={faArrowLeft} size="lg" />
->>>>>>> 6e17c4eceb108d0c2f8aff6051526087cb93f65d
         </button>
         <h1 className="text-2xl font-semibold text-white text-center flex-grow">
           Detail
