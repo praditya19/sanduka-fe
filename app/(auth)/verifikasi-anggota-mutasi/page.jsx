@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheckCircle,
@@ -77,8 +77,8 @@ const VerifikasiAnggotaMutasi = () => {
         console.warn("No data found.");
       }
 
-      setAnggotaData(fetchedData || []); // Set empty array if no data
-      setFotoBase64(fotoBase64Array); // Set all decoded images
+      setAnggotaData(fetchedData || []);
+      setFotoBase64(fotoBase64Array); 
       setTotalPages(response.data.totalPages || 0);
       setLoading(false);
     } catch (error) {
@@ -344,48 +344,89 @@ const FilterSection = ({
 );
 
 const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
-  const [query, setQuery] = React.useState("");
-  const [showDropdown, setShowDropdown] = React.useState(false);
+  const [query, setQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [filterQuery, setFilterQuery] = useState("");
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const filteredOptions = options.filter((option) =>
-    option.kecamatan.toLowerCase().includes(query.toLowerCase())
+    option.kecamatan.toLowerCase().includes(filterQuery.toLowerCase())
   );
 
   return (
-    <div className="relative inline-block">
+    <div className="relative inline-block w-56" ref={dropdownRef}>
       <label className="block mb-2 font-semibold text-gray-800">{label}</label>
       <input
         type="text"
-        className="border rounded-lg p-2 w-56 bg-white shadow-sm"
+        className="border rounded-lg p-2 w-full bg-white shadow-sm"
         placeholder={`Pilih ${label}`}
-        value={query || selectedCabang}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          handleChange(e.target.value);
+        value={selectedCabang || query}  
+        readOnly
+        onFocus={() => {
+          setQuery("");  
+          setShowDropdown(true);  
+          setFilterQuery("");  
         }}
-        onFocus={() => setShowDropdown(true)}
-        onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
       />
+
       {showDropdown && (
-        <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 max-h-48 overflow-y-auto w-full">
-          {filteredOptions.length > 0 ? (
-            filteredOptions.map((item) => (
-              <li
-                key={item.idKecamatan}
-                className="p-2 cursor-pointer hover:bg-gray-100"
-                onClick={() => {
-                  setQuery(item.kecamatan);
-                  setShowDropdown(false);
-                  handleChange(item.kecamatan);
-                }}
-              >
-                {item.kecamatan}
-              </li>
-            ))
-          ) : (
-            <li className="p-2 text-gray-500">No results found</li>
-          )}
-        </ul>
+        <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-full">
+          <input
+            type="text"
+            className="border-b rounded-t-lg p-2 w-full bg-white"
+            placeholder={`Filter ${label}`}
+            value={filterQuery}
+            onChange={(e) => setFilterQuery(e.target.value)}  
+            autoFocus
+          />
+
+          <ul className="max-h-48 overflow-y-auto">
+            <li
+              key="default-option"
+              className="p-2 cursor-pointer hover:bg-gray-100 font-semibold text-gray-600"
+              onClick={() => {
+                setQuery("");  
+                handleChange("");  
+                setShowDropdown(false); 
+                setFilterQuery("");
+              }}
+            >
+              Pilih Cabang
+            </li>
+
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((item) => (
+                <li
+                  key={item.idKecamatan}
+                  className="p-2 cursor-pointer hover:bg-gray-100"
+                  onClick={() => {
+                    setQuery(item.kecamatan); 
+                    handleChange(item.kecamatan);  
+                    setShowDropdown(false); 
+                    setFilterQuery("");  
+                  }}
+                >
+                  {item.kecamatan}
+                </li>
+              ))
+            ) : (
+              <li className="p-2 text-gray-500">No results found</li>
+            )}
+          </ul>
+        </div>
       )}
     </div>
   );
@@ -400,15 +441,12 @@ const DropdownUnitKerja = ({
 }) => {
   const [query, setQuery] = React.useState(selectedUnitKerja || "");
   const [showDropdown, setShowDropdown] = React.useState(false);
+  const [filterQuery, setFilterQuery] = useState("");
+  const dropdownRef = useRef(null);
 
   const filteredOptions = options.filter((option) =>
-    option.unitKerja.toLowerCase().includes(query.toLowerCase())
+    option.unitKerja.toLowerCase().includes(filterQuery.toLowerCase())
   );
-
-  const handleInputChange = (e) => {
-    setQuery(e.target.value);
-    handleChange(e.target.value);
-  };
 
   const handleOptionSelect = (item) => {
     setQuery(item.unitKerja);
@@ -416,12 +454,21 @@ const DropdownUnitKerja = ({
     handleChange(item.unitKerja);
   };
 
-  const handleBlur = () => {
-    setTimeout(() => setShowDropdown(false), 200);
-  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
-    <div className="relative inline-block w-56">
+    <div className="relative inline-block w-56" ref={dropdownRef}>
       <label className="block mb-2 font-semibold text-gray-800">{label}</label>
       <input
         type="text"
@@ -430,27 +477,54 @@ const DropdownUnitKerja = ({
         }`}
         placeholder={`Pilih ${label}`}
         value={query}
-        onChange={handleInputChange}
-        onFocus={() => !disabled && setShowDropdown(true)}
-        onBlur={handleBlur}
+        readOnly
+        onFocus={() => {
+          if (!disabled) {
+            setFilterQuery(""); 
+            setShowDropdown(true); 
+          }
+        }}
         disabled={disabled}
       />
+
+      
       {showDropdown && !disabled && (
-        <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 max-h-48 overflow-y-auto w-full">
-          {filteredOptions.length > 0 ? (
-            filteredOptions.map((item) => (
-              <li
-                key={item.id}
-                className="p-2 cursor-pointer hover:bg-gray-100"
-                onClick={() => handleOptionSelect(item)}
-              >
-                {item.unitKerja}
-              </li>
-            ))
-          ) : (
-            <li className="p-2 text-gray-500">No results found</li>
-          )}
-        </ul>
+        <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-full">
+      
+          <input
+            type="text"
+            className="border-b rounded-t-lg p-2 w-full bg-white"
+            placeholder={`Filter ${label}`}
+            value={filterQuery}
+            onChange={(e) => setFilterQuery(e.target.value)}
+            autoFocus
+          />
+
+         
+          <ul className="max-h-48 overflow-y-auto">
+       
+            <li
+              className="p-2 cursor-pointer hover:bg-gray-100"
+              onClick={() => handleOptionSelect({ unitKerja: "" })}
+            >
+              Pilih Unit Kerja
+            </li>
+
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((item) => (
+                <li
+                  key={item.id}
+                  className="p-2 cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleOptionSelect(item)} 
+                >
+                  {item.unitKerja}
+                </li>
+              ))
+            ) : (
+              <li className="p-2 text-gray-500">No results found</li>
+            )}
+          </ul>
+        </div>
       )}
     </div>
   );
@@ -702,20 +776,21 @@ const PopupDetail = ({
             alt="Anggota Foto"
             className="rounded-full"
           />
-          
         </div>
         <div>
-
-        {!selectedRow.isVerified && (
-                <Badge variant="destructive" className="flex items-center mr-4 w-1/3">
-                  <FontAwesomeIcon
-                    icon={faTimesCircle}
-                    className="mr-2 text-white w-1/3" 
-                    size="lg"
-                  />
-                  <span>Belum Terverifikasi</span>
-                </Badge>
-              )}
+          {!selectedRow.isVerified && (
+            <Badge
+              variant="destructive"
+              className="flex items-center mr-4 w-1/3"
+            >
+              <FontAwesomeIcon
+                icon={faTimesCircle}
+                className="mr-2 text-white w-1/3"
+                size="lg"
+              />
+              <span>Belum Terverifikasi</span>
+            </Badge>
+          )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700 mb-4">
           <div>
@@ -759,7 +834,6 @@ const PopupDetail = ({
           <div>
             <p className="font-medium text-gray-600 mr-4">Status:</p>
             <div className="flex items-center">
-             
               <FontAwesomeIcon
                 icon={faCheckCircle}
                 size="2xl"

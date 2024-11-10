@@ -570,9 +570,9 @@ function DataAnggota() {
             </div>
           )}
 
-          <div className="mb-4 -mt-40 ">
+          <div className="mb-4 ">
             <div className="flex flex-wrap items-start mt-40 justify-between">
-              <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
+              <div className="flex flex-wrap items-center space-x-2">
                 <div className="flex flex-col relative w-64" ref={cabangRef}>
                   <Input
                     type="text"
@@ -583,7 +583,7 @@ function DataAnggota() {
                     placeholder="Pilih Cabang"
                   />
                   {showCabangDropdown && (
-                    <div className="absolute mt-9 w-full">
+                    <div className="absolute mt-11 w-full">
                       <Input
                         type="text"
                         onChange={(e) => handleCabangSearch(e.target.value)}
@@ -628,7 +628,7 @@ function DataAnggota() {
                     disabled={!selectedCabang}
                   />
                   {showUnitKerjaDropdown && (
-                    <div className="absolute mt-9 w-full">
+                    <div className="absolute mt-11 w-full">
                       <Input
                         type="text"
                         onChange={(e) => handleUnitKerjaSearch(e.target.value)}
@@ -664,11 +664,11 @@ function DataAnggota() {
                     </div>
                   )}
                 </div>
-                <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mt-12 md:mb-0">
+                <select className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline  md:mb-0">
                   <option>Semua</option>
                 </select>
               </div>
-              <p className="text-center text-xl font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto mt-12">
+              <p className="text-center text-xl font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto ">
                 Data Anggota By Name
               </p>
               <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">

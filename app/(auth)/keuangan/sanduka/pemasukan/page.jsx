@@ -51,23 +51,19 @@ function Pemasukan() {
     const printContent = tableRef.current;
     const originalContent = document.body.innerHTML;
 
-    // Temporarily replace body content with table content
     document.body.innerHTML = printContent.innerHTML;
 
-    window.print(); // Trigger the print dialog
+    window.print();
 
-    // Restore the original content after printing
     document.body.innerHTML = originalContent;
-    window.location.reload(); // Refresh the page to re-apply React events
+    window.location.reload();
   };
 
   useEffect(() => {
-    // Get the current date
     const today = new Date();
 
-    // Format the date as "Tanggal Bulan Tahun"
     const options = { day: "numeric", month: "long", year: "numeric" };
-    const formattedDate = today.toLocaleDateString("id-ID", options); // Use 'id-ID' for Indonesian locale
+    const formattedDate = today.toLocaleDateString("id-ID", options);
 
     setFormValues((prevValues) => ({
       ...prevValues,
@@ -78,20 +74,18 @@ function Pemasukan() {
   const fetchData = async () => {
     try {
       if (selectedBulan && newSelectedYear) {
-        // Ensure both filters are selected
         const data = await GlobalApi.getTablePemasukanSanduka(
           selectedBulan,
           newSelectedYear
         );
-        console.log(data); // Log the fetched data to the console
-        setTransactions(data); // Set fetched data into transactions state
+        console.log(data);
+        setTransactions(data);
       }
     } catch (error) {
-      console.error("Error fetching data:", error); // Log any errors that occur
+      console.error("Error fetching data:", error);
     }
   };
 
-  // Fetch data whenever selectedBulan or newSelectedYear changes
   useEffect(() => {
     fetchData();
   }, [selectedBulan, newSelectedYear]);
@@ -105,7 +99,7 @@ function Pemasukan() {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setCabangList(response.data); // Assuming the response data is an array
+        setCabangList(response.data);
       } catch (error) {}
     };
 
@@ -116,11 +110,11 @@ function Pemasukan() {
     const fetchBulan = async () => {
       try {
         const response = await GlobalApi.getBulan();
-        setBulanList(response.data); // Simpan data bulan dari API ke state
+        setBulanList(response.data);
       } catch (error) {}
     };
 
-    fetchBulan(); // Panggil fungsi ketika komponen pertama kali dimuat
+    fetchBulan();
   }, []);
 
   const [selectAll, setSelectAll] = useState(false);
@@ -146,6 +140,7 @@ function Pemasukan() {
 
       const response = await GlobalApi.createPembayaranSanduka(dataToSend);
       toast.success("Data berhasil disimpan!");
+      console.log("Data yang berhasil dikirim:", dataToSend);
     } catch (error) {
       toast.error(`Gagal menyimpan data: ${error.message}`);
     }
@@ -265,7 +260,6 @@ function Pemasukan() {
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -280,7 +274,6 @@ function Pemasukan() {
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -304,18 +297,18 @@ function Pemasukan() {
           <Toaster
             toastOptions={{
               style: {
-                fontSize: "1.25rem", // Ukuran font yang lebih besar
-                padding: "16px", // Menambah padding jika diperlukan
+                fontSize: "1.25rem",
+                padding: "16px",
               },
               success: {
                 style: {
-                  background: "white", // Warna background hijau untuk pesan sukses
+                  background: "white",
                   color: "black",
                 },
               },
               error: {
                 style: {
-                  background: "#f44336", // Warna background merah untuk pesan error
+                  background: "#f44336",
                   color: "#fff",
                 },
               },
@@ -353,11 +346,10 @@ function Pemasukan() {
                   <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="tanggalTransaksi"
-                    type="text" // Change to text since the format is custom
+                    type="text"
                     name="tanggalTransaksi"
                     value={formValues.tanggalTransaksi}
                     onChange={handleChange}
-                    readOnly
                   />
                 </div>
                 <div className="flex flex-col">
@@ -422,6 +414,7 @@ function Pemasukan() {
                     ))}
                   </select>
                 </div>
+
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -436,6 +429,22 @@ function Pemasukan() {
                     name="setoranBulan"
                     value={formValues.setoranBulan}
                     onChange={handleChange}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="nominal"
+                  >
+                    Total Anggota
+                  </Label>
+                  <Input
+                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="nominal"
+                    type="number"
+                    name="nominal"
+                    // value={formValues.nominal}
+                    // onChange={handleChange}
                   />
                 </div>
                 <div className="flex flex-col">
@@ -469,8 +478,30 @@ function Pemasukan() {
                     onChange={handleChange}
                   />
                 </div>
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="nominal"
+                  >
+                    Total Sumbangan
+                  </Label>
+                  <Input
+                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="nominal"
+                    type="number"
+                    name="nominal"
+                    // value={formValues.nominal}
+                    // onChange={handleChange}
+                  />
+                </div>
               </div>
-              <div className="flex items-center mt-6 justify-center">
+              <div className="flex items-center mt-6 justify-center gap-6">
+                <Button
+                  className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                  onClick={handleSubmit}
+                >
+                  Sesuai Jumlah Target
+                </Button>
                 <Button
                   className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                   onClick={handleSubmit}
@@ -478,7 +509,7 @@ function Pemasukan() {
                   Simpan
                 </Button>
                 <Button
-                  className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-700 transition duration-150 ease-in-out ml-6"
+                  className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-700 transition duration-150 ease-in-out"
                   type="button"
                   onClick={handleReset}
                 >
@@ -509,7 +540,7 @@ function Pemasukan() {
                     onChange={(e) => setNewSelectedYear(e.target.value)}
                   >
                     <option value="">Pilih Tahun</option>
-                    {/* Map through years array to create options */}
+
                     {years.map((year) => (
                       <option key={year} value={year}>
                         {year}
@@ -524,7 +555,6 @@ function Pemasukan() {
                   <Input
                     type="checkbox"
                     className="form-checkbox h-4 w-4 mt-3"
-                    // checked={selectAll}
                     onChange={handleSelectAll}
                   />
                   <Button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300">
