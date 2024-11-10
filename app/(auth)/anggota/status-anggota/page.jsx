@@ -169,9 +169,14 @@ function StatusAnggota() {
     setSelectedUnitKerja(unitKerja.unitKerja);
     setUnitKerjaInput(unitKerja.unitKerja);
     setShowUnitKerjaDropdown(false);
-    const filteredRekapData = originalRekapData.filter(
-      (item) => item.alamatKerja === unitKerja.unitKerja
-    );
+  
+    
+    const filteredRekapData = Array.isArray(originalRekapData)
+      ? originalRekapData.filter(
+          (item) => item.alamatKerja === unitKerja.unitKerja
+        )
+      : [];
+  
     setRekapData(filteredRekapData);
   };
 
@@ -690,7 +695,7 @@ function StatusAnggota() {
                     placeholder="Pilih Cabang"
                   />
                   {showCabangDropdown && (
-                    <div className="absolute mt-9 w-full">
+                    <div className="absolute mt-11 w-full">
                       <Input
                         type="text"
                         onChange={(e) => handleCabangSearch(e.target.value)}
@@ -699,7 +704,7 @@ function StatusAnggota() {
                         autoFocus
                       />
                       {filteredCabangList.length > 0 && (
-                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto mt-1">
+                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto mt-0">
                           <li
                             onClick={() =>
                               handleSelectCabang({ kecamatan: "" })
@@ -738,7 +743,7 @@ function StatusAnggota() {
                       disabled={!selectedCabang}
                     />
                     {showUnitKerjaDropdown && (
-                      <div className="absolute mt-9 w-full">
+                      <div className="absolute mt-11 w-full">
                         <Input
                           type="text"
                           onChange={(e) =>
