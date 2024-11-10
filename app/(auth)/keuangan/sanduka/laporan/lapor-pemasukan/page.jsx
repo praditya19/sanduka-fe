@@ -16,46 +16,39 @@ const Page = () => {
   const [selectedYear, setSelectedYear] = useState("");
   const [laporanData, setLaporanData] = useState([]);
 
-  // Fungsi untuk fetch data
   const fetchData = async () => {
     if (selectedBulan && selectedYear) {
       const bulanFormatted = `${selectedYear}-${selectedBulan}`;
       try {
         const laporanData = await GlobalApi.getLaporanPemasukan(bulanFormatted);
-        setLaporanData(laporanData); // Simpan data ke state
+        setLaporanData(laporanData);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     }
   };
 
-  // Gunakan useEffect untuk set default bulan dan tahun sesuai waktu sekarang
   useEffect(() => {
     const currentDate = new Date();
 
-    // Mendapatkan bulan saat ini (0 = Januari, jadi tambahkan 1 untuk membuatnya lebih manusiawi)
     const currentBulan = (currentDate.getMonth() + 1)
       .toString()
       .padStart(2, "0");
 
-    // Mendapatkan tahun saat ini
     const currentYear = currentDate.getFullYear().toString();
 
-    // Set bulan dan tahun saat ini sebagai default
     setSelectedBulan(currentBulan);
     setSelectedYear(currentYear);
 
-    // Lakukan fetch data untuk bulan dan tahun saat ini
     fetchData(currentBulan, currentYear);
   }, []);
 
   useEffect(() => {
     if (selectedBulan && selectedYear) {
-      fetchData(); // Panggil fetchData ketika bulan atau tahun berubah
+      fetchData();
     }
   }, [selectedBulan, selectedYear]);
 
-  // useEffect untuk fetch data bulan
   useEffect(() => {
     const fetchBulan = async () => {
       try {
@@ -69,7 +62,6 @@ const Page = () => {
     fetchBulan();
   }, []);
 
-  // Handle perubahan bulan
   const handleBulanChange = (e) => {
     const selectedBulan = e.target.value;
     setSelectedBulan(selectedBulan);
@@ -80,7 +72,6 @@ const Page = () => {
     setSelectedYear(selectedYear);
   };
 
-  // Data untuk tahun (years range)
   const years = Array.from(
     { length: currentYear - startYear + 1 },
     (_, index) => startYear + index
@@ -90,14 +81,12 @@ const Page = () => {
     const printContent = tableRef.current;
     const originalContent = document.body.innerHTML;
 
-    // Temporarily replace body content with table content
     document.body.innerHTML = printContent.innerHTML;
 
-    window.print(); // Trigger the print dialog
+    window.print();
 
-    // Restore the original content after printing
     document.body.innerHTML = originalContent;
-    window.location.reload(); // Refresh the page to re-apply React events
+    window.location.reload();
   };
 
   useEffect(() => {
@@ -198,7 +187,7 @@ const Page = () => {
                       id="tahun"
                       name="tahun"
                       value={selectedYear}
-                      onChange={handleYearChange} // Pastikan handler untuk tahun diaktifkan
+                      onChange={handleYearChange}
                     >
                       {years.map((year) => (
                         <option key={year} value={year}>

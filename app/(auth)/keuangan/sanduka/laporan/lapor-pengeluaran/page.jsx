@@ -16,52 +16,52 @@ const Page = () => {
   const [selectedYear, setSelectedYear] = useState("");
   const [laporanData, setLaporanData] = useState([]);
 
-  // Fungsi untuk fetch data
+  
   const fetchData = async () => {
     if (selectedBulan && selectedYear) {
-      // Format bulan dan tahun
+      
       const bulanFormatted = `${selectedYear}-${selectedBulan.padStart(
         2,
         "0"
-      )}`; // Pastikan bulan selalu dalam format dua digit
+      )}`; 
       try {
         const response = await GlobalApi.getLaporanPengeluaran(bulanFormatted);
-        // Ambil dataTransaksi dari response dan simpan ke state
-        setLaporanData(response.dataTransaksi); // Simpan data ke state
+        
+        setLaporanData(response.dataTransaksi); 
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     }
   };
 
-  // Gunakan useEffect untuk set default bulan dan tahun sesuai waktu sekarang
+  
   useEffect(() => {
     const currentDate = new Date();
 
-    // Mendapatkan bulan saat ini (0 = Januari, jadi tambahkan 1 untuk membuatnya lebih manusiawi)
+    
     const currentBulan = (currentDate.getMonth() + 1)
       .toString()
       .padStart(2, "0");
 
-    // Mendapatkan tahun saat ini
+    
     const currentYear = currentDate.getFullYear().toString();
 
-    // Set bulan dan tahun saat ini sebagai default
+    
     setSelectedBulan(currentBulan);
     setSelectedYear(currentYear);
 
-    // Lakukan fetch data untuk bulan dan tahun saat ini
+    
     fetchData(currentBulan, currentYear);
   }, []);
 
-  // Panggil fetchData saat bulan atau tahun berubah
+  
   useEffect(() => {
     if (selectedBulan && selectedYear) {
       fetchData();
     }
   }, [selectedBulan, selectedYear]);
 
-  // useEffect untuk fetch data bulan
+  
   useEffect(() => {
     const fetchBulan = async () => {
       try {
@@ -75,7 +75,7 @@ const Page = () => {
     fetchBulan();
   }, []);
 
-  // Handle perubahan bulan
+  
   const handleBulanChange = (e) => {
     const selectedBulan = e.target.value;
     setSelectedBulan(selectedBulan);
@@ -86,7 +86,7 @@ const Page = () => {
     setSelectedYear(selectedYear);
   };
 
-  // Data untuk tahun (years range)
+  
   const years = Array.from(
     { length: currentYear - startYear + 1 },
     (_, index) => startYear + index
@@ -96,14 +96,14 @@ const Page = () => {
     const printContent = tableRef.current;
     const originalContent = document.body.innerHTML;
 
-    // Temporarily replace body content with table content
+    
     document.body.innerHTML = printContent.innerHTML;
 
-    window.print(); // Trigger the print dialog
+    window.print(); 
 
-    // Restore the original content after printing
+    
     document.body.innerHTML = originalContent;
-    window.location.reload(); // Refresh the page to re-apply React events
+    window.location.reload(); 
   };
 
   useEffect(() => {
@@ -143,7 +143,7 @@ const Page = () => {
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
+            
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -158,7 +158,7 @@ const Page = () => {
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
+     
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -204,7 +204,7 @@ const Page = () => {
                       id="tahun"
                       name="tahun"
                       value={selectedYear}
-                      onChange={handleYearChange} // Pastikan handler untuk tahun diaktifkan
+                      onChange={handleYearChange} 
                     >
                       {years.map((year) => (
                         <option key={year} value={year}>
