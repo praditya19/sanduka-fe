@@ -14,14 +14,14 @@ import toast, { Toaster } from "react-hot-toast";
 function Pemasukan() {
   const tableRef = useRef();
   const [transactions, setTransactions] = useState([]);
-  const [bulanList, setBulanList] = useState([]); // State untuk menyimpan data bulan
+  const [bulanList, setBulanList] = useState([]);
   const [cabangList, setCabangList] = useState([]);
-  const [selectedBulan, setSelectedBulan] = useState(""); // State untuk menyimpan bulan yang dipilih
+  const [selectedBulan, setSelectedBulan] = useState("");
   const currentYear = new Date().getFullYear();
   const startYear = 2020;
   const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
   const [formValues, setFormValues] = useState({
-    noBukti: "",
+    noBukti: '',
     tanggalTransaksi: "",
     posPenerimaan: "",
     jenisPenerimaan: "",
@@ -47,11 +47,13 @@ function Pemasukan() {
     setNewSelectedYear(e.target.value);
   };
 
+ 
+
   useEffect(() => {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setCabangList(response.data); // Assuming the response data is an array
+        setCabangList(response.data);
       } catch (error) {}
     };
 
@@ -62,23 +64,19 @@ function Pemasukan() {
     const printContent = tableRef.current;
     const originalContent = document.body.innerHTML;
 
-    // Temporarily replace body content with table content
     document.body.innerHTML = printContent.innerHTML;
 
-    window.print(); // Trigger the print dialog
+    window.print();
 
-    // Restore the original content after printing
     document.body.innerHTML = originalContent;
-    window.location.reload(); // Refresh the page to re-apply React events
+    window.location.reload();
   };
 
   useEffect(() => {
-    // Get the current date
     const today = new Date();
 
-    // Format the date as "Tanggal Bulan Tahun"
     const options = { day: "numeric", month: "long", year: "numeric" };
-    const formattedDate = today.toLocaleDateString("id-ID", options); // Use 'id-ID' for Indonesian locale
+    const formattedDate = today.toLocaleDateString("id-ID", options);
 
     setFormValues((prevValues) => ({
       ...prevValues,
@@ -89,20 +87,18 @@ function Pemasukan() {
   const fetchData = async () => {
     try {
       if (selectedBulan && newSelectedYear) {
-        // Ensure both filters are selected
         const data = await GlobalApi.getTablePemasukanSanduka(
           selectedBulan,
           newSelectedYear
         );
         console.log("Data Uang Masuk Keluar:", data);
-        setTransactions(data); // Set fetched data into transactions state
+        setTransactions(data);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
 
-  // Fetch data whenever selectedBulan or newSelectedYear changes
   useEffect(() => {
     fetchData();
   }, [selectedBulan, newSelectedYear]);
@@ -116,7 +112,7 @@ function Pemasukan() {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setCabangList(response.data); // Assuming the response data is an array
+        setCabangList(response.data);
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -129,13 +125,13 @@ function Pemasukan() {
     const fetchBulan = async () => {
       try {
         const response = await GlobalApi.getBulan();
-        setBulanList(response.data); // Simpan data bulan dari API ke state
+        setBulanList(response.data);
       } catch (error) {
         console.error("Error fetching bulan:", error);
       }
     };
 
-    fetchBulan(); // Panggil fungsi ketika komponen pertama kali dimuat
+    fetchBulan();
   }, []);
 
   const [selectAll, setSelectAll] = useState(false);
@@ -162,10 +158,6 @@ function Pemasukan() {
       const response = await GlobalApi.createPembayaranSanduka(dataToSend);
       console.log("Data sent successfully:", response);
       toast.success("Data berhasil disimpan!");
-      // setTimeout(() => {
-      //   window.location.reload(); // Reloads the current page
-      // }, 1500);
-      // Reset form atau lakukan aksi lain setelah berhasil submit
     } catch (error) {
       toast.error(`Gagal menyimpan data: ${error.message}`);
     }
@@ -184,12 +176,10 @@ function Pemasukan() {
   };
 
   useEffect(() => {
-    // Get the current date
     const today = new Date();
 
-    // Format the date as "Tanggal Bulan Tahun"
     const options = { day: "numeric", month: "long", year: "numeric" };
-    const formattedDate = today.toLocaleDateString("id-ID", options); // Use 'id-ID' for Indonesian locale
+    const formattedDate = today.toLocaleDateString("id-ID", options);
 
     setFormValues((prevValues) => ({
       ...prevValues,
@@ -336,47 +326,48 @@ function Pemasukan() {
           }`}
         >
           <Toaster
-          toastOptions={{
-            style: {
-              fontSize: "1.25rem", // Ukuran font yang lebih besar
-              padding: "16px", // Menambah padding jika diperlukan
-            },
-            success: {
+            toastOptions={{
               style: {
-                background: "white", // Warna background hijau untuk pesan sukses
-                color: "black",
+                fontSize: "1.25rem",
+                padding: "16px",
               },
-            },
-            error: {
-              style: {
-                background: "#f44336", // Warna background merah untuk pesan error
-                color: "#fff",
+              success: {
+                style: {
+                  background: "white",
+                  color: "black",
+                },
               },
-            },
-          }}
-        />
+              error: {
+                style: {
+                  background: "#f44336",
+                  color: "#fff",
+                },
+              },
+            }}
+          />
           <div className="container mx-auto p-6 mt-8">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
               <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
                 POS PEMASUKAN
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="flex flex-col">
-                  <Label
-                    className="block text-gray-700 text-sm font-semibold mb-2"
-                    htmlFor="noBukti"
-                  >
-                    No. Bukti
-                  </Label>
-                  <Input
-                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="noBukti"
-                    type="text"
-                    name="noBukti"
-                    value={formValues.noBukti}
-                    onChange={handleChange}
-                  />
-                </div>
+              <div className="flex flex-col">
+      <label
+        className="block text-gray-700 text-sm font-semibold mb-2"
+        htmlFor="noBukti"
+      >
+        No. Bukti
+      </label>
+      <input
+        className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        id="noBukti"
+        type="text"
+        name="noBukti"
+        value={formValues.noBukti}
+        onChange={handleChange}
+        readOnly
+      />
+    </div>
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -561,7 +552,6 @@ function Pemasukan() {
                   <Input
                     type="checkbox"
                     className="form-checkbox h-4 w-4 mt-3"
-                    // checked={selectAll}
                     onChange={handleSelectAll}
                   />
                   <Button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300">

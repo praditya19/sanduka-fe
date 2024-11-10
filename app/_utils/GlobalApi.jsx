@@ -2,7 +2,7 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "https://58cb-103-90-210-146.ngrok-free.app",
+  baseURL: "http://localhost:8080",
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
@@ -678,6 +678,24 @@ const getTableKalender = async (bulan, tahun, cabang) => {
 
 // Sanduka
 // Pemasukan & Pengeluaran Sanduka
+const sendSesuaiJumlahTarget = async (data) => {
+  try {
+    const response = await axiosClient.post('/api/uang-masuk-keluar/sesuai-jumlah-target', data);
+    return response.data; 
+  } catch (error) {
+    console.error('Error sending sesuai jumlah target:', error);
+    throw error;
+  }
+};
+const getNoBukti = async () => {
+  try {
+    const response = await axiosClient.get(`/api/bukti/generate`);
+    return response.data;
+  } catch (error) {
+    console.error('Error generating bukti:', error);
+    throw error;
+  }
+};
 const getTablePemasukanSanduka = async (month, year) => {
   try {
     const response = await axiosClient.get(
@@ -967,4 +985,6 @@ export default {
   mutasiCabangUnitKerja,
   getByNIP,
   updateRegisUser,
+  getNoBukti,
+  sendSesuaiJumlahTarget,
 };
