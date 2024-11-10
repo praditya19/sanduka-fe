@@ -73,6 +73,23 @@ const login = async (loginData) => {
   }
 };
 
+const loginAdmin = async (loginData) => {
+  try {
+    const response = await axiosClient.post(
+      "/api/auth/login-admin-super-admin",
+      loginData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error saat login:", error);
+    throw error.response?.data || error.message;
+  }
+};
 // General
 const getCabang = () => axiosClient.get("/api/daftarCabang");
 const getJabatan = () => axiosClient.get("/api/daftarJabatan");
@@ -680,10 +697,14 @@ const getTableKalender = async (bulan, tahun, cabang) => {
 // Pemasukan & Pengeluaran Sanduka
 const sendSesuaiJumlahTarget = async (data) => {
   try {
-    const response = await axiosClient.post('/api/uang-masuk-keluar/sesuai-jumlah-target', data);
-    return response.data; 
+    const response = await axiosClient.post(
+      "/api/uang-masuk-keluar/sesuai-jumlah-target",
+      data
+    );
+    console.log("Respon dari API:", response.data)
+    return response.data;
   } catch (error) {
-    console.error('Error sending sesuai jumlah target:', error);
+    console.error("Error sending sesuai jumlah target:", error);
     throw error;
   }
 };
@@ -692,7 +713,7 @@ const getNoBukti = async () => {
     const response = await axiosClient.get(`/api/bukti/generate`);
     return response.data;
   } catch (error) {
-    console.error('Error generating bukti:', error);
+    console.error("Error generating bukti:", error);
     throw error;
   }
 };
@@ -987,4 +1008,5 @@ export default {
   updateRegisUser,
   getNoBukti,
   sendSesuaiJumlahTarget,
+  loginAdmin,
 };

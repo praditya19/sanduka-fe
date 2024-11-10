@@ -13,6 +13,8 @@ import toast, { Toaster } from "react-hot-toast";
 
 function Pemasukan() {
   const tableRef = useRef();
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const dropdownRef = useRef(null);
   const [transactions, setTransactions] = useState([]);
   const [bulanList, setBulanList] = useState([]);
   const [cabangList, setCabangList] = useState([]);
@@ -48,10 +50,6 @@ function Pemasukan() {
     setSelectedBulan(e.target.value);
   };
 
-  const handleYearChange = (e) => {
-    setNewSelectedYear(e.target.value);
-  };
-
   const printTable = () => {
     const printContent = tableRef.current;
     const originalContent = document.body.innerHTML;
@@ -63,6 +61,19 @@ function Pemasukan() {
     document.body.innerHTML = originalContent;
     window.location.reload();
   };
+
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setIsDropdownVisible(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const today = new Date();
@@ -422,28 +433,92 @@ function Pemasukan() {
                     <option value="Cash">Cash</option>
                   </select>
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col relative" ref={dropdownRef}>
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
                     htmlFor="cabang"
                   >
                     Cabang
                   </Label>
-                  <select
+
+                  <input
+                    type="text"
+                    placeholder="Cari Cabang..."
                     className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="cabang"
-                    name="cabang"
-                    value={formValues.cabang}
-                    onChange={handleChange}
-                  >
-                    <option value="">Pilih Cabang</option>
-                    <option value="All">Semua Cabang</option>{" "}
-                    {cabangList.map((cabang) => (
-                      <option key={cabang.id} value={cabang.kecamatan}>
-                        {cabang.kecamatan}
-                      </option>
-                    ))}
-                  </select>
+                    value={formValues.searchCabang || ""}
+                    onFocus={() => setIsDropdownVisible(true)}
+                    onChange={(e) => {
+                      const searchValue = e.target.value;
+                      setFormValues((prevValues) => ({
+                        ...prevValues,
+                        searchCabang: searchValue,
+                      }));
+                    }}
+                  />
+
+                  {isDropdownVisible && (
+                    <div className="absolute top-full left-0 w-full z-10 mt-1 border bg-white shadow-lg rounded-b">
+                      <ul className="max-h-48 overflow-y-auto">
+                        <li className="py-2 px-4 hover:bg-blue-500 hover:text-white">
+                          <button
+                            onClick={() => {
+                              setFormValues((prevValues) => ({
+                                ...prevValues,
+                                cabang: "",
+                                searchCabang: "",
+                              }));
+                              setIsDropdownVisible(false);
+                            }}
+                          >
+                            Pilih Cabang
+                          </button>
+                        </li>
+
+                        <li className="py-1 px-4 hover:bg-blue-500 hover:text-white">
+                          <button
+                            onClick={() => {
+                              setFormValues((prevValues) => ({
+                                ...prevValues,
+                                cabang: "All",
+                                searchCabang: "All",
+                              }));
+                              setIsDropdownVisible(false);
+                            }}
+                          >
+                            Semua Cabang
+                          </button>
+                        </li>
+
+                        {cabangList
+                          .filter((cabang) =>
+                            cabang.kecamatan
+                              .toLowerCase()
+                              .includes(
+                                formValues.searchCabang?.toLowerCase() || ""
+                              )
+                          )
+                          .map((cabang) => (
+                            <li
+                              key={cabang.id}
+                              className="p-1 px-4 hover:bg-blue-500 hover:text-white"
+                            >
+                              <button
+                                onClick={() => {
+                                  setFormValues((prevValues) => ({
+                                    ...prevValues,
+                                    cabang: cabang.kecamatan,
+                                    searchCabang: cabang.kecamatan,
+                                  }));
+                                  setIsDropdownVisible(false);
+                                }}
+                              >
+                                {cabang.kecamatan}
+                              </button>
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-col">
@@ -667,8 +742,7 @@ function Pemasukan() {
                     ) : null
                   )}
 
-                  {/* Row for TOTAL */}
-                  {/* <tr className="bg-gray-200 text-base text-black text-center font-bold">
+                  <tr className="bg-gray-200 text-base text-black text-center font-bold">
                     <td className="px-6 py-4 text-left" colSpan="4">
                       TOTAL
                     </td>
@@ -704,7 +778,7 @@ function Pemasukan() {
                     </td>
 
                     <td className="px-6 py-4 text-sm"></td>
-                  </tr> */}
+                  </tr>
                 </tbody>
               </table>
             </div>

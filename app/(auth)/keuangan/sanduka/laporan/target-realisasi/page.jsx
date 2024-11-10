@@ -14,13 +14,12 @@ const Page = () => {
   const [selectedBulan, setSelectedBulan] = useState("");
   const [selectedCabang, setSelectedCabang] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
-  const [dataRealisasi, setDataRealisasi] = useState([]); // State untuk menyimpan data
+  const [dataRealisasi, setDataRealisasi] = useState([]);
   const currentYear = new Date().getFullYear();
   const startYear = 2020;
-  const [originalData, setOriginalData] = useState([]); // State untuk menyimpan data asli
+  const [originalData, setOriginalData] = useState([]);
   const router = useRouter();
 
-  // Fungsi untuk fetch data realisasi
   const fetchData = async (bulan, tahun) => {
     if (bulan && tahun) {
       try {
@@ -42,15 +41,14 @@ const Page = () => {
         const bulanAngka = monthMap[bulan];
         const bulanuangmasuk = `${bulanAngka}/${tahun}`;
 
-        // Panggil API tanpa parameter cabang
         const data = await GlobalApi.getTableTargetRealisasi(
           tahun,
           bulanAngka,
-          "", // Kirimkan string kosong untuk cabang
+          "",
           bulanuangmasuk
         );
-        // Set data realisasi ke state
-        setDataRealisasi(data); // Simpan semua data ke state
+
+        setDataRealisasi(data);
         setOriginalData(data);
       } catch (error) {
         console.error("Error fetching data realisasi:", error);
@@ -58,14 +56,12 @@ const Page = () => {
     }
   };
 
-  // useEffect untuk fetch data realisasi setiap kali state bulan atau tahun berubah
   useEffect(() => {
     if (selectedBulan && selectedYear) {
-      fetchData(selectedBulan, selectedYear); // Hanya kirim bulan dan tahun
+      fetchData(selectedBulan, selectedYear);
     }
   }, [selectedBulan, selectedYear]);
 
-  // useEffect untuk fetch data cabang
   useEffect(() => {
     const fetchCabangData = async () => {
       try {
@@ -79,7 +75,6 @@ const Page = () => {
     fetchCabangData();
   }, []);
 
-  // useEffect untuk fetch data bulan
   useEffect(() => {
     const fetchBulan = async () => {
       try {
@@ -93,7 +88,6 @@ const Page = () => {
     fetchBulan();
   }, []);
 
-  // Data untuk tahun (years range)
   const years = Array.from(
     { length: currentYear - startYear + 1 },
     (_, index) => startYear + index
@@ -103,47 +97,40 @@ const Page = () => {
     const printContent = tableRef.current;
     const originalContent = document.body.innerHTML;
 
-    // Temporarily replace body content with table content
     document.body.innerHTML = printContent.innerHTML;
 
-    window.print(); // Trigger the print dialog
+    window.print();
 
-    // Restore the original content after printing
     document.body.innerHTML = originalContent;
-    window.location.reload(); // Refresh the page to re-apply React events
+    window.location.reload();
   };
 
-  // useEffect untuk filter data berdasarkan selectedCabang
   useEffect(() => {
     if (selectedCabang) {
       const filteredData = originalData.filter(
         (item) => item.cabang === selectedCabang
       );
-      setDataRealisasi(filteredData); // Update state dengan data yang difilter
+      setDataRealisasi(filteredData);
     } else {
-      setDataRealisasi(originalData); // Tampilkan kembali data asli jika cabang dikosongkan
+      setDataRealisasi(originalData);
     }
-  }, [selectedCabang]); // Jalankan filter setiap kali selectedCabang berubah
+  }, [selectedCabang]);
 
-  // Handle perubahan cabang
   const handleCabangChange = (e) => {
     const selectedCabang = e.target.value;
     setSelectedCabang(selectedCabang);
   };
 
-  // Handle perubahan bulan
   const handleBulanChange = (e) => {
     const selectedBulan = e.target.value;
     setSelectedBulan(selectedBulan);
   };
 
-  // Handle perubahan tahun
   const handleYearChange = (e) => {
     const selectedYear = e.target.value;
     setSelectedYear(selectedYear);
   };
 
-  // Format untuk tampilan dalam rupiah
   const formatRupiah = (value) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -257,7 +244,7 @@ const Page = () => {
                       id="tahun"
                       name="tahun"
                       value={selectedYear}
-                      onChange={handleYearChange} // Pastikan handler untuk tahun diaktifkan
+                      onChange={handleYearChange}
                     >
                       <option value="">-- Tahun --</option>
                       {years.map((year) => (

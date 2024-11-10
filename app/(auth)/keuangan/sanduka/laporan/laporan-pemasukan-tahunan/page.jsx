@@ -14,24 +14,23 @@ const Page = () => {
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [data, setData] = useState([]);
 
-  // Fungsi untuk memanggil data dari API berdasarkan tahun yang dipilih
   const fetchData = async (year) => {
     try {
-      const response = await GlobalApi.getLaporanPemasukanTahunan(year); // Panggil API dengan tahun yang dipilih
-      setData(response); // Asumsi response berisi array data dari API
+      const response = await GlobalApi.getLaporanPemasukanTahunan(year);
+      setData(response);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
-  // Fetch data ketika tahun berubah atau komponen pertama kali di-mount
+
   useEffect(() => {
     if (selectedYear) {
-      fetchData(selectedYear); // Panggil fetch data dengan tahun yang dipilih
+      fetchData(selectedYear);
     }
-  }, [selectedYear]); // Akan dijalankan setiap kali selectedYear berubah
+  }, [selectedYear]);
 
   const handleYearChange = (e) => {
-    setSelectedYear(e.target.value); // Update tahun yang dipilih
+    setSelectedYear(e.target.value);
   };
 
   const years = Array.from(
@@ -47,18 +46,16 @@ const Page = () => {
     }).format(value);
   };
 
-  const printTable = () => { 
+  const printTable = () => {
     const printContent = tableRef.current;
     const originalContent = document.body.innerHTML;
 
-    // Temporarily replace body content with table content
     document.body.innerHTML = printContent.innerHTML;
 
-    window.print(); // Trigger the print dialog
+    window.print();
 
-    // Restore the original content after printing
     document.body.innerHTML = originalContent;
-    window.location.reload(); // Refresh the page to re-apply React events
+    window.location.reload();
   };
 
   useEffect(() => {
@@ -98,7 +95,6 @@ const Page = () => {
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -106,16 +102,13 @@ const Page = () => {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">
-                Laporan Pemasukan Tahunan Sanduka
-              </h1>
+              <h1 className="text-base">Laporan Pemasukan Tahunan Sanduka</h1>
             </div>
           </div>
         </header>
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -123,9 +116,7 @@ const Page = () => {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">
-                Laporan Pemasukan Tahunan Sanduka
-              </h1>
+              <h1 className="text-base">Laporan Pemasukan Tahunan Sanduka</h1>
             </div>
           </div>
         </header>
@@ -152,7 +143,7 @@ const Page = () => {
                       id="tahun"
                       name="tahun"
                       value={selectedYear}
-                      onChange={handleYearChange} // Pastikan handler untuk tahun diaktifkan
+                      onChange={handleYearChange}
                     >
                       {years.map((year) => (
                         <option key={year} value={year}>
@@ -163,12 +154,14 @@ const Page = () => {
                   </div>
                   <div className="flex-1 flex justify-center">
                     <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-                    LAPORAN PEMASUKAN TAHUN {selectedYear}
+                      LAPORAN PEMASUKAN TAHUN {selectedYear}
                     </h1>
                   </div>
                   <div className="flex justify-center space-x-4 mt-0 sm:mt-3 mr-0 sm:mr-10">
-                    <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300"
-                    onClick={printTable}>
+                    <Button
+                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+                      onClick={printTable}
+                    >
                       Cetak
                     </Button>
                   </div>
@@ -191,7 +184,9 @@ const Page = () => {
                           className="border-b text-black text-center"
                         >
                           <td className="px-6 py-4 text-sm">{index + 1}</td>
-                          <td className="px-6 py-4 text-sm">{item.namaBulan}</td>
+                          <td className="px-6 py-4 text-sm">
+                            {item.namaBulan}
+                          </td>
                           <td className="px-6 py-4 text-sm">
                             {formatRupiah(item.totalPemasukan)}
                           </td>

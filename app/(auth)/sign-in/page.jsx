@@ -62,6 +62,45 @@ function SignIn() {
     }
   };
 
+  const onSignInAdmin = async () => {
+    setLoader(true);
+    setError("");
+    try {
+      if (npaPgri.length < 6) {
+        throw new Error(
+          "NPA PGRI harus 6 digit dan Tanggal Lahir harus 8 digit."
+        );
+      }
+
+      if (!isVerified) {
+        throw new Error("Harap verifikasi reCAPTCHA.");
+      }
+
+      const loginData = {
+        npaPgri: npaPgri,
+        password: password,
+      };
+
+      const response = await GlobalApi.loginAdmin(loginData);
+      setToken(response.token);
+      sessionStorage.setItem("userId", response.id);
+      sessionStorage.setItem("unitKerja", response.unitKerja);
+      sessionStorage.setItem("nama", response.namaLengkap);
+      sessionStorage.setItem("role", response.role);
+
+      const nama = sessionStorage.getItem("nama");
+      toast.success(`Selamat Datang ${nama}`);
+
+      setTimeout(() => {
+        router.push("/home");
+      }, 2000);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoader(false);
+    }
+  };
+
   function onChange(value) {
     setIsVerified(!!value);
   }

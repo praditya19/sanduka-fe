@@ -25,7 +25,6 @@ const Page = () => {
   );
 
   useEffect(() => {
-    // Daftar bulan
     const bulan = [
       { id: 1, namaBulan: "Januari" },
       { id: 2, namaBulan: "Februari" },
@@ -42,17 +41,15 @@ const Page = () => {
     ];
     setBulanList(bulan);
 
-    // Ambil tahun saat ini dan buat array tahun
     const currentYear = new Date().getFullYear();
     const yearsArray = Array.from(
       { length: 5 },
       (_, index) => currentYear - index
-    ); // Misalnya 5 tahun terakhir
+    );
     setSelectedYear(yearsArray);
 
-    // Setel bulan dan tahun default
-    const currentMonth = new Date().getMonth(); // Dapatkan index bulan (0-11)
-    setSelectedMonth(bulan[currentMonth].id); // Setel nama bulan sebagai default
+    const currentMonth = new Date().getMonth();
+    setSelectedMonth(bulan[currentMonth].id);
     setSelectedYear(currentYear);
   }, []);
 
@@ -75,7 +72,7 @@ const Page = () => {
     const fetchBulan = async () => {
       try {
         const response = await GlobalApi.getBulan();
-        setBulanList(response.data || []); // Atur data bulan ke dalam state
+        setBulanList(response.data || []);
       } catch (error) {
         console.error("Error fetching bulan data:", error);
       }
@@ -91,14 +88,12 @@ const Page = () => {
     const printContent = tableRef.current;
     const originalContent = document.body.innerHTML;
 
-    // Temporarily replace body content with table content
     document.body.innerHTML = printContent.innerHTML;
 
-    window.print(); // Trigger the print dialog
+    window.print();
 
-    // Restore the original content after printing
     document.body.innerHTML = originalContent;
-    window.location.reload(); // Refresh the page to re-apply React events
+    window.location.reload();
   };
 
   useEffect(() => {
@@ -134,7 +129,6 @@ const Page = () => {
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -149,7 +143,6 @@ const Page = () => {
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -178,7 +171,7 @@ const Page = () => {
                     <select
                       className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                       value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(e.target.value)} // Update state untuk bulan
+                      onChange={(e) => setSelectedMonth(e.target.value)}
                     >
                       {bulanList.map((bulan) => (
                         <option key={bulan.id} value={bulan.id}>
@@ -190,7 +183,7 @@ const Page = () => {
                       className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                       id="tahunTable"
                       value={selectedYear}
-                      onChange={(e) => setSelectedYear(e.target.value)} // Update state untuk tahun
+                      onChange={(e) => setSelectedYear(e.target.value)}
                     >
                       <option value="">Pilih Tahun</option>
                       {years.map((year) => (
@@ -206,8 +199,10 @@ const Page = () => {
                     </h1>
                   </div>
                   <div className="flex justify-center space-x-4 mt-0 sm:mt-3 mr-0 sm:mr-10">
-                    <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300"
-                      onClick={printTable}>
+                    <Button
+                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+                      onClick={printTable}
+                    >
                       Cetak
                     </Button>
                   </div>
@@ -291,7 +286,6 @@ const Page = () => {
                             </td>
                           </tr>
 
-                          {/* Section Headers */}
                           <tr className="bg-gray-300 font-semibold">
                             <td className="py-2 px-4 border border-gray-300">
                               Penerimaan dan Setoran Bulan Lalu
@@ -302,7 +296,6 @@ const Page = () => {
                             ></td>
                           </tr>
 
-                          {/* Data Rows */}
                           <tr>
                             <td className="py-3 px-4 border border-gray-300">
                               Piutang Bulan Lalu
@@ -334,7 +327,6 @@ const Page = () => {
                             ></td>
                           </tr>
 
-                          {/* Pengeluaran Section */}
                           <tr className="bg-gray-300 font-semibold">
                             <td className="py-2 px-4 border border-gray-300">
                               Pengeluaran
@@ -375,7 +367,6 @@ const Page = () => {
                             ></td>
                           </tr>
 
-                          {/* Total Pengeluaran */}
                           <tr className="font-semibold">
                             <td className="py-3 px-4 border border-gray-300">
                               Total Pengeluaran
@@ -392,7 +383,6 @@ const Page = () => {
                             </td>
                           </tr>
 
-                          {/* Saldo Section */}
                           <tr className="bg-gray-300 font-semibold">
                             <td className="py-2 px-4 border border-gray-300">
                               Pemasukan
@@ -433,7 +423,6 @@ const Page = () => {
                             ></td>
                           </tr>
 
-                          {/* Total Saldo */}
                           <tr className="font-semibold">
                             <td className="py-3 px-4 border border-gray-300">
                               Total Saldo
