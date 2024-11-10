@@ -21,14 +21,19 @@ function Pemasukan() {
   const startYear = 2020;
   const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
   const [formValues, setFormValues] = useState({
-    noBukti: "",
     tanggalTransaksi: "",
-    posPenerimaan: "",
-    jenisPenerimaan: "",
-    cabang: "",
-    setoranBulan: "",
-    nominal: "",
+    posTransaksi: "",
+    masukKe: "Bank",
+    bulan: "11/2024",
+    debet: "2000000",
+    kredit: "",
+    bulanSantunan: "",
+    yangMeninggal: "",
+    namaPenerima: "",
     keterangan: "",
+    jenisPembayaran: "Sanduka",
+    totalAnggota: "",
+    cabang: "",
   });
 
   const handleChange = (e) => {
@@ -62,8 +67,13 @@ function Pemasukan() {
   useEffect(() => {
     const today = new Date();
 
-    const options = { day: "numeric", month: "long", year: "numeric" };
-    const formattedDate = today.toLocaleDateString("id-ID", options);
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+
+    const formattedDate = `${day.toString().padStart(2, "0")}-${month
+      .toString()
+      .padStart(2, "0")}-${year}`;
 
     setFormValues((prevValues) => ({
       ...prevValues,
@@ -78,7 +88,7 @@ function Pemasukan() {
           selectedBulan,
           newSelectedYear
         );
-        console.log(data);
+
         setTransactions(data);
       }
     } catch (error) {
@@ -119,28 +129,47 @@ function Pemasukan() {
 
   const [selectAll, setSelectAll] = useState(false);
 
+  const handleSubmitAll = async (e) => {
+    e.preventDefault();
+
+    const requestData = {
+      uangMasukKeluar: {
+        ...formValues,
+      },
+      targetCabang: formValues.cabang,
+    };
+
+    try {
+      const response = await GlobalApi.sendSesuaiJumlahTarget(requestData);
+    } catch (error) {
+      console.error("Error saat mengirim data:", error);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const dataToSend = {
-        noBukti: formValues.noBukti,
+        // noBukti: formValues.noBukti,
         tanggalTransaksi: formValues.tanggalTransaksi,
-        posTransaksi: formValues.posPenerimaan,
+        posTransaksi: formValues.posTransaksi,
         masukKe: formValues.jenisPenerimaan,
         cabang: formValues.cabang,
         bulan: formValues.setoranBulan,
-        debet: formValues.nominal,
-        kredit: formValues.nominal,
-        bulanSantunan: formValues.setoranBulan,
+        debet: formValues.debet,
+        kredit: formValues.kredit,
+        bulanSantunan: formValues.bulanSantunan,
         keterangan: formValues.keterangan,
         jenisPembayaran: "Sanduka",
         namaPenerima: "",
         yangMeninggal: "",
+        totalAnggota: "522",
+        totalSumbangan: "4718000",
       };
 
       const response = await GlobalApi.createPembayaranSanduka(dataToSend);
+
       toast.success("Data berhasil disimpan!");
-      console.log("Data yang berhasil dikirim:", dataToSend);
     } catch (error) {
       toast.error(`Gagal menyimpan data: ${error.message}`);
     }
@@ -148,8 +177,8 @@ function Pemasukan() {
 
   const handleReset = () => {
     setFormValues({
-      noBukti: "",
-      posPenerimaan: "",
+      // noBukti: "",
+      posTransaksi: "",
       jenisPenerimaan: "",
       cabang: "",
       setoranBulan: "",
@@ -320,7 +349,7 @@ function Pemasukan() {
                 PEMASUKAN SANDUKA
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="flex flex-col">
+                {/* <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
                     htmlFor="noBukti"
@@ -334,8 +363,9 @@ function Pemasukan() {
                     name="noBukti"
                     value={formValues.noBukti}
                     onChange={handleChange}
+                    readOnly
                   />
-                </div>
+                </div> */}
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -348,22 +378,22 @@ function Pemasukan() {
                     id="tanggalTransaksi"
                     type="text"
                     name="tanggalTransaksi"
-                    value={formValues.tanggalTransaksi}
+                    value={formValues.tanggalTransaksi || ""}
                     onChange={handleChange}
                   />
                 </div>
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
-                    htmlFor="posPenerimaan"
+                    htmlFor="posTransaksi"
                   >
                     Pos Penerimaan
                   </Label>
                   <select
                     className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="posPenerimaan"
-                    name="posPenerimaan"
-                    value={formValues.posPenerimaan}
+                    id="posTransaksi"
+                    name="posTransaksi"
+                    value={formValues.posTransaksi || ""}
                     onChange={handleChange}
                   >
                     <option value="">Pilih Pos Penerima</option>
@@ -407,6 +437,7 @@ function Pemasukan() {
                     onChange={handleChange}
                   >
                     <option value="">Pilih Cabang</option>
+                    <option value="All">Semua Cabang</option>{" "}
                     {cabangList.map((cabang) => (
                       <option key={cabang.id} value={cabang.kecamatan}>
                         {cabang.kecamatan}
@@ -427,24 +458,24 @@ function Pemasukan() {
                     id="setoranBulan"
                     type="month"
                     name="setoranBulan"
-                    value={formValues.setoranBulan}
+                    value={formValues.setoranBulan || ""}
                     onChange={handleChange}
                   />
                 </div>
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
-                    htmlFor="nominal"
+                    htmlFor="totalAnggota"
                   >
                     Total Anggota
                   </Label>
                   <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="nominal"
-                    type="number"
-                    name="nominal"
-                    // value={formValues.nominal}
-                    // onChange={handleChange}
+                    id="totalAnggota"
+                    type="totalAnggota"
+                    name="totalAnggota"
+                    value={formValues.totalAnggota || ""}
+                    onChange={handleChange}
                   />
                 </div>
                 <div className="flex flex-col">
@@ -459,7 +490,24 @@ function Pemasukan() {
                     id="nominal"
                     type="number"
                     name="nominal"
-                    value={formValues.nominal}
+                    value={formValues.nominal || ""}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="totalSumbangan"
+                  >
+                    Total Sumbangan
+                  </Label>
+                  <Input
+                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="totalSumbangan"
+                    type="totalSumbangan"
+                    name="totalSumbangan"
+                    value={formValues.totalSumbangan || ""}
                     onChange={handleChange}
                   />
                 </div>
@@ -474,31 +522,15 @@ function Pemasukan() {
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="keterangan"
                     name="keterangan"
-                    value={formValues.keterangan}
+                    value={formValues.keterangan || ""}
                     onChange={handleChange}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <Label
-                    className="block text-gray-700 text-sm font-semibold mb-2"
-                    htmlFor="nominal"
-                  >
-                    Total Sumbangan
-                  </Label>
-                  <Input
-                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="nominal"
-                    type="number"
-                    name="nominal"
-                    // value={formValues.nominal}
-                    // onChange={handleChange}
                   />
                 </div>
               </div>
               <div className="flex items-center mt-6 justify-center gap-6">
                 <Button
                   className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                  onClick={handleSubmit}
+                  onClick={handleSubmitAll}
                 >
                   Sesuai Jumlah Target
                 </Button>
