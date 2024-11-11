@@ -70,6 +70,7 @@ function DataAnggota() {
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const unitKerjaRef = useRef(null);
+  const profileImageUrl = "/profile.png";
 
   const [originalRekapData, setOriginalRekapData] = useState([]);
 
@@ -340,8 +341,8 @@ function DataAnggota() {
             </thead>
             <tbody>
               ${filteredDataForPrint
-                .map(
-                  (item, index) => `
+        .map(
+          (item, index) => `
                     <tr>
                       <td>${index + 1}</td>
                       <td></td>
@@ -355,20 +356,19 @@ function DataAnggota() {
                         <div>${formatDate(item.tanggalLahir)}</div>
                         <div>${calculateAge(item.tanggalLahir)} Tahun</div>
                         <div>${calculateRetirementDate(
-                          item.tanggalLahir,
-                          item.statusPegawai
-                        )}</div>
+            item.tanggalLahir,
+            item.statusPegawai
+          )}</div>
                       </td>
                       <td>
                         <div>${item.cabang},</div>
                         <div>${item.unitKerja}</div>
-                        <div>Anggota: ${
-                          item.tahunDiangkat ? item.tahunDiangkat : "-"
-                        }</div>
+                        <div>Anggota: ${item.tahunDiangkat ? item.tahunDiangkat : "-"
+            }</div>
                         <div>
                           ${item.pangkatGolongan} || ${formatCurrency(
-                    item.iuran
-                  )}
+              item.iuran
+            )}
                         </div>
                       </td>
                       <td>
@@ -376,8 +376,8 @@ function DataAnggota() {
                       </td>
                     </tr>
                   `
-                )
-                .join("")}
+        )
+        .join("")}
             </tbody>
           </table>
         </body>
@@ -601,6 +601,18 @@ function DataAnggota() {
     router.push("/anggota/edit-anggota");
   };
 
+  const getVisiblePages = () => {
+    const visiblePages = [];
+    const leftLimit = Math.max(1, currentPage - 1);
+    const rightLimit = Math.min(totalPages, currentPage + 1);
+
+    for (let i = leftLimit; i <= rightLimit; i++) {
+      visiblePages.push(i);
+    }
+
+    return visiblePages;
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -612,9 +624,8 @@ function DataAnggota() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <Toaster
             toastOptions={{
@@ -884,7 +895,7 @@ function DataAnggota() {
                       >
                         <td className="p-2 md:p-3 border text-center">
                           <div className="flex justify-center items-center">
-                            {globalIndex}
+                            {(currentPage - 1) * itemsPerPage + index + 1}
                             <Button
                               className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
                               onClick={() => handleExpand(index)}
@@ -898,17 +909,18 @@ function DataAnggota() {
                           </div>
                         </td>
                         <td className="p-2 md:p-3 border">
-                          {fotoBase64[index] ? (
-                            <Image
-                              src={`data:image/jpeg;base64,${fotoBase64[index]}`}
-                              className="rounded-full mx-auto"
-                              width={100}
-                              height={100}
-                              alt="Belum ada Foto"
-                            />
-                          ) : (
-                            <span>Belum ada foto</span>
-                          )}
+                          <Image
+                            src={
+                              fotoBase64[index]
+                                ? `data:image/jpeg;base64,${fotoBase64[index]}`
+                                : profileImageUrl
+                            }
+                            alt={`Foto ${item.namaPelapor || "User"}`}
+                            width={50}
+                            height={50}
+                            className="rounded"
+                            unoptimized={true}
+                          />
                         </td>
                         <td className="p-2 md:p-3 border">
                           <div className="font-bold text-sm">
@@ -947,11 +959,10 @@ function DataAnggota() {
                         </td>
                         <td className="p-2 text-center md:p-3 border md:table-cell hidden">
                           <div
-                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${
-                              item.status === "BUKAN ANGGOTA"
-                                ? "bg-red-200 text-red-900"
-                                : "bg-green-200 text-green-900"
-                            }`}
+                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
+                              ? "bg-red-200 text-red-900"
+                              : "bg-green-200 text-green-900"
+                              }`}
                           >
                             {item.role === "USER"
                               ? "Aktif"
@@ -1029,11 +1040,10 @@ function DataAnggota() {
                               <div>Anggota: {item.gabung}</div>
                               <div>{item.golongan}</div>
                               <div
-                                className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${
-                                  item.status === "BUKAN ANGGOTA"
-                                    ? "bg-red-200 text-red-900"
-                                    : "bg-green-200 text-green-900"
-                                }`}
+                                className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${item.status === "BUKAN ANGGOTA"
+                                  ? "bg-red-200 text-red-900"
+                                  : "bg-green-200 text-green-900"
+                                  }`}
                               >
                                 {item.role === "USER"
                                   ? "Aktif"
@@ -1085,7 +1095,51 @@ function DataAnggota() {
                 })}
               </tbody>
             </table>
-            <div className="flex justify-end items-center mb-4">
+            <div className="flex justify-center mt-4 gap-1">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                First
+              </button>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Prev
+              </button>
+
+              {getVisiblePages().map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                    ? "bg-blue-500 text-white"
+                    : "bg-white hover:bg-gray-50"
+                    }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Next
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Last
+              </button>
+            </div>
+            {/* <div className="flex justify-end items-center mb-4">
               {totalItems > itemsPerPage && (
                 <>
                   <Button
@@ -1140,7 +1194,7 @@ function DataAnggota() {
                   </Button>
                 </>
               )}
-            </div>
+            </div> */}
           </div>
 
           <Modal

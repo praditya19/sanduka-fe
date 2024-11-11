@@ -118,12 +118,15 @@ const Page = () => {
   );
 
   const getVisiblePages = () => {
-    const startPage = Math.max(1, currentPage - 1);
-    const endPage = Math.min(totalPages, startPage + 2);
-    return Array.from(
-      { length: endPage - startPage + 1 },
-      (_, i) => startPage + i
-    );
+    const visiblePages = [];
+    const leftLimit = Math.max(1, currentPage - 1);
+    const rightLimit = Math.min(totalPages, currentPage + 1);
+
+    for (let i = leftLimit; i <= rightLimit; i++) {
+      visiblePages.push(i);
+    }
+
+    return visiblePages;
   };
 
   const toggleSidebar = () => {
@@ -143,9 +146,8 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="flex justify-center bg-red-600 py-2 rounded-b-lg shadow-md sm:mt-14 mt-12 sm:-mb-5 -mb-10">
             <h1 className="text-xl font-semibold text-white">
@@ -375,20 +377,18 @@ const Page = () => {
                   </table>
                 </div>
                 {/* Pagination Controls */}
-                <div className="flex justify-center space-x-2">
+                <div className="flex justify-center mt-4 gap-1">
                   <button
                     onClick={() => setCurrentPage(1)}
                     disabled={currentPage === 1}
-                    className="p-2 border rounded"
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                   >
                     First
                   </button>
                   <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className="p-2 border rounded"
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                   >
                     Prev
                   </button>
@@ -397,27 +397,26 @@ const Page = () => {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`p-2 border rounded ${
-                        page === currentPage ? "bg-blue-500 text-white" : ""
-                      }`}
+                      className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                        ? "bg-blue-500 text-white"
+                        : "bg-white hover:bg-gray-50"
+                        }`}
                     >
                       {page}
                     </button>
                   ))}
 
                   <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                    className="p-2 border rounded"
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                   >
                     Next
                   </button>
                   <button
                     onClick={() => setCurrentPage(totalPages)}
                     disabled={currentPage === totalPages}
-                    className="p-2 border rounded"
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                   >
                     Last
                   </button>
