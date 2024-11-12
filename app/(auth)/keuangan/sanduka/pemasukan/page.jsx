@@ -20,8 +20,13 @@ function Pemasukan() {
   const [cabangList, setCabangList] = useState([]);
   const [selectedBulan, setSelectedBulan] = useState("");
   const currentYear = new Date().getFullYear();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const startYear = 2020;
-  const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
+  const endYear = 2050;
+  const [newSelectedYear, setNewSelectedYear] = useState(
+    currentYear.toString()
+  );
+  const [yearsToShow, setYearsToShow] = useState([]);
   const [formValues, setFormValues] = useState({
     tanggalTransaksi: "",
     posTransaksi: "",
@@ -77,14 +82,11 @@ function Pemasukan() {
 
   useEffect(() => {
     const today = new Date();
-
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
     const year = today.getFullYear();
+    const month = (today.getMonth() + 1).toString().padStart(2, "0");
+    const day = today.getDate().toString().padStart(2, "0");
 
-    const formattedDate = `${day.toString().padStart(2, "0")}-${month
-      .toString()
-      .padStart(2, "0")}-${year}`;
+    const formattedDate = `${year}-${month}-${day}`;
 
     setFormValues((prevValues) => ({
       ...prevValues,
@@ -115,6 +117,32 @@ function Pemasukan() {
     { length: currentYear - startYear + 1 },
     (_, index) => startYear + index
   );
+
+  useEffect(() => {
+    const initialEndYear = Math.min(currentYear + 4, endYear);
+    setYearsToShow(
+      Array.from(
+        { length: initialEndYear - currentYear + 1 },
+        (_, index) => currentYear + index
+      )
+    );
+  }, []);
+
+  const updateYearsToShow = (selectedYear) => {
+    const selected = parseInt(selectedYear, 10);
+    if (isNaN(selected)) return;
+
+    const nextStartYear = selected;
+    const nextEndYear = Math.min(nextStartYear + 4, endYear);
+
+    // Memperbarui state untuk menampilkan 5 tahun berikutnya
+    const updatedYears = Array.from(
+      { length: nextEndYear - nextStartYear + 1 },
+      (_, index) => nextStartYear + index
+    );
+
+    setYearsToShow(updatedYears);
+  };
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -387,12 +415,13 @@ function Pemasukan() {
                   <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="tanggalTransaksi"
-                    type="text"
+                    type="date"
                     name="tanggalTransaksi"
                     value={formValues.tanggalTransaksi || ""}
                     onChange={handleChange}
                   />
                 </div>
+
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -547,12 +576,14 @@ function Pemasukan() {
                   <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="totalAnggota"
-                    type="totalAnggota"
+                    type="number"
                     name="totalAnggota"
                     value={formValues.totalAnggota || ""}
                     onChange={handleChange}
+                    disabled
                   />
                 </div>
+
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -580,10 +611,11 @@ function Pemasukan() {
                   <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="totalSumbangan"
-                    type="totalSumbangan"
+                    type="number"
                     name="totalSumbangan"
                     value={formValues.totalSumbangan || ""}
                     onChange={handleChange}
+                    disabled
                   />
                 </div>
                 <div className="flex flex-col">
@@ -601,11 +633,30 @@ function Pemasukan() {
                     onChange={handleChange}
                   />
                 </div>
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="totalAnggota"
+                  >
+                    Total Anggota By Admin
+                  </Label>
+                  <Input
+                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="totalAnggota"
+                    type="totalAnggota"
+                    name="totalAnggota"
+                    value={formValues.totalAnggota || ""}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
               <div className="flex items-center mt-6 justify-center gap-6">
                 <Button
-                  className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                  className={`bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
+                    formValues.nominal ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                   onClick={handleSubmitAll}
+                  disabled={Boolean(formValues.nominal)}
                 >
                   Sesuai Jumlah Target
                 </Button>
@@ -640,20 +691,44 @@ function Pemasukan() {
                       </option>
                     ))}
                   </select>
-                  <select
-                    className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
-                    id="tahunTable"
-                    value={newSelectedYear}
-                    onChange={(e) => setNewSelectedYear(e.target.value)}
-                  >
-                    <option value="">Pilih Tahun</option>
+                  <div className="relative w-28">
+                    <button
+                      onClick={() => setDropdownOpen(!dropdownOpen)}
+                      className="shadow-lg border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white w-full"
+                    >
+                      {newSelectedYear || "Pilih Tahun"}
+                    </button>
 
-                    {years.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
+                    {dropdownOpen && (
+                      <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-40 overflow-y-auto">
+                        <ul className="py-1">
+                          <li
+                            onClick={() => {
+                              setNewSelectedYear(currentYear.toString());
+                              updateYearsToShow(currentYear.toString());
+                              setDropdownOpen(false);
+                            }}
+                            className="px-4 py-2 text-gray-700 cursor-pointer hover:bg-blue-500 hover:text-white"
+                          >
+                            Pilih Tahun
+                          </li>
+                          {yearsToShow.map((year) => (
+                            <li
+                              key={year}
+                              onClick={() => {
+                                setNewSelectedYear(year.toString());
+                                updateYearsToShow(year.toString());
+                                setDropdownOpen(false);
+                              }}
+                              className="px-4 py-2 text-gray-700 cursor-pointer hover:bg-blue-500 hover:text-white"
+                            >
+                              {year}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
                   Transaksi {selectedBulan} {newSelectedYear}

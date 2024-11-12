@@ -62,35 +62,35 @@ function SignIn() {
     }
   };
 
+  // ======================================================
+
   const onSignInAdmin = async () => {
+    
     setLoader(true);
     setError("");
+  
     try {
-      if (npaPgri.length < 6) {
-        throw new Error(
-          "NPA PGRI harus 6 digit dan Tanggal Lahir harus 8 digit."
-        );
-      }
-
+      // Cek verifikasi captcha
       if (!isVerified) {
         throw new Error("Harap verifikasi reCAPTCHA.");
       }
-
-      const loginData = {
-        npaPgri: npaPgri,
-        password: password,
-      };
-
-      const response = await GlobalApi.loginAdmin(loginData);
-      setToken(response.token);
+  
+      // Membuat FormData untuk mengirim data
+      const formData = new FormData();
+      formData.append("npaPgri", npaPgri);
+      formData.append("password", password);
+  
+      // Mengirim request login
+      const response = await GlobalApi.loginAdmin(formData);
       sessionStorage.setItem("userId", response.id);
-      sessionStorage.setItem("unitKerja", response.unitKerja);
-      sessionStorage.setItem("nama", response.namaLengkap);
+      sessionStorage.setItem("nama", response.nama);
       sessionStorage.setItem("role", response.role);
-
+  
+      // Menampilkan pesan sukses
       const nama = sessionStorage.getItem("nama");
       toast.success(`Selamat Datang ${nama}`);
-
+  
+      // Arahkan ke halaman home setelah login berhasil
       setTimeout(() => {
         router.push("/home");
       }, 2000);
@@ -100,7 +100,7 @@ function SignIn() {
       setLoader(false);
     }
   };
-
+  
   function onChange(value) {
     setIsVerified(!!value);
   }
@@ -231,7 +231,7 @@ function SignIn() {
           />
 
           <Button
-            onClick={onSignIn}
+            onClick={activeTab === "login" ? onSignIn : onSignInAdmin}
             disabled={
               !npaPgri ||
               (activeTab === "login" && !tanggalLahir) ||
