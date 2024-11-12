@@ -329,19 +329,19 @@ const Page = () => {
                         scope="col"
                         className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
                       >
+                        Anggota
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      >
                         Nominal
                       </th>
                       <th
                         scope="col"
                         className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
                       >
-                        Lebih
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
-                      >
-                        Kurang
+                        Nominal
                       </th>
                     </tr>
                   </thead>
@@ -359,6 +359,9 @@ const Page = () => {
                           </td>
                           <td className="px-6 py-4 text-sm">
                             {formatRupiah(row.target)}
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            {row.jumlahAnggotaByAdmin}
                           </td>
                           <td className="px-6 py-4 text-sm">
                             {formatRupiah(row.realisasi)}
