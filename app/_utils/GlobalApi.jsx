@@ -91,7 +91,6 @@ const loginAdmin = async (formData) => {
   }
 };
 
-
 // General
 const getCabang = () => axiosClient.get("/api/daftarCabang");
 const getJabatan = () => axiosClient.get("/api/daftarJabatan");
@@ -555,6 +554,21 @@ const getSaldoOrganisasi = async () => {
     throw error;
   }
 };
+
+const editPemasukanUangMasuk = async (noBukti) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/uang-masuk-keluar/by-no-bukti`,
+      {
+        params: { noBukti },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fatching data by noBukti", error);
+    throw error;
+  }
+};
 // end
 // START IURAN PGRI
 const getTotalAnggota = async () => {
@@ -703,7 +717,7 @@ const sendSesuaiJumlahTarget = async (data) => {
       "/api/uang-masuk-keluar/sesuai-jumlah-target",
       data
     );
-    console.log("Respon dari API:", response.data)
+    console.log("Respon dari API:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error sending sesuai jumlah target:", error);
@@ -1011,4 +1025,5 @@ export default {
   getNoBukti,
   sendSesuaiJumlahTarget,
   loginAdmin,
+  editPemasukanUangMasuk,
 };
