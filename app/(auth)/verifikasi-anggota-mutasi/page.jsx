@@ -78,7 +78,7 @@ const VerifikasiAnggotaMutasi = () => {
       }
 
       setAnggotaData(fetchedData || []);
-      setFotoBase64(fotoBase64Array); 
+      setFotoBase64(fotoBase64Array);
       setTotalPages(response.data.totalPages || 0);
       setLoading(false);
     } catch (error) {
@@ -373,12 +373,12 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
         type="text"
         className="border rounded-lg p-2 w-full bg-white shadow-sm"
         placeholder={`Pilih ${label}`}
-        value={selectedCabang || query}  
+        value={selectedCabang || query}
         readOnly
         onFocus={() => {
-          setQuery("");  
-          setShowDropdown(true);  
-          setFilterQuery("");  
+          setQuery("");
+          setShowDropdown(true);
+          setFilterQuery("");
         }}
       />
 
@@ -389,7 +389,7 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
             className="border-b rounded-t-lg p-2 w-full bg-white"
             placeholder={`Filter ${label}`}
             value={filterQuery}
-            onChange={(e) => setFilterQuery(e.target.value)}  
+            onChange={(e) => setFilterQuery(e.target.value)}
             autoFocus
           />
 
@@ -398,9 +398,9 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
               key="default-option"
               className="p-2 cursor-pointer hover:bg-gray-100 font-semibold text-gray-600"
               onClick={() => {
-                setQuery("");  
-                handleChange("");  
-                setShowDropdown(false); 
+                setQuery("");
+                handleChange("");
+                setShowDropdown(false);
                 setFilterQuery("");
               }}
             >
@@ -413,10 +413,10 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
                   key={item.idKecamatan}
                   className="p-2 cursor-pointer hover:bg-gray-100"
                   onClick={() => {
-                    setQuery(item.kecamatan); 
-                    handleChange(item.kecamatan);  
-                    setShowDropdown(false); 
-                    setFilterQuery("");  
+                    setQuery(item.kecamatan);
+                    handleChange(item.kecamatan);
+                    setShowDropdown(false);
+                    setFilterQuery("");
                   }}
                 >
                   {item.kecamatan}
@@ -480,17 +480,15 @@ const DropdownUnitKerja = ({
         readOnly
         onFocus={() => {
           if (!disabled) {
-            setFilterQuery(""); 
-            setShowDropdown(true); 
+            setFilterQuery("");
+            setShowDropdown(true);
           }
         }}
         disabled={disabled}
       />
 
-      
       {showDropdown && !disabled && (
         <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-full">
-      
           <input
             type="text"
             className="border-b rounded-t-lg p-2 w-full bg-white"
@@ -500,9 +498,7 @@ const DropdownUnitKerja = ({
             autoFocus
           />
 
-         
           <ul className="max-h-48 overflow-y-auto">
-       
             <li
               className="p-2 cursor-pointer hover:bg-gray-100"
               onClick={() => handleOptionSelect({ unitKerja: "" })}
@@ -515,7 +511,7 @@ const DropdownUnitKerja = ({
                 <li
                   key={item.id}
                   className="p-2 cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleOptionSelect(item)} 
+                  onClick={() => handleOptionSelect(item)}
                 >
                   {item.unitKerja}
                 </li>
@@ -615,7 +611,7 @@ const DataTable = ({
                         <Badge variant="destructive">
                           <FontAwesomeIcon
                             icon={faTimesCircle}
-                            className="mr-2 text-white"
+                            className="mr-2 p-1 text-white"
                             size="lg"
                           />
                           <span>Belum Terverifikasi</span>
@@ -701,7 +697,7 @@ const DataTable = ({
                       </div>
                       <div>
                         <strong>Aksi:</strong>{" "}
-                        <a
+                        {/* <a
                           href={`https://wa.me/${item.nomorHp}`}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -723,7 +719,7 @@ const DataTable = ({
                           size="lg"
                           className="text-red-500 mr-4 cursor-pointer"
                           onClick={() => handleRejectUserClick(item.id)}
-                        />
+                        /> */}
                         <FontAwesomeIcon
                           icon={faUser}
                           size="lg"
@@ -777,15 +773,12 @@ const PopupDetail = ({
             className="rounded-full"
           />
         </div>
-        <div>
+        <div className="text-center">
           {!selectedRow.isVerified && (
-            <Badge
-              variant="destructive"
-              className="flex items-center mr-4 w-1/3"
-            >
+            <Badge variant="destructive" className="">
               <FontAwesomeIcon
                 icon={faTimesCircle}
-                className="mr-2 text-white w-1/3"
+                className="mr-1 p-1 text-white"
                 size="lg"
               />
               <span>Belum Terverifikasi</span>
@@ -833,23 +826,27 @@ const PopupDetail = ({
           </div>
           <div>
             <p className="font-medium text-gray-600 mr-4">Status:</p>
-            <div className="flex items-center">
-              <FontAwesomeIcon
-                icon={faCheckCircle}
-                size="2xl"
-                className="text-green-500 cursor-pointer"
-                onClick={() => {
-                  handleVerifyUserClick(selectedRow.id);
-                }}
-              />
+            <div className="flex text-center justify-between px-1">
+              <Button className="w-24 hover:bg-green-600">
+                <FontAwesomeIcon
+                  icon={faCheckCircle}
+                  size="2xl"
+                  className=" cursor-pointer"
+                  onClick={() => {
+                    handleVerifyUserClick(selectedRow.id);
+                  }}
+                />
+              </Button>
+              <Button className="w-24 bg-red-500 hover:bg-red-600">
               <FontAwesomeIcon
                 icon={faTimesCircle}
                 size="2xl"
-                className="text-red-500 cursor-pointer ml-3"
+                className=" cursor-pointer"
                 onClick={() => {
                   handleRejectUserClick(selectedRow.id);
                 }}
-              />
+                />
+                </Button>
             </div>
           </div>
         </div>

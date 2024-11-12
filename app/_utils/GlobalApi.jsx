@@ -73,14 +73,14 @@ const login = async (loginData) => {
   }
 };
 
-const loginAdmin = async (loginData) => {
+const loginAdmin = async (formData) => {
   try {
     const response = await axiosClient.post(
       "/api/auth/login-admin-super-admin",
-      loginData,
+      formData,
       {
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "multipart/form-data",
         },
       }
     );
@@ -90,6 +90,8 @@ const loginAdmin = async (loginData) => {
     throw error.response?.data || error.message;
   }
 };
+
+
 // General
 const getCabang = () => axiosClient.get("/api/daftarCabang");
 const getJabatan = () => axiosClient.get("/api/daftarJabatan");
