@@ -438,7 +438,7 @@ const FormStep1 = ({
                             }}
                             autoFocus
                           />
-                          <ul className="max-h-48 overflow-y-auto">
+                          <ul className="max-h-48 overflow-y-auto mt-1">
                           
                             <li
                               className="p-2 cursor-pointer hover:bg-gray-100"

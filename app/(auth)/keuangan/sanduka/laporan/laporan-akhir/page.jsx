@@ -276,13 +276,13 @@ const Page = () => {
                               {data.totalAnggota}
                             </td>
                             <td className="py-3 px-4 border border-gray-300 text-right">
-                              {formatCurrency(data.relaisasiNominal)}
+                              {formatCurrency(data.realisasiNominal)}
                             </td>
                             <td className="py-3 px-4 border border-gray-300 text-right">
-                              {formatCurrency(data.selisihKurang)}
+                              {formatCurrency(data.selisihNominal)}
                             </td>
                             <td className="py-3 px-4 border border-gray-300 text-right">
-                              {formatCurrency(data.selisihLebih)}
+                              {formatCurrency(data.selisihNominal)}
                             </td>
                           </tr>
 
@@ -319,7 +319,7 @@ const Page = () => {
                               colSpan="2"
                               className="py-3 px-4 border border-gray-300 text-right"
                             >
-                              {formatCurrency(data.piutangBulanLalu)}
+                              {formatCurrency(data.saldoPiutangBulanLalu)}
                             </td>
                             <td
                               colSpan="4"

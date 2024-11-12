@@ -30,9 +30,9 @@ function Pemasukan() {
   const [formValues, setFormValues] = useState({
     tanggalTransaksi: "",
     posTransaksi: "",
-    masukKe: "Bank",
-    bulan: "11/2024",
-    debet: "2000000",
+    masukKe: "",
+    bulan: "",
+    debet: "",
     kredit: "",
     bulanSantunan: "",
     yangMeninggal: "",
@@ -135,7 +135,6 @@ function Pemasukan() {
     const nextStartYear = selected;
     const nextEndYear = Math.min(nextStartYear + 4, endYear);
 
-    // Memperbarui state untuk menampilkan 5 tahun berikutnya
     const updatedYears = Array.from(
       { length: nextEndYear - nextStartYear + 1 },
       (_, index) => nextStartYear + index
@@ -264,32 +263,23 @@ function Pemasukan() {
     }).format(value);
   };
 
-  const totalBalance = transactions.reduce(
-    (acc, transaction) =>
-      acc +
-      (parseNumber(transaction.balance) === "-"
-        ? 0
-        : parseNumber(transaction.balance)),
-    0
-  );
+  const handleEditClick = async (noBukti) => {
+    try {
+      console.log("No Bukti yang dipilih:", noBukti);
 
-  const totalDebit = transactions.reduce(
-    (acc, transaction) =>
-      acc +
-      (parseNumber(transaction.debit) === "-"
-        ? 0
-        : parseNumber(transaction.debit)),
-    0
-  );
+      const data = await GlobalApi.editPemasukanUangMasuk(noBukti);
 
-  const totalCredit = transactions.reduce(
-    (acc, transaction) =>
-      acc +
-      (parseNumber(transaction.credit) === "-"
-        ? 0
-        : parseNumber(transaction.credit)),
-    0
-  );
+      console.log("Data yang diperoleh:", data);
+
+      setFormValues({
+        tanggalTransaksi: data.tglTransaksi || "",
+        posTransaksi: data.uraian || "",
+        nominal: data.debet.trim() !== "" ? parseInt(data.debet) : 0,
+      });
+    } catch (error) {
+      console.error("Gagal mengambil data berdasarkan noBukti:", error);
+    }
+  };
 
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -443,6 +433,7 @@ function Pemasukan() {
                     <option value="Saldo Awal">Saldo Awal</option>
                   </select>
                 </div>
+
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -470,24 +461,39 @@ function Pemasukan() {
                     Cabang
                   </Label>
 
+                  {/* Input Readonly Menampilkan Cabang yang Dipilih */}
                   <input
                     type="text"
-                    placeholder="Cari Cabang..."
+                    placeholder="Cabang yang dipilih"
                     className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    value={formValues.searchCabang || ""}
-                    onFocus={() => setIsDropdownVisible(true)}
-                    onChange={(e) => {
-                      const searchValue = e.target.value;
-                      setFormValues((prevValues) => ({
-                        ...prevValues,
-                        searchCabang: searchValue,
-                      }));
-                    }}
+                    value={formValues.cabang || ""}
+                    readOnly
+                    onFocus={() => setIsDropdownVisible(true)} // Membuka dropdown saat input diklik
                   />
 
+                  {/* Dropdown Pilihan Cabang dan Input Pencarian */}
                   {isDropdownVisible && (
                     <div className="absolute top-full left-0 w-full z-10 mt-1 border bg-white shadow-lg rounded-b">
                       <ul className="max-h-48 overflow-y-auto">
+                        {/* Input Pencarian di Dalam Dropdown */}
+                        <li className="py-2 px-4">
+                          <input
+                            type="text"
+                            placeholder="Cari Cabang..."
+                            className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            value={formValues.searchCabang || ""}
+                            autoFocus
+                            onChange={(e) => {
+                              const searchValue = e.target.value;
+                              setFormValues((prevValues) => ({
+                                ...prevValues,
+                                searchCabang: searchValue,
+                              }));
+                            }}
+                          />
+                        </li>
+
+                        {/* Opsi 'Pilih Cabang' */}
                         <li className="py-2 px-4 hover:bg-blue-500 hover:text-white">
                           <button
                             onClick={() => {
@@ -503,7 +509,8 @@ function Pemasukan() {
                           </button>
                         </li>
 
-                        <li className="py-1 px-4 hover:bg-blue-500 hover:text-white">
+                        {/* Opsi 'Semua Cabang' */}
+                        <li className="py-2 px-4 hover:bg-blue-500 hover:text-white">
                           <button
                             onClick={() => {
                               setFormValues((prevValues) => ({
@@ -518,6 +525,7 @@ function Pemasukan() {
                           </button>
                         </li>
 
+                        {/* Filter dan Tampilkan List Cabang */}
                         {cabangList
                           .filter((cabang) =>
                             cabang.kecamatan
@@ -529,14 +537,14 @@ function Pemasukan() {
                           .map((cabang) => (
                             <li
                               key={cabang.id}
-                              className="p-1 px-4 hover:bg-blue-500 hover:text-white"
+                              className="py-1 px-4 hover:bg-blue-500 hover:text-white"
                             >
                               <button
                                 onClick={() => {
                                   setFormValues((prevValues) => ({
                                     ...prevValues,
-                                    cabang: cabang.kecamatan,
-                                    searchCabang: cabang.kecamatan,
+                                    cabang: cabang.kecamatan, // Mengisi input readonly dengan nama cabang
+                                    searchCabang: "", // Mengosongkan input pencarian setelah memilih
                                   }));
                                   setIsDropdownVisible(false);
                                 }}
@@ -808,7 +816,12 @@ function Pemasukan() {
                               checked={transaction.checked}
                               onChange={() => handleCheck(transaction.id)}
                             />
-                            <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                            <Button
+                              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+                              onClick={() =>
+                                handleEditClick(transaction.noBukti)
+                              }
+                            >
                               Edit
                             </Button>
                           </div>
