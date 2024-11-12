@@ -206,10 +206,6 @@ const Page = () => {
         >
           <div className="container mx-auto p-6">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
-              <h2 className="bg-blue-500 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
-                TARGET DAN REALISASI
-              </h2>
-
               <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
                 <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
                   <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5 w-full sm:w-auto">
@@ -333,19 +329,19 @@ const Page = () => {
                         scope="col"
                         className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
                       >
+                        Anggota
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
+                      >
                         Nominal
                       </th>
                       <th
                         scope="col"
                         className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
                       >
-                        Lebih
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm"
-                      >
-                        Kurang
+                        Nominal
                       </th>
                     </tr>
                   </thead>
@@ -361,7 +357,12 @@ const Page = () => {
                           <td className="px-6 py-4 text-sm">
                             {row.jumlahAnggota}
                           </td>
-                          <td className="px-6 py-4 text-sm">{row.target}</td>
+                          <td className="px-6 py-4 text-sm">
+                            {formatRupiah(row.target)}
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            {row.jumlahAnggotaByAdmin}
+                          </td>
                           <td className="px-6 py-4 text-sm">
                             {formatRupiah(row.realisasi)}
                           </td>
