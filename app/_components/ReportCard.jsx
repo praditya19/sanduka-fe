@@ -8,10 +8,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import React, { useState, useEffect } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function ReportCard() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [dataList, setDataList] = useState([]);
+  const [laporan, setLaporan] = useState(null);
+  const [isBatal, setIsBatal] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,6 +29,73 @@ export default function ReportCard() {
 
     fetchData();
   }, []);
+
+  const handleBatalClick = async () => {
+    const laporanId = sessionStorage.getItem("idTerlapor");
+
+    if (!laporanId) {
+      console.error("ID Terlapor tidak ditemukan di sessionStorage");
+      return;
+    }
+
+    try {
+      // Menghapus data laporan
+      await GlobalApi.batalLaporanById(laporanId);
+
+      // Tampilkan notifikasi toast
+      toast.success("Laporan berhasil dibatalkan!");
+
+      // Hapus laporan dari dataList untuk menghilangkan card
+      setDataList((prevDataList) =>
+        prevDataList.filter((data) => data.id !== laporanId)
+      );
+
+      // Reset laporan setelah dihapus
+      setLaporan(null);
+
+      // Reload halaman setelah 2 detik
+      setTimeout(() => {
+        window.location.reload(); // Reload halaman
+      }, 2000);
+    } catch (error) {
+      console.error("Gagal menghapus laporan:", error);
+      toast.error("Gagal membatalkan laporan.");
+    }
+  };
+
+  const handleVerifikasiClick = async () => {
+    const laporanId = sessionStorage.getItem("idTerlapor");
+    if (!laporanId) {
+      console.error("ID Terlapor tidak ditemukan di sessionStorage");
+      return;
+    }
+  
+    // Mengambil tanggal saat ini
+    const currentDate = new Date();
+    const tanggalSantunan = currentDate.toISOString().split("T")[0]; // Format: yyyy-mm-dd
+  
+    const newTanggalSantunan = {
+      tanggalSantunan: tanggalSantunan, // Tanggal saat ini
+    };
+  
+    try {
+      // Panggil API untuk memperbarui tanggal santunan
+      await GlobalApi.verifikasiLaporanById(laporanId, newTanggalSantunan);
+  
+      // Tampilkan notifikasi toast
+      toast.success("Data Berhasil Terkonfirmasi!");
+  
+      // Hapus data setelah 2 detik
+      setTimeout(() => {
+        setDataList((prevDataList) => prevDataList.filter((_, index) => index !== currentSlide));
+      }, 2000);
+    } catch (error) {
+      // Menangani error jika ada
+      console.error("Terjadi kesalahan:", error);
+      toast.error("Gagal Mengkonfirmasi!");
+    }
+  };
+  
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -76,7 +146,26 @@ export default function ReportCard() {
 
   return (
     <div className="relative max-w-sm mx-auto bg-white shadow-lg rounded-2xl overflow-hidden my-6 border border-gray-300">
-   
+   <Toaster
+            toastOptions={{
+              style: {
+                fontSize: "1.25rem", // Ukuran font yang lebih besar
+                padding: "16px", // Menambah padding jika diperlukan
+              },
+              success: {
+                style: {
+                  background: "white", // Warna background hijau untuk pesan sukses
+                  color: "black",
+                },
+              },
+              error: {
+                style: {
+                  background: "#f44336", // Warna background merah untuk pesan error
+                  color: "#fff",
+                },
+              },
+            }}
+          />
       <div className="relative overflow-hidden">
         <div className="absolute bottom-0 left-0 w-full flex justify-center space-x-2 py-2">
           {dataList.map((_, index) => (
@@ -122,15 +211,18 @@ export default function ReportCard() {
           <p>{dataList[currentSlide]?.cabang}</p>
           <p>{dataList[currentSlide]?.alamat}</p>
         </div>
-        <p className="text-center text-gray-600 mb-4 font-medium">Catatan :</p>
+        <p className="text-center text-gray-600 mb-4 font-medium">Catatan :{ dataList[currentSlide]?.keteranganTerlapor }</p>
         <div className="flex justify-around mb-4">
           <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-1 px-3 rounded-full transition duration-300">
             <FontAwesomeIcon icon={faLocation} className="mr-2" /> Lokasi
           </button>
-          <button className="bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded-full transition duration-300">
+          <button className="bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded-full transition duration-300"
+            onClick={handleBatalClick}>
             <FontAwesomeIcon icon={faCancel} className="mr-2" /> Batal
           </button>
-          <button className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-1 px-3 rounded-full transition duration-300">
+          <button className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-1 px-3 rounded-full transition duration-300"
+          onClick={handleVerifikasiClick}
+          >
             <FontAwesomeIcon icon={faCheck} className="mr-2" /> Verifikasi
           </button>
         </div>
