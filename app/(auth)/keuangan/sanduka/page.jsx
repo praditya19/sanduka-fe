@@ -50,7 +50,7 @@ export default function Sanduka() {
     <div>
       <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
         <div className="container mx-auto flex items-center justify-between">
-          {/* Back Button and Title */}
+      
           <div className="flex items-center">
             <FontAwesomeIcon
               icon={faArrowLeft}
@@ -61,7 +61,7 @@ export default function Sanduka() {
             <h1 className="text-base">Keuangan Data Utama</h1>
           </div>
 
-          {/* Navigation */}
+         
           <nav className="hidden md:flex">
             <ul className="flex space-x-6 text-base">
               <li className="cursor-pointer">
@@ -79,13 +79,13 @@ export default function Sanduka() {
             </ul>
           </nav>
 
-          {/* Mobile Menu Button */}
+      
           <button className="md:hidden ml-auto" onClick={toggleMobileMenu}>
             <FontAwesomeIcon icon={faBars} size="lg" />
           </button>
         </div>
 
-        {/* Mobile Menu */}
+       
         {isMobileMenuOpen && (
           <div className="md:hidden absolute top-16 left-0 w-full bg-teal-700 text-white">
             <ul className="flex flex-col space-y-2 p-4">

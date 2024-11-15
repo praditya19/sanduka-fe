@@ -73,6 +73,24 @@ const login = async (loginData) => {
   }
 };
 
+const loginAdmin = async (formData) => {
+  try {
+    const response = await axiosClient.post(
+      "/api/auth/login-admin-super-admin",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error saat login:", error);
+    throw error.response?.data || error.message;
+  }
+};
+
 // General
 const getCabang = () => axiosClient.get("/api/daftarCabang");
 const getJabatan = () => axiosClient.get("/api/daftarJabatan");
@@ -536,6 +554,21 @@ const getSaldoOrganisasi = async () => {
     throw error;
   }
 };
+
+const editPemasukanUangMasuk = async (noBukti) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/uang-masuk-keluar/by-no-bukti`,
+      {
+        params: { noBukti },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fatching data by noBukti", error);
+    throw error;
+  }
+};
 // end
 // START IURAN PGRI
 const getTotalAnggota = async () => {
@@ -678,6 +711,28 @@ const getTableKalender = async (bulan, tahun, cabang) => {
 
 // Sanduka
 // Pemasukan & Pengeluaran Sanduka
+const sendSesuaiJumlahTarget = async (data) => {
+  try {
+    const response = await axiosClient.post(
+      "/api/uang-masuk-keluar/sesuai-jumlah-target",
+      data
+    );
+    console.log("Respon dari API:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error sending sesuai jumlah target:", error);
+    throw error;
+  }
+};
+const getNoBukti = async () => {
+  try {
+    const response = await axiosClient.get(`/api/bukti/generate`);
+    return response.data;
+  } catch (error) {
+    console.error("Error generating bukti:", error);
+    throw error;
+  }
+};
 const getTablePemasukanSanduka = async (month, year) => {
   try {
     const response = await axiosClient.get(
@@ -732,6 +787,7 @@ const getDataLapor = async () => {
   }
 };
 // end
+
 // Laporan Sanduka (TARGET DAN REALISASI)
 const getTableTargetRealisasi = async (
   tahun,
@@ -967,4 +1023,8 @@ export default {
   mutasiCabangUnitKerja,
   getByNIP,
   updateRegisUser,
+  getNoBukti,
+  sendSesuaiJumlahTarget,
+  loginAdmin,
+  editPemasukanUangMasuk,
 };

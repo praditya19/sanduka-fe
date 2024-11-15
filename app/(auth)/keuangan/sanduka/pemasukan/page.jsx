@@ -13,6 +13,8 @@ import toast, { Toaster } from "react-hot-toast";
 
 function Pemasukan() {
   const tableRef = useRef();
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const dropdownRef = useRef(null);
   const [transactions, setTransactions] = useState([]);
   const [bulanList, setBulanList] = useState([]);
   const [cabangList, setCabangList] = useState([]);
@@ -21,14 +23,19 @@ function Pemasukan() {
   const startYear = 2020;
   const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
   const [formValues, setFormValues] = useState({
-    noBukti: "",
     tanggalTransaksi: "",
-    posPenerimaan: "",
-    jenisPenerimaan: "",
-    cabang: "",
-    setoranBulan: "",
-    nominal: "",
+    posTransaksi: "",
+    masukKe: "Bank",
+    bulan: "11/2024",
+    debet: "2000000",
+    kredit: "",
+    bulanSantunan: "",
+    yangMeninggal: "",
+    namaPenerima: "",
     keterangan: "",
+    jenisPembayaran: "Sanduka",
+    totalAnggota: "",
+    cabang: "",
   });
 
   const handleChange = (e) => {
@@ -43,31 +50,41 @@ function Pemasukan() {
     setSelectedBulan(e.target.value);
   };
 
-  const handleYearChange = (e) => {
-    setNewSelectedYear(e.target.value);
-  };
-
   const printTable = () => {
     const printContent = tableRef.current;
     const originalContent = document.body.innerHTML;
 
-    // Temporarily replace body content with table content
     document.body.innerHTML = printContent.innerHTML;
 
-    window.print(); // Trigger the print dialog
+    window.print();
 
-    // Restore the original content after printing
     document.body.innerHTML = originalContent;
-    window.location.reload(); // Refresh the page to re-apply React events
+    window.location.reload();
+  };
+
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setIsDropdownVisible(false);
+    }
   };
 
   useEffect(() => {
-    // Get the current date
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
     const today = new Date();
 
-    // Format the date as "Tanggal Bulan Tahun"
-    const options = { day: "numeric", month: "long", year: "numeric" };
-    const formattedDate = today.toLocaleDateString("id-ID", options); // Use 'id-ID' for Indonesian locale
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+
+    const formattedDate = `${day.toString().padStart(2, "0")}-${month
+      .toString()
+      .padStart(2, "0")}-${year}`;
 
     setFormValues((prevValues) => ({
       ...prevValues,
@@ -78,20 +95,18 @@ function Pemasukan() {
   const fetchData = async () => {
     try {
       if (selectedBulan && newSelectedYear) {
-        // Ensure both filters are selected
         const data = await GlobalApi.getTablePemasukanSanduka(
           selectedBulan,
           newSelectedYear
         );
-        console.log(data); // Log the fetched data to the console
-        setTransactions(data); // Set fetched data into transactions state
+
+        setTransactions(data);
       }
     } catch (error) {
-      console.error("Error fetching data:", error); // Log any errors that occur
+      console.error("Error fetching data:", error);
     }
   };
 
-  // Fetch data whenever selectedBulan or newSelectedYear changes
   useEffect(() => {
     fetchData();
   }, [selectedBulan, newSelectedYear]);
@@ -105,7 +120,7 @@ function Pemasukan() {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setCabangList(response.data); // Assuming the response data is an array
+        setCabangList(response.data);
       } catch (error) {}
     };
 
@@ -116,35 +131,55 @@ function Pemasukan() {
     const fetchBulan = async () => {
       try {
         const response = await GlobalApi.getBulan();
-        setBulanList(response.data); // Simpan data bulan dari API ke state
+        setBulanList(response.data);
       } catch (error) {}
     };
 
-    fetchBulan(); // Panggil fungsi ketika komponen pertama kali dimuat
+    fetchBulan();
   }, []);
 
   const [selectAll, setSelectAll] = useState(false);
+
+  const handleSubmitAll = async (e) => {
+    e.preventDefault();
+
+    const requestData = {
+      uangMasukKeluar: {
+        ...formValues,
+      },
+      targetCabang: formValues.cabang,
+    };
+
+    try {
+      const response = await GlobalApi.sendSesuaiJumlahTarget(requestData);
+    } catch (error) {
+      console.error("Error saat mengirim data:", error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const dataToSend = {
-        noBukti: formValues.noBukti,
+        // noBukti: formValues.noBukti,
         tanggalTransaksi: formValues.tanggalTransaksi,
-        posTransaksi: formValues.posPenerimaan,
+        posTransaksi: formValues.posTransaksi,
         masukKe: formValues.jenisPenerimaan,
         cabang: formValues.cabang,
         bulan: formValues.setoranBulan,
-        debet: formValues.nominal,
-        kredit: formValues.nominal,
-        bulanSantunan: formValues.setoranBulan,
+        debet: formValues.debet,
+        kredit: formValues.kredit,
+        bulanSantunan: formValues.bulanSantunan,
         keterangan: formValues.keterangan,
         jenisPembayaran: "Sanduka",
         namaPenerima: "",
         yangMeninggal: "",
+        totalAnggota: "522",
+        totalSumbangan: "4718000",
       };
 
       const response = await GlobalApi.createPembayaranSanduka(dataToSend);
+
       toast.success("Data berhasil disimpan!");
     } catch (error) {
       toast.error(`Gagal menyimpan data: ${error.message}`);
@@ -153,8 +188,8 @@ function Pemasukan() {
 
   const handleReset = () => {
     setFormValues({
-      noBukti: "",
-      posPenerimaan: "",
+      // noBukti: "",
+      posTransaksi: "",
       jenisPenerimaan: "",
       cabang: "",
       setoranBulan: "",
@@ -265,7 +300,6 @@ function Pemasukan() {
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -280,7 +314,6 @@ function Pemasukan() {
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -304,18 +337,18 @@ function Pemasukan() {
           <Toaster
             toastOptions={{
               style: {
-                fontSize: "1.25rem", // Ukuran font yang lebih besar
-                padding: "16px", // Menambah padding jika diperlukan
+                fontSize: "1.25rem",
+                padding: "16px",
               },
               success: {
                 style: {
-                  background: "white", // Warna background hijau untuk pesan sukses
+                  background: "white",
                   color: "black",
                 },
               },
               error: {
                 style: {
-                  background: "#f44336", // Warna background merah untuk pesan error
+                  background: "#f44336",
                   color: "#fff",
                 },
               },
@@ -327,7 +360,7 @@ function Pemasukan() {
                 PEMASUKAN SANDUKA
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="flex flex-col">
+                {/* <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
                     htmlFor="noBukti"
@@ -341,8 +374,9 @@ function Pemasukan() {
                     name="noBukti"
                     value={formValues.noBukti}
                     onChange={handleChange}
+                    readOnly
                   />
-                </div>
+                </div> */}
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -353,25 +387,24 @@ function Pemasukan() {
                   <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="tanggalTransaksi"
-                    type="text" // Change to text since the format is custom
+                    type="text"
                     name="tanggalTransaksi"
-                    value={formValues.tanggalTransaksi}
+                    value={formValues.tanggalTransaksi || ""}
                     onChange={handleChange}
-                    readOnly
                   />
                 </div>
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
-                    htmlFor="posPenerimaan"
+                    htmlFor="posTransaksi"
                   >
                     Pos Penerimaan
                   </Label>
                   <select
                     className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="posPenerimaan"
-                    name="posPenerimaan"
-                    value={formValues.posPenerimaan}
+                    id="posTransaksi"
+                    name="posTransaksi"
+                    value={formValues.posTransaksi || ""}
                     onChange={handleChange}
                   >
                     <option value="">Pilih Pos Penerima</option>
@@ -400,28 +433,94 @@ function Pemasukan() {
                     <option value="Cash">Cash</option>
                   </select>
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col relative" ref={dropdownRef}>
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
                     htmlFor="cabang"
                   >
                     Cabang
                   </Label>
-                  <select
+
+                  <input
+                    type="text"
+                    placeholder="Cari Cabang..."
                     className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="cabang"
-                    name="cabang"
-                    value={formValues.cabang}
-                    onChange={handleChange}
-                  >
-                    <option value="">Pilih Cabang</option>
-                    {cabangList.map((cabang) => (
-                      <option key={cabang.id} value={cabang.kecamatan}>
-                        {cabang.kecamatan}
-                      </option>
-                    ))}
-                  </select>
+                    value={formValues.searchCabang || ""}
+                    onFocus={() => setIsDropdownVisible(true)}
+                    onChange={(e) => {
+                      const searchValue = e.target.value;
+                      setFormValues((prevValues) => ({
+                        ...prevValues,
+                        searchCabang: searchValue,
+                      }));
+                    }}
+                  />
+
+                  {isDropdownVisible && (
+                    <div className="absolute top-full left-0 w-full z-10 mt-1 border bg-white shadow-lg rounded-b">
+                      <ul className="max-h-48 overflow-y-auto">
+                        <li className="py-2 px-4 hover:bg-blue-500 hover:text-white">
+                          <button
+                            onClick={() => {
+                              setFormValues((prevValues) => ({
+                                ...prevValues,
+                                cabang: "",
+                                searchCabang: "",
+                              }));
+                              setIsDropdownVisible(false);
+                            }}
+                          >
+                            Pilih Cabang
+                          </button>
+                        </li>
+
+                        <li className="py-1 px-4 hover:bg-blue-500 hover:text-white">
+                          <button
+                            onClick={() => {
+                              setFormValues((prevValues) => ({
+                                ...prevValues,
+                                cabang: "All",
+                                searchCabang: "All",
+                              }));
+                              setIsDropdownVisible(false);
+                            }}
+                          >
+                            Semua Cabang
+                          </button>
+                        </li>
+
+                        {cabangList
+                          .filter((cabang) =>
+                            cabang.kecamatan
+                              .toLowerCase()
+                              .includes(
+                                formValues.searchCabang?.toLowerCase() || ""
+                              )
+                          )
+                          .map((cabang) => (
+                            <li
+                              key={cabang.id}
+                              className="p-1 px-4 hover:bg-blue-500 hover:text-white"
+                            >
+                              <button
+                                onClick={() => {
+                                  setFormValues((prevValues) => ({
+                                    ...prevValues,
+                                    cabang: cabang.kecamatan,
+                                    searchCabang: cabang.kecamatan,
+                                  }));
+                                  setIsDropdownVisible(false);
+                                }}
+                              >
+                                {cabang.kecamatan}
+                              </button>
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
+
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -434,7 +533,23 @@ function Pemasukan() {
                     id="setoranBulan"
                     type="month"
                     name="setoranBulan"
-                    value={formValues.setoranBulan}
+                    value={formValues.setoranBulan || ""}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="totalAnggota"
+                  >
+                    Total Anggota
+                  </Label>
+                  <Input
+                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="totalAnggota"
+                    type="totalAnggota"
+                    name="totalAnggota"
+                    value={formValues.totalAnggota || ""}
                     onChange={handleChange}
                   />
                 </div>
@@ -450,7 +565,24 @@ function Pemasukan() {
                     id="nominal"
                     type="number"
                     name="nominal"
-                    value={formValues.nominal}
+                    value={formValues.nominal || ""}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="totalSumbangan"
+                  >
+                    Total Sumbangan
+                  </Label>
+                  <Input
+                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="totalSumbangan"
+                    type="totalSumbangan"
+                    name="totalSumbangan"
+                    value={formValues.totalSumbangan || ""}
                     onChange={handleChange}
                   />
                 </div>
@@ -465,12 +597,18 @@ function Pemasukan() {
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="keterangan"
                     name="keterangan"
-                    value={formValues.keterangan}
+                    value={formValues.keterangan || ""}
                     onChange={handleChange}
                   />
                 </div>
               </div>
-              <div className="flex items-center mt-6 justify-center">
+              <div className="flex items-center mt-6 justify-center gap-6">
+                <Button
+                  className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                  onClick={handleSubmitAll}
+                >
+                  Sesuai Jumlah Target
+                </Button>
                 <Button
                   className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                   onClick={handleSubmit}
@@ -478,7 +616,7 @@ function Pemasukan() {
                   Simpan
                 </Button>
                 <Button
-                  className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-700 transition duration-150 ease-in-out ml-6"
+                  className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-700 transition duration-150 ease-in-out"
                   type="button"
                   onClick={handleReset}
                 >
@@ -509,7 +647,7 @@ function Pemasukan() {
                     onChange={(e) => setNewSelectedYear(e.target.value)}
                   >
                     <option value="">Pilih Tahun</option>
-                    {/* Map through years array to create options */}
+
                     {years.map((year) => (
                       <option key={year} value={year}>
                         {year}
@@ -524,7 +662,6 @@ function Pemasukan() {
                   <Input
                     type="checkbox"
                     className="form-checkbox h-4 w-4 mt-3"
-                    // checked={selectAll}
                     onChange={handleSelectAll}
                   />
                   <Button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300">
@@ -605,8 +742,7 @@ function Pemasukan() {
                     ) : null
                   )}
 
-                  {/* Row for TOTAL */}
-                  {/* <tr className="bg-gray-200 text-base text-black text-center font-bold">
+                  <tr className="bg-gray-200 text-base text-black text-center font-bold">
                     <td className="px-6 py-4 text-left" colSpan="4">
                       TOTAL
                     </td>
@@ -642,7 +778,7 @@ function Pemasukan() {
                     </td>
 
                     <td className="px-6 py-4 text-sm"></td>
-                  </tr> */}
+                  </tr>
                 </tbody>
               </table>
             </div>

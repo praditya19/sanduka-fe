@@ -268,11 +268,11 @@ export default function IconGrid() {
           }`}
         >
           {/* image */}
-          <div className="flex-1 mt-14">
+          <div className="flex-1 mt-[3.1%]">
             <img
               src="https://images.pexels.com/photos/346529/pexels-photo-346529.jpeg?cs=srgb&dl=pexels-bri-schneiter-28802-346529.jpg&fm=jpg"
               alt="Deskripsi gambar"
-              className="w-full h-96 -mt-6 object-cover"
+              className="w-full h-52  object-cover"
             />
           </div>
           <div className="flex-1 ">
@@ -332,17 +332,23 @@ export default function IconGrid() {
                   <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-xl font-bold text-gray-800">
+                        <p className="text-xl font-bold text-gray-800 -mt-1">
                           Lapor Meninggal
                         </p>
                         <p className="text-xs font-semibold text-gray-500 uppercase mt-1">
                           1 Orang
                         </p>
-                        {/* <p className="text-xs text-green-500 font-medium mt-1">
-                          <span className="mr-1">↑</span>3.48% Since last month
-                        </p> */}
+                        <p className="text-sm text-red-500 font-medium mt-1">
+                          <span className="mr-1">
+                            {new Date().toLocaleDateString("id-ID", {
+                              day: "2-digit",
+                              month: "long",
+                              year: "numeric",
+                            })}
+                          </span>
+                        </p>
                       </div>
-                      <div className="flex-shrink-0 bg-red-500 rounded-full p-2 mt-3">
+                      <div className="flex-shrink-0 bg-red-500 rounded-full p-2 mt-0">
                         <FontAwesomeIcon
                           icon={faBullhorn}
                           className="text-white text-xl"
@@ -355,17 +361,23 @@ export default function IconGrid() {
                   <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-xl font-bold text-gray-800">
+                        <p className="text-xl font-bold text-gray-800 -mt-1">
                           Sanduka Diberikan
                         </p>
                         <p className="text-xs font-semibold text-gray-500 uppercase mt-1">
                           173 Orang
                         </p>
-                        {/* <p className="text-xs text-red-500 font-medium mt-1">
-                          <span className="mr-1">↓</span>1.10% Since yesterday
-                        </p> */}
+                        <p className="text-sm text-green-500 font-medium mt-1">
+                          <span className="mr-1">
+                             2020 -{" "}
+                            {new Date().toLocaleDateString("id-ID", {
+                              month: "long",
+                              year: "numeric",
+                            })}
+                          </span>
+                        </p>
                       </div>
-                      <div className="flex-shrink-0 bg-orange-500 rounded-full p-2 mt-3">
+                      <div className="flex-shrink-0 bg-orange-500 rounded-full p-2 mt-0">
                         <FontAwesomeIcon
                           icon={faUser}
                           className="text-white text-xl"
@@ -378,17 +390,23 @@ export default function IconGrid() {
                   <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 h-24">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-xl font-bold text-gray-800">
+                        <p className="text-xl font-bold text-gray-800 -mt-1">
                           Total Santunan
                         </p>
                         <p className="text-xs font-semibold text-gray-500 uppercase mt-1">
                           Rp.432.500.000,-
                         </p>
-                        {/* <p className="text-xs text-red-500 font-medium mt-1">
-                          <span className="mr-1">↓</span>3.48% Since last week
-                        </p> */}
+                        <p className="text-sm text-green-500 font-medium mt-1">
+                          <span className="mr-1">
+                             2020 -{" "}
+                            {new Date().toLocaleDateString("id-ID", {
+                              month: "long",
+                              year: "numeric",
+                            })}
+                          </span>
+                        </p>
                       </div>
-                      <div className="flex-shrink-0 bg-yellow-500 rounded-full p-2 mt-3">
+                      <div className="flex-shrink-0 bg-yellow-500 rounded-full p-2 mt-0">
                         <FontAwesomeIcon
                           icon={faMoneyBill}
                           className="text-white text-xl"

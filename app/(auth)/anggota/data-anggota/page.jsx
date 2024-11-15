@@ -174,21 +174,39 @@ function DataAnggota() {
 
   const handleCabangSelect = (cabang) => {
     setSelectedCabang(cabang.kecamatan);
+    setFormData((prev) => ({
+      ...prev,
+      unit: "",
+    }));
+    setFilteredUnitKerja(
+      allUnitKerja.filter(
+        (unit) => unit.cabang.toLowerCase() === cabang.kecamatan.toLowerCase()
+      )
+    );
+    setIsUnitKerjaDisabled(false);
     setShowDropdownCabang(false);
   };
 
   const handleUnitKerjaChange = (e) => {
-    const unitValue = e.target.value;
-    setFormData((prev) => ({ ...prev, unit: unitValue }));
-
-    const filteredUnits = allUnitKerja.filter(
-      (unit) =>
-        unit.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
-        unit.unitKerja.toLowerCase().includes(unitValue.toLowerCase())
+    const searchTerm = e.target.value.toLowerCase();
+    setSearchUnit(searchTerm);
+    const filtered = allUnitKerja.filter((unit) =>
+       unit.unitKerja.toLowerCase().includes(searchTerm)
     );
-    setFilteredUnitKerja(filteredUnits);
-    setShowDropdownUnit(true);
-  };
+    setFilteredUnitKerja(filtered);
+ };
+  // const handleUnitKerjaChange = (e) => {
+  //   const unitValue = e.target.value;
+  //   setFormData((prev) => ({ ...prev, unit: unitValue }));
+
+  //   const filteredUnits = allUnitKerja.filter(
+  //     (unit) =>
+  //       unit.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
+  //       unit.unitKerja.toLowerCase().includes(unitValue.toLowerCase())
+  //   );
+  //   setFilteredUnitKerja(filteredUnits);
+  //   setShowDropdownUnit(true);
+  // };
 
   useEffect(() => {
     if (!unitKerjaInput && selectedCabang) {
@@ -228,8 +246,6 @@ function DataAnggota() {
 
   useEffect(() => {
     fetchAnggota();
-    fetchData();
-    fetchUnitKerja();
 
     if (!token) {
       router.push("/sign-in");
@@ -253,55 +269,59 @@ function DataAnggota() {
 
   const fetchAnggota = async () => {
     try {
-      const page = 0;
-      const size = 100;
-      const response = await GlobalApi.getAllAnggota(page, size);
+      const role = sessionStorage.getItem("role");
+      const userId = sessionStorage.getItem("userId");
+
       const fotoBase64Array = [];
+      let fetchedData = [];
 
-      const fetchedData = response.data.content;
+      if (role === "USER" && userId) {
+        const userData = await GlobalApi.getUserById(userId);
 
-      if (fetchedData && fetchedData.length > 0) {
-        fetchedData.forEach((item) => {
-          if (item.foto) {
-            try {
-              const decodedString = atob(item.foto);
-              fotoBase64Array.push(decodedString);
-            } catch (error) {
-              console.error("Error decoding Base64:", error);
-              fotoBase64Array.push(null);
-            }
-          } else {
+        if (userData.foto) {
+          try {
+            const decodedString = atob(userData.foto);
+            fotoBase64Array.push(decodedString);
+          } catch (error) {
+            console.error("Error decoding Base64:", error);
             fotoBase64Array.push(null);
           }
-        });
+        } else {
+          fotoBase64Array.push(null);
+        }
+
+        fetchedData = [userData];
       } else {
-        console.warn("No data found.");
+        const page = 0;
+        const size = 100;
+        const response = await GlobalApi.getAllAnggota(page, size);
+        fetchedData = response.data.content || [];
+
+        if (fetchedData.length > 0) {
+          fetchedData.forEach((item) => {
+            if (item.foto) {
+              try {
+                const decodedString = atob(item.foto);
+                fotoBase64Array.push(decodedString);
+              } catch (error) {
+                console.error("Error decoding Base64:", error);
+                fotoBase64Array.push(null);
+              }
+            } else {
+              fotoBase64Array.push(null);
+            }
+          });
+        } else {
+          console.warn("No data found.");
+        }
       }
 
       setFotoBase64(fotoBase64Array);
       setLoading(false);
-      setAnggota(fetchedData || []);
+      setAnggota(fetchedData);
     } catch (error) {
       console.error("Error fetching anggota:", error);
       setAnggota([]);
-    }
-  };
-
-  const fetchData = async () => {
-    try {
-      const response = await GlobalApi.getCabang();
-      setCabang(response.data);
-    } catch (error) {
-      console.error("Error fetching cabang data:", error);
-    }
-  };
-
-  const fetchUnitKerja = async () => {
-    try {
-      const response = await GlobalApi.getUnitKerja();
-      setUnitKerja(response.data);
-    } catch (error) {
-      console.error("Error fetching unit kerja data:", error);
     }
   };
 
@@ -571,6 +591,7 @@ function DataAnggota() {
 
   const handleCancelKeluar = () => {
     setPopupVisibleKeluar(false);
+    setPopupVisible(false);
   };
 
   const handlePopup = () => {
@@ -669,7 +690,7 @@ function DataAnggota() {
                     />
 
                     {showDropdownCabang && (
-                      <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                      <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full ">
                         <Input
                           type="text"
                           value={searchCabang}
@@ -687,15 +708,21 @@ function DataAnggota() {
                           >
                             Pilih Cabang
                           </li>
-                          {filteredCabangOptions.map((cabang) => (
-                            <li
-                              key={cabang.idKecamatan}
-                              className="p-2 cursor-pointer hover:bg-gray-100"
-                              onClick={() => handleCabangSelect(cabang)}
-                            >
-                              {cabang.kecamatan}
+                          {filteredCabangOptions.length > 0 ? (
+                            filteredCabangOptions.map((cabang) => (
+                              <li
+                                key={cabang.idKecamatan}
+                                className="p-2 cursor-pointer hover:bg-gray-100"
+                                onClick={() => handleCabangSelect(cabang)}
+                              >
+                                {cabang.kecamatan}
+                              </li>
+                            ))
+                          ) : (
+                            <li className="px-4 py-2 text-gray-500 cursor-default">
+                              Tidak ada hasil
                             </li>
-                          ))}
+                          )}
                         </ul>
                       </div>
                     )}
@@ -705,7 +732,7 @@ function DataAnggota() {
                     <div className="relative" ref={unitKerjaRef}>
                       <Input
                         type="text"
-                        className="border rounded-lg p-2 w-full bg-white shadow-sm mt-2"
+                        className="border rounded-lg p-2 w-full bg-white shadow-sm "
                         placeholder="Pilih Unit Kerja"
                         readOnly
                         value={formData.unit}
@@ -718,7 +745,7 @@ function DataAnggota() {
                       />
 
                       {showDropdownUnit && (
-                        <div className="absolute mt-1 w-full">
+                         <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-2 w-full">
                           <Input
                             type="text"
                             value={searchUnit}
@@ -749,15 +776,14 @@ function DataAnggota() {
                               filteredUnitKerja.map((unit) => (
                                 <li
                                   key={unit.id}
+                                  className="p-2 cursor-pointer hover:bg-gray-100"
                                   onClick={() => {
                                     setFormData((prev) => ({
                                       ...prev,
                                       unit: unit.unitKerja,
                                     }));
                                     setShowDropdownUnit(false);
-                                    setSearchUnit("");
                                   }}
-                                  className="p-2 cursor-pointer hover:bg-gray-100"
                                 >
                                   {unit.unitKerja}
                                 </li>
@@ -982,34 +1008,72 @@ function DataAnggota() {
                             >
                               <FaEdit className="w-4 h-4" />
                             </Button>
-                            <Button
-                              className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
-                              title="Mutasi"
-                              type="button"
-                              onClick={() => {
-                                sessionStorage.setItem("anggotaId", item.id);
-                                openModal(item);
-                              }}
-                            >
-                              <FaExchangeAlt className="w-4 h-4" />
-                            </Button>
-                            <Link
-                              href="#"
-                              className="text-white bg-red-500 p-2 border rounded-md"
-                            >
-                              <FaExclamationTriangle
-                                className="w-4 h-4"
-                                title="Lapor"
-                              />
-                            </Link>
-                            <Link
-                              href={`https://wa.me/${item.nomorHp}`}
-                              className="text-white bg-green-500 p-2 border rounded-md"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <FaWhatsapp className="w-4 h-4" title="WA" />
-                            </Link>
+
+                            {sessionStorage.getItem("role") === "USER" ? (
+                              <>
+                                <Button
+                                  className="text-white bg-cyan-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                  title="Mutasi"
+                                  type="button"
+                                  disabled
+                                >
+                                  <FaExchangeAlt className="w-4 h-4" />
+                                </Button>
+
+                                <Link
+                                  href="#"
+                                  className="text-white bg-red-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                  title="Lapor"
+                                  onClick={(e) => e.preventDefault()}
+                                >
+                                  <FaExclamationTriangle className="w-4 h-4" />
+                                </Link>
+
+                                <Link
+                                  href="#"
+                                  className="text-white bg-green-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                  title="WhatsApp"
+                                  onClick={(e) => e.preventDefault()}
+                                >
+                                  <FaWhatsapp className="w-4 h-4" />
+                                </Link>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                  title="Mutasi"
+                                  type="button"
+                                  onClick={() => {
+                                    sessionStorage.setItem(
+                                      "anggotaId",
+                                      item.id
+                                    );
+                                    openModal(item);
+                                  }}
+                                >
+                                  <FaExchangeAlt className="w-4 h-4" />
+                                </Button>
+
+                                <Link
+                                  href="#"
+                                  className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
+                                  title="Lapor"
+                                >
+                                  <FaExclamationTriangle className="w-4 h-4" />
+                                </Link>
+
+                                <Link
+                                  href={`https://wa.me/${item.nomorHp}`}
+                                  className="text-white bg-green-500 hover:bg-green-600 p-2 border rounded-md"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title="WhatsApp"
+                                >
+                                  <FaWhatsapp className="w-4 h-4" />
+                                </Link>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -1319,7 +1383,7 @@ function DataAnggota() {
                             Ya, Saya Yakin
                           </button>
                           <button
-                            onClick={handleCancel}
+                            onClick={handleCancelKeluar}
                             className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition duration-200"
                           >
                             Batal

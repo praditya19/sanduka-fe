@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -7,7 +7,8 @@ import Modal from "react-modal";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import {
-  FaPlus,
+  FaPlusCircle,
+  FaMinusCircle,
   FaEdit,
   FaExchangeAlt,
   FaExclamationTriangle,
@@ -29,7 +30,7 @@ function StatusAnggota() {
   const [selectedTingkat, setSelectedTingkat] = useState("");
   const [anggota, setAnggota] = useState([]);
 
-  const [itemsPerPage, setItemsPerPage] = useState(10); 
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: "ascending",
@@ -60,6 +61,8 @@ function StatusAnggota() {
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [expandedRows, setExpandedRows] = useState({});
+  const profileImageUrl = "/profile.png";
 
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
@@ -72,7 +75,7 @@ function StatusAnggota() {
       try {
         const response = await GlobalApi.getCabang();
         setOriginalCabangList(response.data);
-        setFilteredCabangList(response.data); 
+        setFilteredCabangList(response.data);
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -94,7 +97,7 @@ function StatusAnggota() {
 
   const handleUnitKerjaFocus = () => {
     if (selectedCabang) {
-      setShowUnitKerjaDropdown(true); 
+      setShowUnitKerjaDropdown(true);
     }
   };
 
@@ -157,21 +160,26 @@ function StatusAnggota() {
           unitKerja.unitKerja
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) &&
-          unitKerja.cabang === selectedCabang 
+          unitKerja.cabang === selectedCabang
       );
       setFilteredUnitKerja(filtered);
     }
 
-    setShowUnitKerjaDropdown(true); 
+    setShowUnitKerjaDropdown(true);
   };
 
   const handleUnitKerjaSelect = (unitKerja) => {
     setSelectedUnitKerja(unitKerja.unitKerja);
     setUnitKerjaInput(unitKerja.unitKerja);
     setShowUnitKerjaDropdown(false);
-    const filteredRekapData = originalRekapData.filter(
-      (item) => item.alamatKerja === unitKerja.unitKerja
-    );
+
+
+    const filteredRekapData = Array.isArray(originalRekapData)
+      ? originalRekapData.filter(
+        (item) => item.alamatKerja === unitKerja.unitKerja
+      )
+      : [];
+
     setRekapData(filteredRekapData);
   };
 
@@ -215,7 +223,7 @@ function StatusAnggota() {
     try {
       const data = await GlobalApi.getRekapAnggotaByCabang(cabang);
       setRekapData(data);
-      setOriginalRekapData(data); 
+      setOriginalRekapData(data);
     } catch (error) {
       console.error("Error fetching rekap data:", error);
     }
@@ -272,40 +280,47 @@ function StatusAnggota() {
     }
   }, [token, router]);
 
-  const fetchAnggota = async () => {
-    try {
-      const page = 0; 
-      const size = 50; 
-      const response = await GlobalApi.getAllAnggota(page, size);
-      const fotoBase64Array = [];
+  useEffect(() => {
+    const fetchAnggota = async () => {
+      try {
+        const page = 0;
+        const size = 100;
+        const response = await GlobalApi.getAllAnggota(page, size);
+        const fotoBase64Array = [];
 
-      const fetchedData = response.data.content;
+        const fetchedData = response.data.content;
 
-      if (fetchedData && fetchedData.length > 0) {
-        fetchedData.forEach((item) => {
-          if (item.foto) {
-            try {
-              const decodedString = atob(item.foto);
-              fotoBase64Array.push(decodedString);
-            } catch (error) {
-              console.error("Error decoding Base64:", error);
+        if (fetchedData && fetchedData.length > 0) {
+          fetchedData.forEach((item) => {
+            if (item.foto) {
+              try {
+                const decodedString = atob(item.foto);
+                fotoBase64Array.push(decodedString);
+              } catch (error) {
+                console.error("Error decoding Base64:", error);
+                fotoBase64Array.push(null);
+              }
+            } else {
               fotoBase64Array.push(null);
             }
-          } else {
-            fotoBase64Array.push(null);
-          }
-        });
-      } else {
-        console.warn("No data found.");
-      }
+          });
+        } else {
+          console.warn("No data found.");
+        }
 
-      setFotoBase64(fotoBase64Array);
-      setLoading(false);
-      setAnggota(fetchedData || []); 
-    } catch (error) {
-      console.error("Error fetching anggota:", error);
-      setAnggota([]);
-    }
+        setFotoBase64(fotoBase64Array);
+        setLoading(false);
+        setAnggota(fetchedData || []);
+      } catch (error) {
+        console.error("Error fetching anggota:", error);
+        setAnggota([]);
+      }
+    };
+    fetchAnggota();
+  }, []);
+
+  const toggleRow = (index) => {
+    setExpandedRows((prev) => ({ ...prev, [index]: !prev[index] }));
   };
 
   const jumlahAnggota = anggota.length;
@@ -379,7 +394,7 @@ function StatusAnggota() {
   };
 
   const formatTingkat = (tingkat) => {
-    return tingkatSekolahMap[tingkat] || tingkat; 
+    return tingkatSekolahMap[tingkat] || tingkat;
   };
 
   const categories = [
@@ -448,8 +463,8 @@ function StatusAnggota() {
                 </thead>
                 <tbody>
                   ${filteredDataForPrint
-                    .map(
-                      (item, index) => `
+        .map(
+          (item, index) => `
                         <tr>
                           <td>${index + 1}</td>
                           <td></td>
@@ -457,11 +472,11 @@ function StatusAnggota() {
                             <div class="font-bold">${item.namaLengkap}</div>
                             <div>${item.npaPgri}</div>
                             <div>${formatDate(
-                              item.tanggalLahir
-                            )}, ${calculateAge(item.tanggalLahir)}</div>
+            item.tanggalLahir
+          )}, ${calculateAge(item.tanggalLahir)}</div>
                             <div>Usia ${calculateAge(
-                              item.tanggalLahir
-                            )} Tahun</div>
+            item.tanggalLahir
+          )} Tahun</div>
                             <div>${item.unitKerja}</div>
                             <div>${item.jabatan}</div>
                             <div>${item.nomorHp}</div>
@@ -471,8 +486,8 @@ function StatusAnggota() {
                           <td>${item.status}</td>
                         </tr>
                       `
-                    )
-                    .join("")}
+        )
+        .join("")}
                 </tbody>
               </table>
             </body>
@@ -485,7 +500,7 @@ function StatusAnggota() {
   };
 
   const sortedData = useMemo(() => {
-    if (!Array.isArray(anggota)) return []; 
+    if (!Array.isArray(anggota)) return [];
 
     let sortableItems = [...anggota];
 
@@ -530,7 +545,7 @@ function StatusAnggota() {
         (filterCabang ? searchCabangFilter : true) &&
         (filterUnitKerja ? searchUnitKerjaFilter : true) &&
         tingkatSekolahFilter
-      ); 
+      );
     });
   }, [
     sortedData,
@@ -616,6 +631,27 @@ function StatusAnggota() {
     setCurrentPage(number);
   };
 
+  const handlePindahCabangUnit = () => {
+    router.push("/anggota/data-anggota/mutasiCabangUnit");
+  };
+
+
+  const handleEditClick = () => {
+    router.push("/anggota/edit-anggota");
+  };
+
+  const getVisiblePages = () => {
+    const visiblePages = [];
+    const leftLimit = Math.max(1, currentPage - 1);
+    const rightLimit = Math.min(totalPages, currentPage + 1);
+
+    for (let i = leftLimit; i <= rightLimit; i++) {
+      visiblePages.push(i);
+    }
+
+    return visiblePages;
+  };
+
   const startIndex = (currentPage - 1) * maxItems;
   const endIndex = startIndex + maxItems;
 
@@ -632,9 +668,8 @@ function StatusAnggota() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="flex flex-wrap justify-between mt-14 mb-4 mx-4">
             {categories.map((category, index) => (
@@ -690,7 +725,7 @@ function StatusAnggota() {
                     placeholder="Pilih Cabang"
                   />
                   {showCabangDropdown && (
-                    <div className="absolute mt-9 w-full">
+                    <div className="absolute mt-11 w-full">
                       <Input
                         type="text"
                         onChange={(e) => handleCabangSearch(e.target.value)}
@@ -699,7 +734,7 @@ function StatusAnggota() {
                         autoFocus
                       />
                       {filteredCabangList.length > 0 && (
-                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto mt-1">
+                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto mt-0">
                           <li
                             onClick={() =>
                               handleSelectCabang({ kecamatan: "" })
@@ -738,7 +773,7 @@ function StatusAnggota() {
                       disabled={!selectedCabang}
                     />
                     {showUnitKerjaDropdown && (
-                      <div className="absolute mt-9 w-full">
+                      <div className="absolute mt-11 w-full">
                         <Input
                           type="text"
                           onChange={(e) =>
@@ -826,213 +861,273 @@ function StatusAnggota() {
             <table className="w-full">
               <thead>
                 <tr>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">No</th>
                   <th className="p-2 md:p-3 border text-white bg-teal-700">
-                    <div className="flex justify-between items-center">
-                      <span>No</span>
-                      <span
-                        className="ml-1 cursor-pointer"
-                        onClick={() => requestSort("index")}
-                      >
-            
-                      </span>
-                    </div>
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
                     Foto
                   </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
-                    <div className="flex justify-between items-center">
-                      <span>Nama</span>
-                      <span
-                        className="ml-1 cursor-pointer"
-                        onClick={() => requestSort("nama")}
-                      >
-                 
-                      </span>
-                    </div>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">Nama</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
+                    Tingkat Sekolah
                   </th>
                   <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
-                    <div className="flex justify-between items-center">
-                      <span>Tingkat Sekolah</span>
-                    </div>
+                    Cabang
                   </th>
                   <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
-                    <div className="flex justify-between items-center">
-                      <span>Cabang</span>
-                      <span
-                        className="ml-1 cursor-pointer"
-                        onClick={() => requestSort("kerja")}
-                      >
-                
-                      </span>
-                    </div>
+                    Keterangan
                   </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
-                    <div className="flex justify-between items-center">
-                      <span>Keterangan</span>
-                      <span
-                        className="ml-1 cursor-pointer"
-                        onClick={() => requestSort("keterangan")}
-                      >
-                      
-                      </span>
-                    </div>
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
-                    Aksi
-                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedMembersData.map((item, index) => (
-                  <tr
-                    key={index}
-                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                  >
-                    <td className="p-2 md:p-3 border text-center">
-                      {startIndex + index + 1}
-                    </td>
-                    <td className="p-2 md:p-3 border md:table-cell hidden">
-                      {fotoBase64[index] ? (
+                  <React.Fragment key={index}>
+                    <tr className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                      <td className="p-2 md:p-3 border text-center">
+                        {startIndex + index + 1}
+                        <button
+                          onClick={() => toggleRow(index)}
+                          className="text-blue-500 md:hidden"
+                        >
+                          {expandedRows[index] ? (
+                            <FaMinusCircle className="w-4 h-4" title="Collapse" />
+                          ) : (
+                            <FaPlusCircle className="w-4 h-4" title="Expand" />
+                          )}
+                        </button>
+                      </td>
+                      <td className="p-2 md:p-3 border md:table-cell">
                         <Image
-                          src={`data:image/jpeg;base64,${fotoBase64[index]}`}
-                          className="rounded-full mx-auto"
-                          width={100}
-                          height={100}
-                          alt="Belum ada Foto"
+                          src={
+                            fotoBase64[index]
+                              ? `data:image/jpeg;base64,${fotoBase64[index]}`
+                              : profileImageUrl
+                          }
+                          alt={`Foto ${item.namaPelapor || "User"}`}
+                          width={50}
+                          height={50}
+                          className="rounded"
+                          unoptimized={true}
                         />
-                      ) : (
-                        <span>Belum ada foto</span>
-                      )}
-                    </td>
-                    <td className="p-2 md:p-3 border">
-                      <div className="font-bold text-sm">
-                        {item.namaLengkap}
-                      </div>
-                      <div className="text-sm">{item.npaPgri}</div>
-                      <div className="text-sm">
-                        {item.tempatLahir}, {formatDate(item.tanggalLahir)}
-                      </div>
-                      <div className="text-sm">
-                        Usia {calculateAge(item.tanggalLahir)} Tahun
-                      </div>
-                      <div className="text-sm">{item.unitKerja}</div>
-                      <div className="text-sm">{item.jabatan}</div>
-                      <div className="text-sm">{item.nomorHp}</div>
-                    </td>
-                    <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
-                      {formatTingkat(item.tingkatSekolah)}
-                    </td>
-                    <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
-                      {item.cabang}
-                    </td>
-                    <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
-                      <div
-                        className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${
-                          item.status === "BUKAN ANGGOTA"
+                      </td>
+                      <td className="p-2 md:p-3 border">
+                        <div className="font-bold text-sm">{item.namaLengkap}</div>
+                        <div className="text-sm">{item.npaPgri}</div>
+                        <div className="text-sm">
+                          {item.tempatLahir}, {item.tanggalLahir}
+                        </div>
+                        <div className="text-sm">Usia: {item.usia} Tahun</div>
+                        <div className="text-sm">{item.unitKerja}</div>
+                        <div className="text-sm">{item.jabatan}</div>
+                      </td>
+                      <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
+                        {item.tingkatSekolah}
+                      </td>
+                      <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
+                        {item.cabang}
+                      </td>
+                      <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
+                        <div
+                          className={` inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm ${item.status === "BUKAN ANGGOTA"
                             ? "bg-red-200 text-red-900"
                             : "bg-green-200 text-green-900"
-                        }`}
-                      >
-                        {item.status === "ANGGOTA" ? "Aktif" : item.status}
-                      </div>
-                    </td>
-                    <td className="p-2 md:p-3 border text-center">
-                      <div className="flex justify-center space-x-2">
-                        <Link
-                          href="#"
-                          className="text-white bg-blue-500 p-2 border rounded-md"
+                            }`}
                         >
-                          <FaEdit className="w-4 h-4" title="Edit Data" />
-                        </Link>
-                        <Button
-                          className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
-                          title="Mutasi"
-                          onClick={() => openModal(item)}
-                        >
-                          <FaExchangeAlt className="w-4 h-4" />
-                        </Button>
-                        <Link
-                          href="#"
-                          className="text-white bg-red-500 p-2 border rounded-md"
-                        >
-                          <FaExclamationTriangle
-                            className="w-4 h-4"
-                            title="Lapor"
-                          />
-                        </Link>
-                        <Link
-                          href={`https://wa.me/${item.nomorHp}`}
-                          className="text-white bg-green-500 p-2 border rounded-md"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <FaWhatsapp className="w-4 h-4" title="WA" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
+                          {item.role === "USER"
+                            ? "Aktif"
+                            : item.status_keanggotaan}
+                        </div>
+                      </td>
+                      <td className="p-2 md:p-3 border text-center md:table-cell hidden">
+                        <div className="flex justify-center space-x-2">
+                          <Button
+                            type="button"
+                            className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                            title="Edit Data"
+                            onClick={() => {
+                              sessionStorage.setItem("anggotaId", item.id);
+                              handleEditClick();
+                            }}
+                          >
+                            <FaEdit className="w-4 h-4" />
+                          </Button>
+
+                          {sessionStorage.getItem("role") === "USER" ? (
+                            <>
+                              <Button
+                                className="text-white bg-cyan-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                title="Mutasi"
+                                type="button"
+                                disabled
+                              >
+                                <FaExchangeAlt className="w-4 h-4" />
+                              </Button>
+
+                              <Link
+                                href="#"
+                                className="text-white bg-red-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                title="Lapor"
+                                onClick={(e) => e.preventDefault()}
+                              >
+                                <FaExclamationTriangle className="w-4 h-4" />
+                              </Link>
+
+                              <Link
+                                href="#"
+                                className="text-white bg-green-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                title="WhatsApp"
+                                onClick={(e) => e.preventDefault()}
+                              >
+                                <FaWhatsapp className="w-4 h-4" />
+                              </Link>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                title="Mutasi"
+                                type="button"
+                                onClick={() => {
+                                  sessionStorage.setItem(
+                                    "anggotaId",
+                                    item.id
+                                  );
+                                  openModal(item);
+                                }}
+                              >
+                                <FaExchangeAlt className="w-4 h-4" />
+                              </Button>
+
+                              <Link
+                                href="#"
+                                className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
+                                title="Lapor"
+                              >
+                                <FaExclamationTriangle className="w-4 h-4" />
+                              </Link>
+
+                              <Link
+                                href={`https://wa.me/${item.nomorHp}`}
+                                className="text-white bg-green-500 hover:bg-green-600 p-2 border rounded-md"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="WhatsApp"
+                              >
+                                <FaWhatsapp className="w-4 h-4" />
+                              </Link>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                    {/* Expanded Row for mobile */}
+                    {expandedRows[index] && (
+                      <tr className="md:hidden">
+                        <td colSpan="3" className="p-2 bg-gray-100">
+                          <div className="text-sm">Tingkat Sekolah: {item.tingkatSekolah}</div>
+                          <div className="text-sm">Cabang: {item.cabang}</div>
+                          <div className="text-sm">Keterangan: {item.status}</div>
+                          <div
+                            className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${item.status === "BUKAN ANGGOTA"
+                              ? "bg-red-200 text-red-900"
+                              : "bg-green-200 text-green-900"
+                              }`}
+                          >
+                            {item.role === "USER"
+                              ? "Aktif"
+                              : item.status_keanggotaan}
+                          </div>
+                          <div className="flex justify-center space-x-2 mt-2">
+                            <Button
+                              className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                              title="Edit Data"
+                              onClick={() =>
+                                router.push(
+                                  `/anggota/edit-anggota?id=${item.id}`
+                                )
+                              }
+                            >
+                              <FaEdit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                              title="Mutasi"
+                              onClick={() => openModal(item)}
+                            >
+                              <FaExchangeAlt className="w-4 h-4" />
+                            </Button>
+                            <Link
+                              href="#"
+                              className="text-white bg-red-500 p-2 border rounded-md"
+                            >
+                              <FaExclamationTriangle
+                                className="w-4 h-4"
+                                title="Lapor"
+                              />
+                            </Link>
+                            <Link
+                              href={`https://wa.me/${item.nomorHp}`}
+                              className="text-white bg-green-500 p-2 border rounded-md"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <FaWhatsapp className="w-4 h-4" title="WA" />
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
-            <div className="flex justify-end items-center mb-4">
-              {totalItems > maxItems && (
-                <>
-                  <Button
-                    onClick={handlePreviousPage}
-                    disabled={currentPage === 1}
-                    className="mr-2"
-                  >
-                    Previous
-                  </Button>
-                  <div className="flex items-center">
-                    {totalPages > 1 && (
-                      <ul className="flex space-x-1">
-                        {(() => {
-                          let startPage = Math.max(1, currentPage - 1);
-                          let endPage = Math.min(totalPages, currentPage + 1);
+            {totalItems >= maxItems && (
+              <div className="flex justify-center mt-4 gap-1">
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                >
+                  First
+                </button>
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                >
+                  Prev
+                </button>
 
-                          if (currentPage === 1) {
-                            endPage = Math.min(3, totalPages);
-                          } else if (currentPage === totalPages) {
-                            startPage = Math.max(totalPages - 2, 1);
-                          } else if (totalPages - currentPage < 2) {
-                            startPage = Math.max(totalPages - 2, 1);
-                          }
-
-                          return Array.from(
-                            { length: endPage - startPage + 1 },
-                            (_, i) => startPage + i
-                          );
-                        })().map((number) => (
-                          <li key={number}>
-                            <Button
-                              onClick={() => handlePageClick(number)}
-                              className={`mx-1 px-4 py-2 border rounded-md ${
-                                currentPage === number
-                                  ? "bg-blue-500 text-white"
-                                  : "bg-white text-black"
-                              }`}
-                            >
-                              {number}
-                            </Button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                  <Button
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                    className="ml-2"
+                {getVisiblePages().map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                      ? "bg-blue-500 text-white"
+                      : "bg-white hover:bg-gray-50"
+                      }`}
                   >
-                    Next
-                  </Button>
-                </>
-              )}
-            </div>
+                    {page}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                >
+                  Next
+                </button>
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                >
+                  Last
+                </button>
+              </div>
+            )}
           </div>
-      
+
           <Modal
             isOpen={isModalOpen}
             onRequestClose={closeModal}

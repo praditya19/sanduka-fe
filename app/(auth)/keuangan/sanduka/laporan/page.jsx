@@ -14,7 +14,7 @@ export default function Lapor() {
 
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const router = useRouter();
+  const router = useRouter();
 
   const handleBackClick = () => {
     router.back();
@@ -43,7 +43,6 @@ export default function Lapor() {
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -58,7 +57,6 @@ export default function Lapor() {
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}

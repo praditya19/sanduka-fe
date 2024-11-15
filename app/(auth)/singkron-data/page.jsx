@@ -142,7 +142,7 @@ const SyncData = () => {
     setSelectedUnitKerja(unitKerja.unitKerja);
     setUnitKerjaInput(unitKerja.unitKerja);
     setShowUnitKerjaDropdown(false);
-    console.log("Unit kerja yang dipilih:", unitKerja);
+
     const filteredRekapData = originalRekapData.filter(
       (item) => item.alamatKerja === unitKerja.unitKerja
     );
@@ -463,19 +463,18 @@ const SyncData = () => {
                   placeholder="Pilih Cabang"
                 />
                 {showCabangDropdown && (
-                  <div className="absolute mt-9 z-10">
+                  <div className="absolute mt-11 z-10 w-full">
                     <Input
                       type="text"
                       onChange={(e) => handleCabangSearch(e.target.value)}
-                      className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-2"
+                      className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
                       placeholder="Cari atau ketik Cabang..."
                       autoFocus
                     />
                     {filteredCabangList.length > 0 && (
-                      <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto mt-1">
-                       
+                      <ul className="absolute  w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto mt-1">
                         <li
-                          onClick={() => handleSelectCabang({ kecamatan: "" })} 
+                          onClick={() => handleSelectCabang({ kecamatan: "" })}
                           className="px-4 py-2 cursor-pointer hover:bg-gray-200"
                         >
                           Pilih Cabang
@@ -507,7 +506,7 @@ const SyncData = () => {
                   disabled={!selectedCabang}
                 />
                 {showUnitKerjaDropdown && (
-                  <div className="absolute mt-9 w-full z-10">
+                  <div className="absolute mt-11 w-full z-10">
                     <Input
                       type="text"
                       onChange={(e) => handleUnitKerjaSearch(e.target.value)}

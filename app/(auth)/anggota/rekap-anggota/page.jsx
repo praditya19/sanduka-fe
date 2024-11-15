@@ -30,6 +30,7 @@ function RekapAnggota() {
   const unitKerjaRef = useRef(null);
   const [originalRekapData, setOriginalRekapData] = useState([]);
   const [expandedIndex, setExpandedIndex] = useState(null);
+  const [totalSumbanganPerCabang, setTotalSumbanganPerCabang] = useState(0);
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -158,7 +159,7 @@ function RekapAnggota() {
     setSelectedUnitKerja(unitKerja.unitKerja);
     setUnitKerjaInput(unitKerja.unitKerja);
     setShowUnitKerjaDropdown(false);
-    console.log("Unit kerja yang dipilih:", unitKerja);
+
     const filteredRekapData = originalRekapData.filter(
       (item) => item.alamatKerja === unitKerja.unitKerja
     );
@@ -210,10 +211,6 @@ function RekapAnggota() {
       console.error("Error fetching rekap data:", error);
     }
   };
-
-  useEffect(() => {
-    console.log("Total Sumbangan Per Cabang State:", totalSumbanganPerCabang);
-  }, [totalSumbanganPerCabang]);
 
   useEffect(() => {
     if (!token) {
@@ -305,7 +302,7 @@ function RekapAnggota() {
                     placeholder="Pilih Cabang"
                   />
                   {showCabangDropdown && (
-                    <div className="absolute mt-9 w-full">
+                    <div className="absolute mt-11 w-full">
                       <Input
                         type="text"
                         onChange={(e) => handleCabangSearch(e.target.value)}
@@ -350,7 +347,7 @@ function RekapAnggota() {
                     disabled={!selectedCabang}
                   />
                   {showUnitKerjaDropdown && (
-                    <div className="absolute mt-9 w-full">
+                    <div className="absolute mt-11 w-full">
                       <Input
                         type="text"
                         onChange={(e) => handleUnitKerjaSearch(e.target.value)}
@@ -486,20 +483,20 @@ function RekapAnggota() {
                           {item.alamatKerja}
                         </td>
                         <td className="p-2 md:p-3 border text-center">
-                          {item.totalPns}
+                          {item.pesertaKtaDigitalCount}
                         </td>
                         <td className="p-2 md:p-3 border text-center">
-                          {item.totalPppk}
+                          {item.pesertaSandukaCount}
                         </td>
                         <td className="p-2 md:p-3 border text-center">
-                          {item.totalNonPns}
+                          {item.pesertaDaspenCount}
                         </td>
 
                         <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
-                          {item.jumlah}
+                          {item.totalCount}
                         </td>
                         <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
-                          {item.totalIuran}
+                          {item.totalSumbangan}
                         </td>
                       </tr>
 
@@ -542,23 +539,15 @@ function RekapAnggota() {
                   >
                     Jumlah :
                   </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center"
-                  colSpan="5">
+                  <td
+                    className="p-2 md:p-3 border bg-green-200 text-center"
+                    colSpan="5"
+                  >
                     {totalSumbanganPerCabang
-        ? `Rp. ${parseInt(totalSumbanganPerCabang).toLocaleString("id-ID")},-`
-        : "Data tidak tersedia"}
-                  </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
-                    {jumlahPppk}
-                  </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center">
-                    {jumlahNonPns}
-                  </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center hidden lg:table-cell">
-                    {jumlah}
-                  </td>
-                  <td className="p-2 md:p-3 border bg-green-200 text-center hidden lg:table-cell">
-                    Rp. {jumlahIuran.toLocaleString("id-ID")},-
+                      ? `Rp. ${parseInt(totalSumbanganPerCabang).toLocaleString(
+                          "id-ID"
+                        )},-`
+                      : "Data tidak tersedia"}
                   </td>
                 </tr>
               </tfoot>
