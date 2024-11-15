@@ -18,7 +18,7 @@ export default function DataUtama() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
 
-  const [data, setData] = useState([]); // State untuk menampung data dari API
+  const [data, setData] = useState([]); 
 
   const handleBackClick = () => {
     router.back();
@@ -47,36 +47,46 @@ export default function DataUtama() {
     };
   }, []);
 
-   // Memanggil GlobalApi berdasarkan tab yang aktif
-   useEffect(() => {
+   
+  useEffect(() => {
     const fetchData = async () => {
       let response;
-      if (activeTab === "iuran-pgri") {
-        response = await GlobalApi.getIuranByFilter("Iuran PGRI");
-        sessionStorage.setItem("iuranPGRIData", JSON.stringify(response)); // Store in session storage
-      } else if (activeTab === "daspen") {
-        response = await GlobalApi.getIuranByFilter("Daspen");
-        sessionStorage.setItem("daspenData", JSON.stringify(response)); // Store in session storage
-      } else if (activeTab === "derap") {
-        response = await GlobalApi.getIuranByFilter("Derap");
-        sessionStorage.setItem("derapData", JSON.stringify(response)); // Store in session storage
-      } else if (activeTab === "kalender") {
-        response = await GlobalApi.getIuranByFilter("Kalender");
-        sessionStorage.setItem("kalenderData", JSON.stringify(response)); // Store in session storage
-      }
-      setData(response); // Set data yang diterima dari API
       
+      if (activeTab === "iuran-pgri") {
+        // Mengambil data untuk semua tab (daspen, derap, kalender)
+        const daspenResponse = await GlobalApi.getIuranByFilter("Daspen");
+        const derapResponse = await GlobalApi.getIuranByFilter("Derap");
+        const kalenderResponse = await GlobalApi.getIuranByFilter("Kalender");
+  
+        // Menyimpan semua data di sessionStorage
+        sessionStorage.setItem("daspenData", JSON.stringify(daspenResponse));
+        sessionStorage.setItem("derapData", JSON.stringify(derapResponse));
+        sessionStorage.setItem("kalenderData", JSON.stringify(kalenderResponse));
+  
+        // Menggabungkan semua data ke dalam satu objek atau array
+        response = {
+          daspen: daspenResponse,
+          derap: derapResponse,
+          kalender: kalenderResponse
+        };
+      } else if (activeTab === "iuran-pgri") {
+        response = await GlobalApi.getIuranByFilter("Iuran PGRI");
+        sessionStorage.setItem("PGRIData", JSON.stringify(response));
+      }
+      
+      setData(response);
     };
   
-    // Check session storage before fetching data
+    // Mengecek apakah data sudah ada di sessionStorage untuk tab yang aktif
     const storedData = sessionStorage.getItem(`${activeTab}Data`);
     if (storedData) {
       const parsedData = JSON.parse(storedData);
-      setData(parsedData); // Use data from session storage
+      setData(parsedData);
     } else {
       fetchData();
     }
   }, [activeTab]);
+  
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">

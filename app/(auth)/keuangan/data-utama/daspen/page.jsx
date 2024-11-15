@@ -30,8 +30,8 @@ export default function Daspen() {
   const [perolehanKabupaten, setPerolehanKabupaten] = useState(0);
   const [perolehanProvinsi, setPerolehanProvinsi] = useState(0);
   const [tableData, setTableData] = useState([]);
-  const [bulanList, setBulanList] = useState([]); // State untuk menyimpan daftar bulan
-  const [selectedBulan, setSelectedBulan] = useState(""); // State untuk bulan yang dipilih
+  const [bulanList, setBulanList] = useState([]);
+  const [selectedBulan, setSelectedBulan] = useState("");
   const tableRef = useRef();
   const currentYear = new Date().getFullYear();
   const startYear = 2020;
@@ -45,7 +45,6 @@ export default function Daspen() {
     new Date().getFullYear()
   );
 
-  // Function to fetch data based on selected filters
   useEffect(() => {
     const fetchData = async () => {
       const data = await GlobalApi.getTableDaspen(
@@ -57,14 +56,13 @@ export default function Daspen() {
     };
 
     if (selectedBulanBaru && newSelectedYear) {
-      // Cek apakah bulan dan tahun sudah dipilih
       fetchData();
     }
   }, [selectedBulanBaru, newSelectedYear, newCabangList]);
 
   useEffect(() => {
     if (!selectedBulanBaru || !newSelectedYear) {
-      setTableData([]); // Atau setDataSumbangan(null) jika lebih sesuai
+      setTableData([]);
     }
   }, [selectedBulanBaru, newSelectedYear]);
 
@@ -72,7 +70,7 @@ export default function Daspen() {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setCabangList(response.data); // Assuming the response data is an array
+        setCabangList(response.data);
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -81,70 +79,61 @@ export default function Daspen() {
     fetchCabangData();
   }, []);
 
-  // Generate an array of years from startYear to currentYear
   const years = Array.from(
     { length: currentYear - startYear + 1 },
     (_, index) => startYear + index
   );
 
-  const [selectedYear, setSelectedYear] = useState(currentYear); // Set default to current year
+  const [selectedYear, setSelectedYear] = useState(currentYear);
 
-  // Ambil data bulan dari API
   useEffect(() => {
     const fetchBulan = async () => {
       try {
         const response = await GlobalApi.getBulan();
-        setBulanList(response.data); // Simpan data bulan dari API ke state
+        setBulanList(response.data);
       } catch (error) {
         console.error("Error fetching bulan:", error);
       }
     };
 
-    fetchBulan(); // Panggil fungsi ketika komponen pertama kali dimuat
+    fetchBulan();
   }, []);
 
   const printTable = () => {
     const printContent = tableRef.current;
     const originalContent = document.body.innerHTML;
-    
-    // Temporarily replace body content with table content
+
     document.body.innerHTML = printContent.innerHTML;
 
-    window.print(); // Trigger the print dialog
+    window.print();
 
-    // Restore the original content after printing
     document.body.innerHTML = originalContent;
-    window.location.reload(); // Refresh the page to re-apply React events
+    window.location.reload();
   };
 
-  // Ambil data dari database ketika komponen di-mount
   useEffect(() => {
     const storedData = sessionStorage.getItem("daspenData");
 
     if (storedData) {
       const data = JSON.parse(storedData);
 
-      // Assuming data is an array and you want the first item
       const firstItem = data[0];
 
-      // Check if the first item exists and set values accordingly
       if (firstItem) {
-        setKuota(Number(firstItem.pb)); // Use Number() to convert to a number
+        setKuota(Number(firstItem.pb));
         setKatagori1(Number(firstItem.propinsi));
         setKatagori2(Number(firstItem.kabupaten));
         setKatagori3(Number(firstItem.cabang));
       }
-    } 
+    }
   }, []);
 
-  // Perhitungan otomatis ketika kuota atau kategori lainnya berubah
   useEffect(() => {
     setKatagori1Lainnya(kuota * katagori1);
     setKatagori2Lainnya(kuota * katagori2);
     setKatagori3Lainnya(kuota * katagori3);
   }, [kuota, katagori1, katagori2, katagori3]);
 
-  // Hitung total target dan perolehan provinsi, cabang, kabupaten
   useEffect(() => {
     const total =
       katagori1Lainnya * kat1 +
@@ -163,9 +152,8 @@ export default function Daspen() {
   }, [kat1, kat2, kat3, katagori1, katagori2, katagori3]);
 
   const handleSubmit = async (event) => {
-    event.preventDefault(); // Prevent page reload
+    event.preventDefault();
 
-    // Prepare the payload with form data
     const payload = {
       kategori1: katagori1,
       kategori2: katagori2,
@@ -176,13 +164,10 @@ export default function Daspen() {
     };
 
     try {
-      // Send data to the API endpoint
       const result = await GlobalApi.createDaspenData(payload);
 
-      // Show success message
       toast.success("Data berhasil disimpan!");
     } catch (error) {
-      // Handle error
       toast.error(`Gagal menyimpan data: ${error.message}`);
     }
   };
@@ -191,12 +176,12 @@ export default function Daspen() {
     event.preventDefault();
 
     const payload = {
-      bulan: selectedBulan, // "September"
-      tahun: selectedYear, // "2024"
-      cabang: selectedCabang, // "BANGSRI"
-      kategori1: kat1, // Mapping to "kategori1" expected by the backend
-      kategori2: kat2, // Mapping to "kategori2" expected by the backend
-      kategori3: kat3, // Mapping to "kategori3" expected by the backend
+      bulan: selectedBulan,
+      tahun: selectedYear,
+      cabang: selectedCabang,
+      kategori1: kat1,
+      kategori2: kat2,
+      kategori3: kat3,
     };
 
     try {
@@ -209,21 +194,17 @@ export default function Daspen() {
     }
   };
 
-  // Reset form ke nilai default
   const handleReset = () => {
-    // Retrieve data from sessionStorage
     const storedData = JSON.parse(sessionStorage.getItem("daspenData"));
 
     if (storedData && storedData.length > 0) {
-      const daspen = storedData[0]; // Assuming you want to reset based on the first object in daspenData
+      const daspen = storedData[0];
 
-      // Set form fields based on daspenData
-      setKuota(parseInt(daspen.pb)); // Set Kuota
-      setKatagori1(parseInt(daspen.propinsi)); // Set Kategori I
-      setKatagori2(parseInt(daspen.kabupaten)); // Set Kategori II
-      setKatagori3(parseInt(daspen.cabang)); // Set Kategori III
+      setKuota(parseInt(daspen.pb));
+      setKatagori1(parseInt(daspen.propinsi));
+      setKatagori2(parseInt(daspen.kabupaten));
+      setKatagori3(parseInt(daspen.cabang));
     } else {
-      // If no data is found, you can reset fields to default values or keep them unchanged
       setKatagori1(0);
       setKatagori2(0);
       setKatagori3(0);
@@ -303,26 +284,26 @@ export default function Daspen() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-           <Toaster
-          toastOptions={{
-            style: {
-              fontSize: "1.25rem", // Ukuran font yang lebih besar
-              padding: "16px", // Menambah padding jika diperlukan
-            },
-            success: {
+          <Toaster
+            toastOptions={{
               style: {
-                background: "white", // Warna background hijau untuk pesan sukses
-                color: "black",
+                fontSize: "1.25rem",
+                padding: "16px",
               },
-            },
-            error: {
-              style: {
-                background: "#f44336", // Warna background merah untuk pesan error
-                color: "#fff",
+              success: {
+                style: {
+                  background: "white",
+                  color: "black",
+                },
               },
-            },
-          }}
-        />
+              error: {
+                style: {
+                  background: "#f44336",
+                  color: "#fff",
+                },
+              },
+            }}
+          />
           <div className="container mx-auto p-6 bg-gray-50 rounded-lg shadow-lg mt-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-lg shadow-md">
@@ -366,7 +347,7 @@ export default function Daspen() {
                         type="number"
                         id="katagori1-2"
                         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                        value={katagori1} // Nilai awal dari database bisa diubah oleh user
+                        value={katagori1}
                         onChange={(e) => setKatagori1(parseInt(e.target.value))}
                       />
                     </div>
@@ -393,7 +374,7 @@ export default function Daspen() {
                         type="number"
                         id="katagori2-2"
                         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                        value={katagori2} // Nilai awal dari database bisa diubah oleh user
+                        value={katagori2}
                         onChange={(e) => setKatagori2(parseInt(e.target.value))}
                       />
                     </div>
@@ -420,7 +401,7 @@ export default function Daspen() {
                         type="number"
                         id="katagori3-2"
                         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                        value={katagori3} // Nilai awal dari database bisa diubah oleh user
+                        value={katagori3}
                         onChange={(e) => setKatagori3(parseInt(e.target.value))}
                       />
                     </div>
@@ -458,7 +439,7 @@ export default function Daspen() {
                       <select
                         id="bulan"
                         value={selectedBulan}
-                        onChange={(e) => setSelectedBulan(e.target.value)} // Mengatur bulan yang dipilih
+                        onChange={(e) => setSelectedBulan(e.target.value)}
                         className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
                       >
                         {/* Dynamically populate options */}
@@ -697,8 +678,10 @@ export default function Daspen() {
                 <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
                   Transaksi Juli 2024
                 </h1>
-                <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out mt-3 mr-6 w-24"
-                onClick={printTable}>
+                <Button
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out mt-3 mr-6 w-24"
+                  onClick={printTable}
+                >
                   Cetak
                 </Button>
               </div>

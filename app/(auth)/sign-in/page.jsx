@@ -62,44 +62,52 @@ function SignIn() {
     }
   };
 
-  // ======================================================
+  
 
   const onSignInAdmin = async () => {
-    
     setLoader(true);
     setError("");
   
     try {
-      // Cek verifikasi captcha
+      
       if (!isVerified) {
         throw new Error("Harap verifikasi reCAPTCHA.");
       }
   
-      // Membuat FormData untuk mengirim data
-      const formData = new FormData();
-      formData.append("npaPgri", npaPgri);
-      formData.append("password", password);
+      
+      const npaPgriValue = npaPgri?.trim();  
+      const passwordValue = password?.trim();
   
-      // Mengirim request login
-      const response = await GlobalApi.loginAdmin(formData);
+      
+      if (!npaPgriValue || !passwordValue) {
+        throw new Error("NPA PGRI dan Password tidak boleh kosong.");
+      }
+  
+      
+      console.log("Payload untuk login:", { npaPgri: npaPgriValue, password: passwordValue });
+  
+      
+      const response = await GlobalApi.loginAdmin(npaPgriValue, passwordValue);
+      setToken(response.token);
+      
       sessionStorage.setItem("userId", response.id);
-      sessionStorage.setItem("nama", response.nama);
+      sessionStorage.setItem("nama", response.namaLengkap);
       sessionStorage.setItem("role", response.role);
   
-      // Menampilkan pesan sukses
-      const nama = sessionStorage.getItem("nama");
-      toast.success(`Selamat Datang ${nama}`);
+      
+      toast.success(`Selamat Datang ${response.namaLengkap}`);
   
-      // Arahkan ke halaman home setelah login berhasil
+      
       setTimeout(() => {
         router.push("/home");
       }, 2000);
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Terjadi kesalahan saat login");
     } finally {
       setLoader(false);
     }
   };
+  
   
   function onChange(value) {
     setIsVerified(!!value);
