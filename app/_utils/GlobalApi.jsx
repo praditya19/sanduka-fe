@@ -73,17 +73,25 @@ const login = async (loginData) => {
   }
 };
 
-const loginAdmin = async (formData) => {
+const loginAdmin = async (npaPgri, password) => {
   try {
+    // Debug Log Payload
+    console.log("Payload untuk login:", { npaPgri, password });
+
     const response = await axiosClient.post(
-      "/api/auth/login-admin-super-admin",
-      formData,
+      "/api/auth/login-password",
+      {
+        npaPgri,
+        password,
+      },
       {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       }
     );
+
+    console.log("Response login:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error saat login:", error);
@@ -831,6 +839,28 @@ const getLaporanPengeluaran = async (tanggal) => {
     throw error;
   }
 };
+// Create Kwitansi
+const createKwitansiByIdAndNpa = async (id, npaPgri) => {
+  try {
+    const response = await axiosClient.post(`/api/kwitansi/${id}/${npaPgri}`);
+
+    // Mengembalikan data dari respons API
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching kwitansi data:", error);
+    throw error;
+  }
+};
+// Get Kwitansi
+const getKwitansiByIdAndNpa = async (id, npaPgri) => {
+  try {
+    const response = await axiosClient.get(`/api/kwitansi/${id}/${npaPgri}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching kwitansi data:", error);
+    throw error;
+  }
+};
 // (Laporan Pemasukan Tahunan)
 const getLaporanPemasukanTahunan = async (tahun) => {
   try {
@@ -949,6 +979,34 @@ const mutasiCabangUnitKerja = async (idAnggota, cabang, unitKerja) => {
   }
 };
 
+// AKSI Pelaporan Anggota
+const batalLaporanById = async (id) => {
+  try {
+    // Endpoint untuk membatalkan laporan dengan ID
+    const response = await axiosClient.put(`/api/laporan/${id}/batal`);
+    console.log("Laporan berhasil dibatalkan:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error saat membatalkan laporan:", error);
+    throw error.response?.data || error.message;
+  }
+};
+
+const verifikasiLaporanById = async (id, data) => {
+  try {
+    // Endpoint untuk mengupdate tanggal santunan berdasarkan ID
+    const response = await axiosClient.put(
+      `/api/laporan/${id}/tanggal-santunan`,
+      data
+    );
+    console.log("Tanggal santunan berhasil diperbarui:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error saat memperbarui tanggal santunan:", error);
+    throw error.response?.data || error.message;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1027,4 +1085,8 @@ export default {
   sendSesuaiJumlahTarget,
   loginAdmin,
   editPemasukanUangMasuk,
+  batalLaporanById,
+  verifikasiLaporanById,
+  createKwitansiByIdAndNpa,
+  getKwitansiByIdAndNpa,
 };

@@ -36,6 +36,8 @@ function Pengeluaran() {
   const [filteredNames, setFilteredNames] = useState([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const dropdownRef = useRef(null);
+  const [isPopupVisible, setPopupVisible] = useState(false);
+  const [kwitansiData, setKwitansiData] = useState(null);
 
   const [selectAll, setSelectAll] = useState(false);
   const handleChange = (e) => {
@@ -233,32 +235,33 @@ function Pengeluaran() {
     }).format(value);
   };
 
-  const totalBalance = transactions.reduce(
-    (acc, transaction) =>
-      acc +
-      (parseNumber(transaction.balance) === "-"
-        ? 0
-        : parseNumber(transaction.balance)),
-    0
-  );
+  const handleKwitansiClick = async () => {
+    const fetchKwitansiData = async () => {
+      // Mengambil id dan npaPgri dari sessionStorage
+      const id = sessionStorage.getItem("idTerlapor");
+      const npaPgri = sessionStorage.getItem("npaTerlapor");
 
-  const totalDebit = transactions.reduce(
-    (acc, transaction) =>
-      acc +
-      (parseNumber(transaction.debit) === "-"
-        ? 0
-        : parseNumber(transaction.debit)),
-    0
-  );
+      // Mengecek apakah id dan npaPgri sudah tersedia di sessionStorage
+      if (!id || !npaPgri) {
+        console.error("ID atau NPA PGRI tidak ditemukan di sessionStorage.");
+        return;
+      }
 
-  const totalCredit = transactions.reduce(
-    (acc, transaction) =>
-      acc +
-      (parseNumber(transaction.credit) === "-"
-        ? 0
-        : parseNumber(transaction.credit)),
-    0
-  );
+      try {
+        const data = await GlobalApi.getKwitansiByIdAndNpa(id, npaPgri);
+        console.log("Data Kwitansi:", data);
+
+        // Anggap data berisi URL gambar
+        setKwitansiData(data.gambarUrl); // Menyimpan URL gambar ke state
+        setPopupVisible(true); // Menampilkan popup
+      } catch (error) {
+        console.error("Gagal mengambil data kwitansi:", error.message);
+      }
+    };
+
+    // Memanggil fungsi fetchKwitansiData
+    await fetchKwitansiData();
+  };
 
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -427,7 +430,35 @@ function Pengeluaran() {
                     value={formValues.namaPenerima}
                     onChange={handleChange}
                   />
-                  <Button className="mt-2">Kwitansi</Button>
+                  <Button className="mt-2" onClick={handleKwitansiClick}>
+                    Kwitansi
+                  </Button>
+                  {isPopupVisible && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                      <div className="bg-white rounded-lg p-6 w-3/4 max-w-lg">
+                        <h2 className="text-xl font-bold mb-4">Kwitansi</h2>
+
+                        {kwitansiData ? (
+                          <div className="flex justify-center">
+                            <Image
+                              src={kwitansiData} // Ini adalah URL gambar yang diambil dari API
+                              alt="Gambar Kwitansi"
+                              className="w-full max-h-96 object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <p>Gambar kwitansi tidak tersedia.</p>
+                        )}
+
+                        <button
+                          className="mt-4 bg-teal-500 text-white py-2 px-4 rounded"
+                          onClick={() => setPopupVisible(false)}
+                        >
+                          Tutup
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-col">
                   <Label

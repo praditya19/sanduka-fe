@@ -5,11 +5,13 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBell, faSearch } from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "../_utils/GlobalApi";
+import { useRouter } from "next/navigation";
 
 const HeaderHome = () => {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
-  const [previousNotificationCount, setPreviousNotificationCount] = useState(0); 
+  const [previousNotificationCount, setPreviousNotificationCount] = useState(0);
   const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] =
     useState(false);
   const audioRef = useRef(null);
@@ -34,12 +36,13 @@ const HeaderHome = () => {
   };
 
   const handleNotificationClick = () => {
+    router.push("/keuangan/sanduka/lapor/lapor-cabang");
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
       setIsNotificationSoundPlaying(false);
     }
-    setPreviousNotificationCount(notificationCount); 
+    setPreviousNotificationCount(notificationCount);
     setNotificationCount(0);
   };
 
@@ -57,8 +60,8 @@ const HeaderHome = () => {
   };
 
   const handleLogout = () => {
-    sessionStorage.clear(); 
-    window.location.href = "/"; 
+    sessionStorage.clear();
+    window.location.href = "/";
   };
 
   useEffect(() => {
@@ -73,7 +76,7 @@ const HeaderHome = () => {
     };
 
     fetchNotificationCount();
-    const intervalId = setInterval(fetchNotificationCount, 60000); 
+    const intervalId = setInterval(fetchNotificationCount, 60000);
 
     return () => clearInterval(intervalId);
   }, []);
@@ -81,7 +84,6 @@ const HeaderHome = () => {
   useEffect(() => {
     getAnggotaById();
 
-    
     if (
       notificationCount > previousNotificationCount &&
       !isNotificationSoundPlaying

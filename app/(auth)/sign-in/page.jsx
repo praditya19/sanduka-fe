@@ -62,45 +62,53 @@ function SignIn() {
     }
   };
 
+  
+
   const onSignInAdmin = async () => {
     setLoader(true);
     setError("");
+  
     try {
-      if (npaPgri.length < 6) {
-        throw new Error(
-          "NPA PGRI harus 6 digit dan Tanggal Lahir harus 8 digit."
-        );
-      }
-
+      
       if (!isVerified) {
         throw new Error("Harap verifikasi reCAPTCHA.");
       }
-
-      const loginData = {
-        npaPgri: npaPgri,
-        password: password,
-      };
-
-      const response = await GlobalApi.loginAdmin(loginData);
+  
+      
+      const npaPgriValue = npaPgri?.trim();  
+      const passwordValue = password?.trim();
+  
+      
+      if (!npaPgriValue || !passwordValue) {
+        throw new Error("NPA PGRI dan Password tidak boleh kosong.");
+      }
+  
+      
+      console.log("Payload untuk login:", { npaPgri: npaPgriValue, password: passwordValue });
+  
+      
+      const response = await GlobalApi.loginAdmin(npaPgriValue, passwordValue);
       setToken(response.token);
+      
       sessionStorage.setItem("userId", response.id);
-      sessionStorage.setItem("unitKerja", response.unitKerja);
       sessionStorage.setItem("nama", response.namaLengkap);
       sessionStorage.setItem("role", response.role);
-
-      const nama = sessionStorage.getItem("nama");
-      toast.success(`Selamat Datang ${nama}`);
-
+  
+      
+      toast.success(`Selamat Datang ${response.namaLengkap}`);
+  
+      
       setTimeout(() => {
         router.push("/home");
       }, 2000);
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || "Terjadi kesalahan saat login");
     } finally {
       setLoader(false);
     }
   };
-
+  
+  
   function onChange(value) {
     setIsVerified(!!value);
   }
@@ -231,7 +239,7 @@ function SignIn() {
           />
 
           <Button
-            onClick={onSignIn}
+            onClick={activeTab === "login" ? onSignIn : onSignInAdmin}
             disabled={
               !npaPgri ||
               (activeTab === "login" && !tanggalLahir) ||

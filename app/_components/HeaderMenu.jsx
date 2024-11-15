@@ -41,6 +41,7 @@ const HeaderHome = () => {
   };
 
   const handleNotificationClick = () => {
+    router.push("/keuangan/sanduka/lapor/lapor-cabang");
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
