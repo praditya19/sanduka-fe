@@ -808,6 +808,7 @@ const getTableTargetRealisasi = async (
       `/api/laporan-target-realisasi?bulan=${bulan}&tahun=${tahun}&inputKecamatan=${inputKecamatan}&bulanuangmasuk=${bulanuangmasuk}`
       // Pastikan '=' ditambahkan di sini
     );
+
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching total Target Realisasi:", error);
