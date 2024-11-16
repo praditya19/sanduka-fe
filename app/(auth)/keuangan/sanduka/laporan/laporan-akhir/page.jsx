@@ -282,7 +282,7 @@ const Page = () => {
                               {formatCurrency(data.selisihNominal)}
                             </td>
                             <td className="py-3 px-4 border border-gray-300 text-right">
-                              {formatCurrency(data.selisihNominal)}
+                              {formatCurrency(data.kelebihanBayarBulanSekarang)}
                             </td>
                           </tr>
 
