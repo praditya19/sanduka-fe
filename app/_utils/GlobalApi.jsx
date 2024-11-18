@@ -86,7 +86,7 @@ const loginAdmin = async (npaPgri, password) => {
       },
       {
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
         },
       }
     );
@@ -105,6 +105,11 @@ const getJabatan = () => axiosClient.get("/api/daftarJabatan");
 const getGolonganJabatan = () => axiosClient.get("/api/daftarGolongan");
 const getUnitKerja = () => axiosClient.get("/api/unit-kerja/all");
 const getBulan = () => axiosClient.get("/api/bulan");
+const searchUsersByName = (namaLengkap) => {
+  return axiosClient.get(
+    `/api/auth/search-users?namaLengkap=${encodeURIComponent(namaLengkap)}`
+  );
+};
 
 // Anggota
 const getAllAnggota = (page = 0, size = 10) => {
@@ -764,7 +769,7 @@ const createPembayaranSanduka = async (payload) => {
 // Rekap Lapor Sanduka
 const getRekapLaporDiterima = async () => {
   try {
-    const response = await axiosClient.get("/api/rekap-lapor-sanduka/diterima"); // Ganti dengan endpoint yang sesuai
+    const response = await axiosClient.get("/api/rekap-lapor-sanduka/diterima"); 
     return response.data;
   } catch (error) {
     console.error("Error fetching Data Lapor:", error);
@@ -775,7 +780,7 @@ const getRekapLaporBelom = async () => {
   try {
     const response = await axiosClient.get(
       "/api/rekap-lapor-sanduka/belom-diterima"
-    ); // Ganti dengan endpoint yang sesuai
+    );  
     return response.data;
   } catch (error) {
     console.error("Error fetching Data Lapor:", error);
@@ -786,8 +791,7 @@ const getRekapLaporBelom = async () => {
 // Data Lapor
 const getDataLapor = async () => {
   try {
-    const response = await axiosClient.get("/api/notifikasi/data-terlapor"); // Ganti dengan endpoint yang sesuai
-    console.log("Data Lapor berhasil diambil:", response.data); // Munculkan data di konsol
+    const response = await axiosClient.get("/api/notifikasi/data-terlapor"); 
     return response.data;
   } catch (error) {
     console.error("Error fetching Data Lapor:", error);
@@ -808,7 +812,6 @@ const getTableTargetRealisasi = async (
       `/api/laporan-target-realisasi?bulan=${bulan}&tahun=${tahun}&inputKecamatan=${inputKecamatan}&bulanuangmasuk=${bulanuangmasuk}`
       // Pastikan '=' ditambahkan di sini
     );
-
     return response.data; // Kembalikan data yang didapat dari API
   } catch (error) {
     console.error("Error fetching total Target Realisasi:", error);
@@ -841,27 +844,40 @@ const getLaporanPengeluaran = async (tanggal) => {
   }
 };
 // Create Kwitansi
-const createKwitansiByIdAndNpa = async (id, npaPgri) => {
+const createKwitansiByIdAndNpa = async (id, npaPgri, formData) => {
   try {
-    const response = await axiosClient.post(`/api/kwitansi/${id}/${npaPgri}`);
+    const response = await axiosClient.post(
+      `/api/kwitansi/${id}/${npaPgri}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
 
     // Mengembalikan data dari respons API
     return response.data;
   } catch (error) {
-    console.error("Error fetching kwitansi data:", error);
+    console.error("Error uploading kwitansi data:", error);
     throw error;
   }
 };
+
 // Get Kwitansi
 const getKwitansiByIdAndNpa = async (id, npaPgri) => {
   try {
-    const response = await axiosClient.get(`/api/kwitansi/${id}/${npaPgri}`);
-    return response.data;
+    // Menambahkan responseType sebagai "blob"
+    const response = await axiosClient.get(`/api/kwitansi/${id}/${npaPgri}`, {
+      responseType: "blob",
+    });
+    return response; // Mengembalikan seluruh respons, bukan hanya data
   } catch (error) {
     console.error("Error fetching kwitansi data:", error);
     throw error;
   }
 };
+
 // (Laporan Pemasukan Tahunan)
 const getLaporanPemasukanTahunan = async (tahun) => {
   try {
@@ -1090,4 +1106,5 @@ export default {
   verifikasiLaporanById,
   createKwitansiByIdAndNpa,
   getKwitansiByIdAndNpa,
+  searchUsersByName,
 };
