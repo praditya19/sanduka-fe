@@ -2,7 +2,7 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "https://71a6-36-71-80-24.ngrok-free.app",
+  baseURL: "https://cb25-103-134-212-202.ngrok-free.app",
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
