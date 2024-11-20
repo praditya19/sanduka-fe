@@ -695,16 +695,18 @@ function StatusAnggota() {
                     placeholder="Pilih Cabang"
                   />
                   {showCabangDropdown && (
-                    <div className="absolute mt-11 w-full">
+                    <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                    <ul className="max-h-44 overflow-y-auto">
+                    <li className="py-2 px-2">
                       <Input
                         type="text"
                         onChange={(e) => handleCabangSearch(e.target.value)}
-                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-2"
-                        placeholder="Cari atau ketik Cabang..."
+                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                        placeholder="Cari Cabang..."
                         autoFocus
-                      />
-                      {filteredCabangList.length > 0 && (
-                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto mt-0">
+                        />
+                        </li>
+                    
                           <li
                             onClick={() =>
                               handleSelectCabang({ kecamatan: "" })
@@ -723,7 +725,7 @@ function StatusAnggota() {
                             </li>
                           ))}
                         </ul>
-                      )}
+                    
                     </div>
                   )}
                 </div>
@@ -743,7 +745,9 @@ function StatusAnggota() {
                       disabled={!selectedCabang}
                     />
                     {showUnitKerjaDropdown && (
-                      <div className="absolute mt-11 w-full">
+                      <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                      <ul className="max-h-44 overflow-y-auto">
+                      <li className="py-2 px-2">
                         <Input
                           type="text"
                           onChange={(e) =>
@@ -751,9 +755,9 @@ function StatusAnggota() {
                           }
                           placeholder="Cari atau ketik Unit Kerja..."
                           autoFocus
-                          className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-2"
-                        />
-                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto mt-1">
+                          className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-1"
+                          />
+                          </li>
                           <li
                             onClick={() =>
                               handleUnitKerjaSelect({ unitKerja: "" })

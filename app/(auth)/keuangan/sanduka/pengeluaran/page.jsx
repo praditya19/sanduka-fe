@@ -241,25 +241,28 @@ function Pengeluaran() {
       const id = sessionStorage.getItem("idTerlapor");
       const npaPgri = sessionStorage.getItem("npaTerlapor");
 
-      // Mengecek apakah id dan npaPgri sudah tersedia di sessionStorage
       if (!id || !npaPgri) {
         console.error("ID atau NPA PGRI tidak ditemukan di sessionStorage.");
         return;
       }
 
       try {
-        const data = await GlobalApi.getKwitansiByIdAndNpa(id, npaPgri);
-        console.log("Data Kwitansi:", data);
+        // Memanggil API dan menerima respons berupa BLOB
+        const response = await GlobalApi.getKwitansiByIdAndNpa(id, npaPgri, {
+          responseType: "blob", // Menentukan bahwa respons berupa BLOB
+        });
 
-        // Anggap data berisi URL gambar
-        setKwitansiData(data.gambarUrl); // Menyimpan URL gambar ke state
+        // Mengonversi BLOB menjadi URL
+        const gambarUrl = URL.createObjectURL(response.data);
+        console.log("URL Gambar Kwitansi:", gambarUrl);
+
+        setKwitansiData(gambarUrl); // Menyimpan URL gambar ke state
         setPopupVisible(true); // Menampilkan popup
       } catch (error) {
         console.error("Gagal mengambil data kwitansi:", error.message);
       }
     };
 
-    // Memanggil fungsi fetchKwitansiData
     await fetchKwitansiData();
   };
 
@@ -434,14 +437,14 @@ function Pengeluaran() {
                     Kwitansi
                   </Button>
                   {isPopupVisible && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                       <div className="bg-white rounded-lg p-6 w-3/4 max-w-lg">
                         <h2 className="text-xl font-bold mb-4">Kwitansi</h2>
 
                         {kwitansiData ? (
                           <div className="flex justify-center">
-                            <Image
-                              src={kwitansiData} // Ini adalah URL gambar yang diambil dari API
+                            <img
+                              src={kwitansiData} // Menggunakan URL yang dibuat dari BLOB
                               alt="Gambar Kwitansi"
                               className="w-full max-h-96 object-contain"
                             />
@@ -452,7 +455,11 @@ function Pengeluaran() {
 
                         <button
                           className="mt-4 bg-teal-500 text-white py-2 px-4 rounded"
-                          onClick={() => setPopupVisible(false)}
+                          onClick={() => {
+                            setPopupVisible(false);
+                            URL.revokeObjectURL(kwitansiData); // Membersihkan URL BLOB
+                            setKwitansiData(null);
+                          }}
                         >
                           Tutup
                         </button>

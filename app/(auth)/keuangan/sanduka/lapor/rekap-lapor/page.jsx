@@ -1,35 +1,40 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFilter, faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import toast, { Toaster } from "react-hot-toast";
 
 const Page = () => {
-  const [filter, setFilter] = useState("");
+  const dropdownRef = useRef(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [dataLapor, setDataLapor] = useState([]);
+  const [userDetails, setUserDetails] = useState({ id: null, npaPgri: null });
   const [dataLaporDiterima, setDataLaporDiterima] = useState([]);
   const [dataLaporBelum, setDataLaporBelum] = useState([]);
   const [displayedDataLapor, setDisplayedDataLapor] = useState([]);
   const [bulanList, setBulanList] = useState([]);
   const [selectedBulan, setSelectedBulan] = useState("");
   const [cabangList, setCabangList] = useState([]);
-  const [selectedCabang, setSelectedCabang] = useState("");
   const currentYear = new Date().getFullYear();
   const startYear = 2020;
   const [selectedYear, setSelectedYear] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [filterText, setFilterText] = useState("");
+  const [showFilterInput, setShowFilterInput] = useState(false);
+  const [filteredCabangList, setFilteredCabangList] = useState(cabangList);
+  const [isPopupVisible, setPopupVisible] = useState(false);
+  const [kwitansiData, setKwitansiData] = useState(null);
 
-  // Diterima
   useEffect(() => {
     const fetchDataDiterima = async () => {
       try {
         const response = await GlobalApi.getRekapLaporDiterima();
-        const fetchedDataDiterima = response || []; // Gunakan response.data jika API mengembalikan data di bawah `data`
-        setDataLaporDiterima(fetchedDataDiterima); // Store data Diterima
+        const fetchedDataDiterima = response || [];
+        setDataLaporDiterima(fetchedDataDiterima);
       } catch (error) {
         console.error("Error fetching data lapor diterima:", error);
       }
@@ -37,13 +42,13 @@ const Page = () => {
 
     fetchDataDiterima();
   }, []);
-  // Belum Diterima
+
   useEffect(() => {
     const fetchDataBelum = async () => {
       try {
         const response = await GlobalApi.getRekapLaporBelom();
-        const fetchedDataBelum = response || []; // Gunakan response.data jika API mengembalikan data di bawah `data`
-        setDataLaporBelum(fetchedDataBelum); // Store data Belum
+        const fetchedDataBelum = response || [];
+        setDataLaporBelum(fetchedDataBelum);
       } catch (error) {
         console.error("Error fetching data lapor belum:", error);
       }
@@ -56,7 +61,7 @@ const Page = () => {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setCabangList(response.data); // Assuming the response data is an array
+        setCabangList(response.data);
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -69,13 +74,13 @@ const Page = () => {
     const fetchBulan = async () => {
       try {
         const response = await GlobalApi.getBulan();
-        setBulanList(response.data); // Simpan data bulan dari API ke state
+        setBulanList(response.data);
       } catch (error) {
         console.error("Error fetching bulan:", error);
       }
     };
 
-    fetchBulan(); // Panggil fungsi ketika komponen pertama kali dimuat
+    fetchBulan();
   }, []);
 
   const years = Array.from(
@@ -83,85 +88,245 @@ const Page = () => {
     (_, index) => startYear + index
   );
 
-  // Filter
-  // Fungsi untuk menangani perubahan pilihan cabang
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setShowFilterInput(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleCabangSelect = (cabang) => {
+    setSelectedCabang(cabang ? cabang.kecamatan : "");
+    setShowFilterInput(false);
+    setFilterText("");
+  };
+
+  const handleFilterChange = (event) => {
+    setFilterText(event.target.value);
+    const filtered = cabangList.filter((cabang) =>
+      cabang.kecamatan.toLowerCase().includes(event.target.value.toLowerCase())
+    );
+    setFilteredCabangList(filtered);
+  };
+
+  const handleFocus = () => {
+    setShowFilterInput(true);
+    setFilteredCabangList(cabangList);
+  };
+
+  const handleViewClick = async (dataMeninggal) => {
+    if (!dataMeninggal) return;
+
+    const namaAnggota = dataMeninggal.split("\n")[0].trim();
+    console.log(`Nama Anggota yang diambil: ${namaAnggota}`);
+
+    try {
+      
+      const response = await GlobalApi.searchUsersByName(namaAnggota);
+      console.log("Response searchUsersByName:", response);
+
+      const userDataArray = response.data.users;
+      if (userDataArray && userDataArray.length > 0) {
+        const user = userDataArray[0];
+        const { id, npaPgri } = user;
+        console.log(`ID yang ditemukan: ${id}, NPA PGRI: ${npaPgri}`);
+
+        try {
+          
+          const kwitansiResponse = await GlobalApi.getKwitansiByIdAndNpa(
+            id,
+            npaPgri
+          );
+          console.log("Response getKwitansiByIdAndNpa:", kwitansiResponse);
+
+          
+          const blob = kwitansiResponse.data;
+          const imageUrl = URL.createObjectURL(blob);
+          setKwitansiData(imageUrl);
+
+          
+          setPopupVisible(true);
+        } catch (error) {
+          console.error("Error saat mengambil gambar kwitansi:", error);
+        }
+      } else {
+        console.error("Tidak ada data user yang ditemukan berdasarkan nama");
+      }
+    } catch (error) {
+      console.error("Error saat mengambil data user:", error);
+    }
+  };
+
+  const handleFileClick = async (dataMeninggal) => {
+    if (!dataMeninggal) return;
+
+    const namaAnggota = dataMeninggal.split("\n")[0].trim();
+    console.log(`Nama Anggota yang diambil: ${namaAnggota}`);
+
+    try {
+      const response = await GlobalApi.searchUsersByName(namaAnggota);
+      console.log("Response searchUsersByName:", response);
+
+      const userDataArray = response.data.users;
+      if (userDataArray && userDataArray.length > 0) {
+        const npaTerlaporList =
+          JSON.parse(sessionStorage.getItem("npaTerlaporList")) || [];
+
+        const filteredUser = userDataArray.find((user) =>
+          npaTerlaporList.includes(user.npaPgri)
+        );
+
+        if (filteredUser) {
+          const { id, npaPgri } = filteredUser;
+
+          console.log(`ID yang ditemukan: ${id}, NPA PGRI: ${npaPgri}`);
+
+          const npaResponse = await GlobalApi.cekNpa(npaPgri);
+          console.log("Response cekNpa:", npaResponse);
+
+          if (npaResponse && npaResponse.id && npaResponse.npaPgri) {
+            setUserDetails({ id, npaPgri });
+
+            console.log(
+              `ID Terpilih: ${npaResponse.id}, NPA PGRI: ${npaResponse.npaPgri}`
+            );
+          } else {
+            console.error("Data user tidak ditemukan pada response cekNpa");
+          }
+        } else {
+          console.error(
+            "Tidak ada user yang sesuai dengan NPA dari sessionStorage"
+          );
+        }
+      } else {
+        console.error("Tidak ada data user yang ditemukan berdasarkan nama");
+      }
+    } catch (error) {
+      console.error("Error saat mengambil data user:", error);
+    }
+  };
+
+  const handleFileChangeAndUpload = async (event) => {
+    const file = event.target.files[0];
+    const { id, npaPgri } = userDetails;
+
+    if (!file) {
+      console.error("Tidak ada file yang dipilih.");
+      toast.error("Tidak ada file yang dipilih.");
+      return;
+    }
+
+    if (!id || !npaPgri) {
+      console.error("ID atau NPA PGRI tidak ditemukan.");
+      toast.error("ID atau NPA PGRI tidak ditemukan.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await GlobalApi.createKwitansiByIdAndNpa(
+        id,
+        npaPgri,
+        formData
+      );
+      console.log("Response Upload Kwitansi:", response);
+
+      toast.success("File berhasil diupload");
+    } catch (error) {
+      console.error("Gagal mengupload file kwitansi:", error);
+      toast.error("Gagal mengupload file");
+    }
+  };
+
   const handleCabangChange = (e) => {
     setSelectedCabang(e.target.value);
   };
 
   const handleBulanChange = (e) => {
-    setSelectedBulan(e.target.value); // Angka bulan
+    setSelectedBulan(e.target.value);
   };
 
   const handleYearChange = (e) => {
-    setSelectedYear(e.target.value); // Menyimpan nilai tahun yang dipilih
+    setSelectedYear(e.target.value);
   };
 
   useEffect(() => {
     if (filterStatus === "Terima") {
-      setDisplayedDataLapor(dataLaporDiterima); // Set data diterima
+      setDisplayedDataLapor(dataLaporDiterima);
     } else if (filterStatus === "Belum") {
-      setDisplayedDataLapor(dataLaporBelum); // Set data belum
+      setDisplayedDataLapor(dataLaporBelum);
     } else {
-      setDisplayedDataLapor([]); // Kosongkan jika tidak ada filter
+      setDisplayedDataLapor([]);
     }
   }, [filterStatus, dataLaporDiterima, dataLaporBelum]);
 
   useEffect(() => {
-    // Menggabungkan semua filter status, cabang, bulan, dan tahun
     const filterData = () => {
       let filteredData = [];
-  
+
       if (filterStatus === "Terima") {
         filteredData = dataLaporDiterima;
       } else if (filterStatus === "Belum") {
         filteredData = dataLaporBelum;
       } else {
-        filteredData = [...dataLaporDiterima, ...dataLaporBelum]; // Tampilkan semua data jika filterStatus kosong
+        filteredData = [...dataLaporDiterima, ...dataLaporBelum];
       }
-  
+
       const finalFilteredData = filteredData.filter((item) => {
-        // Filter Cabang
-        const isCabangMatch = selectedCabang ? item.Cabang === selectedCabang : true;
-  
-        // Ekstrak tanggal lapor
+        const isCabangMatch = selectedCabang
+          ? item.Cabang === selectedCabang
+          : true;
+
         let monthFromData = null;
         let yearFromData = null;
         if (item.Date_lapor) {
           const dateMatch = item.Date_lapor.match(/\b\d{2}-\d{2}-\d{4}\b/);
           if (dateMatch) {
             const dateParts = dateMatch[0].split("-");
-            monthFromData = dateParts[1]; // Bulan
-            yearFromData = dateParts[2];  // Tahun
+            monthFromData = dateParts[1];
+            yearFromData = dateParts[2];
           }
         }
-  
-        // Filter Bulan dan Tahun
-        const isBulanMatch = selectedBulan ? monthFromData === selectedBulan : true;
+
+        const isBulanMatch = selectedBulan
+          ? monthFromData === selectedBulan
+          : true;
         const isYearMatch = selectedYear ? yearFromData === selectedYear : true;
-  
-        // Hasil akhir dari filter gabungan
+
         return isCabangMatch && isBulanMatch && isYearMatch;
       });
-  
+
       setDisplayedDataLapor(finalFilteredData);
     };
-  
+
     filterData();
-  }, [filterStatus, selectedCabang, selectedBulan, selectedYear, dataLaporDiterima, dataLaporBelum]);
+  }, [
+    filterStatus,
+    selectedCabang,
+    selectedBulan,
+    selectedYear,
+    dataLaporDiterima,
+    dataLaporBelum,
+  ]);
 
   const handlePrint = () => {
-    const printContent = document.getElementById("table-to-print").innerHTML; // Ambil elemen tabel
-    const originalContent = document.body.innerHTML; // Simpan konten asli halaman
+    const printContent = document.getElementById("table-to-print").innerHTML;
+    const originalContent = document.body.innerHTML;
 
-    // Ganti konten halaman dengan hanya tabel
     document.body.innerHTML = printContent;
 
-    window.print(); // Panggil fungsi cetak
+    window.print();
 
-    // Kembalikan konten halaman ke aslinya setelah mencetak
     document.body.innerHTML = originalContent;
-    window.location.reload(); // Reload halaman untuk memastikan tampilan kembali normal
+    window.location.reload();
   };
 
   useEffect(() => {
@@ -198,10 +363,30 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+      <Toaster
+        toastOptions={{
+          style: {
+            marginTop: "1%",
+            fontSize: "1.25rem",
+            padding: "16px",
+          },
+          success: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+          error: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+        }}
+      />
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -216,7 +401,6 @@ const Page = () => {
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -252,26 +436,67 @@ const Page = () => {
                   showFilters ? "block" : "hidden"
                 } sm:relative sm:w-auto sm:p-0 sm:bg-transparent`}
               >
-                <select
-                  className="bg-white p-2 rounded border w-full sm:w-auto"
-                  id="cabang"
-                  name="cabang"
-                  value={selectedCabang}
-                  onChange={handleCabangChange}
-                >
-                  <option value="">-- Cabang --</option>
-                  {cabangList.map((cabang) => (
-                    <option key={cabang.id} value={cabang.kecamatan}>
-                      {cabang.kecamatan}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative w-full sm:w-auto" ref={dropdownRef}>
+                  {/* Input for displaying the selected branch */}
+                  <input
+                    className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    type="text"
+                    placeholder="Pilih Cabang"
+                    value={selectedCabang}
+                    readOnly
+                    onFocus={handleFocus}
+                  />
+
+                  {/* Dropdown with integrated filter input */}
+                  {showFilterInput && (
+                    <div className="absolute bg-white border rounded w-full mt-1 z-10 shadow-lg">
+                      <ul className="max-h-44 overflow-y-auto">
+                        <li className="py-2 px-2">
+                          <input
+                            className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            type="text"
+                            placeholder="Cari Cabang..."
+                            value={filterText}
+                            onChange={handleFilterChange}
+                            autoFocus
+                          />
+                        </li>
+
+                        {/* Option to reset selection */}
+                        <li
+                          className="p-2 px-2 hover:bg-gray-100 cursor-pointer text-gray-500"
+                          onClick={() => handleCabangSelect(null)}
+                        >
+                          Pilih Cabang
+                        </li>
+
+                        {/* List of filtered cabang */}
+                        {filteredCabangList.map((cabang) => (
+                          <li
+                            key={cabang.id}
+                            className="p-2 px-2 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => handleCabangSelect(cabang)}
+                          >
+                            {cabang.kecamatan}
+                          </li>
+                        ))}
+
+                        {/* Option if no cabang found */}
+                        {filteredCabangList.length === 0 && (
+                          <div className="p-2 text-gray-500 text-center">
+                            Cabang tidak ditemukan
+                          </div>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </div>
                 <select
                   className="bg-white p-2 rounded border w-full sm:w-auto"
                   id="bulan"
                   name="bulan"
                   value={selectedBulan}
-                  onChange={handleBulanChange} // Update ini
+                  onChange={handleBulanChange}
                 >
                   <option value="">-- Bulan --</option>
                   {bulanList.map((bulan) => (
@@ -285,7 +510,7 @@ const Page = () => {
                   id="tahun"
                   name="tahun"
                   value={selectedYear}
-                  onChange={handleYearChange} // Pastikan handler untuk tahun diaktifkan
+                  onChange={handleYearChange}
                 >
                   <option value="">-- Tahun --</option>
                   {years.map((year) => (
@@ -330,12 +555,18 @@ const Page = () => {
                   displayedDataLapor.length > 0 ? (
                     displayedDataLapor.map((item, index) => (
                       <tr key={index} className="border-t text-sm">
-                        <td className="py-2 px-3 text-center text-sm">{index + 1}</td>
+                        <td className="py-2 px-3 text-center text-sm">
+                          {index + 1}
+                        </td>
                         <td className="py-2 px-3 text-sm">
                           {item.Date_lapor ? item.Date_lapor : "N/A"}
                         </td>
-                        <td className="py-2 px-3 text-sm">{item.Data_Meninggal}</td>
-                        <td className="py-2 px-3 text-center text-sm">{item.Cabang}</td>
+                        <td className="py-2 px-3 text-sm">
+                          {item.Data_Meninggal}
+                        </td>
+                        <td className="py-2 px-3 text-center text-sm">
+                          {item.Cabang}
+                        </td>
                         <td className="py-2 px-3 text-center text-sm">
                           {item.Keterangan}
                         </td>
@@ -351,15 +582,52 @@ const Page = () => {
                           </button>
                         </td>
                         <td className="py-2 px-3 text-center">
-                          <button className="bg-gray-200 p-2 rounded border">
+                          <button
+                            className="bg-gray-200 p-2 rounded border"
+                            onClick={() => handleViewClick(item.Data_Meninggal)}
+                          >
                             View
                           </button>
+                          {isPopupVisible && (
+                            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-5 z-50">
+                              <div className="bg-white rounded-lg p-6 w-3/4 max-w-lg">
+                                <h2 className="text-xl font-bold mb-4">
+                                  Bukti Kwitansi
+                                </h2>
+
+                                {kwitansiData ? (
+                                  <div className="flex justify-center">
+                                    <img
+                                      src={kwitansiData} 
+                                      alt="Gambar Kwitansi"
+                                      className="w-full max-h-96 object-contain"
+                                    />
+                                  </div>
+                                ) : (
+                                  <p>Gambar kwitansi tidak tersedia.</p>
+                                )}
+
+                                <button
+                                  className="mt-4 bg-teal-500 text-white py-2 px-4 rounded"
+                                  onClick={() => {
+                                    setPopupVisible(false);
+                                    URL.revokeObjectURL(kwitansiData); 
+                                    setKwitansiData(null);
+                                  }}
+                                >
+                                  Tutup
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </td>
                         <td className="py-2 px-3 text-center">
                           <input
                             type="file"
                             className="hidden"
                             id={`file-upload-${index}`}
+                            onClick={() => handleFileClick(item.Data_Meninggal)}
+                            onChange={handleFileChangeAndUpload}
                           />
                           <label
                             htmlFor={`file-upload-${index}`}

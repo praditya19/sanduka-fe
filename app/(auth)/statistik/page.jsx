@@ -297,17 +297,19 @@ const Page = () => {
                       />
 
                       {showDropdown && (
-                        <div className="absolute w-64 bg-white border border-gray-300 rounded-md max-h-48 shadow-lg z-10">
+                        <div className="absolute z-10 border rounded-lg bg-white shadow-sm -mt-1 w-full">
+                        <ul className="max-h-44 overflow-y-auto">
+                        <li className="py-2 px-2">
                           <Input
                             type="text"
                             placeholder="Cari atau ketik Cabang..."
                             value={searchTerm}
                             onChange={handleInputChange}
-                            className="p-2 border-b border-gray-300 w-full"
+                            className="p-2 border-b border-gray-300 w-full mt-1"
                             autoFocus
-                          />
+                            />
+                            </li>
 
-                          <ul className="max-h-40 overflow-y-auto">
                             <li
                               className="p-2 hover:bg-blue-100 cursor-pointer text-gray-700"
                               onClick={() => handleOptionClick(null)} 

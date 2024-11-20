@@ -302,35 +302,34 @@ function RekapAnggota() {
                     placeholder="Pilih Cabang"
                   />
                   {showCabangDropdown && (
-                    <div className="absolute mt-11 w-full">
-                      <Input
-                        type="text"
-                        onChange={(e) => handleCabangSearch(e.target.value)}
-                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-2"
-                        placeholder="Cari atau ketik Cabang..."
-                        autoFocus
-                      />
-                      {filteredCabangList.length > 0 && (
-                        <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto mt-1">
+                    <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                    <ul className="max-h-44 overflow-y-auto">
+                      <li className="py-2 px-2">
+                          <Input
+                            type="text"
+                            onChange={(e) => handleCabangSearch(e.target.value)}
+                            className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                            placeholder="Cari ketik Cabang..."
+                            autoFocus
+                          />
+                        </li>
+
+                        <li
+                          onClick={() => handleSelectCabang({ kecamatan: "" })}
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                        >
+                          Pilih Cabang
+                        </li>
+                        {filteredCabangList.map((cabang) => (
                           <li
-                            onClick={() =>
-                              handleSelectCabang({ kecamatan: "" })
-                            }
-                            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                            key={cabang.id}
+                            onClick={() => handleSelectCabang(cabang)}
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-100"
                           >
-                            Pilih Cabang
+                            {cabang.kecamatan}
                           </li>
-                          {filteredCabangList.map((cabang) => (
-                            <li
-                              key={cabang.id}
-                              onClick={() => handleSelectCabang(cabang)}
-                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                            >
-                              {cabang.kecamatan}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
+                        ))}
+                      </ul>
                     </div>
                   )}
                 </div>
@@ -347,15 +346,17 @@ function RekapAnggota() {
                     disabled={!selectedCabang}
                   />
                   {showUnitKerjaDropdown && (
-                    <div className="absolute mt-11 w-full">
+                     <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                       <ul className="max-h-44 overflow-y-auto">
+                       <li className="py-2 px-2">
                       <Input
                         type="text"
                         onChange={(e) => handleUnitKerjaSearch(e.target.value)}
                         placeholder="Cari atau ketik Unit Kerja..."
                         autoFocus
-                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-2"
-                      />
-                      <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto mt-1">
+                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-1"
+                        />
+                        </li>
                         <li
                           onClick={() =>
                             handleUnitKerjaSelect({ unitKerja: "" })
@@ -428,23 +429,12 @@ function RekapAnggota() {
                     Unit Kerja
                   </th>
                   <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
-                    colSpan="3"
-                  >
-                    Status Anggota
-                  </th>
-                  <th
                     className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell"
                     rowSpan="2"
                   >
                     Jumlah
                   </th>
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell"
-                    rowSpan="2"
-                  >
-                    Iuran
-                  </th>
+                 
                 </tr>
                 <tr>
                   <th className="p-2 md:p-3 border text-white bg-teal-700">
@@ -455,6 +445,12 @@ function RekapAnggota() {
                   </th>
                   <th className="p-2 md:p-3 border text-white bg-teal-700">
                     Daspen
+                  </th>
+                  <th
+                    className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell"
+                    rowSpan="2"
+                  >
+                    Iuran
                   </th>
                 </tr>
               </thead>

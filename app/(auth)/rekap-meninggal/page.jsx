@@ -175,7 +175,7 @@ const Page = () => {
                       onChange={(e) => setSelectedMonth(e.target.value)}
                       className="p-2 border rounded md:ml-4 mb-2 md:mb-0 w-full md:w-auto"
                     >
-                      <option value="">All Months</option>
+                      <option value="">Semua Bulan</option>
                       {Array.from({ length: 12 }, (_, i) => i + 1).map(
                         (month) => (
                           <option key={month} value={month}>
@@ -191,7 +191,7 @@ const Page = () => {
                       onChange={(e) => setSelectedYear(e.target.value)}
                       className="p-2 border rounded md:ml-4 mb-2 md:mb-0 w-full md:w-auto"
                     >
-                      <option value="">All Years</option>
+                      <option value="">Semua Tahun</option>
                       {[
                         ...new Set(
                           data.map((item) =>
@@ -232,13 +232,10 @@ const Page = () => {
                           No
                         </th>
                         <th className="border border-gray-300 p-2 text-center font-bold uppercase">
-                          Foto
-                        </th>
-                        <th className="border border-gray-300 p-2 text-center font-bold uppercase">
-                          Data Lapor
-                        </th>
-                        <th className="border border-gray-300 p-2 text-center font-bold uppercase">
                           Data Meninggal
+                        </th>
+                        <th className="border border-gray-300 p-2 text-center font-bold uppercase">
+                          Data Pelapor
                         </th>
                         <th className="border border-gray-300 p-2 text-center font-bold uppercase hidden lg:table-cell">
                           Cabang
@@ -274,41 +271,6 @@ const Page = () => {
                                   )}
                                 </button>
                               </td>
-                              <td className="border px-4 py-2">
-                                <Image
-                                  src={
-                                    fotoBase64[index]
-                                      ? `data:image/jpeg;base64,${fotoBase64[index]}`
-                                      : profileImageUrl
-                                  }
-                                  alt={`Foto ${item.namaPelapor || "User"}`}
-                                  width={50}
-                                  height={50}
-                                  className="rounded"
-                                  unoptimized={true}
-                                />
-                              </td>
-
-                              <td className="border px-4 py-2">
-                                <div className="text-xs">
-                                  {item.namaPelapor}
-                                </div>
-                                <div className="text-xs">
-                                  {item.jabatanPelapor ||
-                                    "Jabatan tidak tersedia"}
-                                </div>
-                                <div className="text-xs">
-                                  {item.tanggalPelaporan
-                                    ? item.tanggalPelaporan.join("-")
-                                    : "Tanggal tidak tersedia"}
-                                </div>
-                                <div className="text-xs">
-                                  {item.cabangPelapor}
-                                </div>
-                                <div className="text-xs">
-                                  {item.nomorHpPelapor}
-                                </div>
-                              </td>
 
                               <td className="border px-4 py-2">
                                 <div className="text-xs">
@@ -324,6 +286,28 @@ const Page = () => {
                                 </div>
                                 <div className="text-xs">
                                   {item.unitKerjaTerlapor}
+                                </div>
+                              </td>
+
+                              <td className="border px-4 py-2">
+                                <div className="text-xs">
+                                  {item.namaPelapor}
+                                </div>
+                                <div className="text-xs">
+                                  {item.jabatanPelapor ||
+                                    "Jabatan tidak tersedia"}
+                                </div>
+                                <div className="text-xs">
+                                  {item.jamLapor}{", "}
+                                  {item.tanggalPelaporan
+                                    ? item.tanggalPelaporan.join("-")
+                                    : "Tanggal tidak tersedia"}
+                                </div>
+                                <div className="text-xs">
+                                  {item.cabangPelapor}
+                                </div>
+                                <div className="text-xs">
+                                  {item.nomorHpPelapor}
                                 </div>
                               </td>
 

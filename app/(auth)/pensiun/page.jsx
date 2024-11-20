@@ -152,7 +152,7 @@ const Page = () => {
                   onChange={handleMonthChange}
                   className="p-2 border rounded w-full md:w-auto"
                 >
-                  <option value="">-- Pilih Bulan --</option>
+                  <option value="">Pilih Bulan</option>
                   {bulanOptions.map((bulan) => (
                     <option key={bulan.id} value={bulan.angkaBulan}>
                       {bulan.namaBulan}
@@ -165,7 +165,7 @@ const Page = () => {
                   onChange={handleYearChange}
                   className="p-2 border rounded w-full md:w-auto"
                 >
-                  <option value="">-- Pilih Tahun --</option>
+                  <option value="">Pilih Tahun</option>
                   {yearOptions.map((year) => (
                     <option key={year} value={year}>
                       {year}
