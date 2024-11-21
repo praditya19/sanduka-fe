@@ -145,10 +145,10 @@ export default function Home() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <div className="min-h-screen bg-gray-50 p-4 md:p-6 pt-6 ">
-            <div className="min-h-screen bg-gray-50 -ml-8 -mb-96 sm:-mb-40">
-              <nav className="container mt-8">
-                <ul className="flex flex-wrap space-x-4 md:space-x-6">
+          <div className="min-h-screen bg-gray-50 p-2 md:p-2">
+            
+              <nav className="container mt-8 -ml-8 sm:-ml-4">
+                <ul className="flex flex-wrap space-x-2 md:space-x-6">
                   <li>
                     <Link
                       href="/keuangan/data-utama"
@@ -175,8 +175,8 @@ export default function Home() {
                   </li>
                 </ul>
               </nav>
-            </div>
-            <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg -mt-[39rem] sm:-mt-[41rem]">
+          
+            <main className=" mx-auto w-full bg-white shadow-lg rounded-lg ">
               <div className="text-center md:mx-6 my-4 md:my-0">
                 <h4 className="text-xl md:text-2xl font-extrabold">SALDO</h4>
                 <p className="text-md md:text-base text-gray-600">
@@ -216,7 +216,7 @@ export default function Home() {
                           </div>
                           {/* Pengeluaran */}
                           <div className="text-center w-full">
-                            <h6 className="font-bold text-red-700">
+                            <h6 className="font-bold text-red-700 ">
                               PENGELUARAN
                             </h6>
                             <p className="text-sm font-semibold text-gray-800">
@@ -263,10 +263,10 @@ export default function Home() {
                 <table className="container w-full table-auto mb-8">
                   <thead>
                     <tr className="bg-teal-700 text-white">
-                      <th className="p-2 md:p-3 border">No</th>
-                      <th className="p-2 md:p-3 border">Cabang</th>
-                      <th className="p-2 md:p-3 border">Kurang Setor</th>
-                      <th className="p-2 md:p-3 border">Detail</th>
+                      <th className="p-2 md:p-3 border text-sm">No</th>
+                      <th className="p-2 md:p-3 border text-sm">Cabang</th>
+                      <th className="p-2 md:p-3 border text-sm">Kurang Setor</th>
+                      <th className="p-2 md:p-3 border text-sm">Detail</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -275,14 +275,14 @@ export default function Home() {
                         key={index}
                         className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
                       >
-                        <td className="p-2 md:p-3 border text-center">
+                        <td className="p-2 md:p-3 border text-center text-sm">
                           {index + 1}
                         </td>
-                        <td className="p-2 md:p-3 border">{item.cabang}</td>
-                        <td className="p-2 md:p-3 border text-center">
+                        <td className="p-2 md:p-3 border text-sm">{item.cabang}</td>
+                        <td className="p-2 md:p-3 border text-center text-sm">
                           {item.kurangSetor.toFixed(2)}
                         </td>
-                        <td className="p-2 md:p-3 border text-center">
+                        <td className="p-2 md:p-3 border text-center text-sm">
                           <Link
                             href="/keuangan/home/detail"
                             className="text-blue-500"

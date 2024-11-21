@@ -46,6 +46,7 @@ const FormStep1 = ({
   const [showDropdownCabang, setShowDropdownCabang] = useState(false);
   const [queryUnit, setQueryUnit] = useState("");
   const [showDropdownUnit, setShowDropdownUnit] = useState(false);
+  const [canProceed, setCanProceed] = useState(true);
 
   useEffect(() => {
     if (!token) {
@@ -161,6 +162,7 @@ const FormStep1 = ({
     try {
       const response = await GlobalApi.searchUsers(value);
       const allNames = response.data;
+      console.log("data ", allNames);
 
       const filtered = allNames.filter((data) =>
         data.namaLengkap.toLowerCase().includes(value.toLowerCase())
@@ -168,8 +170,24 @@ const FormStep1 = ({
 
       setFilteredNames(filtered);
       setIsDropdownVisible(true);
+
+      if (filtered.length > 0) {
+        const selectedUser = filtered[0];
+        const userName = selectedUser.namaLengkap;
+        const searchResponse = await GlobalApi.searchUsersByName(userName);
+        console.log("Data berdasarkan nama anggota:", searchResponse.data);
+
+        const userDetail = searchResponse.data.users[0];
+
+        if (userDetail && userDetail.tanggalPelaporan === null) {
+          setCanProceed(true);
+        } else {
+          setCanProceed(false);
+        }
+      }
     } catch (error) {
       console.error("Error fetching names:", error);
+      setCanProceed(false);
     }
   };
 
@@ -419,17 +437,19 @@ const FormStep1 = ({
                           id="dropdownCabang"
                           className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[10%] w-full"
                         >
-                          <Input
-                            type="text"
-                            className="border-b p-2 w-full bg-white"
-                            placeholder="Cari atau ketik Cabang..."
-                            value={queryCabang}
-                            onChange={(e) => {
-                              setQueryCabang(e.target.value);
-                            }}
-                            autoFocus
-                          />
-                          <ul className="max-h-48 overflow-y-auto mt-1">
+                          <ul className="max-h-44 overflow-y-auto">
+                            <li className="py-2 px-2">
+                              <Input
+                                type="text"
+                                className="border-b p-2 w-full bg-white"
+                                placeholder="Cari Cabang..."
+                                value={queryCabang}
+                                onChange={(e) => {
+                                  setQueryCabang(e.target.value);
+                                }}
+                                autoFocus
+                              />
+                            </li>
                             <li
                               className="p-2 cursor-pointer hover:bg-gray-100"
                               onClick={() =>
@@ -467,7 +487,7 @@ const FormStep1 = ({
                       </Label>
                       <Input
                         type="text"
-                        className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-not-allowed"
+                        className="border rounded-lg p-2 w-full bg-white shadow-sm "
                         placeholder="Pilih Unit Kerja"
                         value={formData.unit || ""}
                         readOnly
@@ -479,16 +499,18 @@ const FormStep1 = ({
                           className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[4.5%] w-[43%]"
                           id="dropdownUnit"
                         >
-                          <Input
-                            id="searchInput"
-                            type="text"
-                            className="border-b p-2 w-full bg-white mb-1"
-                            placeholder="Cari atau ketik Unit Kerja..."
-                            value={queryUnit}
-                            onChange={(e) => setQueryUnit(e.target.value)}
-                            autoFocus
-                          />
-                          <ul className="absolute z-10 border rounded-lg bg-white shadow-sm max-h-48 overflow-y-auto w-full">
+                          <ul className="max-h-44 overflow-y-auto">
+                            <li className="py-2 px-2">
+                              <Input
+                                id="searchInput"
+                                type="text"
+                                className="border-b p-2 w-full bg-white mb-1"
+                                placeholder="Cari Unit Kerja..."
+                                value={queryUnit}
+                                onChange={(e) => setQueryUnit(e.target.value)}
+                                autoFocus
+                              />
+                            </li>
                             <li
                               className="p-2 cursor-pointer hover:bg-gray-100"
                               onClick={() => {
@@ -545,7 +567,7 @@ const FormStep1 = ({
 
                       {filteredNames.length > 0 && isDropdownVisible && (
                         <ul className="absolute left-0 w-full mt-[70px] bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                          {filteredNames.map((data) => (
+                          {filteredNames.slice(0, 5).map((data) => (
                             <li
                               key={data.id}
                               className="py-2 px-4 hover:bg-gray-100 cursor-pointer"
@@ -590,13 +612,19 @@ const FormStep1 = ({
                     </div>
 
                     <div className="flex justify-end mt-4">
-                      <Button
-                        type="button"
-                        onClick={handleNext}
-                        className="ml-auto"
-                      >
-                        Next
-                      </Button>
+                      {canProceed ? (
+                        <Button
+                          type="button"
+                          onClick={handleNext}
+                          className="ml-auto"
+                        >
+                          Next
+                        </Button>
+                      ) : (
+                        <p className="text-red-500">
+                          Pelaporan sudah dilakukan, tidak bisa melanjutkan.
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -647,18 +675,9 @@ const Resume = ({
   const fetchDataById = async () => {
     if (selectedId) {
       try {
-  
         const response = await GlobalApi.getUserById(selectedId);
-  
 
         onFormDataUpdate(response);
-  
-
-        const npaPgri = response?.npaPgri || "";
-        sessionStorage.setItem("npaTerlapor", npaPgri);
-  
-        console.log("Respons API:", response);
-        console.log("npaPgri berhasil disimpan ke sessionStorage:", npaPgri);
       } catch (error) {
         console.error(
           "Error fetching report data:",
@@ -667,7 +686,6 @@ const Resume = ({
       }
     }
   };
-  
 
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
@@ -889,6 +907,7 @@ const Page = () => {
     unitKerja: "",
     deathDate: "",
     description: "",
+    npaPgri: "",
   });
   const [selectedMemberId, setSelectedMemberId] = useState("");
   const [pelaporData, setPelaporData] = useState({
@@ -927,9 +946,15 @@ const Page = () => {
 
       await GlobalApi.submitReport(reportData);
 
-      sessionStorage.setItem("idTerlapor", formData.id);
+      const idList = JSON.parse(sessionStorage.getItem("idTerlaporList")) || [];
+      const npaList =
+        JSON.parse(sessionStorage.getItem("npaTerlaporList")) || [];
 
+      idList.push(formData.id);
+      npaList.push(formData.npaPgri);
 
+      sessionStorage.setItem("idTerlaporList", JSON.stringify(idList));
+      sessionStorage.setItem("npaTerlaporList", JSON.stringify(npaList));
 
       toast.success("Laporan berhasil ditambahkan!");
 

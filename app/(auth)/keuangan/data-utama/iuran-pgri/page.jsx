@@ -11,7 +11,7 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function Iuran() {
-  // State variables
+  
   const [totalAnggota, setTotalAnggota] = useState(null);
   const [iuranPB, setIuranPB] = useState("");
   const [iuranProvinsi, setIuranProvinsi] = useState("");
@@ -21,22 +21,22 @@ export default function Iuran() {
   const [totalIuran, setTotalIuran] = useState("");
   const [sumbanganSanduka, setSumbanganSanduka] = useState("");
   const [totalSumbangan, setTotalSumbangan] = useState("");
-  const [selectedBulan, setSelectedBulan] = useState(""); // Selected month
-  const [tahun, setTahun] = useState(""); // Current year
-  const [isFormVisible, setFormVisible] = useState(false); // Toggle for form visibility
+  const [selectedBulan, setSelectedBulan] = useState(""); 
+  const [tahun, setTahun] = useState(""); 
+  const [isFormVisible, setFormVisible] = useState(false); 
   const [bulanList, setBulanList] = useState([]);
-  const [cabangList, setCabangList] = useState([]); // List of cabang
-  const [selectedCabang, setSelectedCabang] = useState(""); // Selected cabang
-  const [keteranganSelisih, setKeteranganSelisih] = useState(""); // Keterangan for selisih
-  const [jumlah, setJumlah] = useState(""); // Jumlah for target
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // Selected year
+  const [cabangList, setCabangList] = useState([]); 
+  const [selectedCabang, setSelectedCabang] = useState(""); 
+  const [keteranganSelisih, setKeteranganSelisih] = useState(""); 
+  const [jumlah, setJumlah] = useState(""); 
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); 
   const [newSelectedYear, setNewSelectedYear] = useState(
     new Date().getFullYear()
-  ); // Selected year
-  const [isMobile, setIsMobile] = useState(false); // Mobile view state
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Sidebar state
+  ); 
+  const [isMobile, setIsMobile] = useState(false); 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
   const [selectedBulanBaru, setSelectedBulanBaru] = useState("");
-  const [newCabangList, setNewCabangList] = useState([]); // List of new cabang
+  const [newCabangList, setNewCabangList] = useState([]); 
   const [dataSumbangan, setDataSumbangan] = useState([]);
 
   const currentYear = new Date().getFullYear();
@@ -44,14 +44,14 @@ export default function Iuran() {
 
   useEffect(() => {
     const fetchTotalAnggota = async () => {
-      const response = await GlobalApi.getTotalAnggota(); // Memanggil API
-      setTotalAnggota(response); // Jika hanya ada 7231 di respons
+      const response = await GlobalApi.getTotalAnggota(); 
+      setTotalAnggota(response); 
     };
 
-    fetchTotalAnggota(); // Panggil fungsi fetch
+    fetchTotalAnggota(); 
   }, []);
 
-  // Function to fetch data based on selected filters
+  
   useEffect(() => {
     const fetchData = async () => {
       const data = await GlobalApi.getTableIuran(
@@ -63,14 +63,14 @@ export default function Iuran() {
     };
 
     if (selectedBulanBaru && newSelectedYear) {
-      // Cek apakah bulan dan tahun sudah dipilih
+      
       fetchData();
     }
   }, [selectedBulanBaru, newSelectedYear, newCabangList]);
 
   useEffect(() => {
     if (!selectedBulanBaru || !newSelectedYear) {
-      setDataSumbangan([]); // Atau setDataSumbangan(null) jika lebih sesuai
+      setDataSumbangan([]); 
     }
   }, [selectedBulanBaru, newSelectedYear]);
 
@@ -78,22 +78,22 @@ export default function Iuran() {
     setKeteranganSelisih(event.target.value);
   };
 
-  // Generate an array of years from startYear to currentYear
+  
   const years = Array.from(
     { length: currentYear - startYear + 1 },
     (_, index) => startYear + index
   );
 
-  // Ambil data bulan dari API
+  
   useEffect(() => {
     const fetchBulan = async () => {
       try {
         const response = await GlobalApi.getBulan();
-        // Asumsikan bahwa response.data selalu berupa array, jika tidak, pastikan ini.
-        setBulanList(response.data || []); // Pastikan bulanList diisi dengan array
+        
+        setBulanList(response.data || []); 
       } catch (error) {
         console.error("Error fetching bulan:", error);
-        setBulanList([]); // Jika terjadi error, tetap set bulanList menjadi array kosong
+        setBulanList([]); 
       }
     };
 
@@ -104,7 +104,7 @@ export default function Iuran() {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setCabangList(response.data); // Assuming the response data is an array
+        setCabangList(response.data); 
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -114,18 +114,18 @@ export default function Iuran() {
   }, []);
 
   useEffect(() => {
-    // Mengatur bulan dan tahun otomatis saat komponen dimuat
+    
     const currentDate = new Date();
     const currentMonth = new Intl.DateTimeFormat("id-ID", {
       month: "long",
-    }).format(currentDate); // Nama bulan dalam bahasa Indonesia
-    const currentYear = currentDate.getFullYear(); // Tahun
+    }).format(currentDate); 
+    const currentYear = currentDate.getFullYear(); 
     setBulan(currentMonth);
     setTahun(currentYear);
   }, []);
 
   const handleSubmit = async (event) => {
-    event.preventDefault(); // Mencegah reload halaman
+    event.preventDefault(); 
     const payload = {
       pb: iuranPB,
       propinsi: iuranProvinsi,
@@ -137,12 +137,12 @@ export default function Iuran() {
     };
 
     try {
-      const result = await GlobalApi.createIuranData(payload); // Kirim data ke API
-      handleReset(); // Reset form setelah berhasil menyimpan
+      const result = await GlobalApi.createIuranData(payload); 
+      handleReset(); 
 
-      // handle toast
+      
       toast.success("Data berhasil disimpan!");
-      // Reload halaman setelah 2 detik
+      
       setTimeout(() => {
         window.location.reload();
       }, 2000);
@@ -152,9 +152,9 @@ export default function Iuran() {
   };
 
   const handleSubmitTarget = async (event) => {
-    event.preventDefault(); // Prevent page reload
+    event.preventDefault(); 
 
-    // Prepare the payload with form data
+    
     const payload = {
       cabang: selectedCabang,
       jumlah: jumlah,
@@ -164,34 +164,65 @@ export default function Iuran() {
     };
 
     try {
-      // Send data to the API endpoint
+      
       const result = await GlobalApi.createTargetIuaran(payload);
 
-      // Show success message
+      
       toast.success("Data berhasil disimpan!");
     } catch (error) {
-      // Handle error
+      
       toast.error(`Gagal menyimpan data: ${error.message}`);
     }
   };
 
   useEffect(() => {
-    // Hitung total iuran hanya dari input form
+    
     const total = iuranPB + iuranProvinsi + iuranKabupaten + iuranCabang;
     setTotalIuran(total);
     setTotalSumbangan(total + sumbanganSanduka);
   }, [iuranPB, iuranProvinsi, iuranKabupaten, iuranCabang, sumbanganSanduka]);
 
-  // Populate form with data from session storage
-  useEffect(() => {
-    const storedData = sessionStorage.getItem("iuranPGRIData");
+  
+  // useEffect(() => {
+  //   const storedData = sessionStorage.getItem("PGRIData");
+  //   if (storedData) {
+  //     const data = JSON.parse(storedData);
+
+      
+  //     const firstItem = data[0];
+
+      
+  //     if (firstItem) {
+  //       setIuranPB(Number(firstItem.pb));
+  //       setIuranProvinsi(Number(firstItem.propinsi));
+  //       setIuranKabupaten(Number(firstItem.kabupaten));
+  //       setIuranCabang(Number(firstItem.cabang));
+  //       setSumbanganSanduka(Number(firstItem.sanduka));
+
+        
+  //       const calculatedTotalIuran =
+  //         Number(firstItem.pb) +
+  //         Number(firstItem.propinsi) +
+  //         Number(firstItem.kabupaten) +
+  //         Number(firstItem.cabang);
+
+  //       setTotalIuran(calculatedTotalIuran);
+
+        
+  //       const calculatedTotalSumbangan =
+  //         calculatedTotalIuran + (Number(firstItem.sanduka) || 0);
+
+  //       setTotalSumbangan(calculatedTotalSumbangan);
+  //     }
+  //   }
+  // }, []);
+  const fetchIuranData = () => {
+    const storedData = sessionStorage.getItem("PGRIData");
     if (storedData) {
       const data = JSON.parse(storedData);
 
-      // Assuming data is an array and you want the first item
       const firstItem = data[0];
 
-      // Check if the firstItem exists and set values accordingly
       if (firstItem) {
         setIuranPB(Number(firstItem.pb));
         setIuranProvinsi(Number(firstItem.propinsi));
@@ -199,7 +230,6 @@ export default function Iuran() {
         setIuranCabang(Number(firstItem.cabang));
         setSumbanganSanduka(Number(firstItem.sanduka));
 
-        // Calculate total Iuran
         const calculatedTotalIuran =
           Number(firstItem.pb) +
           Number(firstItem.propinsi) +
@@ -208,17 +238,16 @@ export default function Iuran() {
 
         setTotalIuran(calculatedTotalIuran);
 
-        // Calculate total Sumbangan
         const calculatedTotalSumbangan =
           calculatedTotalIuran + (Number(firstItem.sanduka) || 0);
 
         setTotalSumbangan(calculatedTotalSumbangan);
       }
     }
-  }, []);
+  };
 
   const handleInputChange = (event, setter) => {
-    setter(Number(event.target.value.replace(/\D/g, ""))); // Convert input to number
+    setter(Number(event.target.value.replace(/\D/g, ""))); 
   };
 
   const handleReset = () => {
@@ -226,26 +255,26 @@ export default function Iuran() {
 
     if (storedData) {
       const data = JSON.parse(storedData);
-      const firstItem = data[0]; // Assuming you want to use the first item
+      const firstItem = data[0]; 
 
       if (firstItem) {
-        setIuranPB(parseInt(firstItem.pb) || 0); // Set IuranPB to pb from the first item
-        setIuranProvinsi(parseInt(firstItem.propinsi) || 0); // Set IuranProvinsi to propinsi
-        setIuranKabupaten(parseInt(firstItem.kabupaten) || 0); // Set IuranKabupaten to kabupaten
-        setIuranCabang(parseInt(firstItem.cabang) || 0); // Set IuranCabang to cabang
-        setSumbanganSanduka(parseInt(firstItem.sanduka) || 0); // Set SumbanganSanduka to sanduka
+        setIuranPB(parseInt(firstItem.pb) || 0); 
+        setIuranProvinsi(parseInt(firstItem.propinsi) || 0); 
+        setIuranKabupaten(parseInt(firstItem.kabupaten) || 0); 
+        setIuranCabang(parseInt(firstItem.cabang) || 0); 
+        setSumbanganSanduka(parseInt(firstItem.sanduka) || 0); 
       }
     } else {
-      // If no data found in sessionStorage, reset to default values
-      setIuranPB(6400); // Default value for IuranPB
-      setIuranProvinsi(1200); // Default value for IuranProvinsi
-      setIuranKabupaten(1800); // Default value for IuranKabupaten
-      setIuranCabang(2400); // Default value for IuranCabang
-      setSumbanganSanduka(3000); // Default value for SumbanganSanduka
+      
+      setIuranPB(6400); 
+      setIuranProvinsi(1200); 
+      setIuranKabupaten(1800); 
+      setIuranCabang(2400); 
+      setSumbanganSanduka(3000); 
     }
   };
 
-  // Format untuk tampilan dalam rupiah
+  
   const formatRupiah = (value) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -255,10 +284,11 @@ export default function Iuran() {
   };
 
   const handleToggleForm = () => {
+    fetchIuranData();
     setFormVisible(!isFormVisible);
   };
 
-  // Fungsi cetak
+  
   const handlePrint = () => {
     const printContent = document.getElementById("printTable").innerHTML;
     const newWindow = window.open("", "", "width=800,height=600");
@@ -316,7 +346,7 @@ export default function Iuran() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+    <div className="min-h-screen bg-gray-50 p-2 md:p-4">
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
@@ -359,26 +389,26 @@ export default function Iuran() {
            <Toaster
           toastOptions={{
             style: {
-              fontSize: "1.25rem", // Ukuran font yang lebih besar
-              padding: "16px", // Menambah padding jika diperlukan
+              fontSize: "1.25rem", 
+              padding: "16px", 
             },
             success: {
               style: {
-                background: "white", // Warna background hijau untuk pesan sukses
+                background: "white", 
                 color: "black",
               },
             },
             error: {
               style: {
-                background: "#f44336", // Warna background merah untuk pesan error
+                background: "#f44336", 
                 color: "#fff",
               },
             },
           }}
         />
-          <div className="container mx-auto p-6 bg-gray-50 rounded-lg shadow-lg mt-10">
+          <div className="w-full p-4 bg-gray-50 rounded-lg shadow-lg">
             <Button
-              className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+              className="bg-green-500 hover:bg-green-700 text-white font-bold rounded"
               onClick={handleToggleForm}
             >
               Rincian Iuran
@@ -618,7 +648,7 @@ export default function Iuran() {
                       className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                       id="newCabangTable"
                       value={newCabangList}
-                      onChange={(e) => setNewCabangList(e.target.value)} // Event handler for new cabang filter
+                      onChange={(e) => setNewCabangList(e.target.value)} 
                     >
                       <option value="">Pilih Cabang Baru</option>
                       {cabangList.map((cabang) => (
@@ -649,7 +679,7 @@ export default function Iuran() {
                       className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                       id="tahunTable"
                       value={newSelectedYear}
-                      onChange={(e) => setNewSelectedYear(e.target.value)} // Event handler untuk perubahan filter tahun
+                      onChange={(e) => setNewSelectedYear(e.target.value)} 
                     >
                       <option value="">Pilih Tahun</option>
                       {years.map((year) => (

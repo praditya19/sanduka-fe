@@ -245,11 +245,10 @@ export default function Daspen() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+    <div className="min-h-screen bg-gray-50 p-2 md:p-4">
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -264,7 +263,6 @@ export default function Daspen() {
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -304,7 +302,7 @@ export default function Daspen() {
               },
             }}
           />
-          <div className="container mx-auto p-6 bg-gray-50 rounded-lg shadow-lg mt-10">
+          <div className="p-4 bg-gray-50 rounded-lg shadow-lg ">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-5 text-center">
@@ -442,7 +440,6 @@ export default function Daspen() {
                         onChange={(e) => setSelectedBulan(e.target.value)}
                         className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
                       >
-                        {/* Dynamically populate options */}
                         {bulanList.map((bulan) => (
                           <option key={bulan.id} value={bulan.namaBulan}>
                             {bulan.namaBulan}
@@ -464,7 +461,6 @@ export default function Daspen() {
                         onChange={(e) => setSelectedYear(e.target.value)}
                         className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
                       >
-                        {/* Map through years array to create options */}
                         {years.map((year) => (
                           <option key={year} value={year}>
                             {year}
@@ -628,7 +624,6 @@ export default function Daspen() {
             <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
               <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
                 <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-                  {/* Filter Cabang */}
                   <select
                     className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                     id="newCabangTable"
@@ -643,7 +638,6 @@ export default function Daspen() {
                     ))}
                   </select>
 
-                  {/* Filter Bulan */}
                   <select
                     className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                     id="bulanTableBaru"
@@ -651,7 +645,7 @@ export default function Daspen() {
                     onChange={(e) => setSelectedBulanBaru(e.target.value)}
                   >
                     <option value="">Pilih Bulan</option>
-                    {/* Dynamically populate options */}
+
                     {bulanList.map((bulan) => (
                       <option key={bulan.id} value={bulan.namaBulan}>
                         {bulan.namaBulan}
@@ -659,7 +653,6 @@ export default function Daspen() {
                     ))}
                   </select>
 
-                  {/* Filter Tahun */}
                   <select
                     className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                     id="tahunTable"
@@ -667,7 +660,7 @@ export default function Daspen() {
                     onChange={(e) => setNewSelectedYear(e.target.value)}
                   >
                     <option value="">Pilih Tahun</option>
-                    {/* Map through years array to create options */}
+
                     {years.map((year) => (
                       <option key={year} value={year}>
                         {year}

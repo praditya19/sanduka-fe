@@ -461,21 +461,21 @@ function Pemasukan() {
                     Cabang
                   </Label>
 
-                  {/* Input Readonly Menampilkan Cabang yang Dipilih */}
+                 
                   <input
                     type="text"
                     placeholder="Cabang yang dipilih"
                     className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     value={formValues.cabang || ""}
                     readOnly
-                    onFocus={() => setIsDropdownVisible(true)} // Membuka dropdown saat input diklik
+                    onFocus={() => setIsDropdownVisible(true)} 
                   />
 
-                  {/* Dropdown Pilihan Cabang dan Input Pencarian */}
+                 
                   {isDropdownVisible && (
                     <div className="absolute top-full left-0 w-full z-10 mt-1 border bg-white shadow-lg rounded-b">
                       <ul className="max-h-48 overflow-y-auto">
-                        {/* Input Pencarian di Dalam Dropdown */}
+                       
                         <li className="py-2 px-4">
                           <input
                             type="text"
@@ -493,8 +493,8 @@ function Pemasukan() {
                           />
                         </li>
 
-                        {/* Opsi 'Pilih Cabang' */}
-                        <li className="py-2 px-4 hover:bg-blue-500 hover:text-white">
+                       
+                        <li className="py-2 px-4 hover:bg-blue-500 hover:text-white text-gray-500">
                           <button
                             onClick={() => {
                               setFormValues((prevValues) => ({
@@ -509,7 +509,7 @@ function Pemasukan() {
                           </button>
                         </li>
 
-                        {/* Opsi 'Semua Cabang' */}
+                       
                         <li className="py-2 px-4 hover:bg-blue-500 hover:text-white">
                           <button
                             onClick={() => {
@@ -525,7 +525,7 @@ function Pemasukan() {
                           </button>
                         </li>
 
-                        {/* Filter dan Tampilkan List Cabang */}
+                       
                         {cabangList
                           .filter((cabang) =>
                             cabang.kecamatan
@@ -543,8 +543,8 @@ function Pemasukan() {
                                 onClick={() => {
                                   setFormValues((prevValues) => ({
                                     ...prevValues,
-                                    cabang: cabang.kecamatan, // Mengisi input readonly dengan nama cabang
-                                    searchCabang: "", // Mengosongkan input pencarian setelah memilih
+                                    cabang: cabang.kecamatan, 
+                                    searchCabang: "", 
                                   }));
                                   setIsDropdownVisible(false);
                                 }}

@@ -133,10 +133,7 @@ const Page = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
-
-  const anggotaId = sessionStorage.getItem("anggotaId");
-  const userID = sessionStorage.getItem("userId");
-
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -215,6 +212,7 @@ const Page = () => {
 
     try {
       const response = await GlobalApi.updateUserById(id, formData);
+      console.log("Foto berhasil disimpan:", response);
       toast.success("Data Anda Berhasil Diupdate!");
 
       setTimeout(() => {
@@ -738,7 +736,6 @@ const Page = () => {
                       onChange={(e) => setNpaPgri(e.target.value)}
                       maxLength={11}
                     />
-                    
                   </div>
 
                   <div className="w-full">

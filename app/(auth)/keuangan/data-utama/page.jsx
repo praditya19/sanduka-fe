@@ -54,23 +54,26 @@ export default function DataUtama() {
       
       if (activeTab === "iuran-pgri") {
         // Mengambil data untuk semua tab (daspen, derap, kalender)
+        const pgriResponse = await GlobalApi.getIuranByFilter("Iuran PGRI");
         const daspenResponse = await GlobalApi.getIuranByFilter("Daspen");
         const derapResponse = await GlobalApi.getIuranByFilter("Derap");
         const kalenderResponse = await GlobalApi.getIuranByFilter("Kalender");
   
         // Menyimpan semua data di sessionStorage
+        sessionStorage.setItem("PGRIData", JSON.stringify(pgriResponse));
         sessionStorage.setItem("daspenData", JSON.stringify(daspenResponse));
         sessionStorage.setItem("derapData", JSON.stringify(derapResponse));
         sessionStorage.setItem("kalenderData", JSON.stringify(kalenderResponse));
   
         // Menggabungkan semua data ke dalam satu objek atau array
         response = {
+          pgri: pgriResponse,
           daspen: daspenResponse,
           derap: derapResponse,
           kalender: kalenderResponse
         };
       } else if (activeTab === "iuran-pgri") {
-        response = await GlobalApi.getIuranByFilter("Iuran PGRI");
+        
         sessionStorage.setItem("PGRIData", JSON.stringify(response));
       }
       
@@ -89,7 +92,7 @@ export default function DataUtama() {
   
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+    <div className="min-h-screen bg-gray-50 p-2 ">
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
@@ -116,7 +119,7 @@ export default function DataUtama() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <div className="min-h-screen bg-gray-50 px-4 md:px-6 py-6">
+          <div className="min-h-screen bg-gray-50 py-3   ">
           <nav className="container mt-12">
               <ul className="flex flex-wrap space-x-4 md:space-x-6">
                 <NavItem isActive={activeTab === "iuran-pgri"} onClick={() => handleTabChange("iuran-pgri")}>

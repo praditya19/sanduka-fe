@@ -36,23 +36,20 @@ function DerapForm() {
   );
   const tableRef = useRef();
 
-  // Function to fetch data based on selected filters
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Jika cabang tidak dipilih, fetch data tanpa filter cabang
         const data = await GlobalApi.getTableDerap(
           selectedBulanBaru,
           newSelectedYear,
-          newCabangList || "" // Kirim string kosong jika cabang tidak dipilih
+          newCabangList || ""
         );
-        setTableData(data); // Simpan data yang diambil ke dalam state
+        setTableData(data);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
 
-    // Cek apakah bulan dan tahun sudah dipilih, tetapi cabang boleh kosong
     if (selectedBulanBaru && newSelectedYear) {
       fetchData();
     }
@@ -60,36 +57,33 @@ function DerapForm() {
 
   useEffect(() => {
     if (!selectedBulanBaru || !newSelectedYear) {
-      setTableData([]); // Atau setDataSumbangan(null) jika lebih sesuai
+      setTableData([]);
     }
   }, [selectedBulanBaru, newSelectedYear]);
 
-  // Ambil data bulan dari API
   useEffect(() => {
     const fetchBulan = async () => {
       try {
         const response = await GlobalApi.getBulan();
-        setBulanList(response.data); // Simpan data bulan dari API ke state
+        setBulanList(response.data);
       } catch (error) {
         console.error("Error fetching bulan:", error);
       }
     };
 
-    fetchBulan(); // Panggil fungsi ketika komponen pertama kali dimuat
+    fetchBulan();
   }, []);
 
   const printTable = () => {
     const printContent = tableRef.current;
     const originalContent = document.body.innerHTML;
-    
-    // Temporarily replace body content with table content
+
     document.body.innerHTML = printContent.innerHTML;
 
-    window.print(); // Trigger the print dialog
+    window.print();
 
-    // Restore the original content after printing
     document.body.innerHTML = originalContent;
-    window.location.reload(); // Refresh the page to re-apply React events
+    window.location.reload();
   };
 
   const years = Array.from(
@@ -98,11 +92,11 @@ function DerapForm() {
   );
 
   const getCurrentMonthAndYear = () => {
-    const now = new Date(); // Get the current date
-    const month = now.toLocaleString("id-ID", { month: "long" }); // Get the month in Indonesian
-    const year = now.getFullYear(); // Get the full year
+    const now = new Date();
+    const month = now.toLocaleString("id-ID", { month: "long" });
+    const year = now.getFullYear();
 
-    return { month, year }; // Return as an object
+    return { month, year };
   };
 
   useEffect(() => {
@@ -115,7 +109,7 @@ function DerapForm() {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setCabangList(response.data); // Assuming the response data is an array
+        setCabangList(response.data);
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -136,7 +130,7 @@ function DerapForm() {
         setKabupaten(firstItem.kabupaten);
         setCabang(firstItem.cabang);
       }
-    } 
+    }
   }, []);
 
   const handleProvinsiChange = (e) => {
@@ -160,42 +154,36 @@ function DerapForm() {
   };
 
   const handleSubmit = async (event) => {
-    event.preventDefault(); // Prevent page reload
+    event.preventDefault();
 
-    // Prepare the first payload with form data for the first API
     const payload1 = {
-      pb: "", // This is empty in the provided format, you can adjust if necessary
-      propinsi: provinsi, // Assuming 'provinsi' holds the category for 'propinsi'
-      kabupaten: kabupaten, // Assuming 'kabupaten' holds the category for 'kabupaten'
-      cabang: selectedCabang, // Assuming 'cabang' holds the value for 'cabang'
-      sanduka: "", // This is empty in the provided format, adjust if needed
-      bulan: selectedBulan, // Assuming 'selectedBulan' holds the selected month
-      tahun: selectedYear, // Assuming 'selectedYear' holds the selected year
+      pb: "",
+      propinsi: provinsi,
+      kabupaten: kabupaten,
+      cabang: selectedCabang,
+      sanduka: "",
+      bulan: selectedBulan,
+      tahun: selectedYear,
     };
 
-    // Prepare the second payload for the second API
     const payload2 = {
-      cabang: selectedCabang, // Assuming 'cabang' holds the value for 'cabang'
-      jumlah: jumlahPesanan, // Assuming 'jumlahPesanan' holds the number for 'jumlah'
-      bulan: selectedBulan, // Using the same month as in the first payload
-      tahun: selectedYear, // Using the same year as in the first payload
+      cabang: selectedCabang,
+      jumlah: jumlahPesanan,
+      bulan: selectedBulan,
+      tahun: selectedYear,
     };
 
     try {
-      // Send data to the first API endpoint
       const result1 = await GlobalApi.createDerapData(payload1);
 
-      // Send data to the second API endpoint with the second payload
-      const result2 = await GlobalApi.createTargetDerap(payload2); // Change this to your second API function
-      // Show success message for both submissions
+      const result2 = await GlobalApi.createTargetDerap(payload2);
+
       toast.success("Data berhasil disimpan!");
 
-      // Reload the page without changing the route
       setTimeout(() => {
-        window.location.reload(); // Reloads the current page
-      }, 1500); // Optional delay for showing toast message
+        window.location.reload();
+      }, 1500);
     } catch (error) {
-      // Handle error for both submissions
       toast.error(`Gagal menyimpan data: ${error.message}`);
     }
   };
@@ -227,22 +215,21 @@ function DerapForm() {
 
     if (storedData) {
       const data = JSON.parse(storedData);
-      const firstItem = data[0]; // Menggunakan item pertama
+      const firstItem = data[0];
 
       if (firstItem) {
         setProvinsi(firstItem.propinsi || 0);
         setKabupaten(firstItem.kabupaten || 0);
         setCabang(firstItem.cabang || 0);
-        setTotalHarga(0); // Resetting totalHarga to 0
+        setTotalHarga(0);
         setJumlahPesanan(0);
         setSetorProvinsi(0);
         setUntukKabupaten(0);
         setUntukCabang(0);
         setTotalHargaAkhir(0);
-        setJenisCabang(""); // Resetting jenisCabang
+        setJenisCabang("");
       }
     } else {
-      // Jika tidak ada data dalam sessionStorage, reset ke nilai default
       setProvinsi(0);
       setKabupaten(0);
       setCabang(0);
@@ -252,7 +239,7 @@ function DerapForm() {
       setUntukKabupaten(0);
       setUntukCabang(0);
       setTotalHargaAkhir(0);
-      setJenisCabang(""); // Resetting jenisCabang
+      setJenisCabang("");
     }
   };
 
@@ -263,7 +250,6 @@ function DerapForm() {
     }
   };
 
-  // Format untuk tampilan dalam rupiah
   const formatRupiah = (value) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -272,15 +258,12 @@ function DerapForm() {
     }).format(value);
   };
 
-  // Ambil data dari sessionStorage
   const derapData = JSON.parse(sessionStorage.getItem("derapData"));
 
-  // Jika ada data, ambil nilai cabang, kabupaten, dan propinsi dari derapData
   const firstItem = derapData
     ? derapData[0]
     : { cabang: 0, kabupaten: 0, propinsi: 0 };
 
-  // Fungsi untuk menghitung total dari perkalian item.jumlah dengan cabang, kabupaten, dan propinsi
   const calculateTotal = (jumlah, cabang, kabupaten, propinsi) => {
     const cabangMultiplier = cabang || 0;
     const kabupatenMultiplier = kabupaten || 0;
@@ -290,7 +273,6 @@ function DerapForm() {
     const resultKabupaten = jumlah * kabupatenMultiplier;
     const resultProvinsi = jumlah * propinsiMultiplier;
 
-    // Mengembalikan hasil penjumlahan
     return resultCabang + resultKabupaten + resultProvinsi;
   };
 
@@ -327,11 +309,10 @@ function DerapForm() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+    <div className="min-h-screen bg-gray-50 p-2 md:p-4">
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -346,7 +327,6 @@ function DerapForm() {
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -367,29 +347,29 @@ function DerapForm() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-           <Toaster
-          toastOptions={{
-            style: {
-              fontSize: "1.25rem", // Ukuran font yang lebih besar
-              padding: "16px", // Menambah padding jika diperlukan
-            },
-            success: {
+          <Toaster
+            toastOptions={{
               style: {
-                background: "white", // Warna background hijau untuk pesan sukses
-                color: "black",
+                fontSize: "1.25rem",
+                padding: "16px",
               },
-            },
-            error: {
-              style: {
-                background: "#f44336", // Warna background merah untuk pesan error
-                color: "#fff",
+              success: {
+                style: {
+                  background: "white",
+                  color: "black",
+                },
               },
-            },
-          }}
-        />
-          <div className="container mx-auto p-6 mt-8">
+              error: {
+                style: {
+                  background: "#f44336",
+                  color: "#fff",
+                },
+              },
+            }}
+          />
+          <div className="p-4 bg-gray-50 rounded-lg shadow-lg ">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="p-8 rounded-lg shadow-lg border border-gray-200 bg-white">
+              <div className="p-6 rounded-lg shadow-lg border border-gray-200 bg-white">
                 <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-5 text-center">
                   Pesanan Derap PGRI
                 </h2>
@@ -453,10 +433,10 @@ function DerapForm() {
                       Jumlah Pesanan
                     </label>
                     <select
-                      id="selectCabang" // ganti ID untuk menghindari konflik
+                      id="selectCabang"
                       value={selectedCabang}
                       className="w-full lg:w-1/3 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out mt-2 lg:mt-0 lg:ml-4"
-                      onChange={(e) => setSelectedCabang(e.target.value)} // simpan kecamatan atau sesuaikan dengan id atau data lain yang diinginkan
+                      onChange={(e) => setSelectedCabang(e.target.value)}
                     >
                       <option value="">Pilih Cabang</option>
                       {cabangList.map((cabang) => (
@@ -577,7 +557,7 @@ function DerapForm() {
                     onChange={(e) => setNewSelectedYear(e.target.value)}
                   >
                     <option value="">Pilih Tahun</option>
-                    {/* Map through years array to create options */}
+
                     {years.map((year) => (
                       <option key={year} value={year}>
                         {year}
@@ -588,7 +568,10 @@ function DerapForm() {
                 <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
                   Transaksi {selectedBulanBaru} {newSelectedYear}
                 </h1>
-                <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out mt-3 mr-6 w-24" onClick={printTable}>
+                <Button
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out mt-3 mr-6 w-24"
+                  onClick={printTable}
+                >
                   Cetak
                 </Button>
               </div>
@@ -598,16 +581,28 @@ function DerapForm() {
               <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
                   <tr>
-                    <th scope="col" className="border px-6 py-3 text-center text-sm">
+                    <th
+                      scope="col"
+                      className="border px-6 py-3 text-center text-sm"
+                    >
                       No
                     </th>
-                    <th scope="col" className="border px-6 py-3 text-center text-sm">
+                    <th
+                      scope="col"
+                      className="border px-6 py-3 text-center text-sm"
+                    >
                       Cabang Khusus
                     </th>
-                    <th scope="col" className="border px-6 py-3 text-center text-sm">
+                    <th
+                      scope="col"
+                      className="border px-6 py-3 text-center text-sm"
+                    >
                       Pesanan
                     </th>
-                    <th scope="col" className="border px-6 py-3 text-center text-sm">
+                    <th
+                      scope="col"
+                      className="border px-6 py-3 text-center text-sm"
+                    >
                       Total
                     </th>
                   </tr>

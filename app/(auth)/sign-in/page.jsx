@@ -62,36 +62,42 @@ function SignIn() {
     }
   };
 
+  
+
   const onSignInAdmin = async () => {
     setLoader(true);
     setError("");
-
+  
     try {
+      
       if (!isVerified) {
         throw new Error("Harap verifikasi reCAPTCHA.");
       }
-
-      const npaPgriValue = npaPgri?.trim();
+  
+      
+      const npaPgriValue = npaPgri?.trim();  
       const passwordValue = password?.trim();
-
+  
+      
       if (!npaPgriValue || !passwordValue) {
         throw new Error("NPA PGRI dan Password tidak boleh kosong.");
       }
-
-      console.log("Payload untuk login:", {
-        npaPgri: npaPgriValue,
-        password: passwordValue,
-      });
-
+  
+      
+      console.log("Payload untuk login:", { npaPgri: npaPgriValue, password: passwordValue });
+  
+      
       const response = await GlobalApi.loginAdmin(npaPgriValue, passwordValue);
       setToken(response.token);
-
+      
       sessionStorage.setItem("userId", response.id);
       sessionStorage.setItem("nama", response.namaLengkap);
       sessionStorage.setItem("role", response.role);
-
+  
+      
       toast.success(`Selamat Datang ${response.namaLengkap}`);
-
+  
+      
       setTimeout(() => {
         router.push("/home");
       }, 2000);
@@ -101,7 +107,8 @@ function SignIn() {
       setLoader(false);
     }
   };
-
+  
+  
   function onChange(value) {
     setIsVerified(!!value);
   }
@@ -128,9 +135,9 @@ function SignIn() {
           },
         }}
       />
-      <div className="flex flex-col items-center justify-center p-4 sm:p-6 md:p-10 bg-gray-100 border border-gray-200 rounded-lg shadow-md w-full sm:w-[80%] md:w-[60%] lg:w-[40%] mx-auto">
-        <Image src="/sanduka.png" width={150} height={150} alt="logo" />
-        <h2 className="font-bold text-2xl sm:text-3xl mt-4">Masuk ke Akun</h2>
+      <div className="flex flex-col items-center justify-center p-10 bg-gray-100 border border-gray-200 rounded-lg shadow-md w-[40%]">
+        <Image src="/sanduka.png" width={200} height={200} alt="logo" />
+        <h2 className="font-bold text-3xl mt-4">Masuk ke Akun</h2>
         <h2 className="text-gray-500 mt-2 text-center">
           Masukkan NPA PGRI dan{" "}
           {activeTab === "login" ? "Tanggal Lahir" : "Password"} Anda untuk
@@ -138,7 +145,7 @@ function SignIn() {
         </h2>
 
         {/* Tab Navigation */}
-        <div className="flex space-x-2 sm:space-x-4 mt-4">
+        <div className="flex space-x-4 mt-4">
           <button
             className={`rounded-md p-2 ${
               activeTab === "login"
@@ -161,7 +168,7 @@ function SignIn() {
           </button>
         </div>
 
-        <div className="w-full max-w-md mt-6">
+        <div className="w-full max-w-lg mt-6">
           {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
           {/* Form sesuai tab yang aktif */}
@@ -251,6 +258,7 @@ function SignIn() {
               href={"/create-account/syarat-ketentuan"}
               className="text-blue-500 ml-1 hover:underline"
             >
+              {" "}
               Klik di sini untuk membuat akun baru
             </Link>
           </p>

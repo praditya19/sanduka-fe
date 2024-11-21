@@ -13,9 +13,9 @@ const Page = () => {
   const [data, setData] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-  const [totalItems, setTotalItems] = useState(0);
+  const [page, setPage] = useState(0);
+  const [size] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { token } = useAuth();
@@ -86,7 +86,7 @@ const Page = () => {
       const pageIndex = currentPage - 1; // Konversi currentPage ke zero-based index
       const historyResponse = await GlobalApi.getHistoryData(pageIndex, itemsPerPage);
       const historyData = historyResponse.content;
-      setTotalItems(historyResponse.totalElements);
+      setTotalPages(historyResponse.totalPages);
 
       const npaList = historyData.map((item) => item.npa).filter((npa) => npa);
 
@@ -103,7 +103,7 @@ const Page = () => {
       }, {});
 
       const enrichedData = historyData.map((item) => {
-        const npaDetail = npaMap[item.npa?.trim().toLowerCase()];
+        const npaDetail = npaMap[item.npa.trim().toLowerCase()];
         return {
           ...item,
           npaDetail: npaDetail || {},
@@ -129,29 +129,23 @@ const Page = () => {
 
       return () => window.removeEventListener("resize", handleResize);
     }
-  }, [token, router, currentPage]); // Add currentPage as dependency
+  }, [token, router, page]);
 
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-  const getVisiblePages = () => {
-    const visiblePages = [];
-    const leftLimit = Math.max(1, currentPage - 1);
-    const rightLimit = Math.min(totalPages, currentPage + 1);
-
-    for (let i = leftLimit; i <= rightLimit; i++) {
-      visiblePages.push(i);
-    }
-
-    return visiblePages;
-  };
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   const filteredData = data.filter((item) => {
     const matchesSearchTerm =
-      (item.npaDetail?.namaLengkap?.toLowerCase().includes(filter.toLowerCase()) ||
-        item.cabang?.toLowerCase().includes(filter.toLowerCase()));
+      (item.npaDetail.namaLengkap &&
+        item.npaDetail.namaLengkap
+          .toLowerCase()
+          .includes(filter.toLowerCase())) ||
+      (item.cabang && item.cabang.toLowerCase().includes(filter.toLowerCase()));
 
     const matchesCabang = selectedCabang
-      ? item.cabang?.toLowerCase() === selectedCabang.toLowerCase()
+      ? item.cabang &&
+        item.cabang.toLowerCase() === selectedCabang.toLowerCase()
       : true;
 
     const matchesMonth = selectedMonth
@@ -166,7 +160,7 @@ const Page = () => {
   });
 
   const handleEdit = (item) => {
-    const npa = item.npaDetail?.npaPgri;
+    const npa = item.npaDetail.npaPgri;
     console.log(`NPA yang dituju: ${npa}`);
     sessionStorage.setItem("npa", npa);
     router.push(`/history-data/detail`);
@@ -176,6 +170,14 @@ const Page = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
     localStorage.setItem("isSidebarOpen", newSidebarState.toString());
+  };
+
+  const handleNextPage = () => {
+    if (page < totalPages - 1) setPage(page + 1);
+  };
+
+  const handlePreviousPage = () => {
+    if (page > 0) setPage(page - 1);
   };
 
   const formatDate = (tanggal) => {
@@ -206,20 +208,17 @@ const Page = () => {
     return age;
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
-
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
       {isMobile ? <HeaderMobile /> : <HeaderHome />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-        <div className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"}`}>
+        <div
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
+        >
           <div className="w-full p-4 container shadow-lg rounded-lg mt-12">
             <div className="rounded-md flex flex-col py-4">
               <div className="container px-2">
@@ -233,7 +232,7 @@ const Page = () => {
                       <option value="">Semua Cabang</option>
                       {cabangOptions.map((option) => (
                         <option key={option.id} value={option.kecamatan}>
-                          {option.kecamatan}
+                          {option.kecamatan}{" "}
                         </option>
                       ))}
                     </select>
@@ -276,12 +275,20 @@ const Page = () => {
                 <table className="w-full table-auto mb-8">
                   <thead className="p-2 md:p-3 border bg-green-300">
                     <tr>
-                      {["No", "Date", "Data", "Cabang", "Detail", "Keterangan"].map((header, idx) => (
+                      {[
+                        "No",
+                        "Date",
+                        "Data",
+                        "Cabang",
+                        "Detail",
+                        "Keterangan",
+                      ].map((header, idx) => (
                         <th
                           key={header}
                           rowSpan="2"
-                          className={`border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white ${idx > 2 ? "hidden lg:table-cell" : ""
-                            }`}
+                          className={`border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white ${
+                            idx > 2 ? "hidden lg:table-cell" : ""
+                          }`}
                         >
                           {header}
                         </th>
@@ -291,9 +298,13 @@ const Page = () => {
                   <tbody>
                     {filteredData.map((item, index) => (
                       <React.Fragment key={index}>
-                        <tr className={index % 2 === 0 ? "bg-gray-200" : "bg-white"}>
+                        <tr
+                          className={
+                            index % 2 === 0 ? "bg-gray-200" : "bg-white"
+                          }
+                        >
                           <td className="text-center border">
-                            {startIndex + index + 1}
+                            {index + 1 + page * size}
                             <button
                               className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden ml-2"
                               onClick={() => handleExpand(index)}
@@ -305,28 +316,40 @@ const Page = () => {
                               )}
                             </button>
                           </td>
-                          <td className="border">{`${item.hari}, ${formatDate(item.tanggal)}, ${item.jam}`}</td>
+                          <td className="border">{`${item.hari}, ${formatDate(
+                            item.tanggal
+                          )}, ${item.jam}`}</td>
                           <td className="border">
                             {item.npaDetail ? (
                               <div>
-                                <div>{item.npaDetail.namaLengkap ?? "-"}</div>
-                                <div>{item.npaDetail.npaPgri ?? "-"}</div>
+                                <div>{item.npaDetail.namaLengkap ?? "-"},</div>
+                                <div>{item.npaDetail.npaPgri ?? "-"},</div>
                                 <div>
                                   {item.npaDetail.tempatLahir ?? "-"}{" "}
-                                  {item.npaDetail.tanggalLahir ? formatDate(item.npaDetail.tanggalLahir) : "-"}
+                                  {item.npaDetail.tanggalLahir
+                                    ? formatDate(item.npaDetail.tanggalLahir)
+                                    : "-"}
                                 </div>
-                                <div>{item.npaDetail.jabatan ?? "-"}</div>
-                                <div>{item.npaDetail.unitKerja ?? "-"}</div>
+                                <div>{item.npaDetail.jabatan ?? "-"},</div>
+                                <div>{item.npaDetail.unitKerja ?? "-"},</div>
                                 <div>
-                                  {item.npaDetail.tanggalLahir ? calculateAge(item.npaDetail.tanggalLahir) : "-"} Tahun
+                                  {item.npaDetail.tanggalLahir
+                                    ? calculateAge(item.npaDetail.tanggalLahir)
+                                    : "-"}{" "}
+                                  Tahun
                                 </div>
                               </div>
                             ) : (
                               "-"
                             )}
                           </td>
-                          <td className="text-center border hidden lg:table-cell">{item.cabang}</td>
-                          <td className="border hidden lg:table-cell">{item.uraian}</td>
+
+                          <td className="text-center border hidden lg:table-cell">
+                            {item.cabang}
+                          </td>
+                          <td className="border hidden lg:table-cell">
+                            {item.uraian}
+                          </td>
                           <td className="text-center border hidden lg:table-cell">
                             <button
                               onClick={() => handleEdit(item)}
@@ -364,23 +387,20 @@ const Page = () => {
 
                 <div className="flex flex-col md:flex-row justify-between text-sm mt-4 items-center space-y-2 md:space-y-0 md:space-x-2">
                   <span className="text-center md:text-left">
-                    Showing {startIndex + 1} to {endIndex} of {totalItems} entries
+                    Showing {page * size + 1} to{" "}
+                    {Math.min((page + 1) * size, totalPages * size)} of{" "}
+                    {totalPages * size} entries
                   </span>
 
-                  <div className="flex justify-center mt-4 gap-1">
+                  <div className="flex flex-wrap justify-center md:justify-end space-x-2">
                     <button
-                      onClick={() => setCurrentPage(1)}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                      onClick={handlePreviousPage}
+                      className={`px-3 py-1 border text-sm rounded ${
+                        page === 0 ? "bg-gray-300" : "bg-white"
+                      }`}
+                      disabled={page === 0}
                     >
-                      First
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                    >
-                      Prev
+                      Previous
                     </button>
 
                     {getVisiblePages().map((page) => (
@@ -397,18 +417,13 @@ const Page = () => {
                     ))}
 
                     <button
-                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                      onClick={handleNextPage}
+                      className={`px-3 py-1 border text-sm rounded ${
+                        page === totalPages - 1 ? "bg-gray-300" : "bg-white"
+                      }`}
+                      disabled={page === totalPages - 1}
                     >
                       Next
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage(totalPages)}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                    >
-                      Last
                     </button>
                   </div>
                 </div>

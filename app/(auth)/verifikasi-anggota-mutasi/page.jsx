@@ -384,16 +384,18 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
 
       {showDropdown && (
         <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-full">
-          <input
-            type="text"
-            className="border-b rounded-t-lg p-2 w-full bg-white"
-            placeholder={`Filter ${label}`}
-            value={filterQuery}
-            onChange={(e) => setFilterQuery(e.target.value)}
-            autoFocus
-          />
+          <ul className="max-h-44 overflow-y-auto">
+            <li className="py-2 px-2">
+              <input
+                type="text"
+                className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={`Filter ${label}`}
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                autoFocus
+              />
+            </li>
 
-          <ul className="max-h-48 overflow-y-auto">
             <li
               key="default-option"
               className="p-2 cursor-pointer hover:bg-gray-100 font-semibold text-gray-600"
@@ -489,16 +491,18 @@ const DropdownUnitKerja = ({
 
       {showDropdown && !disabled && (
         <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-full">
-          <input
-            type="text"
-            className="border-b rounded-t-lg p-2 w-full bg-white"
-            placeholder={`Filter ${label}`}
-            value={filterQuery}
-            onChange={(e) => setFilterQuery(e.target.value)}
-            autoFocus
-          />
+          <ul className="max-h-44 overflow-y-auto">
+            <li className="py-2 px-2">
+              <input
+                type="text"
+                className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={`Filter ${label}`}
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                autoFocus
+              />
+            </li>
 
-          <ul className="max-h-48 overflow-y-auto">
             <li
               className="p-2 cursor-pointer hover:bg-gray-100"
               onClick={() => handleOptionSelect({ unitKerja: "" })}
@@ -838,15 +842,15 @@ const PopupDetail = ({
                 />
               </Button>
               <Button className="w-24 bg-red-500 hover:bg-red-600">
-              <FontAwesomeIcon
-                icon={faTimesCircle}
-                size="2xl"
-                className=" cursor-pointer"
-                onClick={() => {
-                  handleRejectUserClick(selectedRow.id);
-                }}
+                <FontAwesomeIcon
+                  icon={faTimesCircle}
+                  size="2xl"
+                  className=" cursor-pointer"
+                  onClick={() => {
+                    handleRejectUserClick(selectedRow.id);
+                  }}
                 />
-                </Button>
+              </Button>
             </div>
           </div>
         </div>

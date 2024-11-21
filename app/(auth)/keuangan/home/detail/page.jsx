@@ -4,7 +4,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
-import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 
@@ -40,8 +39,6 @@ export default function Home() {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
-  const [expandedRows, setExpandedRows] = useState({});
-  const [colSpan, setColSpan] = useState(2);
 
   const { token } = useAuth();
   useEffect(() => {
@@ -72,30 +69,6 @@ export default function Home() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
-
-  useEffect(() => {
-    // Function to check the screen width and update colSpan
-    const updateColSpan = () => {
-      setColSpan(window.innerWidth >= 768 ? 3 : 2); // 3 for desktop, 2 for mobile
-    };
-
-    // Initial check
-    updateColSpan();
-
-    // Add event listener to update colSpan on resize
-    window.addEventListener("resize", updateColSpan);
-
-    // Cleanup event listener on component unmount
-    return () => window.removeEventListener("resize", updateColSpan);
-  }, []);
-
-  const toggleRowExpansion = (idx) => {
-    setExpandedRows((prev) => ({
-      ...prev,
-      [idx]: !prev[idx],
-    }));
-  };
-
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
@@ -134,8 +107,9 @@ export default function Home() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="max-w-4xl mx-auto p-6">
             <div className="flex justify-center space-x-4 mb-4 mx-auto mt-12">
@@ -166,46 +140,27 @@ export default function Home() {
                     <tr className="bg-gray-200">
                       <th className="py-3 px-4">Jenis</th>
                       <th className="py-3 px-4">Setor Kabupaten</th>
-                      <th className="py-3 px-4 hidden md:table-cell">
-                        Peruntukan Cabang/Ranting
-                      </th>
+                      <th className="py-3 px-4">Peruntukan Cabang/Ranting</th>
                       <th className="py-3 px-4">Total</th>
                     </tr>
                   </thead>
                   <tbody>
                     {monthData.items.map((item, idx) => (
-                      <>
-                        <tr key={idx} className="border-t">
-                          <td className="py-3 px-4">
-                            {item.jenis}
-                            <button className="lg:hidden" onClick={() => toggleRowExpansion(idx)}>
-                              {expandedRows[idx] ? <FaMinusCircle /> : <FaPlusCircle />}
-                            </button>
-                          </td>
-                          <td className="py-3 px-4">
-                            {item.kabupaten.toLocaleString("id-ID")}
-                          </td>
-                          {/* Display Peruntukan Cabang/Ranting on desktop only */}
-                          <td className="py-3 px-4 hidden md:table-cell">
-                            {item.cabang.toLocaleString("id-ID")}
-                          </td>
-                          <td className="py-3 px-4 font-semibold">
-                            {(item.kabupaten + item.cabang).toLocaleString("id-ID")}
-                          </td>
-                        </tr>
-                        {/* Render additional details if expanded (mobile only) */}
-                        {expandedRows[idx] && (
-                          <tr key={`expanded-${idx}`} className="border-t md:hidden">
-                            <td colSpan="3" className="py-3 px-4">
-                              <div>
-                                <strong>Peruntukan Cabang/Ranting:</strong> {item.cabang.toLocaleString("id-ID")}
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </>
+                      <tr key={idx} className="border-t">
+                        <td className="py-3 px-4">{item.jenis}</td>
+                        <td className="py-3 px-4">
+                          {item.kabupaten.toLocaleString("id-ID")}
+                        </td>
+                        <td className="py-3 px-4">
+                          {item.cabang.toLocaleString("id-ID")}
+                        </td>
+                        <td className="py-3 px-4 font-semibold">
+                          {(item.kabupaten + item.cabang).toLocaleString(
+                            "id-ID"
+                          )}
+                        </td>
+                      </tr>
                     ))}
-                    {/* Total row */}
                     <tr className="border-t bg-gray-100">
                       <td className="py-3 px-4 font-bold">Total</td>
                       <td className="py-3 px-4 font-bold">
@@ -213,7 +168,7 @@ export default function Home() {
                           .reduce((acc, item) => acc + item.kabupaten, 0)
                           .toLocaleString("id-ID")}
                       </td>
-                      <td className="py-3 px-4 font-bold hidden md:table-cell">
+                      <td className="py-3 px-4 font-bold">
                         {monthData.items
                           .reduce((acc, item) => acc + item.cabang, 0)
                           .toLocaleString("id-ID")}
@@ -227,9 +182,8 @@ export default function Home() {
                           .toLocaleString("id-ID")}
                       </td>
                     </tr>
-                    {/* Total Kekurangan */}
                     <tr className="border-t bg-gray-300">
-                      <td className="py-3 px-4 font-bold" colSpan={colSpan}>
+                      <td className="py-3 px-4 font-bold" colSpan="3">
                         Total Kekurangan
                       </td>
                       <td className="py-3 px-4 font-bold">

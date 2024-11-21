@@ -118,15 +118,12 @@ const Page = () => {
   );
 
   const getVisiblePages = () => {
-    const visiblePages = [];
-    const leftLimit = Math.max(1, currentPage - 1);
-    const rightLimit = Math.min(totalPages, currentPage + 1);
-
-    for (let i = leftLimit; i <= rightLimit; i++) {
-      visiblePages.push(i);
-    }
-
-    return visiblePages;
+    const startPage = Math.max(1, currentPage - 1);
+    const endPage = Math.min(totalPages, startPage + 2);
+    return Array.from(
+      { length: endPage - startPage + 1 },
+      (_, i) => startPage + i
+    );
   };
 
   const toggleSidebar = () => {
@@ -146,8 +143,9 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="flex justify-center bg-red-600 py-2 rounded-b-lg shadow-md sm:mt-14 mt-12 sm:-mb-5 -mb-10">
             <h1 className="text-xl font-semibold text-white">
@@ -177,7 +175,7 @@ const Page = () => {
                       onChange={(e) => setSelectedMonth(e.target.value)}
                       className="p-2 border rounded md:ml-4 mb-2 md:mb-0 w-full md:w-auto"
                     >
-                      <option value="">All Months</option>
+                      <option value="">Semua Bulan</option>
                       {Array.from({ length: 12 }, (_, i) => i + 1).map(
                         (month) => (
                           <option key={month} value={month}>
@@ -193,7 +191,7 @@ const Page = () => {
                       onChange={(e) => setSelectedYear(e.target.value)}
                       className="p-2 border rounded md:ml-4 mb-2 md:mb-0 w-full md:w-auto"
                     >
-                      <option value="">All Years</option>
+                      <option value="">Semua Tahun</option>
                       {[
                         ...new Set(
                           data.map((item) =>
@@ -234,13 +232,10 @@ const Page = () => {
                           No
                         </th>
                         <th className="border border-gray-300 p-2 text-center font-bold uppercase">
-                          Foto
-                        </th>
-                        <th className="border border-gray-300 p-2 text-center font-bold uppercase">
-                          Data Lapor
-                        </th>
-                        <th className="border border-gray-300 p-2 text-center font-bold uppercase">
                           Data Meninggal
+                        </th>
+                        <th className="border border-gray-300 p-2 text-center font-bold uppercase">
+                          Data Pelapor
                         </th>
                         <th className="border border-gray-300 p-2 text-center font-bold uppercase hidden lg:table-cell">
                           Cabang
@@ -276,41 +271,6 @@ const Page = () => {
                                   )}
                                 </button>
                               </td>
-                              <td className="border px-4 py-2">
-                                <Image
-                                  src={
-                                    fotoBase64[index]
-                                      ? `data:image/jpeg;base64,${fotoBase64[index]}`
-                                      : profileImageUrl
-                                  }
-                                  alt={`Foto ${item.namaPelapor || "User"}`}
-                                  width={50}
-                                  height={50}
-                                  className="rounded"
-                                  unoptimized={true}
-                                />
-                              </td>
-
-                              <td className="border px-4 py-2">
-                                <div className="text-xs">
-                                  {item.namaPelapor}
-                                </div>
-                                <div className="text-xs">
-                                  {item.jabatanPelapor ||
-                                    "Jabatan tidak tersedia"}
-                                </div>
-                                <div className="text-xs">
-                                  {item.tanggalPelaporan
-                                    ? item.tanggalPelaporan.join("-")
-                                    : "Tanggal tidak tersedia"}
-                                </div>
-                                <div className="text-xs">
-                                  {item.cabangPelapor}
-                                </div>
-                                <div className="text-xs">
-                                  {item.nomorHpPelapor}
-                                </div>
-                              </td>
 
                               <td className="border px-4 py-2">
                                 <div className="text-xs">
@@ -326,6 +286,28 @@ const Page = () => {
                                 </div>
                                 <div className="text-xs">
                                   {item.unitKerjaTerlapor}
+                                </div>
+                              </td>
+
+                              <td className="border px-4 py-2">
+                                <div className="text-xs">
+                                  {item.namaPelapor}
+                                </div>
+                                <div className="text-xs">
+                                  {item.jabatanPelapor ||
+                                    "Jabatan tidak tersedia"}
+                                </div>
+                                <div className="text-xs">
+                                  {item.jamLapor}{", "}
+                                  {item.tanggalPelaporan
+                                    ? item.tanggalPelaporan.join("-")
+                                    : "Tanggal tidak tersedia"}
+                                </div>
+                                <div className="text-xs">
+                                  {item.cabangPelapor}
+                                </div>
+                                <div className="text-xs">
+                                  {item.nomorHpPelapor}
                                 </div>
                               </td>
 
@@ -377,18 +359,20 @@ const Page = () => {
                   </table>
                 </div>
                 {/* Pagination Controls */}
-                <div className="flex justify-center mt-4 gap-1">
+                <div className="flex justify-center space-x-2">
                   <button
                     onClick={() => setCurrentPage(1)}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                    className="p-2 border rounded"
                   >
                     First
                   </button>
                   <button
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
                     disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                    className="p-2 border rounded"
                   >
                     Prev
                   </button>
@@ -397,26 +381,27 @@ const Page = () => {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 border rounded text-sm ${page === currentPage
-                        ? "bg-blue-500 text-white"
-                        : "bg-white hover:bg-gray-50"
-                        }`}
+                      className={`p-2 border rounded ${
+                        page === currentPage ? "bg-blue-500 text-white" : ""
+                      }`}
                     >
                       {page}
                     </button>
                   ))}
 
                   <button
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                    className="p-2 border rounded"
                   >
                     Next
                   </button>
                   <button
                     onClick={() => setCurrentPage(totalPages)}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                    className="p-2 border rounded"
                   >
                     Last
                   </button>

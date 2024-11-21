@@ -37,7 +37,6 @@ function DataAnggota() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
   const [anggota, setAnggota] = useState([]);
-  const [cabang, setCabang] = useState([]);
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [isMobile, setIsMobile] = useState(false);
@@ -67,10 +66,9 @@ function DataAnggota() {
   const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
   const [searchUnit, setSearchUnit] = useState("");
   const [unitKerjaInput, setUnitKerjaInput] = useState("");
-  const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const unitKerjaRef = useRef(null);
-  const profileImageUrl = "/profile.png";
 
   const [originalRekapData, setOriginalRekapData] = useState([]);
 
@@ -191,22 +189,10 @@ function DataAnggota() {
     const searchTerm = e.target.value.toLowerCase();
     setSearchUnit(searchTerm);
     const filtered = allUnitKerja.filter((unit) =>
-       unit.unitKerja.toLowerCase().includes(searchTerm)
+      unit.unitKerja.toLowerCase().includes(searchTerm)
     );
     setFilteredUnitKerja(filtered);
- };
-  // const handleUnitKerjaChange = (e) => {
-  //   const unitValue = e.target.value;
-  //   setFormData((prev) => ({ ...prev, unit: unitValue }));
-
-  //   const filteredUnits = allUnitKerja.filter(
-  //     (unit) =>
-  //       unit.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
-  //       unit.unitKerja.toLowerCase().includes(unitValue.toLowerCase())
-  //   );
-  //   setFilteredUnitKerja(filteredUnits);
-  //   setShowDropdownUnit(true);
-  // };
+  };
 
   useEffect(() => {
     if (!unitKerjaInput && selectedCabang) {
@@ -296,7 +282,7 @@ function DataAnggota() {
         const size = 100;
         const response = await GlobalApi.getAllAnggota(page, size);
         fetchedData = response.data.content || [];
-
+        console.log("data:", response.data);
         if (fetchedData.length > 0) {
           fetchedData.forEach((item) => {
             if (item.foto) {
@@ -361,8 +347,8 @@ function DataAnggota() {
             </thead>
             <tbody>
               ${filteredDataForPrint
-        .map(
-          (item, index) => `
+                .map(
+                  (item, index) => `
                     <tr>
                       <td>${index + 1}</td>
                       <td></td>
@@ -376,19 +362,20 @@ function DataAnggota() {
                         <div>${formatDate(item.tanggalLahir)}</div>
                         <div>${calculateAge(item.tanggalLahir)} Tahun</div>
                         <div>${calculateRetirementDate(
-            item.tanggalLahir,
-            item.statusPegawai
-          )}</div>
+                          item.tanggalLahir,
+                          item.statusPegawai
+                        )}</div>
                       </td>
                       <td>
                         <div>${item.cabang},</div>
                         <div>${item.unitKerja}</div>
-                        <div>Anggota: ${item.tahunDiangkat ? item.tahunDiangkat : "-"
-            }</div>
+                        <div>Anggota: ${
+                          item.tahunDiangkat ? item.tahunDiangkat : "-"
+                        }</div>
                         <div>
                           ${item.pangkatGolongan} || ${formatCurrency(
-              item.iuran
-            )}
+                    item.iuran
+                  )}
                         </div>
                       </td>
                       <td>
@@ -396,8 +383,8 @@ function DataAnggota() {
                       </td>
                     </tr>
                   `
-        )
-        .join("")}
+                )
+                .join("")}
             </tbody>
           </table>
         </body>
@@ -577,13 +564,43 @@ function DataAnggota() {
   const handleKeluarAnggota = async () => {
     try {
       const anggotaId = sessionStorage.getItem("anggotaId");
+      await GlobalApi.keluarAnggota(anggotaId);
       setPopupVisibleKeluar(false);
-      toast.success("Anggota berhasil dihapus!", {
+      toast.success("Anggota berhasil dikeluar!", {
         autoClose: 3000,
       });
     } catch (error) {
       console.error("Gagal mengeluarkan anggota:", error);
-      toast.error("Gagal menghapus anggota.", {
+      toast.error("Gagal mengeluarkan anggota.", {
+        autoClose: 3000,
+      });
+    }
+  };
+
+  const handleDeleteClick = async () => {
+    try {
+      const anggotaId = sessionStorage.getItem("anggotaId");
+
+      if (!anggotaId) {
+        toast.error("ID Anggota tidak ditemukan.");
+        return;
+      }
+
+      const result = await GlobalApi.deleteUser(anggotaId);
+      console.log("Data berhasil dihapus:", result);
+
+      toast.success("Data Anggota Berhasil Dihapus!", {
+        autoClose: 3000,
+      });
+
+      setTimeout(() => {
+        setIsPopupVisible(false);
+        window.location.reload();
+      }, 3000);
+    } catch (error) {
+      console.error("Gagal Menghapus Data:", error);
+
+      toast.error("Gagal pensiun anggota.", {
         autoClose: 3000,
       });
     }
@@ -622,18 +639,6 @@ function DataAnggota() {
     router.push("/anggota/edit-anggota");
   };
 
-  const getVisiblePages = () => {
-    const visiblePages = [];
-    const leftLimit = Math.max(1, currentPage - 1);
-    const rightLimit = Math.min(totalPages, currentPage + 1);
-
-    for (let i = leftLimit; i <= rightLimit; i++) {
-      visiblePages.push(i);
-    }
-
-    return visiblePages;
-  };
-
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -645,8 +650,9 @@ function DataAnggota() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <Toaster
             toastOptions={{
@@ -691,15 +697,17 @@ function DataAnggota() {
 
                     {showDropdownCabang && (
                       <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full ">
-                        <Input
-                          type="text"
-                          value={searchCabang}
-                          onChange={handleCabangChange}
-                          className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                          placeholder="Cari atau ketik Cabang..."
-                          autoFocus
-                        />
-                        <ul className="max-h-48 overflow-y-auto">
+                        <ul className="max-h-44 overflow-y-auto">
+                          <li className="py-2 px-2">
+                            <Input
+                              type="text"
+                              value={searchCabang}
+                              onChange={handleCabangChange}
+                              className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Cari Cabang..."
+                              autoFocus
+                            />
+                          </li>
                           <li
                             className="p-2 cursor-pointer hover:bg-gray-100"
                             onClick={() => {
@@ -745,19 +753,21 @@ function DataAnggota() {
                       />
 
                       {showDropdownUnit && (
-                         <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-2 w-full">
-                          <Input
-                            type="text"
-                            value={searchUnit}
-                            onChange={(e) => {
-                              setSearchUnit(e.target.value);
-                              handleUnitKerjaChange(e);
-                            }}
-                            placeholder="Cari atau ketik Unit Kerja..."
-                            autoFocus
-                            className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-0"
-                          />
-                          <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md max-h-40 overflow-y-auto">
+                        <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-2 w-full">
+                          <ul className="max-h-44 overflow-y-auto">
+                            <li className="py-2 px-2">
+                              <Input
+                                type="text"
+                                value={searchUnit}
+                                onChange={(e) => {
+                                  setSearchUnit(e.target.value);
+                                  handleUnitKerjaChange(e);
+                                }}
+                                placeholder="Cari Unit Kerja..."
+                                autoFocus
+                                className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-0"
+                              />
+                            </li>
                             <li
                               onClick={() => {
                                 setFormData((prev) => ({
@@ -921,7 +931,7 @@ function DataAnggota() {
                       >
                         <td className="p-2 md:p-3 border text-center">
                           <div className="flex justify-center items-center">
-                            {(currentPage - 1) * itemsPerPage + index + 1}
+                            {globalIndex}
                             <Button
                               className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
                               onClick={() => handleExpand(index)}
@@ -935,18 +945,17 @@ function DataAnggota() {
                           </div>
                         </td>
                         <td className="p-2 md:p-3 border">
-                          <Image
-                            src={
-                              fotoBase64[index]
-                                ? `data:image/jpeg;base64,${fotoBase64[index]}`
-                                : profileImageUrl
-                            }
-                            alt={`Foto ${item.namaPelapor || "User"}`}
-                            width={50}
-                            height={50}
-                            className="rounded"
-                            unoptimized={true}
-                          />
+                          {fotoBase64[index] ? (
+                            <Image
+                              src={`data:image/jpeg;base64,${fotoBase64[index]}`}
+                              className="rounded-full mx-auto"
+                              width={100}
+                              height={100}
+                              alt="Belum ada Foto"
+                            />
+                          ) : (
+                            <span>Belum ada foto</span>
+                          )}
                         </td>
                         <td className="p-2 md:p-3 border">
                           <div className="font-bold text-sm">
@@ -976,19 +985,31 @@ function DataAnggota() {
                           <div className="text-sm">{item.unitKerja}</div>
                           <div className="text-sm">
                             Anggota:{" "}
-                            {item.tahunDiangkat ? item.tahunDiangkat : "-"}
+                            {item.tahunDiangkat
+                              ? (() => {
+                                  const date = new Date(item.tahunDiangkat);
+                                  const day = String(date.getDate()).padStart(
+                                    2,
+                                    "0"
+                                  );
+                                  const month = String(
+                                    date.getMonth() + 1
+                                  ).padStart(2, "0");
+                                  const year = date.getFullYear();
+                                  return `${day}-${month}-${year}`;
+                                })()
+                              : "-"}
                           </div>
-                          <div className="text-sm">
-                            {item.pangkatGolongan} ||{" "}
-                            {formatCurrency(item.iuran)}
-                          </div>
+
+                          <div className="text-sm">{item.pangkatGolongan}</div>
                         </td>
                         <td className="p-2 text-center md:p-3 border md:table-cell hidden">
                           <div
-                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
-                              ? "bg-red-200 text-red-900"
-                              : "bg-green-200 text-green-900"
-                              }`}
+                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${
+                              item.status === "BUKAN ANGGOTA"
+                                ? "bg-red-200 text-red-900"
+                                : "bg-green-200 text-green-900"
+                            }`}
                           >
                             {item.role === "USER"
                               ? "Aktif"
@@ -1011,14 +1032,15 @@ function DataAnggota() {
 
                             {sessionStorage.getItem("role") === "USER" ? (
                               <>
-                                <Button
+                                <Link
+                                  href="#"
                                   className="text-white bg-cyan-500 p-2 border rounded-md cursor-not-allowed opacity-50"
                                   title="Mutasi"
                                   type="button"
                                   disabled
                                 >
                                   <FaExchangeAlt className="w-4 h-4" />
-                                </Button>
+                                </Link>
 
                                 <Link
                                   href="#"
@@ -1055,14 +1077,58 @@ function DataAnggota() {
                                   <FaExchangeAlt className="w-4 h-4" />
                                 </Button>
 
-                                <Link
-                                  href="#"
-                                  className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
-                                  title="Lapor"
-                                >
-                                  <FaExclamationTriangle className="w-4 h-4" />
-                                </Link>
+                                {sessionStorage.getItem("role") ===
+                                "SUPERADMIN" ? (
+                                  <Button
+                                    className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
+                                    onClick={() => {
+                                      sessionStorage.setItem(
+                                        "anggotaId",
+                                        item.id
+                                      );
+                                      setIsPopupVisible(true);
+                                    }}
+                                  >
+                                    <FaExclamationTriangle className="w-4 h-4" />
+                                  </Button>
+                                ) : (
+                                  <Link
+                                    href="#"
+                                    className="text-white bg-red-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                    title="Lapor"
+                                    type="button"
+                                    disabled
+                                  >
+                                    <FaExclamationTriangle className="w-4 h-4" />
+                                  </Link>
+                                )}
 
+                                {isPopupVisible && (
+                                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-10 z-40 w-screen h-screen">
+                                    <div className="bg-white p-6 rounded-lg shadow-md w-96">
+                                      <h2 className="text-xl font-semibold text-center mb-4">
+                                        Apakah Anda Yakin ingin Menghapus Data
+                                        Anggota ini?
+                                      </h2>
+                                      <div className="flex justify-end gap-4">
+                                        <button
+                                          onClick={() =>
+                                            setIsPopupVisible(false)
+                                          }
+                                          className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md"
+                                        >
+                                          Batal
+                                        </button>
+                                        <button
+                                          onClick={handleDeleteClick}
+                                          className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                                        >
+                                          Ya, Saya Sakin
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
                                 <Link
                                   href={`https://wa.me/${item.nomorHp}`}
                                   className="text-white bg-green-500 hover:bg-green-600 p-2 border rounded-md"
@@ -1104,10 +1170,11 @@ function DataAnggota() {
                               <div>Anggota: {item.gabung}</div>
                               <div>{item.golongan}</div>
                               <div
-                                className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${item.status === "BUKAN ANGGOTA"
-                                  ? "bg-red-200 text-red-900"
-                                  : "bg-green-200 text-green-900"
-                                  }`}
+                                className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${
+                                  item.status === "BUKAN ANGGOTA"
+                                    ? "bg-red-200 text-red-900"
+                                    : "bg-green-200 text-green-900"
+                                }`}
                               >
                                 {item.role === "USER"
                                   ? "Aktif"
@@ -1159,51 +1226,7 @@ function DataAnggota() {
                 })}
               </tbody>
             </table>
-            <div className="flex justify-center mt-4 gap-1">
-              <button
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-              >
-                First
-              </button>
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-              >
-                Prev
-              </button>
-
-              {getVisiblePages().map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-3 py-1 border rounded text-sm ${page === currentPage
-                    ? "bg-blue-500 text-white"
-                    : "bg-white hover:bg-gray-50"
-                    }`}
-                >
-                  {page}
-                </button>
-              ))}
-
-              <button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-              >
-                Next
-              </button>
-              <button
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-              >
-                Last
-              </button>
-            </div>
-            {/* <div className="flex justify-end items-center mb-4">
+            <div className="flex justify-end items-center mb-4">
               {totalItems > itemsPerPage && (
                 <>
                   <Button
@@ -1258,7 +1281,7 @@ function DataAnggota() {
                   </Button>
                 </>
               )}
-            </div> */}
+            </div>
           </div>
 
           <Modal
@@ -1342,16 +1365,16 @@ function DataAnggota() {
                         </p>
                         <div className="flex justify-center gap-4">
                           <button
-                            onClick={handleKeluarAnggota}
-                            className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
-                          >
-                            Ya, Saya Yakin
-                          </button>
-                          <button
                             onClick={handleCancelKeluar}
                             className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition duration-200"
                           >
                             Batal
+                          </button>
+                          <button
+                            onClick={handleKeluarAnggota}
+                            className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                          >
+                            Ya, Saya Yakin
                           </button>
                         </div>
                       </div>
@@ -1377,16 +1400,16 @@ function DataAnggota() {
                         </p>
                         <div className="flex justify-center gap-4">
                           <button
-                            onClick={handlePensiunAnggota}
-                            className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
-                          >
-                            Ya, Saya Yakin
-                          </button>
-                          <button
                             onClick={handleCancelKeluar}
                             className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition duration-200"
                           >
                             Batal
+                          </button>
+                          <button
+                            onClick={handlePensiunAnggota}
+                            className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                          >
+                            Ya, Saya Yakin
                           </button>
                         </div>
                       </div>

@@ -535,33 +535,32 @@ const getAllFiles = async () => {
   }
 };
 
-// Fungsi untuk mengambil semua data dari calculate-sanduka/cabang-all
 const getCalculateSandukaAll = async (bulan, tahun) => {
   try {
-    // Dapatkan bulan dan tahun saat ini jika tidak diberikan
-    const today = new Date();
-    const currentMonth = today.toLocaleString("default", { month: "long" }); // e.g., "September"
-    const currentYear = today.getFullYear(); // e.g., 2024
 
-    // Gunakan bulan dan tahun saat ini jika bulan atau tahun tidak diberikan
+    const today = new Date();
+    const currentMonth = today.toLocaleString("default", { month: "long" }); 
+    const currentYear = today.getFullYear(); 
+
+ 
     const xbulan = bulan || currentMonth;
     const xtahun = tahun || currentYear;
 
-    // Lakukan request ke API dengan parameter bulan dan tahun yang telah diset
+   
     const response = await axiosClient.get(
       "/api/calculate-sanduka/cabang-all",
       {
         params: {
-          xbulan: xbulan, // Parameter bulan
-          xtahun: xtahun, // Parameter tahun
+          xbulan: xbulan, 
+          xtahun: xtahun, 
         },
       }
     );
 
-    // Kembalikan data jika sukses
+   
     return response.data;
   } catch (error) {
-    // Tangani error
+    
     console.error("Error fetching calculate sanduka cabang all:", error);
     throw error;
   }
@@ -574,7 +573,7 @@ const getTableIuran = async (bulan, tahun, cabang) => {
     const response = await axiosClient.get(
       `/api/iuran/total-sumbangan?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
     );
-    return response.data; // Kembalikan data yang didapat dari API
+    return response.data; 
   } catch (error) {
     console.error("Error fetching total sumbangan:", error);
     throw error;
@@ -584,7 +583,7 @@ const getTableIuran = async (bulan, tahun, cabang) => {
 const getSaldoSanduka = async () => {
   try {
     const response = await axiosClient.get("/api/sanduka/saldo-sanduka");
-    return response.data; // Kembalikan data yang didapat dari API
+    return response.data;
   } catch (error) {
     console.error("Error fetching saldo sanduka:", error);
     throw error;
@@ -594,7 +593,7 @@ const getSaldoSanduka = async () => {
 const getSaldoOrganisasi = async () => {
   try {
     const response = await axiosClient.get("/api/sanduka/saldo-organisasi");
-    return response.data; // Kembalikan data yang didapat dari API
+    return response.data;
   } catch (error) {
     console.error("Error fetching saldo organisasi:", error);
     throw error;
@@ -620,7 +619,7 @@ const editPemasukanUangMasuk = async (noBukti) => {
 const getTotalAnggota = async () => {
   try {
     const response = await axiosClient.get("/api/iuran/total-anggota");
-    return response.data; // Kembalikan data yang didapat dari API
+    return response.data;
   } catch (error) {
     console.error("Error fetching total anggota:", error);
     throw error;
@@ -641,7 +640,7 @@ const getIuranByFilter = async (iuran) => {
 const createIuranData = async (payload) => {
   try {
     const response = await axiosClient.post("/api/iuran", payload);
-    return response.data; // Kembalikan data yang didapat dari API
+    return response.data;
   } catch (error) {
     console.error("Error creating iuran data:", error);
     throw error;
@@ -651,7 +650,7 @@ const createIuranData = async (payload) => {
 const createTargetIuaran = async (payload) => {
   try {
     const response = await axiosClient.post("/api/target-sanduka", payload);
-    return response.data; // Kembalikan data yang didapat dari API
+    return response.data;
   } catch (error) {
     console.error("Error creating target iuran data:", error);
     throw error;
@@ -663,20 +662,20 @@ const createTargetIuaran = async (payload) => {
 const createDaspenData = async (payload) => {
   try {
     const response = await axiosClient.post("/api/tabel-daspen", payload);
-    return response.data; // Return the data from the response
+    return response.data;
   } catch (error) {
     console.error("Error creating daspen data:", error);
-    throw error; // Throw the error to handle it elsewhere
+    throw error;
   }
 };
 // (Target Daspen)
 const createTargetDaspen = async (payload) => {
   try {
     const response = await axiosClient.post("/api/target-daspen", payload);
-    return response.data; // Return the data from the response
+    return response.data;
   } catch (error) {
     console.error("Error creating data target daspen :", error);
-    throw error; // Throw the error to handle it elsewhere
+    throw error;
   }
 };
 // Table Daspen
@@ -685,7 +684,7 @@ const getTableDaspen = async (bulan, tahun, cabang) => {
     const response = await axiosClient.get(
       `/api/target-daspen/summary?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
     );
-    return response.data; // Kembalikan data yang didapat dari API
+    return response.data;
   } catch (error) {
     console.error("Error fetching total sumbangan:", error);
     throw error;
@@ -696,19 +695,19 @@ const getTableDaspen = async (bulan, tahun, cabang) => {
 const createDerapData = async (payload) => {
   try {
     const response = await axiosClient.post("/api/derap", payload);
-    return response.data; // Return the data from the response
+    return response.data;
   } catch (error) {
     console.error("Error creating derap data:", error);
-    throw error; // Throw the error to handle it elsewhere
+    throw error;
   }
 };
 const createTargetDerap = async (payload) => {
   try {
     const response = await axiosClient.post("/api/target-derap", payload);
-    return response.data; // Return the data from the response
+    return response.data;
   } catch (error) {
     console.error("Error creating target derap data:", error);
-    throw error; // Throw the error to handle it elsewhere
+    throw error;
   }
 };
 const getTableDerap = async (bulan, tahun, cabang) => {
@@ -716,7 +715,7 @@ const getTableDerap = async (bulan, tahun, cabang) => {
     const response = await axiosClient.get(
       `/api/target-derap/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
     );
-    return response.data; // Kembalikan data yang didapat dari API
+    return response.data;
   } catch (error) {
     console.error("Error fetching total sumbangan:", error);
     throw error;
@@ -727,19 +726,19 @@ const getTableDerap = async (bulan, tahun, cabang) => {
 const createKalenderData = async (payload) => {
   try {
     const response = await axiosClient.post("/api/kalender", payload);
-    return response.data; // Return the data from the response
+    return response.data;
   } catch (error) {
     console.error("Error creating derap data:", error);
-    throw error; // Throw the error to handle it elsewhere
+    throw error;
   }
 };
 const createTargetKalender = async (payload) => {
   try {
     const response = await axiosClient.post("/api/target-kalender", payload);
-    return response.data; // Return the data from the response
+    return response.data;
   } catch (error) {
     console.error("Error creating target derap data:", error);
-    throw error; // Throw the error to handle it elsewhere
+    throw error;
   }
 };
 const getTableKalender = async (bulan, tahun, cabang) => {
@@ -747,7 +746,7 @@ const getTableKalender = async (bulan, tahun, cabang) => {
     const response = await axiosClient.get(
       `/api/target-kalender/tabel?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
     );
-    return response.data; // Kembalikan data yang didapat dari API
+    return response.data;
   } catch (error) {
     console.error("Error fetching total Kalender:", error);
     throw error;
@@ -784,7 +783,7 @@ const getTablePemasukanSanduka = async (month, year) => {
     const response = await axiosClient.get(
       `/api/uang-masuk-keluar/tabel?month=${month}&year=${year}`
     );
-    return response.data; // Kembalikan data yang didapat dari API
+    return response.data;
   } catch (error) {
     console.error("Error fetching Uang Masuk Keluar:", error);
     throw error;
@@ -793,10 +792,10 @@ const getTablePemasukanSanduka = async (month, year) => {
 const createPembayaranSanduka = async (payload) => {
   try {
     const response = await axiosClient.post("/api/uang-masuk-keluar", payload);
-    return response.data; // Return the data from the response
+    return response.data;
   } catch (error) {
     console.error("Error creating pembayaran sanduka data:", error);
-    throw error; // Throw the error to handle it elsewhere
+    throw error;
   }
 };
 // Rekap Lapor Sanduka
@@ -845,7 +844,7 @@ const getTableTargetRealisasi = async (
       `/api/laporan-target-realisasi?bulan=${bulan}&tahun=${tahun}&inputKecamatan=${inputKecamatan}&bulanuangmasuk=${bulanuangmasuk}`
       // Pastikan '=' ditambahkan di sini
     );
-    return response.data; // Kembalikan data yang didapat dari API
+    return response.data;
   } catch (error) {
     console.error("Error fetching total Target Realisasi:", error);
     throw error;
@@ -1032,7 +1031,6 @@ const mutasiCabangUnitKerja = async (idAnggota, cabang, unitKerja) => {
 // AKSI Pelaporan Anggota
 const batalLaporanById = async (id) => {
   try {
-    // Endpoint untuk membatalkan laporan dengan ID
     const response = await axiosClient.put(`/api/laporan/${id}/batal`);
     console.log("Laporan berhasil dibatalkan:", response.data);
     return response.data;
@@ -1044,7 +1042,7 @@ const batalLaporanById = async (id) => {
 
 const verifikasiLaporanById = async (id, data) => {
   try {
-    // Endpoint untuk mengupdate tanggal santunan berdasarkan ID
+    
     const response = await axiosClient.put(
       `/api/laporan/${id}/tanggal-santunan`,
       data
@@ -1056,6 +1054,17 @@ const verifikasiLaporanById = async (id, data) => {
     throw error.response?.data || error.message;
   }
 };
+
+// Delete USER
+const deleteUser = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/auth/user/${id}`)
+    return response.data
+  } catch (error) {
+    console.error("Error fetching user data: ", error)
+    throw error;
+  }
+} 
 
 // Export all functions
 export default {
@@ -1140,5 +1149,6 @@ export default {
   createKwitansiByIdAndNpa,
   getKwitansiByIdAndNpa,
   searchUsersByName,
+  deleteUser,
   getHistoryDataById,
 };
