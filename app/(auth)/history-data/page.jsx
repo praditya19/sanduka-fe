@@ -59,7 +59,32 @@ const Page = () => {
 
   const fetchData = async () => {
     try {
-      const historyResponse = await GlobalApi.getHistoryData(page, size);
+      const role = sessionStorage.getItem("role");
+      const userId = sessionStorage.getItem("userId");
+
+      if (role === "USER" && userId) {
+        // Jika role adalah USER, ambil data spesifik user
+        const userData = await GlobalApi.getHistoryDataById(userId);
+
+        // Pastikan data npaDetail ada
+        const npaDetail = userData.npa
+          ? await GlobalApi.cekNpaList([userData.npa])
+          : null;
+
+        const enrichedData = [
+          {
+            ...userData,
+            npaDetail: npaDetail?.[0] || {}, // Ambil detail NPA jika tersedia
+          },
+        ];
+
+        setData(enrichedData);
+        return; // Keluar dari fungsi setelah data USER diambil
+      }
+
+      // Jika bukan USER, ambil data history secara umum
+      const pageIndex = currentPage - 1; // Konversi currentPage ke zero-based index
+      const historyResponse = await GlobalApi.getHistoryData(pageIndex, itemsPerPage);
       const historyData = historyResponse.content;
       setTotalPages(historyResponse.totalPages);
 
@@ -378,38 +403,18 @@ const Page = () => {
                       Previous
                     </button>
 
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      if (
-                        index < 3 ||
-                        index > totalPages - 4 ||
-                        (index >= page - 1 && index <= page + 1)
-                      ) {
-                        return (
-                          <button
-                            key={index}
-                            onClick={() => setPage(index)}
-                            className={`px-3 py-1 border text-sm rounded ${
-                              page === index
-                                ? "bg-blue-500 text-white"
-                                : "bg-white"
-                            }`}
-                          >
-                            {index + 1}
-                          </button>
-                        );
-                      }
-                      if (index === 3 || index === totalPages - 4) {
-                        return (
-                          <span
-                            key={index}
-                            className="px-3 py-1 border text-sm rounded text-gray-500"
-                          >
-                            ...
-                          </span>
-                        );
-                      }
-                      return null;
-                    })}
+                    {getVisiblePages().map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                          ? "bg-blue-500 text-white"
+                          : "bg-white hover:bg-gray-50"
+                          }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
 
                     <button
                       onClick={handleNextPage}

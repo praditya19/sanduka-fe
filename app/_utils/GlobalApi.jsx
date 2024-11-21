@@ -411,6 +411,39 @@ const getHistoryData = async (page = 0, size = 10) => {
     throw error;
   }
 };
+
+const getHistoryDataById = async (userId) => {
+  try {
+    // Ambil data login berdasarkan userId
+    const loginHistoryResponse = await axiosClient.get(`/api/history/user/${userId}/login`);
+    const loginHistory = loginHistoryResponse.data;
+
+    // Ambil data mutasi cabang/unit kerja berdasarkan userId
+    const mutasiHistoryResponse = await axiosClient.get(`/api/history/user/${userId}/mutasi`);
+    const mutasiHistory = mutasiHistoryResponse.data;
+
+    // Gabungkan kedua data menjadi satu histori
+    const combinedHistory = [
+      ...loginHistory.map((item) => ({
+        ...item,
+        type: "Login", // Tambahkan tipe data untuk membedakan
+      })),
+      ...mutasiHistory.map((item) => ({
+        ...item,
+        type: "Mutasi", // Tambahkan tipe data untuk membedakan
+      })),
+    ];
+
+    // Sortir data berdasarkan timestamp (jika ada)
+    combinedHistory.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    return combinedHistory;
+  } catch (error) {
+    console.error("Error fetching history data:", error);
+    throw error;
+  }
+};
+
 const cekNpaList = async (npaList) => {
   try {
     const response = await axiosClient.get(
@@ -1117,4 +1150,5 @@ export default {
   getKwitansiByIdAndNpa,
   searchUsersByName,
   deleteUser,
+  getHistoryDataById,
 };

@@ -252,6 +252,7 @@ export default function IconGrid() {
             "Ketentuan",
             "Bantuan",
             "Data Anggota",
+            "History data",
           ].includes(item.label)
         )
       : icons;
