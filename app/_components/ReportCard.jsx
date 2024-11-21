@@ -313,22 +313,34 @@ export default function ReportCard() {
           Catatan :{dataList[currentSlide]?.keteranganTerlapor}
         </p>
         <div className="flex justify-around mb-4">
-          <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-1 px-3 rounded-full transition duration-300">
-            <FontAwesomeIcon icon={faLocation} className="mr-2" /> Lokasi
-          </button>
-          <button
-            className="bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded-full transition duration-300"
-            onClick={handleBatalClick}
-          >
-            <FontAwesomeIcon icon={faCancel} className="mr-2" /> Batal
-          </button>
-          <button
-            className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-1 px-3 rounded-full transition duration-300"
-            onClick={handleVerifikasiClick}
-          >
-            <FontAwesomeIcon icon={faCheck} className="mr-2" /> Verifikasi
-          </button>
-        </div>
+  <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-1 px-3 rounded-full transition duration-300">
+    <FontAwesomeIcon icon={faLocation} className="mr-2" /> Lokasi
+  </button>
+  <button
+    className={`${
+      ["ADMIN", "SUPERADMIN"].includes(sessionStorage.getItem("role"))
+        ? "bg-red-600 hover:bg-red-700"
+        : "bg-gray-400 cursor-not-allowed"
+    } text-white font-medium py-1 px-3 rounded-full transition duration-300`}
+    onClick={handleBatalClick}
+    disabled={!["ADMIN", "SUPERADMIN"].includes(sessionStorage.getItem("role"))}
+  >
+    <FontAwesomeIcon icon={faCancel} className="mr-2" /> Batal
+  </button>
+  <button
+    className={`${
+      ["ADMIN", "SUPERADMIN"].includes(sessionStorage.getItem("role"))
+        ? "bg-purple-600 hover:bg-purple-700"
+        : "bg-gray-400 cursor-not-allowed"
+    } text-white font-medium py-1 px-3 rounded-full transition duration-300`}
+    onClick={handleVerifikasiClick}
+    disabled={!["ADMIN", "SUPERADMIN"].includes(sessionStorage.getItem("role"))}
+  >
+    <FontAwesomeIcon icon={faCheck} className="mr-2" /> Verifikasi
+  </button>
+</div>
+
+
         <div className="bg-blue-700 text-white font-medium py-2 px-4 rounded-full text-center flex items-center justify-center mb-4">
           <FontAwesomeIcon icon={faBullhorn} className="mr-2" /> PELAPOR
         </div>

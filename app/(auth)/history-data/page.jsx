@@ -62,6 +62,7 @@ const Page = () => {
       // Convert currentPage to zero-based index for API
       const pageIndex = currentPage - 1;
       const historyResponse = await GlobalApi.getHistoryData(pageIndex, itemsPerPage);
+      console.log("Data", historyResponse)
       const historyData = historyResponse.content;
       setTotalItems(historyResponse.totalElements);
  
