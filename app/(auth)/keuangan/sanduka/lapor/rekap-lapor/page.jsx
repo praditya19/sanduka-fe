@@ -127,7 +127,6 @@ const Page = () => {
     console.log(`Nama Anggota yang diambil: ${namaAnggota}`);
 
     try {
-      
       const response = await GlobalApi.searchUsersByName(namaAnggota);
       console.log("Response searchUsersByName:", response);
 
@@ -138,19 +137,16 @@ const Page = () => {
         console.log(`ID yang ditemukan: ${id}, NPA PGRI: ${npaPgri}`);
 
         try {
-          
           const kwitansiResponse = await GlobalApi.getKwitansiByIdAndNpa(
             id,
             npaPgri
           );
           console.log("Response getKwitansiByIdAndNpa:", kwitansiResponse);
 
-          
           const blob = kwitansiResponse.data;
           const imageUrl = URL.createObjectURL(blob);
           setKwitansiData(imageUrl);
 
-          
           setPopupVisible(true);
         } catch (error) {
           console.error("Error saat mengambil gambar kwitansi:", error);
@@ -598,7 +594,7 @@ const Page = () => {
                                 {kwitansiData ? (
                                   <div className="flex justify-center">
                                     <img
-                                      src={kwitansiData} 
+                                      src={kwitansiData}
                                       alt="Gambar Kwitansi"
                                       className="w-full max-h-96 object-contain"
                                     />
@@ -611,7 +607,7 @@ const Page = () => {
                                   className="mt-4 bg-teal-500 text-white py-2 px-4 rounded"
                                   onClick={() => {
                                     setPopupVisible(false);
-                                    URL.revokeObjectURL(kwitansiData); 
+                                    URL.revokeObjectURL(kwitansiData);
                                     setKwitansiData(null);
                                   }}
                                 >
