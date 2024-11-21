@@ -59,8 +59,31 @@ const Page = () => {
 
   const fetchData = async () => {
     try {
-      // Convert currentPage to zero-based index for API
-      const pageIndex = currentPage - 1;
+      const role = sessionStorage.getItem("role");
+      const userId = sessionStorage.getItem("userId");
+
+      if (role === "USER" && userId) {
+        // Jika role adalah USER, ambil data spesifik user
+        const userData = await GlobalApi.getHistoryDataById(userId);
+
+        // Pastikan data npaDetail ada
+        const npaDetail = userData.npa
+          ? await GlobalApi.cekNpaList([userData.npa])
+          : null;
+
+        const enrichedData = [
+          {
+            ...userData,
+            npaDetail: npaDetail?.[0] || {}, // Ambil detail NPA jika tersedia
+          },
+        ];
+
+        setData(enrichedData);
+        return; // Keluar dari fungsi setelah data USER diambil
+      }
+
+      // Jika bukan USER, ambil data history secara umum
+      const pageIndex = currentPage - 1; // Konversi currentPage ke zero-based index
       const historyResponse = await GlobalApi.getHistoryData(pageIndex, itemsPerPage);
       const historyData = historyResponse.content;
       setTotalItems(historyResponse.totalElements);
@@ -365,8 +388,8 @@ const Page = () => {
                         key={page}
                         onClick={() => setCurrentPage(page)}
                         className={`px-3 py-1 border rounded text-sm ${page === currentPage
-                            ? "bg-blue-500 text-white"
-                            : "bg-white hover:bg-gray-50"
+                          ? "bg-blue-500 text-white"
+                          : "bg-white hover:bg-gray-50"
                           }`}
                       >
                         {page}

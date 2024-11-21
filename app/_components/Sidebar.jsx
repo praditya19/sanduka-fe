@@ -149,6 +149,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
             "Ketentuan",
             "Bantuan",
             "Data Anggota",
+            "History data",
           ].includes(item.label)
         )
       : icons;
