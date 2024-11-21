@@ -32,6 +32,24 @@ function RekapAnggota() {
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [totalSumbanganPerCabang, setTotalSumbanganPerCabang] = useState(0);
 
+  const getVisiblePages = () => {
+    const maxVisiblePages = 2;
+    const halfVisiblePages = Math.floor(maxVisiblePages / 2);
+ 
+    let startPage = Math.max(1, currentPage - halfVisiblePages);
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+ 
+    // Adjust start page if end page is less than max visible pages
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+ 
+    return Array.from(
+      { length: endPage - startPage + 1 },
+      (_, index) => startPage + index
+    );
+  };
+
   useEffect(() => {
     const fetchCabangData = async () => {
       try {
@@ -454,20 +472,19 @@ function RekapAnggota() {
                   </th>
                 </tr>
               </thead>
-              <tbody>
-                {rekapData.length > 0 && selectedCabang ? (
-                  rekapData.map((item, index) => (
-                    <>
-                      <tr key={item.id}>
+           <tbody>
+                {paginatedData.length > 0 && selectedCabang ? (
+                  paginatedData.map((item, index) => (
+                    <React.Fragment key={item.id}>
+                      <tr>
                         <td className="p-2 md:p-3 border text-center">
                           <div className="flex justify-center items-center">
-                            {index + 1}
-
+                            {startIndex + index + 1}
                             <Button
                               className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
-                              onClick={() => handleExpand(index)}
+                              onClick={() => handleExpand(startIndex + index)}
                             >
-                              {expandedIndex === index ? (
+                              {expandedIndex === startIndex + index ? (
                                 <FaMinusCircle />
                               ) : (
                                 <FaPlusCircle />
@@ -487,7 +504,6 @@ function RekapAnggota() {
                         <td className="p-2 md:p-3 border text-center">
                           {item.pesertaDaspenCount}
                         </td>
-
                         <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
                           {item.totalCount}
                         </td>
@@ -495,8 +511,8 @@ function RekapAnggota() {
                           {item.totalSumbangan}
                         </td>
                       </tr>
-
-                      {expandedIndex === index && (
+ 
+                      {expandedIndex === startIndex + index && (
                         <tr className="lg:hidden bg-gray-100">
                           <td colSpan="5" className="p-2 md:p-3 border text-sm">
                             <div>
@@ -509,7 +525,7 @@ function RekapAnggota() {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </React.Fragment>
                   ))
                 ) : (
                   <tr>
@@ -518,12 +534,8 @@ function RekapAnggota() {
                     <td className="p-2 md:p-3 border text-center">0</td>
                     <td className="p-2 md:p-3 border text-center">0</td>
                     <td className="p-2 md:p-3 border text-center">0</td>
-                    <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
-                      0
-                    </td>
-                    <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
-                      0
-                    </td>
+                    <td className="p-2 md:p-3 border text-center hidden lg:table-cell">0</td>
+                    <td className="p-2 md:p-3 border text-center hidden lg:table-cell">0</td>
                   </tr>
                 )}
               </tbody>
@@ -550,23 +562,48 @@ function RekapAnggota() {
             </table>
           </div>
 
-          <div className="flex justify-end items-center mb-4">
+          <div className="flex justify-center mt-4 gap-1">
             <button
-              onClick={handlePreviousPage}
+              onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="mr-2 px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
+              className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
             >
-              Previous
+              First
             </button>
-            <span>
-              Page {currentPage} of {totalPages}
-            </span>
             <button
-              onClick={handleNextPage}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+            >
+              Prev
+            </button>
+ 
+            {getVisiblePages().map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                  ? "bg-blue-500 text-white"
+                  : "bg-white hover:bg-gray-50"
+                  }`}
+              >
+                {page}
+              </button>
+            ))}
+ 
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="ml-2 px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
+              className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
             >
               Next
+            </button>
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+            >
+              Last
             </button>
           </div>
         </div>
