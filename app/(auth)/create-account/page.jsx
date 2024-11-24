@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,11 +42,16 @@ const Page = () => {
   const [base64String, setBase64String] = useState("");
   const [today, setToday] = useState("");
   const router = useRouter();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const handleOpenModal = () => setIsModalOpen(true);
-  const handleCloseModal = () => setIsModalOpen(false);
-  const [showPopup, setShowPopup] = useState(false);
-  const [userData, setUserData] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false); // State untuk mengontrol tampilan dropdown
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
+  const [searchTermUnitKerja, setSearchTermUnitKerja] = useState("");
+  const [filteredUnitKerjaByCabang, setFilteredUnitKerjaByCabang] = useState(
+    []
+  );
+  const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
+  const [allUnitKerja, setAllUnitKerja] = useState([]);
+  const dropdownRef = useRef(null);
 
   const updateUnitKerja = (kecamatan) => {
     const filteredUnitKerja = unitKerja.filter((item) => {
@@ -55,10 +60,25 @@ const Page = () => {
     setFilteredUnitKerja(filteredUnitKerja);
   };
 
-  const handleCabangChange = (value) => {
-    setSelectedCabang(value);
-    updateUnitKerja(value);
-  };
+  useEffect(() => {
+    if (!allUnitKerja.length) return; // Pastikan data tersedia
+
+    if (selectedCabang) {
+      const filtered = allUnitKerja.filter(
+        (unit) =>
+          unit.cabang === selectedCabang &&
+          unit.unitKerja
+            .toLowerCase()
+            .includes(searchTermUnitKerja.toLowerCase())
+      );
+      setFilteredUnitKerjaByCabang(filtered);
+    } else {
+      const filteredData = allUnitKerja.filter((item) =>
+        item.unitKerja.toLowerCase().includes(searchTermUnitKerja.toLowerCase())
+      );
+      setFilteredUnitKerjaByCabang(filteredData);
+    }
+  }, [selectedCabang, searchTermUnitKerja, allUnitKerja]);
 
   useEffect(() => {
     const currentDate = new Date().toISOString().split("T")[0];
@@ -69,7 +89,6 @@ const Page = () => {
     fetchData();
     fetchJabatan();
     fetchGolonganJabatan();
-    fetchUnitKerja();
   }, []);
 
   const fetchData = async () => {
@@ -99,14 +118,21 @@ const Page = () => {
     }
   };
 
-  const fetchUnitKerja = async () => {
-    try {
-      const response = await GlobalApi.getUnitKerja();
-      setUnitKerja(response.data);
-    } catch (error) {
-      console.error("Error fetching recipes:", error);
-    }
-  };
+  useEffect(() => {
+    const fetchUnitKerja = async () => {
+      try {
+        const response = await GlobalApi.getUnitKerja(); // Sesuaikan API Anda
+        setAllUnitKerja(response.data);
+      } catch (error) {
+        console.error("Gagal memuat data Unit Kerja", error);
+      }
+    };
+    fetchUnitKerja();
+  }, []);
+
+  const filteredCabang = cabang.filter((item) =>
+    item.kecamatan.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleGetLocation = () => {
     setLoading(true);
@@ -115,16 +141,15 @@ const Page = () => {
         (position) => {
           setLatitude(position.coords.latitude);
           setLongitude(position.coords.longitude);
-          setError("");
           setLoading(false);
         },
-        (error) => {
-          setError("Unable to retrieve your location. Please try again.");
+        () => {
+          toast.error("Gagal mendapatkan lokasi.");
           setLoading(false);
         }
       );
     } else {
-      setError("Geolocation is not supported by this browser.");
+      toast.error("Geolocation tidak tersedia di perangkat Anda.");
       setLoading(false);
     }
   };
@@ -133,41 +158,87 @@ const Page = () => {
     const npaValue = document.getElementById("npaPgri").value;
 
     try {
+      // Panggil API untuk mengecek NPA
       const response = await GlobalApi.cekNpa(npaValue);
 
-      if (response) {
-        const updatedData = {
-          cabang: response.cabang,
-          email: response.email,
-          foto: response.foto,
-          jabatan: response.jabatan,
-          namaLengkap: response.namaLengkap,
-          noHp: response.noHp,
-          npaPgri: response.npaPgri,
-          password: response.password,
-          role: response.role,
-        };
+      console.log("Respons API:", response); // Debugging respons API
 
-        const updateResponse = await GlobalApi.updateRegisUser(
-          response.id,
-          updatedData
-        );
-        console.log(
-          "Data berhasil diperbarui dan dikirim ke database:",
-          updateResponse
-        );
-
-        toast.success("Data Anda telah disinkronkan!");
-      } else {
-        toast.error(
-          "Data dengan NPA PGRI tidak ditemukan. Silakan registrasi."
-        );
+      // Jika data ditemukan
+      if (response?.id) {
+        toast.success("NPA Sudah Terdaftar!");
+        setTimeout(() => {
+          router.push(`/sign-in`); // Arahkan ke halaman Home
+        }, 3000);
       }
     } catch (error) {
-      console.error("Error saat mengecek NPA:", error.message);
-      toast.error("Terjadi kesalahan. Silakan coba lagi.");
+      if (error.response?.status === 404) {
+        // Jika respons API adalah 404 (NPA tidak ditemukan)
+        toast("NPA tidak ditemukan. Silakan lanjutkan registrasi.", {
+          icon: "ℹ️",
+        });
+      } else {
+        // Error lainnya (server atau jaringan)
+        console.error("Error saat mengecek NPA:", error.message);
+        toast("NPA tidak ditemukan. Silakan lanjutkan registrasi.", {
+          icon: "ℹ️",
+        });
+      }
     }
   };
+
+  // const handleCekNpaClick = async () => {
+  //   const npaValue = document.getElementById("npaPgri").value;
+
+  //   try {
+  //     const response = await GlobalApi.cekNpa(npaValue);
+
+  //     if (response) {
+  //       const updatedData = {
+  //         cabang: response.cabang,
+  //         email: response.email,
+  //         foto: response.foto,
+  //         jabatan: response.jabatan,
+  //         namaLengkap: response.namaLengkap,
+  //         noHp: response.noHp,
+  //         npaPgri: response.npaPgri,
+  //         password: response.password,
+  //         role: response.role,
+  //       };
+
+  //       const updateResponse = await GlobalApi.updateRegisUser(
+  //         response.id,
+  //         updatedData
+  //       );
+  //       console.log(
+  //         "Data berhasil diperbarui dan dikirim ke database:",
+  //         updateResponse
+  //       );
+
+  //       toast.success("Data Anda telah disinkronkan!");
+  //     } else {
+  //       toast.error(
+  //         "Data dengan NPA PGRI tidak ditemukan. Silakan registrasi."
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error("Error saat mengecek NPA:", error.message);
+  //     toast.error("Terjadi kesalahan. Silakan coba lagi.");
+  //   }
+  // };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -234,26 +305,51 @@ const Page = () => {
       longitude,
       foto: base64String,
     };
+    console.log("Data yang akan dikirim ke database:", finalData);
 
     try {
       const response = await GlobalApi.registerUser(finalData);
+      console.log("Response dari API:", response);
       toast.success("Anda Berhasil Mendaftar Menjadi Anggota Sanduka");
       setTimeout(() => {
         router.push("/sign-in");
-      }, 2000);
+      }, 5000);
     } catch (error) {
       toast.error("Anda Tidak Berhasil Mendaftar Menjadi Anggota Sanduka");
     }
   };
 
   const nextStep = () => {
+    // Validasi file sebelum melanjutkan
     if (!selectedFile) {
-      setError("Harap unggah gambar sebelum melanjutkan.");
+      toast.error("Harap unggah gambar sebelum melanjutkan.");
       return;
     }
 
+    // Validasi ukuran file
+    const maxFileSize = 250 * 1024; // 250 KB
+    if (selectedFile.size > maxFileSize) {
+      toast.error("Ukuran file tidak boleh lebih dari 250KB.");
+      return;
+    }
+
+    // Validasi format file
+    const validFormats = ["image/jpeg", "image/png", "image/jpg"];
+    if (!validFormats.includes(selectedFile.type)) {
+      toast.error(
+        "Format file tidak didukung. Harap unggah file jpg, jpeg, atau png."
+      );
+      return;
+    }
+
+    // Validasi apakah lokasi sudah diambil
+    if (!latitude || !longitude) {
+      toast.error("Anda harus mendapatkan lokasi terlebih dahulu.");
+      return;
+    }
+
+    // Jika validasi lolos
     setStep(step + 1);
-    setError("");
   };
 
   const prevStep = () => {
@@ -261,7 +357,7 @@ const Page = () => {
   };
 
   return (
-    <div className="max-w-screen-lg mx-auto px-4 py-6">
+    <div className="w-full mx-auto px-4 py-6 bg-slate-200">
       <div className="container mx-auto max-w-screen-lg sm:max-w-full md:max-w-screen-lg px-4">
         <Toaster />
         {step === 1 && (
@@ -275,6 +371,7 @@ const Page = () => {
               className="bg-white p-4 sm:p-8 rounded-lg shadow-lg"
             >
               <div className="w-full flex flex-col items-center">
+                {/* Preview Gambar */}
                 <Image
                   width={150}
                   height={150}
@@ -282,6 +379,8 @@ const Page = () => {
                   src={preview || "https://via.placeholder.com/100"}
                   alt="Photo Preview"
                 />
+
+                {/* Input File */}
                 <Input
                   type="file"
                   id="foto"
@@ -295,15 +394,17 @@ const Page = () => {
                 >
                   Choose Files
                 </label>
+
+                {/* Pesan Peringatan */}
                 <p className="text-red-600 font-bold text-center mt-2">
-                  {" "}
                   *Wajib Menggunakan Batik PGRI
                 </p>
                 <p className="text-red-600 text-center">
-                  {" "}
                   *Maksimal ukuran file unggah 250kb format file (jpg, jpeg,
                   png)
                 </p>
+
+                {/* Pesan Error */}
                 {error && (
                   <p className="text-red-600 text-center mt-2">{error}</p>
                 )}
@@ -362,21 +463,28 @@ const Page = () => {
                     type="text"
                     id="npaPgri"
                     placeholder="Tuliskan NPA"
-                    {...register("npaPgri")}
+                    maxLength={11} // Batas maksimal karakter
+                    {...register("npaPgri", { required: true })}
                   />
-                  <Button
-                    type="button"
-                    onClick={handleCekNpaClick}
-                    className="mt-2 p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
-                  >
-                    Cek NPA
-                  </Button>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Button
+                      type="button"
+                      onClick={handleCekNpaClick}
+                      className="mt-2 p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+                    >
+                      Cek NPA
+                    </Button>
+                    <p className="text-red-500 text-xs sm:text-sm mt-2">
+                      Silahkan Melakukan pengecekan NPA terlebih dahulu
+                    </p>
+                  </div>
                   {errors.npaPgri && (
                     <span className="text-red-500 text-sm">
                       NPA is required
                     </span>
                   )}
                 </div>
+
                 <div className="w-full">
                   <Label className="block text-sm font-medium mb-3">
                     NIP
@@ -609,9 +717,12 @@ const Page = () => {
                     >
                       {loading ? "Mendapatkan Lokasi..." : "Get Location"}
                     </Button>
-                    <p className="text-red-500 text-xs sm:text-sm">
-                      Mohon Get Location Ketika Anda Berada Dirumah
-                    </p>
+                    {latitude && longitude && (
+                      <p className="text-teal-500 mt-1">
+                        Lokasi berhasil ditemukan: {latitude.toFixed(4)},{" "}
+                        {longitude.toFixed(4)}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -731,7 +842,7 @@ const Page = () => {
               onSubmit={handleSubmit(onSubmit)}
               className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white p-4 sm:p-8 rounded-lg shadow-lg"
             >
-              <div className="w-full">
+              <div className="w-full" ref={dropdownRef}>
                 <Label className="block text-sm font-medium mb-3">
                   Cabang
                   <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
@@ -743,31 +854,63 @@ const Page = () => {
                   control={control}
                   rules={{ required: true }}
                   render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        handleCabangChange(value);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Cabang" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {cabang.map((item) => (
-                            <SelectItem
-                              key={item.idKecamatan}
-                              value={item.kecamatan}
-                            >
-                              {item.kecamatan}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                    <div className="relative" ref={dropdownRef}>
+                      {/* Input Utama */}
+                      <Input
+                        type="text"
+                        value={selectedCabang || field.value}
+                        onClick={() => setShowDropdown((prev) => !prev)}
+                        readOnly
+                        className="w-full p-2 border rounded focus:outline-none"
+                        placeholder="Pilih Cabang"
+                      />
+
+                      {/* Dropdown */}
+                      {showDropdown && (
+                        <div className="mt-1 max-h-40 overflow-y-auto border p-2 rounded absolute z-10 bg-slate-200 w-full">
+                          {/* Input Pencarian */}
+                          <div className="px-1">
+                            <Input
+                              type="text"
+                              placeholder="Cari Cabang..."
+                              className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              autoFocus
+                            />
+                          </div>
+
+                          {/* Hasil Filter */}
+                          {filteredCabang.length > 0 ? (
+                            filteredCabang
+                              .filter((item) =>
+                                item.kecamatan
+                                  .toLowerCase()
+                                  .includes(searchTerm.toLowerCase())
+                              )
+                              .map((item) => (
+                                <div
+                                  key={item.idKecamatan}
+                                  className="cursor-pointer p-2 hover:bg-slate-100 mt-2"
+                                  onClick={() => {
+                                    setSelectedCabang(item.kecamatan);
+                                    field.onChange(item.kecamatan);
+                                    setShowDropdown(false);
+                                    setSearchTerm("");
+                                  }}
+                                >
+                                  {item.kecamatan}
+                                </div>
+                              ))
+                          ) : (
+                            <div className="p-2">Cabang tidak ditemukan</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   )}
                 />
+                {/* Validasi Error */}
                 {errors.cabang && (
                   <span className="text-red-500 text-sm">
                     Kecamatan/Cabang harus dipilih
@@ -776,34 +919,61 @@ const Page = () => {
               </div>
 
               <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
+                <label className="block text-sm font-medium mb-3">
                   Unit Kerja
-                </Label>
+                </label>
                 <Controller
                   name="unitKerja"
                   control={control}
                   rules={{ required: true }}
                   render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      disabled={!selectedCabang}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Unit Kerja" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {filteredUnitKerja.map((item) => (
-                            <SelectItem key={item.id} value={item.unitKerja}>
+                    <div className="relative">
+                      {/* Input Field */}
+                      <Input
+                        type="text"
+                        value={selectedUnitKerja || field.value}
+                        onClick={() => setShowDropdownUnitKerja(true)}
+                        readOnly
+                        className="w-full p-2 border rounded focus:outline-none"
+                        placeholder="Pilih Unit Kerja"
+                      />
+
+                      {/* Dropdown */}
+                      {showDropdownUnitKerja && (
+                        <div className="mt-1 max-h-40 overflow-y-auto border p-2 rounded absolute z-10 bg-slate-200 w-full">
+                          {/* Search Input */}
+                          <Input
+                            type="text"
+                            placeholder="Cari Unit Kerja..."
+                            className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            value={searchTermUnitKerja}
+                            onChange={(e) =>
+                              setSearchTermUnitKerja(e.target.value)
+                            }
+                            autoFocus
+                          />
+
+                          {/* Filtered Results */}
+                          {filteredUnitKerjaByCabang.map((item) => (
+                            <div
+                              key={item.id}
+                              className="cursor-pointer p-2 hover:bg-slate-100 mt-2"
+                              onClick={() => {
+                                setSelectedUnitKerja(item.unitKerja);
+                                setShowDropdownUnitKerja(false);
+                                field.onChange(item.unitKerja);
+                                setSearchTermUnitKerja("");
+                              }}
+                            >
                               {item.unitKerja}
-                            </SelectItem>
+                            </div>
                           ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                        </div>
+                      )}
+                    </div>
                   )}
                 />
+                {/* Validation Error */}
                 {errors.unitKerja && (
                   <span className="text-red-500 text-sm">
                     Unit Kerja harus dipilih
@@ -1072,7 +1242,7 @@ const Page = () => {
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Sertifikat" />
+                        <SelectValue placeholder="Pilih Golongan Jabatan" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
