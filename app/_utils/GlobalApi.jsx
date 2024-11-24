@@ -260,6 +260,7 @@ const deleteCabang = async (idCabang) => {
     }
   }
 };
+
 const cekNpa = async (npa) => {
   try {
     const response = await axiosClient.get(`/api/auth/npa/${npa}`);
@@ -415,11 +416,15 @@ const getHistoryData = async (page = 0, size = 10) => {
 const getHistoryDataById = async (userId) => {
   try {
     // Ambil data login berdasarkan userId
-    const loginHistoryResponse = await axiosClient.get(`/api/history/user/${userId}/login`);
+    const loginHistoryResponse = await axiosClient.get(
+      `/api/history/user/${userId}/login`
+    );
     const loginHistory = loginHistoryResponse.data;
 
     // Ambil data mutasi cabang/unit kerja berdasarkan userId
-    const mutasiHistoryResponse = await axiosClient.get(`/api/history/user/${userId}/mutasi`);
+    const mutasiHistoryResponse = await axiosClient.get(
+      `/api/history/user/${userId}/mutasi`
+    );
     const mutasiHistory = mutasiHistoryResponse.data;
 
     // Gabungkan kedua data menjadi satu histori
@@ -435,7 +440,9 @@ const getHistoryDataById = async (userId) => {
     ];
 
     // Sortir data berdasarkan timestamp (jika ada)
-    combinedHistory.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    combinedHistory.sort(
+      (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+    );
 
     return combinedHistory;
   } catch (error) {
@@ -537,30 +544,25 @@ const getAllFiles = async () => {
 
 const getCalculateSandukaAll = async (bulan, tahun) => {
   try {
-
     const today = new Date();
-    const currentMonth = today.toLocaleString("default", { month: "long" }); 
-    const currentYear = today.getFullYear(); 
+    const currentMonth = today.toLocaleString("default", { month: "long" });
+    const currentYear = today.getFullYear();
 
- 
     const xbulan = bulan || currentMonth;
     const xtahun = tahun || currentYear;
 
-   
     const response = await axiosClient.get(
       "/api/calculate-sanduka/cabang-all",
       {
         params: {
-          xbulan: xbulan, 
-          xtahun: xtahun, 
+          xbulan: xbulan,
+          xtahun: xtahun,
         },
       }
     );
 
-   
     return response.data;
   } catch (error) {
-    
     console.error("Error fetching calculate sanduka cabang all:", error);
     throw error;
   }
@@ -573,7 +575,7 @@ const getTableIuran = async (bulan, tahun, cabang) => {
     const response = await axiosClient.get(
       `/api/iuran/total-sumbangan?bulan=${bulan}&tahun=${tahun}&cabang=${cabang}`
     );
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error("Error fetching total sumbangan:", error);
     throw error;
@@ -801,7 +803,7 @@ const createPembayaranSanduka = async (payload) => {
 // Rekap Lapor Sanduka
 const getRekapLaporDiterima = async () => {
   try {
-    const response = await axiosClient.get("/api/rekap-lapor-sanduka/diterima"); 
+    const response = await axiosClient.get("/api/rekap-lapor-sanduka/diterima");
     return response.data;
   } catch (error) {
     console.error("Error fetching Data Lapor:", error);
@@ -812,7 +814,7 @@ const getRekapLaporBelom = async () => {
   try {
     const response = await axiosClient.get(
       "/api/rekap-lapor-sanduka/belom-diterima"
-    );  
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching Data Lapor:", error);
@@ -823,7 +825,7 @@ const getRekapLaporBelom = async () => {
 // Data Lapor
 const getDataLapor = async () => {
   try {
-    const response = await axiosClient.get("/api/notifikasi/data-terlapor"); 
+    const response = await axiosClient.get("/api/notifikasi/data-terlapor");
     return response.data;
   } catch (error) {
     console.error("Error fetching Data Lapor:", error);
@@ -1042,7 +1044,6 @@ const batalLaporanById = async (id) => {
 
 const verifikasiLaporanById = async (id, data) => {
   try {
-    
     const response = await axiosClient.put(
       `/api/laporan/${id}/tanggal-santunan`,
       data
@@ -1058,13 +1059,13 @@ const verifikasiLaporanById = async (id, data) => {
 // Delete USER
 const deleteUser = async (id) => {
   try {
-    const response = await axiosClient.delete(`/api/auth/user/${id}`)
-    return response.data
+    const response = await axiosClient.delete(`/api/auth/user/${id}`);
+    return response.data;
   } catch (error) {
-    console.error("Error fetching user data: ", error)
+    console.error("Error fetching user data: ", error);
     throw error;
   }
-} 
+};
 
 // Export all functions
 export default {
