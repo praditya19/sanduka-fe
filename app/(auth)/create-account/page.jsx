@@ -342,12 +342,6 @@ const Page = () => {
       return;
     }
 
-    // Validasi apakah lokasi sudah diambil
-    if (!latitude || !longitude) {
-      toast.error("Anda harus mendapatkan lokasi terlebih dahulu.");
-      return;
-    }
-
     // Jika validasi lolos
     setStep(step + 1);
   };
