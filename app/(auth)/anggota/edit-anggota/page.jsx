@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,7 +44,7 @@ const Page = () => {
   const [golonganJabatan, setGolonganJabatan] = useState([]);
   const [valueGolonganJabatan, setValueGolonganJabatan] = useState("");
   const [unitKerja, setUnitKerja] = useState([]);
-  const [selectedCabang, setSelectedCabang] = useState("");
+  const [selectedCabang, setSelectedCabang] = useState(null);
   const [query, setQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [base64String, setBase64String] = useState("");
@@ -130,10 +130,10 @@ const Page = () => {
     golonganJabatan: "",
     mengajar: "",
   });
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const handleOpenModal = () => setIsModalOpen(true);
-  const handleCloseModal = () => setIsModalOpen(false);
-  
+  const [allUnitKerja, setAllUnitKerja] = useState([]);
+  const cabangRef = useRef(null);
+  const unitKerjaRef = useRef(null);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -144,19 +144,17 @@ const Page = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-
+  
     const anggotaId = sessionStorage.getItem("anggotaId");
     const userId = sessionStorage.getItem("userId");
-
+  
     const id = anggotaId || userId;
-
+  
     if (!id) {
-      console.error(
-        "User ID atau Anggota ID tidak ditemukan atau tidak valid."
-      );
+      console.error("User ID atau Anggota ID tidak ditemukan atau tidak valid.");
       return;
     }
-
+  
     const formatTanggal = (tanggal) => {
       const date = new Date(tanggal);
       const year = date.getFullYear();
@@ -164,11 +162,11 @@ const Page = () => {
       const day = String(date.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
     };
-
+  
     const formattedTanggalLahir = formatTanggal(tanggalLahir);
     const formattedTahunDiangkat = formatTanggal(tahunDiangkat);
     const formattedMulaiJadiAnggota = formatTanggal(mulaiJadiAnggotaPgri);
-
+  
     const formData = new FormData();
     formData.append("email", email);
     formData.append("password", password);
@@ -187,11 +185,11 @@ const Page = () => {
     formData.append("kodePos", kodePos);
     formData.append("nomorHp", nomorHp);
     formData.append("namaSuamiIstri", namaSuamiIstri);
-
+  
     if (selectedFile) {
       formData.append("foto", selectedFile);
     }
-
+  
     formData.append("cabang", selectedCabang);
     formData.append("unitKerja", selectedUnitKerja);
     formData.append("jabatan", valueJabatan);
@@ -205,16 +203,23 @@ const Page = () => {
     formData.append("mulaiJadiAnggotaPgri", formattedMulaiJadiAnggota);
     formData.append("golonganJabatan", valueGolonganJabatan);
     formData.append("mengajar", mengajar);
-
+  
     formData.append("pesertaSanduka", pesertaSanduka ? "Ya" : "");
     formData.append("pesertaDaspen", pesertaDaspen ? "Ya" : "");
     formData.append("pesertaKtaDigital", pesertaKtaDigital ? "Ya" : "");
-
+  
+    // Convert FormData to a plain object for logging
+    const plainData = {};
+    formData.forEach((value, key) => {
+      plainData[key] = value;
+    });
+  
+   
     try {
       const response = await GlobalApi.updateUserById(id, formData);
-      console.log("Foto berhasil disimpan:", response);
+     
       toast.success("Data Anda Berhasil Diupdate!");
-
+  
       setTimeout(() => {
         router.push("/anggota/data-anggota");
       }, 2000);
@@ -222,6 +227,7 @@ const Page = () => {
       console.error("Update gagal:", error);
     }
   };
+  
 
   const handleConfirmAndSendData = async () => {
     try {
@@ -242,6 +248,26 @@ const Page = () => {
       toast.error("Terjadi kesalahan saat mengirim data.");
     }
   };
+
+  useEffect(() => {
+    // Fungsi untuk menutup dropdown jika klik di luar area dropdown
+    const handleClickOutside = (e) => {
+      if (cabangRef.current && !cabangRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+      if (unitKerjaRef.current && !unitKerjaRef.current.contains(e.target)) {
+        setShowDropdownUnitKerja(false);
+      }
+    };
+
+    // Menambahkan event listener pada document untuk klik di luar area
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Menghapus event listener saat komponen unmount
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleBackClick = () => {
     router.push("/anggota/data-anggota");
@@ -272,17 +298,13 @@ const Page = () => {
     setStep(step - 1);
   };
 
-  const filteredOptions = cabang
-    .filter((item) =>
-      item.kecamatan.toLowerCase().includes(query.toLowerCase())
-    )
-    .slice(0, 5);
+  const filteredOptions = cabang.filter((item) =>
+    item.kecamatan.toLowerCase().includes(query.toLowerCase())
+  );
 
-  const handleUnitKerjaChange = (value) => {
-    const filtered = unitKerja.filter((item) =>
-      item.unitKerja.toLowerCase().includes(value.toLowerCase())
-    );
-    setFilteredUnitKerja(filtered);
+  const handleUnitKerjaChange = (item) => {
+    setSelectedUnitKerja(item.unitKerja);
+    setShowDropdownUnitKerja(false);
   };
 
   const getAnggotaById = async () => {
@@ -450,15 +472,15 @@ const Page = () => {
     setFilteredUnitKerja(filteredUnitKerja);
   };
 
-  const handleCabangChange = (value) => {
-    setSelectedCabang(value);
+  const handleCabangChange = (item) => {
+    setSelectedCabang(item.kecamatan);
+     setQuery("");
+    setShowDropdown(false);
 
-    if (Array.isArray(unitKerja)) {
-      const filtered = unitKerja.filter((item) => item.cabang === value);
-      setFilteredUnitKerja(filtered);
-    } else {
-      console.error("unitKerja is not an array:", unitKerja);
-      setFilteredUnitKerja([]);
+    if (Array.isArray(allUnitKerja)) {
+      setFilteredUnitKerja(
+        allUnitKerja.filter((uk) => uk.cabang === item.kecamatan)
+      );
     }
   };
 
@@ -541,7 +563,6 @@ const Page = () => {
   const fetchGolonganJabatan = async () => {
     try {
       const response = await GlobalApi.getGolonganJabatan();
-
       setGolonganJabatan(response.data || []);
     } catch (error) {
       console.error("Error fetching golongan jabatan:", error);
@@ -558,7 +579,9 @@ const Page = () => {
     const fetchUnitKerja = async () => {
       try {
         const response = await GlobalApi.getUnitKerja();
-        setUnitKerja(response.data || []);
+        setAllUnitKerja(response.data);
+        setFilteredUnitKerja(data);
+       
       } catch (error) {
         console.error("Error fetching unit kerja:", error);
       }
@@ -1000,37 +1023,19 @@ const Page = () => {
                         )}
                       />
                     </div>
-                    <Button
-                      type="button"
-                      onClick={handleGetLocation}
-                      className="mt-2 p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
-                    >
-                      {loading ? "Mendapatkan Lokasi..." : "Get Location"}
-                    </Button>
-                    <AiOutlineInfoCircle
-                      className="inline-block ml-2 text-red-500 cursor-pointer"
-                      size={20}
-                      onClick={handleOpenModal}
-                    />
+                    <div className="flex items-center space-x-4 mt-2">
+                      <Button
+                        type="button"
+                        onClick={handleGetLocation}
+                        className=" p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+                      >
+                        {loading ? "Mendapatkan Lokasi..." : "Get Location"}
+                      </Button>
 
-                    {isModalOpen && (
-                      <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
-                        <div className="bg-white p-4 rounded-lg shadow-lg">
-                          <h2 className="text-lg font-semibold">Informasi</h2>
-                          <p className="mt-2">
-                            Mohon Get Location Ketika Anda Berada Dirumah
-                          </p>
-                          <div className="flex justify-end mt-6">
-                            <button
-                              onClick={handleCloseModal}
-                              className="mt-4 px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600"
-                            >
-                              Close
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                      <p className=" text-red-500">
+                        Mohon Get Location Ketika Anda Berada Dirumah
+                      </p>
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
@@ -1159,7 +1164,7 @@ const Page = () => {
                 </h2>
                 <hr className="mb-6 border-t-2 border-gray-300 mt-4" />
 
-                <div className="w-full">
+                <div className="w-full" ref={cabangRef}>
                   <Label className="block text-sm font-medium mb-3">
                     Cabang
                     <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
@@ -1169,56 +1174,65 @@ const Page = () => {
                   <Controller
                     name="cabang"
                     control={control}
-                    defaultValue={cabang}
-                    render={({ field: { onChange, value } }) => (
+                    defaultValue={selectedCabang}
+                    render={({ field: { onChange } }) => (
                       <div className="relative">
-                        <input
+                        <Input
                           type="text"
-                          className="border rounded-lg p-2 w-56 bg-white shadow-sm"
+                          className="border rounded-lg p-2 w-56 bg-white shadow-sm w-full"
                           placeholder="Pilih Cabang"
-                          value={query || value}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            setQuery(value);
-                            onChange(value);
-                            setSelectedCabang(e);
+                          value={selectedCabang || ""}
+                          readOnly
+                          onFocus={() => {
+                            setQuery("");
                             setShowDropdown(true);
                           }}
-                          onFocus={() => setShowDropdown(true)}
-                          onBlur={() =>
-                            setTimeout(() => setShowDropdown(false), 200)
-                          }
                         />
                         {showDropdown && (
-                          <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 max-h-48 overflow-y-auto w-full">
-                            {filteredOptions.length > 0 ? (
-                              filteredOptions.map((item) => (
-                                <li
-                                  key={item.idKecamatan}
-                                  className="p-2 cursor-pointer hover:bg-gray-100"
-                                  onClick={() => {
-                                    setQuery(item.kecamatan);
-                                    setSelectedCabang(item.kecamatan);
-                                    handleCabangChange(item.kecamatan);
-                                    setShowDropdown(false);
-                                  }}
-                                >
-                                  {item.kecamatan}
+                          <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-full">
+                            <div className="p-2">
+                              <Input
+                                type="text"
+                                className="border rounded-lg p-2 w-full bg-gray-100 shadow-inner"
+                                placeholder="Cari Cabang..."
+                                value={query}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  setQuery(value);
+                                }}
+                                autoFocus
+                              />
+                            </div>
+                            {/* List hasil pencarian */}
+                            <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-full max-h-32 overflow-y-auto">
+                              {filteredOptions.length > 0 ? (
+                                filteredOptions.map((item) => (
+                                  <li
+                                    key={item.idKecamatan}
+                                    className="p-2 cursor-pointer hover:bg-gray-100"
+                                    onClick={() => {
+                                      handleCabangChange(item);
+                                      onChange(item.kecamatan);
+                                      setShowDropdown(false);
+                                    }}
+                                  >
+                                    {item.kecamatan}
+                                  </li>
+                                ))
+                              ) : (
+                                <li className="p-2 text-gray-500">
+                                  Cabang tidak ditemukan
                                 </li>
-                              ))
-                            ) : (
-                              <li className="p-2 text-gray-500">
-                                No results found
-                              </li>
-                            )}
-                          </ul>
+                              )}
+                            </ul>
+                          </div>
                         )}
                       </div>
                     )}
                   />
                 </div>
 
-                <div className="w-full">
+                <div className="w-full" ref={unitKerjaRef}>
                   <Label className="block text-sm font-medium mb-3">
                     Unit Kerja
                   </Label>
@@ -1228,48 +1242,64 @@ const Page = () => {
                     defaultValue={selectedUnitKerja}
                     render={({ field: { onChange } }) => (
                       <div className="relative">
-                        <input
+                        <Input
                           type="text"
-                          className="border rounded-lg p-2 w-56 bg-white shadow-sm"
+                          className="border rounded-lg p-2 w-56 bg-white shadow-sm w-full"
                           placeholder="Pilih Unit Kerja"
-                          value={queryUnitKerja}
-                          onChange={(e) => {
-                            const inputValue = e.target.value;
-                            setQueryUnitKerja(inputValue);
-                            handleUnitKerjaChange(inputValue);
+                          value={selectedUnitKerja || ""}
+                          readOnly
+                          onFocus={() => {
+                            setQueryUnitKerja("");
                             setShowDropdownUnitKerja(true);
                           }}
-                          onFocus={() => setShowDropdownUnitKerja(true)}
-                          onBlur={() =>
-                            setTimeout(
-                              () => setShowDropdownUnitKerja(false),
-                              200
-                            )
-                          }
                         />
                         {showDropdownUnitKerja && (
-                          <ul className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 max-h-48 overflow-y-auto w-full">
-                            {filteredUnitKerja.length > 0 ? (
-                              filteredUnitKerja.map((item) => (
-                                <li
-                                  key={item.id}
-                                  className="p-2 cursor-pointer hover:bg-gray-100"
-                                  onClick={() => {
-                                    setQueryUnitKerja(item.unitKerja);
-                                    onChange(item.unitKerja);
-                                    setSelectedUnitKerja(item.unitKerja);
-                                    setShowDropdownUnitKerja(false);
-                                  }}
-                                >
-                                  {item.unitKerja}
+                          <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-full">
+                            <div className="p-2">
+                              <Input
+                                type="text"
+                                className="border rounded-lg p-2 w-full bg-gray-100 shadow-inner"
+                                placeholder="Cari Unit Kerja..."
+                                value={queryUnitKerja}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  setQueryUnitKerja(value);
+                                  setFilteredUnitKerja(
+                                    allUnitKerja.filter(
+                                      (uk) =>
+                                        uk.cabang === selectedCabang &&
+                                        uk.unitKerja
+                                          .toLowerCase()
+                                          .includes(value.toLowerCase())
+                                    )
+                                  );
+                                }}
+                                autoFocus
+                              />
+                            </div>
+                            {/* List hasil pencarian */}
+                            <ul className="max-h-48 overflow-y-auto">
+                              {filteredUnitKerja &&
+                              filteredUnitKerja.length > 0 ? (
+                                filteredUnitKerja.map((item) => (
+                                  <li
+                                    key={item.id}
+                                    className="p-2 cursor-pointer hover:bg-gray-100"
+                                    onClick={() => {
+                                      setSelectedUnitKerja(item.unitKerja);
+                                      setShowDropdownUnitKerja(false);
+                                    }}
+                                  >
+                                    {item.unitKerja}
+                                  </li>
+                                ))
+                              ) : (
+                                <li className="p-2 text-gray-500">
+                                  Unit kerja tidak ditemukan
                                 </li>
-                              ))
-                            ) : (
-                              <li className="p-2 text-gray-500">
-                                Unit kerja tidak tersedia.
-                              </li>
-                            )}
-                          </ul>
+                              )}
+                            </ul>
+                          </div>
                         )}
                       </div>
                     )}
@@ -1428,19 +1458,36 @@ const Page = () => {
                 </div>
 
                 <div className="w-full">
-                  <Label className="flex flex-col sm:flex-row items-start sm:items-center">
+                  <Label className="flex flex-col sm:flex-row items-start sm:items-center mb-4">
                     Pangkat Golongan
-                    <span className="ml-0 sm:ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md mt-1 sm:mt-0">
-                      *Bila Tidak Ada, Isi Tanda (-)
-                    </span>
                   </Label>
-                  <Input
-                    className="mt-2 sm:mt-2"
-                    type="text"
-                    id="pangkatGolongan"
-                    placeholder="Tuliskan Golongan"
-                    value={pangkatGolongan}
-                    onChange={(e) => setPangkatGolongan(e.target.value)}
+                  <Controller
+                    name="pangkatGolongan"
+                    control={control}
+                    defaultValue={pangkatGolongan}
+                    render={({ field: { onChange, value } }) => (
+                      <Select
+                        value={value || pangkatGolongan}
+                        onValueChange={(e) => {
+                          onChange(e);
+                          setPangkatGolongan(e);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih Golongan" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            {Array.isArray(golonganJabatan) &&
+                              golonganJabatan.map((item) => (
+                                <SelectItem key={item.id} value={item.golongan}>
+                                  {item.golongan}
+                                </SelectItem>
+                              ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    )}
                   />
                 </div>
 
@@ -1538,27 +1585,25 @@ const Page = () => {
                     control={control}
                     defaultValue={valueGolonganJabatan}
                     render={({ field: { onChange, value } }) => (
+                      
                       <Select
-                        value={value || valueGolonganJabatan}
-                        onValueChange={(e) => {
-                          onChange(e);
-                          setValueGolonganJabatan(e);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih Golongan" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            {Array.isArray(golonganJabatan) &&
-                              golonganJabatan.map((item) => (
-                                <SelectItem key={item.id} value={item.golongan}>
-                                  {item.golongan}
-                                </SelectItem>
-                              ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
+                      value={value || valueGolonganJabatan}
+                      onValueChange={(e) => {
+                        onChange(e);
+                        setValueGolonganJabatan(e);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Golongan Jabatan" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="PENDIDIK">Pendidik</SelectItem>
+                          <SelectItem value="TENAGAPENDIDIK">Tenaga Pendidik</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                    
                     )}
                   />
                 </div>
