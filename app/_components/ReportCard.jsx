@@ -116,7 +116,7 @@ export default function ReportCard() {
       JSON.parse(sessionStorage.getItem("idTerlaporList")) || [];
     const npaTerlaporList =
       JSON.parse(sessionStorage.getItem("npaTerlaporList")) || [];
-
+  
     if (idTerlaporList.length === 0 || npaTerlaporList.length === 0) {
       console.error(
         "ID Terlapor atau NPA Terlapor tidak ditemukan di sessionStorage"
@@ -124,59 +124,47 @@ export default function ReportCard() {
       toast.error("Data ID atau NPA tidak valid");
       return;
     }
-
+  
     const currentNpa = dataList[currentSlide]?.npaPgri || null;
     if (!currentNpa) {
       console.error("NPA tidak ditemukan di UI");
       toast.error("NPA tidak valid di UI");
       return;
     }
-
+  
     const currentIndex = npaTerlaporList.indexOf(currentNpa);
-
+  
     if (currentIndex === -1) {
       console.error("NPA dari UI tidak ditemukan di sessionStorage");
       toast.error("NPA tidak sesuai dengan data di sessionStorage");
       return;
     }
-
+  
     const laporanId = idTerlaporList[currentIndex];
-
+  
     try {
       const userData = await GlobalApi.cekNpa(currentNpa);
-
+  
       console.log("Response cekNpa:", userData);
-
+  
       const userId = userData?.id;
       const npaUser = userData?.npaPgri;
-
+  
       if (userId === laporanId && npaUser === currentNpa) {
         console.log("ID dan NPA cocok, lanjutkan proses verifikasi");
-
+  
         const currentDate = new Date();
         const tanggalSantunan = currentDate.toISOString().split("T")[0];
-
+  
         const newTanggalSantunan = {
           tanggalSantunan: tanggalSantunan,
         };
-
+  
         try {
           await GlobalApi.verifikasiLaporanById(laporanId, newTanggalSantunan);
-
+  
           toast.success("Data Berhasil Terkonfirmasi!");
-
-          idTerlaporList.splice(currentIndex, 1);
-          npaTerlaporList.splice(currentIndex, 1);
-
-          sessionStorage.setItem(
-            "idTerlaporList",
-            JSON.stringify(idTerlaporList)
-          );
-          sessionStorage.setItem(
-            "npaTerlaporList",
-            JSON.stringify(npaTerlaporList)
-          );
-
+  
           setTimeout(() => {
             setDataList((prevDataList) =>
               prevDataList.filter((_, index) => index !== currentSlide)
@@ -195,6 +183,7 @@ export default function ReportCard() {
       toast.error("Gagal mengecek NPA!");
     }
   };
+  
 
   const formatDate = (dateString) => {
     if (!dateString) return "";

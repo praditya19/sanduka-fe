@@ -62,42 +62,36 @@ function SignIn() {
     }
   };
 
-  
-
   const onSignInAdmin = async () => {
     setLoader(true);
     setError("");
-  
+
     try {
-      
       if (!isVerified) {
         throw new Error("Harap verifikasi reCAPTCHA.");
       }
-  
-      
-      const npaPgriValue = npaPgri?.trim();  
+
+      const npaPgriValue = npaPgri?.trim();
       const passwordValue = password?.trim();
-  
-      
+
       if (!npaPgriValue || !passwordValue) {
         throw new Error("NPA PGRI dan Password tidak boleh kosong.");
       }
-  
-      
-      console.log("Payload untuk login:", { npaPgri: npaPgriValue, password: passwordValue });
-  
-      
+
+      console.log("Payload untuk login:", {
+        npaPgri: npaPgriValue,
+        password: passwordValue,
+      });
+
       const response = await GlobalApi.loginAdmin(npaPgriValue, passwordValue);
       setToken(response.token);
-      
+
       sessionStorage.setItem("userId", response.id);
       sessionStorage.setItem("nama", response.namaLengkap);
       sessionStorage.setItem("role", response.role);
-  
-      
+
       toast.success(`Selamat Datang ${response.namaLengkap}`);
-  
-      
+
       setTimeout(() => {
         router.push("/home");
       }, 2000);
@@ -107,14 +101,13 @@ function SignIn() {
       setLoader(false);
     }
   };
-  
-  
+
   function onChange(value) {
     setIsVerified(!!value);
   }
 
   return (
-    <div className="flex items-baseline justify-center my-9">
+    <div className="flex items-baseline justify-center my-14">
       <Toaster
         toastOptions={{
           style: {
@@ -135,17 +128,17 @@ function SignIn() {
           },
         }}
       />
-      <div className="flex flex-col items-center justify-center p-10 bg-gray-100 border border-gray-200 rounded-lg shadow-md w-[40%]">
-        <Image src="/sanduka.png" width={200} height={200} alt="logo" />
-        <h2 className="font-bold text-3xl mt-4">Masuk ke Akun</h2>
-        <h2 className="text-gray-500 mt-2 text-center">
+      <div className="flex flex-col items-center justify-center p-6 sm:p-10 bg-gray-100 border border-gray-200 rounded-lg shadow-md w-full max-w-md sm:max-w-lg lg:w-[32%]">
+        <Image src="/sanduka.png" width={100} height={100} alt="logo" />
+        <h2 className="font-bold text-xl sm:text-2xl mt-4">Masuk ke Akun</h2>
+        <h4 className="text-gray-500 mt-2 text-center text-sm sm:text-base">
           Masukkan NPA PGRI dan{" "}
           {activeTab === "login" ? "Tanggal Lahir" : "Password"} Anda untuk
           Masuk
-        </h2>
+        </h4>
 
         {/* Tab Navigation */}
-        <div className="flex space-x-4 mt-4">
+        <div className="flex flex-wrap justify-center space-x-2 sm:space-x-4 mt-4">
           <button
             className={`rounded-md p-2 ${
               activeTab === "login"
@@ -168,7 +161,7 @@ function SignIn() {
           </button>
         </div>
 
-        <div className="w-full max-w-lg mt-6">
+        <div className="w-full mt-6">
           {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
           {/* Form sesuai tab yang aktif */}
@@ -236,6 +229,7 @@ function SignIn() {
           <ReCAPTCHA
             sitekey="6Lfcxy4qAAAAACy6hmLpVgTejZFZG3xGjn0xOVmd"
             onChange={onChange}
+            className="flex justify-center"
           />
 
           <Button
@@ -247,7 +241,7 @@ function SignIn() {
               loader ||
               !isVerified
             }
-            className="w-full mt-4"
+            className="w-full mt-4 flex justify-center items-center"
           >
             {loader ? <LoaderIcon className="animate-spin mr-2" /> : "Masuk"}
           </Button>
@@ -258,7 +252,6 @@ function SignIn() {
               href={"/create-account/syarat-ketentuan"}
               className="text-blue-500 ml-1 hover:underline"
             >
-              {" "}
               Klik di sini untuk membuat akun baru
             </Link>
           </p>
