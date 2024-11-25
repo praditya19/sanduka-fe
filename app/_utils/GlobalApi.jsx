@@ -483,7 +483,7 @@ const getAdminBantuan = () =>
   axiosClient.get("/api/register-admin/admins-per-cabang");
 
 // Teman Unit Kerja
-const getTemanUnitKerja = async (unitKerja, page = 0, size = 10) => {
+const getTemanUnitKerja = async (unitKerja, page = 0, size = 50) => {
   try {
     const response = await axiosClient.get("/api/auth/teman-unit-kerja", {
       params: {

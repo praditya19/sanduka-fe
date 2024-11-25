@@ -47,6 +47,8 @@ const FormStep1 = ({
   const [queryUnit, setQueryUnit] = useState("");
   const [showDropdownUnit, setShowDropdownUnit] = useState(false);
   const [canProceed, setCanProceed] = useState(true);
+  const [temanUnitKerjaData, setTemanUnitKerjaData] = useState([]);
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
 
   useEffect(() => {
     if (!token) {
@@ -149,47 +151,70 @@ const FormStep1 = ({
     setFilteredUnitKerja(unitsForSelectedCabang);
   };
 
-  const handleSearch = async (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    setFormData((prevFormData) => ({ ...prevFormData, memberName: value }));
+  useEffect(() => {
+    const fetchTemanUnitKerja = async () => {
+      if (!selectedUnitKerja) return;
 
-    if (value === "") {
-      setIsDropdownVisible(false);
-      return;
-    }
-
-    try {
-      const response = await GlobalApi.searchUsers(value);
-      const allNames = response.data;
-      console.log("data ", allNames);
-
-      const filtered = allNames.filter((data) =>
-        data.namaLengkap.toLowerCase().includes(value.toLowerCase())
-      );
-
-      setFilteredNames(filtered);
-      setIsDropdownVisible(true);
-
-      if (filtered.length > 0) {
-        const selectedUser = filtered[0];
-        const userName = selectedUser.namaLengkap;
-        const searchResponse = await GlobalApi.searchUsersByName(userName);
-        console.log("Data berdasarkan nama anggota:", searchResponse.data);
-
-        const userDetail = searchResponse.data.users[0];
-
-        if (userDetail && userDetail.tanggalPelaporan === null) {
-          setCanProceed(true);
-        } else {
-          setCanProceed(false);
-        }
+      try {
+        const response = await GlobalApi.getTemanUnitKerja(selectedUnitKerja);
+        console.log("Data teman unit kerja yang diterima:", response);
+        setTemanUnitKerjaData(response.content);
+        setFilteredNames(response.content);
+        setIsDropdownVisible(true);
+      } catch (error) {
+        console.error("Error fetching teman unit kerja:", error);
       }
-    } catch (error) {
-      console.error("Error fetching names:", error);
-      setCanProceed(false);
+    };
+
+    fetchTemanUnitKerja();
+  }, [selectedUnitKerja]);
+
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredNames(temanUnitKerjaData);
+    } else {
+      const filtered = temanUnitKerjaData.filter((item) =>
+        item.namaLengkap.toLowerCase().includes(searchTerm.toLowerCase().trim())
+      );
+      setFilteredNames(filtered);
+    }
+  }, [searchTerm, temanUnitKerjaData]);
+
+  const handleUnitKerjaChange = async (unitKerja) => {
+    setShowDropdownUnit(false);
+    setQueryUnit(unitKerja);
+
+    const response = await GlobalApi.getTemanUnitKerja(unitKerja);
+    setTemanUnitKerjaData(response.content);
+  };
+
+  const handleSearch = (e) => {
+    const value = e.target.value.toLowerCase().trim();
+    setSearchTerm(value);
+
+    if (Array.isArray(temanUnitKerjaData)) {
+      const filtered = temanUnitKerjaData.filter((item) =>
+        item.namaLengkap.toLowerCase().includes(value)
+      );
+      setFilteredNames(filtered);
+      setIsDropdownVisible(filtered.length > 0);
+    } else {
+      console.error("temanUnitKerjaData bukan array:", temanUnitKerjaData);
     }
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownVisible(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleNameClick = (name, id) => {
     setFormData((prevFormData) => ({
@@ -197,6 +222,7 @@ const FormStep1 = ({
       memberName: name,
       memberId: id,
     }));
+    console.log(`Nama Anggota yang dipilih: ${name}, ID: ${id}`);
     setSearchTerm(name);
     setFilteredNames([]);
     sessionStorage.setItem("selectedMemberId", id);
@@ -364,7 +390,7 @@ const FormStep1 = ({
                       type="date"
                       id="date"
                       placeholder="tanggal"
-                      className="text-sm"
+                      className="text-sm cursor-not-allowed"
                       value={formattedDate}
                       disabled
                     />
@@ -374,8 +400,7 @@ const FormStep1 = ({
                       type="text"
                       id="name"
                       placeholder="Nama"
-                      className="text-sm"
-                      disabled
+                      className="text-sm cursor-not-allowed"
                       value={silaporData?.namaLengkap}
                     />
                   </div>
@@ -384,8 +409,7 @@ const FormStep1 = ({
                       type="text"
                       id="branch"
                       placeholder="Cabang / Khusus"
-                      className="text-sm"
-                      disabled
+                      className="text-sm cursor-not-allowed"
                       value={silaporData?.cabang}
                     />
                   </div>
@@ -394,8 +418,7 @@ const FormStep1 = ({
                       type="text"
                       id="position"
                       placeholder="Jabatan"
-                      className="text-sm"
-                      disabled
+                      className="text-sm cursor-not-allowed"
                       value={silaporData?.jabatan}
                     />
                   </div>
@@ -404,8 +427,7 @@ const FormStep1 = ({
                       type="number"
                       id="phone"
                       placeholder="Nomor Whatsapp"
-                      className="text-sm"
-                      disabled
+                      className="text-sm cursor-not-allowed"
                       value={formatPhoneNumber(silaporData?.nomorHp)}
                     />
                   </div>
@@ -487,10 +509,11 @@ const FormStep1 = ({
                       </Label>
                       <Input
                         type="text"
-                        className="border rounded-lg p-2 w-full bg-white shadow-sm "
+                        className="border rounded-lg p-2 w-full bg-white shadow-sm"
                         placeholder="Pilih Unit Kerja"
-                        value={formData.unit || ""}
+                        value={queryUnit || selectedUnitKerja}
                         readOnly
+                        onChange={(e) => handleUnitKerjaChange(e.target.value)}
                         onClick={() => setShowDropdownUnit(true)}
                       />
 
@@ -527,17 +550,18 @@ const FormStep1 = ({
                               .filter((unit) =>
                                 unit.unitKerja
                                   .toLowerCase()
-                                  .includes(queryUnit.toLowerCase() || "")
+                                  .includes(queryUnit.toLowerCase())
                               )
                               .map((unit) => (
                                 <li
                                   key={unit.id}
                                   className="p-2 cursor-pointer hover:bg-gray-100"
-                                  onClick={() => {
+                                  onClick={async () => {
                                     setFormData((prev) => ({
                                       ...prev,
                                       unit: unit.unitKerja,
                                     }));
+                                    await handleUnitKerjaChange(unit.unitKerja);
                                     setShowDropdownUnit(false);
                                   }}
                                 >
@@ -548,6 +572,7 @@ const FormStep1 = ({
                         </div>
                       )}
                     </div>
+
                     <div
                       className="w-full flex flex-col items-start mt-3 relative"
                       ref={dropdownRef}
@@ -561,6 +586,10 @@ const FormStep1 = ({
                         name="memberName"
                         value={searchTerm}
                         onChange={handleSearch}
+                        onFocus={() => {
+                          setFilteredNames(temanUnitKerjaData);
+                          setIsDropdownVisible(true);
+                        }}
                         placeholder="Cari Nama Anggota"
                         className="text-sm"
                       />
