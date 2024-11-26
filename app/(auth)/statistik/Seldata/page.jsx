@@ -426,7 +426,7 @@ const DataTable = () => {
                                       className="border text-center"
                                       colSpan="2"
                                     ></TableCell>
-                                    <TableCell className="border">
+                                    <TableCell className="border text-center">
                                       {extraNama}
                                     </TableCell>
                                     <TableCell className="border text-center">

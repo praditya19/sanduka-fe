@@ -587,6 +587,16 @@ const getCalculateSandukaKeluar = async (month, year, cabang) => {
   }
 };
 
+const getTotalAnggotaStatistik = async () => {
+  try {
+    const respons = await axiosClient.get("/api/iuran/total-anggota")
+    return respons.data;
+  } catch (error) {
+    console.error('Error fetching total anggota:', error);
+      throw error;
+  }
+}
+
 // Sinkronisasi
 const uploadFile = async (formData) => {
   try {
@@ -1227,4 +1237,5 @@ export default {
   getCalculateSandukaMeninggal,
   getCalculateSandukaPensiun,
   getCalculateSandukaKeluar,
+  getTotalAnggotaStatistik,
 };

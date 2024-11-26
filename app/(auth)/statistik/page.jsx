@@ -39,6 +39,9 @@ const Page = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
   const { token } = useAuth();
+  const [totalAnggota, setTotalAnggota] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const today = new Date();
@@ -91,6 +94,21 @@ const Page = () => {
     };
 
     fetchCabangData();
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await GlobalApi.getTotalAnggota();
+        setTotalAnggota(data);
+        setLoading(false);
+      } catch (error) {
+        setError(error.message);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const fetchCalculateSanduka = async () => {
@@ -298,7 +316,7 @@ const Page = () => {
                     </div>
                     <div className="ml-2 sm:ml-4">
                       <div className="text-base sm:text-base font-semibold text-gray-800">
-                        6950
+                      <p>{totalAnggota !== null ? totalAnggota : 'No data available'}</p>
                       </div>
                       <div className="text-xs sm:text-sm text-gray-500">
                         Total Anggota
