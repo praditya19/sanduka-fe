@@ -81,7 +81,7 @@ export default function LaporCabang() {
           }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-            <h1 className="text-3xl font-bold text-green-700 mb-8 text-center mt-4">
+            <h1 className="text-3xl font-bold text-green-700 text-center mt-3">
               DATA LAPOR
             </h1>
             <ReportCard />

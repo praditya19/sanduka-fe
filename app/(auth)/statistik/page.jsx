@@ -24,7 +24,6 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 import { Input } from "@/components/ui/input";
 
 const Page = () => {
-  // State Management
   const [searchTerm, setSearchTerm] = useState("");
   const [cabangOptions, setCabangOptions] = useState([]);
   const [filteredOptions, setFilteredOptions] = useState([]);
@@ -32,7 +31,7 @@ const Page = () => {
   const [selectedTahun, setSelectedTahun] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [tahunOptions, setTahunOptions] = useState([]);
-  const [data, setData] = useState([]);
+  const [tableData, setTableData] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [bulanOptions, setBulanOptions] = useState([]);
@@ -40,17 +39,19 @@ const Page = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
   const { token } = useAuth();
+  const [totalAnggota, setTotalAnggota] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const today = new Date();
-    const currentMonth = today.toLocaleString("default", { month: "long" }); // e.g., "September"
-    const currentYear = today.getFullYear(); // e.g., 2024
+    const currentMonth = today.toLocaleString("default", { month: "long" });
+    const currentYear = today.getFullYear();
 
     setSelectedBulan(currentMonth);
     setSelectedTahun(currentYear);
   }, []);
 
-  // Effect for fetching options
   useEffect(() => {
     const fetchOptions = async () => {
       try {
@@ -59,7 +60,7 @@ const Page = () => {
           setBulanOptions(bulanResponse.data);
 
           const currentMonthIndex = new Date().getMonth();
-          const currentMonth = bulanResponse.data[currentMonthIndex]?.namaBulan;
+          const currentMonth = bulanResponse.data[currentMonthIndex]?.id;
 
           if (currentMonth) {
             setSelectedBulan(currentMonth);
@@ -95,54 +96,51 @@ const Page = () => {
     fetchCabangData();
   }, []);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await GlobalApi.getTotalAnggota();
+        setTotalAnggota(data);
+        setLoading(false);
+      } catch (error) {
+        setError(error.message);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const fetchCalculateSanduka = async () => {
+    try {
+      const data = await GlobalApi.getCalculateSanduka(
+        selectedBulan,
+        selectedTahun,
+        selectedCabang || null
+      );
+      if (Array.isArray(data)) {
+        setTableData(data);
+      } else {
+        console.error("API response is not an array:", data);
+        setTableData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching calculate-sanduka data:", error);
+      setTableData([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchCalculateSanduka();
+  }, [selectedBulan, selectedTahun, selectedCabang]);
+
+  useEffect(() => {}, [tableData]);
+
   const handleCabangClick = () => {
     setSearchTerm("");
     setFilteredOptions(cabangOptions);
     setShowDropdown(true);
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        let result;
-        const bulan = selectedBulan || null;
-        const tahun = selectedTahun || null;
-
-        if (selectedCabang) {
-          result = await GlobalApi.getCalculateSanduka(
-            bulan,
-            tahun,
-            selectedCabang
-          );
-          const dataArray = [
-            {
-              cabang: selectedCabang,
-              ...result,
-            },
-          ];
-          setData(dataArray);
-        } else if (searchTerm.trim() === "") {
-          result = await GlobalApi.getCalculateSandukaAll(bulan, tahun);
-
-          if (typeof result === "object" && result !== null) {
-            const dataArray = Object.entries(result).map(
-              ([cabang, values]) => ({
-                cabang,
-                ...values,
-              })
-            );
-            setData(dataArray);
-          } else {
-            setData([]);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, [selectedBulan, selectedTahun, selectedCabang, searchTerm]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -193,6 +191,48 @@ const Page = () => {
     setIsSidebarOpen(sidebarState);
   }, []);
 
+  const handlePrint = () => {
+    const printWindow = window.open("", "", "width=800,height=600");
+    printWindow.document.write("<html><head><title>Data Statistik</title>");
+    printWindow.document.write(
+      "<style>@media print { .no-print { display: none; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #000; padding: 8px; text-align: center; } }</style>"
+    );
+    printWindow.document.write("</head><body>");
+    printWindow.document.write(
+      '<button class="no-print" onclick="window.print()">Print</button>'
+    );
+    printWindow.document.write(
+      '<table class="table-auto w-full border-collapse border border-gray-300 text-sm">'
+    );
+    printWindow.document.write('<thead class="bg-gray-100">');
+    printWindow.document.write(
+      "<tr><th>No</th><th>Cabang</th><th>Data Lalu</th><th>Mutasi Baru</th><th>Pensiun</th><th>Meninggal</th><th>Keluar Anggota</th><th>Masuk</th><th>Keluar</th><th>Data Sekarang</th></tr>"
+    );
+    printWindow.document.write("</thead>");
+    printWindow.document.write('<tbody class="divide-y divide-gray-200">');
+
+    tableData.forEach((item, index) => {
+      printWindow.document.write("<tr>");
+      printWindow.document.write(`<td>${index + 1}</td>`);
+      printWindow.document.write(`<td>${item.cabang}</td>`);
+      printWindow.document.write(`<td>${item.dataLalu}</td>`);
+      printWindow.document.write(`<td>${item.baru}</td>`);
+      printWindow.document.write(`<td>${item.pensiun}</td>`);
+      printWindow.document.write(`<td>${item.meninggal}</td>`);
+      printWindow.document.write(`<td>${item.keluarAnggota}</td>`);
+      printWindow.document.write(`<td>${item.pindahCabangMasuk}</td>`);
+      printWindow.document.write(`<td>${item.pindahCabangKeluar}</td>`);
+      printWindow.document.write(`<td>${item.dataSekarang}</td>`);
+      printWindow.document.write("</tr>");
+    });
+
+    printWindow.document.write("</tbody>");
+    printWindow.document.write("</table>");
+    printWindow.document.write("</body></html>");
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
@@ -229,7 +269,7 @@ const Page = () => {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <div className="w-full p-4 container shadow-lg rounded-lg mt-12">
+          <div className="w-full p-4 container shadow-lg rounded-lg mt-5">
             <div className="rounded-md flex flex-col py-4">
               <div className="container px-2">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
@@ -276,7 +316,7 @@ const Page = () => {
                     </div>
                     <div className="ml-2 sm:ml-4">
                       <div className="text-base sm:text-base font-semibold text-gray-800">
-                        6950
+                      <p>{totalAnggota !== null ? totalAnggota : 'No data available'}</p>
                       </div>
                       <div className="text-xs sm:text-sm text-gray-500">
                         Total Anggota
@@ -284,39 +324,39 @@ const Page = () => {
                     </div>
                   </div>
                 </div>
-                <div className="flex mb-4">
-                  <div className="w-full flex space-x-4">
-                    <div className="relative" ref={dropdownRef}>
+                <div className="w-full flex flex-col md:flex-row md:items-center md:justify-between mb-4 space-y-4 md:space-y-0">
+                  <div className="w-full grid grid-cols-1 gap-4 md:flex md:space-x-4">
+                    <div
+                      className="relative w-full md:w-auto"
+                      ref={dropdownRef}
+                    >
                       <Input
                         type="text"
                         placeholder="Cabang terpilih"
                         value={selectedCabang}
                         readOnly
-                        className="p-2 border border-gray-300 rounded-md mb-2 w-64"
-                        onClick={handleCabangClick} 
+                        className="p-2 border border-gray-300 rounded-md w-full"
+                        onClick={handleCabangClick}
                       />
-
                       {showDropdown && (
-                        <div className="absolute z-10 border rounded-lg bg-white shadow-sm -mt-1 w-full">
-                        <ul className="max-h-44 overflow-y-auto">
-                        <li className="py-2 px-2">
-                          <Input
-                            type="text"
-                            placeholder="Cari atau ketik Cabang..."
-                            value={searchTerm}
-                            onChange={handleInputChange}
-                            className="p-2 border-b border-gray-300 w-full mt-1"
-                            autoFocus
-                            />
+                        <div className="absolute z-10 border rounded-lg bg-white shadow-sm w-full mt-1">
+                          <ul className="max-h-44 overflow-y-auto">
+                            <li className="py-2 px-2">
+                              <Input
+                                type="text"
+                                placeholder="Cari atau ketik Cabang..."
+                                value={searchTerm}
+                                onChange={handleInputChange}
+                                className="p-2 border-b border-gray-300 w-full"
+                                autoFocus
+                              />
                             </li>
-
                             <li
                               className="p-2 hover:bg-blue-100 cursor-pointer text-gray-700"
-                              onClick={() => handleOptionClick(null)} 
+                              onClick={() => handleOptionClick(null)}
                             >
                               Pilih Cabang
                             </li>
-
                             {filteredOptions.length > 0 ? (
                               filteredOptions.map((option, index) => (
                                 <li
@@ -337,232 +377,159 @@ const Page = () => {
                       )}
                     </div>
 
-                    {/* Dropdown for Bulan */}
-                    <div>
-                      <select
-                        onChange={handleBulanChange}
-                        value={selectedBulan}
-                        className="p-2 border border-gray-300 rounded-md mb-2 w-40"
-                      >
-                        {Array.isArray(bulanOptions) &&
-                          bulanOptions.map((bulan) => (
-                            <option key={bulan.id} value={bulan.namaBulan}>
-                              {bulan.namaBulan}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-
-                    {/* Dropdown for Tahun */}
-                    <div>
-                      <select
-                        value={selectedTahun}
-                        onChange={handleTahunChange}
-                        className="p-2 border border-gray-300 rounded-md mb-2 w-40"
-                      >
-                        <option value="">Pilih Tahun</option>
-                        {tahunOptions.map((tahun) => (
-                          <option key={tahun} value={tahun}>
-                            {tahun}
+                    <select
+                      onChange={handleBulanChange}
+                      value={selectedBulan}
+                      className="p-2 border border-gray-300 rounded-md w-full md:w-40"
+                    >
+                      {Array.isArray(bulanOptions) &&
+                        bulanOptions.map((bulan) => (
+                          <option key={bulan.id} value={bulan.id}>
+                            {bulan.namaBulan}
                           </option>
                         ))}
-                      </select>
-                    </div>
+                    </select>
+
+                    <select
+                      value={selectedTahun}
+                      onChange={handleTahunChange}
+                      className="p-2 border border-gray-300 rounded-md w-full md:w-40"
+                    >
+                      <option value="">Pilih Tahun</option>
+                      {tahunOptions.map((tahun) => (
+                        <option key={tahun} value={tahun}>
+                          {tahun}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="w-full md:w-auto">
+                    <button
+                      onClick={handlePrint}
+                      className="w-full md:w-auto px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
+                    >
+                      Cetak
+                    </button>
                   </div>
                 </div>
-                <Table className="table-auto w-full border-collapse border border-gray-300 text-sm">
-                  <TableHeader className="bg-gray-100">
-                    <TableRow>
-                      <TableHead
-                        rowSpan="2"
-                        className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white"
-                      >
-                        No
-                      </TableHead>
-                      <TableHead
-                        rowSpan="2"
-                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                      >
-                        Cabang
-                      </TableHead>
-                      <TableHead
-                        rowSpan="2"
-                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                      >
-                        Data Lalu
-                      </TableHead>
-                      <TableHead
-                        colSpan="5"
-                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                      >
-                        Mutasi
-                      </TableHead>
-                      <TableHead
-                        colSpan="2"
-                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                      >
-                        Pindah Cabang
-                      </TableHead>
-                      <TableHead
-                        rowSpan="2"
-                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                      >
-                        Data Sekarang
-                      </TableHead>
-                    </TableRow>
-                    <TableRow>
-                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                        Baru
-                      </TableHead>
-                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                        Aktif
-                      </TableHead>
-                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                        Pensiun
-                      </TableHead>
-                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                        Meninggal
-                      </TableHead>
-                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                        Keluar Anggota
-                      </TableHead>
-                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                        masuk
-                      </TableHead>
-                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                        keluar
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {data.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={11}
-                          className="border border-gray-300 p-2 text-center text-gray-500"
+
+                <div className="overflow-x-auto">
+                  <table className="table-auto w-full border-collapse border border-gray-300 text-sm">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th
+                          rowSpan="2"
+                          className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white"
                         >
-                          Tidak ada data. Silakan pilih filter untuk melihat
-                          hasil.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      (() => {
-                        // Inisialisasi variabel untuk menghitung total
-                        let totalLalu = 0,
-                          totalMurni = 0,
-                          totalAktifkan = 0,
-                          totalPensiun = 0,
-                          totalMeninggal = 0,
-                          totalKeluarLainnya = 0,
-                          totalMasuk = 0,
-                          totalKeluar = 0,
-                          totalDataSekarang = 0;
-
-                        return (
-                          <>
-                            {data.map((item, index) => {
-                              // Hitung dataSekarang
-                              const dataSekarang =
-                                item.jumlahLalu +
-                                item.jumlahMurni -
-                                item.jumlahPensiun -
-                                item.jumlahMeninggal -
-                                item.jumlahKeluarLainnya +
-                                item.jumlahMasuk -
-                                item.jumlahKeluar;
-
-                              // Akumulasi nilai ke variabel total
-                              totalLalu += item.jumlahLalu;
-                              totalMurni += item.jumlahMurni;
-                              totalAktifkan += item.jumlahAktifkan;
-                              totalPensiun += item.jumlahPensiun;
-                              totalMeninggal += item.jumlahMeninggal;
-                              totalKeluarLainnya += item.jumlahKeluarLainnya;
-                              totalMasuk += item.jumlahMasuk;
-                              totalKeluar += item.jumlahKeluar;
-                              totalDataSekarang += dataSekarang;
-
-                              return (
-                                <TableRow key={index}>
-                                  <TableCell className="text-center border">
-                                    {index + 1}
-                                  </TableCell>
-                                  <TableCell className="border border-gray-300 p-2 text-xs">
-                                    {item.cabang || selectedCabang}
-                                  </TableCell>
-                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                    {item.jumlahLalu}
-                                  </TableCell>
-                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                    {item.jumlahMurni}
-                                  </TableCell>
-                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                    {item.jumlahAktifkan}
-                                  </TableCell>
-                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                    {item.jumlahPensiun}
-                                  </TableCell>
-                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                    {item.jumlahMeninggal}
-                                  </TableCell>
-                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                    {item.jumlahKeluarLainnya}
-                                  </TableCell>
-                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                    {item.jumlahMasuk}
-                                  </TableCell>
-                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                    {item.jumlahKeluar}
-                                  </TableCell>
-                                  <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                    {dataSekarang}
-                                  </TableCell>
-                                </TableRow>
-                              );
-                            })}
-
-                            {/* Baris Total */}
-                            <TableRow className="bg-gray-200">
-                              <TableCell
-                                colSpan="2"
-                                className="border border-gray-300 p-2 text-xs font-bold text-center"
-                              >
-                                Total
-                              </TableCell>
-                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                {totalLalu}
-                              </TableCell>
-                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                {totalMurni}
-                              </TableCell>
-                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                {totalAktifkan}
-                              </TableCell>
-                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                {totalPensiun}
-                              </TableCell>
-                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                {totalMeninggal}
-                              </TableCell>
-                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                {totalKeluarLainnya}
-                              </TableCell>
-                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                {totalMasuk}
-                              </TableCell>
-                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                {totalKeluar}
-                              </TableCell>
-                              <TableCell className="border border-gray-300 p-2 text-xs text-center">
-                                {totalDataSekarang}
-                              </TableCell>
-                            </TableRow>
-                          </>
-                        );
-                      })()
-                    )}
-                  </TableBody>
-                </Table>
+                          No
+                        </th>
+                        <th
+                          rowSpan="2"
+                          className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                        >
+                          Cabang
+                        </th>
+                        <th
+                          rowSpan="2"
+                          className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                        >
+                          Data Lalu
+                        </th>
+                        <th
+                          colSpan="4"
+                          className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                        >
+                          Mutasi
+                        </th>
+                        <th
+                          colSpan="2"
+                          className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                        >
+                          Pindah Cabang
+                        </th>
+                        <th
+                          rowSpan="2"
+                          className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                        >
+                          Data Sekarang
+                        </th>
+                      </tr>
+                      <tr>
+                        <th className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                          Baru
+                        </th>
+                        <th className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                          Pensiun
+                        </th>
+                        <th className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                          Meninggal
+                        </th>
+                        <th className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                          Keluar Anggota
+                        </th>
+                        <th className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                          Masuk
+                        </th>
+                        <th className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                          Keluar
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {Array.isArray(tableData) && tableData.length > 0 ? (
+                        tableData.map((item, index) => (
+                          <tr
+                            key={index}
+                            className={
+                              index % 2 === 0 ? "bg-gray-100" : "bg-white"
+                            }
+                          >
+                            <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                              {index + 1}
+                            </td>
+                            <td className="border border-gray-300 p-2 text-xs">
+                              {item.cabang}
+                            </td>
+                            <td className="border border-gray-300 p-2 text-xs text-center">
+                              {item.dataLalu}
+                            </td>
+                            <td className="border border-gray-300 p-2 text-xs text-center">
+                              {item.baru}
+                            </td>
+                            <td className="border border-gray-300 p-2 text-xs text-center">
+                              {item.pensiun}
+                            </td>
+                            <td className="border border-gray-300 p-2 text-xs text-center">
+                              {item.meninggal}
+                            </td>
+                            <td className="border border-gray-300 p-2 text-xs text-center">
+                              {item.keluarAnggota}
+                            </td>
+                            <td className="border border-gray-300 p-2 text-xs text-center">
+                              {item.pindahCabangMasuk}
+                            </td>
+                            <td className="border border-gray-300 p-2 text-xs text-center">
+                              {item.pindahCabangKeluar}
+                            </td>
+                            <td className="border border-gray-300 p-2 text-xs text-center">
+                              {item.dataSekarang}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan="11"
+                            className="px-6 py-4 text-center text-gray-500 text-sm"
+                          >
+                            No data available
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
             <div

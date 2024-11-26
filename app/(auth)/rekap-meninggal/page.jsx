@@ -217,7 +217,7 @@ const Page = () => {
                     </select>
                   </div>
                   <button
-                    onClick={() => window.print()} // Fungsi untuk mencetak halaman
+                    onClick={() => window.print()}
                     className="p-2 px-4 bg-blue-500 text-white rounded w-full md:w-auto"
                   >
                     Cetak
