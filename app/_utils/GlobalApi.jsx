@@ -2,7 +2,7 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "https://13f1-103-134-212-202.ngrok-free.app",
+  baseURL: "http://localhost:8080",
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
@@ -503,15 +503,86 @@ const getTemanUnitKerja = async (unitKerja, page = 0, size = 50) => {
 const getCalculateSanduka = async (bulan, tahun, cabang) => {
   try {
     const response = await axiosClient.get("/api/calculate-sanduka", {
+      params: { bulan, tahun, cabang },
+    });
+    if (response.data) {
+      return response.data;
+    } else {
+      throw new Error("Invalid response data");
+    }
+  } catch (error) {
+    if (error.response && error.response.status === 500) {
+      console.warn(
+        "Server returned status 500 but with data:",
+        error.response.data
+      );
+      return error.response.data;
+    }
+    console.error("Error fetching calculate-sanduka data:", error);
+    throw error;
+  }
+};
+
+const getCalculateSandukaBaru = async (month, year, cabang) => {
+  try {
+    const respons = await axiosClient.get("/api/calculate-sanduka/baru", {
       params: {
-        xbulan: bulan,
-        xtahun: tahun,
-        cabang: cabang,
+        cabang: cabang || null,
+        year: year,
+        month: month,
       },
     });
-    return response.data;
+    return respons.data;
   } catch (error) {
-    console.error("Error fetching calculate sanduka:", error);
+    console.error("Error fetching calculate-sanduka data:", error);
+    throw error;
+  }
+};
+
+const getCalculateSandukaMeninggal = async (month, year, cabang) => {
+  try {
+    const respons = await axiosClient.get("/api/calculate-sanduka/meninggal", {
+      params: {
+        cabang: cabang || null,
+        year: year,
+        month: month,
+      },
+    });
+    return respons.data;
+  } catch (error) {
+    console.error("Error fetching calculate-sanduka data:", error);
+    throw error;
+  }
+};
+
+const getCalculateSandukaPensiun = async (month, year, cabang) => {
+  try {
+    const respons = await axiosClient.get("/api/calculate-sanduka/pensiun", {
+      params: {
+        cabang: cabang || null,
+        year: year,
+        month: month,
+      },
+    });
+    return respons.data;
+  } catch (error) {
+    console.error("Error fetching calculate-sanduka data:", error);
+    throw error;
+  }
+};
+
+const getCalculateSandukaKeluar = async (month, year, cabang) => {
+  try {
+    const respons = await axiosClient.get("/api/calculate-sanduka/keluar-anggota", {
+      params: {
+        cabang: cabang || null,
+        year: year,
+        month: month,
+      },
+    });
+    return respons.data;
+  } catch (error) {
+    console.error("Error fetching calculate-sanduka data:", error);
     throw error;
   }
 };
@@ -521,7 +592,7 @@ const uploadFile = async (formData) => {
   try {
     const response = await axiosClient.post("/api/files/upload", formData, {
       headers: {
-        "Content-Type": "multipart/form-data", // Pastikan menggunakan tipe konten yang sesuai
+        "Content-Type": "multipart/form-data",
       },
     });
 
@@ -1152,4 +1223,8 @@ export default {
   searchUsersByName,
   deleteUser,
   getHistoryDataById,
+  getCalculateSandukaBaru,
+  getCalculateSandukaMeninggal,
+  getCalculateSandukaPensiun,
+  getCalculateSandukaKeluar,
 };

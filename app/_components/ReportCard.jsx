@@ -233,7 +233,7 @@ export default function ReportCard() {
   }, [dataList]);
 
   return (
-    <div className="relative max-w-sm mx-auto bg-white shadow-lg rounded-2xl overflow-hidden my-6 border border-gray-300">
+    <div className="relative max-w-sm mx-auto bg-white shadow-lg rounded-2xl overflow-hidden my-4 border border-gray-300">
       <Toaster
         toastOptions={{
           style: {
