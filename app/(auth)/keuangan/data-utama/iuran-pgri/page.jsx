@@ -11,7 +11,6 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function Iuran() {
-  
   const [totalAnggota, setTotalAnggota] = useState(null);
   const [iuranPB, setIuranPB] = useState("");
   const [iuranProvinsi, setIuranProvinsi] = useState("");
@@ -21,22 +20,22 @@ export default function Iuran() {
   const [totalIuran, setTotalIuran] = useState("");
   const [sumbanganSanduka, setSumbanganSanduka] = useState("");
   const [totalSumbangan, setTotalSumbangan] = useState("");
-  const [selectedBulan, setSelectedBulan] = useState(""); 
-  const [tahun, setTahun] = useState(""); 
-  const [isFormVisible, setFormVisible] = useState(false); 
+  const [selectedBulan, setSelectedBulan] = useState("");
+  const [tahun, setTahun] = useState("");
+  const [isFormVisible, setFormVisible] = useState(false);
   const [bulanList, setBulanList] = useState([]);
-  const [cabangList, setCabangList] = useState([]); 
-  const [selectedCabang, setSelectedCabang] = useState(""); 
-  const [keteranganSelisih, setKeteranganSelisih] = useState(""); 
-  const [jumlah, setJumlah] = useState(""); 
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); 
+  const [cabangList, setCabangList] = useState([]);
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [keteranganSelisih, setKeteranganSelisih] = useState("");
+  const [jumlah, setJumlah] = useState("");
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [newSelectedYear, setNewSelectedYear] = useState(
     new Date().getFullYear()
-  ); 
-  const [isMobile, setIsMobile] = useState(false); 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
+  );
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedBulanBaru, setSelectedBulanBaru] = useState("");
-  const [newCabangList, setNewCabangList] = useState([]); 
+  const [newCabangList, setNewCabangList] = useState([]);
   const [dataSumbangan, setDataSumbangan] = useState([]);
 
   const currentYear = new Date().getFullYear();
@@ -44,14 +43,13 @@ export default function Iuran() {
 
   useEffect(() => {
     const fetchTotalAnggota = async () => {
-      const response = await GlobalApi.getTotalAnggota(); 
-      setTotalAnggota(response); 
+      const response = await GlobalApi.getTotalAnggota();
+      setTotalAnggota(response);
     };
 
-    fetchTotalAnggota(); 
+    fetchTotalAnggota();
   }, []);
 
-  
   useEffect(() => {
     const fetchData = async () => {
       const data = await GlobalApi.getTableIuran(
@@ -63,14 +61,13 @@ export default function Iuran() {
     };
 
     if (selectedBulanBaru && newSelectedYear) {
-      
       fetchData();
     }
   }, [selectedBulanBaru, newSelectedYear, newCabangList]);
 
   useEffect(() => {
     if (!selectedBulanBaru || !newSelectedYear) {
-      setDataSumbangan([]); 
+      setDataSumbangan([]);
     }
   }, [selectedBulanBaru, newSelectedYear]);
 
@@ -78,22 +75,20 @@ export default function Iuran() {
     setKeteranganSelisih(event.target.value);
   };
 
-  
   const years = Array.from(
     { length: currentYear - startYear + 1 },
     (_, index) => startYear + index
   );
 
-  
   useEffect(() => {
     const fetchBulan = async () => {
       try {
         const response = await GlobalApi.getBulan();
-        
-        setBulanList(response.data || []); 
+
+        setBulanList(response.data || []);
       } catch (error) {
         console.error("Error fetching bulan:", error);
-        setBulanList([]); 
+        setBulanList([]);
       }
     };
 
@@ -104,7 +99,7 @@ export default function Iuran() {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setCabangList(response.data); 
+        setCabangList(response.data);
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -114,18 +109,17 @@ export default function Iuran() {
   }, []);
 
   useEffect(() => {
-    
     const currentDate = new Date();
     const currentMonth = new Intl.DateTimeFormat("id-ID", {
       month: "long",
-    }).format(currentDate); 
-    const currentYear = currentDate.getFullYear(); 
+    }).format(currentDate);
+    const currentYear = currentDate.getFullYear();
     setBulan(currentMonth);
     setTahun(currentYear);
   }, []);
 
   const handleSubmit = async (event) => {
-    event.preventDefault(); 
+    event.preventDefault();
     const payload = {
       pb: iuranPB,
       propinsi: iuranProvinsi,
@@ -137,12 +131,11 @@ export default function Iuran() {
     };
 
     try {
-      const result = await GlobalApi.createIuranData(payload); 
-      handleReset(); 
+      const result = await GlobalApi.createIuranData(payload);
+      handleReset();
 
-      
       toast.success("Data berhasil disimpan!");
-      
+
       setTimeout(() => {
         window.location.reload();
       }, 2000);
@@ -152,9 +145,8 @@ export default function Iuran() {
   };
 
   const handleSubmitTarget = async (event) => {
-    event.preventDefault(); 
+    event.preventDefault();
 
-    
     const payload = {
       cabang: selectedCabang,
       jumlah: jumlah,
@@ -164,63 +156,24 @@ export default function Iuran() {
     };
 
     try {
-      
       const result = await GlobalApi.createTargetIuaran(payload);
 
-      
       toast.success("Data berhasil disimpan!");
     } catch (error) {
-      
       toast.error(`Gagal menyimpan data: ${error.message}`);
     }
   };
 
   useEffect(() => {
-    
     const total = iuranPB + iuranProvinsi + iuranKabupaten + iuranCabang;
     setTotalIuran(total);
     setTotalSumbangan(total + sumbanganSanduka);
   }, [iuranPB, iuranProvinsi, iuranKabupaten, iuranCabang, sumbanganSanduka]);
 
-  
-  // useEffect(() => {
-  //   const storedData = sessionStorage.getItem("PGRIData");
-  //   if (storedData) {
-  //     const data = JSON.parse(storedData);
-
-      
-  //     const firstItem = data[0];
-
-      
-  //     if (firstItem) {
-  //       setIuranPB(Number(firstItem.pb));
-  //       setIuranProvinsi(Number(firstItem.propinsi));
-  //       setIuranKabupaten(Number(firstItem.kabupaten));
-  //       setIuranCabang(Number(firstItem.cabang));
-  //       setSumbanganSanduka(Number(firstItem.sanduka));
-
-        
-  //       const calculatedTotalIuran =
-  //         Number(firstItem.pb) +
-  //         Number(firstItem.propinsi) +
-  //         Number(firstItem.kabupaten) +
-  //         Number(firstItem.cabang);
-
-  //       setTotalIuran(calculatedTotalIuran);
-
-        
-  //       const calculatedTotalSumbangan =
-  //         calculatedTotalIuran + (Number(firstItem.sanduka) || 0);
-
-  //       setTotalSumbangan(calculatedTotalSumbangan);
-  //     }
-  //   }
-  // }, []);
   const fetchIuranData = () => {
     const storedData = sessionStorage.getItem("PGRIData");
     if (storedData) {
       const data = JSON.parse(storedData);
-
       const firstItem = data[0];
 
       if (firstItem) {
@@ -247,7 +200,7 @@ export default function Iuran() {
   };
 
   const handleInputChange = (event, setter) => {
-    setter(Number(event.target.value.replace(/\D/g, ""))); 
+    setter(Number(event.target.value.replace(/\D/g, "")));
   };
 
   const handleReset = () => {
@@ -255,26 +208,18 @@ export default function Iuran() {
 
     if (storedData) {
       const data = JSON.parse(storedData);
-      const firstItem = data[0]; 
+      const firstItem = data[0];
 
       if (firstItem) {
-        setIuranPB(parseInt(firstItem.pb) || 0); 
-        setIuranProvinsi(parseInt(firstItem.propinsi) || 0); 
-        setIuranKabupaten(parseInt(firstItem.kabupaten) || 0); 
-        setIuranCabang(parseInt(firstItem.cabang) || 0); 
-        setSumbanganSanduka(parseInt(firstItem.sanduka) || 0); 
+        setIuranPB(parseInt(firstItem.pb) || 0);
+        setIuranProvinsi(parseInt(firstItem.propinsi) || 0);
+        setIuranKabupaten(parseInt(firstItem.kabupaten) || 0);
+        setIuranCabang(parseInt(firstItem.cabang) || 0);
+        setSumbanganSanduka(parseInt(firstItem.sanduka) || 0);
       }
-    } else {
-      
-      setIuranPB(6400); 
-      setIuranProvinsi(1200); 
-      setIuranKabupaten(1800); 
-      setIuranCabang(2400); 
-      setSumbanganSanduka(3000); 
     }
   };
 
-  
   const formatRupiah = (value) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -288,7 +233,6 @@ export default function Iuran() {
     setFormVisible(!isFormVisible);
   };
 
-  
   const handlePrint = () => {
     const printContent = document.getElementById("printTable").innerHTML;
     const newWindow = window.open("", "", "width=800,height=600");
@@ -386,26 +330,26 @@ export default function Iuran() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-           <Toaster
-          toastOptions={{
-            style: {
-              fontSize: "1.25rem", 
-              padding: "16px", 
-            },
-            success: {
+          <Toaster
+            toastOptions={{
               style: {
-                background: "white", 
-                color: "black",
+                fontSize: "1.25rem",
+                padding: "16px",
               },
-            },
-            error: {
-              style: {
-                background: "#f44336", 
-                color: "#fff",
+              success: {
+                style: {
+                  background: "white",
+                  color: "black",
+                },
               },
-            },
-          }}
-        />
+              error: {
+                style: {
+                  background: "#f44336",
+                  color: "#fff",
+                },
+              },
+            }}
+          />
           <div className="w-full p-4 bg-gray-50 rounded-lg shadow-lg">
             <Button
               className="bg-green-500 hover:bg-green-700 text-white font-bold rounded"
@@ -648,7 +592,7 @@ export default function Iuran() {
                       className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                       id="newCabangTable"
                       value={newCabangList}
-                      onChange={(e) => setNewCabangList(e.target.value)} 
+                      onChange={(e) => setNewCabangList(e.target.value)}
                     >
                       <option value="">Pilih Cabang Baru</option>
                       {cabangList.map((cabang) => (
@@ -679,7 +623,7 @@ export default function Iuran() {
                       className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                       id="tahunTable"
                       value={newSelectedYear}
-                      onChange={(e) => setNewSelectedYear(e.target.value)} 
+                      onChange={(e) => setNewSelectedYear(e.target.value)}
                     >
                       <option value="">Pilih Tahun</option>
                       {years.map((year) => (
@@ -746,22 +690,22 @@ export default function Iuran() {
                       <td className="border px-6 py-4 text-center"></td>
                       <td className="border px-6 py-4 text-center"></td>
                       <td className="border px-6 py-4 text-center text-sm">
-                        {formatRupiah(6000)}
+                        {formatRupiah(totalIuran)}
                       </td>
                       <td className="border px-6 py-4 text-center text-sm">
-                        {formatRupiah(600)}
+                        {formatRupiah(iuranPB)}
                       </td>
                       <td className="border px-6 py-4 text-center text-sm">
-                        {formatRupiah(1200)}
+                        {formatRupiah(iuranProvinsi)}
                       </td>
                       <td className="border px-6 py-4 text-center text-sm">
-                        {formatRupiah(1800)}
+                        {formatRupiah(iuranKabupaten)}
                       </td>
                       <td className="border px-6 py-4 text-center text-sm">
-                        {formatRupiah(2400)}
+                        {formatRupiah(iuranCabang)}
                       </td>
                       <td className="border px-6 py-4 text-center text-sm">
-                        {formatRupiah(3000)}
+                        {formatRupiah(sumbanganSanduka)}
                       </td>
                       <td className="border px-6 py-4 text-center text-sm"></td>
                     </tr>

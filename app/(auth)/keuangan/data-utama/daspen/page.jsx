@@ -204,11 +204,6 @@ export default function Daspen() {
       setKatagori1(parseInt(daspen.propinsi));
       setKatagori2(parseInt(daspen.kabupaten));
       setKatagori3(parseInt(daspen.cabang));
-    } else {
-      setKatagori1(0);
-      setKatagori2(0);
-      setKatagori3(0);
-      setKuota(0);
     }
   };
 
