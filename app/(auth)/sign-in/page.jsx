@@ -48,6 +48,8 @@ function SignIn() {
       sessionStorage.setItem("unitKerja", response.unitKerja);
       sessionStorage.setItem("nama", response.namaLengkap);
       sessionStorage.setItem("role", response.role);
+      // Added: Store NPA PGRI in sessionStorage
+      sessionStorage.setItem("npaPgri", npaPgri);
 
       const nama = sessionStorage.getItem("nama");
       toast.success(`Selamat Datang ${nama}`);
@@ -89,6 +91,8 @@ function SignIn() {
       sessionStorage.setItem("userId", response.id);
       sessionStorage.setItem("nama", response.namaLengkap);
       sessionStorage.setItem("role", response.role);
+      // Added: Store NPA PGRI in sessionStorage
+      sessionStorage.setItem("npaPgri", npaPgriValue);
 
       toast.success(`Selamat Datang ${response.namaLengkap}`);
 
@@ -140,21 +144,19 @@ function SignIn() {
         {/* Tab Navigation */}
         <div className="flex flex-wrap justify-center space-x-2 sm:space-x-4 mt-4">
           <button
-            className={`rounded-md p-2 ${
-              activeTab === "login"
+            className={`rounded-md p-2 ${activeTab === "login"
                 ? "bg-teal-500 text-white"
                 : "bg-white text-teal-500"
-            }`}
+              }`}
             onClick={() => setActiveTab("login")}
           >
             Anggota
           </button>
           <button
-            className={`rounded-md p-2 ${
-              activeTab === "password"
+            className={`rounded-md p-2 ${activeTab === "password"
                 ? "bg-teal-500 text-white"
                 : "bg-white text-teal-500"
-            }`}
+              }`}
             onClick={() => setActiveTab("password")}
           >
             Admin & Super Admin
