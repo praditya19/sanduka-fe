@@ -13,12 +13,14 @@ import toast, { Toaster } from "react-hot-toast";
 
 function Pemasukan() {
   const tableRef = useRef();
+  const [selectAll, setSelectAll] = useState(false);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const dropdownRef = useRef(null);
   const [transactions, setTransactions] = useState([]);
   const [bulanList, setBulanList] = useState([]);
   const [cabangList, setCabangList] = useState([]);
   const [selectedBulan, setSelectedBulan] = useState("");
+  const [selectedBulanName, setSelectedBulanName] = useState("");
   const currentYear = new Date().getFullYear();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const startYear = 2020;
@@ -41,6 +43,7 @@ function Pemasukan() {
     jenisPembayaran: "Sanduka",
     totalAnggota: "",
     cabang: "",
+    checked: false,
   });
 
   const handleChange = (e) => {
@@ -52,20 +55,57 @@ function Pemasukan() {
   };
 
   const handleBulanChange = (e) => {
-    setSelectedBulan(e.target.value);
+    const selectedId = e.target.value; // Ambil ID bulan yang dipilih
+    setSelectedBulan(selectedId);
+  
+    // Cari nama bulan berdasarkan ID
+    const bulan = bulanList.find((b) => b.id === parseInt(selectedId));
+    setSelectedBulanName(bulan ? bulan.namaBulan : ""); // Update nama bulan
   };
+  
 
   const printTable = () => {
-    const printContent = tableRef.current;
-    const originalContent = document.body.innerHTML;
-
-    document.body.innerHTML = printContent.innerHTML;
-
-    window.print();
-
-    document.body.innerHTML = originalContent;
-    window.location.reload();
+    const tableHTML = tableRef.current.outerHTML; // Ambil tabel saja
+    const printWindow = window.open("", "_blank"); // Buka jendela baru untuk mencetak
+    printWindow.document.open();
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Table Data Pemasukan</title>
+          <style>
+            /* Gaya CSS untuk cetakan */
+            @media print {
+              body {
+                margin: 0;
+                padding: 0;
+                background: white;
+                color: black;
+              }
+              th:nth-child(8), td:nth-child(8) {
+                display: none;
+              }
+              table {
+                width: 100%;
+                border-collapse: collapse;
+              }
+              th, td {
+                border: 1px solid black;
+                padding: 8px;
+                text-align: center;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          ${tableHTML} <!-- Masukkan tabel ke dalam dokumen baru -->
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print(); // Cetak halaman
+    printWindow.close();
   };
+  
 
   const handleClickOutside = (event) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -165,8 +205,6 @@ function Pemasukan() {
     fetchBulan();
   }, []);
 
-  const [selectAll, setSelectAll] = useState(false);
-
   const handleSubmitAll = async (e) => {
     e.preventDefault();
 
@@ -225,23 +263,30 @@ function Pemasukan() {
     });
   };
 
-  const handleCheck = (id) => {
-    setTransactions((prevTransactions) =>
-      prevTransactions.map((transaction) =>
-        transaction.id === id
-          ? { ...transaction, checked: !transaction.checked }
-          : transaction
-      )
+  const handleCheck = (noBukti) => {
+    // Perbarui status checked untuk item tertentu berdasarkan noBukti
+    const updatedTransactions = transactions.map((transaction) =>
+      transaction.noBukti === noBukti
+        ? { ...transaction, checked: !transaction.checked }
+        : transaction
     );
+
+    setTransactions(updatedTransactions);
+
+    // Periksa apakah semua checkbox dipilih
+    const allChecked = updatedTransactions.every(
+      (transaction) => transaction.checked
+    );
+    setSelectAll(allChecked);
   };
 
-  const handleSelectAll = (e) => {
-    const isChecked = e.target.checked;
-    setSelectAll(isChecked);
+  const handleSelectAll = () => {
+    const newSelectAll = !selectAll;
+    setSelectAll(newSelectAll);
     setTransactions((prevTransactions) =>
       prevTransactions.map((transaction) => ({
         ...transaction,
-        checked: isChecked,
+        checked: newSelectAll,
       }))
     );
   };
@@ -461,21 +506,18 @@ function Pemasukan() {
                     Cabang
                   </Label>
 
-                 
                   <input
                     type="text"
                     placeholder="Cabang yang dipilih"
                     className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     value={formValues.cabang || ""}
                     readOnly
-                    onFocus={() => setIsDropdownVisible(true)} 
+                    onFocus={() => setIsDropdownVisible(true)}
                   />
 
-                 
                   {isDropdownVisible && (
                     <div className="absolute top-full left-0 w-full z-10 mt-1 border bg-white shadow-lg rounded-b">
                       <ul className="max-h-48 overflow-y-auto">
-                       
                         <li className="py-2 px-4">
                           <input
                             type="text"
@@ -493,7 +535,6 @@ function Pemasukan() {
                           />
                         </li>
 
-                       
                         <li className="py-2 px-4 hover:bg-blue-500 hover:text-white text-gray-500">
                           <button
                             onClick={() => {
@@ -509,7 +550,6 @@ function Pemasukan() {
                           </button>
                         </li>
 
-                       
                         <li className="py-2 px-4 hover:bg-blue-500 hover:text-white">
                           <button
                             onClick={() => {
@@ -525,7 +565,6 @@ function Pemasukan() {
                           </button>
                         </li>
 
-                       
                         {cabangList
                           .filter((cabang) =>
                             cabang.kecamatan
@@ -543,8 +582,8 @@ function Pemasukan() {
                                 onClick={() => {
                                   setFormValues((prevValues) => ({
                                     ...prevValues,
-                                    cabang: cabang.kecamatan, 
-                                    searchCabang: "", 
+                                    cabang: cabang.kecamatan,
+                                    searchCabang: "",
                                   }));
                                   setIsDropdownVisible(false);
                                 }}
@@ -739,12 +778,13 @@ function Pemasukan() {
                   </div>
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-                  Transaksi {selectedBulan} {newSelectedYear}
+                  Transaksi {selectedBulanName} {newSelectedYear}
                 </h1>
                 <div className="flex justify-center space-x-4 mt-5 mr-10">
                   <Input
                     type="checkbox"
                     className="form-checkbox h-4 w-4 mt-3"
+                    checked={selectAll}
                     onChange={handleSelectAll}
                   />
                   <Button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300">
@@ -814,7 +854,7 @@ function Pemasukan() {
                               type="checkbox"
                               className="form-checkbox h-4 w-4"
                               checked={transaction.checked}
-                              onChange={() => handleCheck(transaction.id)}
+                              onChange={() => handleCheck(transaction.noBukti)}
                             />
                             <Button
                               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
@@ -869,6 +909,21 @@ function Pemasukan() {
                   </tr>
                 </tbody>
               </table>
+              <style jsx>{`
+    @media print {
+      th:nth-child(8),
+      td:nth-child(8) {
+        display: none;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: white;
+      }
+    }
+  `}</style>
+
             </div>
           </div>
         </div>

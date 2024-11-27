@@ -1,8 +1,8 @@
 "use client";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
@@ -11,7 +11,6 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function Iuran() {
-  
   const [totalAnggota, setTotalAnggota] = useState(null);
   const [iuranPB, setIuranPB] = useState("");
   const [iuranProvinsi, setIuranProvinsi] = useState("");
@@ -21,37 +20,40 @@ export default function Iuran() {
   const [totalIuran, setTotalIuran] = useState("");
   const [sumbanganSanduka, setSumbanganSanduka] = useState("");
   const [totalSumbangan, setTotalSumbangan] = useState("");
-  const [selectedBulan, setSelectedBulan] = useState(""); 
-  const [tahun, setTahun] = useState(""); 
-  const [isFormVisible, setFormVisible] = useState(false); 
+  const [selectedBulan, setSelectedBulan] = useState("");
+  const [tahun, setTahun] = useState("");
+  const [isFormVisible, setFormVisible] = useState(false);
   const [bulanList, setBulanList] = useState([]);
-  const [cabangList, setCabangList] = useState([]); 
-  const [selectedCabang, setSelectedCabang] = useState(""); 
-  const [keteranganSelisih, setKeteranganSelisih] = useState(""); 
-  const [jumlah, setJumlah] = useState(""); 
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); 
+  const [cabangList, setCabangList] = useState([]);
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [keteranganSelisih, setKeteranganSelisih] = useState("");
+  const [jumlah, setJumlah] = useState("");
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [newSelectedYear, setNewSelectedYear] = useState(
     new Date().getFullYear()
-  ); 
-  const [isMobile, setIsMobile] = useState(false); 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
+  );
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedBulanBaru, setSelectedBulanBaru] = useState("");
-  const [newCabangList, setNewCabangList] = useState([]); 
+  const [newCabangList, setNewCabangList] = useState([]);
   const [dataSumbangan, setDataSumbangan] = useState([]);
-
   const currentYear = new Date().getFullYear();
   const startYear = 2020;
 
+  const [filteredCabangList, setFilteredCabangList] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
   useEffect(() => {
     const fetchTotalAnggota = async () => {
-      const response = await GlobalApi.getTotalAnggota(); 
-      setTotalAnggota(response); 
+      const response = await GlobalApi.getTotalAnggota();
+      setTotalAnggota(response);
     };
 
-    fetchTotalAnggota(); 
+    fetchTotalAnggota();
   }, []);
 
-  
   useEffect(() => {
     const fetchData = async () => {
       const data = await GlobalApi.getTableIuran(
@@ -63,14 +65,13 @@ export default function Iuran() {
     };
 
     if (selectedBulanBaru && newSelectedYear) {
-      
       fetchData();
     }
   }, [selectedBulanBaru, newSelectedYear, newCabangList]);
 
   useEffect(() => {
     if (!selectedBulanBaru || !newSelectedYear) {
-      setDataSumbangan([]); 
+      setDataSumbangan([]);
     }
   }, [selectedBulanBaru, newSelectedYear]);
 
@@ -78,22 +79,20 @@ export default function Iuran() {
     setKeteranganSelisih(event.target.value);
   };
 
-  
   const years = Array.from(
     { length: currentYear - startYear + 1 },
     (_, index) => startYear + index
   );
 
-  
   useEffect(() => {
     const fetchBulan = async () => {
       try {
         const response = await GlobalApi.getBulan();
-        
-        setBulanList(response.data || []); 
+
+        setBulanList(response.data || []);
       } catch (error) {
         console.error("Error fetching bulan:", error);
-        setBulanList([]); 
+        setBulanList([]);
       }
     };
 
@@ -104,7 +103,8 @@ export default function Iuran() {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setCabangList(response.data); 
+        setCabangList(response.data);
+        setFilteredCabangList(response.data);
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -114,18 +114,17 @@ export default function Iuran() {
   }, []);
 
   useEffect(() => {
-    
     const currentDate = new Date();
     const currentMonth = new Intl.DateTimeFormat("id-ID", {
       month: "long",
-    }).format(currentDate); 
-    const currentYear = currentDate.getFullYear(); 
+    }).format(currentDate);
+    const currentYear = currentDate.getFullYear();
     setBulan(currentMonth);
     setTahun(currentYear);
   }, []);
 
   const handleSubmit = async (event) => {
-    event.preventDefault(); 
+    event.preventDefault();
     const payload = {
       pb: iuranPB,
       propinsi: iuranProvinsi,
@@ -137,12 +136,11 @@ export default function Iuran() {
     };
 
     try {
-      const result = await GlobalApi.createIuranData(payload); 
-      handleReset(); 
+      const result = await GlobalApi.createIuranData(payload);
+      handleReset();
 
-      
       toast.success("Data berhasil disimpan!");
-      
+
       setTimeout(() => {
         window.location.reload();
       }, 2000);
@@ -152,9 +150,7 @@ export default function Iuran() {
   };
 
   const handleSubmitTarget = async (event) => {
-    event.preventDefault(); 
-
-    
+    event.preventDefault();
     const payload = {
       cabang: selectedCabang,
       jumlah: jumlah,
@@ -164,58 +160,19 @@ export default function Iuran() {
     };
 
     try {
-      
       const result = await GlobalApi.createTargetIuaran(payload);
-
-      
       toast.success("Data berhasil disimpan!");
     } catch (error) {
-      
       toast.error(`Gagal menyimpan data: ${error.message}`);
     }
   };
 
   useEffect(() => {
-    
     const total = iuranPB + iuranProvinsi + iuranKabupaten + iuranCabang;
     setTotalIuran(total);
     setTotalSumbangan(total + sumbanganSanduka);
   }, [iuranPB, iuranProvinsi, iuranKabupaten, iuranCabang, sumbanganSanduka]);
 
-  
-  // useEffect(() => {
-  //   const storedData = sessionStorage.getItem("PGRIData");
-  //   if (storedData) {
-  //     const data = JSON.parse(storedData);
-
-      
-  //     const firstItem = data[0];
-
-      
-  //     if (firstItem) {
-  //       setIuranPB(Number(firstItem.pb));
-  //       setIuranProvinsi(Number(firstItem.propinsi));
-  //       setIuranKabupaten(Number(firstItem.kabupaten));
-  //       setIuranCabang(Number(firstItem.cabang));
-  //       setSumbanganSanduka(Number(firstItem.sanduka));
-
-        
-  //       const calculatedTotalIuran =
-  //         Number(firstItem.pb) +
-  //         Number(firstItem.propinsi) +
-  //         Number(firstItem.kabupaten) +
-  //         Number(firstItem.cabang);
-
-  //       setTotalIuran(calculatedTotalIuran);
-
-        
-  //       const calculatedTotalSumbangan =
-  //         calculatedTotalIuran + (Number(firstItem.sanduka) || 0);
-
-  //       setTotalSumbangan(calculatedTotalSumbangan);
-  //     }
-  //   }
-  // }, []);
   const fetchIuranData = () => {
     const storedData = sessionStorage.getItem("PGRIData");
     if (storedData) {
@@ -246,8 +203,35 @@ export default function Iuran() {
     }
   };
 
+  const handleSearchChange = (e) => {
+    const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
+    const filtered = cabangList.filter((cabang) =>
+      cabang.kecamatan.toLowerCase().includes(query)
+    );
+    setFilteredCabangList(filtered);
+  };
+
+  // Mengatur cabang yang dipilih
+  const handleCabangSelect = (cabang) => {
+    setSelectedCabang(cabang);
+    setIsDropdownOpen(false); // Tutup dropdown setelah memilih
+    setSearchQuery(""); // Reset pencarian setelah memilih
+  };
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+
   const handleInputChange = (event, setter) => {
-    setter(Number(event.target.value.replace(/\D/g, ""))); 
+    setter(Number(event.target.value.replace(/\D/g, "")));
   };
 
   const handleReset = () => {
@@ -255,26 +239,24 @@ export default function Iuran() {
 
     if (storedData) {
       const data = JSON.parse(storedData);
-      const firstItem = data[0]; 
+      const firstItem = data[0];
 
       if (firstItem) {
-        setIuranPB(parseInt(firstItem.pb) || 0); 
-        setIuranProvinsi(parseInt(firstItem.propinsi) || 0); 
-        setIuranKabupaten(parseInt(firstItem.kabupaten) || 0); 
-        setIuranCabang(parseInt(firstItem.cabang) || 0); 
-        setSumbanganSanduka(parseInt(firstItem.sanduka) || 0); 
+        setIuranPB(parseInt(firstItem.pb) || 0);
+        setIuranProvinsi(parseInt(firstItem.propinsi) || 0);
+        setIuranKabupaten(parseInt(firstItem.kabupaten) || 0);
+        setIuranCabang(parseInt(firstItem.cabang) || 0);
+        setSumbanganSanduka(parseInt(firstItem.sanduka) || 0);
       }
     } else {
-      
-      setIuranPB(6400); 
-      setIuranProvinsi(1200); 
-      setIuranKabupaten(1800); 
-      setIuranCabang(2400); 
-      setSumbanganSanduka(3000); 
+      setIuranPB(6400);
+      setIuranProvinsi(1200);
+      setIuranKabupaten(1800);
+      setIuranCabang(2400);
+      setSumbanganSanduka(3000);
     }
   };
 
-  
   const formatRupiah = (value) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -288,7 +270,6 @@ export default function Iuran() {
     setFormVisible(!isFormVisible);
   };
 
-  
   const handlePrint = () => {
     const printContent = document.getElementById("printTable").innerHTML;
     const newWindow = window.open("", "", "width=800,height=600");
@@ -350,7 +331,6 @@ export default function Iuran() {
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -365,7 +345,6 @@ export default function Iuran() {
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -386,26 +365,26 @@ export default function Iuran() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-           <Toaster
-          toastOptions={{
-            style: {
-              fontSize: "1.25rem", 
-              padding: "16px", 
-            },
-            success: {
+          <Toaster
+            toastOptions={{
               style: {
-                background: "white", 
-                color: "black",
+                fontSize: "1.25rem",
+                padding: "16px",
               },
-            },
-            error: {
-              style: {
-                background: "#f44336", 
-                color: "#fff",
+              success: {
+                style: {
+                  background: "white",
+                  color: "black",
+                },
               },
-            },
-          }}
-        />
+              error: {
+                style: {
+                  background: "#f44336",
+                  color: "#fff",
+                },
+              },
+            }}
+          />
           <div className="w-full p-4 bg-gray-50 rounded-lg shadow-lg">
             <Button
               className="bg-green-500 hover:bg-green-700 text-white font-bold rounded"
@@ -564,19 +543,47 @@ export default function Iuran() {
                       Jumlah Anggota Selisih laporan Cabang
                     </p>
                     <div className="flex flex-col sm:flex-row items-center mt-2 space-y-2 sm:space-y-0 sm:space-x-2">
-                      <select
-                        className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        id="cabang"
-                        value={selectedCabang}
-                        onChange={(e) => setSelectedCabang(e.target.value)}
-                      >
-                        <option>Pilih Cabang</option>
-                        {cabangList.map((cabang) => (
-                          <option key={cabang.id} value={cabang.kecamatan}>
-                            {cabang.kecamatan}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="relative" ref={dropdownRef}>
+                        {/* Input readonly untuk menampilkan cabang terpilih */}
+                        <Input
+                          type="text"
+                          className="shadow-lg border rounded w-full py-2 px-3 text-gray-700 bg-gray-100 cursor-pointer"
+                          readOnly
+                          value={selectedCabang}
+                          placeholder="Pilih Cabang Baru"
+                          onClick={() => setIsDropdownOpen(!isDropdownOpen)} // Toggle dropdown saat klik
+                        />
+
+                        {/* Dropdown dan pencarian */}
+                        {isDropdownOpen && (
+                          <div className="absolute w-full mt-1 bg-white border rounded shadow-lg z-10">
+                            <ul className="max-h-44 overflow-y-auto">
+                            <li className="py-2 px-2">
+                            <Input
+                              type="text"
+                              className="w-full p-2 border-b text-gray-700 focus:outline-none"
+                              placeholder="Cari cabang..."
+                              value={searchQuery}
+                                  onChange={handleSearchChange}
+                                  autoFocus
+                              />
+                              </li>
+                              {filteredCabangList.map((cabang) => (
+                                <li
+                                  key={cabang.id}
+                                  className="p-2 hover:bg-gray-100 cursor-pointer"
+                                  onClick={() =>
+                                    handleCabangSelect(cabang.kecamatan)
+                                  }
+                                >
+                                  {cabang.kecamatan}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+
                       <select
                         className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                         id="bulan"
@@ -608,7 +615,7 @@ export default function Iuran() {
                         id="jumlah"
                         value={jumlah}
                         onChange={(e) => setJumlah(e.target.value)}
-                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        className="shadow appearance-none border rounded max-w-md py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                         placeholder="Data Cabang"
                       />
                     </div>
@@ -643,12 +650,11 @@ export default function Iuran() {
               <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
                 <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
                   <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-                    {/* Filter Cabang */}
                     <select
                       className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                       id="newCabangTable"
                       value={newCabangList}
-                      onChange={(e) => setNewCabangList(e.target.value)} 
+                      onChange={(e) => setNewCabangList(e.target.value)}
                     >
                       <option value="">Pilih Cabang Baru</option>
                       {cabangList.map((cabang) => (
@@ -658,7 +664,6 @@ export default function Iuran() {
                       ))}
                     </select>
 
-                    {/* Filter Bulan */}
                     <select
                       className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                       id="bulanTableBaru"
@@ -674,12 +679,11 @@ export default function Iuran() {
                         ))}
                     </select>
 
-                    {/* Filter Tahun */}
                     <select
                       className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                       id="tahunTable"
                       value={newSelectedYear}
-                      onChange={(e) => setNewSelectedYear(e.target.value)} 
+                      onChange={(e) => setNewSelectedYear(e.target.value)}
                     >
                       <option value="">Pilih Tahun</option>
                       {years.map((year) => (
