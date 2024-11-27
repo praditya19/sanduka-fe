@@ -29,7 +29,7 @@ function StatusAnggota() {
   const [selectedTingkat, setSelectedTingkat] = useState("");
   const [anggota, setAnggota] = useState([]);
 
-  const [itemsPerPage, setItemsPerPage] = useState(10); 
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: "ascending",
@@ -72,7 +72,7 @@ function StatusAnggota() {
       try {
         const response = await GlobalApi.getCabang();
         setOriginalCabangList(response.data);
-        setFilteredCabangList(response.data); 
+        setFilteredCabangList(response.data);
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -94,7 +94,7 @@ function StatusAnggota() {
 
   const handleUnitKerjaFocus = () => {
     if (selectedCabang) {
-      setShowUnitKerjaDropdown(true); 
+      setShowUnitKerjaDropdown(true);
     }
   };
 
@@ -157,26 +157,26 @@ function StatusAnggota() {
           unitKerja.unitKerja
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) &&
-          unitKerja.cabang === selectedCabang 
+          unitKerja.cabang === selectedCabang
       );
       setFilteredUnitKerja(filtered);
     }
 
-    setShowUnitKerjaDropdown(true); 
+    setShowUnitKerjaDropdown(true);
   };
 
   const handleUnitKerjaSelect = (unitKerja) => {
     setSelectedUnitKerja(unitKerja.unitKerja);
     setUnitKerjaInput(unitKerja.unitKerja);
     setShowUnitKerjaDropdown(false);
-  
-    
+
+
     const filteredRekapData = Array.isArray(originalRekapData)
       ? originalRekapData.filter(
-          (item) => item.alamatKerja === unitKerja.unitKerja
-        )
+        (item) => item.alamatKerja === unitKerja.unitKerja
+      )
       : [];
-  
+
     setRekapData(filteredRekapData);
   };
 
@@ -220,7 +220,7 @@ function StatusAnggota() {
     try {
       const data = await GlobalApi.getRekapAnggotaByCabang(cabang);
       setRekapData(data);
-      setOriginalRekapData(data); 
+      setOriginalRekapData(data);
     } catch (error) {
       console.error("Error fetching rekap data:", error);
     }
@@ -277,41 +277,44 @@ function StatusAnggota() {
     }
   }, [token, router]);
 
-  const fetchAnggota = async () => {
-    try {
-      const page = 0; 
-      const size = 50; 
-      const response = await GlobalApi.getAllAnggota(page, size);
-      const fotoBase64Array = [];
+  useEffect(() => {
+    const fetchAnggota = async () => {
+      try {
+        const page = 0;
+        const size = 7000;
+        const response = await GlobalApi.getAllAnggota(page, size);
+        const fotoBase64Array = [];
 
-      const fetchedData = response.data.content;
+        const fetchedData = response.data.content;
 
-      if (fetchedData && fetchedData.length > 0) {
-        fetchedData.forEach((item) => {
-          if (item.foto) {
-            try {
-              const decodedString = atob(item.foto);
-              fotoBase64Array.push(decodedString);
-            } catch (error) {
-              console.error("Error decoding Base64:", error);
+        if (fetchedData && fetchedData.length > 0) {
+          fetchedData.forEach((item) => {
+            if (item.foto) {
+              try {
+                const decodedString = atob(item.foto);
+                fotoBase64Array.push(decodedString);
+              } catch (error) {
+                console.error("Error decoding Base64:", error);
+                fotoBase64Array.push(null);
+              }
+            } else {
               fotoBase64Array.push(null);
             }
-          } else {
-            fotoBase64Array.push(null);
-          }
-        });
-      } else {
-        console.warn("No data found.");
-      }
+          });
+        } else {
+          console.warn("No data found.");
+        }
 
-      setFotoBase64(fotoBase64Array);
-      setLoading(false);
-      setAnggota(fetchedData || []); 
-    } catch (error) {
-      console.error("Error fetching anggota:", error);
-      setAnggota([]);
-    }
-  };
+        setFotoBase64(fotoBase64Array);
+        setLoading(false);
+        setAnggota(fetchedData || []);
+      } catch (error) {
+        console.error("Error fetching anggota:", error);
+        setAnggota([]);
+      }
+    };
+    fetchAnggota();
+  }, []);
 
   const jumlahAnggota = anggota.length;
 
@@ -384,7 +387,7 @@ function StatusAnggota() {
   };
 
   const formatTingkat = (tingkat) => {
-    return tingkatSekolahMap[tingkat] || tingkat; 
+    return tingkatSekolahMap[tingkat] || tingkat;
   };
 
   const categories = [
@@ -453,8 +456,8 @@ function StatusAnggota() {
                 </thead>
                 <tbody>
                   ${filteredDataForPrint
-                    .map(
-                      (item, index) => `
+        .map(
+          (item, index) => `
                         <tr>
                           <td>${index + 1}</td>
                           <td></td>
@@ -462,11 +465,11 @@ function StatusAnggota() {
                             <div class="font-bold">${item.namaLengkap}</div>
                             <div>${item.npaPgri}</div>
                             <div>${formatDate(
-                              item.tanggalLahir
-                            )}, ${calculateAge(item.tanggalLahir)}</div>
+            item.tanggalLahir
+          )}, ${calculateAge(item.tanggalLahir)}</div>
                             <div>Usia ${calculateAge(
-                              item.tanggalLahir
-                            )} Tahun</div>
+            item.tanggalLahir
+          )} Tahun</div>
                             <div>${item.unitKerja}</div>
                             <div>${item.jabatan}</div>
                             <div>${item.nomorHp}</div>
@@ -476,8 +479,8 @@ function StatusAnggota() {
                           <td>${item.status}</td>
                         </tr>
                       `
-                    )
-                    .join("")}
+        )
+        .join("")}
                 </tbody>
               </table>
             </body>
@@ -490,7 +493,7 @@ function StatusAnggota() {
   };
 
   const sortedData = useMemo(() => {
-    if (!Array.isArray(anggota)) return []; 
+    if (!Array.isArray(anggota)) return [];
 
     let sortableItems = [...anggota];
 
@@ -535,7 +538,7 @@ function StatusAnggota() {
         (filterCabang ? searchCabangFilter : true) &&
         (filterUnitKerja ? searchUnitKerjaFilter : true) &&
         tingkatSekolahFilter
-      ); 
+      );
     });
   }, [
     sortedData,
@@ -626,6 +629,15 @@ function StatusAnggota() {
 
   const paginatedMembersData = filteredMembersData.slice(startIndex, endIndex);
 
+  const imageMap = {
+    PAUD: "paud.png",
+    SMP_MTS: "smp.png",
+    TK_RA: "tk.png",
+    SMA_SMK_MA: "sma.png",
+    SD_MI: "sd.png",
+    PERGURUAN_TINGGI: "perguruan_tinggi.png",
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -637,9 +649,8 @@ function StatusAnggota() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="flex flex-wrap justify-between mt-14 mb-4 mx-4">
             {categories.map((category, index) => (
@@ -666,13 +677,21 @@ function StatusAnggota() {
                       key={idx}
                       className="bg-white border rounded-lg shadow-md p-4 mb-2 w-full sm:w-60 mx-2 text-center"
                     >
+                      {/* Gambar */}
                       <img
-                        src={`/images/${item
-                          .toLowerCase()
-                          .replace(/\//g, "-")}.png`}
+                        src={`/${imageMap[item] || "default.png"}`}
                         alt={item}
-                        className="mb-2 w-40 mx-auto"
+                        className="mb-2 h-16 w-auto mx-auto object-contain"
                       />
+
+                      {/* Nama Kategori */}
+                      <p className="text-md font-semibold text-gray-800 mb-2">
+                        {item === "PERGURUAN_TINGGI"
+                          ? item.replace(/_/g, ' ')
+                          : item.replace(/_/g, '/')}
+                      </p>
+
+                      {/* Tombol */}
                       <Button className="bg-blue-500 hover:bg-blue-700 w-full">
                         {countMembersByLevel(item)} Anggota
                       </Button>
@@ -696,36 +715,36 @@ function StatusAnggota() {
                   />
                   {showCabangDropdown && (
                     <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
-                    <ul className="max-h-44 overflow-y-auto">
-                    <li className="py-2 px-2">
-                      <Input
-                        type="text"
-                        onChange={(e) => handleCabangSearch(e.target.value)}
-                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
-                        placeholder="Cari Cabang..."
-                        autoFocus
-                        />
+                      <ul className="max-h-44 overflow-y-auto">
+                        <li className="py-2 px-2">
+                          <Input
+                            type="text"
+                            onChange={(e) => handleCabangSearch(e.target.value)}
+                            className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                            placeholder="Cari Cabang..."
+                            autoFocus
+                          />
                         </li>
-                    
+
+                        <li
+                          onClick={() =>
+                            handleSelectCabang({ kecamatan: "" })
+                          }
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                        >
+                          Pilih Cabang
+                        </li>
+                        {filteredCabangList.map((cabang) => (
                           <li
-                            onClick={() =>
-                              handleSelectCabang({ kecamatan: "" })
-                            }
+                            key={cabang.id}
+                            onClick={() => handleSelectCabang(cabang)}
                             className="px-4 py-2 cursor-pointer hover:bg-gray-200"
                           >
-                            Pilih Cabang
+                            {cabang.kecamatan}
                           </li>
-                          {filteredCabangList.map((cabang) => (
-                            <li
-                              key={cabang.id}
-                              onClick={() => handleSelectCabang(cabang)}
-                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                            >
-                              {cabang.kecamatan}
-                            </li>
-                          ))}
-                        </ul>
-                    
+                        ))}
+                      </ul>
+
                     </div>
                   )}
                 </div>
@@ -746,17 +765,17 @@ function StatusAnggota() {
                     />
                     {showUnitKerjaDropdown && (
                       <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
-                      <ul className="max-h-44 overflow-y-auto">
-                      <li className="py-2 px-2">
-                        <Input
-                          type="text"
-                          onChange={(e) =>
-                            handleUnitKerjaSearch(e.target.value)
-                          }
-                          placeholder="Cari atau ketik Unit Kerja..."
-                          autoFocus
-                          className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-1"
-                          />
+                        <ul className="max-h-44 overflow-y-auto">
+                          <li className="py-2 px-2">
+                            <Input
+                              type="text"
+                              onChange={(e) =>
+                                handleUnitKerjaSearch(e.target.value)
+                              }
+                              placeholder="Cari atau ketik Unit Kerja..."
+                              autoFocus
+                              className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-1"
+                            />
                           </li>
                           <li
                             onClick={() =>
@@ -842,7 +861,7 @@ function StatusAnggota() {
                         className="ml-1 cursor-pointer"
                         onClick={() => requestSort("index")}
                       >
-            
+
                       </span>
                     </div>
                   </th>
@@ -856,7 +875,7 @@ function StatusAnggota() {
                         className="ml-1 cursor-pointer"
                         onClick={() => requestSort("nama")}
                       >
-                 
+
                       </span>
                     </div>
                   </th>
@@ -872,7 +891,7 @@ function StatusAnggota() {
                         className="ml-1 cursor-pointer"
                         onClick={() => requestSort("kerja")}
                       >
-                
+
                       </span>
                     </div>
                   </th>
@@ -883,7 +902,7 @@ function StatusAnggota() {
                         className="ml-1 cursor-pointer"
                         onClick={() => requestSort("keterangan")}
                       >
-                      
+
                       </span>
                     </div>
                   </th>
@@ -937,11 +956,10 @@ function StatusAnggota() {
                     </td>
                     <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
                       <div
-                        className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${
-                          item.status === "BUKAN ANGGOTA"
-                            ? "bg-red-200 text-red-900"
-                            : "bg-green-200 text-green-900"
-                        }`}
+                        className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
+                          ? "bg-red-200 text-red-900"
+                          : "bg-green-200 text-green-900"
+                          }`}
                       >
                         {item.status === "ANGGOTA" ? "Aktif" : item.status}
                       </div>
@@ -1017,11 +1035,10 @@ function StatusAnggota() {
                           <li key={number}>
                             <Button
                               onClick={() => handlePageClick(number)}
-                              className={`mx-1 px-4 py-2 border rounded-md ${
-                                currentPage === number
-                                  ? "bg-blue-500 text-white"
-                                  : "bg-white text-black"
-                              }`}
+                              className={`mx-1 px-4 py-2 border rounded-md ${currentPage === number
+                                ? "bg-blue-500 text-white"
+                                : "bg-white text-black"
+                                }`}
                             >
                               {number}
                             </Button>
@@ -1041,7 +1058,7 @@ function StatusAnggota() {
               )}
             </div>
           </div>
-      
+
           <Modal
             isOpen={isModalOpen}
             onRequestClose={closeModal}
