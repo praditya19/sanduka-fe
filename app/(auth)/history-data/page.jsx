@@ -59,27 +59,42 @@ const Page = () => {
  
   const fetchData = async () => {
     try {
-      // Convert currentPage to zero-based index for API
+      const userRole = sessionStorage.getItem("role");
+      const npa = sessionStorage.getItem("npaPgri");
+  
       const pageIndex = currentPage - 1;
-      const historyResponse = await GlobalApi.getHistoryData(pageIndex, itemsPerPage);
-      console.log("Data", historyResponse)
-      const historyData = historyResponse.content;
-      setTotalItems(historyResponse.totalElements);
- 
+      
+      let historyResponse;
+      if (userRole === "USER") {
+        historyResponse = await GlobalApi.getHistoryByNpa(npa, pageIndex, itemsPerPage);
+        // Ubah array menjadi object
+        historyResponse = historyResponse.reduce((acc, item) => {
+          acc[item.npa] = item;
+          return acc;
+        }, {});
+      } else {
+        historyResponse = await GlobalApi.getHistoryData(pageIndex, itemsPerPage);
+      }
+  
+      console.log("Data", historyResponse);
+  
+      const historyData = userRole === "USER" ? Object.values(historyResponse) : historyResponse.content;
+      setTotalItems(userRole === "USER" ? historyData.length : historyResponse.totalElements);
+  
       const npaList = historyData.map((item) => item.npa).filter((npa) => npa);
- 
+  
       let npaData = [];
       if (npaList.length > 0) {
         npaData = await GlobalApi.cekNpaList(npaList);
       }
- 
+  
       const npaMap = npaData.reduce((acc, item) => {
         if (item.npaPgri) {
           acc[item.npaPgri.trim().toLowerCase()] = item;
         }
         return acc;
       }, {});
- 
+  
       const enrichedData = historyData.map((item) => {
         const npaDetail = npaMap[item.npa?.trim().toLowerCase()];
         return {
@@ -87,12 +102,13 @@ const Page = () => {
           npaDetail: npaDetail || {},
         };
       });
- 
+  
       setData(enrichedData);
     } catch (error) {
       console.error("Error fetching history data:", error);
     }
   };
+  
  
   useEffect(() => {
     if (!token) {
