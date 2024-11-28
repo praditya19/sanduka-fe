@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
+import { Input } from "@/components/ui/input";
 
 const Page = () => {
   const dropdownRef = useRef(null);
@@ -434,7 +435,7 @@ const Page = () => {
               >
                 <div className="relative w-full sm:w-auto" ref={dropdownRef}>
                   {/* Input for displaying the selected branch */}
-                  <input
+                  <Input
                     className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     type="text"
                     placeholder="Pilih Cabang"
@@ -448,7 +449,7 @@ const Page = () => {
                     <div className="absolute bg-white border rounded w-full mt-1 z-10 shadow-lg">
                       <ul className="max-h-44 overflow-y-auto">
                         <li className="py-2 px-2">
-                          <input
+                          <Input
                             className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             type="text"
                             placeholder="Cari Cabang..."

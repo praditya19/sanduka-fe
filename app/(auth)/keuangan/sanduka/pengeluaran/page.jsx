@@ -19,6 +19,7 @@ function Pengeluaran() {
   const startYear = 2020;
   const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
   const [selectedBulan, setSelectedBulan] = useState("");
+  const [selectedBulanName, setSelectedBulanName] = useState("");
   const [formValues, setFormValues] = useState({
     noBukti: "",
     tanggalTransaksi: "",
@@ -105,7 +106,12 @@ function Pengeluaran() {
   }, []);
 
   const handleBulanChange = (e) => {
-    setSelectedBulan(e.target.value);
+    const selectedId = e.target.value; // Ambil ID bulan yang dipilih
+    setSelectedBulan(selectedId);
+  
+    // Cari nama bulan berdasarkan ID
+    const bulan = bulanList.find((b) => b.id === parseInt(selectedId));
+    setSelectedBulanName(bulan ? bulan.namaBulan : ""); // Update nama bulan
   };
 
   const years = Array.from(
@@ -609,7 +615,7 @@ function Pengeluaran() {
                   </select>
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-                  Transaksi {selectedBulan} {newSelectedYear}
+                  Transaksi {selectedBulanName} {newSelectedYear}
                 </h1>
                 <div className="flex justify-center space-x-4 mt-5 mr-10">
                   <Input

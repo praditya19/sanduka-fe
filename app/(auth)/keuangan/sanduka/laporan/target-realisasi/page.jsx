@@ -17,8 +17,7 @@ const Page = () => {
   const [selectedCabang, setSelectedCabang] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [dataRealisasi, setDataRealisasi] = useState([]);
-  const currentYear = new Date().getFullYear();
-  const startYear = 2020;
+  const [years, setYears] = useState([]);
   const [originalData, setOriginalData] = useState([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [formValues, setFormValues] = useState({
@@ -96,22 +95,31 @@ const Page = () => {
   }, []);
 
   useEffect(() => {
+    const now = new Date();
+    const currentMonth = now.toLocaleString("id-ID", { month: "long" });
+    const currentYear = now.getFullYear();
+
+    setSelectedBulan(currentMonth);
+    setSelectedYear(currentYear);
+
+    // Mengisi daftar tahun untuk dropdown
+    const yearRange = Array.from(
+      { length: 5 },
+      (_, index) => currentYear - index
+    );
+    setYears(yearRange);
+
+    // Fetch daftar bulan dari API
     const fetchBulan = async () => {
       try {
         const response = await GlobalApi.getBulan();
         setBulanList(response.data);
       } catch (error) {
-        console.error("Error fetching bulan data:", error);
+        console.error("Error fetching bulan:", error);
       }
     };
-
     fetchBulan();
   }, []);
-
-  const years = Array.from(
-    { length: currentYear - startYear + 1 },
-    (_, index) => startYear + index
-  );
 
   const printTable = () => {
     const printContent = tableRef.current;
@@ -231,7 +239,7 @@ const Page = () => {
                   <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5 w-full sm:w-auto">
                     <div className="flex flex-col relative" ref={dropdownRef}>
                       <Label
-                        className="block text-gray-700 text-sm font-semibold mb-2"
+                        className="block text-white text-sm font-semibold mb-2"
                         htmlFor="cabang"
                       >
                         Cabang
@@ -281,21 +289,6 @@ const Page = () => {
                               </button>
                             </li>
 
-                            <li className="py-2 px-4 hover:bg-blue-500 hover:text-white">
-                              <button
-                                onClick={() => {
-                                  setSelectedCabang("All");
-                                  setFormValues((prevValues) => ({
-                                    ...prevValues,
-                                    searchCabang: "All",
-                                  }));
-                                  setIsDropdownVisible(false);
-                                }}
-                              >
-                                Semua Cabang
-                              </button>
-                            </li>
-
                             {cabangList
                               .filter((cabang) =>
                                 cabang.kecamatan
@@ -330,7 +323,7 @@ const Page = () => {
 
                     <div>
                       <Label
-                        className="block text-gray-700 text-sm font-semibold mb-2"
+                        className="block text-white text-sm font-semibold mb-2"
                         htmlFor="bulan"
                       >
                         Bulan
@@ -340,7 +333,6 @@ const Page = () => {
                         value={selectedBulan}
                         onChange={handleBulanChange}
                       >
-                        <option value="">-- Bulan --</option>
                         {bulanList.map((bulan) => (
                           <option
                             key={bulan.angkaBulan}
@@ -353,7 +345,7 @@ const Page = () => {
                     </div>
                     <div>
                       <Label
-                        className="block text-gray-700 text-sm font-semibold mb-2"
+                        className="block text-white text-sm font-semibold mb-2"
                         htmlFor="tahun"
                       >
                         Tahun
@@ -365,7 +357,6 @@ const Page = () => {
                         value={selectedYear}
                         onChange={handleYearChange}
                       >
-                        <option value="">-- Tahun --</option>
                         {years.map((year) => (
                           <option key={year} value={year}>
                             {year}
