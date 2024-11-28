@@ -188,7 +188,7 @@ export default function Iuran() {
     event.preventDefault();
     const payload = {
       cabang: selectedCabang,
-      jumlah: jumlah,
+      jumlah: totalAnggotaCabang,
       bulan: selectedBulan,
       keterangan: keteranganSelisih,
       tahun: selectedYear,
@@ -212,7 +212,6 @@ export default function Iuran() {
     const storedData = sessionStorage.getItem("PGRIData");
     if (storedData) {
       const data = JSON.parse(storedData);
-
       const firstItem = data[0];
 
       if (firstItem) {
@@ -300,12 +299,6 @@ export default function Iuran() {
         setIuranCabang(parseInt(firstItem.cabang) || 0);
         setSumbanganSanduka(parseInt(firstItem.sanduka) || 0);
       }
-    } else {
-      setIuranPB(6400);
-      setIuranProvinsi(1200);
-      setIuranKabupaten(1800);
-      setIuranCabang(2400);
-      setSumbanganSanduka(3000);
     }
   };
 
@@ -671,6 +664,7 @@ export default function Iuran() {
                           type="number"
                           id="jumlah"
                           value={totalAnggotaCabang}
+                           onChange={(e) => setJumlah(e.target.value)}
                           disabled
                           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline cursor-not-allowed"
                           placeholder="Data Cabang"

@@ -89,8 +89,8 @@ export default function Daspen() {
   useEffect(() => {
     const fetchBulan = async () => {
       try {
-        const response = await GlobalApi.getBulan();
-        setBulanList(response.data);
+        const response = await GlobalApi.getBulan(); // Ganti dengan API Anda
+        setBulanList(response.data || []); // Simpan daftar bulan ke state
       } catch (error) {
         console.error("Error fetching bulan:", error);
       }
@@ -98,6 +98,15 @@ export default function Daspen() {
 
     fetchBulan();
   }, []);
+
+  // Mengatur bulan saat ini secara otomatis
+  useEffect(() => {
+    if (bulanList.length > 0) {
+      const currentMonthIndex = new Date().getMonth(); // Ambil index bulan saat ini (0-11)
+      const currentMonth = bulanList[currentMonthIndex]?.namaBulan || ""; // Ambil nama bulan
+      setSelectedBulanBaru(currentMonth); // Set bulan saat ini ke selectedBulanBaru
+    }
+  }, [bulanList]);
 
   const printTable = () => {
     const printContent = tableRef.current;
@@ -204,11 +213,6 @@ export default function Daspen() {
       setKatagori1(parseInt(daspen.propinsi));
       setKatagori2(parseInt(daspen.kabupaten));
       setKatagori3(parseInt(daspen.cabang));
-    } else {
-      setKatagori1(0);
-      setKatagori2(0);
-      setKatagori3(0);
-      setKuota(0);
     }
   };
 
@@ -639,19 +643,18 @@ export default function Daspen() {
                   </select>
 
                   <select
-                    className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    id="bulanTableBaru"
-                    value={selectedBulanBaru}
-                    onChange={(e) => setSelectedBulanBaru(e.target.value)}
-                  >
-                    <option value="">Pilih Bulan</option>
-
-                    {bulanList.map((bulan) => (
-                      <option key={bulan.id} value={bulan.namaBulan}>
-                        {bulan.namaBulan}
-                      </option>
-                    ))}
-                  </select>
+      className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+      id="bulanTableBaru"
+      value={selectedBulanBaru}
+      onChange={(e) => setSelectedBulanBaru(e.target.value)}
+    >
+      <option value="">Pilih Bulan</option>
+      {bulanList.map((bulan) => (
+        <option key={bulan.id} value={bulan.namaBulan}>
+          {bulan.namaBulan}
+        </option>
+      ))}
+    </select>
 
                   <select
                     className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
