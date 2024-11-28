@@ -740,6 +740,15 @@ const createTargetIuaran = async (payload) => {
   }
 };
 
+const getTotalAnggotaByCabang = async (cabang) => {
+  try {
+    const response = await axiosClient.get(`/api/iuran/total-anggota-by-cabang?cabang=${cabang}`)
+    return response.data
+  } catch (error) {
+    console.error('Error fetching total anggota by cabang:', error);
+  throw error
+  }
+}
 // END
 // DASPEN start (Sumbangan Daspen)
 const createDaspenData = async (payload) => {
@@ -1238,4 +1247,5 @@ export default {
   getCalculateSandukaPensiun,
   getCalculateSandukaKeluar,
   getTotalAnggotaStatistik,
+  getTotalAnggotaByCabang,
 };
