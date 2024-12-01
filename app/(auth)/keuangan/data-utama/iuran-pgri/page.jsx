@@ -38,6 +38,7 @@ export default function Iuran() {
   const [selectedBulanBaru, setSelectedBulanBaru] = useState("");
   const [newCabangList, setNewCabangList] = useState([]);
   const [dataSumbangan, setDataSumbangan] = useState([]);
+  const [filteredDataSumbangan, setFilteredDataSumbangan] = useState([]);
   const currentYear = new Date().getFullYear();
   const startYear = 2020;
   const [filteredCabangList, setFilteredCabangList] = useState([]);
@@ -69,6 +70,7 @@ export default function Iuran() {
         newCabangList
       );
       setDataSumbangan(data);
+      setFilteredDataSumbangan(data);
     };
 
     if (selectedBulanBaru && newSelectedYear) {
@@ -94,13 +96,13 @@ export default function Iuran() {
   useEffect(() => {
     const fetchBulan = async () => {
       try {
-        const response = await GlobalApi.getBulan(); // Ambil data dari API
+        const response = await GlobalApi.getBulan();
         const fetchedBulan = response.data || [];
         setBulanList(fetchedBulan);
 
-        // Tetapkan bulan saat ini sebagai default
         const currentMonthIndex = new Date().getMonth();
-        const currentMonthName = fetchedBulan[currentMonthIndex]?.namaBulan || "";
+        const currentMonthName =
+          fetchedBulan[currentMonthIndex]?.namaBulan || "";
         setSelectedBulanBaru(currentMonthName);
       } catch (error) {
         console.error("Error fetching bulan:", error);
@@ -119,7 +121,7 @@ export default function Iuran() {
         setFilteredCabangList(response.data);
         setAllCabangData(response.data);
         setFilteredCabangOptions(response.data);
-        setCabangOptions(response.data)
+        setCabangOptions(response.data);
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -142,11 +144,6 @@ export default function Iuran() {
     setDropdownVisible(false);
     setSearchTerm("");
   };
-
-  const filteredDataSumbangan = dataSumbangan.filter((item) => {
-    if (!chosenCabang) return true;
-    return item[0].toLowerCase().includes(chosenCabang.toLowerCase());
-  });
 
   useEffect(() => {
     const currentDate = new Date();
@@ -195,9 +192,17 @@ export default function Iuran() {
     };
 
     try {
-      const result = await GlobalApi.createTargetIuaran(payload);
+      await GlobalApi.createTargetIuaran(payload);
       toast.success("Data berhasil disimpan!");
+
+      const data = await GlobalApi.getTableIuran(
+        selectedBulanBaru,
+        newSelectedYear,
+        newCabangList
+      );
+      setFilteredDataSumbangan(data);
     } catch (error) {
+      console.error("Error creating data:", error);
       toast.error(`Gagal menyimpan data: ${error.message}`);
     }
   };
@@ -596,6 +601,9 @@ export default function Iuran() {
                           value={selectedCabang}
                           placeholder="Pilih Cabang Baru"
                           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                          onFocus={() => {
+                            setSearchQuery("");
+                          }}
                         />
 
                         {isDropdownOpen && (
@@ -664,7 +672,7 @@ export default function Iuran() {
                           type="number"
                           id="jumlah"
                           value={totalAnggotaCabang}
-                           onChange={(e) => setJumlah(e.target.value)}
+                          onChange={(e) => setJumlah(e.target.value)}
                           disabled
                           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline cursor-not-allowed"
                           placeholder="Data Cabang"
@@ -702,58 +710,60 @@ export default function Iuran() {
               <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
                 <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
                   <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-                  <div className="relative flex flex-col md:flex ml-2 w-72">
-  <Input
-    type="text"
-    placeholder="Pilih Cabang"
-    value={chosenCabang || "Pilih Cabang"}
-    readOnly
-    onFocus={() => {
-      setDropdownVisible(true); // Mengatur dropdown visible
-      setFilteredCabangOptions(cabangOptions); // Mengisi ulang opsi dropdown
-    }}
-    className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
-  />
+                    <div className="relative flex flex-col md:flex ">
+                      <Input
+                        type="text"
+                        placeholder="Pilih Cabang"
+                        value={chosenCabang || "Pilih Cabang"}
+                        readOnly
+                        onFocus={() => {
+                          setDropdownVisible(true);
+                          setFilteredCabangOptions(cabangOptions);
+                          setSearchTerm("");
+                        }}
+                        className="border rounded-lg p-2 px-4 w-52 bg-white shadow-sm cursor-pointer"
+                      />
 
-  {dropdownVisible && (
-    <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full">
-      <ul className="max-h-44 overflow-y-auto">
-        <li className="py-2 px-2">
-          <Input
-            type="text"
-            value={searchTerm}
-            onChange={handleSearchInputChange} // Memperbarui input pencarian
-            className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Cari Cabang..."
-            autoFocus
-          />
-        </li>
-        <li
-          className="p-2 cursor-pointer hover:bg-gray-100"
-          onClick={() => handleCabangSelection({ kecamatan: "", id: "" })}
-        >
-          Pilih Cabang
-        </li>
-        {filteredCabangOptions.length > 0 ? (
-          filteredCabangOptions.map((cabang) => (
-            <li
-              key={cabang.id}
-              className="p-2 cursor-pointer hover:bg-gray-100"
-              onClick={() => handleCabangSelection(cabang)}
-            >
-              {cabang.kecamatan}
-            </li>
-          ))
-        ) : (
-          <li className="px-4 py-2 text-gray-500 cursor-default">
-            Tidak ada hasil
-          </li>
-        )}
-      </ul>
-    </div>
-  )}
-</div>
-
+                      {dropdownVisible && (
+                        <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full">
+                          <ul className="max-h-44 overflow-y-auto">
+                            <li className="py-2 px-2">
+                              <Input
+                                type="text"
+                                value={searchTerm}
+                                onChange={handleSearchInputChange}
+                                className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="Cari Cabang..."
+                                autoFocus
+                              />
+                            </li>
+                            <li
+                              className="p-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() =>
+                                handleCabangSelection({ kecamatan: "", id: "" })
+                              }
+                            >
+                              Pilih Cabang
+                            </li>
+                            {filteredCabangOptions.length > 0 ? (
+                              filteredCabangOptions.map((cabang) => (
+                                <li
+                                  key={cabang.id}
+                                  className="p-2 cursor-pointer hover:bg-gray-100"
+                                  onClick={() => handleCabangSelection(cabang)}
+                                >
+                                  {cabang.kecamatan}
+                                </li>
+                              ))
+                            ) : (
+                              <li className="px-4 py-2 text-gray-500 cursor-default">
+                                Tidak ada hasil
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
 
                     <select
                       className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -837,28 +847,12 @@ export default function Iuran() {
                   <tbody>
                     {filteredDataSumbangan.length === 0 ? (
                       <tr>
-                        <td className="border px-6 py-4 text-center"></td>
-                        <td className="border px-6 py-4 text-center"></td>
-                        <td className="border px-6 py-4 text-center"></td>
-                        <td className="border px-6 py-4 text-center text-sm">
-                          {formatRupiah(totalIuran)}
+                        <td
+                          className="border px-6 py-4 text-center"
+                          colSpan="10"
+                        >
+                          Data tidak ditemukan
                         </td>
-                        <td className="border px-6 py-4 text-center text-sm">
-                          {formatRupiah(iuranPB)}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm">
-                          {formatRupiah(iuranProvinsi)}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm">
-                          {formatRupiah(iuranKabupaten)}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm">
-                          {formatRupiah(iuranCabang)}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm">
-                          {formatRupiah(sumbanganSanduka)}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm"></td>
                       </tr>
                     ) : (
                       filteredDataSumbangan.map((item, index) => (
