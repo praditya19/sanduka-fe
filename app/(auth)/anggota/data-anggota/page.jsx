@@ -69,7 +69,7 @@ function DataAnggota() {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const unitKerjaRef = useRef(null);
-
+  const profileImageUrl = "/profile.png";
   const [originalRekapData, setOriginalRekapData] = useState([]);
 
   useEffect(() => {
@@ -639,6 +639,18 @@ function DataAnggota() {
     router.push("/anggota/edit-anggota");
   };
 
+  const getVisiblePages = () => {
+    const visiblePages = [];
+    const leftLimit = Math.max(1, currentPage - 1);
+    const rightLimit = Math.min(totalPages, currentPage + 1);
+
+    for (let i = leftLimit; i <= rightLimit; i++) {
+      visiblePages.push(i);
+    }
+
+    return visiblePages;
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -945,17 +957,18 @@ function DataAnggota() {
                           </div>
                         </td>
                         <td className="p-2 md:p-3 border">
-                          {fotoBase64[index] ? (
-                            <Image
-                              src={`data:image/jpeg;base64,${fotoBase64[index]}`}
-                              className="rounded-full mx-auto"
-                              width={100}
-                              height={100}
-                              alt="Belum ada Foto"
-                            />
-                          ) : (
-                            <span>Belum ada foto</span>
-                          )}
+                          <Image
+                            src={
+                              fotoBase64[index]
+                                ? `data:image/jpeg;base64,${fotoBase64[index]}`
+                                : profileImageUrl
+                            }
+                            alt={`Foto ${item.namaPelapor || "User"}`}
+                            width={50}
+                            height={50}
+                            className="rounded"
+                            unoptimized={true}
+                          />
                         </td>
                         <td className="p-2 md:p-3 border">
                           <div className="font-bold text-sm">
@@ -1226,61 +1239,49 @@ function DataAnggota() {
                 })}
               </tbody>
             </table>
-            <div className="flex justify-end items-center mb-4">
-              {totalItems > itemsPerPage && (
-                <>
-                  <Button
-                    onClick={handlePreviousPage}
-                    disabled={currentPage === 1}
-                    className="mr-2"
-                  >
-                    Previous
-                  </Button>
-                  <div className="flex items-center">
-                    {totalPages > 1 && (
-                      <ul className="flex space-x-1">
-                        {(() => {
-                          let startPage = Math.max(1, currentPage - 1);
-                          let endPage = Math.min(totalPages, currentPage + 1);
+            <div className="flex justify-center mt-4 gap-1">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                First
+              </button>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Prev
+              </button>
 
-                          if (currentPage === 1) {
-                            endPage = Math.min(3, totalPages);
-                          } else if (currentPage === totalPages) {
-                            startPage = Math.max(totalPages - 2, 1);
-                          } else if (totalPages - currentPage < 2) {
-                            startPage = Math.max(totalPages - 2, 1);
-                          }
+              {getVisiblePages().map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                    ? "bg-blue-500 text-white"
+                    : "bg-white hover:bg-gray-50"
+                    }`}
+                >
+                  {page}
+                </button>
+              ))}
 
-                          return Array.from(
-                            { length: endPage - startPage + 1 },
-                            (_, i) => startPage + i
-                          );
-                        })().map((number) => (
-                          <li key={number}>
-                            <Button
-                              onClick={() => handlePageClick(number)}
-                              className={`mx-1 px-4 py-2 border rounded-md ${
-                                currentPage === number
-                                  ? "bg-blue-500 text-white"
-                                  : "bg-white text-black"
-                              }`}
-                            >
-                              {number}
-                            </Button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                  <Button
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                    className="ml-2"
-                  >
-                    Next
-                  </Button>
-                </>
-              )}
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Next
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Last
+              </button>
             </div>
           </div>
 

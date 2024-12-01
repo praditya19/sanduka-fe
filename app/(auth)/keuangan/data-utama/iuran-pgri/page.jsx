@@ -45,7 +45,13 @@ export default function Iuran() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const [paginatedData, setPaginatedData] = useState([]);
+  const totalPages = Math.ceil(filteredDataSumbangan.length / itemsPerPage);
   const [allCabangData, setAllCabangData] = useState([]);
   const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
   const [dropdownVisible, setDropdownVisible] = useState(false);
@@ -242,6 +248,31 @@ export default function Iuran() {
     }
   };
 
+  const getVisiblePages = () => {
+    const range = 2; // Number of pages to show around current page
+    let start = Math.max(1, currentPage - range);
+    let end = Math.min(totalPages, currentPage + range);
+
+    const pages = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
+  useEffect(() => {
+    const paginated = filteredDataSumbangan.slice(
+      indexOfFirstItem,
+      indexOfLastItem
+    );
+    setPaginatedData(paginated);
+    setTotalItems(filteredDataSumbangan.length);
+  }, [filteredDataSumbangan, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredDataSumbangan]);
+
   useEffect(() => {
     if (selectedCabang) {
       fetchData();
@@ -411,9 +442,8 @@ export default function Iuran() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <Toaster
             toastOptions={{
@@ -845,7 +875,7 @@ export default function Iuran() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredDataSumbangan.length === 0 ? (
+                    {paginatedData.length === 0 ? (
                       <tr>
                         <td
                           className="border px-6 py-4 text-center"
@@ -855,11 +885,14 @@ export default function Iuran() {
                         </td>
                       </tr>
                     ) : (
-                      filteredDataSumbangan.map((item, index) => (
+                      paginatedData.map((item, index) => (
                         <tr
                           key={index + 1}
                           className="transition duration-200 ease-in-out"
                         >
+                          {/* <td className="border px-6 py-4 text-center text-sm">
+                            {indexOfFirstItem + index + 1}
+                          </td> */}
                           <td className="border px-6 py-4 text-center text-sm">
                             {index + 1}
                           </td>
@@ -895,6 +928,54 @@ export default function Iuran() {
                     )}
                   </tbody>
                 </table>
+              </div>
+              <div className="flex justify-center mt-4 gap-1">
+                {totalItems >= itemsPerPage && (
+                  <div className="flex justify-center mt-4 gap-1">
+                    <button
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                    >
+                      First
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                    >
+                      Prev
+                    </button>
+
+                    {getVisiblePages().map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                            ? "bg-blue-500 text-white"
+                            : "bg-white hover:bg-gray-50"
+                          }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                    >
+                      Next
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                    >
+                      Last
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

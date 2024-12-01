@@ -1,6 +1,10 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
+import { faWhatsapp} from "@fortawesome/free-brands-svg-icons";
+import {
+  FaPlusCircle,
+  FaMinusCircle
+} from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -26,11 +30,11 @@ const SyncData = () => {
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
   const [originalRekapData, setOriginalRekapData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [expandedRows, setExpandedRows] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [data, setData] = useState([]);
   const tableRef = useRef();
-
+  const [expandedIndex, setExpandedIndex] = useState(null);
   const [formData, setFormData] = useState({
     file: null,
     category: "",
@@ -184,6 +188,14 @@ const SyncData = () => {
     };
   }, []);
 
+  const toggleRowExpand = (index) => {
+    setExpandedRows(prev =>
+      prev.includes(index)
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    );
+  };
+
   const filteredData = data.filter((item) => {
     const cabangMatch = selectedCabang ? item.cabang === selectedCabang : true;
     const unitKerjaMatch = searchTerm
@@ -320,6 +332,10 @@ const SyncData = () => {
 
   const handleBackClick = () => {
     router.back();
+  };
+
+  const handleExpand = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
   };
 
   useEffect(() => {
@@ -553,71 +569,116 @@ const SyncData = () => {
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-white uppercase bg-teal-700 text-center">
                   <tr>
-                    <th scope="col" className="py-3 px-6">
-                      No
-                    </th>
-                    <th scope="col" className="py-3 px-6">
-                      Cabang
-                    </th>
-                    <th scope="col" className="py-3 px-6">
-                      Unit Kerja
-                    </th>
-                    <th scope="col" className="py-3 px-6">
-                      Nama
-                    </th>
-                    <th scope="col" className="py-3 px-6">
-                      NPA/NIP
-                    </th>
-                    <th scope="col" className="py-3 px-6">
-                      Data Sanduka
-                    </th>
-                    <th scope="col" className="py-3 px-6">
-                      Data KTA Digital
-                    </th>
-                    <th scope="col" className="py-3 px-6">
-                      Data Daspen
-                    </th>
-                    <th scope="col" className="py-3 px-6">
-                      Wa
-                    </th>
+                    <th scope="col" className="py-3 px-6">No</th>
+                    <th scope="col" className="py-3 px-6">Cabang</th>
+                    <th scope="col" className="py-3 px-6">Unit Kerja</th>
+                    {!isMobile && (
+                      <>
+                        <th scope="col" className="py-3 px-6">Nama</th>
+                        <th scope="col" className="py-3 px-6">NPA/NIP</th>
+                        <th scope="col" className="py-3 px-6">Data Sanduka</th>
+                        <th scope="col" className="py-3 px-6">Data KTA Digital</th>
+                        <th scope="col" className="py-3 px-6">Data Daspen</th>
+                        <th scope="col" className="py-3 px-6">Wa</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="text-center">
                   {filteredData.map((item, index) => (
-                    <tr
-                      key={index}
-                      className={`bg-white border-b ${
-                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                      } hover:bg-gray-200 transition duration-150`}
-                    >
-                      <td className="py-4 px-6">{index + 1}</td>
-                      <td className="py-4 px-6">{item.cabang}</td>
-                      <td className="py-4 px-6">{item.unitKerja}</td>
-                      <td className="py-4 px-6">{item.namaAnggota}</td>
-                      <td className="py-4 px-6">{item.npaNip}</td>
-                      <td className="py-4 px-6">
-                        {item.dataSanduka ? "YES" : "NO"}
-                      </td>
-                      <td className="py-4 px-6">
-                        {item.dataKtaDigital ? "YES" : "NO"}
-                      </td>
-                      <td className="py-4 px-6">
-                        {item.dataDaspen ? "YES" : "NO"}
-                      </td>
-                      <td className="py-4 px-6">
-                        <button
-                          onClick={() =>
-                            window.open(
-                              `https://wa.me/${item.nomorHp}`,
-                              "_blank"
-                            )
-                          }
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
-                        >
-                          <FontAwesomeIcon icon={faWhatsapp} size="lg" />
-                        </button>
-                      </td>
-                    </tr>
+                    <>
+                      <tr
+                        key={index}
+                        className={`bg-white border-b ${index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                          } hover:bg-gray-200 transition duration-150`}
+                      >
+                        <td className="py-4 px-6 flex items-center justify-center">
+                          <div className="flex items-center">
+                            {index + 1}
+                            {isMobile && (
+                              <Button
+                                className="text-blue-500 bg-transparent hover:bg-transparent ml-2"
+                                onClick={() => handleExpand(index)}
+                              >
+                                {expandedIndex === index ? (
+                                  <FaMinusCircle />
+                                ) : (
+                                  <FaPlusCircle />
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">{item.cabang}</td>
+                        <td className="py-4 px-6">{item.unitKerja}</td>
+
+                        {!isMobile && (
+                          <>
+                            <td className="py-4 px-6">{item.namaAnggota}</td>
+                            <td className="py-4 px-6">{item.npaNip}</td>
+                            <td className="py-4 px-6">
+                              {item.dataSanduka ? "YES" : "NO"}
+                            </td>
+                            <td className="py-4 px-6">
+                              {item.dataKtaDigital ? "YES" : "NO"}
+                            </td>
+                            <td className="py-4 px-6">
+                              {item.dataDaspen ? "YES" : "NO"}
+                            </td>
+                            <td className="py-4 px-6">
+                              <button
+                                onClick={() =>
+                                  window.open(
+                                    `https://wa.me/${item.nomorHp}`,
+                                    "_blank"
+                                  )
+                                }
+                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
+                              >
+                                <FontAwesomeIcon icon={faWhatsapp} size="lg" />
+                              </button>
+                            </td>
+                          </>
+                        )}
+                      </tr>
+
+                      {isMobile && expandedIndex === index && (
+                        <tr className="bg-gray-100">
+                          <td colSpan="3" className="p-4">
+                            <div className="grid grid-cols-2 gap-2 text-left">
+                              <div>
+                                <strong>Nama:</strong> {item.namaAnggota}
+                              </div>
+                              <div>
+                                <strong>NPA/NIP:</strong> {item.npaNip}
+                              </div>
+                              <div>
+                                <strong>Sanduka:</strong> {item.dataSanduka ? "YES" : "NO"}
+                              </div>
+                              <div>
+                                <strong>KTA Digital:</strong> {item.dataKtaDigital ? "YES" : "NO"}
+                              </div>
+                              <div>
+                                <strong>Daspen:</strong> {item.dataDaspen ? "YES" : "NO"}
+                              </div>
+                              <div>
+                                <button
+                                  onClick={() =>
+                                    window.open(
+                                      `https://wa.me/${item.nomorHp}`,
+                                      "_blank"
+                                    )
+                                  }
+                                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
+                                >
+                                  <FontAwesomeIcon icon={faWhatsapp} size="lg" /> Hubungi
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   ))}
                 </tbody>
               </table>

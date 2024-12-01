@@ -356,10 +356,10 @@ const Page = () => {
                   </tbody>
                 </table>
  
-                <div className="flex flex-col md:flex-row justify-between text-sm mt-4 items-center space-y-2 md:space-y-0 md:space-x-2">
-                  <span className="text-center md:text-left">
+                {/* <div className="flex flex-col md:flex-row justify-between text-sm mt-4 items-center space-y-2 md:space-y-0 md:space-x-2"> */}
+                  {/* <span className="text-center md:text-left">
                     Showing {startIndex + 1} to {endIndex} of {totalItems} entries
-                  </span>
+                  </span> */}
  
                   <div className="flex justify-center mt-4 gap-1">
                     <button
@@ -405,7 +405,7 @@ const Page = () => {
                       Last
                     </button>
                   </div>
-                </div>
+                {/* </div> */}
               </div>
             </div>
           </div>
