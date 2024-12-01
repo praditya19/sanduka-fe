@@ -15,6 +15,7 @@ const CABANG_PERCENTAGE = 0.065;
 const KABUPATEN_PERCENTAGE = 0.04;
 
 export default function Daspen() {
+  const dropdownRef = useRef(null);
   const [kuota, setKuota] = useState(700);
   const [katagori1, setKatagori1] = useState(0);
   const [katagori2, setKatagori2] = useState(0);
@@ -25,6 +26,9 @@ export default function Daspen() {
   const [kat1, setKat1] = useState(0);
   const [kat2, setKat2] = useState(0);
   const [kat3, setKat3] = useState(0);
+  const [valueKat1, setValueKat1] = useState(0);
+  const [valueKat2, setValueKat2] = useState(0);
+  const [valueKat3, setValueKat3] = useState(0);
   const [totalTarget, setTotalTarget] = useState(0);
   const [perolehanCabang, setPerolehanCabang] = useState(0);
   const [perolehanKabupaten, setPerolehanKabupaten] = useState(0);
@@ -39,26 +43,49 @@ export default function Daspen() {
   const [cabangList, setCabangList] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
 
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredTableData, setFilteredTableData] = useState(tableData);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
+  const [chosenCabang, setChosenCabang] = useState("");
+  const [cabangOptions, setCabangOptions] = useState([]);
+
   const [newCabangList, setNewCabangList] = useState([]);
   const [selectedBulanBaru, setSelectedBulanBaru] = useState("");
   const [newSelectedYear, setNewSelectedYear] = useState(
     new Date().getFullYear()
   );
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const fetchData = async () => {
+    try {
       const data = await GlobalApi.getTableDaspen(
         selectedBulanBaru,
         newSelectedYear,
         newCabangList
       );
-      setTableData(data);
-    };
-
+  
+      // Pisahkan baris "Jumlah"
+      const jumlahRow = data.find((row) => row["Cabang/Khusus"] === "Jumlah");
+      const filteredData = data.filter((row) => row["Cabang/Khusus"] !== "Jumlah");
+  
+      // Tempatkan baris "Jumlah" di akhir
+      const sortedData = jumlahRow ? [...filteredData, jumlahRow] : filteredData;
+  
+      setTableData(sortedData);
+      setFilteredTableData(sortedData);
+    } catch (error) {
+      console.error("Error fetching table data:", error);
+      toast.error("Gagal mengambil data tabel.");
+    }
+  };
+  useEffect(() => {
     if (selectedBulanBaru && newSelectedYear) {
       fetchData();
     }
   }, [selectedBulanBaru, newSelectedYear, newCabangList]);
+    
 
   useEffect(() => {
     if (!selectedBulanBaru || !newSelectedYear) {
@@ -71,6 +98,7 @@ export default function Daspen() {
       try {
         const response = await GlobalApi.getCabang();
         setCabangList(response.data);
+        setCabangOptions(response.data);
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -78,6 +106,75 @@ export default function Daspen() {
 
     fetchCabangData();
   }, []);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
+  const filteredCabangList = cabangList.filter((cabang) =>
+    cabang.kecamatan.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleCabangSelect = (cabang) => {
+    setSelectedCabang(cabang);
+    setIsDropdownOpen(false);
+  };
+
+  const handleSearchInputChange = (e) => {
+    const searchValue = e.target.value.toLowerCase();
+    setSearchTerm(searchValue);
+
+    const filteredOptions = cabangOptions.filter((cabang) =>
+      cabang.kecamatan.toLowerCase().includes(searchValue)
+    );
+    setFilteredCabangOptions(filteredOptions);
+  };
+
+  const handleCabangSelection = (cabang) => {
+    setChosenCabang(cabang.kecamatan || "Pilih Cabang");
+    setDropdownVisible(false);
+
+    // Filter data tabel berdasarkan cabang yang dipilih
+    if (cabang.kecamatan) {
+      const filteredData = tableData.filter(
+        (row) => row["Cabang/Khusus"] === cabang.kecamatan
+      );
+      setFilteredTableData(filteredData);
+    } else {
+      // Tampilkan semua data jika tidak ada cabang yang dipilih
+      setFilteredTableData(tableData);
+    }
+  };
+
+  const handleOutsideClick = (e) => {
+    if (!e.target.closest(".relative")) {
+      setDropdownVisible(false);
+    }
+  };
+
+  useEffect(() => {
+    if (dropdownVisible) {
+      document.addEventListener("click", handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener("click", handleOutsideClick);
+    };
+  }, [dropdownVisible]);
 
   const years = Array.from(
     { length: currentYear - startYear + 1 },
@@ -89,8 +186,8 @@ export default function Daspen() {
   useEffect(() => {
     const fetchBulan = async () => {
       try {
-        const response = await GlobalApi.getBulan(); // Ganti dengan API Anda
-        setBulanList(response.data || []); // Simpan daftar bulan ke state
+        const response = await GlobalApi.getBulan();
+        setBulanList(response.data || []);
       } catch (error) {
         console.error("Error fetching bulan:", error);
       }
@@ -99,12 +196,11 @@ export default function Daspen() {
     fetchBulan();
   }, []);
 
-  // Mengatur bulan saat ini secara otomatis
   useEffect(() => {
     if (bulanList.length > 0) {
-      const currentMonthIndex = new Date().getMonth(); // Ambil index bulan saat ini (0-11)
-      const currentMonth = bulanList[currentMonthIndex]?.namaBulan || ""; // Ambil nama bulan
-      setSelectedBulanBaru(currentMonth); // Set bulan saat ini ke selectedBulanBaru
+      const currentMonthIndex = new Date().getMonth();
+      const currentMonth = bulanList[currentMonthIndex]?.namaBulan || "";
+      setSelectedBulanBaru(currentMonth);
     }
   }, [bulanList]);
 
@@ -183,7 +279,11 @@ export default function Daspen() {
 
   const handleSubmitTarget = async (event) => {
     event.preventDefault();
-
+  
+    const valueKat1 = kat1 * katagori1Lainnya;
+    const valueKat2 = kat2 * katagori2Lainnya;
+    const valueKat3 = kat3 * katagori3Lainnya;
+  
     const payload = {
       bulan: selectedBulan,
       tahun: selectedYear,
@@ -191,17 +291,33 @@ export default function Daspen() {
       kategori1: kat1,
       kategori2: kat2,
       kategori3: kat3,
+      perolehanCabang: perolehanCabang,
+      perolehanKabupaten: perolehanKabupaten,
+      valueKat1,
+      valueKat2,
+      valueKat3,
     };
-
+  
+    console.log("Data yang akan dikirim ke database:", payload);
     try {
-      const result = await GlobalApi.createTargetDaspen(payload);
+      await GlobalApi.createTargetDaspen(payload);
       toast.success("Data berhasil disimpan!");
+  
+      // Perbarui data tabel
+      await fetchData();
       handleReset();
     } catch (error) {
       console.error("Error creating data target daspen:", error);
       toast.error("Gagal menyimpan data target: " + error.message);
     }
   };
+  
+
+  useEffect(() => {
+    setValueKat1(kat1 * katagori1Lainnya);
+    setValueKat2(kat2 * katagori2Lainnya);
+    setValueKat3(kat3 * katagori3Lainnya);
+  }, [kat1, kat2, kat3, katagori1Lainnya, katagori2Lainnya, katagori3Lainnya]);
 
   const handleReset = () => {
     const storedData = JSON.parse(sessionStorage.getItem("daspenData"));
@@ -474,26 +590,59 @@ export default function Daspen() {
                     </div>
                   </div>
                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                    <div className="flex flex-col">
+                    <div className="flex flex-col ">
                       <Label
                         htmlFor="cabang"
                         className="block text-gray-700 text-sm font-semibold mb-2"
                       >
                         Cabang
                       </Label>
-                      <select
-                        id="cabang"
-                        value={selectedCabang}
-                        onChange={(e) => setSelectedCabang(e.target.value)}
-                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                      >
-                        <option value="">Select Cabang</option>
-                        {cabangList.map((cabang) => (
-                          <option key={cabang.id} value={cabang.kecamatan}>
-                            {cabang.kecamatan}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="relative w-full" ref={dropdownRef}>
+                        <Input
+                          type="text"
+                          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                          readOnly
+                          value={selectedCabang || ""}
+                          placeholder="Pilih Cabang"
+                          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                          onFocus={() => {
+                            setSearchQuery("");
+                          }}
+                        />
+
+                        {isDropdownOpen && (
+                          <div className="absolute w-40 mt-1 bg-white border rounded shadow-lg z-10">
+                            <ul className="max-h-44 overflow-y-auto">
+                              <li className="py-2 px-2">
+                                <Input
+                                  type="text"
+                                  className="w-full p-2 border-b text-gray-700 focus:outline-none"
+                                  placeholder="Cari cabang..."
+                                  value={searchQuery}
+                                  onChange={handleSearchChange}
+                                  autoFocus
+                                />
+                              </li>
+                              {filteredCabangList.map((cabang) => (
+                                <li
+                                  key={cabang.id}
+                                  className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                  onClick={() =>
+                                    handleCabangSelect(cabang.kecamatan)
+                                  }
+                                >
+                                  {cabang.kecamatan}
+                                </li>
+                              ))}
+                              {filteredCabangList.length === 0 && (
+                                <li className="p-2 text-gray-500">
+                                  Cabang tidak ditemukan
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="flex flex-col">
                       <Label
@@ -628,33 +777,74 @@ export default function Daspen() {
             <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
               <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
                 <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
+                  <div className="relative flex flex-col md:flex ml-2 w-72">
+                    <Input
+                      type="text"
+                      placeholder="Pilih Cabang"
+                      value={chosenCabang || "Pilih Cabang"}
+                      readOnly
+                      onFocus={() => {
+                        setDropdownVisible(true);
+                        setSearchTerm("");
+                        setFilteredCabangOptions(cabangOptions);
+                      }}
+                      className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
+                    />
+
+                    {dropdownVisible && (
+                      <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full">
+                        <ul className="max-h-44 overflow-y-auto">
+                          <li className="py-2 px-2">
+                            <Input
+                              type="text"
+                              value={searchTerm}
+                              onChange={handleSearchInputChange}
+                              className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Cari Cabang..."
+                              autoFocus
+                            />
+                          </li>
+                          <li
+                            className="p-2 cursor-pointer hover:bg-gray-100"
+                            onClick={() =>
+                              handleCabangSelection({ kecamatan: "", id: "" })
+                            }
+                          >
+                            Pilih Cabang
+                          </li>
+                          {filteredCabangOptions.length > 0 ? (
+                            filteredCabangOptions.map((cabang) => (
+                              <li
+                                key={cabang.id}
+                                className="p-2 cursor-pointer hover:bg-gray-100"
+                                onClick={() => handleCabangSelection(cabang)}
+                              >
+                                {cabang.kecamatan}
+                              </li>
+                            ))
+                          ) : (
+                            <li className="px-4 py-2 text-gray-500 cursor-default">
+                              Tidak ada hasil
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
                   <select
-                    className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
-                    id="newCabangTable"
-                    value={newCabangList}
-                    onChange={(e) => setNewCabangList(e.target.value)}
+                    className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    id="bulanTableBaru"
+                    value={selectedBulanBaru}
+                    onChange={(e) => setSelectedBulanBaru(e.target.value)}
                   >
-                    <option value="">Pilih Cabang Baru</option>
-                    {cabangList.map((cabang) => (
-                      <option key={cabang.id} value={cabang.kecamatan}>
-                        {cabang.kecamatan}
+                    <option value="">Pilih Bulan</option>
+                    {bulanList.map((bulan) => (
+                      <option key={bulan.id} value={bulan.namaBulan}>
+                        {bulan.namaBulan}
                       </option>
                     ))}
                   </select>
-
-                  <select
-      className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-      id="bulanTableBaru"
-      value={selectedBulanBaru}
-      onChange={(e) => setSelectedBulanBaru(e.target.value)}
-    >
-      <option value="">Pilih Bulan</option>
-      {bulanList.map((bulan) => (
-        <option key={bulan.id} value={bulan.namaBulan}>
-          {bulan.namaBulan}
-        </option>
-      ))}
-    </select>
 
                   <select
                     className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
@@ -788,58 +978,72 @@ export default function Daspen() {
                   </tr>
                 </thead>
                 <tbody>
-                  {tableData.length > 0 ? (
-                    tableData.map((row, index) => (
-                      <tr
-                        className="transition duration-200 ease-in-out"
-                        key={index}
-                      >
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {index + 1}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {row["Cabang/Khusus"] || "-"}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {(row["Anggota Kategori I"] ?? 0).toLocaleString(
-                            "en-US"
-                          )}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {(row["Sumbangan Kategori I"] ?? 0).toLocaleString(
-                            "en-US"
-                          )}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {(row["Anggota Kategori II"] ?? 0).toLocaleString(
-                            "en-US"
-                          )}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {(row["Sumbangan Kategori II"] ?? 0).toLocaleString(
-                            "en-US"
-                          )}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {(row["Anggota Kategori III"] ?? 0).toLocaleString(
-                            "en-US"
-                          )}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {(row["Sumbangan Kategori III"] ?? 0).toLocaleString(
-                            "en-US"
-                          )}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {(row["Anggota Total"] ?? 0).toLocaleString("en-US")}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {(row["Sumbangan Total"] ?? 0).toLocaleString(
-                            "en-US"
-                          )}
-                        </td>
-                      </tr>
-                    ))
+                  {filteredTableData.length > 0 ? (
+                    filteredTableData.map((row, index) => {
+                      const isJumlahRow = row["Cabang/Khusus"] === "Jumlah";
+
+                      return (
+                        <tr
+                          key={index}
+                          className={`transition duration-200 ease-in-out ${
+                            isJumlahRow ? "bg-gray-300" : ""
+                          }`}
+                        >
+                          <td className="border px-6 py-4 text-center text-sm text-black">
+                            {!isJumlahRow ? index + 1 : ""}
+                          </td>
+                          <td
+                            className={`border px-6 py-4 text-center text-sm ${
+                              isJumlahRow
+                                ? "text-gray-700 font-bold"
+                                : "text-black"
+                            }`}
+                          >
+                            {row["Cabang/Khusus"] || "-"}
+                          </td>
+                          <td className="border px-6 py-4 text-center text-sm text-black">
+                            {(row["Anggota Kategori I"] ?? 0).toLocaleString(
+                              "en-US"
+                            )}
+                          </td>
+                          <td className="border px-6 py-4 text-center text-sm text-black">
+                            {(row["Sumbangan Kategori I"] ?? 0).toLocaleString(
+                              "en-US"
+                            )}
+                          </td>
+                          <td className="border px-6 py-4 text-center text-sm text-black">
+                            {(row["Anggota Kategori II"] ?? 0).toLocaleString(
+                              "en-US"
+                            )}
+                          </td>
+                          <td className="border px-6 py-4 text-center text-sm text-black">
+                            {(row["Sumbangan Kategori II"] ?? 0).toLocaleString(
+                              "en-US"
+                            )}
+                          </td>
+                          <td className="border px-6 py-4 text-center text-sm text-black">
+                            {(row["Anggota Kategori III"] ?? 0).toLocaleString(
+                              "en-US"
+                            )}
+                          </td>
+                          <td className="border px-6 py-4 text-center text-sm text-black">
+                            {(
+                              row["Sumbangan Kategori III"] ?? 0
+                            ).toLocaleString("en-US")}
+                          </td>
+                          <td className="border px-6 py-4 text-center text-sm text-black">
+                            {(row["Anggota Total"] ?? 0).toLocaleString(
+                              "en-US"
+                            )}
+                          </td>
+                          <td className="border px-6 py-4 text-center text-sm text-black">
+                            {(row["Sumbangan Total"] ?? 0).toLocaleString(
+                              "en-US"
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
                       <td

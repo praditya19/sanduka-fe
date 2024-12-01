@@ -573,13 +573,16 @@ const getCalculateSandukaPensiun = async (month, year, cabang) => {
 
 const getCalculateSandukaKeluar = async (month, year, cabang) => {
   try {
-    const respons = await axiosClient.get("/api/calculate-sanduka/keluar-anggota", {
-      params: {
-        cabang: cabang || null,
-        year: year,
-        month: month,
-      },
-    });
+    const respons = await axiosClient.get(
+      "/api/calculate-sanduka/keluar-anggota",
+      {
+        params: {
+          cabang: cabang || null,
+          year: year,
+          month: month,
+        },
+      }
+    );
     return respons.data;
   } catch (error) {
     console.error("Error fetching calculate-sanduka data:", error);
@@ -589,13 +592,13 @@ const getCalculateSandukaKeluar = async (month, year, cabang) => {
 
 const getTotalAnggotaStatistik = async () => {
   try {
-    const respons = await axiosClient.get("/api/iuran/total-anggota")
+    const respons = await axiosClient.get("/api/iuran/total-anggota");
     return respons.data;
   } catch (error) {
-    console.error('Error fetching total anggota:', error);
-      throw error;
+    console.error("Error fetching total anggota:", error);
+    throw error;
   }
-}
+};
 
 // Sinkronisasi
 const uploadFile = async (formData) => {
@@ -742,13 +745,15 @@ const createTargetIuaran = async (payload) => {
 
 const getTotalAnggotaByCabang = async (cabang) => {
   try {
-    const response = await axiosClient.get(`/api/iuran/total-anggota-by-cabang?cabang=${cabang}`)
-    return response.data
+    const response = await axiosClient.get(
+      `/api/iuran/total-anggota-by-cabang?cabang=${cabang}`
+    );
+    return response.data;
   } catch (error) {
-    console.error('Error fetching total anggota by cabang:', error);
-  throw error
+    console.error("Error fetching total anggota by cabang:", error);
+    throw error;
   }
-}
+};
 // END
 // DASPEN start (Sumbangan Daspen)
 const createDaspenData = async (payload) => {
@@ -796,6 +801,7 @@ const createDerapData = async (payload) => {
 const createTargetDerap = async (payload) => {
   try {
     const response = await axiosClient.post("/api/target-derap", payload);
+
     return response.data;
   } catch (error) {
     console.error("Error creating target derap data:", error);
@@ -854,7 +860,7 @@ const sendSesuaiJumlahTarget = async (data) => {
       "/api/uang-masuk-keluar/sesuai-jumlah-target",
       data
     );
-    console.log("Respon dari API:", response.data);
+
     return response.data;
   } catch (error) {
     console.error("Error sending sesuai jumlah target:", error);
@@ -1124,7 +1130,7 @@ const mutasiCabangUnitKerja = async (idAnggota, cabang, unitKerja) => {
 const batalLaporanById = async (id) => {
   try {
     const response = await axiosClient.put(`/api/laporan/${id}/batal`);
-    console.log("Laporan berhasil dibatalkan:", response.data);
+
     return response.data;
   } catch (error) {
     console.error("Error saat membatalkan laporan:", error);
@@ -1138,7 +1144,7 @@ const verifikasiLaporanById = async (id, data) => {
       `/api/laporan/${id}/tanggal-santunan`,
       data
     );
-    console.log("Tanggal santunan berhasil diperbarui:", response.data);
+
     return response.data;
   } catch (error) {
     console.error("Error saat memperbarui tanggal santunan:", error);

@@ -11,6 +11,7 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
 
 function DerapForm() {
+  const dropdownRef = useRef(null);
   const [provinsi, setProvinsi] = useState("");
   const [kabupaten, setKabupaten] = useState("");
   const [cabang, setCabang] = useState("");
@@ -20,13 +21,22 @@ function DerapForm() {
   const [setorProvinsi, setSetorProvinsi] = useState(0);
   const [untukKabupaten, setUntukKabupaten] = useState(0);
   const [untukCabang, setUntukCabang] = useState(0);
+
   const [selectedCabang, setSelectedCabang] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [tableData, setTableData] = useState([]);
+  const [filteredTableData, setFilteredTableData] = useState(tableData);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
+  const [chosenCabang, setChosenCabang] = useState("");
+  const [cabangOptions, setCabangOptions] = useState([]);
   const [cabangList, setCabangList] = useState([]);
   const [jenisCabang, setJenisCabang] = useState("");
   const [selectedBulan, setSelectedBulan] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [bulanList, setBulanList] = useState([]);
-  const [tableData, setTableData] = useState([]);
   const currentYear = new Date().getFullYear();
   const startYear = 2020;
   const [newCabangList, setNewCabangList] = useState([]);
@@ -42,9 +52,11 @@ function DerapForm() {
         const data = await GlobalApi.getTableDerap(
           selectedBulanBaru,
           newSelectedYear,
-          newCabangList || ""
+          newCabangList
         );
+
         setTableData(data);
+        setFilteredTableData(data);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -65,7 +77,7 @@ function DerapForm() {
     const fetchBulan = async () => {
       try {
         const response = await GlobalApi.getBulan();
-        setBulanList(response.data);
+        setBulanList(response.data || []);
       } catch (error) {
         console.error("Error fetching bulan:", error);
       }
@@ -73,6 +85,14 @@ function DerapForm() {
 
     fetchBulan();
   }, []);
+
+  useEffect(() => {
+    if (bulanList.length > 0) {
+      const currentMonthIndex = new Date().getMonth();
+      const currentMonth = bulanList[currentMonthIndex]?.namaBulan || "";
+      setSelectedBulanBaru(currentMonth);
+    }
+  }, [bulanList]);
 
   const printTable = () => {
     const printContent = tableRef.current;
@@ -110,6 +130,7 @@ function DerapForm() {
       try {
         const response = await GlobalApi.getCabang();
         setCabangList(response.data);
+        setCabangOptions(response.data);
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -117,6 +138,73 @@ function DerapForm() {
 
     fetchCabangData();
   }, []);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
+  const filteredCabangList = cabangList.filter((cabang) =>
+    cabang.kecamatan.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleCabangSelect = (cabang) => {
+    setSelectedCabang(cabang);
+    setIsDropdownOpen(false);
+  };
+
+  const handleSearchInputChange = (e) => {
+    const searchValue = e.target.value.toLowerCase();
+    setSearchTerm(searchValue);
+
+    const filteredOptions = cabangOptions.filter((cabang) =>
+      cabang.kecamatan.toLowerCase().includes(searchValue)
+    );
+    setFilteredCabangOptions(filteredOptions);
+  };
+
+  const handleCabangSelection = (cabang) => {
+    setChosenCabang(cabang.kecamatan || "Pilih Cabang");
+    setDropdownVisible(false);
+
+    if (cabang.kecamatan) {
+      const filteredData = tableData.filter(
+        (row) => row.cabang === cabang.kecamatan
+      );
+      setFilteredTableData(filteredData);
+    } else {
+      setFilteredTableData(tableData);
+    }
+  };
+
+  const handleOutsideClick = (e) => {
+    if (!e.target.closest(".relative")) {
+      setDropdownVisible(false);
+    }
+  };
+
+  useEffect(() => {
+    if (dropdownVisible) {
+      document.addEventListener("click", handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener("click", handleOutsideClick);
+    };
+  }, [dropdownVisible]);
 
   useEffect(() => {
     const storedData = sessionStorage.getItem("derapData");
@@ -155,7 +243,7 @@ function DerapForm() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
+  
     const payload1 = {
       pb: "",
       propinsi: provinsi,
@@ -165,28 +253,39 @@ function DerapForm() {
       bulan: selectedBulan,
       tahun: selectedYear,
     };
-
+  
     const payload2 = {
       cabang: selectedCabang,
       jumlah: jumlahPesanan,
       bulan: selectedBulan,
       tahun: selectedYear,
+      perolehanKabupaten: untukKabupaten,
+      perolehanCabang: untukCabang,
     };
-
+  
     try {
       const result1 = await GlobalApi.createDerapData(payload1);
-
       const result2 = await GlobalApi.createTargetDerap(payload2);
-
+  
+      
+      setFilteredTableData((prevTableData) => [
+        ...prevTableData,
+        {
+          id: result2.id, 
+          cabang: selectedCabang,
+          jumlah: jumlahPesanan,
+          bulan: selectedBulan,
+          tahun: selectedYear,
+          total: calculateTotal(jumlahPesanan, untukCabang, untukKabupaten, provinsi),
+        },
+      ]);
+  
       toast.success("Data berhasil disimpan!");
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
     } catch (error) {
+      console.error("Error saat menyimpan data: ", error);
       toast.error(`Gagal menyimpan data: ${error.message}`);
     }
-  };
+  };  
 
   const calculateTotalHarga = () => {
     const hargaProvinsi = parseInt(provinsi) || 0;
@@ -432,19 +531,52 @@ function DerapForm() {
                     >
                       Jumlah Pesanan
                     </label>
-                    <select
-                      id="selectCabang"
-                      value={selectedCabang}
-                      className="w-full lg:w-1/3 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out mt-2 lg:mt-0 lg:ml-4"
-                      onChange={(e) => setSelectedCabang(e.target.value)}
-                    >
-                      <option value="">Pilih Cabang</option>
-                      {cabangList.map((cabang) => (
-                        <option key={cabang.id} value={cabang.kecamatan}>
-                          {cabang.kecamatan}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative " ref={dropdownRef}>
+                      <Input
+                        type="text"
+                        className="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        readOnly
+                        value={selectedCabang || ""}
+                        placeholder="Pilih Cabang"
+                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                        onFocus={() => {
+                          setSearchQuery("");
+                        }}
+                      />
+
+                      {isDropdownOpen && (
+                        <div className="absolute w-full mt-1 bg-white border rounded shadow-lg z-10">
+                          <ul className="max-h-44 overflow-y-auto">
+                            <li className="py-2 px-2">
+                              <Input
+                                type="text"
+                                className="w-full p-2 border-b text-gray-700 focus:outline-none"
+                                placeholder="Cari cabang..."
+                                value={searchQuery}
+                                onChange={handleSearchChange}
+                                autoFocus
+                              />
+                            </li>
+                            {filteredCabangList.map((cabang) => (
+                              <li
+                                key={cabang.id}
+                                className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                onClick={() =>
+                                  handleCabangSelect(cabang.kecamatan)
+                                }
+                              >
+                                {cabang.kecamatan}
+                              </li>
+                            ))}
+                            {filteredCabangList.length === 0 && (
+                              <li className="p-2 text-gray-500">
+                                Cabang tidak ditemukan
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
                     <Input
                       type="number"
                       id="jumlahPesananInput"
@@ -496,21 +628,19 @@ function DerapForm() {
                   </p>
                 </div>
                 <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Untuk Kabupaten:
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>Rp. {untukKabupaten.toLocaleString()}</b>
-                  </p>
-                </div>
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Untuk Cabang:
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>Rp. {untukCabang.toLocaleString()}</b>
-                  </p>
-                </div>
+        <h3 className="text-lg font-bold mb-2 text-blue-600">
+          Untuk Kabupaten:
+        </h3>
+        <p className="text-lg text-gray-700">
+          <b>Rp. {untukKabupaten.toLocaleString()}</b>
+        </p>
+      </div>
+      <div className="mb-4">
+        <h3 className="text-lg font-bold mb-2 text-blue-600">Untuk Cabang:</h3>
+        <p className="text-lg text-gray-700">
+          <b>Rp. {untukCabang.toLocaleString()}</b>
+        </p>
+      </div>
                 <div>
                   <h3 className="text-lg font-bold mb-2 text-blue-600">
                     Total:
@@ -523,20 +653,61 @@ function DerapForm() {
             </div>
             <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
               <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
-                <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-                  <select
-                    className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
-                    id="newCabangTable"
-                    value={newCabangList}
-                    onChange={(e) => setNewCabangList(e.target.value)}
-                  >
-                    <option value="">Pilih Cabang Baru</option>
-                    {cabangList.map((cabang) => (
-                      <option key={cabang.id} value={cabang.kecamatan}>
-                        {cabang.kecamatan}
-                      </option>
-                    ))}
-                  </select>
+                <div className="flex flex-wrap gap-3 mb-4 sm:mb-0 px-2 mt-5">
+                  <div className="relative flex flex-col md:flex ml-2">
+                    <Input
+                      type="text"
+                      placeholder="Pilih Cabang"
+                      value={chosenCabang || "Pilih Cabang"}
+                      readOnly
+                      onFocus={() => {
+                        setDropdownVisible(true);
+                        setSearchTerm("");
+                        setFilteredCabangOptions(cabangOptions);
+                      }}
+                      className="border rounded-lg p-2 px-4 w-52 bg-white shadow-sm cursor-pointer"
+                    />
+
+                    {dropdownVisible && (
+                      <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full">
+                        <ul className="max-h-44 overflow-y-auto">
+                          <li className="py-2 px-2">
+                            <Input
+                              type="text"
+                              value={searchTerm}
+                              onChange={handleSearchInputChange}
+                              className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Cari Cabang..."
+                              autoFocus
+                            />
+                          </li>
+                          <li
+                            className="p-2 cursor-pointer hover:bg-gray-100"
+                            onClick={() =>
+                              handleCabangSelection({ kecamatan: "", id: "" })
+                            }
+                          >
+                            Pilih Cabang
+                          </li>
+                          {filteredCabangOptions.length > 0 ? (
+                            filteredCabangOptions.map((cabang) => (
+                              <li
+                                key={cabang.id}
+                                className="p-2 cursor-pointer hover:bg-gray-100"
+                                onClick={() => handleCabangSelection(cabang)}
+                              >
+                                {cabang.kecamatan}
+                              </li>
+                            ))
+                          ) : (
+                            <li className="px-4 py-2 text-gray-500 cursor-default">
+                              Tidak ada hasil
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
                   <select
                     className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                     id="bulanTableBaru"
@@ -608,8 +779,8 @@ function DerapForm() {
                   </tr>
                 </thead>
                 <tbody>
-                  {tableData.length > 0 ? (
-                    tableData.map((item, index) => (
+                  {filteredTableData.length > 0 ? (
+                    filteredTableData.map((item, index) => (
                       <tr
                         key={item.id}
                         className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
