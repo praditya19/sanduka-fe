@@ -23,6 +23,10 @@ function Pemasukan() {
   const [selectedBulanName, setSelectedBulanName] = useState("");
   const currentYear = new Date().getFullYear();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [paginatedTransactions, setPaginatedTransactions] = useState([]);
   const startYear = 2020;
   const endYear = 2050;
   const [newSelectedYear, setNewSelectedYear] = useState(
@@ -46,6 +50,23 @@ function Pemasukan() {
     checked: false,
   });
 
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const getVisiblePages = () => {
+    const totalPagesToShow = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
+    let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
+
+    // Adjust start page if we're near the end
+    if (endPage - startPage + 1 < totalPagesToShow) {
+      startPage = Math.max(1, endPage - totalPagesToShow + 1);
+    }
+
+    return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormValues((prevValues) => ({
@@ -57,12 +78,12 @@ function Pemasukan() {
   const handleBulanChange = (e) => {
     const selectedId = e.target.value; // Ambil ID bulan yang dipilih
     setSelectedBulan(selectedId);
-  
+
     // Cari nama bulan berdasarkan ID
     const bulan = bulanList.find((b) => b.id === parseInt(selectedId));
     setSelectedBulanName(bulan ? bulan.namaBulan : ""); // Update nama bulan
   };
-  
+
 
   const printTable = () => {
     const tableHTML = tableRef.current.outerHTML; // Ambil tabel saja
@@ -105,7 +126,7 @@ function Pemasukan() {
     printWindow.print(); // Cetak halaman
     printWindow.close();
   };
-  
+
 
   const handleClickOutside = (event) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -142,7 +163,10 @@ function Pemasukan() {
           newSelectedYear
         );
 
-        setTransactions(data);
+        setTotalItems(data.length);
+        const paginatedData = data.slice(indexOfFirstItem, indexOfLastItem);
+        setTransactions(paginatedData);
+        setPaginatedTransactions(paginatedData);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -151,7 +175,7 @@ function Pemasukan() {
 
   useEffect(() => {
     fetchData();
-  }, [selectedBulan, newSelectedYear]);
+  }, [selectedBulan, newSelectedYear, currentPage, itemsPerPage]);
 
   const years = Array.from(
     { length: currentYear - startYear + 1 },
@@ -188,7 +212,7 @@ function Pemasukan() {
       try {
         const response = await GlobalApi.getCabang();
         setCabangList(response.data);
-      } catch (error) {}
+      } catch (error) { }
     };
 
     fetchCabangData();
@@ -199,7 +223,7 @@ function Pemasukan() {
       try {
         const response = await GlobalApi.getBulan();
         setBulanList(response.data);
-      } catch (error) {}
+      } catch (error) { }
     };
 
     fetchBulan();
@@ -393,9 +417,8 @@ function Pemasukan() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <Toaster
             toastOptions={{
@@ -699,9 +722,8 @@ function Pemasukan() {
               </div>
               <div className="flex items-center mt-6 justify-center gap-6">
                 <Button
-                  className={`bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
-                    formValues.nominal ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  className={`bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${formValues.nominal ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                   onClick={handleSubmitAll}
                   disabled={Boolean(formValues.nominal)}
                 >
@@ -815,16 +837,16 @@ function Pemasukan() {
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.map((transaction, index) =>
+                  {paginatedTransactions.map((transaction, index) =>
                     transaction.tglTransaksi ? (
                       <tr
                         key={index}
-                        className={`border-b text-black text-center ${
-                          transaction.checked
-                            ? "bg-gray-100"
-                            : "hover:bg-gray-50"
-                        }`}
+                        className={`border-b text-black text-center ${transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
+                          }`}
                       >
+                        <td className="px-6 py-4 text-sm">
+                          {indexOfFirstItem + index + 1}
+                        </td>
                         <td className="px-6 py-4 text-sm">{index + 1}</td>
                         <td className="px-6 py-4 text-sm">
                           {transaction.tglTransaksi}
@@ -924,6 +946,54 @@ function Pemasukan() {
     }
   `}</style>
 
+            </div>
+            <div className="flex justify-center mt-4 gap-1">
+              {totalItems >= itemsPerPage && (
+                <div className="flex justify-center mt-4 gap-1">
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    First
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Prev
+                  </button>
+
+                  {getVisiblePages().map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                        ? "bg-blue-500 text-white"
+                        : "bg-white hover:bg-gray-50"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Next
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Last
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
