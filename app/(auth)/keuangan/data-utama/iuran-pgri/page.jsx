@@ -52,6 +52,8 @@ export default function Iuran() {
   const [searchTerm, setSearchTerm] = useState("");
   const [chosenCabang, setChosenCabang] = useState("");
   const [cabangOptions, setCabangOptions] = useState([]);
+  const [isEdit, setIsEdit] = useState(false);
+const [existingId, setExistingId] = useState(null);
 
   useEffect(() => {
     const fetchTotalAnggota = async () => {
@@ -157,6 +159,7 @@ export default function Iuran() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+  
     const payload = {
       pb: iuranPB,
       propinsi: iuranProvinsi,
@@ -166,20 +169,29 @@ export default function Iuran() {
       bulan: bulan,
       tahun: tahun,
     };
-
+  
     try {
-      const result = await GlobalApi.createIuranData(payload);
-      handleReset();
-
+      // Pertama, buat data baru
+      const createResult = await GlobalApi.createIuranData(payload);
       toast.success("Data berhasil disimpan!");
-
+  
+      // Setelah berhasil menyimpan, lakukan update data berdasarkan ID
+      const id = createResult?.id || 1; // Gunakan ID dari respons API jika tersedia, default ke 1
+      const updateResult = await GlobalApi.updateDataIuran(id, payload);
+      toast.success("Data berhasil diperbarui!");
+  
+      // Reset form setelah selesai
+      handleReset();
+  
+      // Reload data tabel jika diperlukan
       setTimeout(() => {
-        window.location.reload();
+        window.location.reload(); // Hindari jika ingin solusi tanpa refresh
       }, 2000);
     } catch (error) {
-      toast.error("Gagal menyimpan data iuran:", error);
+      console.error("Error saat menyimpan atau memperbarui data iuran:", error.message);
+      toast.error("Gagal menyimpan atau memperbarui data iuran!");
     }
-  };
+  };  
 
   const handleSubmitTarget = async (event) => {
     event.preventDefault();
@@ -847,12 +859,28 @@ export default function Iuran() {
                   <tbody>
                     {filteredDataSumbangan.length === 0 ? (
                       <tr>
-                        <td
-                          className="border px-6 py-4 text-center"
-                          colSpan="10"
-                        >
-                          Data tidak ditemukan
+                        <td className="border px-6 py-4 text-center"></td>
+                        <td className="border px-6 py-4 text-center"></td>
+                        <td className="border px-6 py-4 text-center"></td>
+                        <td className="border px-6 py-4 text-center text-sm">
+                          {formatRupiah(totalIuran)}
                         </td>
+                        <td className="border px-6 py-4 text-center text-sm">
+                          {formatRupiah(iuranPB)}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm">
+                          {formatRupiah(iuranProvinsi)}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm">
+                          {formatRupiah(iuranKabupaten)}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm">
+                          {formatRupiah(iuranCabang)}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm">
+                          {formatRupiah(sumbanganSanduka)}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm"></td>
                       </tr>
                     ) : (
                       filteredDataSumbangan.map((item, index) => (

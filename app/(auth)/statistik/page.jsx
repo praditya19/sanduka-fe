@@ -506,7 +506,7 @@ const Page = () => {
                             <td className="border border-gray-300 p-2 text-xs text-center">
                               {item.keluarAnggota}
                             </td>
-                            <td className="border border-gray-300 p-2 text-xs text-center">
+                            <td className="border border-gray-300 p-2 text-xs text-center"> 
                               {item.pindahCabangMasuk}
                             </td>
                             <td className="border border-gray-300 p-2 text-xs text-center">

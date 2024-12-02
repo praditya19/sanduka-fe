@@ -25,7 +25,6 @@ const FormStep1 = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredNames, setFilteredNames] = useState([]);
   const [cabangOptions, setCabangOptions] = useState([]);
-  const [selectedCabang, setSelectedCabang] = useState("");
   const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [cabangFilter, setCabangFilter] = useState("");
@@ -40,6 +39,9 @@ const FormStep1 = ({
   today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
   const formattedDate = today.toISOString().split("T")[0];
   const [silaporData, setSilaporData] = useState(null);
+  const [selectedCabang, setSelectedCabang] = useState(
+    silaporData?.cabang || ""
+  );
   const dropdownRef = useRef(null);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [queryCabang, setQueryCabang] = useState("");
@@ -139,6 +141,13 @@ const FormStep1 = ({
     return number;
   };
 
+  useEffect(() => {
+    const unitsForSelectedCabang = unitKerjaOptions.filter(
+      (unit) => unit.cabang === selectedCabang
+    );
+    setFilteredUnitKerja(unitsForSelectedCabang);
+  }, [selectedCabang, unitKerjaOptions]);
+
   const handleCabangSelect = (cabang) => {
     setQueryCabang("");
     setSelectedCabang(cabang.kecamatan);
@@ -152,17 +161,29 @@ const FormStep1 = ({
   };
 
   useEffect(() => {
+    if (silaporData) {
+      setSelectedCabang(silaporData.cabang || "");
+    }
+  }, [silaporData]);
+
+  useEffect(() => {
     const fetchTemanUnitKerja = async () => {
       if (!selectedUnitKerja) return;
 
       try {
         const response = await GlobalApi.getTemanUnitKerja(selectedUnitKerja);
         console.log("Data teman unit kerja yang diterima:", response);
-        setTemanUnitKerjaData(response.content);
-        setFilteredNames(response.content);
+
+        const temanData = Array.isArray(response?.content)
+          ? response.content
+          : [];
+        setTemanUnitKerjaData(temanData);
+        setFilteredNames(temanData);
         setIsDropdownVisible(true);
       } catch (error) {
         console.error("Error fetching teman unit kerja:", error);
+        setTemanUnitKerjaData([]);
+        setFilteredNames([]);
       }
     };
 
@@ -170,6 +191,11 @@ const FormStep1 = ({
   }, [selectedUnitKerja]);
 
   useEffect(() => {
+    if (!Array.isArray(temanUnitKerjaData)) {
+      setFilteredNames([]);
+      return;
+    }
+
     if (searchTerm.trim() === "") {
       setFilteredNames(temanUnitKerjaData);
     } else {
@@ -182,10 +208,15 @@ const FormStep1 = ({
 
   const handleUnitKerjaChange = async (unitKerja) => {
     setShowDropdownUnit(false);
-    setQueryUnit(unitKerja);
+    setQueryUnit("");
 
     const response = await GlobalApi.getTemanUnitKerja(unitKerja);
     setTemanUnitKerjaData(response.content);
+
+    setFormData((prev) => ({
+      ...prev,
+      unit: unitKerja,
+    }));
   };
 
   const handleSearch = (e) => {
@@ -449,7 +480,7 @@ const FormStep1 = ({
                         type="text"
                         className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
                         placeholder="Pilih Cabang"
-                        value={queryCabang || selectedCabang}
+                        value={queryCabang || selectedCabang} // Use selectedCabang value here
                         readOnly
                         onClick={() => setShowDropdownCabang(true)}
                       />
@@ -511,10 +542,13 @@ const FormStep1 = ({
                         type="text"
                         className="border rounded-lg p-2 w-full bg-white shadow-sm"
                         placeholder="Pilih Unit Kerja"
-                        value={queryUnit || selectedUnitKerja}
+                        value={queryUnit || formData.unit}
                         readOnly
-                        onChange={(e) => handleUnitKerjaChange(e.target.value)}
-                        onClick={() => setShowDropdownUnit(true)}
+                        onChange={(e) => setQueryUnit(e.target.value)} // Input pencarian unit kerja
+                        onClick={() => {
+                          setQueryUnit(""); // Kosongkan queryUnit ketika input diklik
+                          setShowDropdownUnit(true); // Tampilkan dropdown
+                        }}
                       />
 
                       {showDropdownUnit && filteredUnitKerja.length > 0 && (
@@ -530,7 +564,7 @@ const FormStep1 = ({
                                 className="border-b p-2 w-full bg-white mb-1"
                                 placeholder="Cari Unit Kerja..."
                                 value={queryUnit}
-                                onChange={(e) => setQueryUnit(e.target.value)}
+                                onChange={(e) => setQueryUnit(e.target.value)} // Set query unit kerja
                                 autoFocus
                               />
                             </li>
@@ -541,28 +575,25 @@ const FormStep1 = ({
                                   ...prev,
                                   unit: "",
                                 }));
-                                setShowDropdownUnit(false);
+                                setShowDropdownUnit(false); // Tutup dropdown
                               }}
                             >
                               Pilih Unit Kerja
                             </li>
                             {filteredUnitKerja
-                              .filter((unit) =>
-                                unit.unitKerja
-                                  .toLowerCase()
-                                  .includes(queryUnit.toLowerCase())
+                              .filter(
+                                (unit) =>
+                                  unit.unitKerja
+                                    .toLowerCase()
+                                    .includes(queryUnit.toLowerCase()) // Filter berdasarkan query
                               )
                               .map((unit) => (
                                 <li
                                   key={unit.id}
                                   className="p-2 cursor-pointer hover:bg-gray-100"
                                   onClick={async () => {
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      unit: unit.unitKerja,
-                                    }));
-                                    await handleUnitKerjaChange(unit.unitKerja);
-                                    setShowDropdownUnit(false);
+                                    await handleUnitKerjaChange(unit.unitKerja); // Pilih unit kerja
+                                    setShowDropdownUnit(false); // Tutup dropdown
                                   }}
                                 >
                                   {unit.unitKerja}
@@ -594,21 +625,23 @@ const FormStep1 = ({
                         className="text-sm"
                       />
 
-                      {filteredNames.length > 0 && isDropdownVisible && (
-                        <ul className="absolute left-0 w-full mt-[70px] bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                          {filteredNames.slice(0, 5).map((data) => (
-                            <li
-                              key={data.id}
-                              className="py-2 px-4 hover:bg-gray-100 cursor-pointer"
-                              onClick={() =>
-                                handleNameClick(data.namaLengkap, data.id)
-                              }
-                            >
-                              {data.namaLengkap}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
+                      {Array.isArray(filteredNames) &&
+                        filteredNames.length > 0 &&
+                        isDropdownVisible && (
+                          <ul className="absolute left-0 w-full mt-[70px] bg-white border border-gray-300 rounded-md shadow-lg z-10">
+                            {filteredNames.slice(0, 5).map((data) => (
+                              <li
+                                key={data.id}
+                                className="py-2 px-4 hover:bg-gray-100 cursor-pointer"
+                                onClick={() =>
+                                  handleNameClick(data.namaLengkap, data.id)
+                                }
+                              >
+                                {data.namaLengkap}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                     </div>
 
                     <div className="w-full flex flex-col items-start mt-3">
@@ -786,25 +819,36 @@ const Resume = ({
           }`}
         >
           <Toaster
-            toastOptions={{
-              style: {
-                fontSize: "1.25rem",
-                padding: "16px",
-              },
-              success: {
-                style: {
-                  background: "white",
-                  color: "black",
-                },
-              },
-              error: {
-                style: {
-                  background: "#f44336",
-                  color: "#fff",
-                },
-              },
-            }}
-          />
+        toastOptions={{
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem", // Ukuran font
+            padding: "10px", // Padding kecil
+            width: "80%", // Lebar penuh
+            maxWidth: "700px", // Lebar maksimal
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)", // Pusatkan dengan benar
+            textAlign: "center", // Teks di tengah horizontal
+            zIndex: 9999, // Memastikan toast berada di atas elemen lain
+            backgroundColor: "#fff", // Warna latar (opsional)
+            borderRadius: "8px", // Sudut melengkung untuk estetika
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Bayangan halus
+          },
+          success: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+          error: {
+            style: {
+              background: "#f44336",
+              color: "#fff",
+            },
+          },
+        }}
+      />
           <div className="bg-gray-300 pt-9">
             <div className="relative max-w-xl mx-auto bg-white shadow-lg rounded-2xl overflow-hidden my-4 border border-gray-300">
               <div className="flex flex-col items-center gap-4 bg-gray-50 p-4 rounded-lg shadow-lg">
@@ -912,9 +956,17 @@ const Resume = ({
               </div>
 
               <div className="flex justify-center p-2">
-                <Button type="button" onClick={onPrev} className="mr-2">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    onPrev();
+                    window.location.reload();
+                  }}
+                  className="mr-2"
+                >
                   Previous
                 </Button>
+
                 <Button type="button" onClick={onSubmit} className="ml-2">
                   Submit
                 </Button>
@@ -985,11 +1037,30 @@ const Page = () => {
       sessionStorage.setItem("idTerlaporList", JSON.stringify(idList));
       sessionStorage.setItem("npaTerlaporList", JSON.stringify(npaList));
 
-      toast.success("Laporan berhasil ditambahkan!");
+      toast.success(
+        <div>
+          <strong style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
+          Laporan berhasil ditambahkan!
+          </strong>
+        </div>,
+        {
+          icon: (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ width: "48px", height: "48px", color: "#06D001" }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+            </svg>
+          ),
+          duration: 4000,
+        }
+      );
 
       setTimeout(() => {
         window.location.reload();
-      }, 2000);
+      }, 4000);
     } catch (error) {
       toast.error("Gagal menambahkan laporan. Coba lagi nanti.");
     }

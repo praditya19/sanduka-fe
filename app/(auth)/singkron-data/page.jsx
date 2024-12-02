@@ -596,14 +596,39 @@ const SyncData = () => {
                       <td className="py-4 px-6">{item.namaAnggota}</td>
                       <td className="py-4 px-6">{item.npaNip}</td>
                       <td className="py-4 px-6">
-                        {item.dataSanduka ? "YES" : "NO"}
+                        <span
+                          className={`inline-block px-2 py-1 rounded ${
+                            item.dataSanduka
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {item.dataSanduka ? "YES" : "NO"}
+                        </span>
                       </td>
                       <td className="py-4 px-6">
-                        {item.dataKtaDigital ? "YES" : "NO"}
+                        <span
+                          className={`inline-block px-2 py-1 rounded ${
+                            item.dataKtaDigital
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {item.dataKtaDigital ? "YES" : "NO"}
+                        </span>
                       </td>
                       <td className="py-4 px-6">
-                        {item.dataDaspen ? "YES" : "NO"}
+                        <span
+                          className={`inline-block px-2 py-1 rounded ${
+                            item.dataDaspen
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {item.dataDaspen ? "YES" : "NO"}
+                        </span>
                       </td>
+
                       <td className="py-4 px-6">
                         <button
                           onClick={() =>

@@ -226,7 +226,37 @@ const VerifikasiAnggotaMutasi = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      <Toaster />
+      <Toaster /><Toaster
+        toastOptions={{
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem", // Ukuran font
+            padding: "10px", // Padding kecil
+            width: "80%", // Lebar penuh
+            maxWidth: "700px", // Lebar maksimal
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)", // Pusatkan dengan benar
+            textAlign: "center", // Teks di tengah horizontal
+            zIndex: 9999, // Memastikan toast berada di atas elemen lain
+            backgroundColor: "#fff", // Warna latar (opsional)
+            borderRadius: "8px", // Sudut melengkung untuk estetika
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Bayangan halus
+          },
+          success: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+          error: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+        }}
+      />
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />

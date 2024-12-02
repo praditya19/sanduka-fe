@@ -144,17 +144,19 @@ const Page = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-  
+
     const anggotaId = sessionStorage.getItem("anggotaId");
     const userId = sessionStorage.getItem("userId");
-  
+
     const id = anggotaId || userId;
-  
+
     if (!id) {
-      console.error("User ID atau Anggota ID tidak ditemukan atau tidak valid.");
+      console.error(
+        "User ID atau Anggota ID tidak ditemukan atau tidak valid."
+      );
       return;
     }
-  
+
     const formatTanggal = (tanggal) => {
       const date = new Date(tanggal);
       const year = date.getFullYear();
@@ -162,11 +164,11 @@ const Page = () => {
       const day = String(date.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
     };
-  
+
     const formattedTanggalLahir = formatTanggal(tanggalLahir);
     const formattedTahunDiangkat = formatTanggal(tahunDiangkat);
     const formattedMulaiJadiAnggota = formatTanggal(mulaiJadiAnggotaPgri);
-  
+
     const formData = new FormData();
     formData.append("email", email);
     formData.append("password", password);
@@ -185,11 +187,11 @@ const Page = () => {
     formData.append("kodePos", kodePos);
     formData.append("nomorHp", nomorHp);
     formData.append("namaSuamiIstri", namaSuamiIstri);
-  
+
     if (selectedFile) {
       formData.append("foto", selectedFile);
     }
-  
+
     formData.append("cabang", selectedCabang);
     formData.append("unitKerja", selectedUnitKerja);
     formData.append("jabatan", valueJabatan);
@@ -203,23 +205,21 @@ const Page = () => {
     formData.append("mulaiJadiAnggotaPgri", formattedMulaiJadiAnggota);
     formData.append("golonganJabatan", valueGolonganJabatan);
     formData.append("mengajar", mengajar);
-  
+
     formData.append("pesertaSanduka", pesertaSanduka ? "Ya" : "");
     formData.append("pesertaDaspen", pesertaDaspen ? "Ya" : "");
     formData.append("pesertaKtaDigital", pesertaKtaDigital ? "Ya" : "");
-  
-    // Convert FormData to a plain object for logging
+
     const plainData = {};
     formData.forEach((value, key) => {
       plainData[key] = value;
     });
-  
-   
+
     try {
       const response = await GlobalApi.updateUserById(id, formData);
-     
+
       toast.success("Data Anda Berhasil Diupdate!");
-  
+
       setTimeout(() => {
         router.push("/anggota/data-anggota");
       }, 2000);
@@ -227,7 +227,6 @@ const Page = () => {
       console.error("Update gagal:", error);
     }
   };
-  
 
   const handleConfirmAndSendData = async () => {
     try {
@@ -250,7 +249,6 @@ const Page = () => {
   };
 
   useEffect(() => {
-    // Fungsi untuk menutup dropdown jika klik di luar area dropdown
     const handleClickOutside = (e) => {
       if (cabangRef.current && !cabangRef.current.contains(e.target)) {
         setShowDropdown(false);
@@ -260,10 +258,8 @@ const Page = () => {
       }
     };
 
-    // Menambahkan event listener pada document untuk klik di luar area
     document.addEventListener("mousedown", handleClickOutside);
 
-    // Menghapus event listener saat komponen unmount
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -391,8 +387,10 @@ const Page = () => {
       const data = await GlobalApi.getByNIP(nip);
       setData(data);
       setIsPopupVisible(true);
+      toast.success("Data ditemukan!");
     } catch (error) {
       console.error("Gagal mengambil data NIP:", error);
+      toast.error("Data NIP tidak ada");
     }
   };
 
@@ -474,7 +472,7 @@ const Page = () => {
 
   const handleCabangChange = (item) => {
     setSelectedCabang(item.kecamatan);
-     setQuery("");
+    setQuery("");
     setShowDropdown(false);
 
     if (Array.isArray(allUnitKerja)) {
@@ -581,7 +579,6 @@ const Page = () => {
         const response = await GlobalApi.getUnitKerja();
         setAllUnitKerja(response.data);
         setFilteredUnitKerja(data);
-       
       } catch (error) {
         console.error("Error fetching unit kerja:", error);
       }
@@ -623,7 +620,63 @@ const Page = () => {
   return (
     <div className="w-full mx-auto px-4 py-6 bg-slate-200">
       <div className="container mx-auto max-w-screen-lg sm:max-w-full md:max-w-screen-lg px-4">
-        <Toaster />
+      <Toaster
+        toastOptions={{
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem", // Ukuran font
+            padding: "10px", // Padding kecil
+            width: "80%", // Lebar penuh
+            maxWidth: "700px", // Lebar maksimal
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)", // Pusatkan dengan benar
+            textAlign: "center", // Teks di tengah horizontal
+            zIndex: 9999, // Memastikan toast berada di atas elemen lain
+            backgroundColor: "#fff", // Warna latar (opsional)
+            borderRadius: "8px", // Sudut melengkung untuk estetika
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Bayangan halus
+          },
+          success: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+          error: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+        }}
+      />
+        <div className="w-full">
+          {/* Tabs Navigation */}
+          <div className="flex flex-row space-x-4 mb-2 justify-center sm:justify-start">
+            <div
+              className={`py-2 px-4 rounded-full transition duration-300 text-xs sm:text-sm md:text-base ${
+                step === 1
+                  ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                  : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+              }`}
+              onClick={() => setStep(1)}
+            >
+              I. DATA PRIBADI
+            </div>
+            <div
+              className={`py-2 px-4 rounded-full transition duration-300 text-xs sm:text-sm md:text-base ${
+                step === 2
+                  ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                  : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+              }`}
+              onClick={() => setStep(2)}
+            >
+              II. DATA PEKERJAAN
+            </div>
+          </div>
+          <hr className="mb-4 border-t-2 border-gray-400 mt-1 w-full sm:w-96" />
+        </div>
         <div>
           <form
             onSubmit={(event) => onSubmit(event, formData)}
@@ -631,11 +684,6 @@ const Page = () => {
           >
             {step === 1 && (
               <div>
-                <h2 className="font-semibold text-xl text-gray-600">
-                  I. DATA PRIBADI
-                </h2>
-                <hr className="mb-6 border-t-2 border-gray-300 mt-4" />
-
                 <div className="w-full flex flex-col items-center">
                   <Image
                     width={150}
@@ -1027,14 +1075,23 @@ const Page = () => {
                       <Button
                         type="button"
                         onClick={handleGetLocation}
-                        className=" p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+                        className="p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
                       >
                         {loading ? "Mendapatkan Lokasi..." : "Get Location"}
                       </Button>
 
-                      <p className=" text-red-500">
-                        Mohon Get Location Ketika Anda Berada Dirumah
+                      <p className="text-red-500">
+                        {!latitude &&
+                          !longitude &&
+                          "Mohon Get Location Ketika Anda Berada Dirumah"}
                       </p>
+
+                      {latitude && longitude && (
+                        <p className="text-teal-500 mt-1">
+                          Lokasi berhasil ditemukan: {latitude.toFixed(4)},{" "}
+                          {longitude.toFixed(4)}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1158,12 +1215,7 @@ const Page = () => {
               </div>
             )}
             {step === 2 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white p-4 sm:p-8 rounded-lg shadow-lg">
-                <h2 className="font-semibold text-xl text-gray-600">
-                  II. DATA PEKERJAAN
-                </h2>
-                <hr className="mb-6 border-t-2 border-gray-300 mt-4" />
-
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white rounded-lg shadow-lg">
                 <div className="w-full" ref={cabangRef}>
                   <Label className="block text-sm font-medium mb-3">
                     Cabang
@@ -1366,9 +1418,13 @@ const Page = () => {
                             <SelectItem value="SMA_SMK_MA">
                               SMA/SMK/MA
                             </SelectItem>
+                            <SelectItem value="SEKOLAH_LUAR_BIASA">
+                              SEKOLAH LUAR BIASA
+                            </SelectItem>
                             <SelectItem value="PERGURUAN_TINGGI">
                               PERGURUAN TINGGI
                             </SelectItem>
+                            <SelectItem value="LAINNYA">Lainnya</SelectItem>
                           </SelectGroup>
                         </SelectContent>
                       </Select>
@@ -1428,6 +1484,8 @@ const Page = () => {
                             <SelectItem value="PNS">PNS</SelectItem>
                             <SelectItem value="NON_PNS">NON_PNS</SelectItem>
                             <SelectItem value="PPPK">PPPK</SelectItem>
+                            <SelectItem value="GTY">GTY</SelectItem>
+                            <SelectItem value="GTTY">GTTY</SelectItem>
                           </SelectGroup>
                         </SelectContent>
                       </Select>
@@ -1585,25 +1643,25 @@ const Page = () => {
                     control={control}
                     defaultValue={valueGolonganJabatan}
                     render={({ field: { onChange, value } }) => (
-                      
                       <Select
-                      value={value || valueGolonganJabatan}
-                      onValueChange={(e) => {
-                        onChange(e);
-                        setValueGolonganJabatan(e);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Golongan Jabatan" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="PENDIDIK">Pendidik</SelectItem>
-                          <SelectItem value="TENAGAPENDIDIK">Tenaga Pendidik</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    
+                        value={value || valueGolonganJabatan}
+                        onValueChange={(e) => {
+                          onChange(e);
+                          setValueGolonganJabatan(e);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih Golongan Jabatan" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem value="PENDIDIK">Pendidik</SelectItem>
+                            <SelectItem value="TENAGAPENDIDIK">
+                              Tenaga Pendidik
+                            </SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
                     )}
                   />
                 </div>

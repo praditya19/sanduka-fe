@@ -48,17 +48,59 @@ function SignIn() {
       sessionStorage.setItem("unitKerja", response.unitKerja);
       sessionStorage.setItem("nama", response.namaLengkap);
       sessionStorage.setItem("role", response.role);
-      // Added: Store NPA PGRI in sessionStorage
       sessionStorage.setItem("npaPgri", npaPgri);
 
       const nama = sessionStorage.getItem("nama");
-      toast.success(`Selamat Datang ${nama}`);
-
+      toast.success(
+        <div>
+          <strong style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
+            Selamat Datang Di Sanduka
+          </strong>
+          <span style={{ fontSize: "1.75rem" }}>
+            {response.namaLengkap}
+          </span>
+        </div>,
+        {
+          icon: (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ width: "48px", height: "48px", color: "#06D001" }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+            </svg>
+          ),
+          duration: 4000,
+        }
+      );
+      
       setTimeout(() => {
         router.push("/home");
-      }, 2000);
+      }, 4000); 
+      
     } catch (error) {
-      toast.error(error.message);
+      toast.error(
+        <div>
+          <strong style={{ fontSize: "1.75rem" }}>
+          Terjadi kesalahan saat login
+          </strong>
+        </div>,
+        {
+          icon: (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ width: "48px", height: "48px", color: "red" }}  
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+            </svg>
+          ),          
+          duration: 5000,
+        }
+      );
     } finally {
       setLoader(false);
     }
@@ -91,16 +133,59 @@ function SignIn() {
       sessionStorage.setItem("userId", response.id);
       sessionStorage.setItem("nama", response.namaLengkap);
       sessionStorage.setItem("role", response.role);
-      // Added: Store NPA PGRI in sessionStorage
       sessionStorage.setItem("npaPgri", npaPgriValue);
+      sessionStorage.setItem("cabang", response.cabang);
 
-      toast.success(`Selamat Datang ${response.namaLengkap}`);
+      toast.success(
+        <div>
+          <strong style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
+            Selamat Datang Di Sanduka
+          </strong>
+          <span style={{ fontSize: "1.75rem" }}>
+            {response.namaLengkap}
+          </span>
+        </div>,
+        {
+          icon: (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ width: "48px", height: "48px", color: "#06D001" }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+            </svg>
+          ),
+          duration: 4000, 
+        }
+      );
 
       setTimeout(() => {
         router.push("/home");
-      }, 2000);
+      }, 4000);
     } catch (error) {
-      toast.error(error.message || "Terjadi kesalahan saat login");
+      toast.error(
+        <div>
+          <strong style={{ fontSize: "1.75rem" }}>
+          Terjadi kesalahan saat login
+          </strong>
+        </div>,
+        {
+          icon: (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ width: "48px", height: "48px", color: "red" }} 
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+            </svg>
+          ),          
+          duration: 5000, 
+        }
+      );
+      
     } finally {
       setLoader(false);
     }
@@ -115,8 +200,19 @@ function SignIn() {
       <Toaster
         toastOptions={{
           style: {
-            fontSize: "1.25rem",
-            padding: "16px",
+            marginTop: "16%",
+            fontSize: "1.75rem", 
+            padding: "10px", 
+            width: "80%", 
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)", 
+            textAlign: "center", 
+            zIndex: 9999,
+            backgroundColor: "#fff", 
+            borderRadius: "8px", 
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", 
           },
           success: {
             style: {
@@ -126,8 +222,8 @@ function SignIn() {
           },
           error: {
             style: {
-              background: "#f44336",
-              color: "#fff",
+              background: "white",
+              color: "black",
             },
           },
         }}
@@ -144,19 +240,21 @@ function SignIn() {
         {/* Tab Navigation */}
         <div className="flex flex-wrap justify-center space-x-2 sm:space-x-4 mt-4">
           <button
-            className={`rounded-md p-2 ${activeTab === "login"
+            className={`rounded-md p-2 ${
+              activeTab === "login"
                 ? "bg-teal-500 text-white"
                 : "bg-white text-teal-500"
-              }`}
+            }`}
             onClick={() => setActiveTab("login")}
           >
             Anggota
           </button>
           <button
-            className={`rounded-md p-2 ${activeTab === "password"
+            className={`rounded-md p-2 ${
+              activeTab === "password"
                 ? "bg-teal-500 text-white"
                 : "bg-white text-teal-500"
-              }`}
+            }`}
             onClick={() => setActiveTab("password")}
           >
             Admin & Super Admin

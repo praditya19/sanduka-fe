@@ -24,7 +24,7 @@ import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 
 function PencarianAnggota() {
-  const [maxItems, setMaxItems] = useState(10);
+  const [maxItems, setMaxItems] = useState(8000);
   const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
   const [selectedUnitKerja, setSelectedUnitKerja] =
     useState("-- Unit Kerja --");
@@ -85,7 +85,7 @@ function PencarianAnggota() {
   const fetchAnggota = async () => {
     try {
       const page = 0;
-      const size = 50;
+      const size = 7000;
       const response = await GlobalApi.getAllAnggota(page, size);
       const fotoBase64Array = [];
 

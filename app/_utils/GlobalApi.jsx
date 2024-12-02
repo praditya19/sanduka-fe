@@ -2,7 +2,7 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "https://dfd4-103-134-212-202.ngrok-free.app",
+   baseURL: "http://localhost:8080",
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
@@ -733,6 +733,16 @@ const createIuranData = async (payload) => {
   }
 };
 
+const updateDataIuran = async (id, payload) => {
+  try {
+    const response = await axiosClient.put(`/api/iuran/${id}`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error saat mengupdate data iuran:", error.message);
+    throw error;
+  }
+};
+
 const createTargetIuaran = async (payload) => {
   try {
     const response = await axiosClient.post("/api/target-sanduka", payload);
@@ -1254,4 +1264,5 @@ export default {
   getCalculateSandukaKeluar,
   getTotalAnggotaStatistik,
   getTotalAnggotaByCabang,
+  updateDataIuran,
 };

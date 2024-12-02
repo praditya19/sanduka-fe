@@ -638,6 +638,18 @@ function StatusAnggota() {
     PERGURUAN_TINGGI: "perguruan_tinggi.png",
   };
 
+  const getVisiblePages = () => {
+    const visiblePages = [];
+    const leftLimit = Math.max(1, currentPage - 1);
+    const rightLimit = Math.min(totalPages, currentPage + 1);
+ 
+    for (let i = leftLimit; i <= rightLimit; i++) {
+      visiblePages.push(i);
+    }
+ 
+    return visiblePages;
+  };
+  
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -1002,61 +1014,54 @@ function StatusAnggota() {
                 ))}
               </tbody>
             </table>
-            <div className="flex justify-end items-center mb-4">
-              {totalItems > maxItems && (
-                <>
-                  <Button
-                    onClick={handlePreviousPage}
+            <div className="flex justify-center mt-4 gap-1">
+              {totalItems >= maxItems && (
+                <div className="flex justify-center mt-4 gap-1">
+                  <button
+                    onClick={() => setCurrentPage(1)}
                     disabled={currentPage === 1}
-                    className="mr-2"
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                   >
-                    Previous
-                  </Button>
-                  <div className="flex items-center">
-                    {totalPages > 1 && (
-                      <ul className="flex space-x-1">
-                        {(() => {
-                          let startPage = Math.max(1, currentPage - 1);
-                          let endPage = Math.min(totalPages, currentPage + 1);
-
-                          if (currentPage === 1) {
-                            endPage = Math.min(3, totalPages);
-                          } else if (currentPage === totalPages) {
-                            startPage = Math.max(totalPages - 2, 1);
-                          } else if (totalPages - currentPage < 2) {
-                            startPage = Math.max(totalPages - 2, 1);
-                          }
-
-                          return Array.from(
-                            { length: endPage - startPage + 1 },
-                            (_, i) => startPage + i
-                          );
-                        })().map((number) => (
-                          <li key={number}>
-                            <Button
-                              onClick={() => handlePageClick(number)}
-                              className={`mx-1 px-4 py-2 border rounded-md ${currentPage === number
-                                ? "bg-blue-500 text-white"
-                                : "bg-white text-black"
-                                }`}
-                            >
-                              {number}
-                            </Button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                  <Button
-                    onClick={handleNextPage}
+                    First
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Prev
+                  </button>
+ 
+                  {getVisiblePages().map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                        ? "bg-blue-500 text-white"
+                        : "bg-white hover:bg-gray-50"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+ 
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                    className="ml-2"
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                   >
                     Next
-                  </Button>
-                </>
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Last
+                  </button>
+                </div>
               )}
-            </div>
+          </div>
           </div>
 
           <Modal
