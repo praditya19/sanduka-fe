@@ -213,6 +213,12 @@ export default function IconGrid() {
     return null;
   };
 
+  useEffect(() => {
+    // Ambil role dari sessionStorage
+    const userRole = sessionStorage.getItem('role');
+    setRole(userRole);
+  }, []);
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -265,32 +271,35 @@ export default function IconGrid() {
           </div>
           <div className="flex-1 ">
             {isMobile ? (
-              <div className="w-full border -mt-32 overflow-x-auto">
-                <div className="flex justify-center mb-7 ml-3 items-center text-center">
-                  <div className="flex items-center justify-center">
-                    <span className=" text-lg ">Daspen:</span>
-                    <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
-                      {/* Pastikan userData dan pesertaDaspen ada sebelum merender */}
-                      {renderCheckmark(userData?.pesertaDaspen)}
+              <>
+                {role === 'USER' && (
+                  <div className="flex justify-center mb-7 ml-3 -mt-32 items-center text-center overflow-x-hidden max-w-full">
+                    <div className="flex items-center justify-center">
+                      <span className=" text-lg ">Daspen:</span>
+                      <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                        {/* Pastikan userData dan pesertaDaspen ada sebelum merender */}
+                        {renderCheckmark(userData?.pesertaDaspen)}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center justify-center">
-                    <span className=" text-lg ">KTA Digital:</span>
-                    <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
-                      {/* Pastikan userData dan pesertaKtaDigital ada sebelum merender */}
-                      {renderCheckmark(userData?.pesertaKtaDigital)}
+                    <div className="flex items-center justify-center">
+                      <span className=" text-lg ">KTA Digital:</span>
+                      <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                        {/* Pastikan userData dan pesertaKtaDigital ada sebelum merender */}
+                        {renderCheckmark(userData?.pesertaKtaDigital)}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center justify-center">
-                    <span className=" text-lg ">Sanduka:</span>
-                    <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
-                      {/* Pastikan userData dan pesertaSanduka ada sebelum merender */}
-                      {renderCheckmark(userData?.pesertaSanduka)}
+                    <div className="flex items-center justify-center">
+                      <span className=" text-lg ">Sanduka:</span>
+                      <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                        {/* Pastikan userData dan pesertaSanduka ada sebelum merender */}
+                        {renderCheckmark(userData?.pesertaSanduka)}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
+              <div className="w-full border -mt-12 overflow-x-auto">
                 <div className="flex space-x-4 px-4">
                   {/* Lapor Meninggal */}
                   <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 flex-shrink-0 w-48">
@@ -337,34 +346,37 @@ export default function IconGrid() {
                     </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="w-full -mt-36">
-                <div className="flex justify-center space-x-8 mb-11 items-center text-center">
-                  <div className="flex items-center justify-center">
-                    <span className=" text-lg ">Daspen:</span>
-                    <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
-                      {/* Pastikan userData dan pesertaDaspen ada sebelum merender */}
-                      {renderCheckmark(userData?.pesertaDaspen)}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-center">
-                    <span className=" text-lg ">KTA Digital:</span>
-                    <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
-                      {/* Pastikan userData dan pesertaKtaDigital ada sebelum merender */}
-                      {renderCheckmark(userData?.pesertaKtaDigital)}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-center">
-                    <span className=" text-lg ">Sanduka:</span>
-                    <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
-                      {/* Pastikan userData dan pesertaSanduka ada sebelum merender */}
-                      {renderCheckmark(userData?.pesertaSanduka)}
-                    </div>
-                  </div>
                 </div>
+                </>
+            ) : (
+                <div className="w-full -mt-12">
+                  {role === 'USER' && (
+                    <div className="flex justify-center space-x-8 mb-10 -mt-36 items-center text-center">
+                      <div className="flex items-center justify-center">
+                        <span className=" text-lg ">Daspen:</span>
+                        <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                          {/* Pastikan userData dan pesertaDaspen ada sebelum merender */}
+                          {renderCheckmark(userData?.pesertaDaspen)}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-center">
+                        <span className=" text-lg ">KTA Digital:</span>
+                        <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                          {/* Pastikan userData dan pesertaKtaDigital ada sebelum merender */}
+                          {renderCheckmark(userData?.pesertaKtaDigital)}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-center">
+                        <span className=" text-lg ">Sanduka:</span>
+                        <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                          {/* Pastikan userData dan pesertaSanduka ada sebelum merender */}
+                          {renderCheckmark(userData?.pesertaSanduka)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 px-12">
                   {/* Lapor Meninggal */}
                   <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105">

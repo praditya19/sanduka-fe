@@ -359,11 +359,11 @@ const Page = () => {
                   </table>
                 </div>
                 {/* Pagination Controls */}
-                <div className="flex justify-center space-x-2">
+                <div className="flex justify-center mt-4 gap-1">
                   <button
                     onClick={() => setCurrentPage(1)}
                     disabled={currentPage === 1}
-                    className="p-2 border rounded"
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                   >
                     First
                   </button>
@@ -372,7 +372,7 @@ const Page = () => {
                       setCurrentPage((prev) => Math.max(prev - 1, 1))
                     }
                     disabled={currentPage === 1}
-                    className="p-2 border rounded"
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                   >
                     Prev
                   </button>
@@ -381,8 +381,8 @@ const Page = () => {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`p-2 border rounded ${
-                        page === currentPage ? "bg-blue-500 text-white" : ""
+                      className={`px-3 py-1 border rounded text-sm ${
+                        page === currentPage ? "bg-blue-500 text-white" : "bg-white hover:bg-gray-50"
                       }`}
                     >
                       {page}
@@ -394,14 +394,14 @@ const Page = () => {
                       setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                     }
                     disabled={currentPage === totalPages}
-                    className="p-2 border rounded"
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                   >
                     Next
                   </button>
                   <button
                     onClick={() => setCurrentPage(totalPages)}
                     disabled={currentPage === totalPages}
-                    className="p-2 border rounded"
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                   >
                     Last
                   </button>

@@ -75,9 +75,6 @@ const login = async (loginData) => {
 
 const loginAdmin = async (npaPgri, password) => {
   try {
-    // Debug Log Payload
-    console.log("Payload untuk login:", { npaPgri, password });
-
     const response = await axiosClient.post(
       "/api/auth/login-password",
       {

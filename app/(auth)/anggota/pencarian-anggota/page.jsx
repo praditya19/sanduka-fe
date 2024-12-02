@@ -1,7 +1,8 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Modal from "react-modal";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
@@ -49,6 +50,95 @@ function PencarianAnggota() {
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [fotoBase64, setFotoBase64] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showDropdownCabang, setShowDropdownCabang] = useState(false);
+  const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
+  const [searchCabang, setSearchCabang] = useState('');
+  const [searchUnitKerja, setSearchUnitKerja] = useState('');
+  const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
+  const [filteredUnitKerjaOptions, setFilteredUnitKerjaOptions] = useState([]);
+
+  const cabangRef = useRef(null);
+  const unitKerjaRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        cabangRef.current &&
+        !cabangRef.current.contains(event.target)
+      ) {
+        setShowDropdownCabang(false);
+      }
+
+      if (
+        unitKerjaRef.current &&
+        !unitKerjaRef.current.contains(event.target)
+      ) {
+        setShowDropdownUnitKerja(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleCabangChange = (e) => {
+    const searchValue = e.target.value.toLowerCase();
+    setSearchCabang(searchValue);
+
+    const filtered = cabang.filter(item =>
+      item.kecamatan.toLowerCase().includes(searchValue)
+    );
+
+    setFilteredCabangOptions(filtered);
+  };
+
+  const handleUnitKerjaChange = (e) => {
+    const searchValue = e.target.value.toLowerCase();
+    setSearchUnitKerja(searchValue);
+
+    const filtered = unitKerja.filter(item =>
+      item.unitKerja.toLowerCase().includes(searchValue) &&
+      (selectedCabang === "-- Cabang --" || item.cabang === selectedCabang)
+    );
+
+    setFilteredUnitKerjaOptions(filtered);
+  };
+
+  // Select Cabang
+  const handleCabangSelect = (selectedItem) => {
+    setSelectedCabang(selectedItem.kecamatan || "-- Cabang --");
+    setShowDropdownCabang(false);
+    setSearchCabang('');
+    setFilteredCabangOptions(cabang);
+
+    // Reset Unit Kerja when Cabang changes
+    setSelectedUnitKerja("-- Unit Kerja --");
+    setFilteredUnitKerja(
+      unitKerja.filter(uk => uk.cabang === selectedItem.kecamatan)
+    );
+  };
+
+  // Select Unit Kerja
+  const handleUnitKerjaSelect = (selectedItem) => {
+    setSelectedUnitKerja(selectedItem.unitKerja || "-- Unit Kerja --");
+    setShowDropdownUnitKerja(false);
+    setSearchUnitKerja('');
+  };
+
+  const getVisiblePages = () => {
+    const range = []; // Number of pages to show on each side of current page
+    let start = Math.max(1, currentPage - 1);
+    let end = Math.min(totalPages, currentPage + 1);
+
+    // Ensure we always show a consistent number of pages
+    for (let i = start; i <= end; i++) {
+      range.push(i);
+    }
+
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  };
 
   useEffect(() => {
     if (selectedCabang) {
@@ -199,8 +289,8 @@ function PencarianAnggota() {
             </thead>
             <tbody>
               ${filteredDataForPrint
-                .map(
-                  (item, index) => `
+        .map(
+          (item, index) => `
                     <tr>
                       <td>${index + 1}</td>
                       <td></td>
@@ -213,8 +303,8 @@ function PencarianAnggota() {
                         <div>${item.lahir}, ${item.tanggal}</div>
                         <div>${item.usia} Tahun</div>
                         <div>Prediksi Pensiun: ${calculateRetirementDate(
-                          item.tanggal
-                        )}</div>
+            item.tanggal
+          )}</div>
                       </td>
                       <td>
                       <div>${item.cabang},</div>
@@ -226,8 +316,8 @@ function PencarianAnggota() {
                       <td>${item.anggota}</td>
                     </tr>
                   `
-                )
-                .join("")}
+        )
+        .join("")}
             </tbody>
           </table>
         </body>
@@ -399,6 +489,55 @@ function PencarianAnggota() {
     setCurrentPage(pageNumber);
   };
 
+  const PaginationComponent = () => {
+    return (
+      <div className="flex justify-center mt-4 gap-1">
+        {totalItems >= itemsPerPage && (
+          <div className="flex justify-center mt-4 gap-1">
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+            >
+              First
+            </button>
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+            >
+              Prev
+            </button>
+            {getVisiblePages().map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-3 py-1 border rounded text-sm ${page === currentPage ? "bg-blue-500 text-white" : "bg-white hover:bg-gray-50"
+                  }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+            >
+              Next
+            </button>
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+            >
+              Last
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -426,46 +565,108 @@ function PencarianAnggota() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="min-h-screen bg-gray-50 p-2 md:p-6">
             <div className="mb-4">
               <div className="flex flex-wrap items-start mt-16 justify-between">
                 <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
-                  <select
-                    className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                    value={selectedCabang}
-                    onChange={(e) => setSelectedCabang(e.target.value)}
-                  >
-                    <option value="">Pilih Cabang</option>
-                    {cabang.map((item) => (
-                      <option key={item.id} value={item.kecamatan}>
-                        {item.kecamatan}
-                      </option>
-                    ))}
-                  </select>
+                  <div ref={cabangRef} className="relative w-full md:w-40">
+                    <Input
+                      type="text"
+                      placeholder="Pilih Cabang"
+                      value={selectedCabang}
+                      readOnly
+                      onFocus={() => {
+                        setShowDropdownCabang(true);
+                        setFilteredCabangOptions(cabang);
+                      }}
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    />
 
-                  <select
-                    className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                    value={selectedUnitKerja}
-                    onChange={(e) => setSelectedUnitKerja(e.target.value)}
-                  >
-                    <option value="">Pilih Unit Kerja</option>
-                    {filteredUnitKerja.map((item) => (
-                      <option key={item.id} value={item.unitKerja}>
-                        {item.unitKerja}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    className="shadow appearance-none border rounded w-full md:w-80 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                    type="text"
-                    placeholder="Cari Anggota"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+                    {showDropdownCabang && (
+                      <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
+                        <div className="p-2">
+                          <Input
+                            type="text"
+                            value={searchCabang}
+                            onChange={handleCabangChange}
+                            placeholder="Cari Cabang..."
+                            className="w-full border rounded py-2 px-3 mb-2"
+                          />
+                        </div>
+                        <ul className="max-h-44 overflow-y-auto">
+                          <li
+                            className="p-2 cursor-pointer hover:bg-gray-100"
+                            onClick={() => handleCabangSelect({})}
+                          >
+                            Semua Cabang
+                          </li>
+                          {filteredCabangOptions.map((item) => (
+                            <li
+                              key={item.id}
+                              className="p-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleCabangSelect(item)}
+                            >
+                              {item.kecamatan}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Unit Kerja Dropdown */}
+                  <div ref={unitKerjaRef} className="relative w-full md:w-40">
+                    <Input
+                      type="text"
+                      placeholder="Pilih Unit Kerja"
+                      value={selectedUnitKerja}
+                      readOnly
+                      onFocus={() => {
+                        setShowDropdownUnitKerja(true);
+                        setFilteredUnitKerjaOptions(
+                          selectedCabang === "-- Cabang --"
+                            ? unitKerja
+                            : unitKerja.filter(uk => uk.cabang === selectedCabang)
+                        );
+                      }}
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      disabled={selectedCabang === "-- Cabang --"}
+                    />
+
+                    {showDropdownUnitKerja && (
+                      <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
+                        <div className="p-2">
+                          <Input
+                            type="text"
+                            value={searchUnitKerja}
+                            onChange={handleUnitKerjaChange}
+                            placeholder="Cari Unit Kerja..."
+                            className="w-full border rounded py-2 px-3 mb-2"
+                          />
+                        </div>
+                        <ul className="max-h-44 overflow-y-auto">
+                          <li
+                            className="p-2 cursor-pointer hover:bg-gray-100"
+                            onClick={() => handleUnitKerjaSelect({})}
+                          >
+                            Semua Unit Kerja
+                          </li>
+                          {filteredUnitKerjaOptions.map((item) => (
+                            <li
+                              key={item.id}
+                              className="p-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleUnitKerjaSelect(item)}
+                            >
+                              {item.unitKerja}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
                   <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
                     Jumlah Anggota : {jumlahAnggota}
                   </p>
@@ -598,17 +799,19 @@ function PencarianAnggota() {
                           </td>
 
                           <td className="p-2 md:p-3 border">
-                            {fotoBase64[index] ? (
+                            <div className="w-full flex justify-center mb-2">
                               <Image
-                                src={`data:image/jpeg;base64,${fotoBase64[index]}`}
-                                className="rounded-full mx-auto"
-                                width={100}
-                                height={100}
-                                alt="Belum ada Foto"
+                                src={
+                                  fotoBase64
+                                    ? "/profile.png"
+                                    : `data:image/jpeg;base64,${fotoBase64}`
+                                }
+                                width={60}
+                                height={60}
+                                alt="Anggota Foto"
+                                className="rounded-full"
                               />
-                            ) : (
-                              <span>Belum ada foto</span>
-                            )}
+                            </div>
                           </td>
                           <td className="p-2 md:p-3 border">
                             <div className="font-bold text-sm">
@@ -645,11 +848,10 @@ function PencarianAnggota() {
                           </td>
                           <td className="p-2 text-center md:p-3 border md:table-cell hidden">
                             <div
-                              className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${
-                                item.status === "BUKAN ANGGOTA"
-                                  ? "bg-red-200 text-red-900"
-                                  : "bg-green-200 text-green-900"
-                              }`}
+                              className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
+                                ? "bg-red-200 text-red-900"
+                                : "bg-green-200 text-green-900"
+                                }`}
                             >
                               {item.role === "USER"
                                 ? "Aktif"
@@ -776,61 +978,8 @@ function PencarianAnggota() {
                   })}
                 </tbody>
               </table>
-              <div className="flex justify-end items-center mb-4">
-                {totalItems > 10 && (
-                  <>
-                    <Button
-                      onClick={handlePreviousPage}
-                      disabled={currentPage === 1}
-                      className="mr-2"
-                    >
-                      Previous
-                    </Button>
-                    <div className="flex items-center">
-                      {totalPages > 1 && (
-                        <ul className="flex space-x-1">
-                          {(() => {
-                            let startPage = Math.max(1, currentPage - 1);
-                            let endPage = Math.min(totalPages, currentPage + 1);
-
-                            if (currentPage === 1) {
-                              endPage = Math.min(3, totalPages);
-                            } else if (currentPage === totalPages) {
-                              startPage = Math.max(totalPages - 2, 1);
-                            } else if (totalPages - currentPage < 2) {
-                              startPage = Math.max(totalPages - 2, 1);
-                            }
-
-                            return Array.from(
-                              { length: endPage - startPage + 1 },
-                              (_, i) => startPage + i
-                            );
-                          })().map((number) => (
-                            <li key={number}>
-                              <Button
-                                onClick={() => handlePageClick(number)}
-                                className={`mx-1 px-4 py-2 border rounded-md ${
-                                  currentPage === number
-                                    ? "bg-blue-500 text-white"
-                                    : "bg-white text-black"
-                                }`}
-                              >
-                                {number}
-                              </Button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                    <Button
-                      onClick={handleNextPage}
-                      disabled={currentPage === totalPages}
-                      className="ml-2"
-                    >
-                      Next
-                    </Button>
-                  </>
-                )}
+              <div className="flex justify-center items-center mb-4">
+                <PaginationComponent />
               </div>
             </div>
 

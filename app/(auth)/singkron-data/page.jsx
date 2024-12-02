@@ -1,6 +1,10 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
+import { faWhatsapp} from "@fortawesome/free-brands-svg-icons";
+import {
+  FaPlusCircle,
+  FaMinusCircle
+} from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -26,11 +30,11 @@ const SyncData = () => {
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
   const [originalRekapData, setOriginalRekapData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [expandedRows, setExpandedRows] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [data, setData] = useState([]);
   const tableRef = useRef();
-
+  const [expandedIndex, setExpandedIndex] = useState(null);
   const [formData, setFormData] = useState({
     file: null,
     category: "",
@@ -184,6 +188,14 @@ const SyncData = () => {
     };
   }, []);
 
+  const toggleRowExpand = (index) => {
+    setExpandedRows(prev =>
+      prev.includes(index)
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    );
+  };
+
   const filteredData = data.filter((item) => {
     const cabangMatch = selectedCabang ? item.cabang === selectedCabang : true;
     const unitKerjaMatch = searchTerm
@@ -320,6 +332,10 @@ const SyncData = () => {
 
   const handleBackClick = () => {
     router.back();
+  };
+
+  const handleExpand = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
   };
 
   useEffect(() => {
@@ -553,33 +569,19 @@ const SyncData = () => {
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-white uppercase bg-teal-700 text-center">
                   <tr>
-                    <th scope="col" className="py-3 px-6">
-                      No
-                    </th>
-                    <th scope="col" className="py-3 px-6">
-                      Cabang
-                    </th>
-                    <th scope="col" className="py-3 px-6">
-                      Unit Kerja
-                    </th>
-                    <th scope="col" className="py-3 px-6">
-                      Nama
-                    </th>
-                    <th scope="col" className="py-3 px-6">
-                      NPA/NIP
-                    </th>
-                    <th scope="col" className="py-3 px-6">
-                      Data Sanduka
-                    </th>
-                    <th scope="col" className="py-3 px-6">
-                      Data KTA Digital
-                    </th>
-                    <th scope="col" className="py-3 px-6">
-                      Data Daspen
-                    </th>
-                    <th scope="col" className="py-3 px-6">
-                      Wa
-                    </th>
+                    <th scope="col" className="py-3 px-6">No</th>
+                    <th scope="col" className="py-3 px-6">Cabang</th>
+                    <th scope="col" className="py-3 px-6">Unit Kerja</th>
+                    {!isMobile && (
+                      <>
+                        <th scope="col" className="py-3 px-6">Nama</th>
+                        <th scope="col" className="py-3 px-6">NPA/NIP</th>
+                        <th scope="col" className="py-3 px-6">Data Sanduka</th>
+                        <th scope="col" className="py-3 px-6">Data KTA Digital</th>
+                        <th scope="col" className="py-3 px-6">Data Daspen</th>
+                        <th scope="col" className="py-3 px-6">Wa</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="text-center">

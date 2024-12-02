@@ -69,7 +69,7 @@ function DataAnggota() {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const unitKerjaRef = useRef(null);
-
+  const profileImageUrl = "/profile.png";
   const [originalRekapData, setOriginalRekapData] = useState([]);
 
   useEffect(() => {
@@ -641,14 +641,14 @@ function DataAnggota() {
     const visiblePages = [];
     const leftLimit = Math.max(1, currentPage - 1);
     const rightLimit = Math.min(totalPages, currentPage + 1);
- 
+
     for (let i = leftLimit; i <= rightLimit; i++) {
       visiblePages.push(i);
     }
- 
+
     return visiblePages;
   };
-  
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -971,17 +971,18 @@ function DataAnggota() {
                           </div>
                         </td>
                         <td className="p-2 md:p-3 border">
-                          {fotoBase64[index] ? (
-                            <Image
-                              src={`data:image/jpeg;base64,${fotoBase64[index]}`}
-                              className="rounded-full mx-auto"
-                              width={100}
-                              height={100}
-                              alt="Belum ada Foto"
-                            />
-                          ) : (
-                            <span>Belum ada foto</span>
-                          )}
+                          <Image
+                            src={
+                              fotoBase64[index]
+                                ? `data:image/jpeg;base64,${fotoBase64[index]}`
+                                : profileImageUrl
+                            }
+                            alt={`Foto ${item.namaPelapor || "User"}`}
+                            width={50}
+                            height={50}
+                            className="rounded"
+                            unoptimized={true}
+                          />
                         </td>
                         <td className="p-2 md:p-3 border">
                           <div className="font-bold text-sm">
@@ -1276,7 +1277,7 @@ function DataAnggota() {
               >
                 Prev
               </button>
- 
+
               {getVisiblePages().map((page) => (
                 <button
                   key={page}
@@ -1289,7 +1290,7 @@ function DataAnggota() {
                   {page}
                 </button>
               ))}
- 
+
               <button
                 onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}

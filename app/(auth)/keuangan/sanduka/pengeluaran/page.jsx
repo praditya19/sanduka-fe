@@ -33,7 +33,8 @@ function Pengeluaran() {
     namaPenerima: "",
     keterangan: "",
   });
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [filteredNames, setFilteredNames] = useState([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const dropdownRef = useRef(null);
@@ -93,6 +94,23 @@ function Pengeluaran() {
     fetchData();
   }, [selectedBulan, newSelectedYear]);
 
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentTransactions = transactions.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(transactions.length / itemsPerPage);
+
+  const getVisiblePages = () => {
+    const range = 2; // Number of pages to show on each side of current page
+    let start = Math.max(1, currentPage - range);
+    let end = Math.min(totalPages, currentPage + range);
+
+    const pages = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
   useEffect(() => {
     const today = new Date();
 
@@ -108,7 +126,7 @@ function Pengeluaran() {
   const handleBulanChange = (e) => {
     const selectedId = e.target.value; // Ambil ID bulan yang dipilih
     setSelectedBulan(selectedId);
-  
+
     // Cari nama bulan berdasarkan ID
     const bulan = bulanList.find((b) => b.id === parseInt(selectedId));
     setSelectedBulanName(bulan ? bulan.namaBulan : ""); // Update nama bulan
@@ -339,9 +357,8 @@ function Pengeluaran() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <Toaster
             toastOptions={{
@@ -651,15 +668,12 @@ function Pengeluaran() {
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.map((transaction, index) =>
+                  {currentTransactions.map((transaction, index) =>
                     transaction.tglTransaksi ? (
                       <tr
                         key={index}
-                        className={`border-b text-black text-center ${
-                          transaction.checked
-                            ? "bg-gray-100"
-                            : "hover:bg-gray-50"
-                        }`}
+                        className={`border-b text-black text-center ${transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
+                          }`}
                       >
                         <td className="px-6 py-4 text-sm">{index + 1}</td>
                         <td className="px-6 py-4 text-sm">
@@ -741,6 +755,52 @@ function Pengeluaran() {
                 </tbody>
               </table>
             </div>
+                <div className="flex justify-center mt-4 gap-1">
+                  {transactions.length > itemsPerPage && (
+                    <div className="flex justify-center mt-4 gap-1">
+                      <button
+                        onClick={() => setCurrentPage(1)}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                      >
+                        First
+                      </button>
+                      <button
+                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                      >
+                        Prev
+                      </button>
+                      {getVisiblePages().map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                              ? "bg-blue-500 text-white"
+                              : "bg-white hover:bg-gray-50"
+                            }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                      >
+                        Next
+                      </button>
+                      <button
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                      >
+                        Last
+                      </button>
+                    </div>
+                  )}
+                </div>
           </div>
         </div>
       </div>
