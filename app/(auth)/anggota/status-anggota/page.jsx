@@ -622,18 +622,6 @@ function StatusAnggota() {
     setCurrentPage(number);
   };
 
-  const getVisiblePages = () => {
-    const visiblePages = [];
-    const leftLimit = Math.max(1, currentPage - 1);
-    const rightLimit = Math.min(totalPages, currentPage + 1);
-
-    for (let i = leftLimit; i <= rightLimit; i++) {
-      visiblePages.push(i);
-    }
-
-    return visiblePages;
-  };
-
   const startIndex = (currentPage - 1) * maxItems;
   const endIndex = startIndex + maxItems;
 
@@ -648,6 +636,18 @@ function StatusAnggota() {
     PERGURUAN_TINGGI: "perguruan_tinggi.png",
   };
 
+  const getVisiblePages = () => {
+    const visiblePages = [];
+    const leftLimit = Math.max(1, currentPage - 1);
+    const rightLimit = Math.min(totalPages, currentPage + 1);
+ 
+    for (let i = leftLimit; i <= rightLimit; i++) {
+      visiblePages.push(i);
+    }
+ 
+    return visiblePages;
+  };
+  
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -1154,7 +1154,7 @@ function StatusAnggota() {
                   </button>
                 </div>
               )}
-            </div>
+          </div>
           </div>
 
           <Modal

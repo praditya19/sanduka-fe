@@ -8,6 +8,7 @@ import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
+import toast, { Toaster } from "react-hot-toast";
 
 const Page = () => {
   const [pensiunList, setPensiunList] = useState([]);
@@ -19,7 +20,7 @@ const Page = () => {
 
   const router = useRouter();
   const { token } = useAuth();
-
+  const [popupVisible, setPopupVisible] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [bulanOptions, setBulanOptions] = useState([]);
@@ -120,6 +121,30 @@ const Page = () => {
     };
   }, []);
 
+  const handlePopup = () => {
+    setPopupVisible(true);
+  };
+
+  const handleCancelKeluar = () => {
+    setPopupVisible(false);
+  };
+
+  const handlePensiunAnggota = async () => {
+    try {
+      const anggotaId = sessionStorage.getItem("anggotaId");
+      await GlobalApi.pensiunAnggota(anggotaId);
+      setPopupVisible(false);
+      toast.success("Anggota berhasil Pensiun!", {
+        autoClose: 3000,
+      });
+    } catch (error) {
+      console.error("Gagal mengeluarkan anggota:", error);
+      toast.error("Gagal pensiun anggota.", {
+        autoClose: 3000,
+      });
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
@@ -135,6 +160,37 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+      <Toaster
+        toastOptions={{
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem", // Ukuran font
+            padding: "10px", // Padding kecil
+            width: "80%", // Lebar penuh
+            maxWidth: "700px", // Lebar maksimal
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)", // Pusatkan dengan benar
+            textAlign: "center", // Teks di tengah horizontal
+            zIndex: 9999, // Memastikan toast berada di atas elemen lain
+            backgroundColor: "#fff", // Warna latar (opsional)
+            borderRadius: "8px", // Sudut melengkung untuk estetika
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Bayangan halus
+          },
+          success: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+          error: {
+            style: {
+              background: "#f44336",
+              color: "#fff",
+            },
+          },
+        }}
+      />
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -203,6 +259,9 @@ const Page = () => {
                       <th className="py-2 px-3 text-center hidden lg:table-cell">
                         Status
                       </th>
+                      <th className="py-2 px-3 text-center hidden lg:table-cell">
+                        Aksi
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -250,6 +309,45 @@ const Page = () => {
                           <td className="py-2 px-3 text-center hidden lg:table-cell">
                             {pensiun.status}
                           </td>
+                          <td className="py-2 px-3 text-center hidden lg:table-cell">
+                            {/* Tombol Pensiun */}
+                            <button
+                              type="button"
+                              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                              onClick={handlePopup}
+                            >
+                              Pensiun
+                            </button>
+
+                            {/* Popup */}
+                            {popupVisible && (
+                              <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+                                <div className="bg-white rounded-lg p-6 w-2/5 text-center shadow-lg">
+                                  <h2 className="text-lg font-semibold text-gray-800">
+                                    Apakah Anda yakin ?
+                                  </h2>
+                                  <p className="text-gray-600 mt-2 mb-4">
+                                    Apakah Anda yakin untuk mengubah anggota
+                                    menjadi pensiun?
+                                  </p>
+                                  <div className="flex justify-center gap-4">
+                                    <button
+                                      onClick={handleCancelKeluar}
+                                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                                    >
+                                      Batal
+                                    </button>
+                                    <button
+                                      onClick={handlePensiunAnggota}
+                                      className="bg-teal-500 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition duration-200"
+                                    >
+                                      Ya, Saya Yakin
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </td>
                         </tr>
 
                         {expandedIndex === index && (
@@ -291,4 +389,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default Page;  

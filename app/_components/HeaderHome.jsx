@@ -18,6 +18,7 @@ const HeaderHome = () => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
   const [profileImageUrl, setProfileImageUrl] = useState("/profile.png");
+  const [role, setRole] = useState(null);
 
   const getAnggotaById = async () => {
     try {
@@ -82,6 +83,12 @@ const HeaderHome = () => {
   }, []);
 
   useEffect(() => {
+    // Ambil nilai role dari sessionStorage
+    const storedRole = sessionStorage.getItem('role');
+    setRole(storedRole);  // Menyimpan role dalam state
+  }, []);
+
+  useEffect(() => {
     getAnggotaById();
 
     if (
@@ -118,89 +125,19 @@ const HeaderHome = () => {
 
   return (
     <nav className="bg-teal-500 shadow-md fixed top-0 inset-x-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-12">
-          <div className="flex items-center">
-            <Link href="/home">
-              <Image src="/sanduka.png" width={70} height={60} alt="logo" />
-            </Link>
-          </div>
-
-          <div className="hidden md:block">
-            <ul className="flex space-x-6 items-center">
-              <li className="relative">
-                <button onClick={handleNotificationClick} className="relative">
-                  <FontAwesomeIcon
-                    icon={faBell}
-                    className="w-5 h-5 text-gray-700"
-                  />
-                  {notificationCount > 0 && (
-                    <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
-                      {notificationCount}
-                    </span>
-                  )}
-                </button>
-              </li>
-              <li>
-                <Link href="/anggota/pencarian-anggota">
-                  <FontAwesomeIcon
-                    icon={faSearch}
-                    className="w-5 h-5 text-gray-700"
-                  />
-                </Link>
-              </li>
-              <li className="relative" ref={profileMenuRef}>
-                <button
-                  onClick={toggleProfileMenu}
-                  className="flex items-center focus:outline-none"
-                >
-                  <Image
-                    src={
-                      profileImageUrl
-                        ? "/profile.png"
-                        : `data:image/jpeg;base64,${profileImageUrl}`
-                    }
-                    width={30}
-                    height={30}
-                    alt="Foto Profile"
-                    className="rounded-full"
-                  />
-                </button>
-                {isProfileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                    <Link
-                      href={`/anggota/edit-anggota`}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-                    >
-                      Edit Profile
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </li>
-            </ul>
-          </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex justify-between items-center h-12">
+        <div className="flex items-center">
+          <Link href="/home">
+            <Image src="/sanduka.png" width={70} height={60} alt="logo" />
+          </Link>
         </div>
-      </div>
-
-      {/* Mobile menu */}
-      <div className={`${isOpen ? "block" : "hidden"} md:hidden`}>
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          <ul className="flex flex-col space-y-1">
+  
+        <div className="hidden md:block">
+          <ul className="flex space-x-6 items-center">
             <li className="relative">
-              <button
-                onClick={handleNotificationClick}
-                className="relative w-full text-left"
-              >
-                <FontAwesomeIcon
-                  icon={faBell}
-                  className="w-5 h-5 text-gray-700"
-                />
+              <button onClick={handleNotificationClick} className="relative">
+                <FontAwesomeIcon icon={faBell} className="w-5 h-5 text-gray-700" />
                 {notificationCount > 0 && (
                   <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
                     {notificationCount}
@@ -208,29 +145,86 @@ const HeaderHome = () => {
                 )}
               </button>
             </li>
-            <li>
-              <Link href="/anggota/pencarian-anggota">
-                <FontAwesomeIcon
-                  icon={faSearch}
-                  className="w-5 h-5 text-gray-700"
-                />
-              </Link>
-            </li>
-            <li className="relative flex justify-end">
-              <Link href="/update-profile" className="text-blue-500">
+            {/* Render item hanya jika role adalah ADMIN atau SUPERADMIN */}
+            {(role === 'ADMIN' || role === 'SUPERADMIN') && (
+              <li>
+                <Link href="/anggota/pencarian-anggota">
+                  <FontAwesomeIcon icon={faSearch} className="w-5 h-5 text-gray-700" />
+                </Link>
+              </li>
+            )}
+            <li className="relative" ref={profileMenuRef}>
+              <button
+                onClick={toggleProfileMenu}
+                className="flex items-center focus:outline-none"
+              >
                 <Image
-                  src={`data:image/jpeg;base64,${profileImageUrl}`}
-                  alt="Profile"
+                  src={profileImageUrl ? "/profile.png" : `data:image/jpeg;base64,${profileImageUrl}`}
                   width={30}
                   height={30}
-                  className="w-10 h-10 inline-block rounded-full cursor-pointer"
+                  alt="Foto Profile"
+                  className="rounded-full"
                 />
-              </Link>
+              </button>
+              {isProfileMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                  <Link
+                    href={`/anggota/edit-anggota`}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                  >
+                    Edit Profile
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </li>
           </ul>
         </div>
       </div>
-    </nav>
+    </div>
+  
+    {/* Mobile menu */}
+    <div className={`${isOpen ? "block" : "hidden"} md:hidden`}>
+      <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <ul className="flex flex-col space-y-1">
+          <li className="relative">
+            <button onClick={handleNotificationClick} className="relative w-full text-left">
+              <FontAwesomeIcon icon={faBell} className="w-5 h-5 text-gray-700" />
+              {notificationCount > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+                  {notificationCount}
+                </span>
+              )}
+            </button>
+          </li>
+          {role === 'ADMIN' || role === 'SUPERADMIN' ? (
+            <li>
+              <Link href="/anggota/pencarian-anggota">
+                <FontAwesomeIcon icon={faSearch} className="w-5 h-5 text-gray-700" />
+              </Link>
+            </li>
+          ) : null}
+          <li className="relative flex justify-end">
+            <Link href="/update-profile" className="text-blue-500">
+              <Image
+                src={`data:image/jpeg;base64,${profileImageUrl}`}
+                alt="Profile"
+                width={30}
+                height={30}
+                className="w-10 h-10 inline-block rounded-full cursor-pointer"
+              />
+            </Link>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  
   );
 };
 

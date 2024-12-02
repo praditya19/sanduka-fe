@@ -42,7 +42,7 @@ const Page = () => {
   const [base64String, setBase64String] = useState("");
   const [today, setToday] = useState("");
   const router = useRouter();
-  const [showDropdown, setShowDropdown] = useState(false); // State untuk mengontrol tampilan dropdown
+  const [showDropdown, setShowDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [searchTermUnitKerja, setSearchTermUnitKerja] = useState("");
@@ -52,6 +52,7 @@ const Page = () => {
   const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
   const [allUnitKerja, setAllUnitKerja] = useState([]);
   const dropdownRef = useRef(null);
+  const [npaMessage, setNpaMessage] = useState("");
 
   const updateUnitKerja = (kecamatan) => {
     const filteredUnitKerja = unitKerja.filter((item) => {
@@ -61,7 +62,7 @@ const Page = () => {
   };
 
   useEffect(() => {
-    if (!allUnitKerja.length) return; // Pastikan data tersedia
+    if (!allUnitKerja.length) return;
 
     if (selectedCabang) {
       const filtered = allUnitKerja.filter(
@@ -121,7 +122,7 @@ const Page = () => {
   useEffect(() => {
     const fetchUnitKerja = async () => {
       try {
-        const response = await GlobalApi.getUnitKerja(); // Sesuaikan API Anda
+        const response = await GlobalApi.getUnitKerja();
         setAllUnitKerja(response.data);
       } catch (error) {
         console.error("Gagal memuat data Unit Kerja", error);
@@ -154,77 +155,28 @@ const Page = () => {
     }
   };
 
-  const handleCekNpaClick = async () => {
-    const npaValue = document.getElementById("npaPgri").value;
+  const handleNpaChange = async (e) => {
+    const npaValue = e.target.value;
 
-    try {
-      // Panggil API untuk mengecek NPA
-      const response = await GlobalApi.cekNpa(npaValue);
+    setNpaMessage("");
 
-      console.log("Respons API:", response); // Debugging respons API
+    if (npaValue.length === 11) {
+      try {
+        const response = await GlobalApi.cekNpa(npaValue);
 
-      // Jika data ditemukan
-      if (response?.id) {
-        toast.success("NPA Sudah Terdaftar!");
-        setTimeout(() => {
-          router.push(`/sign-in`); // Arahkan ke halaman Home
-        }, 3000);
-      }
-    } catch (error) {
-      if (error.response?.status === 404) {
-        // Jika respons API adalah 404 (NPA tidak ditemukan)
-        toast("NPA tidak ditemukan. Silakan lanjutkan registrasi.", {
-          icon: "ℹ️",
-        });
-      } else {
-        // Error lainnya (server atau jaringan)
-        console.error("Error saat mengecek NPA:", error.message);
-        toast("NPA tidak ditemukan. Silakan lanjutkan registrasi.", {
-          icon: "ℹ️",
-        });
+        if (response?.id) {
+          setNpaMessage("NPA Sudah Terdaftar, silakan login di sini");
+        }
+      } catch (error) {
+        if (error.response?.status === 404) {
+          setNpaMessage("NPA tidak ditemukan. Silakan lanjutkan registrasi.");
+        } else {
+          console.error("Error saat mengecek NPA:", error.message);
+          setNpaMessage("NPA tidak ditemukan. Silakan lanjutkan registrasi.");
+        }
       }
     }
   };
-
-  // const handleCekNpaClick = async () => {
-  //   const npaValue = document.getElementById("npaPgri").value;
-
-  //   try {
-  //     const response = await GlobalApi.cekNpa(npaValue);
-
-  //     if (response) {
-  //       const updatedData = {
-  //         cabang: response.cabang,
-  //         email: response.email,
-  //         foto: response.foto,
-  //         jabatan: response.jabatan,
-  //         namaLengkap: response.namaLengkap,
-  //         noHp: response.noHp,
-  //         npaPgri: response.npaPgri,
-  //         password: response.password,
-  //         role: response.role,
-  //       };
-
-  //       const updateResponse = await GlobalApi.updateRegisUser(
-  //         response.id,
-  //         updatedData
-  //       );
-  //       console.log(
-  //         "Data berhasil diperbarui dan dikirim ke database:",
-  //         updateResponse
-  //       );
-
-  //       toast.success("Data Anda telah disinkronkan!");
-  //     } else {
-  //       toast.error(
-  //         "Data dengan NPA PGRI tidak ditemukan. Silakan registrasi."
-  //       );
-  //     }
-  //   } catch (error) {
-  //     console.error("Error saat mengecek NPA:", error.message);
-  //     toast.error("Terjadi kesalahan. Silakan coba lagi.");
-  //   }
-  // };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -306,34 +258,82 @@ const Page = () => {
       foto: base64String,
     };
     console.log("Data yang akan dikirim ke database:", finalData);
-
+  
     try {
       const response = await GlobalApi.registerUser(finalData);
       console.log("Response dari API:", response);
-      toast.success("Anda Berhasil Mendaftar Menjadi Anggota Sanduka");
+      toast.success(
+        <div>
+          <strong style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
+            Selamat Datang Di Sanduka
+          </strong>
+          <span style={{ fontSize: "1.75rem" }}>
+          Anda Berhasil Mendaftar Menjadi Anggota Sanduka
+          </span>
+        </div>,
+        {
+          icon: (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ width: "48px", height: "48px", color: "#06D001" }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+            </svg>
+          ),
+          duration: 4000, // Notifikasi tampil selama 5 detik
+        }
+      );
+      // toast.success("Anda Berhasil Mendaftar Menjadi Anggota Sanduka");
       setTimeout(() => {
         router.push("/sign-in");
-      }, 5000);
+      }, 4000);
     } catch (error) {
-      toast.error("Anda Tidak Berhasil Mendaftar Menjadi Anggota Sanduka");
+      toast.error(
+        <div>
+          <strong style={{ fontSize: "1.75rem" }}>
+          Anda Tidak Berhasil Mendaftar Menjadi Anggota Sanduka
+          </strong>
+          <br />
+          <span style={{ fontSize: "1.75rem" }}>
+          Periksa Kembali Apakah Ada yang Belum Terisi
+          </span>
+        </div>,
+        {
+          icon: (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ width: "48px", height: "48px", color: "red" }}  // Ganti warna jika diperlukan
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+            </svg>
+          ),          
+          duration: 5000, // Notifikasi tampil selama 5 detik
+        }
+      );
     }
   };
 
+  const handleBackClick = () => {
+    router.push("/anggota/data-anggota");
+  };
+
   const nextStep = () => {
-    // Validasi file sebelum melanjutkan
     if (!selectedFile) {
       toast.error("Harap unggah gambar sebelum melanjutkan.");
       return;
     }
 
-    // Validasi ukuran file
-    const maxFileSize = 250 * 1024; // 250 KB
+    const maxFileSize = 250 * 1024;
     if (selectedFile.size > maxFileSize) {
       toast.error("Ukuran file tidak boleh lebih dari 250KB.");
       return;
     }
 
-    // Validasi format file
     const validFormats = ["image/jpeg", "image/png", "image/jpg"];
     if (!validFormats.includes(selectedFile.type)) {
       toast.error(
@@ -342,7 +342,6 @@ const Page = () => {
       return;
     }
 
-    // Jika validasi lolos
     setStep(step + 1);
   };
 
@@ -353,19 +352,70 @@ const Page = () => {
   return (
     <div className="w-full mx-auto px-4 py-6 bg-slate-200">
       <div className="container mx-auto max-w-screen-lg sm:max-w-full md:max-w-screen-lg px-4">
-        <Toaster />
+      <Toaster
+        toastOptions={{
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem", // Ukuran font
+            padding: "10px", // Padding kecil
+            width: "80%", // Lebar penuh
+            maxWidth: "700px", // Lebar maksimal
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)", // Pusatkan dengan benar
+            textAlign: "center", // Teks di tengah horizontal
+            zIndex: 9999, // Memastikan toast berada di atas elemen lain
+            backgroundColor: "#fff", // Warna latar (opsional)
+            borderRadius: "8px", // Sudut melengkung untuk estetika
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Bayangan halus
+          },
+          success: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+          error: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+        }}
+      />
+        <div className="w-full">
+          {/* Tabs Navigation */}
+          <div className="flex flex-row space-x-4 mb-2 justify-center sm:justify-start">
+            <div
+              className={`py-2 px-4 rounded-full transition duration-300 text-xs sm:text-sm md:text-base ${
+                step === 1
+                  ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                  : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+              }`}
+              onClick={() => setStep(1)}
+            >
+              I. DATA PRIBADI
+            </div>
+            <div
+              className={`py-2 px-4 rounded-full transition duration-300 text-xs sm:text-sm md:text-base ${
+                step === 2
+                  ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                  : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+              }`}
+              onClick={() => setStep(2)}
+            >
+              II. DATA PEKERJAAN
+            </div>
+          </div>
+          <hr className="mb-4 border-t-2 border-gray-400 mt-1 w-full sm:w-96" />
+        </div>
         {step === 1 && (
           <div>
-            <h2 className="font-semibold text-xl text-gray-600">
-              I. DATA PRIBADI
-            </h2>
-            <hr className="mb-6 border-t-2 border-gray-300 mt-4" />
             <form
               onSubmit={handleSubmit(nextStep)}
               className="bg-white p-4 sm:p-8 rounded-lg shadow-lg"
             >
               <div className="w-full flex flex-col items-center">
-                {/* Preview Gambar */}
                 <Image
                   width={150}
                   height={150}
@@ -374,7 +424,6 @@ const Page = () => {
                   alt="Photo Preview"
                 />
 
-                {/* Input File */}
                 <Input
                   type="file"
                   id="foto"
@@ -389,7 +438,6 @@ const Page = () => {
                   Choose Files
                 </label>
 
-                {/* Pesan Peringatan */}
                 <p className="text-red-600 font-bold text-center mt-2">
                   *Wajib Menggunakan Batik PGRI
                 </p>
@@ -398,7 +446,6 @@ const Page = () => {
                   png)
                 </p>
 
-                {/* Pesan Error */}
                 {error && (
                   <p className="text-red-600 text-center mt-2">{error}</p>
                 )}
@@ -457,28 +504,40 @@ const Page = () => {
                     type="text"
                     id="npaPgri"
                     placeholder="Tuliskan NPA"
-                    maxLength={11} // Batas maksimal karakter
+                    maxLength={11}
                     {...register("npaPgri", { required: true })}
+                    onChange={handleNpaChange}
                   />
-                  <div className="flex items-center space-x-2 mt-1">
-                    <Button
-                      type="button"
-                      onClick={handleCekNpaClick}
-                      className="mt-2 p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+                  {npaMessage && (
+                    <p
+                      className={`mt-2 text-sm ${
+                        npaMessage.includes("Terdaftar")
+                          ? "text-red-500"
+                          : "text-green-500"
+                      }`}
                     >
-                      Cek NPA
-                    </Button>
-                    <p className="text-red-500 text-xs sm:text-sm mt-2">
-                      Silahkan Melakukan pengecekan NPA terlebih dahulu
+                      {npaMessage.includes("Terdaftar") ? (
+                        <>
+                          NPA Sudah Terdaftar, silakan{" "}
+                          <a
+                            href="/sign-in"
+                            className="text-blue-500 underline"
+                          >
+                            LOGIN Di Sini
+                          </a>
+                          .
+                        </>
+                      ) : (
+                        npaMessage
+                      )}
                     </p>
-                  </div>
+                  )}
                   {errors.npaPgri && (
                     <span className="text-red-500 text-sm">
                       NPA is required
                     </span>
                   )}
                 </div>
-
                 <div className="w-full">
                   <Label className="block text-sm font-medium mb-3">
                     NIP
@@ -703,21 +762,25 @@ const Page = () => {
                       )}
                     />
                   </div>
-                  <div className="flex items-center space-x-4 mt-2">
-                    <Button
-                      type="button"
-                      onClick={handleGetLocation}
-                      className="p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
-                    >
-                      {loading ? "Mendapatkan Lokasi..." : "Get Location"}
-                    </Button>
-                    {latitude && longitude && (
-                      <p className="text-teal-500 mt-1">
-                        Lokasi berhasil ditemukan: {latitude.toFixed(4)},{" "}
-                        {longitude.toFixed(4)}
-                      </p>
-                    )}
-                  </div>
+                 <div className="flex items-center space-x-4 mt-2">
+  <Button
+    type="button"
+    onClick={handleGetLocation}
+    className="p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+  >
+    {loading ? "Mendapatkan Lokasi..." : "Get Location"}
+  </Button>
+
+  <p className="text-red-500">
+    {!latitude && !longitude && "Mohon Get Location Sebelum melanjutkan"}
+  </p>
+
+  {latitude && longitude && (
+    <p className="text-teal-500 mt-1">
+      Lokasi berhasil ditemukan: {latitude.toFixed(4)}, {longitude.toFixed(4)}
+    </p>
+  )}
+</div>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
@@ -819,19 +882,22 @@ const Page = () => {
                   </div>
                 )}
               </div>
-              <div className="w-full flex justify-end mt-8">
-                <Button type="submit">Next</Button>
-              </div>
+              <div className="col-span-1 sm:col-span-2 flex justify-between mt-4">
+                  <Button
+                    type="button"
+                    className="text-white bg-gray-400 hover:bg-gray-500 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
+                    onClick={handleBackClick}
+                  >
+                    Kembali
+                  </Button>
+                  <Button onClick={nextStep}>Next</Button>
+                </div>
             </form>
           </div>
         )}
 
         {step === 2 && (
-          <div className="max-w-screen-lg mx-auto px-4 py-6">
-            <h2 className="font-semibold text-xl text-gray-600 mb-4">
-              II. DATA PEKERJAAN
-            </h2>
-            <hr className="mb-6 border-t-2 border-gray-300" />
+          <div>
             <form
               onSubmit={handleSubmit(onSubmit)}
               className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white p-4 sm:p-8 rounded-lg shadow-lg"
@@ -849,7 +915,6 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <div className="relative" ref={dropdownRef}>
-                      {/* Input Utama */}
                       <Input
                         type="text"
                         value={selectedCabang || field.value}
@@ -859,10 +924,8 @@ const Page = () => {
                         placeholder="Pilih Cabang"
                       />
 
-                      {/* Dropdown */}
                       {showDropdown && (
                         <div className="mt-1 max-h-40 overflow-y-auto border p-2 rounded absolute z-10 bg-slate-200 w-full">
-                          {/* Input Pencarian */}
                           <div className="px-1">
                             <Input
                               type="text"
@@ -874,7 +937,6 @@ const Page = () => {
                             />
                           </div>
 
-                          {/* Hasil Filter */}
                           {filteredCabang.length > 0 ? (
                             filteredCabang
                               .filter((item) =>
@@ -904,7 +966,7 @@ const Page = () => {
                     </div>
                   )}
                 />
-                {/* Validasi Error */}
+
                 {errors.cabang && (
                   <span className="text-red-500 text-sm">
                     Kecamatan/Cabang harus dipilih
@@ -922,7 +984,6 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <div className="relative">
-                      {/* Input Field */}
                       <Input
                         type="text"
                         value={selectedUnitKerja || field.value}
@@ -932,10 +993,8 @@ const Page = () => {
                         placeholder="Pilih Unit Kerja"
                       />
 
-                      {/* Dropdown */}
                       {showDropdownUnitKerja && (
                         <div className="mt-1 max-h-40 overflow-y-auto border p-2 rounded absolute z-10 bg-slate-200 w-full">
-                          {/* Search Input */}
                           <Input
                             type="text"
                             placeholder="Cari Unit Kerja..."
@@ -947,7 +1006,6 @@ const Page = () => {
                             autoFocus
                           />
 
-                          {/* Filtered Results */}
                           {filteredUnitKerjaByCabang.map((item) => (
                             <div
                               key={item.id}
@@ -967,7 +1025,7 @@ const Page = () => {
                     </div>
                   )}
                 />
-                {/* Validation Error */}
+
                 {errors.unitKerja && (
                   <span className="text-red-500 text-sm">
                     Unit Kerja harus dipilih
@@ -1026,9 +1084,13 @@ const Page = () => {
                           <SelectItem value="SD_MI">SD/MI</SelectItem>
                           <SelectItem value="SMP_MTS">SMP/MTS</SelectItem>
                           <SelectItem value="SMA_SMK_MA">SMA/SMK/MA</SelectItem>
+                          <SelectItem value="SEKOLAH_LUAR_BIASA">
+                            SEKOLAH LUAR BIASA
+                          </SelectItem>
                           <SelectItem value="PERGURUAN_TINGGI">
                             PERGURUAN TINGGI
                           </SelectItem>
+                          <SelectItem value="LAINNYA">Lainnya</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -1086,6 +1148,8 @@ const Page = () => {
                           <SelectItem value="PNS">PNS</SelectItem>
                           <SelectItem value="NON_PNS">NON_PNS</SelectItem>
                           <SelectItem value="PPPK">PPPK</SelectItem>
+                          <SelectItem value="GTY">GTY</SelectItem>
+                          <SelectItem value="GTTY">GTTY</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>

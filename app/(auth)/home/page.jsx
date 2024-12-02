@@ -22,6 +22,8 @@ import {
   faHome,
   faChevronLeft,
   faChevronRight,
+  faExchangeAlt,
+  faRightLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
@@ -123,57 +125,6 @@ const icons = [
   },
 ];
 
-const dataArray = [
-  {
-    img: "/profile.png",
-    name: "John Doe",
-    id: "12345",
-    dateOfDeath: "2023-01-01",
-    position: "Manager",
-    address: "123 Main St",
-  },
-  {
-    img: "/profile.png",
-    name: "Jane Doe",
-    id: "12346",
-    dateOfDeath: "2023-01-02",
-    position: "Director",
-    address: "456 Elm St",
-  },
-  {
-    img: "/profile.png",
-    name: "John Doe",
-    id: "12345",
-    dateOfDeath: "2023-01-01",
-    position: "Manager",
-    address: "123 Main St",
-  },
-  {
-    img: "/profile.png",
-    name: "Jane Doe",
-    id: "12346",
-    dateOfDeath: "2023-01-02",
-    position: "Director",
-    address: "456 Elm St",
-  },
-  {
-    img: "/profile.png",
-    name: "John Doe",
-    id: "12345",
-    dateOfDeath: "2023-01-01",
-    position: "Manager",
-    address: "123 Main St",
-  },
-  {
-    img: "/profile.png",
-    name: "Jane Doe",
-    id: "12346",
-    dateOfDeath: "2023-01-02",
-    position: "Director",
-    address: "456 Elm St",
-  },
-];
-
 export default function IconGrid() {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -184,6 +135,7 @@ export default function IconGrid() {
   const itemsPerPage = 5;
   const [anggotaMeninggal, setAnggotaMeninggal] = useState([]);
   const [role, setRole] = useState(null);
+  const [userData, setUserData] = useState(null);
 
   const handleNext = () => {
     if (currentIndex + itemsPerPage < dataArray.length) {
@@ -233,6 +185,40 @@ export default function IconGrid() {
     fetchAnggotaMeninggal();
   }, []);
 
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const userId = sessionStorage.getItem("userId");
+      if (!userId) {
+        console.error("User ID tidak ditemukan di sessionStorage");
+        return;
+      }
+
+      try {
+        const response = await GlobalApi.getUserById(userId);
+        console.log("Data user diterima:", response);
+        setUserData(response);
+      } catch (error) {
+        console.error("Error saat mendapatkan data user:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+  const renderCheckmark = (value) => {
+    if (value === "Ya") {
+      return <span className="text-green-500">✔</span>;
+    } else if (value === "" || value === null || value === undefined) {
+      return <span className="text-red-500">✘</span>;
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    // Ambil role dari sessionStorage
+    const userRole = sessionStorage.getItem('role');
+    setRole(userRole);
+  }, []);
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -245,16 +231,23 @@ export default function IconGrid() {
 
   const filteredIcons =
     role === "USER"
-      ? icons.filter((item) =>
-          [
-            "Lapor",
-            "Teman Unit",
-            "Ketentuan",
-            "Bantuan",
-            "Data Anggota",
-            "History data",
-          ].includes(item.label)
-        )
+      ? icons
+          .filter((item) =>
+            [
+              "Lapor",
+              "Teman Unit",
+              "Ketentuan",
+              "Bantuan",
+              "Data Anggota",
+              "History data",
+            ].includes(item.label)
+          )
+          .concat({
+            icon: faRightLeft,
+            label: "Mutasi",
+            href: "/anggota/data-anggota/mutasiCabangUnit",
+            color: "text-cyan-500",
+          })
       : icons;
 
   return (
@@ -271,14 +264,42 @@ export default function IconGrid() {
           {/* image */}
           <div className="flex-1 mt-[3.1%]">
             <img
-              src="https://images.pexels.com/photos/346529/pexels-photo-346529.jpeg?cs=srgb&dl=pexels-bri-schneiter-28802-346529.jpg&fm=jpg"
+              src="https://img.pikbest.com/backgrounds/20190905/gray-and-white-color-geometric-abstract-background-v_1547232jpg!sw800"
               alt="Deskripsi gambar"
               className="w-full h-52  object-cover"
             />
           </div>
           <div className="flex-1 ">
             {isMobile ? (
-              <div className="w-full border mt-10 overflow-x-auto">
+              <>
+                {role === 'USER' && (
+                  <div className="flex justify-center mb-7 ml-3 -mt-32 items-center text-center overflow-x-hidden max-w-full">
+                    <div className="flex items-center justify-center">
+                      <span className=" text-lg ">Daspen:</span>
+                      <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                        {/* Pastikan userData dan pesertaDaspen ada sebelum merender */}
+                        {renderCheckmark(userData?.pesertaDaspen)}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-center">
+                      <span className=" text-lg ">KTA Digital:</span>
+                      <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                        {/* Pastikan userData dan pesertaKtaDigital ada sebelum merender */}
+                        {renderCheckmark(userData?.pesertaKtaDigital)}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-center">
+                      <span className=" text-lg ">Sanduka:</span>
+                      <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                        {/* Pastikan userData dan pesertaSanduka ada sebelum merender */}
+                        {renderCheckmark(userData?.pesertaSanduka)}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              <div className="w-full border -mt-12 overflow-x-auto">
                 <div className="flex space-x-4 px-4">
                   {/* Lapor Meninggal */}
                   <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 flex-shrink-0 w-48">
@@ -325,9 +346,37 @@ export default function IconGrid() {
                     </div>
                   </div>
                 </div>
-              </div>
+                </div>
+                </>
             ) : (
-              <div className="w-full -mt-12">
+                <div className="w-full -mt-12">
+                  {role === 'USER' && (
+                    <div className="flex justify-center space-x-8 mb-10 -mt-36 items-center text-center">
+                      <div className="flex items-center justify-center">
+                        <span className=" text-lg ">Daspen:</span>
+                        <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                          {/* Pastikan userData dan pesertaDaspen ada sebelum merender */}
+                          {renderCheckmark(userData?.pesertaDaspen)}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-center">
+                        <span className=" text-lg ">KTA Digital:</span>
+                        <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                          {/* Pastikan userData dan pesertaKtaDigital ada sebelum merender */}
+                          {renderCheckmark(userData?.pesertaKtaDigital)}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-center">
+                        <span className=" text-lg ">Sanduka:</span>
+                        <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                          {/* Pastikan userData dan pesertaSanduka ada sebelum merender */}
+                          {renderCheckmark(userData?.pesertaSanduka)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 px-12">
                   {/* Lapor Meninggal */}
                   <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105">
@@ -370,7 +419,7 @@ export default function IconGrid() {
                         </p>
                         <p className="text-sm text-green-500 font-medium mt-1">
                           <span className="mr-1">
-                             2020 -{" "}
+                            2020 -{" "}
                             {new Date().toLocaleDateString("id-ID", {
                               month: "long",
                               year: "numeric",
@@ -399,7 +448,7 @@ export default function IconGrid() {
                         </p>
                         <p className="text-sm text-green-500 font-medium mt-1">
                           <span className="mr-1">
-                             2020 -{" "}
+                            2020 -{" "}
                             {new Date().toLocaleDateString("id-ID", {
                               month: "long",
                               year: "numeric",
@@ -416,6 +465,8 @@ export default function IconGrid() {
                     </div>
                   </div>
                 </div>
+
+                {/* Peserta Checkbox Section */}
               </div>
             )}
           </div>
@@ -425,12 +476,12 @@ export default function IconGrid() {
               <Link key={index} href={item.href}>
                 <div
                   className="flex flex-col items-center cursor-pointer transition duration-300 transform hover:scale-105 hover:shadow-xl 
-                    p-7 sm:p-4 sm:bg-white sm:rounded-lg sm:shadow-lg"
+          p-7 sm:p-4 sm:bg-white sm:rounded-lg sm:shadow-lg"
                 >
                   <FontAwesomeIcon
-                    icon={item.icon}
+                    icon={item.icon} // Properti icon harus valid
                     size="2x"
-                    className={`mb-2 ${item.color}`}
+                    className={`mb-2 ${item.color}`} // Tambahkan warna dinamis
                   />
                   <span className="text-xs font-normal text-gray-700 text-center whitespace-nowrap">
                     {item.label}

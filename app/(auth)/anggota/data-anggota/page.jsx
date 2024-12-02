@@ -282,7 +282,6 @@ function DataAnggota() {
         const size = 100;
         const response = await GlobalApi.getAllAnggota(page, size);
         fetchedData = response.data.content || [];
-        console.log("data:", response.data);
         if (fetchedData.length > 0) {
           fetchedData.forEach((item) => {
             if (item.foto) {
@@ -587,7 +586,6 @@ function DataAnggota() {
       }
 
       const result = await GlobalApi.deleteUser(anggotaId);
-      console.log("Data berhasil dihapus:", result);
 
       toast.success("Data Anggota Berhasil Dihapus!", {
         autoClose: 3000,
@@ -667,26 +665,36 @@ function DataAnggota() {
           }`}
         >
           <Toaster
-            toastOptions={{
-              style: {
-                marginTop: "1%",
-                fontSize: "1.25rem",
-                padding: "16px",
-              },
-              success: {
-                style: {
-                  background: "white",
-                  color: "black",
-                },
-              },
-              error: {
-                style: {
-                  background: "white",
-                  color: "black",
-                },
-              },
-            }}
-          />
+        toastOptions={{
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem", // Ukuran font
+            padding: "10px", // Padding kecil
+            width: "80%", // Lebar penuh
+            maxWidth: "700px", // Lebar maksimal
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)", // Pusatkan dengan benar
+            textAlign: "center", // Teks di tengah horizontal
+            zIndex: 9999, // Memastikan toast berada di atas elemen lain
+            backgroundColor: "#fff", // Warna latar (opsional)
+            borderRadius: "8px", // Sudut melengkung untuk estetika
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Bayangan halus
+          },
+          success: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+          error: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+        }}
+      />
           <div className="mb-4">
             <div className="flex flex-wrap items-start mt-14 justify-between">
               <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
@@ -759,7 +767,7 @@ function DataAnggota() {
                         onChange={handleUnitKerjaChange}
                         onFocus={() => {
                           setShowDropdownUnit(true);
-                          setSearchUnit("");
+                          setSearchUnit(""); // Clear search term when focus
                         }}
                         disabled={isUnitKerjaDisabled}
                       />
@@ -772,8 +780,7 @@ function DataAnggota() {
                                 type="text"
                                 value={searchUnit}
                                 onChange={(e) => {
-                                  setSearchUnit(e.target.value);
-                                  handleUnitKerjaChange(e);
+                                  setSearchUnit(e.target.value); // Update the search term
                                 }}
                                 placeholder="Cari Unit Kerja..."
                                 autoFocus
@@ -787,7 +794,7 @@ function DataAnggota() {
                                   unit: "",
                                 }));
                                 setShowDropdownUnit(false);
-                                setSearchUnit("");
+                                setSearchUnit(""); // Clear search term
                               }}
                               className="p-2 cursor-pointer hover:bg-gray-100"
                             >
@@ -795,21 +802,28 @@ function DataAnggota() {
                             </li>
 
                             {filteredUnitKerja.length > 0 ? (
-                              filteredUnitKerja.map((unit) => (
-                                <li
-                                  key={unit.id}
-                                  className="p-2 cursor-pointer hover:bg-gray-100"
-                                  onClick={() => {
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      unit: unit.unitKerja,
-                                    }));
-                                    setShowDropdownUnit(false);
-                                  }}
-                                >
-                                  {unit.unitKerja}
-                                </li>
-                              ))
+                              filteredUnitKerja
+                                .filter(
+                                  (unit) =>
+                                    unit.unitKerja
+                                      .toLowerCase()
+                                      .includes(searchUnit.toLowerCase()) // Filter based on search term
+                                )
+                                .map((unit) => (
+                                  <li
+                                    key={unit.id}
+                                    className="p-2 cursor-pointer hover:bg-gray-100"
+                                    onClick={() => {
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        unit: unit.unitKerja,
+                                      }));
+                                      setShowDropdownUnit(false);
+                                    }}
+                                  >
+                                    {unit.unitKerja}
+                                  </li>
+                                ))
                             ) : (
                               <li className="px-4 py-2 text-gray-500 cursor-default">
                                 Tidak ada hasil
@@ -976,6 +990,15 @@ function DataAnggota() {
                           </div>
                           <div className="text-sm">{item.npaPgri}</div>
                           <div className="text-sm">{item.jabatan}</div>
+                          <div
+                            className={`text-sm p-1 inline-block ${
+                              item.nip
+                                ? "bg-green-500 text-white rounded-full px-3"
+                                : "bg-red-500 text-white rounded-full px-3"
+                            }`}
+                          >
+                            {item.nip ? item.nip : "NIP tidak ada"}
+                          </div>
                         </td>
                         <td className="p-2 md:p-3 border md:table-cell hidden">
                           <div className="text-sm">{item.tempatLahir},</div>

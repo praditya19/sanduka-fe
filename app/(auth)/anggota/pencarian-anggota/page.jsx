@@ -25,7 +25,7 @@ import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 
 function PencarianAnggota() {
-  const [maxItems, setMaxItems] = useState(10);
+  const [maxItems, setMaxItems] = useState(8000);
   const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
   const [selectedUnitKerja, setSelectedUnitKerja] =
     useState("-- Unit Kerja --");

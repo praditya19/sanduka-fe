@@ -586,99 +586,65 @@ const SyncData = () => {
                 </thead>
                 <tbody className="text-center">
                   {filteredData.map((item, index) => (
-                    <>
-                      <tr
-                        key={index}
-                        className={`bg-white border-b ${index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                          } hover:bg-gray-200 transition duration-150`}
-                      >
-                        <td className="py-4 px-6 flex items-center justify-center">
-                          <div className="flex items-center">
-                            {index + 1}
-                            {isMobile && (
-                              <Button
-                                className="text-blue-500 bg-transparent hover:bg-transparent ml-2"
-                                onClick={() => handleExpand(index)}
-                              >
-                                {expandedIndex === index ? (
-                                  <FaMinusCircle />
-                                ) : (
-                                  <FaPlusCircle />
-                                )}
-                              </Button>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-4 px-6">{item.cabang}</td>
-                        <td className="py-4 px-6">{item.unitKerja}</td>
+                    <tr
+                      key={index}
+                      className={`bg-white border-b ${
+                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                      } hover:bg-gray-200 transition duration-150`}
+                    >
+                      <td className="py-4 px-6">{index + 1}</td>
+                      <td className="py-4 px-6">{item.cabang}</td>
+                      <td className="py-4 px-6">{item.unitKerja}</td>
+                      <td className="py-4 px-6">{item.namaAnggota}</td>
+                      <td className="py-4 px-6">{item.npaNip}</td>
+                      <td className="py-4 px-6">
+                        <span
+                          className={`inline-block px-2 py-1 rounded ${
+                            item.dataSanduka
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {item.dataSanduka ? "YES" : "NO"}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span
+                          className={`inline-block px-2 py-1 rounded ${
+                            item.dataKtaDigital
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {item.dataKtaDigital ? "YES" : "NO"}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span
+                          className={`inline-block px-2 py-1 rounded ${
+                            item.dataDaspen
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {item.dataDaspen ? "YES" : "NO"}
+                        </span>
+                      </td>
 
-                        {!isMobile && (
-                          <>
-                            <td className="py-4 px-6">{item.namaAnggota}</td>
-                            <td className="py-4 px-6">{item.npaNip}</td>
-                            <td className="py-4 px-6">
-                              {item.dataSanduka ? "YES" : "NO"}
-                            </td>
-                            <td className="py-4 px-6">
-                              {item.dataKtaDigital ? "YES" : "NO"}
-                            </td>
-                            <td className="py-4 px-6">
-                              {item.dataDaspen ? "YES" : "NO"}
-                            </td>
-                            <td className="py-4 px-6">
-                              <button
-                                onClick={() =>
-                                  window.open(
-                                    `https://wa.me/${item.nomorHp}`,
-                                    "_blank"
-                                  )
-                                }
-                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
-                              >
-                                <FontAwesomeIcon icon={faWhatsapp} size="lg" />
-                              </button>
-                            </td>
-                          </>
-                        )}
-                      </tr>
-
-                      {isMobile && expandedIndex === index && (
-                        <tr className="bg-gray-100">
-                          <td colSpan="3" className="p-4">
-                            <div className="grid grid-cols-2 gap-2 text-left">
-                              <div>
-                                <strong>Nama:</strong> {item.namaAnggota}
-                              </div>
-                              <div>
-                                <strong>NPA/NIP:</strong> {item.npaNip}
-                              </div>
-                              <div>
-                                <strong>Sanduka:</strong> {item.dataSanduka ? "YES" : "NO"}
-                              </div>
-                              <div>
-                                <strong>KTA Digital:</strong> {item.dataKtaDigital ? "YES" : "NO"}
-                              </div>
-                              <div>
-                                <strong>Daspen:</strong> {item.dataDaspen ? "YES" : "NO"}
-                              </div>
-                              <div>
-                                <button
-                                  onClick={() =>
-                                    window.open(
-                                      `https://wa.me/${item.nomorHp}`,
-                                      "_blank"
-                                    )
-                                  }
-                                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
-                                >
-                                  <FontAwesomeIcon icon={faWhatsapp} size="lg" /> Hubungi
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </>
+                      <td className="py-4 px-6">
+                        <button
+                          onClick={() =>
+                            window.open(
+                              `https://wa.me/${item.nomorHp}`,
+                              "_blank"
+                            )
+                          }
+                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
+                        >
+                          <FontAwesomeIcon icon={faWhatsapp} size="lg" />
+                        </button>
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
