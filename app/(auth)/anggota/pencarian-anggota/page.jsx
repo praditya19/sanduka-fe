@@ -178,9 +178,9 @@ function PencarianAnggota() {
       const size = 7000;
       const response = await GlobalApi.getAllAnggota(page, size);
       const fotoBase64Array = [];
-
+  
       const fetchedData = response.data.content;
-
+  
       if (fetchedData && fetchedData.length > 0) {
         fetchedData.forEach((item) => {
           if (item.foto) {
@@ -198,15 +198,19 @@ function PencarianAnggota() {
       } else {
         console.warn("No data found.");
       }
-
+  
       setFotoBase64(fotoBase64Array);
-      setLoading(false);
+      setLoading(false);  // Set loading ke false setelah data berhasil diambil
       setAnggota(fetchedData || []);
     } catch (error) {
       console.error("Error fetching anggota:", error);
-      setAnggota([]);
+      setAnggota([]);  // Jika terjadi error, set anggota menjadi array kosong
+      setLoading(false);  // Set loading ke false meskipun terjadi error
     }
   };
+  useEffect(() => {
+    fetchAnggota();
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -550,7 +554,7 @@ function PencarianAnggota() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="text-center">Loading...</div>;  // Menampilkan loading saat data diambil
   }
 
   return (
