@@ -279,7 +279,7 @@ function StatusAnggota() {
     const fetchAnggota = async () => {
       try {
         const page = 0;
-        const size = 7000;
+        const size = 100;
         const response = await GlobalApi.getAllAnggota(page, size);
         const fotoBase64Array = [];
 

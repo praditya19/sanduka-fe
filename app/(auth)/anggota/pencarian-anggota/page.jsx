@@ -25,10 +25,10 @@ import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 
 function PencarianAnggota() {
-  const [maxItems, setMaxItems] = useState(8000);
-  const [selectedCabang, setSelectedCabang] = useState("-- Cabang --");
+  const [maxItems, setMaxItems] = useState(10);
+  const [selectedCabang, setSelectedCabang] = useState("Pilih Cabang");
   const [selectedUnitKerja, setSelectedUnitKerja] =
-    useState("-- Unit Kerja --");
+    useState("Pilih Unit Kerja");
   const [selectedStatus, setSelectedStatus] = useState("Semua");
   const [sortConfig, setSortConfig] = useState({
     key: null,
@@ -100,7 +100,7 @@ function PencarianAnggota() {
 
     const filtered = unitKerja.filter(item =>
       item.unitKerja.toLowerCase().includes(searchValue) &&
-      (selectedCabang === "-- Cabang --" || item.cabang === selectedCabang)
+      (selectedCabang === "Pilih Cabang" || item.cabang === selectedCabang)
     );
 
     setFilteredUnitKerjaOptions(filtered);
@@ -108,13 +108,13 @@ function PencarianAnggota() {
 
   // Select Cabang
   const handleCabangSelect = (selectedItem) => {
-    setSelectedCabang(selectedItem.kecamatan || "-- Cabang --");
+    setSelectedCabang(selectedItem.kecamatan || "Pilih Cabang");
     setShowDropdownCabang(false);
     setSearchCabang('');
     setFilteredCabangOptions(cabang);
 
     // Reset Unit Kerja when Cabang changes
-    setSelectedUnitKerja("-- Unit Kerja --");
+    setSelectedUnitKerja("Pilih Unit Kerja");
     setFilteredUnitKerja(
       unitKerja.filter(uk => uk.cabang === selectedItem.kecamatan)
     );
@@ -122,7 +122,7 @@ function PencarianAnggota() {
 
   // Select Unit Kerja
   const handleUnitKerjaSelect = (selectedItem) => {
-    setSelectedUnitKerja(selectedItem.unitKerja || "-- Unit Kerja --");
+    setSelectedUnitKerja(selectedItem.unitKerja || "Pilih Unit Kerja");
     setShowDropdownUnitKerja(false);
     setSearchUnitKerja('');
   };
@@ -175,7 +175,7 @@ function PencarianAnggota() {
   const fetchAnggota = async () => {
     try {
       const page = 0;
-      const size = 7000;
+      const size = 100;
       const response = await GlobalApi.getAllAnggota(page, size);
       const fotoBase64Array = [];
 
@@ -372,9 +372,9 @@ function PencarianAnggota() {
       const statusFilter =
         selectedStatus === "Semua" || item.anggota === selectedStatus;
       const cabangFilter =
-        selectedCabang === "-- Cabang --" || item.cabang === selectedCabang;
+        selectedCabang === "Pilih Cabang" || item.cabang === selectedCabang;
       const unitKerjaFilter =
-        selectedUnitKerja === "-- Unit Kerja --" ||
+        selectedUnitKerja === "Pilih Unit Kerja" ||
         item.unitKerja === selectedUnitKerja;
 
       const searchLower = searchQuery.toLowerCase();
@@ -469,9 +469,20 @@ function PencarianAnggota() {
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const currentData = useMemo(() => {
+    // Gunakan filteredData secara langsung untuk pencarian dan filtering
+    const slicedData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+    return slicedData;
+  }, [filteredData, currentPage, itemsPerPage]);
   const totalItems = filteredData.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredData.length / itemsPerPage);
+  }, [filteredData, itemsPerPage]);
+
+  useEffect(() => {
+    // Reset halaman ke 1 ketika filter atau pencarian berubah
+    setCurrentPage(1);
+  }, [selectedStatus, selectedCabang, selectedUnitKerja, searchQuery]);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -627,13 +638,13 @@ function PencarianAnggota() {
                       onFocus={() => {
                         setShowDropdownUnitKerja(true);
                         setFilteredUnitKerjaOptions(
-                          selectedCabang === "-- Cabang --"
+                          selectedCabang === "Pilih Cabang"
                             ? unitKerja
                             : unitKerja.filter(uk => uk.cabang === selectedCabang)
                         );
                       }}
                       className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                      disabled={selectedCabang === "-- Cabang --"}
+                      disabled={selectedCabang === "Pilih Cabang"}
                     />
 
                     {showDropdownUnitKerja && (
@@ -667,13 +678,18 @@ function PencarianAnggota() {
                       </div>
                     )}
                   </div>
+
+                  <input
+                    className="shadow appearance-none border rounded w-full md:w-80 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
+                    type="text"
+                    placeholder="Cari Anggota"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                   <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
                     Jumlah Anggota : {jumlahAnggota}
                   </p>
                 </div>
-                <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
-                  Pencarian Anggota
-                </p>
                 <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
                   <div className="space-x-2 w-full flex md:block">
                     <label htmlFor="maxItems" className="mr-2">
@@ -700,6 +716,9 @@ function PencarianAnggota() {
                   </div>
                 </div>
               </div>
+              <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
+                  Pencarian Anggota
+                </p>
             </div>
 
             <div className="overflow-x-auto">
