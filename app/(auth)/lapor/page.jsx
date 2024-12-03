@@ -472,68 +472,71 @@ const FormStep1 = ({
                       Data Anggota Meninggal
                     </h2>
                     <div className="w-full flex flex-col items-start relative">
-                      <Label className="block text-sm font-medium mb-1">
-                        Cabang / Khusus
-                      </Label>
-                      <Input
-                        id="cabangInput"
-                        type="text"
-                        className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
-                        placeholder="Pilih Cabang"
-                        value={queryCabang || selectedCabang} 
-                        disabled
-                        readOnly
-                        onClick={() => setShowDropdownCabang(true)}
-                      />
+  <Label className="block text-sm font-medium mb-1">Cabang / Khusus</Label>
+  <Input
+    id="cabangInput"
+    type="text"
+    className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
+    placeholder="Pilih Cabang"
+    value={queryCabang || selectedCabang}
+    disabled={sessionStorage.getItem("role") !== "SUPER ADMIN"} // Tidak disable jika role adalah SUPER ADMIN
+    readOnly={sessionStorage.getItem("role") !== "SUPER ADMIN"} // Tidak readonly jika role adalah SUPER ADMIN
+    onClick={() => {
+      if (sessionStorage.getItem("role") === "SUPER ADMIN") {
+        setShowDropdownCabang(true);
+      }
+    }}
+  />
 
-                      {showDropdownCabang && (
-                        <div
-                          id="dropdownCabang"
-                          className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[10%] w-full"
-                        >
-                          <ul className="max-h-44 overflow-y-auto">
-                            <li className="py-2 px-2">
-                              <Input
-                                type="text"
-                                className="border-b p-2 w-full bg-white"
-                                placeholder="Cari Cabang..."
-                                value={queryCabang}
-                                onChange={(e) => {
-                                  setQueryCabang(e.target.value);
-                                }}
-                                autoFocus
-                              />
-                            </li>
-                            <li
-                              className="p-2 cursor-pointer hover:bg-gray-100"
-                              onClick={() =>
-                                handleCabangSelect({
-                                  kecamatan: "",
-                                  idKecamatan: null,
-                                })
-                              }
-                            >
-                              Pilih Cabang
-                            </li>
-                            {cabangOptions
-                              .filter((cabang) =>
-                                cabang.kecamatan
-                                  .toLowerCase()
-                                  .includes(queryCabang.toLowerCase())
-                              )
-                              .map((cabang) => (
-                                <li
-                                  key={cabang.idKecamatan}
-                                  className="p-2 cursor-pointer hover:bg-gray-100"
-                                  onClick={() => handleCabangSelect(cabang)}
-                                >
-                                  {cabang.kecamatan}
-                                </li>
-                              ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
+  {showDropdownCabang && (
+    <div
+      id="dropdownCabang"
+      className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[10%] w-full"
+    >
+      <ul className="max-h-44 overflow-y-auto">
+        <li className="py-2 px-2">
+          <Input
+            type="text"
+            className="border-b p-2 w-full bg-white"
+            placeholder="Cari Cabang..."
+            value={queryCabang}
+            onChange={(e) => {
+              setQueryCabang(e.target.value);
+            }}
+            autoFocus
+          />
+        </li>
+        <li
+          className="p-2 cursor-pointer hover:bg-gray-100"
+          onClick={() =>
+            handleCabangSelect({
+              kecamatan: "",
+              idKecamatan: null,
+            })
+          }
+        >
+          Pilih Cabang
+        </li>
+        {cabangOptions
+          .filter((cabang) =>
+            cabang.kecamatan
+              .toLowerCase()
+              .includes(queryCabang.toLowerCase())
+          )
+          .map((cabang) => (
+            <li
+              key={cabang.idKecamatan}
+              className="p-2 cursor-pointer hover:bg-gray-100"
+              onClick={() => handleCabangSelect(cabang)}
+            >
+              {cabang.kecamatan}
+            </li>
+          ))}
+      </ul>
+    </div>
+  )}
+</div>
+
 
                     <div className="w-full flex flex-col items-start mt-3">
                       <Label className="block text-sm font-medium mb-1">

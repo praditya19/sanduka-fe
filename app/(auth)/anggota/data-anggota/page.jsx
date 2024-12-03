@@ -72,6 +72,48 @@ function DataAnggota() {
   const profileImageUrl = "/profile.png";
   const [originalRekapData, setOriginalRekapData] = useState([]);
   const [role, setRole] = useState("");
+  const [isPopupDaspen, setIsPopupDaspen] = useState(false); 
+const [daspenData, setDaspenData] = useState(null);
+
+const handleDataDaspen = async () => {
+  const anggotaId = sessionStorage.getItem("anggotaId");  // Ambil ID dari sessionStorage
+  if (anggotaId) {
+    try {
+      const response = await GlobalApi.getUserById(anggotaId);  // Ambil data user berdasarkan ID
+
+      // Periksa apakah data berhasil diterima
+      if (response) {
+        const nip = response.nip;
+
+        if (nip) {
+          // Panggil API getFileByNip menggunakan nip
+          const fileResponse = await GlobalApi.getFileByNip(nip);
+          
+          // Cek apakah fileResponse valid dan memiliki data yang diperlukan
+          if (fileResponse) {
+            console.log('File Data:', fileResponse);  // Tampilkan data file di console
+            setDaspenData(fileResponse);  // Set data daspen ke state
+            setIsPopupDaspen(true);  // Menampilkan popup jika data file berhasil diambil
+          } else {
+            console.log('File tidak ditemukan untuk NIP:', nip);  // Tangani jika file tidak ditemukan
+          }
+        } else {
+          console.log('NIP tidak ditemukan dalam data anggota');  // Tangani jika NIP tidak ada
+        }
+      } else {
+        console.log('Data anggota tidak ditemukan');  // Tangani jika data user tidak ada
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);  // Tangani error jika API gagal
+    }
+  } else {
+    console.log('Anggota ID tidak ditemukan di sessionStorage');  // Tangani jika anggota ID tidak ada di sessionStorage
+  }
+};
+
+const closePopup = () => {
+  setIsPopupDaspen(false);  // Menutup popup
+};
 
   useEffect(() => {
     const storedRole = sessionStorage.getItem("role");
@@ -1417,6 +1459,42 @@ function DataAnggota() {
                         </td>
                         <td className="p-2 md:p-3 border md:table-cell hidden">
                           <div className="flex justify-center space-x-2">
+                          <div>
+                          <Button
+  type="button"
+  className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+  title="Edit Data"
+  onClick={() => {
+    sessionStorage.setItem("anggotaId", item.id);  // Menyimpan ID anggota ke sessionStorage
+    handleDataDaspen();  // Panggil fungsi untuk mengambil data dan menampilkan popup
+  }}
+>
+  Daspen
+</Button>
+
+{isPopupDaspen && daspenData && (
+  <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-5 z-50">
+    <div className="bg-white p-6 rounded-md w-1/3">
+      <h2 className="text-xl font-bold">Data Daspen</h2>
+
+      <div className="mt-4">
+        <p><strong>Kategori Daspen:</strong> {daspenData.kategoriDaspen}</p>
+        <p><strong>Mulai Jadi Anggota Daspen:</strong> {daspenData.mulaiJadiAnggotaDaspen}</p>
+        <p><strong>Nama Anggota:</strong> {daspenData.namaAnggota}</p>
+        <p><strong>NIP:</strong> {daspenData.nip}</p>
+        <p><strong>Prediksi Pensiun:</strong> {daspenData.prediksiPensiun}</p>
+      </div>
+
+      <button
+        className="mt-4 bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+        onClick={closePopup}  // Fungsi untuk menutup popup
+      >
+        Tutup
+      </button>
+    </div>
+  </div>
+)}
+    </div>
                             <Button
                               type="button"
                               className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
@@ -1536,7 +1614,8 @@ function DataAnggota() {
                                   title="WhatsApp"
                                 >
                                   <FaWhatsapp className="w-4 h-4" />
-                                </Link>
+                                  </Link>
+                                  
                               </>
                             )}
                           </div>

@@ -344,26 +344,26 @@ export default function ReportCard() {
           </button>
           <button
             className={`${
-              ["ADMIN", "SUPERADMIN"].includes(sessionStorage.getItem("role"))
+              ["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
                 ? "bg-red-600 hover:bg-red-700"
                 : "bg-gray-400 cursor-not-allowed"
             } text-white font-medium py-1 px-3 rounded-full transition duration-300`}
             onClick={handleBatalClick}
             disabled={
-              !["ADMIN", "SUPERADMIN"].includes(sessionStorage.getItem("role"))
+              !["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
             }
           >
             <FontAwesomeIcon icon={faCancel} className="mr-2" /> Batal
           </button>
           <button
             className={`${
-              ["ADMIN", "SUPERADMIN"].includes(sessionStorage.getItem("role"))
+              ["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
                 ? "bg-purple-600 hover:bg-purple-700"
                 : "bg-gray-400 cursor-not-allowed"
             } text-white font-medium py-1 px-3 rounded-full transition duration-300`}
             onClick={handleVerifikasiClick}
             disabled={
-              !["ADMIN", "SUPERADMIN"].includes(sessionStorage.getItem("role"))
+              !["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
             }
           >
             <FontAwesomeIcon icon={faCheck} className="mr-2" /> Verifikasi
