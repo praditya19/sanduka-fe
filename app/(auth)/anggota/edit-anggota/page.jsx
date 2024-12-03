@@ -217,12 +217,51 @@ const Page = () => {
 
     try {
       const response = await GlobalApi.updateUserById(id, formData);
-
-      toast.success("Data Anda Berhasil Diupdate!");
-
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ width: "48px", height: "48px", color: "#06D001", marginBottom: "16px" }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
+            Data Anda Berhasil Diupdate!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
       setTimeout(() => {
         router.push("/anggota/data-anggota");
-      }, 2000);
+      }, 4000);
     } catch (error) {
       console.error("Update gagal:", error);
     }
@@ -232,19 +271,141 @@ const Page = () => {
     try {
       const userId = sessionStorage.getItem("userId");
       if (!userId) {
-        toast.error("User ID tidak ditemukan di session storage.");
+        toast.error(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ width: "48px", height: "48px", color: "red", marginBottom: "16px" }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+            </svg>
+            <strong style={{ fontSize: "1.75rem", display: "block", marginBottom: "8px" }}>
+            User ID tidak ditemukan.
+            </strong>
+          </div>,
+          {
+            icon: null, 
+            duration: 3000,
+            style: {
+              marginTop: "16%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "700px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
+        );
         return;
       }
 
       const response = await GlobalApi.updateRegisUser(userId, data);
-
-      toast.success("Data berhasil disinkronkan!");
-
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ width: "48px", height: "48px", color: "#06D001", marginBottom: "16px" }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
+            Data berhasil disinkronkan!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
       handleClosePopup();
     } catch (error) {
       console.error("Error saat mengirim data:", error);
-
-      toast.error("Terjadi kesalahan saat mengirim data.");
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ width: "48px", height: "48px", color: "red", marginBottom: "16px" }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong style={{ fontSize: "1.75rem", display: "block", marginBottom: "8px" }}>
+          Terjadi kesalahan saat mengirim data.
+          </strong>
+        </div>,
+        {
+          icon: null, 
+          duration: 2000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     }
   };
 
@@ -387,10 +548,93 @@ const Page = () => {
       const data = await GlobalApi.getByNIP(nip);
       setData(data);
       setIsPopupVisible(true);
-      toast.success("Data ditemukan!");
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ width: "48px", height: "48px", color: "#06D001", marginBottom: "16px" }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
+          Data ditemukan!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 1000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     } catch (error) {
       console.error("Gagal mengambil data NIP:", error);
-      toast.error("Data NIP tidak ada");
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ width: "48px", height: "48px", color: "red", marginBottom: "16px" }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong style={{ fontSize: "1.75rem", display: "block", marginBottom: "8px" }}>
+          Data NIP tidak ada
+          </strong>
+        </div>,
+        {
+          icon: null, 
+          duration: 2000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     }
   };
 
@@ -624,18 +868,18 @@ const Page = () => {
         toastOptions={{
           style: {
             marginTop: "16%",
-            fontSize: "1.75rem", // Ukuran font
-            padding: "10px", // Padding kecil
-            width: "80%", // Lebar penuh
-            maxWidth: "700px", // Lebar maksimal
+            fontSize: "1.75rem", 
+            padding: "10px", 
+            width: "80%",
+            maxWidth: "700px",
             height: "50%",
             maxHeight: "400px",
-            transform: "translate(-50%, -50%)", // Pusatkan dengan benar
-            textAlign: "center", // Teks di tengah horizontal
-            zIndex: 9999, // Memastikan toast berada di atas elemen lain
-            backgroundColor: "#fff", // Warna latar (opsional)
-            borderRadius: "8px", // Sudut melengkung untuk estetika
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Bayangan halus
+            transform: "translate(-50%, -50%)",
+            textAlign: "center", 
+            zIndex: 9999, 
+            backgroundColor: "#fff",
+            borderRadius: "8px", 
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", 
           },
           success: {
             style: {
@@ -856,20 +1100,20 @@ const Page = () => {
                           ) : (
                             <p>Data tidak tersedia.</p>
                           )}
-                          <div className="mt-2 justify-end flex border">
+                          <div className="mt-2 justify-end flex">
                             <Button
                               type="button"
                               onClick={handleClosePopup}
-                              className="p-2 mr-3 bg-teal-500 w-16 text-white rounded hover:bg-teal-600"
+                              className="p-2 mr-3 bg-red-500 w-16 text-white rounded hover:bg-red-700"
                             >
-                              Tutup
+                              Belum
                             </Button>
                             <Button
                               type="submit"
                               onClick={handleConfirmAndSendData}
                               className="p-2 w-16 bg-teal-500 text-white rounded hover:bg-teal-600"
                             >
-                              Ya
+                              Sudah
                             </Button>
                           </div>
                         </div>

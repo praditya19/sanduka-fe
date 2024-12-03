@@ -71,6 +71,12 @@ function DataAnggota() {
   const unitKerjaRef = useRef(null);
   const profileImageUrl = "/profile.png";
   const [originalRekapData, setOriginalRekapData] = useState([]);
+  const [role, setRole] = useState("");
+
+  useEffect(() => {
+    const storedRole = sessionStorage.getItem("role");
+    setRole(storedRole || "");
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -169,6 +175,14 @@ function DataAnggota() {
       setIsUnitKerjaDisabled(true);
     }
   }, [selectedCabang, allUnitKerja]);
+
+  useEffect(() => {
+    const role = sessionStorage.getItem("role");
+    const cabang = sessionStorage.getItem("cabang");
+    if (role === "ADMIN" && cabang) {
+      setSelectedCabang(cabang);
+    }
+  }, []);
 
   const handleCabangSelect = (cabang) => {
     setSelectedCabang(cabang.kecamatan);
@@ -565,14 +579,113 @@ function DataAnggota() {
       const anggotaId = sessionStorage.getItem("anggotaId");
       await GlobalApi.keluarAnggota(anggotaId);
       setPopupVisibleKeluar(false);
-      toast.success("Anggota berhasil dikeluar!", {
-        autoClose: 3000,
-      });
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Anggota berhasil dikeluar!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          autoClose: 3000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     } catch (error) {
       console.error("Gagal mengeluarkan anggota:", error);
-      toast.error("Gagal mengeluarkan anggota.", {
-        autoClose: 3000,
-      });
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal mengeluarkan anggota.
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 3000,
+          duration: 2000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     }
   };
 
@@ -581,26 +694,175 @@ function DataAnggota() {
       const anggotaId = sessionStorage.getItem("anggotaId");
 
       if (!anggotaId) {
-        toast.error("ID Anggota tidak ditemukan.");
+        toast.error(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                width: "48px",
+                height: "48px",
+                color: "red",
+                marginBottom: "16px",
+              }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+            </svg>
+            <strong
+              style={{
+                fontSize: "1.75rem",
+                display: "block",
+                marginBottom: "8px",
+              }}
+            >
+              ID Anggota tidak ditemukan.
+            </strong>
+          </div>,
+          {
+            icon: null,
+            duration: 2000,
+            style: {
+              marginTop: "16%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "700px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
+        );
         return;
       }
 
       const result = await GlobalApi.deleteUser(anggotaId);
 
-      toast.success("Data Anggota Berhasil Dihapus!", {
-        autoClose: 3000,
-      });
-
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Data Anggota Berhasil Dihapus!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 4000,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
       setTimeout(() => {
         setIsPopupVisible(false);
-        window.location.reload();
-      }, 3000);
+      }, 4000);
     } catch (error) {
       console.error("Gagal Menghapus Data:", error);
-
-      toast.error("Gagal pensiun anggota.", {
-        autoClose: 3000,
-      });
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal pensiun anggota.
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 3000,
+          duration: 3000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     }
   };
 
@@ -618,14 +880,113 @@ function DataAnggota() {
       const anggotaId = sessionStorage.getItem("anggotaId");
       await GlobalApi.pensiunAnggota(anggotaId);
       setPopupVisible(false);
-      toast.success("Anggota berhasil Pensiun!", {
-        autoClose: 3000,
-      });
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Anggota berhasil Pensiun!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 3000,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     } catch (error) {
       console.error("Gagal mengeluarkan anggota:", error);
-      toast.error("Gagal pensiun anggota.", {
-        autoClose: 3000,
-      });
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal pensiun anggota.
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 3000,
+          duration: 3000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     }
   };
 
@@ -665,36 +1026,36 @@ function DataAnggota() {
           }`}
         >
           <Toaster
-        toastOptions={{
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem", // Ukuran font
-            padding: "10px", // Padding kecil
-            width: "80%", // Lebar penuh
-            maxWidth: "700px", // Lebar maksimal
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)", // Pusatkan dengan benar
-            textAlign: "center", // Teks di tengah horizontal
-            zIndex: 9999, // Memastikan toast berada di atas elemen lain
-            backgroundColor: "#fff", // Warna latar (opsional)
-            borderRadius: "8px", // Sudut melengkung untuk estetika
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Bayangan halus
-          },
-          success: {
-            style: {
-              background: "white",
-              color: "black",
-            },
-          },
-          error: {
-            style: {
-              background: "white",
-              color: "black",
-            },
-          },
-        }}
-      />
+            toastOptions={{
+              style: {
+                marginTop: "16%",
+                fontSize: "1.75rem",
+                padding: "10px",
+                width: "80%",
+                maxWidth: "700px",
+                height: "50%",
+                maxHeight: "400px",
+                transform: "translate(-50%, -50%)",
+                textAlign: "center",
+                zIndex: 9999,
+                backgroundColor: "#fff",
+                borderRadius: "8px",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              },
+              success: {
+                style: {
+                  background: "white",
+                  color: "black",
+                },
+              },
+              error: {
+                style: {
+                  background: "white",
+                  color: "black",
+                },
+              },
+            }}
+          />
           <div className="mb-4">
             <div className="flex flex-wrap items-start mt-14 justify-between">
               <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
@@ -708,14 +1069,17 @@ function DataAnggota() {
                       placeholder="Pilih Cabang"
                       value={selectedCabang}
                       readOnly
+                      disabled={role !== "SUPER ADMIN"}
                       onFocus={() => {
-                        setShowDropdownCabang(true);
-                        setFilteredCabangOptions(cabangOptions);
+                        if (role === "SUPER ADMIN") {
+                          setShowDropdownCabang(true);
+                          setFilteredCabangOptions(cabangOptions);
+                        }
                       }}
                       className="border rounded-lg p-2 w-full bg-white shadow-sm"
                     />
 
-                    {showDropdownCabang && (
+                    {showDropdownCabang && role === "SUPER ADMIN" && (
                       <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full ">
                         <ul className="max-h-44 overflow-y-auto">
                           <li className="py-2 px-2">
@@ -767,7 +1131,7 @@ function DataAnggota() {
                         onChange={handleUnitKerjaChange}
                         onFocus={() => {
                           setShowDropdownUnit(true);
-                          setSearchUnit(""); // Clear search term when focus
+                          setSearchUnit("");
                         }}
                         disabled={isUnitKerjaDisabled}
                       />
@@ -780,7 +1144,7 @@ function DataAnggota() {
                                 type="text"
                                 value={searchUnit}
                                 onChange={(e) => {
-                                  setSearchUnit(e.target.value); // Update the search term
+                                  setSearchUnit(e.target.value);
                                 }}
                                 placeholder="Cari Unit Kerja..."
                                 autoFocus
@@ -794,7 +1158,7 @@ function DataAnggota() {
                                   unit: "",
                                 }));
                                 setShowDropdownUnit(false);
-                                setSearchUnit(""); // Clear search term
+                                setSearchUnit("");
                               }}
                               className="p-2 cursor-pointer hover:bg-gray-100"
                             >
@@ -803,11 +1167,10 @@ function DataAnggota() {
 
                             {filteredUnitKerja.length > 0 ? (
                               filteredUnitKerja
-                                .filter(
-                                  (unit) =>
-                                    unit.unitKerja
-                                      .toLowerCase()
-                                      .includes(searchUnit.toLowerCase()) // Filter based on search term
+                                .filter((unit) =>
+                                  unit.unitKerja
+                                    .toLowerCase()
+                                    .includes(searchUnit.toLowerCase())
                                 )
                                 .map((unit) => (
                                   <li
@@ -1114,7 +1477,7 @@ function DataAnggota() {
                                 </Button>
 
                                 {sessionStorage.getItem("role") ===
-                                "SUPERADMIN" ? (
+                                "SUPER ADMIN" ? (
                                   <Button
                                     className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
                                     onClick={() => {
@@ -1151,7 +1514,7 @@ function DataAnggota() {
                                           onClick={() =>
                                             setIsPopupVisible(false)
                                           }
-                                          className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md"
+                                          className="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-md"
                                         >
                                           Batal
                                         </button>
@@ -1282,17 +1645,20 @@ function DataAnggota() {
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`px-3 py-1 border rounded text-sm ${page === currentPage
-                    ? "bg-blue-500 text-white"
-                    : "bg-white hover:bg-gray-50"
-                    }`}
+                  className={`px-3 py-1 border rounded text-sm ${
+                    page === currentPage
+                      ? "bg-blue-500 text-white"
+                      : "bg-white hover:bg-gray-50"
+                  }`}
                 >
                   {page}
                 </button>
               ))}
 
               <button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 disabled={currentPage === totalPages}
                 className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
               >
@@ -1390,7 +1756,7 @@ function DataAnggota() {
                         <div className="flex justify-center gap-4">
                           <button
                             onClick={handleCancelKeluar}
-                            className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition duration-200"
+                            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
                           >
                             Batal
                           </button>
@@ -1425,7 +1791,7 @@ function DataAnggota() {
                         <div className="flex justify-center gap-4">
                           <button
                             onClick={handleCancelKeluar}
-                            className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition duration-200"
+                            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
                           >
                             Batal
                           </button>
