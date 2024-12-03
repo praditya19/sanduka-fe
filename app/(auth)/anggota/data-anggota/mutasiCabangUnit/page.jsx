@@ -146,16 +146,54 @@ const page = () => {
         cabang,
         selectedUnitKerja
       );
-
       toast.success(
-        `Data disimpan: Cabang: ${cabang}, Unit Kerja: ${selectedUnitKerja}`
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+           <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ width: "48px", height: "48px", color: "#06D001", marginBottom: "16px" }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong style={{ fontSize: "1.75rem", display: "block", marginBottom: "8px" }}>
+            {`Mutasi Berhasil: Pindah Cabang: ${cabang}, Unit Kerja: ${selectedUnitKerja}`}
+          </strong>
+        </div>,
+        {
+          icon: null, 
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
       );
       setShowDropdownCabangUnit(false);
       setIsDropdownVisible(false);
 
       setTimeout(() => {
         router.back();
-      }, 5000);
+      }, 4000);
     } catch (error) {
       console.error("Error saat memutasikan anggota:", error);
       console.error("Response data:", error.response?.data);
@@ -206,22 +244,22 @@ const page = () => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <Toaster
+     <Toaster
         toastOptions={{
           style: {
             marginTop: "16%",
-            fontSize: "1.75rem", // Ukuran font
-            padding: "10px", // Padding kecil
-            width: "80%", // Lebar penuh
-            maxWidth: "700px", // Lebar maksimal
+            fontSize: "1.75rem", 
+            padding: "10px", 
+            width: "80%",
+            maxWidth: "700px",
             height: "50%",
             maxHeight: "400px",
-            transform: "translate(-50%, -50%)", // Pusatkan dengan benar
-            textAlign: "center", // Teks di tengah horizontal
-            zIndex: 9999, // Memastikan toast berada di atas elemen lain
-            backgroundColor: "#fff", // Warna latar (opsional)
-            borderRadius: "8px", // Sudut melengkung untuk estetika
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Bayangan halus
+            transform: "translate(-50%, -50%)",
+            textAlign: "center", 
+            zIndex: 9999, 
+            backgroundColor: "#fff",
+            borderRadius: "8px", 
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", 
           },
           success: {
             style: {
@@ -240,7 +278,7 @@ const page = () => {
       <div className="bg-white p-4 rounded shadow-lg w-2/4">
         <h2 className="text-lg font-bold">Pindah Cabang dan Unit Kerja</h2>
 
-        <div className="mb-4" ref={dropdownRef}>
+        <div className="mb-4 mt-2" ref={dropdownRef}>
           <label className="block mb-1">Cabang:</label>
           <Input
             id="cabangInput"
@@ -252,8 +290,10 @@ const page = () => {
           onClick={handleOpenCabangDropdown}
           />
           {showDropdownCabangUnit && (
-            <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-[47%]">
+            <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-[48%]">
               {/* Input Pencarian */}
+              <ul className="max-h-44 overflow-y-auto">
+              <li className="py-2 px-2">
               <Input
                 type="text"
                 className="border-b p-2 bg-white"
@@ -261,9 +301,9 @@ const page = () => {
                 value={searchTerm}
                 onChange={handleCabangSearch}
                 autoFocus
-              />
+                />
+                </li>
               {/* List Hasil Pencarian */}
-              <ul className="max-h-48 overflow-y-auto">
                 {filteredCabangOptions.map((cabangItem) => (
                   <li
                     key={cabangItem.idKecamatan}
@@ -290,14 +330,16 @@ const page = () => {
           />
           {isDropdownVisible && (
             <div className="absolute z-10 bg-white border border-gray-300 rounded mt-1 w-[47%]">
+              <ul className="max-h-44 overflow-y-auto">
+              <li className="py-2 px-2">
               <Input
                 type="text"
                 placeholder="Cari Unit Kerja..."
                 className="border border-gray-300 rounded w-full p-2"
                 onChange={handleUnitKerjaSearch}
                 autoFocus
-              />
-              <ul className="max-h-60 overflow-y-auto">
+                />
+                </li>
                 {filteredUnitKerjaOptions.length > 0 ? (
                   filteredUnitKerjaOptions.map((unit) => (
                     <li
@@ -322,28 +364,28 @@ const page = () => {
         <div className="flex justify-end">
           <Button
             type="button"
-            className="bg-teal-700 hover:bg-teal-500 mr-2"
-            onClick={handleSaveCabangUnit}
+            onClick={handleCancelCabangUnit}
+            className="bg-red-500 hover:bg-red-700 mr-2"
           >
-            Simpan
+            Batal
           </Button>
           <Button
             type="button"
-            onClick={handleCancelCabangUnit}
-            className="bg-red-500 hover:bg-red-700"
+            className="bg-teal-500 hover:bg-teal-700"
+            onClick={handleSaveCabangUnit}
           >
-            Batal
+            Simpan
           </Button>
         </div>
         {isPopupVisible && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-6 rounded shadow-lg">
               <p className="text-lg font-medium">
-                Apakah Anda yakin ingin menyimpan?
+                Apakah Anda yakin Ingin Pindah Cabang?
               </p>
               <div className="mt-4 flex justify-end">
                 <button
-                  className="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded mr-2"
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded mr-2"
                   onClick={handleCancelSave}
                 >
                   Tidak

@@ -480,7 +480,8 @@ const FormStep1 = ({
                         type="text"
                         className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
                         placeholder="Pilih Cabang"
-                        value={queryCabang || selectedCabang} // Use selectedCabang value here
+                        value={queryCabang || selectedCabang} 
+                        disabled
                         readOnly
                         onClick={() => setShowDropdownCabang(true)}
                       />
@@ -544,10 +545,10 @@ const FormStep1 = ({
                         placeholder="Pilih Unit Kerja"
                         value={queryUnit || formData.unit}
                         readOnly
-                        onChange={(e) => setQueryUnit(e.target.value)} // Input pencarian unit kerja
+                        onChange={(e) => setQueryUnit(e.target.value)} 
                         onClick={() => {
-                          setQueryUnit(""); // Kosongkan queryUnit ketika input diklik
-                          setShowDropdownUnit(true); // Tampilkan dropdown
+                          setQueryUnit(""); 
+                          setShowDropdownUnit(true);
                         }}
                       />
 
@@ -564,7 +565,7 @@ const FormStep1 = ({
                                 className="border-b p-2 w-full bg-white mb-1"
                                 placeholder="Cari Unit Kerja..."
                                 value={queryUnit}
-                                onChange={(e) => setQueryUnit(e.target.value)} // Set query unit kerja
+                                onChange={(e) => setQueryUnit(e.target.value)} 
                                 autoFocus
                               />
                             </li>
@@ -575,7 +576,7 @@ const FormStep1 = ({
                                   ...prev,
                                   unit: "",
                                 }));
-                                setShowDropdownUnit(false); // Tutup dropdown
+                                setShowDropdownUnit(false); 
                               }}
                             >
                               Pilih Unit Kerja
@@ -585,15 +586,15 @@ const FormStep1 = ({
                                 (unit) =>
                                   unit.unitKerja
                                     .toLowerCase()
-                                    .includes(queryUnit.toLowerCase()) // Filter berdasarkan query
+                                    .includes(queryUnit.toLowerCase()) 
                               )
                               .map((unit) => (
                                 <li
                                   key={unit.id}
                                   className="p-2 cursor-pointer hover:bg-gray-100"
                                   onClick={async () => {
-                                    await handleUnitKerjaChange(unit.unitKerja); // Pilih unit kerja
-                                    setShowDropdownUnit(false); // Tutup dropdown
+                                    await handleUnitKerjaChange(unit.unitKerja); 
+                                    setShowDropdownUnit(false); 
                                   }}
                                 >
                                   {unit.unitKerja}
@@ -822,18 +823,18 @@ const Resume = ({
         toastOptions={{
           style: {
             marginTop: "16%",
-            fontSize: "1.75rem", // Ukuran font
-            padding: "10px", // Padding kecil
-            width: "80%", // Lebar penuh
-            maxWidth: "700px", // Lebar maksimal
+            fontSize: "1.75rem", 
+            padding: "10px", 
+            width: "80%",
+            maxWidth: "700px",
             height: "50%",
             maxHeight: "400px",
-            transform: "translate(-50%, -50%)", // Pusatkan dengan benar
-            textAlign: "center", // Teks di tengah horizontal
-            zIndex: 9999, // Memastikan toast berada di atas elemen lain
-            backgroundColor: "#fff", // Warna latar (opsional)
-            borderRadius: "8px", // Sudut melengkung untuk estetika
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Bayangan halus
+            transform: "translate(-50%, -50%)",
+            textAlign: "center", 
+            zIndex: 9999, 
+            backgroundColor: "#fff",
+            borderRadius: "8px", 
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", 
           },
           success: {
             style: {
@@ -843,8 +844,8 @@ const Resume = ({
           },
           error: {
             style: {
-              background: "#f44336",
-              color: "#fff",
+              background: "white",
+              color: "black",
             },
           },
         }}
@@ -1038,31 +1039,96 @@ const Page = () => {
       sessionStorage.setItem("npaTerlaporList", JSON.stringify(npaList));
 
       toast.success(
-        <div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ width: "48px", height: "48px", color: "#06D001", marginBottom: "16px" }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
           <strong style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
-          Laporan berhasil ditambahkan!
+            Laporan berhasil ditambahkan!
           </strong>
         </div>,
         {
-          icon: (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{ width: "48px", height: "48px", color: "#06D001" }}
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-            </svg>
-          ),
+          icon: null,
           duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
         }
       );
+      
 
       setTimeout(() => {
-        window.location.reload();
+        window.location.href = "/home";
       }, 4000);
     } catch (error) {
-      toast.error("Gagal menambahkan laporan. Coba lagi nanti.");
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ width: "48px", height: "48px", color: "red", marginBottom: "16px" }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong style={{ fontSize: "1.75rem", display: "block", marginBottom: "8px" }}>
+            Gagal menambahkan laporan.
+          </strong>
+        </div>,
+        {
+          icon: null, 
+          duration: 5000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );            
     }
   };
 
