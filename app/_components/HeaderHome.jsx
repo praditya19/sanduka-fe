@@ -145,8 +145,7 @@ const HeaderHome = () => {
                 )}
               </button>
             </li>
-            {/* Render item hanya jika role adalah ADMIN atau SUPERADMIN */}
-            {(role === 'ADMIN' || role === 'SUPERADMIN') && (
+            {(role === 'ADMIN' || role === 'SUPER ADMIN') && (
               <li>
                 <Link href="/anggota/pencarian-anggota">
                   <FontAwesomeIcon icon={faSearch} className="w-5 h-5 text-gray-700" />
@@ -202,7 +201,7 @@ const HeaderHome = () => {
               )}
             </button>
           </li>
-          {role === 'ADMIN' || role === 'SUPERADMIN' ? (
+          {role === 'ADMIN' || role === 'SUPER ADMIN' ? (
             <li>
               <Link href="/anggota/pencarian-anggota">
                 <FontAwesomeIcon icon={faSearch} className="w-5 h-5 text-gray-700" />

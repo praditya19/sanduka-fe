@@ -2,7 +2,7 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "https://eb1f-118-96-174-72.ngrok-free.app",
+ baseURL: "http://localhost:8080",
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
@@ -127,6 +127,20 @@ const getUserById = async (userId) => {
   }
 };
 
+const getFileByNip = async (nip) => {
+  try {
+    const response = await axiosClient.get(`/api/files/nip/${nip}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+}
 // Update DATA
 const updateUserById = async (userId, formData) => {
   try {
@@ -1251,4 +1265,5 @@ export default {
   getCalculateSandukaKeluar,
   getTotalAnggotaStatistik,
   getTotalAnggotaByCabang,
+  getFileByNip,
 };
