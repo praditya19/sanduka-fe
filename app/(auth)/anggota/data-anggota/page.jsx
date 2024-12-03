@@ -335,7 +335,7 @@ const closePopup = () => {
         fetchedData = [userData];
       } else {
         const page = 0;
-        const size = 100;
+        const size = 7000;
         const response = await GlobalApi.getAllAnggota(page, size);
         fetchedData = response.data.content || [];
         if (fetchedData.length > 0) {
