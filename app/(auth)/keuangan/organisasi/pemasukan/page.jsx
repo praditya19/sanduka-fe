@@ -20,6 +20,9 @@ function Pemasukan() {
   const currentYear = new Date().getFullYear();
   const startYear = 2020;
   const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const itemsPerPage = 10;
   const [formValues, setFormValues] = useState({
     noBukti: '',
     tanggalTransaksi: "",
@@ -41,20 +44,22 @@ function Pemasukan() {
 
   const handleBulanChange = (e) => {
     setSelectedBulan(e.target.value);
+    setCurrentPage(1);
   };
 
   const handleYearChange = (e) => {
     setNewSelectedYear(e.target.value);
+    setCurrentPage(1); // Reset to first page when year changes
   };
 
- 
+
 
   useEffect(() => {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
         setCabangList(response.data);
-      } catch (error) {}
+      } catch (error) { }
     };
 
     fetchCabangData();
@@ -93,6 +98,7 @@ function Pemasukan() {
         );
         console.log("Data Uang Masuk Keluar:", data);
         setTransactions(data);
+        setTotalPages(Math.ceil(data.length / itemsPerPage));
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -102,6 +108,24 @@ function Pemasukan() {
   useEffect(() => {
     fetchData();
   }, [selectedBulan, newSelectedYear]);
+
+  const getPaginatedTransactions = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return transactions.slice(startIndex, endIndex);
+  };
+
+  const getVisiblePages = () => {
+    const range = 2; // Number of pages to show on each side of current page
+    let start = Math.max(1, currentPage - range);
+    let end = Math.min(totalPages, currentPage + range);
+
+    const pages = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
 
   const years = Array.from(
     { length: currentYear - startYear + 1 },
@@ -321,9 +345,8 @@ function Pemasukan() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <Toaster
             toastOptions={{
@@ -351,23 +374,23 @@ function Pemasukan() {
                 POS PEMASUKAN
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="flex flex-col">
-      <label
-        className="block text-gray-700 text-sm font-semibold mb-2"
-        htmlFor="noBukti"
-      >
-        No. Bukti
-      </label>
-      <input
-        className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        id="noBukti"
-        type="text"
-        name="noBukti"
-        value={formValues.noBukti}
-        onChange={handleChange}
-        readOnly
-      />
-    </div>
+                <div className="flex flex-col">
+                  <label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="noBukti"
+                  >
+                    No. Bukti
+                  </label>
+                  <input
+                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="noBukti"
+                    type="text"
+                    name="noBukti"
+                    value={formValues.noBukti}
+                    onChange={handleChange}
+                    readOnly
+                  />
+                </div>
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -582,14 +605,15 @@ function Pemasukan() {
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.map((transaction, index) => (
+                  {getPaginatedTransactions().map((transaction, index) => (
                     <tr
                       key={index}
-                      className={`border-b text-black text-center ${
-                        transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
-                      }`}
+                      className={`border-b text-black text-center ${transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
+                        }`}
                     >
-                      <td className="px-6 py-4 text-sm">{index + 1}</td>
+                      <td className="px-6 py-4 text-sm">
+                        {(currentPage - 1) * itemsPerPage + index + 1}
+                      </td>
                       <td className="px-6 py-4 text-sm">
                         {transaction["Tgl Transaksi"]}
                       </td>
@@ -609,7 +633,7 @@ function Pemasukan() {
                         {formatCurrency(
                           transaction["Debet"] && transaction["Kredit"]
                             ? Number(transaction["Debet"]) -
-                                Number(transaction["Kredit"])
+                            Number(transaction["Kredit"])
                             : transaction["Debet"] || transaction["Kredit"]
                         )}
                       </td>
@@ -668,6 +692,48 @@ function Pemasukan() {
                   </tr>
                 </tbody>
               </table>
+              <div className="flex justify-center mt-4 gap-1">
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                >
+                  First
+                </button>
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                >
+                  Prev
+                </button>
+                {getVisiblePages().map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                      ? "bg-blue-500 text-white"
+                      : "bg-white hover:bg-gray-50"
+                      }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                >
+                  Next
+                </button>
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                >
+                  Last
+                </button>
+              </div>
             </div>
           </div>
         </div>

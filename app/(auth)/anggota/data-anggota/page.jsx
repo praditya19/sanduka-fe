@@ -364,6 +364,8 @@ const closePopup = () => {
       console.error("Error fetching anggota:", error);
       setAnggota([]);
     }
+    
+    setCurrentPage(1);
   };
 
   const formatCurrency = (amount) =>

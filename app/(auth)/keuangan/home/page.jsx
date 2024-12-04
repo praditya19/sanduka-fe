@@ -45,6 +45,8 @@ export default function Home() {
   const [pemasukanOr, setPemasukanOr] = useState("");
   const [pengeluaranOr, setPengeluaranOr] = useState("");
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Fungsi untuk memanggil API dan mendapatkan data saldo sanduka
   const fetchSaldoSanduka = async () => {
@@ -94,7 +96,7 @@ export default function Home() {
   useEffect(() => {
     const date = new Date();
     const options = { year: "numeric", month: "long", day: "numeric" };
-    const formattedDate = date.toLocaleDateString("id-ID", options); 
+    const formattedDate = date.toLocaleDateString("id-ID", options);
 
     setCurrentDate(formattedDate);
   }, []);
@@ -134,48 +136,72 @@ export default function Home() {
     };
   }, []);
 
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+
+  const getCurrentPageData = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return data.slice(startIndex, endIndex);
+  };
+
+  const getVisiblePages = () => {
+    const range = 2; // Number of pages to show on each side of current page
+    let start = Math.max(1, currentPage - range);
+    let end = Math.min(totalPages, currentPage + range);
+
+    // Adjust start and end to always show a consistent number of pages if possible
+    if (end - start < range * 2) {
+      if (start === 1) {
+        end = Math.min(totalPages, start + range * 2);
+      } else if (end === totalPages) {
+        start = Math.max(1, end - range * 2);
+      }
+    }
+
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-     {isMobile ? <HeaderMobile /> : <HeaderHome />}
+      {isMobile ? <HeaderMobile /> : <HeaderHome />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="min-h-screen bg-gray-50 p-2 md:p-2">
-            
-              <nav className="container mt-8 -ml-8 sm:-ml-4">
-                <ul className="flex flex-wrap space-x-2 md:space-x-6">
-                  <li>
-                    <Link
-                      href="/keuangan/data-utama"
-                      className="text-gray-700 hover:text-teal-600"
-                    >
-                      Data Utama
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/keuangan/sanduka"
-                      className="text-gray-700 hover:text-teal-600"
-                    >
-                      Sanduka
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/keuangan/organisasi"
-                      className="text-gray-700 hover:text-teal-600"
-                    >
-                      Organisasi
-                    </Link>
-                  </li>
-                </ul>
-              </nav>
-          
+
+            <nav className="container mt-8 -ml-8 sm:-ml-4">
+              <ul className="flex flex-wrap space-x-2 md:space-x-6">
+                <li>
+                  <Link
+                    href="/keuangan/data-utama"
+                    className="text-gray-700 hover:text-teal-600"
+                  >
+                    Data Utama
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/keuangan/sanduka"
+                    className="text-gray-700 hover:text-teal-600"
+                  >
+                    Sanduka
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/keuangan/organisasi"
+                    className="text-gray-700 hover:text-teal-600"
+                  >
+                    Organisasi
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+
             <main className=" mx-auto w-full bg-white shadow-lg rounded-lg ">
               <div className="text-center md:mx-6 my-4 md:my-0">
                 <h4 className="text-xl md:text-2xl font-extrabold">SALDO</h4>
@@ -260,7 +286,7 @@ export default function Home() {
                 </div>
               </div>
               <div className="overflow-x-auto">
-                <table className="container w-full table-auto mb-8">
+              <table className="container w-full table-auto mb-8">
                   <thead>
                     <tr className="bg-teal-700 text-white">
                       <th className="p-2 md:p-3 border text-sm">No</th>
@@ -270,13 +296,13 @@ export default function Home() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.map((item, index) => (
+                    {getCurrentPageData().map((item, index) => (
                       <tr
                         key={index}
                         className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
                       >
                         <td className="p-2 md:p-3 border text-center text-sm">
-                          {index + 1}
+                          {(currentPage - 1) * itemsPerPage + index + 1}
                         </td>
                         <td className="p-2 md:p-3 border text-sm">{item.cabang}</td>
                         <td className="p-2 md:p-3 border text-center text-sm">
@@ -294,6 +320,49 @@ export default function Home() {
                     ))}
                   </tbody>
                 </table>
+                {/* Pagination */}
+                <div className="flex justify-center mt-4 mb-4 gap-1">
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    First
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Prev
+                  </button>
+                  {getVisiblePages().map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                          ? "bg-blue-500 text-white"
+                          : "bg-white hover:bg-gray-50"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Next
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Last
+                  </button>
+                </div>
               </div>
             </main>
           </div>
