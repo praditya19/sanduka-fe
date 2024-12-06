@@ -18,6 +18,11 @@ import dynamic from "next/dynamic";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import {
+  AiOutlineInfoCircle,
+  AiOutlineEye,
+  AiOutlineEyeInvisible,
+} from "react-icons/ai";
 
 const MapComponent = dynamic(() => import("../../_components/MapComponent"), {
   ssr: false,
@@ -53,6 +58,7 @@ const Page = () => {
   const [allUnitKerja, setAllUnitKerja] = useState([]);
   const dropdownRef = useRef(null);
   const [npaMessage, setNpaMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const updateUnitKerja = (kecamatan) => {
     const filteredUnitKerja = unitKerja.filter((item) => {
@@ -399,6 +405,10 @@ const Page = () => {
     }
   };
 
+  const togglePassword = () => {
+    setShowPassword(!showPassword);
+  };
+
   const handleBackClick = () => {
     router.push("/anggota/data-anggota");
   };
@@ -554,13 +564,26 @@ const Page = () => {
                       *Harap Diingat
                     </span>
                   </Label>
-                  <Input
-                    type="password"
-                    id="password"
-                    placeholder="contoh:Kat45and!"
-                    {...register("password", { required: true })}
-                    className="border-teal-500"
-                  />
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      id="password"
+                      placeholder="contoh:Kat45and!"
+                      {...register("password", { required: true })}
+                      className="border-teal-500 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={togglePassword}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                    >
+                      {showPassword ? (
+                        <AiOutlineEyeInvisible className="w-5 h-5 text-gray-500" />
+                      ) : (
+                        <AiOutlineEye className="w-5 h-5 text-gray-500" />
+                      )}
+                    </button>
+                  </div>
                   {errors.password && (
                     <span className="text-red-500 text-sm">
                       Password is required
