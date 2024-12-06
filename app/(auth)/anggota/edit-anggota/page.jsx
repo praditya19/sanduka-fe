@@ -20,6 +20,8 @@ import toast, { Toaster } from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
 import { AiOutlineInfoCircle } from "react-icons/ai";
 import { useRouter } from "next/navigation";
+import HeaderMobile from "@/app/_components/HeaderMobile";
+import HeaderMenu from "@/app/_components/HeaderMenu";
 
 const MapComponent = dynamic(
   () => import("../../../_components/MapComponent"),
@@ -78,7 +80,7 @@ const Page = () => {
   const [pendidikanTerakhir, setPendidikanTerakhir] = useState("");
   const [sertifikatPendidik, setSertifikatPendidik] = useState("");
   const [mengajar, setMengajar] = useState("");
-
+  const [isMobile, setIsMobile] = useState(false);
   const [valueJabatan, setValueJabatan] = useState("");
   const [foto, setFoto] = useState("");
   const [preview, setPreview] = useState(null);
@@ -229,13 +231,20 @@ const Page = () => {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            style={{ width: "48px", height: "48px", color: "#06D001", marginBottom: "16px" }}
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
-          <strong style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
             Data Anda Berhasil Diupdate!
           </strong>
         </div>,
@@ -263,6 +272,60 @@ const Page = () => {
         router.push("/anggota/data-anggota");
       }, 4000);
     } catch (error) {
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Mohon Untuk Mengisi Selurh Form yang Tersedia
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
       console.error("Update gagal:", error);
     }
   };
@@ -283,19 +346,30 @@ const Page = () => {
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              style={{ width: "48px", height: "48px", color: "red", marginBottom: "16px" }}
+              style={{
+                width: "48px",
+                height: "48px",
+                color: "red",
+                marginBottom: "16px",
+              }}
               fill="currentColor"
               viewBox="0 0 24 24"
             >
               <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
               <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
             </svg>
-            <strong style={{ fontSize: "1.75rem", display: "block", marginBottom: "8px" }}>
-            User ID tidak ditemukan.
+            <strong
+              style={{
+                fontSize: "1.75rem",
+                display: "block",
+                marginBottom: "8px",
+              }}
+            >
+              User ID tidak ditemukan.
             </strong>
           </div>,
           {
-            icon: null, 
+            icon: null,
             duration: 3000,
             style: {
               marginTop: "16%",
@@ -330,13 +404,20 @@ const Page = () => {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            style={{ width: "48px", height: "48px", color: "#06D001", marginBottom: "16px" }}
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
-          <strong style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
             Data berhasil disinkronkan!
           </strong>
         </div>,
@@ -375,19 +456,30 @@ const Page = () => {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            style={{ width: "48px", height: "48px", color: "red", marginBottom: "16px" }}
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "red",
+              marginBottom: "16px",
+            }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
             <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
           </svg>
-          <strong style={{ fontSize: "1.75rem", display: "block", marginBottom: "8px" }}>
-          Terjadi kesalahan saat mengirim data.
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Terjadi kesalahan saat mengirim data.
           </strong>
         </div>,
         {
-          icon: null, 
+          icon: null,
           duration: 2000,
           style: {
             marginTop: "16%",
@@ -560,14 +652,21 @@ const Page = () => {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            style={{ width: "48px", height: "48px", color: "#06D001", marginBottom: "16px" }}
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
-          <strong style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
-          Data ditemukan!
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Data ditemukan!
           </strong>
         </div>,
         {
@@ -604,19 +703,30 @@ const Page = () => {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            style={{ width: "48px", height: "48px", color: "red", marginBottom: "16px" }}
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "red",
+              marginBottom: "16px",
+            }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
             <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
           </svg>
-          <strong style={{ fontSize: "1.75rem", display: "block", marginBottom: "8px" }}>
-          Data NIP tidak ada
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Data NIP tidak ada
           </strong>
         </div>,
         {
-          icon: null, 
+          icon: null,
           duration: 2000,
           style: {
             marginTop: "16%",
@@ -861,41 +971,55 @@ const Page = () => {
     setNamaAnak([...namaAnak, ""]);
   };
 
+  const handleResize = () => {
+    setIsMobile(window.innerWidth <= 768);
+  };
+
+  useEffect(() => {
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <div className="w-full mx-auto px-4 py-6 bg-slate-200">
+      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div className="container mx-auto max-w-screen-lg sm:max-w-full md:max-w-screen-lg px-4">
-      <Toaster
-        toastOptions={{
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem", 
-            padding: "10px", 
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center", 
-            zIndex: 9999, 
-            backgroundColor: "#fff",
-            borderRadius: "8px", 
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", 
-          },
-          success: {
+        <Toaster
+          toastOptions={{
             style: {
-              background: "white",
-              color: "black",
+              marginTop: "16%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "700px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
             },
-          },
-          error: {
-            style: {
-              background: "white",
-              color: "black",
+            success: {
+              style: {
+                background: "white",
+                color: "black",
+              },
             },
-          },
-        }}
-      />
-        <div className="w-full">
+            error: {
+              style: {
+                background: "white",
+                color: "black",
+              },
+            },
+          }}
+        />
+        <div className="w-full mt-12">
           {/* Tabs Navigation */}
           <div className="flex flex-row space-x-4 mb-2 justify-center sm:justify-start">
             <div
@@ -945,18 +1069,13 @@ const Page = () => {
                   />
                   <label
                     htmlFor="foto"
-                    className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md bg-white text-center mt-2"
+                    className="px-4 py-2 cursor-pointer border border-teal-500 rounded-md bg-white text-center mt-2"
                   >
                     Choose Files
                   </label>
                   <p className="text-red-600 font-bold text-center mt-2">
                     {" "}
                     *Wajib Menggunakan Batik PGRI
-                  </p>
-                  <p className="text-red-600 text-center">
-                    {" "}
-                    *Maksimal ukuran file unggah 250kb format file (jpg, jpeg,
-                    png)
                   </p>
                   {error && (
                     <p className="text-red-600 text-center mt-2">{error}</p>
@@ -977,6 +1096,7 @@ const Page = () => {
                       defaultValue={email}
                       render={({ field: { onChange, value } }) => (
                         <Input
+                          className="border-teal-500"
                           type="email"
                           id="email"
                           placeholder="Email"
@@ -1008,6 +1128,7 @@ const Page = () => {
                       placeholder="contoh: Kat45and!"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      className="border-teal-500"
                     />
 
                     {isPasswordInfoOpen && (
@@ -1050,6 +1171,7 @@ const Page = () => {
                       value={npaPgri}
                       onChange={(e) => setNpaPgri(e.target.value)}
                       maxLength={11}
+                      className="border-teal-500"
                     />
                   </div>
 
@@ -1066,6 +1188,7 @@ const Page = () => {
                       placeholder="Nomor Induk Pendidik (NIP)"
                       value={nip}
                       onChange={(e) => setNip(e.target.value)}
+                      className="border-teal-500"
                     />
                     <Button
                       type="button"
@@ -1136,6 +1259,7 @@ const Page = () => {
                       placeholder="16 Digit"
                       value={nik}
                       onChange={(e) => setNik(e.target.value)}
+                      className="border-teal-500"
                     />
                   </div>
                   <div className="w-full">
@@ -1151,6 +1275,7 @@ const Page = () => {
                       placeholder="Sesuai Dengan KTP"
                       value={namaLengkap}
                       onChange={(e) => setNamaLengkap(e.target.value)}
+                      className="border-teal-500"
                     />
                   </div>
                 </div>
@@ -1166,6 +1291,7 @@ const Page = () => {
                       placeholder="Tempat Kelahiran"
                       value={tempatLahir}
                       onChange={(e) => setTempatLahir(e.target.value)}
+                      className="border-teal-500"
                     />
                   </div>
 
@@ -1179,6 +1305,7 @@ const Page = () => {
                       defaultValue={formattedTanggalLahir}
                       render={({ field: { onChange, value } }) => (
                         <Input
+                          className="border-teal-500"
                           type="date"
                           id="tanggalLahir"
                           value={value || formattedTanggalLahir}
@@ -1210,7 +1337,7 @@ const Page = () => {
                             setJenisKelamin(e);
                           }}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="border-teal-500">
                             <SelectValue placeholder="Pilih Jenis Kelamin" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1243,7 +1370,7 @@ const Page = () => {
                             setAgama(e);
                           }}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="border-teal-500">
                             <SelectValue placeholder="Pilih Agama" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1280,7 +1407,7 @@ const Page = () => {
                             setGolonganDarah(e);
                           }}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="border-teal-500">
                             <SelectValue placeholder="Pilih Golongan Darah" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1311,6 +1438,7 @@ const Page = () => {
                             placeholder="JL. RT.  RW.  Desa, Kecamatan, Kabupaten"
                             value={alamat}
                             onChange={(e) => setAlamat(e.target.value)}
+                            className="border-teal-500"
                           />
                         )}
                       />
@@ -1350,6 +1478,7 @@ const Page = () => {
                       placeholder="Tuliskan Kode Pos"
                       value={kodePos}
                       onChange={(e) => setKodePos(e.target.value)}
+                      className="border-teal-500"
                     />
                   </div>
                   <div className="w-full">
@@ -1365,6 +1494,7 @@ const Page = () => {
                       placeholder="Nomor Handphone Aktif"
                       value={nomorHp}
                       onChange={(e) => setNomorHp(e.target.value)}
+                      className="border-teal-500"
                     />
                   </div>
                 </div>
@@ -1380,6 +1510,7 @@ const Page = () => {
                       placeholder=" Nama Suami/Istri"
                       value={namaSuamiIstri}
                       onChange={(e) => setNamaSuamiIstri(e.target.value)}
+                      className="border-teal-500"
                     />
                   </div>
                   <div className="w-full">
@@ -1391,7 +1522,7 @@ const Page = () => {
                               Nama Anak {index + 1}
                             </Label>
                             <Input
-                              className="block w-full text-sm p-2 mt-2 mb-2 border rounded"
+                              className="block w-full text-sm p-2 mt-2 mb-2 border-teal-500 rounded"
                               type="text"
                               placeholder={`Tuliskan Nama Anak ${index + 1}`}
                               value={name}
@@ -1475,7 +1606,7 @@ const Page = () => {
                       <div className="relative">
                         <Input
                           type="text"
-                          className="border rounded-lg p-2 w-56 bg-white shadow-sm w-full"
+                          className="border-teal-500 rounded-lg p-2 w-56 bg-white shadow-sm w-full"
                           placeholder="Pilih Cabang"
                           value={selectedCabang || ""}
                           readOnly
@@ -1485,7 +1616,7 @@ const Page = () => {
                           }}
                         />
                         {showDropdown && (
-                          <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-full">
+                          <div className="absolute z-10 border-teal-500 rounded-lg bg-white shadow-sm mt-1 w-full">
                             <div className="p-2">
                               <Input
                                 type="text"
@@ -1540,7 +1671,7 @@ const Page = () => {
                       <div className="relative">
                         <Input
                           type="text"
-                          className="border rounded-lg p-2 w-56 bg-white shadow-sm w-full"
+                          className="border-teal-500 rounded-lg p-2 w-56 bg-white shadow-sm w-full"
                           placeholder="Pilih Unit Kerja"
                           value={selectedUnitKerja || ""}
                           readOnly
@@ -1617,7 +1748,7 @@ const Page = () => {
                           onChange(e);
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="border-teal-500">
                           <SelectValue placeholder="Pilih Jabatan" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1650,7 +1781,7 @@ const Page = () => {
                           setTingkatSekolah(e);
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="border-teal-500">
                           <SelectValue placeholder="Pilih Jenjang Sekolah" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1691,7 +1822,7 @@ const Page = () => {
                           setStatusSekolah(e);
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="border-teal-500">
                           <SelectValue placeholder="Pilih Status Sekolah" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1720,7 +1851,7 @@ const Page = () => {
                           setStatusPegawai(e);
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="border-teal-500">
                           <SelectValue placeholder="Pilih Status Pegawai" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1746,6 +1877,7 @@ const Page = () => {
                     defaultValue={formattedTahunDiangkat}
                     render={({ field: { onChange, value } }) => (
                       <Input
+                        className="border-teal-500"
                         type="date"
                         id="tahunDiangkat"
                         value={value || tahunDiangkat}
@@ -1775,7 +1907,7 @@ const Page = () => {
                           setPangkatGolongan(e);
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="border-teal-500">
                           <SelectValue placeholder="Pilih Golongan" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1809,7 +1941,7 @@ const Page = () => {
                           setPendidikanTerakhir(e);
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="border-teal-500">
                           <SelectValue placeholder="Pilih Pendidikan" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1841,7 +1973,7 @@ const Page = () => {
                           setSertifikatPendidik(e);
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="border-teal-500">
                           <SelectValue placeholder="Sertifikat" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1894,7 +2026,7 @@ const Page = () => {
                           setValueGolonganJabatan(e);
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="border-teal-500">
                           <SelectValue placeholder="Pilih Golongan Jabatan" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1923,7 +2055,7 @@ const Page = () => {
                     defaultValue={mengajar}
                     render={({ field: { onChange, value } }) => (
                       <Input
-                        className="mt-2 sm:mt-2"
+                        className="mt-2 sm:mt-2 border-teal-500"
                         type="text"
                         id="mengajar"
                         placeholder="Mengajar"

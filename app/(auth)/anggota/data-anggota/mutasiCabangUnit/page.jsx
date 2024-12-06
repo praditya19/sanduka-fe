@@ -1,28 +1,13 @@
 "use client";
 import React from "react";
 import { useState, useEffect, useRef } from "react";
-import Modal from "react-modal";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import Image from "next/image";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  FaPlus,
-  FaEdit,
-  FaExchangeAlt,
-  FaExclamationTriangle,
-  FaWhatsapp,
-  FaSortUp,
-  FaSortDown,
-  FaSort,
-} from "react-icons/fa";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
-import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
-import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 
 const page = () => {
@@ -42,7 +27,8 @@ const page = () => {
 
   const [showDropdownCabangUnit, setShowDropdownCabangUnit] = useState(false);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
-
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const dropdownRef = useRef(null);
   const unitKerjaRef = useRef(null);
 
@@ -165,12 +151,15 @@ const page = () => {
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
           <strong style={{ fontSize: "1.75rem", display: "block", marginBottom: "8px" }}>
-            {`Mutasi Berhasil: Pindah Cabang: ${cabang}, Unit Kerja: ${selectedUnitKerja}`}
+            {`Mutasi Berhasil!`}
           </strong>
+          <span style={{ fontSize: "1.75rem" }}>
+            {` Cabang: ${cabang}, Unit Kerja: ${selectedUnitKerja}`}
+          </span>
         </div>,
         {
           icon: null, 
-          duration: 4000,
+          duration: 5000,
           style: {
             marginTop: "16%",
             fontSize: "1.75rem",
@@ -193,7 +182,7 @@ const page = () => {
 
       setTimeout(() => {
         router.back();
-      }, 4000);
+      }, 5000);
     } catch (error) {
       console.error("Error saat memutasikan anggota:", error);
       console.error("Response data:", error.response?.data);
@@ -242,8 +231,16 @@ const page = () => {
     setShowDropdownCabangUnit(true);
   };
 
+  const toggleSidebar = () => {
+    const newSidebarState = !isSidebarOpen;
+    setIsSidebarOpen(newSidebarState);
+    localStorage.setItem("isSidebarOpen", newSidebarState);
+  };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
+       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
      <Toaster
         toastOptions={{
           style: {
@@ -276,14 +273,14 @@ const page = () => {
         }}
       />
       <div className="bg-white p-4 rounded shadow-lg w-2/4">
-        <h2 className="text-lg font-bold">Pindah Cabang dan Unit Kerja</h2>
+        <h2 className="text-lg font-bold">MUTASI</h2>
 
         <div className="mb-4 mt-2" ref={dropdownRef}>
           <label className="block mb-1">Cabang:</label>
           <Input
             id="cabangInput"
             type="text"
-            className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
+            className="border-teal-500 rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
             placeholder="Pilih Cabang"
             value={cabang}
             readOnly
@@ -322,7 +319,7 @@ const page = () => {
           <label className="block mb-1">Unit Kerja:</label>
           <Input
             type="text"
-            className="border border-gray-300 rounded w-full p-2 cursor-pointer"
+            className="border border-teal-500 rounded w-full p-2 cursor-pointer"
             placeholder="Pilih Unit Kerja"
             value={selectedUnitKerja}
             readOnly

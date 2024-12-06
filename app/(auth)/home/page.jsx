@@ -121,7 +121,7 @@ const icons = [
     icon: faUsers,
     label: "Teman Unit",
     href: "/teman-unit-kerja",
-    color: "text-green-700",
+    color: "text-green-600",
   },
 ];
 
@@ -214,8 +214,7 @@ export default function IconGrid() {
   };
 
   useEffect(() => {
-    // Ambil role dari sessionStorage
-    const userRole = sessionStorage.getItem('role');
+    const userRole = sessionStorage.getItem("role");
     setRole(userRole);
   }, []);
 
@@ -242,13 +241,24 @@ export default function IconGrid() {
               "History data",
             ].includes(item.label)
           )
-          .concat({
-            icon: faRightLeft,
-            label: "Mutasi",
-            href: "/anggota/data-anggota/mutasiCabangUnit",
-            color: "text-cyan-500",
-          })
+          .concat(
+            {
+              icon: faRightLeft,
+              label: "Mutasi",
+              href: "/anggota/data-anggota/mutasiCabangUnit",
+              color: "text-cyan-500",
+            },
+          )
+          .concat(
+            {
+              icon: faFileAlt,
+              label: "Daspen",
+              href: "/daspen",
+              color: "text-teal-700",
+            },
+          )
       : icons;
+
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -261,7 +271,6 @@ export default function IconGrid() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          {/* image */}
           <div className="flex-1 mt-[3.1%]">
             <img
               src="https://img.pikbest.com/backgrounds/20190905/gray-and-white-color-geometric-abstract-background-v_1547232jpg!sw800"
@@ -272,12 +281,11 @@ export default function IconGrid() {
           <div className="flex-1 ">
             {isMobile ? (
               <>
-                {role === 'USER' && (
+                {role === "USER" && (
                   <div className="flex justify-center mb-7 ml-3 -mt-32 items-center text-center overflow-x-hidden max-w-full">
                     <div className="flex items-center justify-center">
                       <span className=" text-lg ">Daspen:</span>
                       <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
-                        {/* Pastikan userData dan pesertaDaspen ada sebelum merender */}
                         {renderCheckmark(userData?.pesertaDaspen)}
                       </div>
                     </div>
@@ -285,7 +293,6 @@ export default function IconGrid() {
                     <div className="flex items-center justify-center">
                       <span className=" text-lg ">KTA Digital:</span>
                       <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
-                        {/* Pastikan userData dan pesertaKtaDigital ada sebelum merender */}
                         {renderCheckmark(userData?.pesertaKtaDigital)}
                       </div>
                     </div>
@@ -293,92 +300,84 @@ export default function IconGrid() {
                     <div className="flex items-center justify-center">
                       <span className=" text-lg ">Sanduka:</span>
                       <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
-                        {/* Pastikan userData dan pesertaSanduka ada sebelum merender */}
                         {renderCheckmark(userData?.pesertaSanduka)}
                       </div>
                     </div>
                   </div>
                 )}
-              <div className="w-full border -mt-12 overflow-x-auto">
-                <div className="flex space-x-4 px-4">
-                  {/* Lapor Meninggal */}
-                  <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 flex-shrink-0 w-48">
-                    <div>
-                      <p className="text-sm font-bold text-gray-800">
-                        Lapor Meninggal
-                      </p>
-                      <p className="text-xs font-semibold text-gray-500 uppercase">
-                        1 Orang
-                      </p>
-                      <p className="text-xs text-green-500 font-medium mt-1">
-                        <span className="mr-1">↑</span>3.48% Since last month
-                      </p>
+                <div className="w-full border -mt-12 overflow-x-auto">
+                  <div className="flex space-x-4 px-4">
+                    <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 flex-shrink-0 w-48">
+                      <div>
+                        <p className="text-sm font-bold text-gray-800">
+                          Lapor Meninggal
+                        </p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase">
+                          1 Orang
+                        </p>
+                        <p className="text-xs text-green-500 font-medium mt-1">
+                          <span className="mr-1">↑</span>3.48% Since last month
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Sanduka Diberikan */}
-                  <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 flex-shrink-0 w-48">
-                    <div>
-                      <p className="text-sm font-bold text-gray-800">
-                        Sanduka Diberikan
-                      </p>
-                      <p className="text-xs font-semibold text-gray-500 uppercase">
-                        173 Orang
-                      </p>
-                      <p className="text-xs text-red-500 font-medium mt-1">
-                        <span className="mr-1">↓</span>1.10% Since yesterday
-                      </p>
+                    <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 flex-shrink-0 w-48">
+                      <div>
+                        <p className="text-sm font-bold text-gray-800">
+                          Sanduka Diberikan
+                        </p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase">
+                          173 Orang
+                        </p>
+                        <p className="text-xs text-red-500 font-medium mt-1">
+                          <span className="mr-1">↓</span>1.10% Since yesterday
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Total Santunan */}
-                  <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 flex-shrink-0 w-48">
-                    <div>
-                      <p className="text-sm font-bold text-gray-800">
-                        Total Santunan
-                      </p>
-                      <p className="text-xs font-semibold text-gray-500 uppercase">
-                        Rp.432.500.000,-
-                      </p>
-                      <p className="text-xs text-red-500 font-medium mt-1">
-                        <span className="mr-1">↓</span>3.48% Since last week
-                      </p>
+                    <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 flex-shrink-0 w-48">
+                      <div>
+                        <p className="text-sm font-bold text-gray-800">
+                          Total Santunan
+                        </p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase">
+                          Rp.432.500.000,-
+                        </p>
+                        <p className="text-xs text-red-500 font-medium mt-1">
+                          <span className="mr-1">↓</span>3.48% Since last week
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-                </div>
-                </>
+              </>
             ) : (
-                <div className="w-full -mt-12">
-                  {role === 'USER' && (
-                    <div className="flex justify-center space-x-8 mb-10 -mt-36 items-center text-center">
-                      <div className="flex items-center justify-center">
-                        <span className=" text-lg ">Daspen:</span>
-                        <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
-                          {/* Pastikan userData dan pesertaDaspen ada sebelum merender */}
-                          {renderCheckmark(userData?.pesertaDaspen)}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-center">
-                        <span className=" text-lg ">KTA Digital:</span>
-                        <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
-                          {/* Pastikan userData dan pesertaKtaDigital ada sebelum merender */}
-                          {renderCheckmark(userData?.pesertaKtaDigital)}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-center">
-                        <span className=" text-lg ">Sanduka:</span>
-                        <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
-                          {/* Pastikan userData dan pesertaSanduka ada sebelum merender */}
-                          {renderCheckmark(userData?.pesertaSanduka)}
-                        </div>
+              <div className="w-full -mt-12">
+                {role === "USER" && (
+                  <div className="flex justify-center space-x-8 mb-10 -mt-36 items-center text-center">
+                    <div className="flex items-center justify-center">
+                      <span className=" text-lg ">Daspen:</span>
+                      <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                        {renderCheckmark(userData?.pesertaDaspen)}
                       </div>
                     </div>
-                  )}
+
+                    <div className="flex items-center justify-center">
+                      <span className=" text-lg ">KTA Digital:</span>
+                      <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                        {renderCheckmark(userData?.pesertaKtaDigital)}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-center">
+                      <span className=" text-lg ">Sanduka:</span>
+                      <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                        {renderCheckmark(userData?.pesertaSanduka)}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 px-12">
-                  {/* Lapor Meninggal */}
                   <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105">
                     <div className="flex justify-between items-center">
                       <div>
@@ -407,7 +406,6 @@ export default function IconGrid() {
                     </div>
                   </div>
 
-                  {/* Sanduka Diberikan */}
                   <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
                     <div className="flex justify-between items-center">
                       <div>
@@ -436,7 +434,6 @@ export default function IconGrid() {
                     </div>
                   </div>
 
-                  {/* Total Santunan */}
                   <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 h-24">
                     <div className="flex justify-between items-center">
                       <div>
@@ -465,8 +462,6 @@ export default function IconGrid() {
                     </div>
                   </div>
                 </div>
-
-                {/* Peserta Checkbox Section */}
               </div>
             )}
           </div>
@@ -479,9 +474,9 @@ export default function IconGrid() {
           p-7 sm:p-4 sm:bg-white sm:rounded-lg sm:shadow-lg"
                 >
                   <FontAwesomeIcon
-                    icon={item.icon} // Properti icon harus valid
+                    icon={item.icon}
                     size="2x"
-                    className={`mb-2 ${item.color}`} // Tambahkan warna dinamis
+                    className={`mb-2 ${item.color}`}
                   />
                   <span className="text-xs font-normal text-gray-700 text-center whitespace-nowrap">
                     {item.label}
@@ -492,7 +487,6 @@ export default function IconGrid() {
           </div>
         </div>
 
-        {/* Pembatas with Title */}
         <div
           className={` flex flex-col items-center my-4 ${
             isSidebarOpen ? "ml-32" : "ml-0"
@@ -504,7 +498,6 @@ export default function IconGrid() {
           </h5>
         </div>
 
-        {/* Card anggota meninggal */}
         <div
           className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${
             isSidebarOpen ? "ml-32" : "ml-0"

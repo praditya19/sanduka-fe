@@ -143,14 +143,14 @@ const HelpPage = () => {
                         <div className="relative w-12 h-12">
                           <Image
                             src="/profile.png"
-                            alt={admin.nama}
+                            
                             layout="fill"
                             className="rounded-full object-cover"
                           />
                         </div>
                         <div>
                           <h3 className="text-sm font-medium text-gray-900">
-                            {admin.nama} ({admin.cabang})
+                     ({admin.cabang})
                           </h3>
                           <a
                             href={`https://wa.me/${admin.nohp.replace(

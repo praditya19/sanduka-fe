@@ -19,7 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
-import HeaderHome from "@/app/_components/HeaderHome";
+import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
@@ -72,48 +72,44 @@ function DataAnggota() {
   const profileImageUrl = "/profile.png";
   const [originalRekapData, setOriginalRekapData] = useState([]);
   const [role, setRole] = useState("");
-  const [isPopupDaspen, setIsPopupDaspen] = useState(false); 
-const [daspenData, setDaspenData] = useState(null);
+  const [isPopupDaspen, setIsPopupDaspen] = useState(false);
+  const [daspenData, setDaspenData] = useState(null);
 
-const handleDataDaspen = async () => {
-  const anggotaId = sessionStorage.getItem("anggotaId");  // Ambil ID dari sessionStorage
-  if (anggotaId) {
-    try {
-      const response = await GlobalApi.getUserById(anggotaId);  // Ambil data user berdasarkan ID
+  const handleDataDaspen = async () => {
+    const anggotaId = sessionStorage.getItem("anggotaId");
+    if (anggotaId) {
+      try {
+        const response = await GlobalApi.getUserById(anggotaId);
 
-      // Periksa apakah data berhasil diterima
-      if (response) {
-        const nip = response.nip;
+        if (response) {
+          const nip = response.nip;
 
-        if (nip) {
-          // Panggil API getFileByNip menggunakan nip
-          const fileResponse = await GlobalApi.getFileByNip(nip);
-          
-          // Cek apakah fileResponse valid dan memiliki data yang diperlukan
-          if (fileResponse) {
-            console.log('File Data:', fileResponse);  // Tampilkan data file di console
-            setDaspenData(fileResponse);  // Set data daspen ke state
-            setIsPopupDaspen(true);  // Menampilkan popup jika data file berhasil diambil
+          if (nip) {
+            const fileResponse = await GlobalApi.getFileByNip(nip);
+
+            if (fileResponse) {
+              setDaspenData(fileResponse);
+              setIsPopupDaspen(true);
+            } else {
+              console.log("File tidak ditemukan untuk NIP:", nip);
+            }
           } else {
-            console.log('File tidak ditemukan untuk NIP:', nip);  // Tangani jika file tidak ditemukan
+            console.log("NIP tidak ditemukan dalam data anggota");
           }
         } else {
-          console.log('NIP tidak ditemukan dalam data anggota');  // Tangani jika NIP tidak ada
+          console.log("Data anggota tidak ditemukan");
         }
-      } else {
-        console.log('Data anggota tidak ditemukan');  // Tangani jika data user tidak ada
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
-    } catch (error) {
-      console.error('Error fetching data:', error);  // Tangani error jika API gagal
+    } else {
+      console.log("Anggota ID tidak ditemukan di sessionStorage");
     }
-  } else {
-    console.log('Anggota ID tidak ditemukan di sessionStorage');  // Tangani jika anggota ID tidak ada di sessionStorage
-  }
-};
+  };
 
-const closePopup = () => {
-  setIsPopupDaspen(false);  // Menutup popup
-};
+  const closePopup = () => {
+    setIsPopupDaspen(false);
+  };
 
   useEffect(() => {
     const storedRole = sessionStorage.getItem("role");
@@ -1058,7 +1054,7 @@ const closePopup = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      {isMobile ? <HeaderMobile /> : <HeaderHome />}
+      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
@@ -1459,42 +1455,6 @@ const closePopup = () => {
                         </td>
                         <td className="p-2 md:p-3 border md:table-cell hidden">
                           <div className="flex justify-center space-x-2">
-                          <div>
-                          <Button
-  type="button"
-  className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
-  title="Edit Data"
-  onClick={() => {
-    sessionStorage.setItem("anggotaId", item.id);  // Menyimpan ID anggota ke sessionStorage
-    handleDataDaspen();  // Panggil fungsi untuk mengambil data dan menampilkan popup
-  }}
->
-  Daspen
-</Button>
-
-{isPopupDaspen && daspenData && (
-  <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-5 z-50">
-    <div className="bg-white p-6 rounded-md w-1/3">
-      <h2 className="text-xl font-bold">Data Daspen</h2>
-
-      <div className="mt-4">
-        <p><strong>Kategori Daspen:</strong> {daspenData.kategoriDaspen}</p>
-        <p><strong>Mulai Jadi Anggota Daspen:</strong> {daspenData.mulaiJadiAnggotaDaspen}</p>
-        <p><strong>Nama Anggota:</strong> {daspenData.namaAnggota}</p>
-        <p><strong>NIP:</strong> {daspenData.nip}</p>
-        <p><strong>Prediksi Pensiun:</strong> {daspenData.prediksiPensiun}</p>
-      </div>
-
-      <button
-        className="mt-4 bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
-        onClick={closePopup}  // Fungsi untuk menutup popup
-      >
-        Tutup
-      </button>
-    </div>
-  </div>
-)}
-    </div>
                             <Button
                               type="button"
                               className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
@@ -1614,10 +1574,115 @@ const closePopup = () => {
                                   title="WhatsApp"
                                 >
                                   <FaWhatsapp className="w-4 h-4" />
-                                  </Link>
-                                  
+                                </Link>
                               </>
                             )}
+                             <div>
+                              <Button
+                                type="button"
+                                className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                                title="Edit Data"
+                                onClick={() => {
+                                  sessionStorage.setItem("anggotaId", item.id);
+                                  handleDataDaspen();
+                                }}
+                              >
+                                Daspen
+                              </Button>
+
+                              {isPopupDaspen && daspenData && (
+                                <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-10 z-50">
+                                  <div className="bg-white p-6 rounded-md w-1/3">
+                                    <h2 className="text-xl font-bold">
+                                      Data Daspen
+                                    </h2>
+
+                                    <div className="mt-4 grid grid-cols-2 gap-4">
+                                      <div>
+                                        <p className="font-semibold">
+                                          Nama Anggota:
+                                        </p>
+                                        <p>
+                                          {daspenData.namaAnggota ||
+                                            "Tidak tersedia"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">
+                                          Kategori Daspen:
+                                        </p>
+                                        <p>
+                                          {daspenData.kategoriDaspen ||
+                                            "Tidak tersedia"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">NIP:</p>
+                                        <p>
+                                          {daspenData.nip || "Tidak tersedia"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">
+                                          Mulai Jadi Anggota:
+                                        </p>
+                                        <p>
+                                          {daspenData.mulaiJadiAnggotaDaspen
+                                            ? new Intl.DateTimeFormat("id-ID", {
+                                                day: "2-digit",
+                                                month: "long",
+                                                year: "numeric",
+                                              }).format(
+                                                new Date(
+                                                  daspenData.mulaiJadiAnggotaDaspen
+                                                )
+                                              )
+                                            : "Tidak tersedia"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">
+                                          Prediksi Pensiun:
+                                        </p>
+                                        <p>
+                                          {daspenData.prediksiPensiun
+                                            ? new Intl.DateTimeFormat("id-ID", {
+                                                day: "2-digit",
+                                                month: "long",
+                                                year: "numeric",
+                                              }).format(
+                                                new Date(
+                                                  daspenData.prediksiPensiun
+                                                )
+                                              )
+                                            : "Tidak tersedia"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">
+                                          Sumbangan:
+                                        </p>
+                                        <p>
+                                          {daspenData.sumbangan
+                                            ? new Intl.NumberFormat("id-ID", {
+                                                style: "currency",
+                                                currency: "IDR",
+                                              }).format(daspenData.sumbangan)
+                                            : "Tidak tersedia"}
+                                        </p>
+                                      </div>
+                                    </div>
+
+                                    <button
+                                      className="mt-4 bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                                      onClick={closePopup}
+                                    >
+                                      Tutup
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </td>
                       </tr>
