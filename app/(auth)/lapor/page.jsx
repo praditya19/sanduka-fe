@@ -472,71 +472,78 @@ const FormStep1 = ({
                       Data Anggota Meninggal
                     </h2>
                     <div className="w-full flex flex-col items-start relative">
-  <Label className="block text-sm font-medium mb-1">Cabang / Khusus</Label>
-  <Input
-    id="cabangInput"
-    type="text"
-    className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
-    placeholder="Pilih Cabang"
-    value={queryCabang || selectedCabang}
-    disabled={sessionStorage.getItem("role") !== "SUPER ADMIN"} // Tidak disable jika role adalah SUPER ADMIN
-    readOnly={sessionStorage.getItem("role") !== "SUPER ADMIN"} // Tidak readonly jika role adalah SUPER ADMIN
-    onClick={() => {
-      if (sessionStorage.getItem("role") === "SUPER ADMIN") {
-        setShowDropdownCabang(true);
-      }
-    }}
-  />
+                      <Label className="block text-sm font-medium mb-1">
+                        Cabang / Khusus
+                      </Label>
+                      <Input
+                        id="cabangInput"
+                        type="text"
+                        className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
+                        placeholder="Pilih Cabang"
+                        value={queryCabang || selectedCabang}
+                        disabled={
+                          sessionStorage.getItem("role") !== "SUPER ADMIN"
+                        }
+                        readOnly={
+                          sessionStorage.getItem("role") !== "SUPER ADMIN"
+                        }
+                        onClick={() => {
+                          if (
+                            sessionStorage.getItem("role") === "SUPER ADMIN"
+                          ) {
+                            setShowDropdownCabang(true);
+                          }
+                        }}
+                      />
 
-  {showDropdownCabang && (
-    <div
-      id="dropdownCabang"
-      className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[10%] w-full"
-    >
-      <ul className="max-h-44 overflow-y-auto">
-        <li className="py-2 px-2">
-          <Input
-            type="text"
-            className="border-b p-2 w-full bg-white"
-            placeholder="Cari Cabang..."
-            value={queryCabang}
-            onChange={(e) => {
-              setQueryCabang(e.target.value);
-            }}
-            autoFocus
-          />
-        </li>
-        <li
-          className="p-2 cursor-pointer hover:bg-gray-100"
-          onClick={() =>
-            handleCabangSelect({
-              kecamatan: "",
-              idKecamatan: null,
-            })
-          }
-        >
-          Pilih Cabang
-        </li>
-        {cabangOptions
-          .filter((cabang) =>
-            cabang.kecamatan
-              .toLowerCase()
-              .includes(queryCabang.toLowerCase())
-          )
-          .map((cabang) => (
-            <li
-              key={cabang.idKecamatan}
-              className="p-2 cursor-pointer hover:bg-gray-100"
-              onClick={() => handleCabangSelect(cabang)}
-            >
-              {cabang.kecamatan}
-            </li>
-          ))}
-      </ul>
-    </div>
-  )}
-</div>
-
+                      {showDropdownCabang && (
+                        <div
+                          id="dropdownCabang"
+                          className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[10%] w-full"
+                        >
+                          <ul className="max-h-44 overflow-y-auto">
+                            <li className="py-2 px-2">
+                              <Input
+                                type="text"
+                                className="border-b p-2 w-full bg-white"
+                                placeholder="Cari Cabang..."
+                                value={queryCabang}
+                                onChange={(e) => {
+                                  setQueryCabang(e.target.value);
+                                }}
+                                autoFocus
+                              />
+                            </li>
+                            <li
+                              className="p-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() =>
+                                handleCabangSelect({
+                                  kecamatan: "",
+                                  idKecamatan: null,
+                                })
+                              }
+                            >
+                              Pilih Cabang
+                            </li>
+                            {cabangOptions
+                              .filter((cabang) =>
+                                cabang.kecamatan
+                                  .toLowerCase()
+                                  .includes(queryCabang.toLowerCase())
+                              )
+                              .map((cabang) => (
+                                <li
+                                  key={cabang.idKecamatan}
+                                  className="p-2 cursor-pointer hover:bg-gray-100"
+                                  onClick={() => handleCabangSelect(cabang)}
+                                >
+                                  {cabang.kecamatan}
+                                </li>
+                              ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
 
                     <div className="w-full flex flex-col items-start mt-3">
                       <Label className="block text-sm font-medium mb-1">
@@ -548,9 +555,9 @@ const FormStep1 = ({
                         placeholder="Pilih Unit Kerja"
                         value={queryUnit || formData.unit}
                         readOnly
-                        onChange={(e) => setQueryUnit(e.target.value)} 
+                        onChange={(e) => setQueryUnit(e.target.value)}
                         onClick={() => {
-                          setQueryUnit(""); 
+                          setQueryUnit("");
                           setShowDropdownUnit(true);
                         }}
                       />
@@ -568,7 +575,7 @@ const FormStep1 = ({
                                 className="border-b p-2 w-full bg-white mb-1"
                                 placeholder="Cari Unit Kerja..."
                                 value={queryUnit}
-                                onChange={(e) => setQueryUnit(e.target.value)} 
+                                onChange={(e) => setQueryUnit(e.target.value)}
                                 autoFocus
                               />
                             </li>
@@ -579,25 +586,24 @@ const FormStep1 = ({
                                   ...prev,
                                   unit: "",
                                 }));
-                                setShowDropdownUnit(false); 
+                                setShowDropdownUnit(false);
                               }}
                             >
                               Pilih Unit Kerja
                             </li>
                             {filteredUnitKerja
-                              .filter(
-                                (unit) =>
-                                  unit.unitKerja
-                                    .toLowerCase()
-                                    .includes(queryUnit.toLowerCase()) 
+                              .filter((unit) =>
+                                unit.unitKerja
+                                  .toLowerCase()
+                                  .includes(queryUnit.toLowerCase())
                               )
                               .map((unit) => (
                                 <li
                                   key={unit.id}
                                   className="p-2 cursor-pointer hover:bg-gray-100"
                                   onClick={async () => {
-                                    await handleUnitKerjaChange(unit.unitKerja); 
-                                    setShowDropdownUnit(false); 
+                                    await handleUnitKerjaChange(unit.unitKerja);
+                                    setShowDropdownUnit(false);
                                   }}
                                 >
                                   {unit.unitKerja}
@@ -823,36 +829,36 @@ const Resume = ({
           }`}
         >
           <Toaster
-        toastOptions={{
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem", 
-            padding: "10px", 
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center", 
-            zIndex: 9999, 
-            backgroundColor: "#fff",
-            borderRadius: "8px", 
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", 
-          },
-          success: {
-            style: {
-              background: "white",
-              color: "black",
-            },
-          },
-          error: {
-            style: {
-              background: "white",
-              color: "black",
-            },
-          },
-        }}
-      />
+            toastOptions={{
+              style: {
+                marginTop: "16%",
+                fontSize: "1.75rem",
+                padding: "10px",
+                width: "80%",
+                maxWidth: "700px",
+                height: "50%",
+                maxHeight: "400px",
+                transform: "translate(-50%, -50%)",
+                textAlign: "center",
+                zIndex: 9999,
+                backgroundColor: "#fff",
+                borderRadius: "8px",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              },
+              success: {
+                style: {
+                  background: "white",
+                  color: "black",
+                },
+              },
+              error: {
+                style: {
+                  background: "white",
+                  color: "black",
+                },
+              },
+            }}
+          />
           <div className="bg-gray-300 pt-9">
             <div className="relative max-w-xl mx-auto bg-white shadow-lg rounded-2xl overflow-hidden my-4 border border-gray-300">
               <div className="flex flex-col items-center gap-4 bg-gray-50 p-4 rounded-lg shadow-lg">
@@ -1053,13 +1059,20 @@ const Page = () => {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            style={{ width: "48px", height: "48px", color: "#06D001", marginBottom: "16px" }}
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
-          <strong style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
             Laporan berhasil ditambahkan!
           </strong>
         </div>,
@@ -1083,7 +1096,6 @@ const Page = () => {
           },
         }
       );
-      
 
       setTimeout(() => {
         window.location.href = "/home";
@@ -1101,19 +1113,30 @@ const Page = () => {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            style={{ width: "48px", height: "48px", color: "red", marginBottom: "16px" }}
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "red",
+              marginBottom: "16px",
+            }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
             <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
           </svg>
-          <strong style={{ fontSize: "1.75rem", display: "block", marginBottom: "8px" }}>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
             Gagal menambahkan laporan.
           </strong>
         </div>,
         {
-          icon: null, 
+          icon: null,
           duration: 5000,
           style: {
             marginTop: "16%",
@@ -1131,7 +1154,7 @@ const Page = () => {
             boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
           },
         }
-      );            
+      );
     }
   };
 

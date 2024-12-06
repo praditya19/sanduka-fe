@@ -11,7 +11,7 @@ import GlobalApi from "../_utils/GlobalApi";
 const HeaderHome = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
-  const [previousNotificationCount, setPreviousNotificationCount] = useState(0); 
+  const [previousNotificationCount, setPreviousNotificationCount] = useState(0);
   const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] =
     useState(false);
   const audioRef = useRef(null);
@@ -47,7 +47,7 @@ const HeaderHome = () => {
       audioRef.current.currentTime = 0;
       setIsNotificationSoundPlaying(false);
     }
-    setPreviousNotificationCount(notificationCount); 
+    setPreviousNotificationCount(notificationCount);
     setNotificationCount(0);
   };
 
@@ -65,8 +65,8 @@ const HeaderHome = () => {
   };
 
   const handleLogout = () => {
-    sessionStorage.clear(); 
-    window.location.href = "/"; 
+    sessionStorage.clear();
+    window.location.href = "/";
   };
 
   useEffect(() => {
@@ -81,7 +81,7 @@ const HeaderHome = () => {
     };
 
     fetchNotificationCount();
-    const intervalId = setInterval(fetchNotificationCount, 60000); 
+    const intervalId = setInterval(fetchNotificationCount, 60000);
 
     return () => clearInterval(intervalId);
   }, []);
@@ -89,7 +89,6 @@ const HeaderHome = () => {
   useEffect(() => {
     getAnggotaById();
 
-    
     if (
       notificationCount > previousNotificationCount &&
       !isNotificationSoundPlaying
@@ -126,13 +125,14 @@ const HeaderHome = () => {
     <nav className="bg-teal-500 shadow-md fixed top-0 inset-x-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-12">
-          <div className="flex items-center">
-          <FontAwesomeIcon
-                icon={faArrowLeft}
-                size="sm"
-                onClick={handleBackClick}
-                className="cursor-pointer mr-4 -ml-20"
-              />
+          <div className="flex items-center space-x-4">
+            <FontAwesomeIcon
+              icon={faArrowLeft}
+              size="sm"
+              onClick={handleBackClick}
+              className="cursor-pointer"
+            />
+            {/* Logo */}
             <Link href="/home">
               <Image src="/sanduka.png" width={70} height={60} alt="logo" />
             </Link>

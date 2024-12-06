@@ -18,14 +18,19 @@ import dynamic from "next/dynamic";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import {
+  AiOutlineInfoCircle,
+  AiOutlineEye,
+  AiOutlineEyeInvisible,
+} from "react-icons/ai";
 
 const MapComponent = dynamic(() => import("../../_components/MapComponent"), {
   ssr: false,
 });
 
 const Page = () => {
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
+  const [latitude, setLatitude] = useState(0);
+  const [longitude, setLongitude] = useState(0);
   const [error, setError] = useState("");
   const [isClient, setIsClient] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -53,6 +58,7 @@ const Page = () => {
   const [allUnitKerja, setAllUnitKerja] = useState([]);
   const dropdownRef = useRef(null);
   const [npaMessage, setNpaMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const updateUnitKerja = (kecamatan) => {
     const filteredUnitKerja = unitKerja.filter((item) => {
@@ -192,23 +198,69 @@ const Page = () => {
     };
   }, []);
 
-  const handleFileChange = (event) => {
+  const handleFileChange = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-      setPreview(URL.createObjectURL(file));
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result.split(",")[1];
-        setBase64String(base64String);
-      };
-      reader.readAsDataURL(file);
-    } else {
+    if (!file) {
       setSelectedFile(null);
       setPreview(null);
       setBase64String("");
+      return;
     }
+
+    // Membaca file dan menampilkan preview
+    setSelectedFile(file);
+    setPreview(URL.createObjectURL(file));
+
+    // Mengompres gambar
+    const compressedBase64 = await compressImage(file);
+    setBase64String(compressedBase64);
+  };
+
+  const compressImage = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const image = new window.Image(); // Menggunakan window.Image untuk objek gambar
+        image.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+
+          const maxWidth = 1024; // Maksimal lebar gambar
+          const maxHeight = 1024; // Maksimal tinggi gambar
+          let width = image.width;
+          let height = image.height;
+
+          // Sesuaikan dengan rasio gambar agar tidak melebihi batas maksimal
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          // Set ukuran canvas
+          canvas.width = width;
+          canvas.height = height;
+
+          // Gambar ulang gambar pada canvas
+          ctx.drawImage(image, 0, 0, width, height);
+
+          // Kompres gambar menjadi format jpeg dengan kualitas 80%
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.8);
+
+          // Resolusi base64 dari gambar yang sudah dikompres
+          resolve(compressedDataUrl);
+        };
+        image.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleChange = (index, event) => {
@@ -247,6 +299,10 @@ const Page = () => {
     const formattedMulaiJadiAnggota = new Date(data.mulaiJadiAnggotaPgri)
       .toISOString()
       .split("T")[0];
+
+    // Menghapus prefix base64 (misalnya "data:image/jpeg;base64,") jika ada
+    const cleanBase64 = base64String.split(",")[1] || base64String;
+
     const finalData = {
       ...data,
       tanggalLahir: formattedTanggalLahir,
@@ -255,20 +311,23 @@ const Page = () => {
       namaAnak: namaAnak.filter((name) => name.trim() !== ""),
       latitude,
       longitude,
-      foto: base64String,
+      foto: cleanBase64, // Kirim base64 tanpa prefix
     };
+
     console.log("Data yang akan dikirim ke database:", finalData);
-  
+
     try {
       const response = await GlobalApi.registerUser(finalData);
       console.log("Response dari API:", response);
       toast.success(
         <div>
-          <strong style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
-            Selamat Datang Di Sanduka
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Selamat Anda Sudah Mendaftar Di New Sanduka
           </strong>
           <span style={{ fontSize: "1.75rem" }}>
-          Anda Berhasil Mendaftar Menjadi Anggota Sanduka
+            Anda Berhasil Mendaftar Menjadi Anggota Sanduka
           </span>
         </div>,
         {
@@ -282,40 +341,72 @@ const Page = () => {
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
             </svg>
           ),
-          duration: 4000, // Notifikasi tampil selama 5 detik
+          duration: 4000,
         }
       );
-      // toast.success("Anda Berhasil Mendaftar Menjadi Anggota Sanduka");
       setTimeout(() => {
         router.push("/sign-in");
       }, 4000);
     } catch (error) {
       toast.error(
-        <div>
-          <strong style={{ fontSize: "1.75rem" }}>
-          Anda Tidak Berhasil Mendaftar Menjadi Anggota Sanduka
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Anda Belum Berhasil Mendaftar
           </strong>
-          <br />
-          <span style={{ fontSize: "1.75rem" }}>
-          Periksa Kembali Apakah Ada yang Belum Terisi
-          </span>
         </div>,
         {
-          icon: (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{ width: "48px", height: "48px", color: "red" }}  // Ganti warna jika diperlukan
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-            </svg>
-          ),          
-          duration: 5000, // Notifikasi tampil selama 5 detik
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
         }
       );
     }
+  };
+
+  const togglePassword = () => {
+    setShowPassword(!showPassword);
   };
 
   const handleBackClick = () => {
@@ -325,12 +416,6 @@ const Page = () => {
   const nextStep = () => {
     if (!selectedFile) {
       toast.error("Harap unggah gambar sebelum melanjutkan.");
-      return;
-    }
-
-    const maxFileSize = 250 * 1024;
-    if (selectedFile.size > maxFileSize) {
-      toast.error("Ukuran file tidak boleh lebih dari 250KB.");
       return;
     }
 
@@ -352,37 +437,37 @@ const Page = () => {
   return (
     <div className="w-full mx-auto px-4 py-6 bg-slate-200">
       <div className="container mx-auto max-w-screen-lg sm:max-w-full md:max-w-screen-lg px-4">
-      <Toaster
-        toastOptions={{
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem", // Ukuran font
-            padding: "10px", // Padding kecil
-            width: "80%", // Lebar penuh
-            maxWidth: "700px", // Lebar maksimal
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)", // Pusatkan dengan benar
-            textAlign: "center", // Teks di tengah horizontal
-            zIndex: 9999, // Memastikan toast berada di atas elemen lain
-            backgroundColor: "#fff", // Warna latar (opsional)
-            borderRadius: "8px", // Sudut melengkung untuk estetika
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Bayangan halus
-          },
-          success: {
+        <Toaster
+          toastOptions={{
             style: {
-              background: "white",
-              color: "black",
+              marginTop: "16%",
+              fontSize: "1.75rem", // Ukuran font
+              padding: "10px", // Padding kecil
+              width: "80%", // Lebar penuh
+              maxWidth: "700px", // Lebar maksimal
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)", // Pusatkan dengan benar
+              textAlign: "center", // Teks di tengah horizontal
+              zIndex: 9999, // Memastikan toast berada di atas elemen lain
+              backgroundColor: "#fff", // Warna latar (opsional)
+              borderRadius: "8px", // Sudut melengkung untuk estetika
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Bayangan halus
             },
-          },
-          error: {
-            style: {
-              background: "white",
-              color: "black",
+            success: {
+              style: {
+                background: "white",
+                color: "black",
+              },
             },
-          },
-        }}
-      />
+            error: {
+              style: {
+                background: "white",
+                color: "black",
+              },
+            },
+          }}
+        />
         <div className="w-full">
           {/* Tabs Navigation */}
           <div className="flex flex-row space-x-4 mb-2 justify-center sm:justify-start">
@@ -416,7 +501,8 @@ const Page = () => {
               className="bg-white p-4 sm:p-8 rounded-lg shadow-lg"
             >
               <div className="w-full flex flex-col items-center">
-                <Image
+                {/* Preview Foto */}
+                <img
                   width={150}
                   height={150}
                   className="border border-gray-300"
@@ -424,7 +510,8 @@ const Page = () => {
                   alt="Photo Preview"
                 />
 
-                <Input
+                {/* Input File */}
+                <input
                   type="file"
                   id="foto"
                   accept=".jpg,.jpeg,.png"
@@ -433,19 +520,17 @@ const Page = () => {
                 />
                 <label
                   htmlFor="foto"
-                  className="px-4 py-2 cursor-pointer border border-gray-300 rounded-md bg-white text-center mt-2"
+                  className="px-4 py-2 cursor-pointer border border-teal-500 rounded-md bg-white text-center mt-2"
                 >
                   Choose Files
                 </label>
 
+                {/* Pesan Peringatan */}
                 <p className="text-red-600 font-bold text-center mt-2">
                   *Wajib Menggunakan Batik PGRI
                 </p>
-                <p className="text-red-600 text-center">
-                  *Maksimal ukuran file unggah 250kb format file (jpg, jpeg,
-                  png)
-                </p>
 
+                {/* Pesan Error */}
                 {error && (
                   <p className="text-red-600 text-center mt-2">{error}</p>
                 )}
@@ -464,6 +549,7 @@ const Page = () => {
                     id="email"
                     placeholder="Email"
                     {...register("email", { required: true })}
+                    className="border-teal-500"
                   />
                   {errors.email && (
                     <span className="text-red-500 text-sm">
@@ -478,12 +564,26 @@ const Page = () => {
                       *Harap Diingat
                     </span>
                   </Label>
-                  <Input
-                    type="password"
-                    id="password"
-                    placeholder="contoh:Kat45and!"
-                    {...register("password", { required: true })}
-                  />
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      id="password"
+                      placeholder="contoh:Kat45and!"
+                      {...register("password", { required: true })}
+                      className="border-teal-500 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={togglePassword}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                    >
+                      {showPassword ? (
+                        <AiOutlineEyeInvisible className="w-5 h-5 text-gray-500" />
+                      ) : (
+                        <AiOutlineEye className="w-5 h-5 text-gray-500" />
+                      )}
+                    </button>
+                  </div>
                   {errors.password && (
                     <span className="text-red-500 text-sm">
                       Password is required
@@ -507,13 +607,14 @@ const Page = () => {
                     maxLength={11}
                     {...register("npaPgri", { required: true })}
                     onChange={handleNpaChange}
+                    className="border-teal-500"
                   />
                   {npaMessage && (
                     <p
                       className={`mt-2 text-sm ${
                         npaMessage.includes("Terdaftar")
-                          ? "text-red-500"
-                          : "text-green-500"
+                          ? " text-green-500"
+                          : "text-red-500"
                       }`}
                     >
                       {npaMessage.includes("Terdaftar") ? (
@@ -550,6 +651,7 @@ const Page = () => {
                     id="nip"
                     placeholder="Nomor Induk Pendidik ( NIP )"
                     {...register("nip", { required: true })}
+                    className="border-teal-500"
                   />
                   {errors.nip && (
                     <span className="text-red-500 text-sm">
@@ -572,6 +674,7 @@ const Page = () => {
                     id="nik"
                     placeholder="16 Digit"
                     {...register("nik", { required: true })}
+                    className="border-teal-500"
                   />
                   {errors.nik && (
                     <span className="text-red-500 text-sm">
@@ -591,6 +694,7 @@ const Page = () => {
                     id="namaLengkap"
                     placeholder="Sesuai Dengan KTP"
                     {...register("namaLengkap", { required: true })}
+                    className="border-teal-500"
                   />
                   {errors.namaLengkap && (
                     <span className="text-red-500 text-sm">
@@ -610,6 +714,7 @@ const Page = () => {
                     id="tempatLahir"
                     placeholder="Tempat Kelahiran"
                     {...register("tempatLahir", { required: true })}
+                    className="border-teal-500"
                   />
                   {errors.tempatLahir && (
                     <span className="text-red-500 text-sm">
@@ -627,6 +732,7 @@ const Page = () => {
                     placeholder="dd/mm/yyyy"
                     max={today}
                     {...register("tanggalLahir", { required: true })}
+                    className="border-teal-500"
                   />
                   {errors.tanggalLahir && (
                     <span className="text-red-500 text-sm">
@@ -650,7 +756,7 @@ const Page = () => {
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="border border-teal-500">
                           <SelectValue placeholder="Pilih Jenis Kelamin" />
                         </SelectTrigger>
                         <SelectContent>
@@ -683,7 +789,7 @@ const Page = () => {
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="border border-teal-500">
                           <SelectValue placeholder="Pilih Agama" />
                         </SelectTrigger>
                         <SelectContent>
@@ -722,7 +828,7 @@ const Page = () => {
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="border border-teal-500">
                           <SelectValue placeholder="Pilih Golongan Darah" />
                         </SelectTrigger>
                         <SelectContent>
@@ -755,6 +861,7 @@ const Page = () => {
                       control={control}
                       render={({ field }) => (
                         <Textarea
+                          className="border-teal-500"
                           placeholder="JL. RT.  RW.  Desa, Kecamatan, Kabupaten"
                           value={field.value}
                           onChange={field.onChange}
@@ -762,25 +869,31 @@ const Page = () => {
                       )}
                     />
                   </div>
-                 <div className="flex items-center space-x-4 mt-2">
-  <Button
-    type="button"
-    onClick={handleGetLocation}
-    className="p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
-  >
-    {loading ? "Mendapatkan Lokasi..." : "Get Location"}
-  </Button>
+                  <div className="flex items-center space-x-4 mt-2">
+                    {/* Button Get Location */}
+                    <button
+                      type="button"
+                      onClick={handleGetLocation}
+                      className="p-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+                    >
+                      {loading ? "Mendapatkan Lokasi..." : "Get Location"}
+                    </button>
 
-  <p className="text-red-500">
-    {!latitude && !longitude && "Mohon Get Location Sebelum melanjutkan"}
-  </p>
+                    {/* Pesan Jika Lokasi Belum Tersedia */}
+                    <p className="text-red-500">
+                      {!latitude &&
+                        !longitude &&
+                        "Silahkan Klik Jika Anda Dirumah"}
+                    </p>
 
-  {latitude && longitude && (
-    <p className="text-teal-500 mt-1">
-      Lokasi berhasil ditemukan: {latitude.toFixed(4)}, {longitude.toFixed(4)}
-    </p>
-  )}
-</div>
+                    {/* Tampilkan Lokasi Jika Tersedia */}
+                    {latitude && longitude && (
+                      <p className="text-teal-500 mt-1">
+                        Lokasi berhasil ditemukan: {latitude.toFixed(4)},{" "}
+                        {longitude.toFixed(4)}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
@@ -793,6 +906,7 @@ const Page = () => {
                     id="kodePos"
                     placeholder="Tuliskan Kode Pos"
                     {...register("kodePos", { required: true })}
+                    className="border-teal-500"
                   />
                   {errors.kodePos && (
                     <span className="text-red-500 text-sm">
@@ -812,6 +926,7 @@ const Page = () => {
                     id="nomorHp"
                     placeholder="Nomor Handphone Aktif"
                     {...register("nomorHp", { required: true })}
+                    className="border-teal-500"
                   />
                   {errors.nomorHp && (
                     <span className="text-red-500 text-sm">
@@ -831,6 +946,7 @@ const Page = () => {
                     id="namaSuamiIstri"
                     placeholder=" Nama Suami/Istri"
                     {...register("namaSuamiIstri")}
+                    className="border-teal-500"
                   />
                   {errors.namaSuamiIstri && (
                     <span className="text-red-500 text-sm">
@@ -846,7 +962,7 @@ const Page = () => {
                           Nama Anak {index + 1}
                         </Label>
                         <Input
-                          className="block w-full text-sm p-2 mt-2 mb-2 border rounded"
+                          className="block w-full text-sm p-2 mt-2 mb-2 border-teal-500 rounded"
                           type="text"
                           placeholder={`Tuliskan Nama Anak ${index + 1}`}
                           value={name}
@@ -883,15 +999,15 @@ const Page = () => {
                 )}
               </div>
               <div className="col-span-1 sm:col-span-2 flex justify-between mt-4">
-                  <Button
-                    type="button"
-                    className="text-white bg-gray-400 hover:bg-gray-500 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
-                    onClick={handleBackClick}
-                  >
-                    Kembali
-                  </Button>
-                  <Button onClick={nextStep}>Next</Button>
-                </div>
+                <Button
+                  type="button"
+                  className="text-white bg-gray-400 hover:bg-gray-500 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
+                  onClick={handleBackClick}
+                >
+                  Kembali
+                </Button>
+                <Button onClick={nextStep}>Next</Button>
+              </div>
             </form>
           </div>
         )}
@@ -920,7 +1036,7 @@ const Page = () => {
                         value={selectedCabang || field.value}
                         onClick={() => setShowDropdown((prev) => !prev)}
                         readOnly
-                        className="w-full p-2 border rounded focus:outline-none"
+                        className="w-full p-2 border-teal-500 rounded focus:outline-none"
                         placeholder="Pilih Cabang"
                       />
 
@@ -989,7 +1105,7 @@ const Page = () => {
                         value={selectedUnitKerja || field.value}
                         onClick={() => setShowDropdownUnitKerja(true)}
                         readOnly
-                        className="w-full p-2 border rounded focus:outline-none"
+                        className="w-full p-2 border-teal-500 rounded focus:outline-none"
                         placeholder="Pilih Unit Kerja"
                       />
 
@@ -1043,7 +1159,7 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
+                      <SelectTrigger className="border border-teal-500">
                         <SelectValue placeholder="Pilih Jabatan" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1074,7 +1190,7 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
+                      <SelectTrigger className="border border-teal-500">
                         <SelectValue placeholder="Pilih Jenjang Sekolah" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1112,7 +1228,7 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
+                      <SelectTrigger className="border border-teal-500">
                         <SelectValue placeholder="Pilih Status Sekolah" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1140,7 +1256,7 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
+                      <SelectTrigger className="border border-teal-500">
                         <SelectValue placeholder="Pilih Status Pegawai" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1161,6 +1277,7 @@ const Page = () => {
                   </span>
                 )}
               </div>
+
               <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
                   Tahun Diangkat PNS/P3K/GTT/GTY
@@ -1171,6 +1288,7 @@ const Page = () => {
                   placeholder="dd/mm/yyyy"
                   max={today}
                   {...register("tahunDiangkat", { required: true })}
+                  className="border-teal-500"
                 />
                 {errors.tmt && (
                   <span className="text-red-500 text-sm">TMT is required</span>
@@ -1187,7 +1305,7 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
+                      <SelectTrigger className="border border-teal-500">
                         <SelectValue placeholder="Pilih Golongan" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1219,7 +1337,7 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
+                      <SelectTrigger className="border border-teal-500">
                         <SelectValue placeholder="Pilih Pendidikan" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1252,7 +1370,7 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
+                      <SelectTrigger className="border border-teal-500">
                         <SelectValue placeholder="Sertifikat" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1281,6 +1399,7 @@ const Page = () => {
                   placeholder="dd/mm/yyyy"
                   max={today}
                   {...register("mulaiJadiAnggotaPgri", { required: true })}
+                  className="border-teal-500"
                 />
                 {errors.mulaiJadiAnggotaPgri && (
                   <span className="text-red-500 text-sm">
@@ -1299,7 +1418,7 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
+                      <SelectTrigger className="border border-teal-500">
                         <SelectValue placeholder="Pilih Golongan Jabatan" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1328,7 +1447,7 @@ const Page = () => {
                   </span>
                 </Label>
                 <Input
-                  className="mt-2 sm:mt-2"
+                  className="mt-2 sm:mt-2 border-teal-500"
                   type="text"
                   id="mengajar"
                   placeholder="Mengajar"
