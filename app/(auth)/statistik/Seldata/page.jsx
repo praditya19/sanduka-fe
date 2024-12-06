@@ -28,12 +28,38 @@ const DataTable = () => {
   const [selectedBulan, setSelectedBulan] = useState("");
   const [bulanOptions, setBulanOptions] = useState([]);
   const [tableData, setTableData] = useState([]);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
   const { token } = useAuth();
   const router = useRouter();
   const [expandedIndex, setExpandedIndex] = useState(null);
+  const totalItems = tableData.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = tableData.slice(indexOfFirstItem, indexOfLastItem);
+  const startingNumber = (currentPage - 1) * itemsPerPage + 1;
+
+  const getVisiblePages = () => {
+    const range = 2; // Number of pages to show on each side of current page
+    let start = Math.max(1, currentPage - range);
+    let end = Math.min(totalPages, currentPage + range);
+
+    // Adjust start and end to always show a consistent number of pages
+    if (currentPage <= range) {
+      end = Math.min(1 + range * 2, totalPages);
+    }
+    if (currentPage > totalPages - range) {
+      start = Math.max(totalPages - range * 2, 1);
+    }
+
+    return Array.from(
+      { length: end - start + 1 },
+      (_, index) => start + index
+    );
+  };
 
   useEffect(() => {
     const today = new Date();
@@ -314,148 +340,195 @@ const DataTable = () => {
             ) : error ? (
               <p className="text-red-500">{error}</p>
             ) : (
-              <Table className="w-full table-auto mb-8 text-sm">
-                <TableHeader className="p-2 md:p-3 border bg-teal-700">
-                  <TableRow>
-                    <TableHead
-                      rowSpan="2"
-                      className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                    >
-                      No
-                    </TableHead>
-                    <TableHead
-                      rowSpan="2"
-                      className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                    >
-                      Data
-                    </TableHead>
-                    <TableHead
-                      rowSpan="2"
-                      className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                    >
-                      Cabang
-                    </TableHead>
-                    <TableHead
-                      colSpan="4"
-                      className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                    >
-                      Detail
-                    </TableHead>
-                  </TableRow>
-                  <TableRow>
-                    <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                      Nama
-                    </TableHead>
-                    <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                      NPA
-                    </TableHead>
-                    <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                      Usia
-                    </TableHead>
-                    <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                      Unit Kerja
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {Array.isArray(tableData) && tableData.length > 0 ? (
-                    tableData.map((item, index) => {
-                      const detailParts = item.detail?.[0]?.split("\n") || [];
-                      const nama = detailParts[0] || "-";
-                      const npa = detailParts[1] || "-";
-                      const usia = detailParts[2] || "-";
-                      const unitKerja = detailParts[3] || "-";
-
-                      return (
-                        <React.Fragment key={index}>
-                          <TableRow
-                            className={
-                              index % 2 === 0 ? "bg-gray-200" : "bg-white"
-                            }
-                          >
-                            <TableCell className="text-center border">
-                              {index + 1}
-                            </TableCell>
-                            <TableCell className="border flex justify-between items-center px-2">
-                              <span>Jumlah Data: {item.jumlahData || "-"}</span>
-                              <button
-                                className="bg-blue-500 text-white px-2 py-1 rounded"
-                                onClick={() => handleToggleDetail(index)}
-                              >
-                                {expandedIndex === index ? "Hide" : "+"}
-                              </button>
-                            </TableCell>
-
-                            <TableCell className="border text-center">
-                              {item.cabang || "-"}
-                            </TableCell>
-                            <TableCell className="border text-center">
-                              {nama}
-                            </TableCell>
-                            <TableCell className="border text-center">
-                              {npa}
-                            </TableCell>
-                            <TableCell className="border text-center">
-                              {usia} Tahun
-                            </TableCell>
-                            <TableCell className="border text-center">
-                              {unitKerja}
-                            </TableCell>
-                          </TableRow>
-
-                          {expandedIndex === index &&
-                            item.detail
-                              .slice(1)
-                              .map((detailItem, detailIndex) => {
-                                const extraDetailParts = detailItem.split("\n");
-                                const extraNama = extraDetailParts[0] || "-";
-                                const extraNpa = extraDetailParts[1] || "-";
-                                const extraUsia = extraDetailParts[2] || "-";
-                                const extraUnitKerja =
-                                  extraDetailParts[3] || "-";
-
-                                return (
-                                  <TableRow
-                                    key={detailIndex}
-                                    className="bg-gray-100"
-                                  >
-                                    <TableCell className="border text-center">
-                                      -
-                                    </TableCell>
-                                    <TableCell
-                                      className="border text-center"
-                                      colSpan="2"
-                                    ></TableCell>
-                                    <TableCell className="border text-center">
-                                      {extraNama}
-                                    </TableCell>
-                                    <TableCell className="border text-center">
-                                      {extraNpa}
-                                    </TableCell>
-                                    <TableCell className="border text-center">
-                                      {extraUsia} Tahun
-                                    </TableCell>
-                                    <TableCell className="border text-center">
-                                      {extraUnitKerja}
-                                    </TableCell>
-                                  </TableRow>
-                                );
-                              })}
-                        </React.Fragment>
-                      );
-                    })
-                  ) : (
+              <>
+                <Table className="w-full table-auto mb-8 text-sm">
+                  <TableHeader className="p-2 md:p-3 border bg-teal-700">
                     <TableRow>
-                      <TableCell
-                        colSpan="7"
-                        className="text-center border p-2 text-gray-500"
+                      <TableHead
+                        rowSpan="2"
+                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
                       >
-                        Tidak ada data yang tersedia.
-                      </TableCell>
+                        No
+                      </TableHead>
+                      <TableHead
+                        rowSpan="2"
+                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                      >
+                        Data
+                      </TableHead>
+                      <TableHead
+                        rowSpan="2"
+                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                      >
+                        Cabang
+                      </TableHead>
+                      <TableHead
+                        colSpan="4"
+                        className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                      >
+                        Detail
+                      </TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                    <TableRow>
+                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                        Nama
+                      </TableHead>
+                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                        NPA
+                      </TableHead>
+                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                        Usia
+                      </TableHead>
+                      <TableHead className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
+                        Unit Kerja
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {Array.isArray(currentItems) && currentItems.length > 0 ? (
+                      currentItems.map((item, index) => {
+                        const detailParts = item.detail?.[0]?.split("\n") || [];
+                        const nama = detailParts[0] || "-";
+                        const npa = detailParts[1] || "-";
+                        const usia = detailParts[2] || "-";
+                        const unitKerja = detailParts[3] || "-";
+
+                        return (
+                          <React.Fragment key={index}>
+                            <TableRow
+                              className={
+                                index % 2 === 0 ? "bg-gray-200" : "bg-white"
+                              }
+                            >
+                              <TableCell className="text-center border">
+                                {startingNumber + index}
+                              </TableCell>
+                              <TableCell className="border flex justify-between items-center px-2">
+                                <span>Jumlah Data: {item.jumlahData || "-"}</span>
+                                <button
+                                  className="bg-blue-500 text-white px-2 py-1 rounded"
+                                  onClick={() => handleToggleDetail(index)}
+                                >
+                                  {expandedIndex === index ? "Hide" : "+"}
+                                </button>
+                              </TableCell>
+
+                              <TableCell className="border text-center">
+                                {item.cabang || "-"}
+                              </TableCell>
+                              <TableCell className="border text-center">
+                                {nama}
+                              </TableCell>
+                              <TableCell className="border text-center">
+                                {npa}
+                              </TableCell>
+                              <TableCell className="border text-center">
+                                {usia} Tahun
+                              </TableCell>
+                              <TableCell className="border text-center">
+                                {unitKerja}
+                              </TableCell>
+                            </TableRow>
+
+                            {expandedIndex === index &&
+                              item.detail
+                                .slice(1)
+                                .map((detailItem, detailIndex) => {
+                                  const extraDetailParts = detailItem.split("\n");
+                                  const extraNama = extraDetailParts[0] || "-";
+                                  const extraNpa = extraDetailParts[1] || "-";
+                                  const extraUsia = extraDetailParts[2] || "-";
+                                  const extraUnitKerja =
+                                    extraDetailParts[3] || "-";
+
+                                  return (
+                                    <TableRow
+                                      key={detailIndex}
+                                      className="bg-gray-100"
+                                    >
+                                      <TableCell className="border text-center">
+                                        -
+                                      </TableCell>
+                                      <TableCell
+                                        className="border text-center"
+                                        colSpan="2"
+                                      ></TableCell>
+                                      <TableCell className="border text-center">
+                                        {extraNama}
+                                      </TableCell>
+                                      <TableCell className="border text-center">
+                                        {extraNpa}
+                                      </TableCell>
+                                      <TableCell className="border text-center">
+                                        {extraUsia} Tahun
+                                      </TableCell>
+                                      <TableCell className="border text-center">
+                                        {extraUnitKerja}
+                                      </TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                          </React.Fragment>
+                        );
+                      })
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan="7"
+                          className="text-center border p-2 text-gray-500"
+                        >
+                          Tidak ada data yang tersedia.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+                {/* Pagination Component */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center mt-4 gap-1">
+                    <button
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                    >
+                      First
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                    >
+                      Prev
+                    </button>
+                    {getVisiblePages().map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                          ? "bg-blue-500 text-white"
+                          : "bg-white hover:bg-gray-50"
+                          }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                    >
+                      Next
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                    >
+                      Last
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

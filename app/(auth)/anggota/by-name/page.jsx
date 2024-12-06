@@ -234,7 +234,7 @@ function DataAnggota() {
   const fetchAnggota = async () => {
     try {
       const page = 0;
-      const size = 50;
+      const size = 7000;
       const response = await GlobalApi.getAllAnggota(page, size);
       setAnggota(response.data.content || []);
     } catch (error) {

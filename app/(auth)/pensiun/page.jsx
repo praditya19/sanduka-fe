@@ -26,6 +26,8 @@ const Page = () => {
   const [bulanOptions, setBulanOptions] = useState([]);
   const [yearOptions, setYearOptions] = useState([]);
   const [filteredPensiunList, setFilteredPensiunList] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   useEffect(() => {
     const fetchBulan = async () => {
@@ -44,12 +46,14 @@ const Page = () => {
     const month = e.target.value;
     setSelectedMonth(month);
     applyFilters(month, selectedYear);
+    setCurrentPage(1);
   };
 
   const handleYearChange = (e) => {
     const year = e.target.value;
     setSelectedYear(year);
     applyFilters(selectedMonth, year);
+    setCurrentPage(1);
   };
 
   useEffect(() => {
@@ -89,6 +93,32 @@ const Page = () => {
     });
 
     setFilteredPensiunList(filteredList);
+  };
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredPensiunList.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredPensiunList.length / itemsPerPage);
+
+  // Get visible page numbers
+  const getVisiblePages = () => {
+    const visiblePages = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    // Adjust start page if we're near the end
+    if (endPage === totalPages) {
+      startPage = Math.max(1, totalPages - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      visiblePages.push(i);
+    }
+
+    return visiblePages;
   };
 
   const formatDate = (dateString) => {
@@ -196,9 +226,8 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="min-h-screen bg-gray-100 p-4">
             <div className="w-full flex items-center justify-between mb-4 mt-16">
@@ -265,7 +294,7 @@ const Page = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredPensiunList.map((pensiun, index) => (
+                    {currentItems.map((pensiun, index) => (
                       <>
                         <tr key={pensiun.id} className="border-t">
                           <td className="py-2 px-3 text-center">
@@ -283,7 +312,7 @@ const Page = () => {
                           </td>
                           <td className="py-2 px-3 text-center">
                             <img
-                              src={pensiun.fotoUrl}
+                              src="/profile.png"
                               alt="Foto"
                               className="w-10 h-10 rounded-full"
                             />
@@ -381,6 +410,50 @@ const Page = () => {
                   </tbody>
                 </table>
               </div>
+              {filteredPensiunList.length > 0 && (
+                <div className="flex justify-center mt-4 gap-1">
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    First
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Prev
+                  </button>
+                  {getVisiblePages().map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                          ? "bg-blue-500 text-white"
+                          : "bg-white hover:bg-gray-50"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Next
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Last
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

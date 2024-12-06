@@ -37,6 +37,27 @@ function Pengeluaran() {
   const [filteredNames, setFilteredNames] = useState([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const dropdownRef = useRef(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const totalPages = Math.ceil(transactions.length / itemsPerPage);
+
+  const getVisiblePages = () => {
+    const pageRange = 2;
+    let start = Math.max(1, currentPage - pageRange);
+    let end = Math.min(totalPages, currentPage + pageRange);
+
+    const pages = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
+  const paginatedTransactions = transactions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const [selectAll, setSelectAll] = useState(false);
   const handleChange = (e) => {
@@ -134,7 +155,7 @@ function Pengeluaran() {
       try {
         const response = await GlobalApi.getCabang();
         setCabangList(response.data); // Assuming the response data is an array
-      } catch (error) {}
+      } catch (error) { }
     };
 
     fetchCabangData();
@@ -168,7 +189,7 @@ function Pengeluaran() {
   const printTable = () => {
     const printContent = tableRef.current;
     const originalContent = document.body.innerHTML;
-    
+
     // Temporarily replace body content with table content
     document.body.innerHTML = printContent.innerHTML;
 
@@ -332,48 +353,47 @@ function Pengeluaran() {
         </header>
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-        <div className="container mx-auto flex items-center justify-between">
-          {/* Back Button and Title */}
-          <div className="flex items-center">
-            <FontAwesomeIcon
-              icon={faArrowLeft}
-              size="sm"
-              onClick={handleBackClick}
-              className="cursor-pointer mr-4"
-            />
-            <h1 className="text-base">Pengeluaran Organisasi</h1>
+          <div className="container mx-auto flex items-center justify-between">
+            {/* Back Button and Title */}
+            <div className="flex items-center">
+              <FontAwesomeIcon
+                icon={faArrowLeft}
+                size="sm"
+                onClick={handleBackClick}
+                className="cursor-pointer mr-4"
+              />
+              <h1 className="text-base">Pengeluaran Organisasi</h1>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
       )}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
-           <Toaster
-          toastOptions={{
-            style: {
-              fontSize: "1.25rem", // Ukuran font yang lebih besar
-              padding: "16px", // Menambah padding jika diperlukan
-            },
-            success: {
+          <Toaster
+            toastOptions={{
               style: {
-                background: "white", // Warna background hijau untuk pesan sukses
-                color: "black",
+                fontSize: "1.25rem", // Ukuran font yang lebih besar
+                padding: "16px", // Menambah padding jika diperlukan
               },
-            },
-            error: {
-              style: {
-                background: "#f44336", // Warna background merah untuk pesan error
-                color: "#fff",
+              success: {
+                style: {
+                  background: "white", // Warna background hijau untuk pesan sukses
+                  color: "black",
+                },
               },
-            },
-          }}
-        />
+              error: {
+                style: {
+                  background: "#f44336", // Warna background merah untuk pesan error
+                  color: "#fff",
+                },
+              },
+            }}
+          />
           <div className="container mx-auto p-6 mt-8">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
               <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
@@ -471,7 +491,7 @@ function Pengeluaran() {
                     value={formValues.cabang}
                     onChange={handleChange}
                   >
-                   <option value="">Pilih Cabang</option>
+                    <option value="">Pilih Cabang</option>
                     {cabangList.map((cabang) => (
                       <option key={cabang.id} value={cabang.kecamatan}>
                         {cabang.kecamatan}
@@ -547,7 +567,7 @@ function Pengeluaran() {
             <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
               <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
                 <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-                <select
+                  <select
                     className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                     value={selectedBulan}
                     onChange={handleBulanChange}
@@ -595,7 +615,7 @@ function Pengeluaran() {
             </div>
 
             <div ref={tableRef} className="overflow-x-auto">
-            <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
+              <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <thead className="text-sm text-black uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
                   <tr className="bg-gray-200 text-black text-center">
                     <th className="px-6 py-3 text-sm">No</th>
@@ -609,14 +629,15 @@ function Pengeluaran() {
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.map((transaction, index) => (
+                  {paginatedTransactions.map((transaction, index) => (
                     <tr
                       key={index}
-                      className={`border-b text-black text-center ${
-                        transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
-                      }`}
+                      className={`border-b text-black text-center ${transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
+                        }`}
                     >
-                      <td className="px-6 py-4 text-sm">{index + 1}</td>
+                      <td className="px-6 py-4 text-sm">
+                        {(currentPage - 1) * itemsPerPage + index + 1}
+                      </td>
                       <td className="px-6 py-4 text-sm">
                         {transaction["Tgl Transaksi"]}
                       </td>
@@ -636,7 +657,7 @@ function Pengeluaran() {
                         {formatCurrency(
                           transaction["Debet"] && transaction["Kredit"]
                             ? Number(transaction["Debet"]) -
-                                Number(transaction["Kredit"])
+                            Number(transaction["Kredit"])
                             : transaction["Debet"] || transaction["Kredit"]
                         )}
                       </td>
@@ -660,7 +681,6 @@ function Pengeluaran() {
                       TOTAL
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      {/* Implementasikan logika untuk menghitung total debet jika diperlukan */}
                       {formatCurrency(
                         transactions.reduce(
                           (total, transaction) =>
@@ -670,7 +690,6 @@ function Pengeluaran() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      {/* Implementasikan logika untuk menghitung total kredit jika diperlukan */}
                       {formatCurrency(
                         transactions.reduce(
                           (total, transaction) =>
@@ -680,7 +699,6 @@ function Pengeluaran() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      {/* Implementasikan logika untuk menghitung total saldo jika diperlukan */}
                       {formatCurrency(
                         transactions.reduce(
                           (total, transaction) =>
@@ -696,6 +714,48 @@ function Pengeluaran() {
                 </tbody>
               </table>
             </div>
+            <div className="flex justify-center mt-4 gap-1">
+                <button
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                >
+                  First
+                </button>
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                >
+                  Prev
+                </button>
+                {getVisiblePages().map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                      ? "bg-blue-500 text-white"
+                      : "bg-white hover:bg-gray-50"
+                      }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                >
+                  Next
+                </button>
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                >
+                  Last
+                </button>
+              </div>
           </div>
         </div>
       </div>
