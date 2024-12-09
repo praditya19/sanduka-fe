@@ -11,6 +11,10 @@ import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import {
+  faCheckCircle,
+  faTimesCircle,
+} from "@fortawesome/free-solid-svg-icons";
 
 const TemanUnitKerja = () => {
   const [cardsData, setCardsData] = useState([]);
@@ -129,55 +133,91 @@ const TemanUnitKerja = () => {
                   ? "Anggota Foto"
                   : `Fallback Image: ${profileImageUrl}`;
 
+                const renderResponseIcon = (response) => {
+                  if (response === "Ya") {
+                    return <span className="text-green-500">✔</span>;
+                  } else {
+                    return <span className="text-red-500">✘</span>;
+                  }
+                };
+
                 return (
                   <div
                     key={index}
-                    className="bg-white items-center rounded-lg shadow-lg p-4 flex border border-gray-200 w-90"
+                    className="bg-white items-center rounded-lg shadow-lg p-3 border border-gray-200 w-full hover:shadow-xl transition duration-300 ease-in-out"
                   >
-                    <div className="flex-shrink-0">
-                      <Image
-                        src={base64Image}
-                        width={50}
-                        height={50}
-                        alt={imageAlt}
-                        className="rounded-full"
-                      />
-                    </div>
-                    <div className="ml-4 flex-grow">
-                      <h2 className="text-xs font-semibold text-gray-800">
+                    <div className="bg-teal-500 text-white p-2 rounded-t-lg mb-4 w-full">
+                      <h2 className="text-sm font-semibold w-full">
                         {data.namaLengkap}
                       </h2>
-                      <p className="text-gray-600 text-xs mb-2">
-                        {data.npaPgri}
-                      </p>
-                      <div className="flex items-center text-gray-800 text-sm mb-1">
-                        <FontAwesomeIcon
-                          icon={faCalendarAlt}
-                          className="text-gray-600"
+                      <p className="text-xs w-full">{data.npaPgri}</p>
+                    </div>
+
+                    <div className="flex w-full items-center">
+                      <div className="flex-shrink-0 w-1/3 flex justify-center">
+                        <Image
+                          src={base64Image}
+                          width={80}
+                          height={80}
+                          alt={imageAlt}
+                          className="rounded-full border-2 border-gray-200 max-w-[80px] max-h-[80px]"
                         />
-                        <span className="ml-2">
-                          {formatDate(data.tanggalLahir)}
-                        </span>
                       </div>
-                      <div className="flex items-center text-gray-800 text-sm mb-1">
-                        <FontAwesomeIcon
-                          icon={faUserTie}
-                          className="text-gray-600"
-                        />
-                        <span className="ml-2">{data.jabatan}</span>
+
+                      <div className="ml-2 w-2/3">
+                        <div className="flex items-center text-gray-800 text-sm mb-1">
+                          <FontAwesomeIcon
+                            icon={faCalendarAlt}
+                            className="text-gray-600"
+                          />
+                          <span className="ml-2">
+                            {formatDate(data.tanggalLahir)}
+                          </span>
+                        </div>
+                        <div className="flex items-center text-gray-800 text-sm mb-1">
+                          <FontAwesomeIcon
+                            icon={faUserTie}
+                            className="text-gray-600"
+                          />
+                          <span className="ml-2">{data.jabatan}</span>
+                        </div>
+                        <div className="flex items-center text-gray-800 text-sm">
+                          <FontAwesomeIcon
+                            icon={faHome}
+                            className="text-gray-600"
+                          />
+                          <span className="ml-2">{data.alamat}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center text-gray-800 text-sm">
-                        <FontAwesomeIcon
-                          icon={faHome}
-                          className="text-gray-600"
-                        />
-                        <span className="ml-2">{data.alamat}</span>
+                    </div>
+
+                    <div className="mt-4 justify-items-center">
+                      <div className="flex items-center text-gray-800 text-sm space-x-6">
+                        <div className="flex items-center">
+                          <span className="font-semibold">Daspen:</span>
+                          <span className="ml-2">
+                            {renderResponseIcon(data.pesertaDaspen)}
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="font-semibold">KTA Digital:</span>
+                          <span className="ml-2">
+                            {renderResponseIcon(data.pesertaKtaDigital)}
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="font-semibold">Sanduka:</span>
+                          <span className="ml-2">
+                            {renderResponseIcon(data.pesertaSanduka)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 );
               })}
             </div>
+
             <ul className="flex mt-4 space-x-2">
               {currentPage > 1 && (
                 <li>

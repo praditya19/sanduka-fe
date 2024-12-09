@@ -45,6 +45,11 @@ const Page = () => {
   const [jabatan, setJabatan] = useState([]);
   const [golonganJabatan, setGolonganJabatan] = useState([]);
   const [valueGolonganJabatan, setValueGolonganJabatan] = useState("");
+
+  const [valueKategoriDaspen, setValueKategoriDaspen] = useState("");
+  const [role, setRole] = useState(null);
+  const [isValidRole, setIsValidRole] = useState(false);
+
   const [unitKerja, setUnitKerja] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState(null);
   const [query, setQuery] = useState("");
@@ -206,6 +211,7 @@ const Page = () => {
     formData.append("sertifikatPendidik", sertifikatPendidik);
     formData.append("mulaiJadiAnggotaPgri", formattedMulaiJadiAnggota);
     formData.append("golonganJabatan", valueGolonganJabatan);
+    formData.append("kategoriDaspen", valueKategoriDaspen);
     formData.append("mengajar", mengajar);
 
     formData.append("pesertaSanduka", pesertaSanduka ? "Ya" : "");
@@ -595,7 +601,7 @@ const Page = () => {
         setNamaSuamiIstri(response.namaSuamiIstri || "");
         setNamaAnak(response.namaAnak || "");
         setLatitude(response.latitude || null);
-        setLongitude(response.longitude || null);
+        setLongitude(response.longitude || "");
         setSelectedUnitKerja(response.unitKerja || "");
         setQueryUnitKerja(response.unitKerja || "");
         setSelectedCabang(response.cabang);
@@ -615,6 +621,7 @@ const Page = () => {
         setValue("pendidikanTerakhir", response.pendidikanTerakhir);
         setSertifikatPendidik(response.sertifikatPendidik || "");
         setValueGolonganJabatan(response.golonganJabatan);
+        setValueKategoriDaspen(response.kategoriDaspen || ""); // Add this line
         setValue("golonganJabatan", response.golonganJabatan);
         setJabatan(response.jabatan);
         setValue("jabatan", response.jabatan);
@@ -982,6 +989,19 @@ const Page = () => {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
+  }, []);
+
+  useEffect(() => {
+    // Mengambil nilai role dari sessionStorage
+    const userRole = sessionStorage.getItem("role");
+
+    // Validasi role untuk menentukan apakah role sesuai
+    if (userRole === "ADMIN" || userRole === "SUPER ADMIN") {
+      setRole(userRole); // Menyimpan role ke dalam state jika valid
+      setIsValidRole(true); // Menandakan role valid
+    } else {
+      setIsValidRole(false); // Menandakan role tidak valid
+    }
   }, []);
 
   return (
@@ -1997,6 +2017,7 @@ const Page = () => {
                     defaultValue={formattedMulaiJadiAnggota}
                     render={({ field: { onChange, value } }) => (
                       <Input
+                        className="border-teal-500"
                         type="date"
                         id="mulaiJadiAnggotaPgri"
                         value={value || formattedMulaiJadiAnggota}
@@ -2010,6 +2031,39 @@ const Page = () => {
                   />
                 </div>
 
+                {isValidRole && (
+                  <div className="w-full">
+                    <Label className="block text-sm font-medium mb-3">
+                      Kategori Daspen
+                    </Label>
+                    <Controller
+                      name="kategoriDaspen"
+                      control={control}
+                      value={valueKategoriDaspen}
+                      onChange={(e) => setValueKategoriDaspen(e.target.value)}
+                      render={({ field: { onChange, value } }) => (
+                        <Select
+                          value={value || valueKategoriDaspen} // Ensure proper value handling
+                          onValueChange={(e) => {
+                            onChange(e);
+                            setValueKategoriDaspen(e); // Update the state with selected value
+                          }}
+                        >
+                          <SelectTrigger className="border-teal-500">
+                            <SelectValue placeholder="Pilih Kategori Daspen" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectItem value="I">I</SelectItem>
+                              <SelectItem value="II">II</SelectItem>
+                              <SelectItem value="III">III</SelectItem>
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
+                )}
                 <div className="w-full">
                   <Label className="block text-sm font-medium mb-3">
                     Golongan Jabatan
