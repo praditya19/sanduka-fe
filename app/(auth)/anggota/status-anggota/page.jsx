@@ -276,16 +276,16 @@ function StatusAnggota() {
   }, [token, router]);
 
   useEffect(() => {
-    const fetchAnggota = async () => {
+    const fetchAnggota = async (
+      page = 0, 
+      cabang = "", 
+      unitKerja = ""
+    ) => {
       try {
-        const page = 0;
-        const size = 100;
-        const response = await GlobalApi.getAllAnggota(page, size);
         const fotoBase64Array = [];
-
-        const fetchedData = response.data.content;
-
-        if (fetchedData && fetchedData.length > 0) {
+        const fetchedData = await GlobalApi.getAllAnggota(page, cabang, unitKerja);
+    
+        if (fetchedData.length > 0) {
           fetchedData.forEach((item) => {
             if (item.foto) {
               try {
@@ -302,15 +302,17 @@ function StatusAnggota() {
         } else {
           console.warn("No data found.");
         }
-
+    
         setFotoBase64(fotoBase64Array);
         setLoading(false);
-        setAnggota(fetchedData || []);
+        setAnggota(fetchedData);
+        setCurrentPage(page + 1);
       } catch (error) {
         console.error("Error fetching anggota:", error);
         setAnggota([]);
+        setLoading(false);
       }
-    };
+    };    
     fetchAnggota();
   }, []);
 

@@ -305,17 +305,21 @@ function DataAnggota() {
     }
   }, [token, router, selectedCabang, filterCabang, filterUnitKerja]);
 
-  const fetchAnggota = async () => {
+  const fetchAnggota = async (
+    page = 0, 
+    cabang = "", 
+    unitKerja = ""
+  ) => {
     try {
       const role = sessionStorage.getItem("role");
       const userId = sessionStorage.getItem("userId");
-
+  
       const fotoBase64Array = [];
       let fetchedData = [];
-
+  
       if (role === "USER" && userId) {
         const userData = await GlobalApi.getUserById(userId);
-
+  
         if (userData.foto) {
           try {
             const decodedString = atob(userData.foto);
@@ -327,41 +331,39 @@ function DataAnggota() {
         } else {
           fotoBase64Array.push(null);
         }
-
+  
         fetchedData = [userData];
       } else {
-        const page = 0;
-        const size = 7000;
-        const response = await GlobalApi.getAllAnggota(page, size);
-        fetchedData = response.data.content || [];
-        if (fetchedData.length > 0) {
-          fetchedData.forEach((item) => {
-            if (item.foto) {
-              try {
-                const decodedString = atob(item.foto);
-                fotoBase64Array.push(decodedString);
-              } catch (error) {
-                console.error("Error decoding Base64:", error);
-                fotoBase64Array.push(null);
-              }
-            } else {
+        fetchedData = await GlobalApi.getAllAnggota(page, cabang, unitKerja);
+      }
+  
+      if (fetchedData.length > 0) {
+        fetchedData.forEach((item) => {
+          if (item.foto) {
+            try {
+              const decodedString = atob(item.foto);
+              fotoBase64Array.push(decodedString);
+            } catch (error) {
+              console.error("Error decoding Base64:", error);
               fotoBase64Array.push(null);
             }
-          });
-        } else {
-          console.warn("No data found.");
-        }
+          } else {
+            fotoBase64Array.push(null);
+          }
+        });
+      } else {
+        console.warn("No data found.");
       }
-
+  
       setFotoBase64(fotoBase64Array);
       setLoading(false);
       setAnggota(fetchedData);
+      setCurrentPage(page + 1);
     } catch (error) {
       console.error("Error fetching anggota:", error);
       setAnggota([]);
+      setLoading(false);
     }
-    
-    setCurrentPage(1);
   };
 
   const formatCurrency = (amount) =>

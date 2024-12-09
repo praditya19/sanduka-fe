@@ -172,16 +172,16 @@ function PencarianAnggota() {
     }
   }, [token, router, selectedCabang]);
 
-  const fetchAnggota = async () => {
+  const fetchAnggota = async (
+    page = 0, 
+    cabang = "", 
+    unitKerja = ""
+  ) => {
     try {
-      const page = 0;
-      const size = 7000;
-      const response = await GlobalApi.getAllAnggota(page, size);
       const fotoBase64Array = [];
+      const fetchedData = await GlobalApi.getAllAnggota(page, cabang, unitKerja);
   
-      const fetchedData = response.data.content;
-  
-      if (fetchedData && fetchedData.length > 0) {
+      if (fetchedData.length > 0) {
         fetchedData.forEach((item) => {
           if (item.foto) {
             try {
@@ -200,14 +200,16 @@ function PencarianAnggota() {
       }
   
       setFotoBase64(fotoBase64Array);
-      setLoading(false);  // Set loading ke false setelah data berhasil diambil
-      setAnggota(fetchedData || []);
+      setLoading(false);
+      setAnggota(fetchedData);
+      setCurrentPage(page + 1);
     } catch (error) {
       console.error("Error fetching anggota:", error);
-      setAnggota([]);  // Jika terjadi error, set anggota menjadi array kosong
-      setLoading(false);  // Set loading ke false meskipun terjadi error
+      setAnggota([]);
+      setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchAnggota();
   }, []);
@@ -721,8 +723,8 @@ function PencarianAnggota() {
                 </div>
               </div>
               <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
-                  Pencarian Anggota
-                </p>
+                Pencarian Anggota
+              </p>
             </div>
 
             <div className="overflow-x-auto">
