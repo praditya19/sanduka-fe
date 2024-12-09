@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBullhorn,
@@ -36,95 +36,6 @@ import { useAuth } from "@/app/AuthContext";
 import { useRouter } from "next/navigation";
 import GlobalApi from "@/app/_utils/GlobalApi";
 
-const icons = [
-  { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
-  {
-    icon: faCheckCircle,
-    label: "Verifikasi",
-    href: "/verifikasi-anggota-mutasi",
-    color: "text-blue-500",
-  },
-  {
-    icon: faUsers,
-    label: "Data Anggota",
-    href: "/anggota/data-anggota",
-    color: "text-orange-500",
-  },
-  {
-    icon: faUbuntu,
-    label: "Rekap By Nominal",
-    href: "/anggota/rekap-anggota",
-    color: "text-gray-500",
-  },
-  {
-    icon: faUsersGear,
-    label: "by Name",
-    href: "/anggota/by-name",
-    color: "text-yellow-500",
-  },
-  {
-    icon: faFileInvoice,
-    label: "Rekap Meninggal",
-    href: "/rekap-meninggal",
-    color: "text-pink-500",
-  },
-  {
-    icon: faFileAlt,
-    label: "Statistik",
-    href: "/statistik",
-    color: "text-blue-500",
-  },
-  {
-    icon: faUserGraduate,
-    label: "Status Anggota",
-    href: "/anggota/status-anggota",
-    color: "text-indigo-500",
-  },
-  {
-    icon: faDatabase,
-    label: "History data",
-    href: "/history-data",
-    color: "text-green-500",
-  },
-  {
-    icon: faSyncAlt,
-    label: "Pensiun",
-    href: "/pensiun",
-    color: "text-rose-500",
-  },
-  {
-    icon: faWallet,
-    label: "Keuangan",
-    href: "/keuangan/home",
-    color: "text-lime-500",
-  },
-  {
-    icon: faClipboardCheck,
-    label: "Ketentuan",
-    href: "/ketentuan",
-    color: "text-teal-500",
-  },
-  {
-    icon: faHandsHelping,
-    label: "Bantuan",
-    href: "/bantuan",
-    color: "text-purple-500",
-  },
-  {
-    icon: faCog,
-    label: "Pengaturan",
-    href: "/pengaturan/user",
-    color: "text-gray-700",
-  },
-
-  {
-    icon: faUsers,
-    label: "Teman Unit",
-    href: "/teman-unit-kerja",
-    color: "text-green-600",
-  },
-];
-
 export default function IconGrid() {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -134,8 +45,126 @@ export default function IconGrid() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const itemsPerPage = 5;
   const [anggotaMeninggal, setAnggotaMeninggal] = useState([]);
-  const [role, setRole] = useState(null);
   const [userData, setUserData] = useState(null);
+  const [role, setRole] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(null);
+  const dropdownRef = useRef(null);
+  const icons = [
+    { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
+    {
+      icon: faCheckCircle,
+      label: "Verifikasi",
+      href: "#",
+      color: "text-blue-500",
+    },
+    {
+      icon: faUsers,
+      label: "Data Anggota",
+      href: "/anggota/data-anggota",
+      color: "text-orange-500",
+    },
+    {
+      icon: faUbuntu,
+      label: "Rekap By Nominal",
+      href: "/anggota/rekap-anggota",
+      color: "text-gray-500",
+    },
+    {
+      icon: faUsersGear,
+      label: "by Name",
+      href: "/anggota/by-name",
+      color: "text-yellow-500",
+    },
+    {
+      icon: faFileInvoice,
+      label: "Rekap Meninggal",
+      href: "/rekap-meninggal",
+      color: "text-pink-500",
+    },
+    {
+      icon: faFileAlt,
+      label: "Statistik",
+      href: "/statistik",
+      color: "text-blue-500",
+    },
+    {
+      icon: faUserGraduate,
+      label: "Status Anggota",
+      href: "/anggota/status-anggota",
+      color: "text-indigo-500",
+    },
+    {
+      icon: faDatabase,
+      label: "History data",
+      href: "/history-data",
+      color: "text-green-500",
+    },
+    {
+      icon: faSyncAlt,
+      label: "Pensiun",
+      href: "/pensiun",
+      color: "text-rose-500",
+    },
+    {
+      icon: faWallet,
+      label: "Keuangan",
+      href: "/keuangan/home",
+      color: "text-lime-500",
+    },
+    {
+      icon: faClipboardCheck,
+      label: "Ketentuan",
+      href: "/ketentuan",
+      color: "text-teal-500",
+    },
+    {
+      icon: faHandsHelping,
+      label: "Bantuan",
+      href: "/bantuan",
+      color: "text-purple-500",
+    },
+    {
+      icon: faCog,
+      label: "Pengaturan",
+      href: "/pengaturan/user",
+      color: "text-gray-700",
+    },
+
+    {
+      icon: faUsers,
+      label: "Teman Unit",
+      href: "/teman-unit-kerja",
+      color: "text-green-600",
+    },
+  ];
+  if (role === "SUPER ADMIN") {
+    icons.push({
+      icon: faUserGraduate,
+      label: "Upload Galeri",
+      href: "/galeri",
+      color: "text-teal-500",
+    });
+  }
+
+  const handleMainMenuClick = (e, index, href) => {
+    e.preventDefault();
+    if (index !== dropdownOpen) {
+      setDropdownOpen(index);
+    }
+    if (href) {
+      router.push(href);
+    }
+  };
+
+  const handleDropdownClick = (href) => {
+    router.push(href);
+    setDropdownOpen(null);
+  };
+
+  useEffect(() => {
+    const storedRole = sessionStorage.getItem("role");
+    setRole(storedRole);
+  }, []);
 
   const handleNext = () => {
     if (currentIndex + itemsPerPage < dataArray.length) {
@@ -218,6 +247,19 @@ export default function IconGrid() {
     setRole(userRole);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -241,24 +283,19 @@ export default function IconGrid() {
               "History data",
             ].includes(item.label)
           )
-          .concat(
-            {
-              icon: faRightLeft,
-              label: "Mutasi",
-              href: "/anggota/data-anggota/mutasiCabangUnit",
-              color: "text-cyan-500",
-            },
-          )
-          .concat(
-            {
-              icon: faFileAlt,
-              label: "Daspen",
-              href: "/daspen",
-              color: "text-teal-700",
-            },
-          )
+          .concat({
+            icon: faRightLeft,
+            label: "Mutasi",
+            href: "/anggota/data-anggota/mutasiCabangUnit",
+            color: "text-cyan-500",
+          })
+          .concat({
+            icon: faFileAlt,
+            label: "Daspen",
+            href: "/daspen",
+            color: "text-teal-700",
+          })
       : icons;
-
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -305,7 +342,7 @@ export default function IconGrid() {
                     </div>
                   </div>
                 )}
-                <div className="w-full border -mt-12 overflow-x-auto">
+                <div className="w-full border overflow-x-auto -mt-11">
                   <div className="flex space-x-4 px-4">
                     <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 flex-shrink-0 w-48">
                       <div>
@@ -468,10 +505,10 @@ export default function IconGrid() {
 
           <div className="px-6 mt-5 sm:px-12 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-2">
             {filteredIcons.map((item, index) => (
-              <Link key={index} href={item.href}>
+              <div key={index} className="relative">
                 <div
-                  className="flex flex-col items-center cursor-pointer transition duration-300 transform hover:scale-105 hover:shadow-xl 
-          p-7 sm:p-4 sm:bg-white sm:rounded-lg sm:shadow-lg"
+                  onClick={(e) => handleMainMenuClick(e, index, item.href)}
+                  className="flex flex-col items-center cursor-pointer transition duration-300 transform hover:scale-105 hover:shadow-xl p-7 sm:p-4 sm:bg-white sm:rounded-lg sm:shadow-lg"
                 >
                   <FontAwesomeIcon
                     icon={item.icon}
@@ -482,7 +519,32 @@ export default function IconGrid() {
                     {item.label}
                   </span>
                 </div>
-              </Link>
+
+                {dropdownOpen === index && item.label === "Verifikasi" && (
+                  <div
+                    ref={dropdownRef}
+                    className="absolute -left-14 sm:left-3 flex space-x-1 p-2 bg-transparent border-gray-300 rounded shadow-lg z-10 "
+                  >
+                    <button
+                      onClick={() =>
+                        handleDropdownClick("/verifikasi-anggota-mutasi")
+                      }
+                      className={`text-white bg-blue-600 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800`}
+                    >
+                      Verifikasi Anggota
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        handleDropdownClick("/verifikasi-anggota-pindah-cabang")
+                      }
+                      className={`text-white bg-blue-600 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800`}
+                    >
+                      Verifikasi Pindah Cabang
+                    </button>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>

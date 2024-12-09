@@ -6,13 +6,11 @@ import HeaderMobile from "@/app/_components/HeaderMobile";
 import Link from "next/link";
 import Sidebar from "@/app/_components/Sidebar";
 
-
 const Page = () => {
   const [daspenData, setDaspenData] = useState(null);
   const [error, setError] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -93,9 +91,9 @@ const Page = () => {
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-      <div className="bg-white p-6 rounded-md w-1/3">
+      <div className="bg-white p-5 rounded-md w-full sm:w-[90%] md:w-[70%] lg:w-[35%] mt-4 sm:mt-0 max-h-[88vh] overflow-y-auto">
         <h2 className="text-xl font-bold">Data Daspen</h2>
-        <div className="mt-4 grid grid-cols-2 gap-4">
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p className="font-semibold">Nama Anggota:</p>
             <p>{daspenData.namaAnggota || "Tidak tersedia"}</p>
@@ -158,14 +156,23 @@ const Page = () => {
           </div>
           <div>
             <p className="font-semibold">Untuk Lihat Data Lengkap:</p>
-            <Link href="https://www.dansetjateng.org/" className="text-blue-400" target="_blank">www.dansetjateng.org</Link>
+            <div className="flex items-center">
+              <p className="text-sm mr-1">Link Website:</p>
+              <Link
+                href="https://www.dansetjateng.org/"
+                className="text-blue-400"
+                target="_blank"
+              >
+                www.dansetjateng.org
+              </Link>
+            </div>
           </div>
         </div>
       </div>
     </div>
   ) : error ? (
     <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-10 z-50">
-      <div className="bg-white p-6 rounded-md w-1/3">
+      <div className="bg-white p-5 rounded-md w-full sm:w-[90%] md:w-[70%] lg:w-[35%] mt-12 sm:mt-0 max-h-[80vh] overflow-y-auto">
         <h2 className="text-xl font-bold text-red-500">Kesalahan</h2>
         <p>{error}</p>
         <button

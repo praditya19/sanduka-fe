@@ -57,8 +57,14 @@ const Page = () => {
   const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
   const [allUnitKerja, setAllUnitKerja] = useState([]);
   const dropdownRef = useRef(null);
+  const dropdownRefUnitKerja = useRef(null);
   const [npaMessage, setNpaMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const jenisKelaminRef = useRef(null);
+  const agamaRef = useRef(null);
+  const golonganDarahRef = useRef(null);
+  const tahunDiangkatRef = useRef(null);
+  const pangkatGolonganRef = useRef(null);
 
   const updateUnitKerja = (kecamatan) => {
     const filteredUnitKerja = unitKerja.filter((item) => {
@@ -185,9 +191,16 @@ const Page = () => {
   };
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setShowDropdown(false);
+      }
+
+      if (
+        dropdownRefUnitKerja.current &&
+        !dropdownRefUnitKerja.current.contains(e.target)
+      ) {
+        setShowDropdownUnitKerja(false);
       }
     };
 
@@ -208,11 +221,9 @@ const Page = () => {
       return;
     }
 
-    // Membaca file dan menampilkan preview
     setSelectedFile(file);
     setPreview(URL.createObjectURL(file));
 
-    // Mengompres gambar
     const compressedBase64 = await compressImage(file);
     setBase64String(compressedBase64);
   };
@@ -221,17 +232,16 @@ const Page = () => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const image = new window.Image(); // Menggunakan window.Image untuk objek gambar
+        const image = new window.Image();
         image.onload = () => {
           const canvas = document.createElement("canvas");
           const ctx = canvas.getContext("2d");
 
-          const maxWidth = 1024; // Maksimal lebar gambar
-          const maxHeight = 1024; // Maksimal tinggi gambar
+          const maxWidth = 1024;
+          const maxHeight = 1024;
           let width = image.width;
           let height = image.height;
 
-          // Sesuaikan dengan rasio gambar agar tidak melebihi batas maksimal
           if (width > height) {
             if (width > maxWidth) {
               height = Math.round((height * maxWidth) / width);
@@ -244,17 +254,13 @@ const Page = () => {
             }
           }
 
-          // Set ukuran canvas
           canvas.width = width;
           canvas.height = height;
 
-          // Gambar ulang gambar pada canvas
           ctx.drawImage(image, 0, 0, width, height);
 
-          // Kompres gambar menjadi format jpeg dengan kualitas 80%
           const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.8);
 
-          // Resolusi base64 dari gambar yang sudah dikompres
           resolve(compressedDataUrl);
         };
         image.src = reader.result;
@@ -281,15 +287,35 @@ const Page = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    watch,
     control,
+    formState: { errors },
+    setValue,
   } = useForm({
-    defaultValues: {
-      jenisKelamin: "",
-    },
+    defaultValues: {},
   });
 
+  const validateForm = (errors, formRefs) => {
+    for (const field in errors) {
+      if (errors[field]) {
+        toast.error(`${field.replace(/([A-Z])/g, " $1")} wajib diisi.`);
+        if (formRefs[field]?.current) {
+          formRefs[field].current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+        return false;
+      }
+    }
+  
+    return true;
+  };
+  
   const onSubmit = async (data) => {
+    const isFormValid = validateForm();
+    if (!isFormValid) return;
+
     const formattedTanggalLahir = new Date(data.tanggalLahir)
       .toISOString()
       .split("T")[0];
@@ -300,18 +326,17 @@ const Page = () => {
       .toISOString()
       .split("T")[0];
 
-    // Menghapus prefix base64 (misalnya "data:image/jpeg;base64,") jika ada
     const cleanBase64 = base64String.split(",")[1] || base64String;
 
     const finalData = {
       ...data,
       tanggalLahir: formattedTanggalLahir,
       tahunDiangkat: formattedTahunDiangkat,
-      mulaiJadiAnggotaPgri: formattedMulaiJadiAnggota,
+      mulaiJadiAnggotaPgri: formattedMulaiJadiAnggota ,
       namaAnak: namaAnak.filter((name) => name.trim() !== ""),
       latitude,
       longitude,
-      foto: cleanBase64, // Kirim base64 tanpa prefix
+      foto: cleanBase64,
     };
 
     console.log("Data yang akan dikirim ke database:", finalData);
@@ -420,10 +445,98 @@ const Page = () => {
     }
 
     const validFormats = ["image/jpeg", "image/png", "image/jpg"];
+
     if (!validFormats.includes(selectedFile.type)) {
       toast.error(
         "Format file tidak didukung. Harap unggah file jpg, jpeg, atau png."
       );
+      return;
+    }
+
+    const email = watch("email");
+    if (!email) {
+      toast.error("Email harus diisi.");
+      return;
+    }
+
+    const password = watch("password");
+    if (!password) {
+      toast.error("password harus diisi.");
+      return;
+    }
+
+    const npaPgri = watch("npaPgri");
+    if (!npaPgri) {
+      toast.error("npaPgri harus diisi.");
+      return;
+    }
+
+    const nip = watch("nip");
+    if (!nip) {
+      toast.error("nip harus diisi.");
+      return;
+    }
+
+    const nik = watch("nik");
+    if (!nik) {
+      toast.error("nik harus diisi.");
+      return;
+    }
+
+    const namaLengkap = watch("namaLengkap");
+    if (!namaLengkap) {
+      toast.error("nama Lengkap harus diisi.");
+      return;
+    }
+
+    const tempatLahir = watch("tempatLahir");
+    if (!tempatLahir) {
+      toast.error("tempatLahir harus diisi.");
+      return;
+    }
+
+    const tanggalLahir = watch("tanggalLahir");
+    if (!tanggalLahir) {
+      toast.error("tanggalLahir harus diisi.");
+      return;
+    }
+
+    if (errors.jenisKelamin) {
+      jenisKelaminRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      toast.error("Jenis kelamin harus diisi.");
+      return;
+    }
+
+    if (errors.agama) {
+      agamaRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      toast.error("Agama harus diisi.");
+      return;
+    }
+
+    if (errors.golonganDarah) {
+      golonganDarahRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      toast.error("Golongan darah harus diisi.");
+      return;
+    }
+
+    const kodePos = watch("kodePos");
+    if (!kodePos) {
+      toast.error("kodePos harus diisi.");
+      return;
+    }
+
+    const nomorHp = watch("nomorHp");
+    if (!nomorHp) {
+      toast.error("nomorHp harus diisi.");
       return;
     }
 
@@ -441,18 +554,18 @@ const Page = () => {
           toastOptions={{
             style: {
               marginTop: "16%",
-              fontSize: "1.75rem", // Ukuran font
-              padding: "10px", // Padding kecil
-              width: "80%", // Lebar penuh
-              maxWidth: "700px", // Lebar maksimal
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "700px",
               height: "50%",
               maxHeight: "400px",
-              transform: "translate(-50%, -50%)", // Pusatkan dengan benar
-              textAlign: "center", // Teks di tengah horizontal
-              zIndex: 9999, // Memastikan toast berada di atas elemen lain
-              backgroundColor: "#fff", // Warna latar (opsional)
-              borderRadius: "8px", // Sudut melengkung untuk estetika
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Bayangan halus
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
             },
             success: {
               style: {
@@ -469,7 +582,6 @@ const Page = () => {
           }}
         />
         <div className="w-full">
-          {/* Tabs Navigation */}
           <div className="flex flex-row space-x-4 mb-2 justify-center sm:justify-start">
             <div
               className={`py-2 px-4 rounded-full transition duration-300 text-xs sm:text-sm md:text-base ${
@@ -501,7 +613,6 @@ const Page = () => {
               className="bg-white p-4 sm:p-8 rounded-lg shadow-lg"
             >
               <div className="w-full flex flex-col items-center">
-                {/* Preview Foto */}
                 <img
                   width={150}
                   height={150}
@@ -510,7 +621,6 @@ const Page = () => {
                   alt="Photo Preview"
                 />
 
-                {/* Input File */}
                 <input
                   type="file"
                   id="foto"
@@ -525,12 +635,10 @@ const Page = () => {
                   Choose Files
                 </label>
 
-                {/* Pesan Peringatan */}
                 <p className="text-red-600 font-bold text-center mt-2">
                   *Wajib Menggunakan Batik PGRI
                 </p>
 
-                {/* Pesan Error */}
                 {error && (
                   <p className="text-red-600 text-center mt-2">{error}</p>
                 )}
@@ -743,20 +851,26 @@ const Page = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
-                <div className="w-full">
+                <div className="w-full" ref={jenisKelaminRef}>
                   <Label className="block text-sm font-medium mb-3">
                     Jenis Kelamin
                   </Label>
                   <Controller
                     name="jenisKelamin"
                     control={control}
-                    rules={{ required: true }}
+                    rules={{ required: "Jenis Kelamin is required" }}
                     render={({ field }) => (
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        <SelectTrigger className="border border-teal-500">
+                        <SelectTrigger
+                          className={`border ${
+                            errors.jenisKelamin
+                              ? "border-red-500"
+                              : "border-teal-500"
+                          } focus:ring-teal-500`}
+                        >
                           <SelectValue placeholder="Pilih Jenis Kelamin" />
                         </SelectTrigger>
                         <SelectContent>
@@ -770,13 +884,14 @@ const Page = () => {
                       </Select>
                     )}
                   />
+
                   {errors.jenisKelamin && (
                     <span className="text-red-500 text-sm">
                       Jenis Kelamin is required
                     </span>
                   )}
                 </div>
-                <div className="w-full">
+                <div className="w-full" ref={agamaRef}>
                   <Label className="block text-sm font-medium mb-3">
                     Agama
                   </Label>
@@ -789,7 +904,11 @@ const Page = () => {
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        <SelectTrigger className="border border-teal-500">
+                        <SelectTrigger
+                          className={`border ${
+                            errors.agama ? "border-red-500" : "border-teal-500"
+                          } focus:ring-teal-500`}
+                        >
                           <SelectValue placeholder="Pilih Agama" />
                         </SelectTrigger>
                         <SelectContent>
@@ -815,20 +934,26 @@ const Page = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
-                <div className="w-full">
+                <div className="w-full" ref={golonganDarahRef}>
                   <Label className="block text-sm font-medium mb-3">
                     Golongan Darah
                   </Label>
                   <Controller
                     name="golonganDarah"
                     control={control}
-                    rules={{ required: true }}
+                    rules={{ required: "Golongan Darah is required" }}
                     render={({ field }) => (
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        <SelectTrigger className="border border-teal-500">
+                        <SelectTrigger
+                          className={`border ${
+                            errors.golonganDarah
+                              ? "border-red-500"
+                              : "border-teal-500"
+                          } focus:ring-teal-500`}
+                        >
                           <SelectValue placeholder="Pilih Golongan Darah" />
                         </SelectTrigger>
                         <SelectContent>
@@ -870,7 +995,6 @@ const Page = () => {
                     />
                   </div>
                   <div className="flex items-center space-x-4 mt-2">
-                    {/* Button Get Location */}
                     <button
                       type="button"
                       onClick={handleGetLocation}
@@ -879,14 +1003,12 @@ const Page = () => {
                       {loading ? "Mendapatkan Lokasi..." : "Get Location"}
                     </button>
 
-                    {/* Pesan Jika Lokasi Belum Tersedia */}
                     <p className="text-red-500">
                       {!latitude &&
                         !longitude &&
                         "Silahkan Klik Jika Anda Dirumah"}
                     </p>
 
-                    {/* Tampilkan Lokasi Jika Tersedia */}
                     {latitude && longitude && (
                       <p className="text-teal-500 mt-1">
                         Lokasi berhasil ditemukan: {latitude.toFixed(4)},{" "}
@@ -1090,7 +1212,7 @@ const Page = () => {
                 )}
               </div>
 
-              <div className="w-full">
+              <div className="w-full" ref={dropdownRefUnitKerja}>
                 <label className="block text-sm font-medium mb-3">
                   Unit Kerja
                 </label>
@@ -1110,7 +1232,10 @@ const Page = () => {
                       />
 
                       {showDropdownUnitKerja && (
-                        <div className="mt-1 max-h-40 overflow-y-auto border p-2 rounded absolute z-10 bg-slate-200 w-full">
+                        <div
+                          ref={dropdownRef}
+                          className="mt-1 max-h-40 overflow-y-auto border p-2 rounded absolute z-10 bg-slate-200 w-full"
+                        >
                           <Input
                             type="text"
                             placeholder="Cari Unit Kerja..."
@@ -1278,7 +1403,7 @@ const Page = () => {
                 )}
               </div>
 
-              <div className="w-full">
+              <div className="w-full" ref={tahunDiangkatRef}>
                 <Label className="block text-sm font-medium mb-3">
                   Tahun Diangkat PNS/P3K/GTT/GTY
                 </Label>
@@ -1286,16 +1411,15 @@ const Page = () => {
                   type="date"
                   id="tahunDiangkat"
                   placeholder="dd/mm/yyyy"
-                  max={today}
                   {...register("tahunDiangkat", { required: true })}
                   className="border-teal-500"
                 />
-                {errors.tmt && (
-                  <span className="text-red-500 text-sm">TMT is required</span>
+                {errors.tahunDiangkat && (
+                  <span className="text-red-500 text-sm">Wajib Diisi</span>
                 )}
               </div>
 
-              <div className="w-full">
+              <div className="w-full" ref={pangkatGolonganRef}>
                 <Label className="block text-sm font-medium mb-3">
                   Pangkat Golongan
                 </Label>
@@ -1389,23 +1513,23 @@ const Page = () => {
                 )}
               </div>
 
-              <div className="w-full">
+              <div className="w-full" >
                 <Label className="block text-sm font-medium mb-3">
                   Mulai Jadi Anggota PGRI
                 </Label>
                 <Input
                   type="date"
-                  id="mulaiJadiAnggotaPgri"
+                  // id="mulaiJadiAnggotaPgri"
                   placeholder="dd/mm/yyyy"
                   max={today}
-                  {...register("mulaiJadiAnggotaPgri", { required: true })}
+                  {...register("mulaiJadiAnggotaPgri")}
                   className="border-teal-500"
                 />
-                {errors.mulaiJadiAnggotaPgri && (
+                {/* {errors.mulaiJadiAnggotaPgri && (
                   <span className="text-red-500 text-sm">
                     Mulai jadi anggota PGRI is required
                   </span>
-                )}
+                )} */}
               </div>
 
               <div className="w-full">
@@ -1473,6 +1597,24 @@ const Page = () => {
                   className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
                 >
                   Submit
+                </Button>
+              </div>
+              <div className="w-full">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    const isValid = validateForm(errors, watch, {
+                      tahunDiangkat: tahunDiangkatRef,
+                      pangkatGolongan: pangkatGolonganRef,
+                    });
+
+                    if (isValid) {
+                      alert("Form sudah lengkap!");
+                    }
+                  }}
+                  className="text-white bg-yellow-500 hover:bg-yellow-600 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
+                >
+                  Cek Form
                 </Button>
               </div>
             </form>
