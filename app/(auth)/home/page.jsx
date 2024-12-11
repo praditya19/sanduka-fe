@@ -236,7 +236,7 @@ export default function IconGrid() {
   const renderCheckmark = (value) => {
     if (value === "Ya") {
       return <span className="text-green-500">✔</span>;
-    } else if (value === "" || value === null || value === undefined) {
+    } else if (value === "" || value === null || value === undefined || value === "TIDAK") {
       return <span className="text-red-500">✘</span>;
     }
     return null;
