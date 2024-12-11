@@ -562,7 +562,7 @@ function DataAnggota() {
     ) {
       age--;
     }
-    return age;
+    return `${age} tahun`;
   };
 
   const calculateRetirementDate = (birthDateString, employmentType) => {
@@ -1581,7 +1581,7 @@ function DataAnggota() {
                                 </Link>
                               </>
                             )}
-                             <div>
+                            <div>
                               <Button
                                 type="button"
                                 className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
@@ -1595,8 +1595,8 @@ function DataAnggota() {
                               </Button>
 
                               {isPopupDaspen && daspenData && (
-                                <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-10 z-50">
-                                  <div className="bg-white p-6 rounded-md w-1/3">
+                                <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-10 z-50 ">
+                                  <div className="bg-white p-6 rounded-md w-5/12">
                                     <h2 className="text-xl font-bold">
                                       Data Daspen
                                     </h2>
@@ -1618,6 +1618,32 @@ function DataAnggota() {
                                         <p>
                                           {daspenData.kategoriDaspen ||
                                             "Tidak tersedia"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">
+                                          Tanggal Lahir:
+                                        </p>
+                                        <p>
+                                          {daspenData.tanggalLahir
+                                            ? new Intl.DateTimeFormat("id-ID", {
+                                                day: "2-digit",
+                                                month: "long",
+                                                year: "numeric",
+                                              }).format(
+                                                new Date(
+                                                  daspenData.tanggalLahir
+                                                )
+                                              )
+                                            : "Tidak tersedia"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">Usia:</p>
+                                        <p>
+                                          {calculateAge(
+                                            daspenData.tanggalLahir
+                                          ) || "Tidak tersedia"}
                                         </p>
                                       </div>
                                       <div>
@@ -1646,19 +1672,38 @@ function DataAnggota() {
                                       </div>
                                       <div>
                                         <p className="font-semibold">
+                                          Kelompok Jabatan:
+                                        </p>
+                                        <p>
+                                          {daspenData.kelompokJabatan || "-"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">
                                           Prediksi Pensiun:
                                         </p>
                                         <p>
                                           {daspenData.prediksiPensiun
-                                            ? new Intl.DateTimeFormat("id-ID", {
-                                                day: "2-digit",
-                                                month: "long",
-                                                year: "numeric",
-                                              }).format(
-                                                new Date(
-                                                  daspenData.prediksiPensiun
-                                                )
-                                              )
+                                            ? (() => {
+                                                const prediksiPensiunDate =
+                                                  new Date(
+                                                    daspenData.prediksiPensiun
+                                                  );
+
+                                                prediksiPensiunDate.setMonth(
+                                                  prediksiPensiunDate.getMonth() +
+                                                    1
+                                                );
+
+                                                return new Intl.DateTimeFormat(
+                                                  "id-ID",
+                                                  {
+                                                    day: "2-digit",
+                                                    month: "long",
+                                                    year: "numeric",
+                                                  }
+                                                ).format(prediksiPensiunDate);
+                                              })()
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -1675,14 +1720,33 @@ function DataAnggota() {
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
+                                      <div>
+                                        <p className="font-semibold">
+                                          Untuk Lihat Data Lengkap:
+                                        </p>
+                                        <div className="flex items-center">
+                                          <p className="text-sm mr-1">
+                                            Link Website:
+                                          </p>
+                                          <Link
+                                            href="https://www.dansetjateng.org/"
+                                            className="text-blue-400"
+                                            target="_blank"
+                                          >
+                                            www.dansetjateng.org
+                                          </Link>
+                                        </div>
+                                      </div>
                                     </div>
 
-                                    <button
-                                      className="mt-4 bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
-                                      onClick={closePopup}
-                                    >
-                                      Tutup
-                                    </button>
+                                    <div className="flex justify-end mt-4 mr-10">
+                                      <button
+                                        className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                                        onClick={closePopup}
+                                      >
+                                        Tutup
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                               )}
@@ -1739,22 +1803,46 @@ function DataAnggota() {
                                 >
                                   <FaEdit className="w-4 h-4" />
                                 </Button>
-                                <Button
-                                  className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
-                                  title="Mutasi"
-                                  onClick={() => openModal(item)}
-                                >
-                                  <FaExchangeAlt className="w-4 h-4" />
-                                </Button>
-                                <Link
-                                  href="#"
-                                  className="text-white bg-red-500 p-2 border rounded-md"
-                                >
-                                  <FaExclamationTriangle
-                                    className="w-4 h-4"
+                                {sessionStorage.getItem("role") ===
+                                "SUPER ADMIN" ? (
+                                  <Button
+                                    className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                    title="Mutasi"
+                                    onClick={() => openModal(item)}
+                                  >
+                                    <FaExchangeAlt className="w-4 h-4" />
+                                  </Button>
+                                ) : <Button
+                                className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                title="Mutasi"
+                              >
+                                <FaExchangeAlt className="w-4 h-4" />
+                              </Button>}
+                                {sessionStorage.getItem("role") ===
+                                "SUPER ADMIN" ? (
+                                  <Button
+                                    className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
+                                    onClick={() => {
+                                      sessionStorage.setItem(
+                                        "anggotaId",
+                                        item.id
+                                      );
+                                      setIsPopupVisible(true);
+                                    }}
+                                  >
+                                    <FaExclamationTriangle className="w-4 h-4" />
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    className="text-white bg-red-500 p-2 border rounded-md cursor-not-allowed opacity-50"
                                     title="Lapor"
-                                  />
-                                </Link>
+                                    type="button"
+                                    disabled
+                                  >
+                                    <FaExclamationTriangle className="w-4 h-4" />
+                                  </Button>
+                                )}
+
                                 <Link
                                   href={`https://wa.me/${item.nomorHp}`}
                                   className="text-white bg-green-500 p-2 border rounded-md"
@@ -1763,6 +1851,195 @@ function DataAnggota() {
                                 >
                                   <FaWhatsapp className="w-4 h-4" title="WA" />
                                 </Link>
+                                <div>
+                                  <Button
+                                    type="button"
+                                    className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                                    title="Edit Data"
+                                    onClick={() => {
+                                      sessionStorage.setItem(
+                                        "anggotaId",
+                                        item.id
+                                      );
+                                      handleDataDaspen();
+                                    }}
+                                  >
+                                    Daspen
+                                  </Button>
+
+                                  {isPopupDaspen && daspenData && (
+                                    <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-40 z-50 px-4">
+                                      <div className="bg-white p-6 rounded-md w-full sm:w-5/12 lg:w-1/3 xl:w-1/4 max-h-[70vh] overflow-auto">
+                                        <h2 className="text-xl font-bold">
+                                          Data Daspen
+                                        </h2>
+
+                                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                          <div>
+                                            <p className="font-semibold">
+                                              Nama Anggota:
+                                            </p>
+                                            <p>
+                                              {daspenData.namaAnggota ||
+                                                "Tidak tersedia"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              Kategori Daspen:
+                                            </p>
+                                            <p>
+                                              {daspenData.kategoriDaspen ||
+                                                "Tidak tersedia"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              Tanggal Lahir:
+                                            </p>
+                                            <p>
+                                              {daspenData.tanggalLahir
+                                                ? new Intl.DateTimeFormat(
+                                                    "id-ID",
+                                                    {
+                                                      day: "2-digit",
+                                                      month: "long",
+                                                      year: "numeric",
+                                                    }
+                                                  ).format(
+                                                    new Date(
+                                                      daspenData.tanggalLahir
+                                                    )
+                                                  )
+                                                : "Tidak tersedia"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              Usia:
+                                            </p>
+                                            <p>
+                                              {calculateAge(
+                                                daspenData.tanggalLahir
+                                              ) || "Tidak tersedia"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              NIP:
+                                            </p>
+                                            <p>
+                                              {daspenData.nip ||
+                                                "Tidak tersedia"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              Mulai Jadi Anggota:
+                                            </p>
+                                            <p>
+                                              {daspenData.mulaiJadiAnggotaDaspen
+                                                ? new Intl.DateTimeFormat(
+                                                    "id-ID",
+                                                    {
+                                                      day: "2-digit",
+                                                      month: "long",
+                                                      year: "numeric",
+                                                    }
+                                                  ).format(
+                                                    new Date(
+                                                      daspenData.mulaiJadiAnggotaDaspen
+                                                    )
+                                                  )
+                                                : "Tidak tersedia"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              Kelompok Jabatan:
+                                            </p>
+                                            <p>
+                                              {daspenData.kelompokJabatan ||
+                                                "-"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              Prediksi Pensiun:
+                                            </p>
+                                            <p>
+                                              {daspenData.prediksiPensiun
+                                                ? (() => {
+                                                    const prediksiPensiunDate =
+                                                      new Date(
+                                                        daspenData.prediksiPensiun
+                                                      );
+                                                    prediksiPensiunDate.setMonth(
+                                                      prediksiPensiunDate.getMonth() +
+                                                        1
+                                                    );
+
+                                                    return new Intl.DateTimeFormat(
+                                                      "id-ID",
+                                                      {
+                                                        day: "2-digit",
+                                                        month: "long",
+                                                        year: "numeric",
+                                                      }
+                                                    ).format(
+                                                      prediksiPensiunDate
+                                                    );
+                                                  })()
+                                                : "Tidak tersedia"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              Sumbangan:
+                                            </p>
+                                            <p>
+                                              {daspenData.sumbangan
+                                                ? new Intl.NumberFormat(
+                                                    "id-ID",
+                                                    {
+                                                      style: "currency",
+                                                      currency: "IDR",
+                                                    }
+                                                  ).format(daspenData.sumbangan)
+                                                : "Tidak tersedia"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              Untuk Lihat Data Lengkap:
+                                            </p>
+                                            <div className="flex items-center">
+                                              <p className="text-sm mr-1">
+                                                Link Website:
+                                              </p>
+                                              <Link
+                                                href="https://www.dansetjateng.org/"
+                                                className="text-blue-400"
+                                                target="_blank"
+                                              >
+                                                www.dansetjateng.org
+                                              </Link>
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        <div className="flex justify-end mt-4">
+                                          <button
+                                            className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                                            onClick={closePopup}
+                                          >
+                                            Tutup
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           )}
@@ -1894,7 +2171,7 @@ function DataAnggota() {
 
                   {popupVisibleKeluar && (
                     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-                      <div className="bg-white rounded-lg p-6 w-2/5 text-center shadow-lg">
+                      <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
                         <h2 className="text-lg font-semibold text-gray-800">
                           Apakah Anda yakin?
                         </h2>
@@ -1928,7 +2205,7 @@ function DataAnggota() {
                   </Button>
                   {popupVisible && (
                     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-                      <div className="bg-white rounded-lg p-6 w-2/5 text-center shadow-lg">
+                      <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
                         <h2 className="text-lg font-semibold text-gray-800">
                           Apakah Anda yakin ?
                         </h2>

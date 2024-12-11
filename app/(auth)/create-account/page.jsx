@@ -35,7 +35,7 @@ const Page = () => {
   const [isClient, setIsClient] = useState(false);
   const [loading, setLoading] = useState(false);
   const [namaAnak, setNamesanak] = useState([""]);
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(2);
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [cabang, setCabang] = useState([]);
@@ -308,10 +308,10 @@ const Page = () => {
         return false;
       }
     }
-  
+
     return true;
   };
-  
+
   const onSubmit = async (data) => {
     const isFormValid = validateForm();
     if (!isFormValid) return;
@@ -332,7 +332,7 @@ const Page = () => {
       ...data,
       tanggalLahir: formattedTanggalLahir,
       tahunDiangkat: formattedTahunDiangkat,
-      mulaiJadiAnggotaPgri: formattedMulaiJadiAnggota ,
+      mulaiJadiAnggotaPgri: formattedMulaiJadiAnggota,
       namaAnak: namaAnak.filter((name) => name.trim() !== ""),
       latitude,
       longitude,
@@ -370,7 +370,7 @@ const Page = () => {
         }
       );
       setTimeout(() => {
-        router.push("/sign-in");
+        router.push("/tunggu-admin");
       }, 4000);
     } catch (error) {
       toast.error(
@@ -438,6 +438,12 @@ const Page = () => {
     router.push("/anggota/data-anggota");
   };
 
+  useEffect(() => {
+    if (!router.isReady) return;
+    const queryStep = parseInt(router.query?.step) || 2;
+    setStep(queryStep);
+  }, [router.isReady, router.query]);
+
   const nextStep = () => {
     if (!selectedFile) {
       toast.error("Harap unggah gambar sebelum melanjutkan.");
@@ -445,7 +451,6 @@ const Page = () => {
     }
 
     const validFormats = ["image/jpeg", "image/png", "image/jpg"];
-
     if (!validFormats.includes(selectedFile.type)) {
       toast.error(
         "Format file tidak didukung. Harap unggah file jpg, jpeg, atau png."
@@ -540,15 +545,87 @@ const Page = () => {
       return;
     }
 
-    setStep(step + 1);
+    const nextStepValue = step + 1;
+    router.push(`/create-account?step=${nextStepValue}`);
+    setStep(nextStepValue);
   };
 
   const prevStep = () => {
     setStep(step - 1);
   };
 
+  const handleNavigation = (stepNumber) => {
+    setStep(stepNumber);
+  };
+
   return (
-    <div className="w-full mx-auto px-4 py-6 bg-slate-200">
+    <div className="w-full mx-auto  py-6 bg-slate-200">
+      <div className="w-full mx-auto">
+        <div className="flex flex-row items-center justify-center space-x-2 sm:space-x-4 mb-2">
+          <div
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm ${
+              step === 1
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
+            // onClick={() => handleNavigation(1)}
+          >
+            1. SYARAT & KETENTUAN
+          </div>
+
+          <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
+
+          <div
+            className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
+              step === 2
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
+            onClick={() => handleNavigation(2)}
+          >
+            2. DATA PRIBADI
+          </div>
+
+          <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
+
+          <div
+            className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
+              step === 3
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
+            onClick={() => handleNavigation(3)}
+          >
+            3. DATA PEKERJAAN
+          </div>
+
+          <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
+
+          <div
+            className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
+              step === 4
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
+            // onClick={() => handleNavigation(4)}
+          >
+            4. REVIEW
+          </div>
+
+          <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
+
+          <div
+            className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
+              step === 5
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
+            // onClick={() => handleNavigation(5)}
+          >
+            5. SELESAI
+          </div>
+        </div>
+      </div>
       <div className="container mx-auto max-w-screen-lg sm:max-w-full md:max-w-screen-lg px-4">
         <Toaster
           toastOptions={{
@@ -581,32 +658,8 @@ const Page = () => {
             },
           }}
         />
-        <div className="w-full">
-          <div className="flex flex-row space-x-4 mb-2 justify-center sm:justify-start">
-            <div
-              className={`py-2 px-4 rounded-full transition duration-300 text-xs sm:text-sm md:text-base ${
-                step === 1
-                  ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                  : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-              }`}
-              onClick={() => setStep(1)}
-            >
-              I. DATA PRIBADI
-            </div>
-            <div
-              className={`py-2 px-4 rounded-full transition duration-300 text-xs sm:text-sm md:text-base ${
-                step === 2
-                  ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                  : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-              }`}
-              onClick={() => setStep(2)}
-            >
-              II. DATA PEKERJAAN
-            </div>
-          </div>
-          <hr className="mb-4 border-t-2 border-gray-400 mt-1 w-full sm:w-96" />
-        </div>
-        {step === 1 && (
+
+        {step === 2 && (
           <div>
             <form
               onSubmit={handleSubmit(nextStep)}
@@ -709,37 +762,23 @@ const Page = () => {
                     </span>
                   </Label>
                   <Input
-                    type="text"
+                    type="number"
                     id="npaPgri"
                     placeholder="Tuliskan NPA"
-                    maxLength={11}
                     {...register("npaPgri", { required: true })}
-                    onChange={handleNpaChange}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value.length <= 11) {
+                        handleNpaChange(e);
+                        setNpaMessage("");
+                      } else {
+                        setNpaMessage("NPA maksimal hanya 11 angka.");
+                      }
+                    }}
                     className="border-teal-500"
                   />
                   {npaMessage && (
-                    <p
-                      className={`mt-2 text-sm ${
-                        npaMessage.includes("Terdaftar")
-                          ? " text-green-500"
-                          : "text-red-500"
-                      }`}
-                    >
-                      {npaMessage.includes("Terdaftar") ? (
-                        <>
-                          NPA Sudah Terdaftar, silakan{" "}
-                          <a
-                            href="/sign-in"
-                            className="text-blue-500 underline"
-                          >
-                            LOGIN Di Sini
-                          </a>
-                          .
-                        </>
-                      ) : (
-                        npaMessage
-                      )}
-                    </p>
+                    <p className="mt-2 text-sm text-red-500">{npaMessage}</p>
                   )}
                   {errors.npaPgri && (
                     <span className="text-red-500 text-sm">
@@ -747,6 +786,7 @@ const Page = () => {
                     </span>
                   )}
                 </div>
+
                 <div className="w-full">
                   <Label className="block text-sm font-medium mb-3">
                     NIP
@@ -1134,7 +1174,7 @@ const Page = () => {
           </div>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <div>
             <form
               onSubmit={handleSubmit(onSubmit)}
@@ -1513,23 +1553,23 @@ const Page = () => {
                 )}
               </div>
 
-              <div className="w-full" >
+              <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
                   Mulai Jadi Anggota PGRI
                 </Label>
                 <Input
                   type="date"
-                  // id="mulaiJadiAnggotaPgri"
+                  id="mulaiJadiAnggotaPgri"
                   placeholder="dd/mm/yyyy"
                   max={today}
                   {...register("mulaiJadiAnggotaPgri")}
                   className="border-teal-500"
                 />
-                {/* {errors.mulaiJadiAnggotaPgri && (
+                {errors.mulaiJadiAnggotaPgri && (
                   <span className="text-red-500 text-sm">
                     Mulai jadi anggota PGRI is required
                   </span>
-                )} */}
+                )}
               </div>
 
               <div className="w-full">
@@ -1593,14 +1633,6 @@ const Page = () => {
                   Kembali
                 </Button>
                 <Button
-                  type="submit"
-                  className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
-                >
-                  Submit
-                </Button>
-              </div>
-              <div className="w-full">
-                <Button
                   type="button"
                   onClick={() => {
                     const isValid = validateForm(errors, watch, {
@@ -1615,6 +1647,12 @@ const Page = () => {
                   className="text-white bg-yellow-500 hover:bg-yellow-600 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
                 >
                   Cek Form
+                </Button>
+                <Button
+                  type="submit"
+                  className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
+                >
+                  Submit
                 </Button>
               </div>
             </form>

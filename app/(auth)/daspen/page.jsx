@@ -56,7 +56,6 @@ const Page = () => {
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
 
-    // Jika bulan hari ini sebelum bulan lahir atau tanggal hari ini sebelum tanggal lahir
     if (
       monthDiff < 0 ||
       (monthDiff === 0 && today.getDate() < birth.getDate())
@@ -91,7 +90,7 @@ const Page = () => {
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-      <div className="bg-white p-5 rounded-md w-full sm:w-[90%] md:w-[70%] lg:w-[35%] mt-4 sm:mt-0 max-h-[88vh] overflow-y-auto">
+      <div className="bg-white p-5 rounded-md w-5/12 mt-4 sm:mt-0 max-h-[88vh] overflow-y-auto">
         <h2 className="text-xl font-bold">Data Daspen</h2>
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -104,7 +103,16 @@ const Page = () => {
           </div>
           <div>
             <p className="font-semibold">Tanggal Lahir:</p>
-            <p>{daspenData.tanggalLahir}</p>
+            <p>
+              {" "}
+              {daspenData.tanggalLahir
+                ? new Intl.DateTimeFormat("id-ID", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  }).format(new Date(daspenData.tanggalLahir))
+                : "Tidak tersedia"}
+            </p>
           </div>
 
           <div>
@@ -135,11 +143,21 @@ const Page = () => {
             <p className="font-semibold">Prediksi Pensiun:</p>
             <p>
               {daspenData.prediksiPensiun
-                ? new Intl.DateTimeFormat("id-ID", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  }).format(new Date(daspenData.prediksiPensiun))
+                ? (() => {
+                    const prediksiPensiunDate = new Date(
+                      daspenData.prediksiPensiun
+                    );
+
+                    prediksiPensiunDate.setMonth(
+                      prediksiPensiunDate.getMonth() + 1
+                    );
+
+                    return new Intl.DateTimeFormat("id-ID", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    }).format(prediksiPensiunDate);
+                  })()
                 : "Tidak tersedia"}
             </p>
           </div>
@@ -168,19 +186,6 @@ const Page = () => {
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  ) : error ? (
-    <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-10 z-50">
-      <div className="bg-white p-5 rounded-md w-full sm:w-[90%] md:w-[70%] lg:w-[35%] mt-12 sm:mt-0 max-h-[80vh] overflow-y-auto">
-        <h2 className="text-xl font-bold text-red-500">Kesalahan</h2>
-        <p>{error}</p>
-        <button
-          className="mt-4 bg-gray-500 text-white p-2 rounded-md hover:bg-gray-600"
-          onClick={closePopup}
-        >
-          Tutup
-        </button>
       </div>
     </div>
   ) : null;
