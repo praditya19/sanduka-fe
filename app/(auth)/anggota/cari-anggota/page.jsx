@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/alert";
 import { LoaderIcon, Search, AlertCircle } from "lucide-react";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import { format, parse } from "date-fns"; // Import date-fns functions
+import { format } from "date-fns";
 
 function CariAnggota() {
   const [npaPgri, setNpa] = useState("");
@@ -18,43 +18,45 @@ function CariAnggota() {
   const [anggota, setAnggota] = useState([]);
   const [error, setError] = useState("");
   const [filteredMember, setFilteredMember] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAnggota();
   }, []);
 
-  const fetchAnggota = async () => {
-    setLoader(true);
+  const fetchAnggota = async (
+    page = 0,
+    cabang = "",
+    unitKerja = ""
+  ) => {
     try {
-      const page = 0;
-      const size = 50;
-      const response = await GlobalApi.getAllAnggota(page, size);
-      const fetchedData = response.data.content;
+      const fetchedData = await GlobalApi.getAllAnggota(page, cabang, unitKerja);
 
-      if (fetchedData) {
-        setAnggota(fetchedData);
+      if (fetchedData.length > 0) {
+        console.log("Data fetched successfully.");
       } else {
         console.warn("No data found.");
       }
+
+      setLoading(false);
+      setAnggota(fetchedData);
     } catch (error) {
       console.error("Error fetching anggota:", error);
-      setError("Error fetching data. Please try again later.");
-    } finally {
-      setLoader(false);
+      setAnggota([]);
+      setLoading(false);
     }
   };
 
   const onSearch = () => {
     setLoader(true);
     try {
-      const formattedDate = format(parse(tanggalLahir, "yyyy-MM-dd", new Date()), "yyyy-MM-dd");
+      const formattedDate = format(new Date(tanggalLahir), "dd-MM-yyyy");
       console.log("Searching for NPA:", npaPgri, "with Date:", formattedDate);
-      
-      // Sesuaikan pencarian berdasarkan format tanggal di data
+
       const member = anggota.find(
-        (m) => m.npaPgri === npaPgri && format(new Date(m.tanggalLahir), "yyyy-MM-dd") === formattedDate
+        (m) => m.npaPgri === npaPgri && format(new Date(m.tanggalLahir), "dd-MM-yyyy") === formattedDate
       );
-  
+
       if (member) {
         setFilteredMember(member);
         setError("");
@@ -68,8 +70,7 @@ function CariAnggota() {
     } finally {
       setLoader(false);
     }
-  };  
-  
+  };
 
   return (
     <div className="flex items-baseline justify-center my-20">
@@ -84,7 +85,7 @@ function CariAnggota() {
           />
           <Input
             type="date"
-            placeholder="Tanggal Lahir (YYYY-MM-DD)"
+            placeholder="Tanggal Lahir"
             className="mt-3"
             value={tanggalLahir}
             onChange={(e) => setTanggalLahir(e.target.value)}

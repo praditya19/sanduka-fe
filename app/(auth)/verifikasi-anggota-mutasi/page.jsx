@@ -972,24 +972,71 @@ const PopupDetail = ({
 );
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  const getVisiblePages = () => {
+    const pages = [];
+    const maxVisiblePages = 3;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    // Adjust start page if we're near the end
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  };
+
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex justify-between items-center mt-4">
-      <Button
-        className="bg-blue-700 text-white px-4 py-2 rounded-lg"
+    <div className="flex justify-center mt-4 gap-1">
+      <button
+        onClick={() => onPageChange(0)}
+        disabled={currentPage === 0}
+        className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+      >
+        First
+      </button>
+      <button
         onClick={() => onPageChange(Math.max(currentPage - 1, 0))}
         disabled={currentPage === 0}
+        className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
       >
-        Previous
-      </Button>
-      <Button
-        className="bg-blue-700 text-white px-4 py-2 rounded-lg"
+        Prev
+      </button>
+
+      {getVisiblePages().map((page) => (
+        <button
+          key={page}
+          onClick={() => onPageChange(page - 1)}
+          className={`px-3 py-1 border rounded text-sm ${
+            page - 1 === currentPage
+              ? "bg-blue-500 text-white"
+              : "bg-white hover:bg-gray-50"
+          }`}
+        >
+          {page}
+        </button>
+      ))}
+
+      <button
         onClick={() => onPageChange(Math.min(currentPage + 1, totalPages - 1))}
         disabled={currentPage === totalPages - 1}
+        className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
       >
         Next
-      </Button>
+      </button>
+      <button
+        onClick={() => onPageChange(totalPages - 1)}
+        disabled={currentPage === totalPages - 1}
+        className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+      >
+        Last
+      </button>
     </div>
   );
 };

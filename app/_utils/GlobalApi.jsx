@@ -109,9 +109,50 @@ const searchUsersByName = (namaLengkap) => {
 };
 
 // Anggota
-const getAllAnggota = (page = 0, size = 10) => {
-  return axiosClient.get(`/api/auth/users?page=${page}&size=${size}`);
+// const getAllAnggota = (page = 0, size = 10) => {
+//   return axiosClient.get(`/api/auth/users?page=${page}&size=${size}`);
+// };
+
+const getAllAnggota = async (
+  page = 0,
+  cabang = null,
+  unitKerja = null
+) => {
+  const fetchAllPages = async () => {
+    let currentPage = page;
+    let allData = [];
+    let hasMoreData = true;
+
+    while (hasMoreData) {
+      const params = new URLSearchParams({ 
+        page: currentPage, 
+        size: 500 // Gunakan ukuran batch yang masuk akal
+      });
+
+      if (cabang) params.append("cabang", cabang);
+      if (unitKerja) params.append("unitKerja", unitKerja);
+
+      try {
+        const response = await axiosClient.get(`/api/auth/users?${params.toString()}`);
+        const pageData = response.data.content;
+        const totalPages = response.data.totalPages;
+
+        allData = [...allData, ...pageData];
+
+        hasMoreData = currentPage + 1 < totalPages;
+        currentPage++;
+      } catch (error) {
+        console.error("Error fetching pages:", error);
+        break;
+      }
+    }
+
+    return allData;
+  };
+
+  return fetchAllPages();
 };
+
 const getUserById = async (userId) => {
   try {
     const response = await axiosClient.get(`/api/auth/user/${userId}`);
