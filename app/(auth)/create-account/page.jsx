@@ -22,6 +22,7 @@ import {
   AiOutlineInfoCircle,
   AiOutlineEye,
   AiOutlineEyeInvisible,
+  AiOutlineWarning 
 } from "react-icons/ai";
 
 const MapComponent = dynamic(() => import("../../_components/MapComponent"), {
@@ -65,6 +66,15 @@ const Page = () => {
   const golonganDarahRef = useRef(null);
   const tahunDiangkatRef = useRef(null);
   const pangkatGolonganRef = useRef(null);
+  const jabatanRef = useRef();
+  const tingkatSekolahRef = useRef();
+  const statusSekolahRef = useRef();
+  const statusPegawaiRef = useRef();
+  const pendidikanTerakhirRef = useRef();
+  const sertifikatPendidikRef = useRef();
+  const golonganJabatanRef = useRef();
+  const [isSubmitClicked, setIsSubmitClicked] = useState(false);
+  const [isValid, setIsValid] = useState(true);
 
   const updateUnitKerja = (kecamatan) => {
     const filteredUnitKerja = unitKerja.filter((item) => {
@@ -296,26 +306,107 @@ const Page = () => {
   });
 
   const validateForm = (errors, formRefs) => {
+    let isValid = true;
+
     for (const field in errors) {
       if (errors[field]) {
-        toast.error(`${field.replace(/([A-Z])/g, " $1")} wajib diisi.`);
+        // Mengubah nama field menjadi huruf besar pada awal kata
+        const formattedField = field
+          .replace(/([A-Z])/g, " $1") // Menambahkan spasi sebelum huruf kapital
+          .replace(/^./, (str) => str.toUpperCase()); // Mengubah huruf pertama menjadi kapital
+    
+        toast.error(`${formattedField} wajib diisi.`);
+    
         if (formRefs[field]?.current) {
           formRefs[field].current.scrollIntoView({
             behavior: "smooth",
             block: "center",
           });
         }
-        return false;
+
+        if (field === "Cabang" && dropdownRef.current) {
+          dropdownRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+
+        if (field === "UnitKerja" && dropdownRefUnitKerja.current) {
+          dropdownRefUnitKerja.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+
+        if (field === "Jabatan" && jabatanRef.current) {
+          jabatanRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+
+        if (field === "TingkatSekolah" && tingkatSekolahRef.current) {
+          tingkatSekolahRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+
+        if (field === "StatusSekolah" && statusSekolahRef.current) {
+          statusSekolahRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+
+        if (field === "StatusPegawai" && statusPegawaiRef.current) {
+          statusPegawaiRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+
+        if (field === "PangkatGolongan" && pangkatGolonganRef.current) {
+          pangkatGolonganRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+
+        if (field === "PendidikanTerakhir" && pendidikanTerakhirRef.current) {
+          pendidikanTerakhirRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+
+        if (field === "SertifikatPendidik" && sertifikatPendidikRef.current) {
+          sertifikatPendidikRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+
+        if (field === "GolonganJabatan" && golonganJabatanRef.current) {
+          golonganJabatanRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+
+        isValid = false;
+        break;
       }
     }
 
-    return true;
+    return isValid;
   };
 
   const onSubmit = async (data) => {
     const isFormValid = validateForm();
     if (!isFormValid) return;
-
+    setIsSubmitClicked(true); 
+    
     const formattedTanggalLahir = new Date(data.tanggalLahir)
       .toISOString()
       .split("T")[0];
@@ -345,7 +436,28 @@ const Page = () => {
       const response = await GlobalApi.registerUser(finalData);
       console.log("Response dari API:", response);
       toast.success(
-        <div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
           <strong
             style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
           >
@@ -356,23 +468,31 @@ const Page = () => {
           </span>
         </div>,
         {
-          icon: (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{ width: "48px", height: "48px", color: "#06D001" }}
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-            </svg>
-          ),
+          icon: null,
           duration: 4000,
+          autoClose: 3000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
         }
       );
       setTimeout(() => {
         router.push("/tunggu-admin");
       }, 4000);
     } catch (error) {
+      const errorMessage = error.response?.data || "Terjadi kesalahan saat registrasi.";
       toast.error(
         <div
           style={{
@@ -406,6 +526,9 @@ const Page = () => {
           >
             Anda Belum Berhasil Mendaftar
           </strong>
+          <span style={{ fontSize: "1.75rem" }}>
+          {errorMessage}
+        </span>
         </div>,
         {
           icon: null,
@@ -609,7 +732,7 @@ const Page = () => {
             }`}
             // onClick={() => handleNavigation(4)}
           >
-            4. REVIEW
+            4. MENUNGGU VERIFIKASI ADMIN
           </div>
 
           <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
@@ -1324,7 +1447,10 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="border border-teal-500">
+                      <SelectTrigger
+                        className="border border-teal-500"
+                        ref={jabatanRef}
+                      >
                         <SelectValue placeholder="Pilih Jabatan" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1355,7 +1481,10 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="border border-teal-500">
+                      <SelectTrigger
+                        className="border border-teal-500"
+                        ref={tingkatSekolahRef}
+                      >
                         <SelectValue placeholder="Pilih Jenjang Sekolah" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1393,7 +1522,10 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="border border-teal-500">
+                      <SelectTrigger
+                        className="border border-teal-500"
+                        ref={statusSekolahRef}
+                      >
                         <SelectValue placeholder="Pilih Status Sekolah" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1421,7 +1553,10 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="border border-teal-500">
+                      <SelectTrigger
+                        className="border border-teal-500"
+                        ref={statusPegawaiRef}
+                      >
                         <SelectValue placeholder="Pilih Status Pegawai" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1459,7 +1594,7 @@ const Page = () => {
                 )}
               </div>
 
-              <div className="w-full" ref={pangkatGolonganRef}>
+              <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
                   Pangkat Golongan
                 </Label>
@@ -1469,7 +1604,10 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="border border-teal-500">
+                      <SelectTrigger
+                        className="border border-teal-500"
+                        ref={pangkatGolonganRef}
+                      >
                         <SelectValue placeholder="Pilih Golongan" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1501,7 +1639,10 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="border border-teal-500">
+                      <SelectTrigger
+                        className="border border-teal-500"
+                        ref={pendidikanTerakhirRef}
+                      >
                         <SelectValue placeholder="Pilih Pendidikan" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1534,7 +1675,10 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="border border-teal-500">
+                      <SelectTrigger
+                        className="border border-teal-500"
+                        ref={sertifikatPendidikRef}
+                      >
                         <SelectValue placeholder="Sertifikat" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1555,7 +1699,7 @@ const Page = () => {
 
               <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
-                  Mulai Jadi Anggota PGRI
+                  Mulai Jadi Anggota Sanduka
                 </Label>
                 <Input
                   type="date"
@@ -1582,7 +1726,10 @@ const Page = () => {
                   rules={{ required: true }}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="border border-teal-500">
+                      <SelectTrigger
+                        className="border border-teal-500"
+                        ref={golonganJabatanRef}
+                      >
                         <SelectValue placeholder="Pilih Golongan Jabatan" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1633,27 +1780,45 @@ const Page = () => {
                   Kembali
                 </Button>
                 <Button
-                  type="button"
-                  onClick={() => {
-                    const isValid = validateForm(errors, watch, {
-                      tahunDiangkat: tahunDiangkatRef,
-                      pangkatGolongan: pangkatGolonganRef,
-                    });
+        type="button"
+        onClick={() => {
+          if (isSubmitClicked) {
+            const isValid = validateForm(errors, {
+              jabatan: jabatanRef,
+              pangkatGolongan: pangkatGolonganRef,
+              tingkatSekolah: tingkatSekolahRef,
+              statusSekolah: statusSekolahRef,
+              statusPegawai: statusPegawaiRef,
+              pangkatGolongan: pangkatGolonganRef,
+              tahunDiangkat: tahunDiangkatRef,
+              pendidikanTerakhir: pendidikanTerakhirRef,
+              sertifikatPendidik: sertifikatPendidikRef,
+              golonganJabatan: golonganJabatanRef,
+              cabang: dropdownRef,
+              unitKerja: dropdownRefUnitKerja,
+            });
 
-                    if (isValid) {
-                      alert("Form sudah lengkap!");
-                    }
-                  }}
-                  className="text-white bg-yellow-500 hover:bg-yellow-600 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
+            if (isValid) {
+              alert("Form sudah lengkap!");
+            }
+          } else {
+            alert("Klik Submit terlebih dahulu!");
+          }
+        }}
+        className="text-white bg-red-500 hover:bg-red-600 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
+        disabled={!isSubmitClicked} 
                 >
-                  Cek Form
-                </Button>
-                <Button
-                  type="submit"
-                  className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
-                >
-                  Submit
-                </Button>
+                    <AiOutlineWarning className="h-5 w-5 mr-2 text-yellow-400" />
+        Belum Terisi
+      </Button>
+
+      <Button
+        type="submit"
+        onClick={onSubmit}
+        className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
+      >
+        Submit
+      </Button>
               </div>
             </form>
           </div>

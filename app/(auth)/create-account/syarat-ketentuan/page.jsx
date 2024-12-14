@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
-import { useState, useEffect } from "react"; // Tambahkan useEffect
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 function App() {
@@ -11,9 +11,8 @@ function App() {
   const [step, setStep] = useState(1);
   const router = useRouter();
 
-  // Update step dari query parameter
   useEffect(() => {
-    const queryStep = parseInt(router.query?.step) || 1; // Default ke langkah 1 jika query step tidak ada
+    const queryStep = parseInt(router.query?.step) || 1;
     setStep(queryStep);
   }, [router.query]);
 
@@ -27,88 +26,87 @@ function App() {
 
   return (
     <div className="bg-gradient-to-r from-blue-500 p-6 to-green-500 min-h-screen w-full  items-center justify-items-center">
-        <div className="flex flex-row items-center justify-center space-x-2 sm:space-x-4 mb-2">
-          {/* Step 1: Syarat & Ketentuan */}
-          <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm ${
-              step === 1
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
-            onClick={() => handleNavigation(1)}
-          >
-            1. SYARAT & KETENTUAN
-          </div>
-
-          <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
-
-          {/* Step 2: Data Pribadi */}
-          <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
-              step === 2
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
-            onClick={() => handleNavigation(2)}
-          >
-            2. DATA PRIBADI
-          </div>
-
-          <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
-
-          {/* Step 3: Data Pekerjaan */}
-          <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
-              step === 3
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
-            onClick={() => handleNavigation(3)}
-          >
-            3. DATA PEKERJAAN
-          </div>
-
-          <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
-
-          {/* Step 4: Menunggu ACC Admin */}
-          <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
-              step === 4
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
-            onClick={() => handleNavigation(4)}
-          >
-            4. MENUNGGU ACC ADMIN
-          </div>
-
-          <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
-
-          {/* Step 5: Selesai */}
-          <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
-              step === 5
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
-            onClick={() => handleNavigation(5)}
-          >
-            5. SELESAI
-          </div>
+      <div className="flex flex-row items-center justify-center space-x-2 sm:space-x-4 mb-2">
+        {/* Step 1: Syarat & Ketentuan */}
+        <div
+          className={`py-2 px-4 rounded-full transition duration-300 text-sm ${
+            step === 1
+              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+          }`}
+          // onClick={() => handleNavigation(1)}
+        >
+          1. SYARAT & KETENTUAN
         </div>
-      <div className=" flex-col items-center justify-center w-full max-w-4xl">
 
+        <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
+
+        {/* Step 2: Data Pribadi */}
+        <div
+          className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
+            step === 2
+              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+          }`}
+          // onClick={() => handleNavigation(2)}
+        >
+          2. DATA PRIBADI
+        </div>
+
+        <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
+
+        {/* Step 3: Data Pekerjaan */}
+        <div
+          className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
+            step === 3
+              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+          }`}
+          // onClick={() => handleNavigation(3)}
+        >
+          3. DATA PEKERJAAN
+        </div>
+
+        <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
+
+        {/* Step 4: Menunggu ACC Admin */}
+        <div
+          className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
+            step === 4
+              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+          }`}
+          // onClick={() => handleNavigation(4)}
+        >
+          4. MENUNGGU ACC ADMIN
+        </div>
+
+        <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
+
+        {/* Step 5: Selesai */}
+        <div
+          className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
+            step === 5
+              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+          }`}
+          // onClick={() => handleNavigation(5)}
+        >
+          5. SELESAI
+        </div>
+      </div>
+      <div className=" flex-col items-center justify-center w-full max-w-4xl">
         <div className="bg-white p-8 rounded-2xl shadow-lg w-full relative">
-          <div className="top-0 bg-white pb-4 z-10">
-            <div className="flex items-center justify-center">
+          <div className="top-10 bg-white pb-4 z-10">
+            <div className="flex items-center justify-center -mt-8">
               <Image src="/sanduka.png" width={250} height={200} alt="logo" />
             </div>
-            <h2 className="text-3xl font-bold text-center text-gray-800">
+            <h2 className="text-3xl -mt-3 font-bold text-center text-gray-800">
               Syarat dan Ketentuan
             </h2>
           </div>
 
-           <div className="overflow-y-auto max-h-96 text-justify text-gray-600">
+          <div className="overflow-y-auto max-h-96 text-justify text-gray-600">
             <p className="mb-6 text-gray-600 text-center">
               Syarat dan Ketentuan ini merupakan bagian dari Syarat dan
               Ketentuan Aplikasi Sanduka. Penggunaan layanan Sanduka tunduk pada
@@ -288,7 +286,7 @@ function App() {
               Anggota dianggap menyetujui perubahan jika tidak ada keberatan
               dalam waktu 30 hari.{" "}
             </p>
-          </div> 
+          </div>
 
           {/* Checkbox */}
           <div className="flex items-center mb-6 mt-4">
@@ -306,14 +304,13 @@ function App() {
           </div>
 
           <Link href={isAgreed ? "/create-account?step=2" : "#"}>
-  <Button
-    disabled={!isAgreed}
-    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded w-full"
-  >
-    Lanjutkan
-  </Button>
-</Link>
-
+            <Button
+              disabled={!isAgreed}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded w-full"
+            >
+              Lanjutkan
+            </Button>
+          </Link>
         </div>
       </div>
     </div>

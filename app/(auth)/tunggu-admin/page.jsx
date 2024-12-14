@@ -71,7 +71,7 @@ const Page = () => {
           }`}
           onClick={() => handleNavigation(4)}
         >
-          4. MENUNGGU ACC ADMIN
+          4. MENUNGGU VERIFIKASI ADMIN
         </div>
 
         <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
@@ -97,11 +97,11 @@ const Page = () => {
           />
         </div>
 
-        <h1 className="text-2xl font-bold text-teal-600 mb-4">
+        <h1 className="text-4xl font-bold text-teal-600 mb-4">
           Registrasi Berhasil
         </h1>
         <p className="text-gray-700 mb-6">
-          Menunggu ACC dari Admin. Harap cek kembali secara berkala.
+          Menunggu Verifikasi dari Admin. Harap cek kembali secara berkala.
         </p>
 
         <button

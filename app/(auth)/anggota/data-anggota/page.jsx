@@ -15,6 +15,7 @@ import {
   FaSortUp,
   FaSortDown,
   FaSort,
+  FaTimes,
 } from "react-icons/fa";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
@@ -74,6 +75,9 @@ function DataAnggota() {
   const [role, setRole] = useState("");
   const [isPopupDaspen, setIsPopupDaspen] = useState(false);
   const [daspenData, setDaspenData] = useState(null);
+  const [kategoriDaspen, setKategoriDaspen] = useState("");
+  const [isKategoriChanged, setIsKategoriChanged] = useState(false);
+  const [tempKategoriDaspen, setTempKategoriDaspen] = useState(kategoriDaspen);
 
   const handleDataDaspen = async () => {
     const anggotaId = sessionStorage.getItem("anggotaId");
@@ -82,12 +86,18 @@ function DataAnggota() {
         const response = await GlobalApi.getUserById(anggotaId);
 
         if (response) {
+          console.log("Data anggota yang diterima dari getUserById:", response);
+
+          // Set kategoriDaspen dengan nilai dari response
+          setKategoriDaspen(response.kategoriDaspen || "Tidak tersedia");
+
           const nip = response.nip;
 
           if (nip) {
             const fileResponse = await GlobalApi.getFileByNip(nip);
 
             if (fileResponse) {
+              console.log("Data file untuk NIP:", nip, fileResponse);
               setDaspenData(fileResponse);
               setIsPopupDaspen(true);
             } else {
@@ -101,6 +111,41 @@ function DataAnggota() {
         }
       } catch (error) {
         console.error("Error fetching data:", error);
+        toast.error(
+          <div style={{ textAlign: "center" }}>
+            {/* Ikon silang di atas */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "8px",
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                style={{ width: "48px", height: "48px", color: "red" }}
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+                <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+              </svg>
+            </div>
+            {/* Teks di bawah ikon */}
+            <strong style={{ fontSize: "1.75rem", display: "block" }}>
+              NIP tidak ditemukan, silahkan melakukan sinkronisasi dahulu.
+            </strong>
+          </div>,
+          {
+            icon: false,
+            duration: 5000,
+            style: {
+              borderRadius: "10px",
+              background: "white",
+              padding: "16px",
+            },
+          }
+        );
       }
     } else {
       console.log("Anggota ID tidak ditemukan di sessionStorage");
@@ -305,21 +350,17 @@ function DataAnggota() {
     }
   }, [token, router, selectedCabang, filterCabang, filterUnitKerja]);
 
-  const fetchAnggota = async (
-    page = 0, 
-    cabang = "", 
-    unitKerja = ""
-  ) => {
+  const fetchAnggota = async (page = 0, cabang = "", unitKerja = "") => {
     try {
       const role = sessionStorage.getItem("role");
       const userId = sessionStorage.getItem("userId");
-  
+
       const fotoBase64Array = [];
       let fetchedData = [];
-  
+
       if (role === "USER" && userId) {
         const userData = await GlobalApi.getUserById(userId);
-  
+
         if (userData.foto) {
           try {
             const decodedString = atob(userData.foto);
@@ -331,12 +372,11 @@ function DataAnggota() {
         } else {
           fotoBase64Array.push(null);
         }
-  
+
         fetchedData = [userData];
       } else {
         fetchedData = await GlobalApi.getAllAnggota(page, cabang, unitKerja);
       }
-  
       if (fetchedData.length > 0) {
         fetchedData.forEach((item) => {
           if (item.foto) {
@@ -354,7 +394,7 @@ function DataAnggota() {
       } else {
         console.warn("No data found.");
       }
-  
+
       setFotoBase64(fotoBase64Array);
       setLoading(false);
       setAnggota(fetchedData);
@@ -366,6 +406,194 @@ function DataAnggota() {
     }
   };
 
+  const handleKategoriChange = (event) => {
+    const newKategori = event.target.value;
+  
+    if (newKategori !== daspenData.kategoriDaspen) {
+      setTempKategoriDaspen(newKategori); // Simpan kategori sementara
+      setIsKategoriChanged(true); // Tampilkan popup konfirmasi jika ada perubahan
+    } else {
+      setTempKategoriDaspen(newKategori); // Tetap simpan kategori jika tidak ada perubahan
+    }
+  };
+
+  // const handleConfirmChange = async () => {
+  //   setKategoriDaspen(tempKategoriDaspen); // Terapkan kategori baru
+    
+  //   try {
+  //     // Ambil id dari sessionStorage
+  //     const anggotaId = sessionStorage.getItem('anggotaId');
+  //     if (!anggotaId) {
+  //       console.error("ID anggota tidak ditemukan di sessionStorage");
+  //       return;
+  //     }
+  
+  //     // Ambil data pengguna berdasarkan ID dari sessionStorage
+  //     const response = await GlobalApi.getUserById(anggotaId);
+  
+  //     if (response) {
+  //       // Tampilkan data yang diterima dari API
+  //       console.log("Data yang diterima dari API:", response);
+  
+  //       // Fungsi untuk format tanggal menjadi yyyy-MM-dd
+  //       const formatTanggal = (tanggal) => {
+  //         const date = new Date(tanggal);
+  //         const year = date.getFullYear();
+  //         const month = String(date.getMonth() + 1).padStart(2, "0");  // Menambahkan leading zero
+  //         const day = String(date.getDate()).padStart(2, "0");  // Menambahkan leading zero
+  //         return `${year}-${month}-${day}`;  // Format yyyy-MM-dd
+  //       };
+  
+  //       // Siapkan data yang ingin diperbarui, termasuk kategoriDaspen
+  //       const updatedData = new FormData();
+  //       updatedData.append("email", response.email);
+  //       updatedData.append("password", response.password || "");
+  //       updatedData.append("npaPgri", response.npaPgri);
+  //       updatedData.append("nip", response.nip);
+  //       updatedData.append("nik", response.nik);
+  //       updatedData.append("namaLengkap", response.namaLengkap);
+  //       updatedData.append("tempatLahir", response.tempatLahir);
+  //       updatedData.append("tanggalLahir", formatTanggal(response.tanggalLahir));  // Format tanggalLahir
+  //       updatedData.append("kategoriDaspen", tempKategoriDaspen); // Gunakan kategori baru
+  //       updatedData.append("jenisKelamin", response.jenisKelamin);
+  //       updatedData.append("agama", response.agama);
+  //       updatedData.append("golonganDarah", response.golonganDarah);
+  //       updatedData.append("alamat", response.alamat);
+  //       updatedData.append("latitude", response.latitude || 0);
+  //       updatedData.append("longitude", response.longitude || 0);
+  //       updatedData.append("kodePos", response.kodePos || null);
+  //       updatedData.append("nomorHp", response.nomorHp || "");
+  //       updatedData.append("namaSuamiIstri", response.namaSuamiIstri || "");
+  //       updatedData.append("namaAnak", response.namaAnak || "");
+  //       updatedData.append("foto", response.foto || null);
+  //       updatedData.append("cabang", response.cabang || "");
+  //       updatedData.append("unitKerja", response.unitKerja || "");
+  //       updatedData.append("jabatan", response.jabatan || "");
+  //       updatedData.append("tingkatSekolah", response.tingkatSekolah || "");
+  //       updatedData.append("statusSekolah", response.statusSekolah || "");
+  //       updatedData.append("statusPegawai", response.statusPegawai || "");
+  //       updatedData.append("sertifikatPendidik", response.sertifikatPendidik);
+  //       updatedData.append("tahunDiangkat", formatTanggal(response.tahunDiangkat));  // Format tahunDiangkat
+  //       updatedData.append("pangkatGolongan", response.pangkatGolongan || "");
+  //       updatedData.append("pendidikanTerakhir", response.pendidikanTerakhir || "");
+  //       updatedData.append("mulaiJadiAnggotaPgri", formatTanggal(response.mulaiJadiAnggotaPgri));  // Format mulaiJadiAnggotaPgri
+  //       updatedData.append("golonganJabatan", response.golonganJabatan || "");
+  //       updatedData.append("mengajar", response.mengajar || "");
+  //       updatedData.append("pesertaDaspen", response.pesertaDaspen ? "Ya" : "");
+  //       updatedData.append("pesertaKtaDigital", response.pesertaKtaDigital ? "Ya" : "");
+  
+  //       // Debug log untuk melihat data yang ada dalam FormData
+  //       console.log("Data dalam FormData:");
+  //       updatedData.forEach((value, key) => {
+  //         console.log(`${key}: ${value}`);
+  //       });
+  
+  //       // Kirim permintaan untuk memperbarui data
+  //       const updateResponse = await GlobalApi.updateUserById(anggotaId, updatedData);
+  
+  //       if (updateResponse.status === 200) {
+  //         console.log("Kategori Daspen berhasil diperbarui");
+  //         setKategoriDaspen(tempKategoriDaspen); // Perbarui kategoriDaspen
+  //       } else {
+  //         console.error("Gagal memperbarui kategori Daspen");
+  //       }
+  //     } else {
+  //       console.error("Gagal mendapatkan data pengguna");
+  //     }
+  //   } catch (error) {
+  //     console.error("Terjadi kesalahan saat mengambil atau memperbarui data pengguna", error);
+  //   }
+  
+  //   // Menutup popup konfirmasi
+  //   setIsKategoriChanged(false);
+  // };
+  const handleConfirmChange = async () => {
+    setKategoriDaspen(tempKategoriDaspen); // Terapkan kategori baru
+    
+    try {
+      // Ambil id dari sessionStorage
+      const anggotaId = sessionStorage.getItem('anggotaId');
+      if (!anggotaId) {
+        console.error("ID anggota tidak ditemukan di sessionStorage");
+        return;
+      }
+  
+      // Ambil data pengguna berdasarkan ID dari sessionStorage
+      const response = await GlobalApi.getUserById(anggotaId);
+  
+      if (response) {
+        // Tampilkan data yang diterima dari API
+        console.log("Data yang diterima dari API:", response);
+  
+        // Fungsi untuk format tanggal menjadi yyyy-MM-dd
+        const formatTanggal = (tanggal) => {
+          const date = new Date(tanggal);
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, "0");  // Menambahkan leading zero
+          const day = String(date.getDate()).padStart(2, "0");  // Menambahkan leading zero
+          return `${year}-${month}-${day}`;  // Format yyyy-MM-dd
+        };
+  
+        // Siapkan data yang ingin diperbarui, termasuk kategoriDaspen
+        const updatedData = {
+          email: response.email,
+          password: response.password || "",
+          npaPgri: response.npaPgri,
+          nip: response.nip,
+          nik: response.nik,
+          namaLengkap: response.namaLengkap,
+          tempatLahir: response.tempatLahir,
+          tanggalLahir: formatTanggal(response.tanggalLahir),  // Format tanggalLahir
+          kategoriDaspen: tempKategoriDaspen, // Gunakan kategori baru
+          jenisKelamin: response.jenisKelamin,
+          agama: response.agama,
+          golonganDarah: response.golonganDarah,
+          alamat: response.alamat,
+          latitude: response.latitude || 0,
+          longitude: response.longitude || 0,
+          kodePos: response.kodePos || null,
+          nomorHp: response.nomorHp || "",
+          namaSuamiIstri: response.namaSuamiIstri || "",
+          namaAnak: response.namaAnak || "",
+          foto: response.foto || null,
+          cabang: response.cabang || "",
+          unitKerja: response.unitKerja || "",
+          jabatan: response.jabatan || "",
+          tingkatSekolah: response.tingkatSekolah || "",
+          statusSekolah: response.statusSekolah || "",
+          statusPegawai: response.statusPegawai || "",
+          sertifikatPendidik: response.sertifikatPendidik || "",
+          tahunDiangkat: formatTanggal(response.tahunDiangkat),  // Format tahunDiangkat
+          pangkatGolongan: response.pangkatGolongan || "",
+          pendidikanTerakhir: response.pendidikanTerakhir || "",
+          mulaiJadiAnggotaPgri: formatTanggal(response.mulaiJadiAnggotaPgri),  // Format mulaiJadiAnggotaPgri
+          golonganJabatan: response.golonganJabatan || "",
+          mengajar: response.mengajar || "",
+          pesertaDaspen: response.pesertaDaspen ? "Ya" : "",
+          pesertaKtaDigital: response.pesertaKtaDigital ? "Ya" : "",
+        };
+  
+        // Kirim permintaan untuk memperbarui data
+        const updateResponse = await GlobalApi.updateUserById(anggotaId, updatedData);
+  
+        if (updateResponse.status === 200) {
+          console.log("Kategori Daspen berhasil diperbarui");
+          setKategoriDaspen(tempKategoriDaspen); // Perbarui kategoriDaspen
+        } else {
+          console.error("Gagal memperbarui kategori Daspen");
+        }
+      } else {
+        console.error("Gagal mendapatkan data pengguna");
+      }
+    } catch (error) {
+      console.error("Terjadi kesalahan saat mengambil atau memperbarui data pengguna", error);
+    }
+  
+    // Menutup popup konfirmasi
+    setIsKategoriChanged(false);
+  };
+  
+  // updatedData.append("sertifikatPendidik", response.sertifikatPendidik);
   const formatCurrency = (amount) =>
     `Rp ${parseInt(amount).toLocaleString("id-ID")}`;
 
@@ -915,6 +1143,10 @@ function DataAnggota() {
 
   const handlePopup = () => {
     setPopupVisible(true);
+  };
+
+  const cancelChange = () => {
+    setShowConfirmationPopup(false);
   };
 
   const handlePensiunAnggota = async () => {
@@ -1582,21 +1814,27 @@ function DataAnggota() {
                               </>
                             )}
                             <div>
-                              <Button
-                                type="button"
-                                className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
-                                title="Edit Data"
-                                onClick={() => {
-                                  sessionStorage.setItem("anggotaId", item.id);
-                                  handleDataDaspen();
-                                }}
-                              >
-                                Daspen
-                              </Button>
-
+                            <Button
+  type="button"
+  className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+  title="Data Daspen"
+  onClick={() => {
+    sessionStorage.setItem("anggotaId", item.id);
+    handleDataDaspen();
+  }}
+>
+  Daspen
+</Button>
                               {isPopupDaspen && daspenData && (
-                                <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-10 z-50 ">
-                                  <div className="bg-white p-6 rounded-md w-5/12">
+                                <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-10 z-50">
+                                  <div className="bg-white p-6 rounded-md w-5/12 relative">
+                                    <button
+                                      onClick={closePopup}
+                                      className="absolute top-2 right-2 p-2 bg-white rounded-full"
+                                    >
+                                      <FaTimes className="h-6 w-6 text-red-600" />
+                                    </button>
+
                                     <h2 className="text-xl font-bold">
                                       Data Daspen
                                     </h2>
@@ -1612,14 +1850,41 @@ function DataAnggota() {
                                         </p>
                                       </div>
                                       <div>
-                                        <p className="font-semibold">
-                                          Kategori Daspen:
-                                        </p>
-                                        <p>
-                                          {daspenData.kategoriDaspen ||
-                                            "Tidak tersedia"}
-                                        </p>
-                                      </div>
+          <p className="font-semibold">Kategori Daspen:</p>
+          <select
+            className="w-full p-2 border rounded-md border-teal-500"
+            value={tempKategoriDaspen}
+            onChange={handleKategoriChange}
+          >
+            <option value="I">I</option>
+            <option value="II">II</option>
+            <option value="III">III</option>
+          </select>
+          
+          {isKategoriChanged && (
+            <div className="popup">
+              <p>Apakah Anda yakin ingin mengganti kategori Daspen?</p>
+
+              <button
+                onClick={handleConfirmChange}
+                className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition duration-200 px-6"
+              >
+                Ya
+              </button>
+
+              <button
+                onClick={() => {
+                  setTempKategoriDaspen(daspenData.kategoriDaspen);
+                  setIsKategoriChanged(false);
+                }}
+                className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-200 ml-2 px-4"
+              >
+                Tidak
+              </button>
+            </div>
+          )}
+        </div>
+
                                       <div>
                                         <p className="font-semibold">
                                           Tanggal Lahir:
@@ -1689,12 +1954,10 @@ function DataAnggota() {
                                                   new Date(
                                                     daspenData.prediksiPensiun
                                                   );
-
                                                 prediksiPensiunDate.setMonth(
                                                   prediksiPensiunDate.getMonth() +
                                                     1
                                                 );
-
                                                 return new Intl.DateTimeFormat(
                                                   "id-ID",
                                                   {
@@ -1812,12 +2075,14 @@ function DataAnggota() {
                                   >
                                     <FaExchangeAlt className="w-4 h-4" />
                                   </Button>
-                                ) : <Button
-                                className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
-                                title="Mutasi"
-                              >
-                                <FaExchangeAlt className="w-4 h-4" />
-                              </Button>}
+                                ) : (
+                                  <Button
+                                    className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                    title="Mutasi"
+                                  >
+                                    <FaExchangeAlt className="w-4 h-4" />
+                                  </Button>
+                                )}
                                 {sessionStorage.getItem("role") ===
                                 "SUPER ADMIN" ? (
                                   <Button

@@ -1113,9 +1113,41 @@ const getRekapAnggotaByCabang = async (cabang) => {
 // end
 
 //Start Pensiun
-const getAllPensiun = (page = 0, size = 10) => {
+const getAllPensiun = (page = 0, size = 560) => {
   return axiosClient.get(`/api/pensiun?page=${page}&size=${size}`);
 };
+// const getAllPensiun = async (page = 0) => {
+//   const fetchAllPages = async () => {
+//     let currentPage = page;
+//     let allData = [];
+//     let hasMoreData = true;
+ 
+//     while (hasMoreData) {
+//       const params = new URLSearchParams({ 
+//         page: currentPage, 
+//         size: 0
+//       });
+ 
+//       try {
+//         const response = await axiosClient.get(`/api/pensiun?${params.toString()}`);
+//         const pageData = response.data.content;
+//         const totalPages = response.data.totalPages;
+ 
+//         allData = [...allData, ...pageData];
+ 
+//         hasMoreData = currentPage + 1 < totalPages;
+//         currentPage++;
+//       } catch (error) {
+//         console.error("Error fetching pensiun pages:", error);
+//         break;
+//       }
+//     }
+ 
+//     return allData;
+//   };
+ 
+//   return fetchAllPages();
+// };
 // ENd
 
 //Notifikasi

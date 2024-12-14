@@ -1060,8 +1060,8 @@ const Page = () => {
           <svg
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              width: "48px",
-              height: "48px",
+              width: "150px", // Ukuran ikon lebih kecil agar sesuai dengan tampilan portrait
+              height: "150px",
               color: "#06D001",
               marginBottom: "16px",
             }}
@@ -1071,23 +1071,27 @@ const Page = () => {
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
           <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+            style={{
+              fontSize: "2rem", // Ukuran teks sedikit lebih kecil untuk menyesuaikan orientasi potret
+              display: "block",
+              marginBottom: "8px",
+            }}
           >
-            Laporan berhasil ditambahkan!
+            Laporan Berhasil!
           </strong>
         </div>,
         {
           icon: null,
           duration: 4000,
           style: {
-            marginTop: "16%",
+            marginTop: "16%", // Posisi toast di tengah vertikal
             fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
+            padding: "16px", // Menambah padding agar tidak terlalu rapat
+            width: "80%", // Lebar toast lebih kecil
+            maxWidth: "500px", // Batas lebar maksimal untuk tampilannya lebih portrait
+            height: "auto", // Sesuaikan tinggi secara otomatis
+            maxHeight: "500px", // Maksimal tinggi toast
+            transform: "translate(-50%, -50%)", // Posisikan di tengah
             textAlign: "center",
             zIndex: 9999,
             backgroundColor: "#fff",
@@ -1095,7 +1099,7 @@ const Page = () => {
             boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
           },
         }
-      );
+      );      
 
       setTimeout(() => {
         window.location.href = "/home";

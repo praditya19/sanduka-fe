@@ -3,11 +3,16 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBell, faSearch } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBell,
+  faSearch,
+  faEnvelope,
+} from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "../_utils/GlobalApi";
 import { useRouter } from "next/navigation";
 
 const HeaderHome = () => {
+  const [emailCount, setEmailCount] = useState(0);
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
@@ -91,6 +96,11 @@ const HeaderHome = () => {
   useEffect(() => {
     getAnggotaById();
 
+    const storedStatusSegeraCount = sessionStorage.getItem("statusSegera");
+    if (storedStatusSegeraCount) {
+      setEmailCount(parseInt(storedStatusSegeraCount));
+    }
+
     if (
       notificationCount > previousNotificationCount &&
       !isNotificationSoundPlaying
@@ -123,6 +133,10 @@ const HeaderHome = () => {
     };
   }, [isProfileMenuOpen]);
 
+  const handleEmailClick = () => {
+    router.push("/pensiun");
+  };
+
   return (
     <nav className="bg-teal-500 shadow-md fixed top-0 inset-x-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -135,6 +149,19 @@ const HeaderHome = () => {
 
           <div className="hidden md:block">
             <ul className="flex space-x-6 items-center">
+              <li className="relative">
+              <button className="relative" onClick={handleEmailClick}>
+            <FontAwesomeIcon
+              icon={faEnvelope}
+              className="w-5 h-5 text-gray-700"
+            />
+            {emailCount > 0 && (
+              <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+                {emailCount}
+              </span>
+            )}
+          </button>
+              </li>
               <li className="relative">
                 <button onClick={handleNotificationClick} className="relative">
                   <FontAwesomeIcon

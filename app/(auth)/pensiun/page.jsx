@@ -17,7 +17,7 @@ const Page = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState(null);
-
+  
   const router = useRouter();
   const { token } = useAuth();
   const [popupVisible, setPopupVisible] = useState(false);
@@ -28,6 +28,20 @@ const Page = () => {
   const [filteredPensiunList, setFilteredPensiunList] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const startNumber = (currentPage - 1) * itemsPerPage;
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [statusSegeraCount, setStatusSegeraCount] = useState(0);
+
+  const handleStatusChange = (event) => {
+    const status = event.target.value;
+    setSelectedStatus(status);
+
+    const filteredItems = pensiunList.filter((pensiun) => {
+      return status ? pensiun.status === status : true;
+    });
+
+    setFilteredPensiunList(filteredItems);
+  };
 
   useEffect(() => {
     const fetchBulan = async () => {
@@ -59,13 +73,13 @@ const Page = () => {
   useEffect(() => {
     const fetchPensiunData = async () => {
       try {
-        const response = await GlobalApi.getAllPensiun();
-        setPensiunList(response.data.content);
-        setFilteredPensiunList(response.data.content);
-
+        const fetchedData = await GlobalApi.getAllPensiun();
+        setPensiunList(fetchedData);
+        setFilteredPensiunList(fetchedData);
+ 
         const years = Array.from(
           new Set(
-            response.data.content.map((pensiun) =>
+            fetchedData.map((pensiun) =>
               new Date(pensiun.prediksiPensiun).getFullYear()
             )
           )
@@ -77,7 +91,7 @@ const Page = () => {
         setLoading(false);
       }
     };
-
+ 
     fetchPensiunData();
   }, []);
 
@@ -97,27 +111,41 @@ const Page = () => {
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredPensiunList.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredPensiunList.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
 
-  // Calculate total pages
+  useEffect(() => {
+    const role = sessionStorage.getItem('role');  // Mengambil role dari sessionStorage
+
+    // Jika role adalah ADMIN atau SUPER ADMIN, langsung jalankan fungsi untuk menghitung "Segera"
+    if (role === 'ADMIN' || role === 'SUPER ADMIN') {
+      const countSegera = filteredPensiunList.filter(item => item.status === 'Segera').length;
+      setStatusSegeraCount(countSegera);
+
+      // Simpan jumlah "Segera" ke sessionStorage
+      sessionStorage.setItem('statusSegera', countSegera);
+    }
+  }, [currentItems]);
+
   const totalPages = Math.ceil(filteredPensiunList.length / itemsPerPage);
 
-  // Get visible page numbers
   const getVisiblePages = () => {
     const visiblePages = [];
-    const maxVisiblePages = 5;
+    const maxVisiblePages = 3;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
+ 
     // Adjust start page if we're near the end
     if (endPage === totalPages) {
       startPage = Math.max(1, totalPages - maxVisiblePages + 1);
     }
-
+ 
     for (let i = startPage; i <= endPage; i++) {
       visiblePages.push(i);
     }
-
+ 
     return visiblePages;
   };
 
@@ -194,18 +222,18 @@ const Page = () => {
         toastOptions={{
           style: {
             marginTop: "16%",
-            fontSize: "1.75rem", // Ukuran font
-            padding: "10px", // Padding kecil
-            width: "80%", // Lebar penuh
-            maxWidth: "700px", // Lebar maksimal
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
             height: "50%",
             maxHeight: "400px",
-            transform: "translate(-50%, -50%)", // Pusatkan dengan benar
-            textAlign: "center", // Teks di tengah horizontal
-            zIndex: 9999, // Memastikan toast berada di atas elemen lain
-            backgroundColor: "#fff", // Warna latar (opsional)
-            borderRadius: "8px", // Sudut melengkung untuk estetika
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", // Bayangan halus
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
           },
           success: {
             style: {
@@ -226,16 +254,17 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="min-h-screen bg-gray-100 p-4">
-            <div className="w-full flex items-center justify-between mb-4 mt-16">
-              <div className="flex w-full space-x-2">
+            <div className="w-full flex flex-wrap items-center justify-between mb-4 mt-16 gap-4">
+              <div className="flex flex-wrap w-full gap-4 md:w-auto">
                 <select
                   value={selectedMonth}
                   onChange={handleMonthChange}
-                  className="p-2 border rounded w-full md:w-auto"
+                  className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
                 >
                   <option value="">Pilih Bulan</option>
                   {bulanOptions.map((bulan) => (
@@ -248,7 +277,7 @@ const Page = () => {
                 <select
                   value={selectedYear}
                   onChange={handleYearChange}
-                  className="p-2 border rounded w-full md:w-auto"
+                  className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
                 >
                   <option value="">Pilih Tahun</option>
                   {yearOptions.map((year) => (
@@ -257,9 +286,18 @@ const Page = () => {
                     </option>
                   ))}
                 </select>
+
+                <select
+                  value={selectedStatus}
+                  onChange={handleStatusChange}
+                  className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
+                >
+                  <option value="">Pilih Status</option>
+                  <option value="Segera">Segera</option>
+                </select>
               </div>
 
-              <button className="p-2 px-4 bg-blue-500 text-white rounded w-full md:w-auto transition duration-300 hover:bg-blue-700">
+              <button className="p-2 px-4 bg-blue-500 text-white rounded w-full sm:w-auto transition duration-300 hover:bg-blue-700">
                 Cetak
               </button>
             </div>
@@ -270,6 +308,9 @@ const Page = () => {
                 <span>Jumlah Anggota: {filteredPensiunList.length} Orang</span>
               </div>
               <div className="overflow-x-auto">
+              <div className="my-4 text-center">
+        <h3>Status "Segera" Ditemukan: {statusSegeraCount}</h3>
+      </div>
                 <table className="min-w-full bg-white mt-4">
                   <thead className="bg-teal-700 text-white">
                     <tr>
@@ -298,7 +339,7 @@ const Page = () => {
                       <>
                         <tr key={pensiun.id} className="border-t">
                           <td className="py-2 px-3 text-center">
-                            {index + 1}
+                          {startNumber + index + 1}
                             <Button
                               className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
                               onClick={() => handleExpand(index)}
@@ -317,7 +358,6 @@ const Page = () => {
                               className="w-10 h-10 rounded-full"
                             />
                           </td>
-
                           <td className="py-2 px-3 text-center hidden lg:table-cell">
                             {formatDate(pensiun.prediksiPensiun)}
                           </td>
@@ -339,7 +379,6 @@ const Page = () => {
                             {pensiun.status}
                           </td>
                           <td className="py-2 px-3 text-center hidden lg:table-cell">
-                            {/* Tombol Pensiun */}
                             <button
                               type="button"
                               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -348,9 +387,8 @@ const Page = () => {
                               Pensiun
                             </button>
 
-                            {/* Popup */}
                             {popupVisible && (
-                              <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+                              <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex justify-center items-center z-50">
                                 <div className="bg-white rounded-lg p-6 w-2/5 text-center shadow-lg">
                                   <h2 className="text-lg font-semibold text-gray-800">
                                     Apakah Anda yakin ?
@@ -378,7 +416,6 @@ const Page = () => {
                             )}
                           </td>
                         </tr>
-
                         {expandedIndex === index && (
                           <tr className="bg-gray-100 lg:hidden">
                             <td
@@ -402,6 +439,41 @@ const Page = () => {
                               <div>
                                 <strong>Status:</strong> {pensiun.status}
                               </div>
+                              <button
+                                type="button"
+                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-1"
+                                onClick={handlePopup}
+                              >
+                                Pensiun
+                              </button>
+
+                              {popupVisible && (
+                                <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex justify-center items-center z-50">
+                                  <div className="bg-white rounded-lg p-6 w-4/5 sm:w-2/5 md:w-1/3 text-center shadow-lg">
+                                    <h2 className="text-lg font-semibold text-gray-800">
+                                      Apakah Anda yakin ?
+                                    </h2>
+                                    <p className="text-gray-600 mt-2 mb-4">
+                                      Apakah Anda yakin untuk mengubah anggota
+                                      menjadi pensiun?
+                                    </p>
+                                    <div className="flex justify-center gap-4">
+                                      <button
+                                        onClick={handleCancelKeluar}
+                                        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                                      >
+                                        Batal
+                                      </button>
+                                      <button
+                                        onClick={handlePensiunAnggota}
+                                        className="bg-teal-500 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition duration-200"
+                                      >
+                                        Ya, Saya Yakin
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                             </td>
                           </tr>
                         )}
@@ -431,8 +503,8 @@ const Page = () => {
                       key={page}
                       onClick={() => setCurrentPage(page)}
                       className={`px-3 py-1 border rounded text-sm ${page === currentPage
-                          ? "bg-blue-500 text-white"
-                          : "bg-white hover:bg-gray-50"
+                        ? "bg-blue-500 text-white"
+                        : "bg-white hover:bg-gray-50"
                         }`}
                     >
                       {page}
@@ -462,4 +534,4 @@ const Page = () => {
   );
 };
 
-export default Page;  
+export default Page;

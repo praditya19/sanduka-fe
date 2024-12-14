@@ -258,7 +258,7 @@ function SignIn() {
   }
 
   return (
-    <div className="flex items-baseline justify-center my-14">
+    <div className="flex items-baseline justify-center my-8">
       <Toaster
         toastOptions={{
           style: {
@@ -292,7 +292,7 @@ function SignIn() {
       />
       <div className="flex flex-col items-center justify-center p-6 sm:p-10 bg-gray-100 border border-gray-200 rounded-lg shadow-md w-full max-w-md sm:max-w-lg lg:w-[32%]">
         <Image src="/sanduka.png" width={100} height={100} alt="logo" />
-        <h2 className="font-bold text-xl sm:text-2xl mt-4">Masuk ke Akun</h2>
+        <h2 className="font-bold text-xl sm:text-2xl">Masuk ke Akun</h2>
         <h4 className="text-gray-500 mt-2 text-center text-sm sm:text-base">
           Masukkan NPA PGRI dan{" "}
           {activeTab === "login" ? "Tanggal Lahir" : "Password"} Anda untuk
