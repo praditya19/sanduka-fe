@@ -182,6 +182,7 @@ const getFileByNip = async (nip) => {
     }
   }
 }
+
 // Update DATA
 const updateUserById = async (userId, formData) => {
   try {
