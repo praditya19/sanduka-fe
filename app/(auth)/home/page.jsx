@@ -37,6 +37,7 @@ import { useRouter } from "next/navigation";
 import GlobalApi from "@/app/_utils/GlobalApi";
 
 export default function IconGrid() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [statusSegeraCount, setStatusSegeraCount] = useState(0);
   const [loader, setLoader] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -147,15 +148,15 @@ export default function IconGrid() {
       color: "text-teal-500",
     });
   }
-
+  
   const getPensiunDataAndCountSegera = async () => {
     setLoader(true);
-
+  
     try {
       // Ambil data pensiun
       const pensiunResponse = await GlobalApi.getAllPensiun();
-
-      if (pensiunResponse && pensiunResponse.data && pensiunResponse.data.content) {
+  
+      if (pensiunResponse && pensiunResponse.data.content) {
         const filteredPensiunList = pensiunResponse.data.content;
         
         // Filter untuk status "Segera"
@@ -163,12 +164,22 @@ export default function IconGrid() {
         
         // Hitung jumlah "Segera"
         const countSegera = segeraItems.length;
-
+  
         // Simpan jumlah "Segera" ke sessionStorage
         sessionStorage.setItem('statusSegera', countSegera);
-
+  
         // Set statusSegeraCount di state
         setStatusSegeraCount(countSegera);
+  
+        // Jika statusSegera belum ada di sessionStorage, set dan refresh halaman
+        if (countSegera > 0 && !sessionStorage.getItem('statusSegera')) {
+          sessionStorage.setItem('statusSegera', countSegera.toString());
+          
+          // Tambahkan delay 3 detik sebelum melakukan refresh
+          setTimeout(() => {
+            window.location.reload(); // Refresh hanya setelah 3 detik
+          }, 3000); // 3000 milidetik = 3 detik
+        }
       }
     } catch (error) {
       console.error("Terjadi kesalahan saat mengambil data pensiun:", error);
@@ -177,11 +188,50 @@ export default function IconGrid() {
       setLoader(false);
     }
   };
-
+  
   useEffect(() => {
-    // Setelah login, kita panggil fungsi ini
-    getPensiunDataAndCountSegera();
+    // Cek status login saat komponen pertama kali dimuat
+    checkLoginStatus();
   }, []);
+  
+  useEffect(() => {
+    // Jika sudah login, jalankan fungsi untuk mengambil data pensiun
+    if (isLoggedIn) {
+      // Mengecek jika statusSegera sudah ada di sessionStorage
+      const statusSegera = sessionStorage.getItem('statusSegera');
+      if (statusSegera) {
+        // Jika sudah ada, tidak perlu refresh
+        setStatusSegeraCount(parseInt(statusSegera)); // Set statusSegeraCount langsung dari sessionStorage
+      } else {
+        // Jika tidak ada, jalankan fungsi untuk mendapatkan data pensiun
+        getPensiunDataAndCountSegera();
+      }
+    }
+  }, [isLoggedIn]);
+  
+  const checkLoginStatus = () => {
+    const userToken = sessionStorage.getItem('authToken');
+    const hasRefreshed = sessionStorage.getItem('hasRefreshed'); // Cek apakah halaman sudah di-refresh
+  
+    if (userToken) {
+      setIsLoggedIn(true);  // Set isLoggedIn true jika token ada
+  
+      // Hanya refresh jika statusSegera belum ada di sessionStorage
+      const statusSegera = sessionStorage.getItem('statusSegera');
+      if (!statusSegera) {
+        // Jika statusSegera belum ada, refresh halaman setelah 3 detik
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000); // 3 detik
+      } else {
+        // Jika statusSegera ada, ambil data pensiun langsung
+        getPensiunDataAndCountSegera();
+      }
+    } else {
+      router.push('/login');  // Jika belum login, arahkan ke halaman login
+    }
+  };
+  
 
   const handleMainMenuClick = (e, index, href) => {
     e.preventDefault();

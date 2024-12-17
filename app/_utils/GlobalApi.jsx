@@ -652,6 +652,16 @@ const getTotalAnggotaStatistik = async () => {
   }
 };
 
+const updateIuranById = async (id, payload) => {
+  try {
+    const response = await axiosClient.put(`/api/iuran/${id}`, payload); // Mengirim payload di body
+    return response.data;  // Mengembalikan data dari respon API
+  } catch (error) {
+    console.error('Error fetching data from API:', error);
+    throw error;  // Melempar error agar bisa ditangani di tempat lain
+  }
+};
+
 // Sinkronisasi
 const uploadFile = async (formData) => {
   try {
@@ -1339,4 +1349,5 @@ export default {
   getTotalAnggotaStatistik,
   getTotalAnggotaByCabang,
   getFileByNip,
+  updateIuranById,
 };

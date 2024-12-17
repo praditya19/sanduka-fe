@@ -17,7 +17,7 @@ const Page = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState(null);
-  
+
   const router = useRouter();
   const { token } = useAuth();
   const [popupVisible, setPopupVisible] = useState(false);
@@ -74,12 +74,30 @@ const Page = () => {
     const fetchPensiunData = async () => {
       try {
         const fetchedData = await GlobalApi.getAllPensiun();
-        setPensiunList(fetchedData);
-        setFilteredPensiunList(fetchedData);
- 
+        if (fetchedData && fetchedData.data.content && fetchedData.data.content) {
+          const filteredPensiunList = fetchedData.data.content;
+          
+          // Filter untuk status "Segera"
+          const segeraItems = filteredPensiunList.filter(item => item.status === 'Segera');
+          
+          // Hitung jumlah "Segera"
+          const countSegera = segeraItems.length;
+  
+          // Simpan jumlah "Segera" ke sessionStorage
+          sessionStorage.setItem('statusSegera', countSegera);
+  
+          // Set statusSegeraCount di state
+          setStatusSegeraCount(countSegera);
+        }
+        console.log(fetchedData.data.content)
+        const pensiunList = fetchedData.data.content;
+
+        setPensiunList(pensiunList);
+        setFilteredPensiunList(pensiunList);
+
         const years = Array.from(
           new Set(
-            fetchedData.map((pensiun) =>
+            pensiunList.map((pensiun) =>
               new Date(pensiun.prediksiPensiun).getFullYear()
             )
           )
@@ -91,7 +109,7 @@ const Page = () => {
         setLoading(false);
       }
     };
- 
+
     fetchPensiunData();
   }, []);
 
@@ -117,15 +135,15 @@ const Page = () => {
   );
 
   useEffect(() => {
-    const role = sessionStorage.getItem('role');  // Mengambil role dari sessionStorage
+    const role = sessionStorage.getItem("role");
 
-    // Jika role adalah ADMIN atau SUPER ADMIN, langsung jalankan fungsi untuk menghitung "Segera"
-    if (role === 'ADMIN' || role === 'SUPER ADMIN') {
-      const countSegera = filteredPensiunList.filter(item => item.status === 'Segera').length;
+    if (role === "ADMIN" || role === "SUPER ADMIN") {
+      const countSegera = filteredPensiunList.filter(
+        (item) => item.status === "Segera"
+      ).length;
       setStatusSegeraCount(countSegera);
 
-      // Simpan jumlah "Segera" ke sessionStorage
-      sessionStorage.setItem('statusSegera', countSegera);
+      sessionStorage.setItem("statusSegera", countSegera);
     }
   }, [currentItems]);
 
@@ -136,16 +154,15 @@ const Page = () => {
     const maxVisiblePages = 3;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
- 
-    // Adjust start page if we're near the end
+
     if (endPage === totalPages) {
       startPage = Math.max(1, totalPages - maxVisiblePages + 1);
     }
- 
+
     for (let i = startPage; i <= endPage; i++) {
       visiblePages.push(i);
     }
- 
+
     return visiblePages;
   };
 
@@ -179,8 +196,22 @@ const Page = () => {
     };
   }, []);
 
-  const handlePopup = () => {
-    setPopupVisible(true);
+  const handlePopup = async (npa) => {
+    try {
+      const response = await GlobalApi.cekNpa(npa);
+
+      if (response && response && response.id) {
+        const id = response.id;
+
+        sessionStorage.setItem("idPensiun", id);
+
+        setPopupVisible(true);
+      } else {
+        console.error("ID tidak ditemukan dalam respon API");
+      }
+    } catch (error) {
+      console.error("Error saat mengambil NPA:", error);
+    }
   };
 
   const handleCancelKeluar = () => {
@@ -189,17 +220,115 @@ const Page = () => {
 
   const handlePensiunAnggota = async () => {
     try {
-      const anggotaId = sessionStorage.getItem("anggotaId");
-      await GlobalApi.pensiunAnggota(anggotaId);
+      const idPensiun = sessionStorage.getItem("idPensiun");
+      await GlobalApi.pensiunAnggota(idPensiun);
       setPopupVisible(false);
-      toast.success("Anggota berhasil Pensiun!", {
-        autoClose: 3000,
-      });
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Anggota berhasil Pensiun!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 4000,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     } catch (error) {
-      console.error("Gagal mengeluarkan anggota:", error);
-      toast.error("Gagal pensiun anggota.", {
-        autoClose: 3000,
-      });
+      console.error("Gagal pensiun anggota:", error);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Anggota Gagal Pensiun.
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 5000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     }
   };
 
@@ -308,9 +437,6 @@ const Page = () => {
                 <span>Jumlah Anggota: {filteredPensiunList.length} Orang</span>
               </div>
               <div className="overflow-x-auto">
-              <div className="my-4 text-center">
-        <h3>Status "Segera" Ditemukan: {statusSegeraCount}</h3>
-      </div>
                 <table className="min-w-full bg-white mt-4">
                   <thead className="bg-teal-700 text-white">
                     <tr>
@@ -339,7 +465,7 @@ const Page = () => {
                       <>
                         <tr key={pensiun.id} className="border-t">
                           <td className="py-2 px-3 text-center">
-                          {startNumber + index + 1}
+                            {startNumber + index + 1}
                             <Button
                               className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
                               onClick={() => handleExpand(index)}
@@ -382,7 +508,7 @@ const Page = () => {
                             <button
                               type="button"
                               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                              onClick={handlePopup}
+                              onClick={() => handlePopup(pensiun.npa)}
                             >
                               Pensiun
                             </button>
@@ -441,8 +567,8 @@ const Page = () => {
                               </div>
                               <button
                                 type="button"
-                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-1"
-                                onClick={handlePopup}
+                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                onClick={() => handlePopup(pensiun.npa)}
                               >
                                 Pensiun
                               </button>
@@ -492,7 +618,9 @@ const Page = () => {
                     First
                   </button>
                   <button
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
                     disabled={currentPage === 1}
                     className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                   >
@@ -502,16 +630,19 @@ const Page = () => {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 border rounded text-sm ${page === currentPage
-                        ? "bg-blue-500 text-white"
-                        : "bg-white hover:bg-gray-50"
-                        }`}
+                      className={`px-3 py-1 border rounded text-sm ${
+                        page === currentPage
+                          ? "bg-blue-500 text-white"
+                          : "bg-white hover:bg-gray-50"
+                      }`}
                     >
                       {page}
                     </button>
                   ))}
                   <button
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
                     disabled={currentPage === totalPages}
                     className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                   >

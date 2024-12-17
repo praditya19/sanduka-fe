@@ -101,7 +101,12 @@ const VerifikasiAnggotaMutasi = () => {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            style={{ width: "48px", height: "48px", color: "#06D001", marginBottom: "16px" }}
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
@@ -136,6 +141,60 @@ const VerifikasiAnggotaMutasi = () => {
       }, 4000);
     } catch (error) {
       console.error("Error fetching cabang:", error);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Anggota Gagal Diverifikasi.
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 5000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     }
   };
 
@@ -154,7 +213,12 @@ const VerifikasiAnggotaMutasi = () => {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            style={{ width: "48px", height: "48px", color: "#06D001", marginBottom: "16px" }}
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
@@ -189,6 +253,60 @@ const VerifikasiAnggotaMutasi = () => {
       }, 4000);
     } catch (error) {
       console.error("Error fetching cabang:", error);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal Menghapus Pengguna.
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 5000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     }
   };
 

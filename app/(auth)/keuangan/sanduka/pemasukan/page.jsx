@@ -17,7 +17,20 @@ function Pemasukan() {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const dropdownRef = useRef(null);
   const [transactions, setTransactions] = useState([]);
-  const [bulanList, setBulanList] = useState([]);
+  const bulanList = [
+    { id: '01', angkaBulan: 0, namaBulan: 'Januari' },
+    { id: '02', angkaBulan: 1, namaBulan: 'Februari' },
+    { id: '03', angkaBulan: 2, namaBulan: 'Maret' },
+    { id: '04', angkaBulan: 3, namaBulan: 'April' },
+    { id: '05', angkaBulan: 4, namaBulan: 'Mei' },
+    { id: '06', angkaBulan: 5, namaBulan: 'Juni' },
+    { id: '07', angkaBulan: 6, namaBulan: 'Juli' },
+    { id: '08', angkaBulan: 7, namaBulan: 'Agustus' },
+    { id: '09', angkaBulan: 8, namaBulan: 'September' },
+    { id: '10', angkaBulan: 9, namaBulan: 'Oktober' },
+    { id: '11', angkaBulan: 10, namaBulan: 'November' },
+    { id: '12', angkaBulan: 11, namaBulan: 'Desember' },
+  ];
   const [cabangList, setCabangList] = useState([]);
   const [selectedBulan, setSelectedBulan] = useState("");
   const [selectedBulanName, setSelectedBulanName] = useState("");
@@ -28,7 +41,7 @@ function Pemasukan() {
   const [totalItems, setTotalItems] = useState(0);
   const [paginatedTransactions, setPaginatedTransactions] = useState([]);
   const startYear = 2020;
-  const endYear = 2050;
+  const endYear = 2030;
   const [newSelectedYear, setNewSelectedYear] = useState(
     currentYear.toString()
   );
@@ -59,7 +72,6 @@ function Pemasukan() {
     let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
     let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
 
-    // Adjust start page if we're near the end
     if (endPage - startPage + 1 < totalPagesToShow) {
       startPage = Math.max(1, endPage - totalPagesToShow + 1);
     }
@@ -76,18 +88,26 @@ function Pemasukan() {
   };
 
   const handleBulanChange = (e) => {
-    const selectedId = e.target.value; // Ambil ID bulan yang dipilih
+    const selectedId = e.target.value; 
     setSelectedBulan(selectedId);
 
-    // Cari nama bulan berdasarkan ID
     const bulan = bulanList.find((b) => b.id === parseInt(selectedId));
-    setSelectedBulanName(bulan ? bulan.namaBulan : ""); // Update nama bulan
+    setSelectedBulanName(bulan ? bulan.namaBulan : ""); 
   };
 
+  useEffect(() => {
+    const currentMonth = new Date().getMonth(); 
+    
+    const currentBulan = bulanList.find(bulan => bulan.angkaBulan === currentMonth);
+    
+    if (currentBulan) {
+      setSelectedBulan(currentBulan.id);
+    }
+  }, []);
 
   const printTable = () => {
-    const tableHTML = tableRef.current.outerHTML; // Ambil tabel saja
-    const printWindow = window.open("", "_blank"); // Buka jendela baru untuk mencetak
+    const tableHTML = tableRef.current.outerHTML; 
+    const printWindow = window.open("", "_blank"); 
     printWindow.document.open();
     printWindow.document.write(`
       <html>
@@ -123,7 +143,7 @@ function Pemasukan() {
       </html>
     `);
     printWindow.document.close();
-    printWindow.print(); // Cetak halaman
+    printWindow.print(); 
     printWindow.close();
   };
 
@@ -218,31 +238,76 @@ function Pemasukan() {
     fetchCabangData();
   }, []);
 
-  useEffect(() => {
-    const fetchBulan = async () => {
-      try {
-        const response = await GlobalApi.getBulan();
-        setBulanList(response.data);
-      } catch (error) { }
-    };
-
-    fetchBulan();
-  }, []);
-
   const handleSubmitAll = async (e) => {
     e.preventDefault();
-
+  
     const requestData = {
       uangMasukKeluar: {
         ...formValues,
       },
       targetCabang: formValues.cabang,
     };
-
+  
     try {
       const response = await GlobalApi.sendSesuaiJumlahTarget(requestData);
+      if (response && response.data) {
+        toast.success(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                width: "150px",
+                height: "150px",
+                color: "#06D001",
+                marginBottom: "16px",
+              }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+            </svg>
+            <strong
+              style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+            >
+Data berhasil dikirim!            </strong>
+          </div>,
+          {
+            icon: null,
+            autoClose: 4000,
+            duration: 4000,
+            style: {
+              marginTop: "16%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "700px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
+        );
+      }
     } catch (error) {
       console.error("Error saat mengirim data:", error);
+  
+      toast.error('Terjadi kesalahan saat mengirim data.', {
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: 3000,
+      });
     }
   };
 
@@ -256,7 +321,7 @@ function Pemasukan() {
         masukKe: formValues.jenisPenerimaan,
         cabang: formValues.cabang,
         bulan: formValues.setoranBulan,
-        debet: formValues.debet,
+        debet: formValues.nominal,
         kredit: formValues.kredit,
         bulanSantunan: formValues.bulanSantunan,
         keterangan: formValues.keterangan,
@@ -268,8 +333,55 @@ function Pemasukan() {
       };
 
       const response = await GlobalApi.createPembayaranSanduka(dataToSend);
-
-      toast.success("Data berhasil disimpan!");
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+Data berhasil disimpan!          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 4000,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     } catch (error) {
       toast.error(`Gagal menyimpan data: ${error.message}`);
     }
@@ -288,7 +400,6 @@ function Pemasukan() {
   };
 
   const handleCheck = (noBukti) => {
-    // Perbarui status checked untuk item tertentu berdasarkan noBukti
     const updatedTransactions = transactions.map((transaction) =>
       transaction.noBukti === noBukti
         ? { ...transaction, checked: !transaction.checked }
@@ -297,7 +408,6 @@ function Pemasukan() {
 
     setTransactions(updatedTransactions);
 
-    // Periksa apakah semua checkbox dipilih
     const allChecked = updatedTransactions.every(
       (transaction) => transaction.checked
     );
@@ -748,18 +858,18 @@ function Pemasukan() {
             <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
               <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
                 <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-                  <select
-                    className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
-                    value={selectedBulan}
-                    onChange={handleBulanChange}
-                  >
-                    <option value="">Pilih Bulan</option>
-                    {bulanList.map((bulan) => (
-                      <option key={bulan.angkaBulan} value={bulan.id}>
-                        {bulan.namaBulan}
-                      </option>
-                    ))}
-                  </select>
+                <select
+      className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+      value={selectedBulan}
+      onChange={handleBulanChange}
+    >
+      <option value="">Pilih Bulan</option>
+      {bulanList.map((bulan) => (
+        <option key={bulan.angkaBulan} value={bulan.id}>
+          {bulan.namaBulan}
+        </option>
+      ))}
+    </select>
                   <div className="relative w-28">
                     <button
                       onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -847,10 +957,7 @@ function Pemasukan() {
                         <td className="px-6 py-4 text-sm">
                           {indexOfFirstItem + index + 1}
                         </td>
-                        <td className="px-6 py-4 text-sm">{index + 1}</td>
-                        <td className="px-6 py-4 text-sm">
-                          {transaction.tglTransaksi}
-                        </td>
+                        <td className="px-6 py-4 text-sm"> {transaction.tglTransaksi}</td>
                         <td className="px-6 py-4 text-sm">
                           {transaction.noBukti}
                         </td>

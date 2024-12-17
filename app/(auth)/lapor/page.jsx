@@ -1060,7 +1060,7 @@ const Page = () => {
           <svg
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              width: "150px", // Ukuran ikon lebih kecil agar sesuai dengan tampilan portrait
+              width: "150px",
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
@@ -1072,7 +1072,7 @@ const Page = () => {
           </svg>
           <strong
             style={{
-              fontSize: "2rem", // Ukuran teks sedikit lebih kecil untuk menyesuaikan orientasi potret
+              fontSize: "2rem",
               display: "block",
               marginBottom: "8px",
             }}
@@ -1084,14 +1084,14 @@ const Page = () => {
           icon: null,
           duration: 4000,
           style: {
-            marginTop: "16%", // Posisi toast di tengah vertikal
+            marginTop: "16%",
             fontSize: "1.75rem",
-            padding: "16px", // Menambah padding agar tidak terlalu rapat
-            width: "80%", // Lebar toast lebih kecil
-            maxWidth: "500px", // Batas lebar maksimal untuk tampilannya lebih portrait
-            height: "auto", // Sesuaikan tinggi secara otomatis
-            maxHeight: "500px", // Maksimal tinggi toast
-            transform: "translate(-50%, -50%)", // Posisikan di tengah
+            padding: "16px", 
+            width: "80%",
+            maxWidth: "500px",
+            height: "auto",
+            maxHeight: "500px",
+            transform: "translate(-50%, -50%)",
             textAlign: "center",
             zIndex: 9999,
             backgroundColor: "#fff",
@@ -1118,8 +1118,8 @@ const Page = () => {
           <svg
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              width: "48px",
-              height: "48px",
+              width: "150px",
+              height: "150px",
               color: "red",
               marginBottom: "16px",
             }}

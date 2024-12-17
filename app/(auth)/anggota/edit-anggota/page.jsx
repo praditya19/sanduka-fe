@@ -577,7 +577,7 @@ const Page = () => {
 
     try {
       const response = await GlobalApi.getUserById(id);
-
+// 35
       console.log("data", response);
       if (response) {
         setNamaLengkap(response.namaLengkap || "");
