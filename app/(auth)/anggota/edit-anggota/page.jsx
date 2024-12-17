@@ -577,7 +577,8 @@ const Page = () => {
 
     try {
       const response = await GlobalApi.getUserById(id);
-
+// 35
+      console.log("data", response);
       if (response) {
         setNamaLengkap(response.namaLengkap || "");
         setPassword(response.password || "");
@@ -621,7 +622,7 @@ const Page = () => {
         setValue("pendidikanTerakhir", response.pendidikanTerakhir);
         setSertifikatPendidik(response.sertifikatPendidik || "");
         setValueGolonganJabatan(response.golonganJabatan);
-        setValueKategoriDaspen(response.kategoriDaspen || ""); // Add this line
+        setValueKategoriDaspen(response.kategoriDaspen || "");
         setValue("golonganJabatan", response.golonganJabatan);
         setJabatan(response.jabatan);
         setValue("jabatan", response.jabatan);
@@ -992,15 +993,13 @@ const Page = () => {
   }, []);
 
   useEffect(() => {
-    // Mengambil nilai role dari sessionStorage
     const userRole = sessionStorage.getItem("role");
 
-    // Validasi role untuk menentukan apakah role sesuai
     if (userRole === "ADMIN" || userRole === "SUPER ADMIN") {
-      setRole(userRole); // Menyimpan role ke dalam state jika valid
-      setIsValidRole(true); // Menandakan role valid
+      setRole(userRole);
+      setIsValidRole(true);
     } else {
-      setIsValidRole(false); // Menandakan role tidak valid
+      setIsValidRole(false);
     }
   }, []);
 
@@ -1760,7 +1759,7 @@ const Page = () => {
                   <Controller
                     name="jabatan"
                     control={control}
-                    defaultValue={jabatan}
+                    defaultValue={valueJabatan}
                     render={({ field: { onChange, value } }) => (
                       <Select
                         value={value}
@@ -2043,10 +2042,10 @@ const Page = () => {
                       onChange={(e) => setValueKategoriDaspen(e.target.value)}
                       render={({ field: { onChange, value } }) => (
                         <Select
-                          value={value || valueKategoriDaspen} // Ensure proper value handling
+                          value={value || valueKategoriDaspen}
                           onValueChange={(e) => {
                             onChange(e);
-                            setValueKategoriDaspen(e); // Update the state with selected value
+                            setValueKategoriDaspen(e);
                           }}
                         >
                           <SelectTrigger className="border-teal-500">

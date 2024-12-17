@@ -14,7 +14,20 @@ import toast, { Toaster } from "react-hot-toast";
 function Pengeluaran() {
   const tableRef = useRef();
   const [transactions, setTransactions] = useState([]);
-  const [bulanList, setBulanList] = useState([]);
+  const bulanList = [
+    { id: "01", angkaBulan: 0, namaBulan: "Januari" },
+    { id: "02", angkaBulan: 1, namaBulan: "Februari" },
+    { id: "03", angkaBulan: 2, namaBulan: "Maret" },
+    { id: "04", angkaBulan: 3, namaBulan: "April" },
+    { id: "05", angkaBulan: 4, namaBulan: "Mei" },
+    { id: "06", angkaBulan: 5, namaBulan: "Juni" },
+    { id: "07", angkaBulan: 6, namaBulan: "Juli" },
+    { id: "08", angkaBulan: 7, namaBulan: "Agustus" },
+    { id: "09", angkaBulan: 8, namaBulan: "September" },
+    { id: "10", angkaBulan: 9, namaBulan: "Oktober" },
+    { id: "11", angkaBulan: 10, namaBulan: "November" },
+    { id: "12", angkaBulan: 11, namaBulan: "Desember" },
+  ];
   const currentYear = new Date().getFullYear();
   const startYear = 2020;
   const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
@@ -40,6 +53,9 @@ function Pengeluaran() {
   const dropdownRef = useRef(null);
   const [isPopupVisible, setPopupVisible] = useState(false);
   const [kwitansiData, setKwitansiData] = useState(null);
+  const [tanggal, setTanggal] = useState("");
+  const [bulan, setBulan] = useState("");
+  const [tahun, setTahun] = useState("");
 
   const [selectAll, setSelectAll] = useState(false);
   const handleChange = (e) => {
@@ -50,27 +66,99 @@ function Pengeluaran() {
     }));
   };
 
+  const getBulanAngka = (bulanNama) => {
+    const bulanObj = bulanList.find((bulan) => bulan.namaBulan === bulanNama);
+    return bulanObj ? bulanObj.angkaBulan : null;
+  };
+
+  useEffect(() => {
+    const tanggalStr = formValues.tanggalTransaksi;
+
+    const [tanggalPart, bulanPart, tahunPart] = tanggalStr.split(" ");
+
+    const bulanAngka = getBulanAngka(bulanPart);
+
+    setTanggal(parseInt(tanggalPart));
+    setBulan(bulanAngka);
+    setTahun(parseInt(tahunPart));
+  }, [formValues.tanggalTransaksi]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const dataToSend = {
-        noBukti: formValues.noBukti,
-        tanggalTransaksi: formValues.tanggalTransaksi,
-        posTransaksi: formValues.posPenerimaan,
-        masukKe: formValues.jenisPenerimaan,
-        cabang: formValues.cabang,
-        bulan: formValues.setoranBulan,
-        debet: formValues.nominal,
-        kredit: formValues.nominal,
-        bulanSantunan: formValues.bulanSantunan,
-        yangMeninggal: formValues.yangMeninggal,
-        namaPenerima: formValues.namaPenerima,
-        keterangan: formValues.keterangan,
-        jenisPembayaran: "Sanduka",
-      };
 
+    const formattedTanggal = `${tahun}-${String(bulan + 1).padStart(
+      2,
+      "0"
+    )}-${String(tanggal).padStart(2, "0")}`;
+
+    const dataToSend = {
+      noBukti: formValues.noBukti,
+      tanggalTransaksi: formattedTanggal,
+      posTransaksi: formValues.posPenerimaan,
+      masukKe: formValues.jenisPenerimaan,
+      cabang: formValues.cabang,
+      bulan: formValues.setoranBulan,
+      debet: formValues.nominal,
+      kredit: formValues.nominal,
+      bulanSantunan: formValues.bulanSantunan,
+      yangMeninggal: formValues.yangMeninggal,
+      namaPenerima: formValues.namaPenerima,
+      keterangan: formValues.keterangan,
+      jenisPembayaran: "Sanduka",
+    };
+
+    try {
       const response = await GlobalApi.createPembayaranSanduka(dataToSend);
-      toast.success("Data berhasil disimpan!");
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Data berhasil dikirim!{" "}
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 4000,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     } catch (error) {
       toast.error(`Gagal menyimpan data: ${error.message}`);
     }
@@ -96,11 +184,14 @@ function Pengeluaran() {
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentTransactions = transactions.slice(indexOfFirstItem, indexOfLastItem);
+  const currentTransactions = transactions.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
   const totalPages = Math.ceil(transactions.length / itemsPerPage);
 
   const getVisiblePages = () => {
-    const range = 2; // Number of pages to show on each side of current page
+    const range = 2;
     let start = Math.max(1, currentPage - range);
     let end = Math.min(totalPages, currentPage + range);
 
@@ -124,31 +215,29 @@ function Pengeluaran() {
   }, []);
 
   const handleBulanChange = (e) => {
-    const selectedId = e.target.value; // Ambil ID bulan yang dipilih
+    const selectedId = e.target.value;
     setSelectedBulan(selectedId);
 
-    // Cari nama bulan berdasarkan ID
     const bulan = bulanList.find((b) => b.id === parseInt(selectedId));
-    setSelectedBulanName(bulan ? bulan.namaBulan : ""); // Update nama bulan
+    setSelectedBulanName(bulan ? bulan.namaBulan : "");
   };
+
+  useEffect(() => {
+    const currentMonth = new Date().getMonth();
+
+    const currentBulan = bulanList.find(
+      (bulan) => bulan.angkaBulan === currentMonth
+    );
+
+    if (currentBulan) {
+      setSelectedBulan(currentBulan.id);
+    }
+  }, []);
 
   const years = Array.from(
     { length: currentYear - startYear + 1 },
     (_, index) => startYear + index
   );
-
-  useEffect(() => {
-    const fetchBulan = async () => {
-      try {
-        const response = await GlobalApi.getBulan();
-        setBulanList(response.data);
-      } catch (error) {
-        console.error("Error fetching bulan:", error);
-      }
-    };
-
-    fetchBulan();
-  }, []);
 
   const handleSearch = async (e) => {
     const value = e.target.value;
@@ -261,7 +350,6 @@ function Pengeluaran() {
 
   const handleKwitansiClick = async () => {
     const fetchKwitansiData = async () => {
-      // Mengambil id dan npaPgri dari sessionStorage
       const id = sessionStorage.getItem("idTerlapor");
       const npaPgri = sessionStorage.getItem("npaTerlapor");
 
@@ -271,17 +359,15 @@ function Pengeluaran() {
       }
 
       try {
-        // Memanggil API dan menerima respons berupa BLOB
         const response = await GlobalApi.getKwitansiByIdAndNpa(id, npaPgri, {
-          responseType: "blob", // Menentukan bahwa respons berupa BLOB
+          responseType: "blob",
         });
 
-        // Mengonversi BLOB menjadi URL
         const gambarUrl = URL.createObjectURL(response.data);
         console.log("URL Gambar Kwitansi:", gambarUrl);
 
-        setKwitansiData(gambarUrl); // Menyimpan URL gambar ke state
-        setPopupVisible(true); // Menampilkan popup
+        setKwitansiData(gambarUrl);
+        setPopupVisible(true);
       } catch (error) {
         console.error("Gagal mengambil data kwitansi:", error.message);
       }
@@ -357,8 +443,9 @@ function Pengeluaran() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <Toaster
             toastOptions={{
@@ -386,7 +473,7 @@ function Pengeluaran() {
                 PENGELUARAN SANDUKA
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="flex flex-col">
+                {/* <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
                     htmlFor="noBukti"
@@ -401,7 +488,7 @@ function Pengeluaran() {
                     value={formValues.noBukti}
                     onChange={handleChange}
                   />
-                </div>
+                </div> */}
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -415,7 +502,12 @@ function Pengeluaran() {
                     type="text"
                     name="tanggalTransaksi"
                     value={formValues.tanggalTransaksi}
-                    onChange={handleChange}
+                    onChange={(e) =>
+                      setFormValues({
+                        ...formValues,
+                        tanggalTransaksi: e.target.value,
+                      })
+                    }
                     readOnly
                   />
                 </div>
@@ -467,7 +559,7 @@ function Pengeluaran() {
                         {kwitansiData ? (
                           <div className="flex justify-center">
                             <img
-                              src={kwitansiData} // Menggunakan URL yang dibuat dari BLOB
+                              src={kwitansiData}
                               alt="Gambar Kwitansi"
                               className="w-full max-h-96 object-contain"
                             />
@@ -480,7 +572,7 @@ function Pengeluaran() {
                           className="mt-4 bg-teal-500 text-white py-2 px-4 rounded"
                           onClick={() => {
                             setPopupVisible(false);
-                            URL.revokeObjectURL(kwitansiData); // Membersihkan URL BLOB
+                            URL.revokeObjectURL(kwitansiData);
                             setKwitansiData(null);
                           }}
                         >
@@ -672,8 +764,11 @@ function Pengeluaran() {
                     transaction.tglTransaksi ? (
                       <tr
                         key={index}
-                        className={`border-b text-black text-center ${transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
-                          }`}
+                        className={`border-b text-black text-center ${
+                          transaction.checked
+                            ? "bg-gray-100"
+                            : "hover:bg-gray-50"
+                        }`}
                       >
                         <td className="px-6 py-4 text-sm">{index + 1}</td>
                         <td className="px-6 py-4 text-sm">
@@ -755,52 +850,57 @@ function Pengeluaran() {
                 </tbody>
               </table>
             </div>
+            <div className="flex justify-center mt-4 gap-1">
+              {transactions.length > itemsPerPage && (
                 <div className="flex justify-center mt-4 gap-1">
-                  {transactions.length > itemsPerPage && (
-                    <div className="flex justify-center mt-4 gap-1">
-                      <button
-                        onClick={() => setCurrentPage(1)}
-                        disabled={currentPage === 1}
-                        className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                      >
-                        First
-                      </button>
-                      <button
-                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                        disabled={currentPage === 1}
-                        className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                      >
-                        Prev
-                      </button>
-                      {getVisiblePages().map((page) => (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`px-3 py-1 border rounded text-sm ${page === currentPage
-                              ? "bg-blue-500 text-white"
-                              : "bg-white hover:bg-gray-50"
-                            }`}
-                        >
-                          {page}
-                        </button>
-                      ))}
-                      <button
-                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                        disabled={currentPage === totalPages}
-                        className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                      >
-                        Next
-                      </button>
-                      <button
-                        onClick={() => setCurrentPage(totalPages)}
-                        disabled={currentPage === totalPages}
-                        className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                      >
-                        Last
-                      </button>
-                    </div>
-                  )}
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    First
+                  </button>
+                  <button
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Prev
+                  </button>
+                  {getVisiblePages().map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 border rounded text-sm ${
+                        page === currentPage
+                          ? "bg-blue-500 text-white"
+                          : "bg-white hover:bg-gray-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Next
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Last
+                  </button>
                 </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

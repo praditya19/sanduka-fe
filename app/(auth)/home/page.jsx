@@ -37,6 +37,9 @@ import { useRouter } from "next/navigation";
 import GlobalApi from "@/app/_utils/GlobalApi";
 
 export default function IconGrid() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [statusSegeraCount, setStatusSegeraCount] = useState(0);
+  const [loader, setLoader] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { token } = useAuth();
@@ -145,6 +148,90 @@ export default function IconGrid() {
       color: "text-teal-500",
     });
   }
+  
+  const getPensiunDataAndCountSegera = async () => {
+    setLoader(true);
+  
+    try {
+      // Ambil data pensiun
+      const pensiunResponse = await GlobalApi.getAllPensiun();
+  
+      if (pensiunResponse && pensiunResponse.data.content) {
+        const filteredPensiunList = pensiunResponse.data.content;
+        
+        // Filter untuk status "Segera"
+        const segeraItems = filteredPensiunList.filter(item => item.status === 'Segera');
+        
+        // Hitung jumlah "Segera"
+        const countSegera = segeraItems.length;
+  
+        // Simpan jumlah "Segera" ke sessionStorage
+        sessionStorage.setItem('statusSegera', countSegera);
+  
+        // Set statusSegeraCount di state
+        setStatusSegeraCount(countSegera);
+  
+        // Jika statusSegera belum ada di sessionStorage, set dan refresh halaman
+        if (countSegera > 0 && !sessionStorage.getItem('statusSegera')) {
+          sessionStorage.setItem('statusSegera', countSegera.toString());
+          
+          // Tambahkan delay 3 detik sebelum melakukan refresh
+          setTimeout(() => {
+            window.location.reload(); // Refresh hanya setelah 3 detik
+          }, 3000); // 3000 milidetik = 3 detik
+        }
+      }
+    } catch (error) {
+      console.error("Terjadi kesalahan saat mengambil data pensiun:", error);
+      toast.error("Gagal mengambil data pensiun");
+    } finally {
+      setLoader(false);
+    }
+  };
+  
+  useEffect(() => {
+    // Cek status login saat komponen pertama kali dimuat
+    checkLoginStatus();
+  }, []);
+  
+  useEffect(() => {
+    // Jika sudah login, jalankan fungsi untuk mengambil data pensiun
+    if (isLoggedIn) {
+      // Mengecek jika statusSegera sudah ada di sessionStorage
+      const statusSegera = sessionStorage.getItem('statusSegera');
+      if (statusSegera) {
+        // Jika sudah ada, tidak perlu refresh
+        setStatusSegeraCount(parseInt(statusSegera)); // Set statusSegeraCount langsung dari sessionStorage
+      } else {
+        // Jika tidak ada, jalankan fungsi untuk mendapatkan data pensiun
+        getPensiunDataAndCountSegera();
+      }
+    }
+  }, [isLoggedIn]);
+  
+  const checkLoginStatus = () => {
+    const userToken = sessionStorage.getItem('authToken');
+    const hasRefreshed = sessionStorage.getItem('hasRefreshed'); // Cek apakah halaman sudah di-refresh
+  
+    if (userToken) {
+      setIsLoggedIn(true);  // Set isLoggedIn true jika token ada
+  
+      // Hanya refresh jika statusSegera belum ada di sessionStorage
+      const statusSegera = sessionStorage.getItem('statusSegera');
+      if (!statusSegera) {
+        // Jika statusSegera belum ada, refresh halaman setelah 3 detik
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000); // 3 detik
+      } else {
+        // Jika statusSegera ada, ambil data pensiun langsung
+        getPensiunDataAndCountSegera();
+      }
+    } else {
+      router.push('/login');  // Jika belum login, arahkan ke halaman login
+    }
+  };
+  
 
   const handleMainMenuClick = (e, index, href) => {
     e.preventDefault();
@@ -319,7 +406,7 @@ export default function IconGrid() {
             {isMobile ? (
               <>
                 {role === "USER" && (
-                  <div className="flex justify-center mb-7 ml-3 -mt-32 items-center text-center overflow-x-hidden max-w-full">
+                  <div className="flex justify-center mb-[18%] ml-3 -mt-32 items-center text-center overflow-x-hidden max-w-full">
                     <div className="flex items-center justify-center">
                       <span className=" text-lg ">Daspen:</span>
                       <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
@@ -508,7 +595,7 @@ export default function IconGrid() {
               <div key={index} className="relative">
                 <div
                   onClick={(e) => handleMainMenuClick(e, index, item.href)}
-                  className="flex flex-col items-center cursor-pointer transition duration-300 transform hover:scale-105 hover:shadow-xl p-7 sm:p-4 sm:bg-white sm:rounded-lg sm:shadow-lg"
+                  className="flex flex-col items-center cursor-pointer transition duration-300 transform hover:scale-105 hover:shadow-xl p-7 sm:p-4 sm:bg-white sm:rounded-lg sm:shadow-lg lg:p-4 lg:bg-transparent lg:shadow-none"
                 >
                   <FontAwesomeIcon
                     icon={item.icon}

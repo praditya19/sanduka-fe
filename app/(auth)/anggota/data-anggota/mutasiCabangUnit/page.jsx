@@ -145,8 +145,8 @@ const page = () => {
           <svg
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              width: "48px",
-              height: "48px",
+              width: "150px",
+              height: "150px",
               color: "#06D001",
               marginBottom: "16px",
             }}

@@ -5,12 +5,17 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { useRouter } from "next/navigation";
-import { faBell, faSearch } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBell,
+  faSearch,
+  faEnvelope,
+} from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "../_utils/GlobalApi";
 
 const HeaderHome = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [emailCount, setEmailCount] = useState(0);
   const [previousNotificationCount, setPreviousNotificationCount] = useState(0);
   const [isNotificationSoundPlaying, setIsNotificationSoundPlaying] =
     useState(false);
@@ -89,6 +94,11 @@ const HeaderHome = () => {
   useEffect(() => {
     getAnggotaById();
 
+    const storedStatusSegeraCount = sessionStorage.getItem("statusSegera");
+    if (storedStatusSegeraCount) {
+      setEmailCount(parseInt(storedStatusSegeraCount));
+    }
+
     if (
       notificationCount > previousNotificationCount &&
       !isNotificationSoundPlaying
@@ -140,6 +150,21 @@ const HeaderHome = () => {
 
           <div className="hidden md:block">
             <ul className="flex space-x-6 items-center">
+              {/* Icon Email */}
+              <li className="relative">
+                <button className="relative">
+                  <FontAwesomeIcon
+                    icon={faEnvelope}
+                    className="w-5 h-5 text-gray-700"
+                  />
+                  {emailCount > 0 && (
+                    <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+                      {emailCount}
+                    </span>
+                  )}
+                </button>
+              </li>
+              {/* Icon Bell */}
               <li className="relative">
                 <button onClick={handleNotificationClick} className="relative">
                   <FontAwesomeIcon

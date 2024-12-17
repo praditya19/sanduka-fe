@@ -58,8 +58,6 @@ export default function Iuran() {
   const [searchTerm, setSearchTerm] = useState("");
   const [chosenCabang, setChosenCabang] = useState("");
   const [cabangOptions, setCabangOptions] = useState([]);
-  const [isEdit, setIsEdit] = useState(false);
-const [existingId, setExistingId] = useState(null);
 
   useEffect(() => {
     const fetchTotalAnggota = async () => {
@@ -163,7 +161,16 @@ const [existingId, setExistingId] = useState(null);
     setTahun(currentYear);
   }, []);
 
-  const handleSubmit = async (event) => {
+  useEffect(() => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; 
+    const currentYear = currentDate.getFullYear(); 
+
+    setBulan(currentMonth); 
+    setTahun(currentYear);  
+  }, []);
+
+   const handleSubmit = async (event) => {
     event.preventDefault();
   
     const payload = {
@@ -172,32 +179,181 @@ const [existingId, setExistingId] = useState(null);
       kabupaten: iuranKabupaten,
       cabang: iuranCabang,
       sanduka: sumbanganSanduka,
-      bulan: bulan,
-      tahun: tahun,
+      bulan: bulan, 
+      tahun: tahun, 
     };
   
     try {
-      // Pertama, buat data baru
+      
       const createResult = await GlobalApi.createIuranData(payload);
-      toast.success("Data berhasil disimpan!");
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Data berhasil disimpan!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 4000,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );  
+      
+      const id = createResult?.id || 1; 
+      const updateResult = await GlobalApi.updateIuranById(id, payload);
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Data berhasil diperbarui!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 4000,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
   
-      // Setelah berhasil menyimpan, lakukan update data berdasarkan ID
-      const id = createResult?.id || 1; // Gunakan ID dari respons API jika tersedia, default ke 1
-      const updateResult = await GlobalApi.updateDataIuran(id, payload);
-      toast.success("Data berhasil diperbarui!");
-  
-      // Reset form setelah selesai
+      
       handleReset();
   
-      // Reload data tabel jika diperlukan
+      
       setTimeout(() => {
-        window.location.reload(); // Hindari jika ingin solusi tanpa refresh
+        window.location.reload(); 
       }, 2000);
     } catch (error) {
       console.error("Error saat menyimpan atau memperbarui data iuran:", error.message);
-      toast.error("Gagal menyimpan atau memperbarui data iuran!");
-    }
-  };  
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal Menyimpan Data.
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 5000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );    }
+  };     
 
   const handleSubmitTarget = async (event) => {
     event.preventDefault();
@@ -211,7 +367,56 @@ const [existingId, setExistingId] = useState(null);
 
     try {
       await GlobalApi.createTargetIuaran(payload);
-      toast.success("Data berhasil disimpan!");
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+           Data berhasil disimpan!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 4000,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
 
       const data = await GlobalApi.getTableIuran(
         selectedBulanBaru,
@@ -221,8 +426,60 @@ const [existingId, setExistingId] = useState(null);
       setFilteredDataSumbangan(data);
     } catch (error) {
       console.error("Error creating data:", error);
-      toast.error(`Gagal menyimpan data: ${error.message}`);
-    }
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal Menyimpan Data.
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 5000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );    }
   };
 
   useEffect(() => {
@@ -261,7 +518,7 @@ const [existingId, setExistingId] = useState(null);
   };
 
   const getVisiblePages = () => {
-    const range = 2; // Number of pages to show around current page
+    const range = 2; 
     let start = Math.max(1, currentPage - range);
     let end = Math.min(totalPages, currentPage + range);
 

@@ -63,18 +63,23 @@ function SignIn() {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            style={{ width: "48px", height: "48px", color: "#06D001", marginBottom: "16px" }}
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
-          <strong style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
-          Selamat Datang Di Sanduka
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Selamat Datang Di Sanduka
           </strong>
-          <span style={{ fontSize: "1.75rem" }}>
-            {response.namaLengkap}
-          </span>
+          <span style={{ fontSize: "1.75rem" }}>{response.namaLengkap}</span>
         </div>,
         {
           icon: null,
@@ -99,27 +104,59 @@ function SignIn() {
       setTimeout(() => {
         router.push("/home");
       }, 4000);
-      
     } catch (error) {
       toast.error(
-        <div>
-          <strong style={{ fontSize: "1.75rem" }}>
-          Terjadi kesalahan saat login
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Terjadi kesalahan saat login
           </strong>
         </div>,
         {
-          icon: (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{ width: "48px", height: "48px", color: "red" }}  
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-            </svg>
-          ),          
+          icon: null,
           duration: 5000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
         }
       );
     } finally {
@@ -168,18 +205,23 @@ function SignIn() {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            style={{ width: "48px", height: "48px", color: "#06D001", marginBottom: "16px" }}
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
-          <strong style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
-          Selamat Datang Di Sanduka
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Selamat Datang Di Sanduka
           </strong>
-          <span style={{ fontSize: "1.75rem" }}>
-            {response.namaLengkap}
-          </span>
+          <span style={{ fontSize: "1.75rem" }}>{response.namaLengkap}</span>
         </div>,
         {
           icon: null,
@@ -217,20 +259,31 @@ function SignIn() {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            style={{ width: "48px", height: "48px", color: "red", marginBottom: "16px" }}
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
             <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
           </svg>
-          <strong style={{ fontSize: "1.75rem", display: "block", marginBottom: "8px" }}>
-          Terjadi kesalahan saat login
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Terjadi kesalahan saat login
           </strong>
         </div>,
         {
-          icon: null, 
-          duration: 2000,
+          icon: null,
+          duration: 5000,
           style: {
             marginTop: "16%",
             fontSize: "1.75rem",
@@ -258,23 +311,23 @@ function SignIn() {
   }
 
   return (
-    <div className="flex items-baseline justify-center my-14">
+    <div className="flex items-baseline justify-center my-8">
       <Toaster
         toastOptions={{
           style: {
             marginTop: "16%",
-            fontSize: "1.75rem", 
-            padding: "10px", 
-            width: "80%", 
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
             maxWidth: "700px",
             height: "50%",
             maxHeight: "400px",
-            transform: "translate(-50%, -50%)", 
-            textAlign: "center", 
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
             zIndex: 9999,
-            backgroundColor: "#fff", 
-            borderRadius: "8px", 
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", 
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
           },
           success: {
             style: {
@@ -292,7 +345,7 @@ function SignIn() {
       />
       <div className="flex flex-col items-center justify-center p-6 sm:p-10 bg-gray-100 border border-gray-200 rounded-lg shadow-md w-full max-w-md sm:max-w-lg lg:w-[32%]">
         <Image src="/sanduka.png" width={100} height={100} alt="logo" />
-        <h2 className="font-bold text-xl sm:text-2xl mt-4">Masuk ke Akun</h2>
+        <h2 className="font-bold text-xl sm:text-2xl">Masuk ke Akun</h2>
         <h4 className="text-gray-500 mt-2 text-center text-sm sm:text-base">
           Masukkan NPA PGRI dan{" "}
           {activeTab === "login" ? "Tanggal Lahir" : "Password"} Anda untuk
