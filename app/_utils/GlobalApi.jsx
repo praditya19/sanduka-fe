@@ -251,6 +251,7 @@ const getUnverifiedUsers = (
 
   return axiosClient.get(`/api/auth/unverified-users?${params.toString()}`);
 };
+
 const verifyUser = async (userId) => {
   try {
     const response = await axiosClient.put(`/api/auth/user/${userId}/verify`);
