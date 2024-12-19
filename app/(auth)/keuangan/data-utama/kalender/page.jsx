@@ -198,7 +198,7 @@ function KalenderForm() {
 
     if (storedData) {
       const data = JSON.parse(storedData);
-      const firstItem = data[0];
+      const firstItem = data;
 
       if (firstItem) {
         setProvinsi(firstItem.propinsi);
@@ -243,14 +243,13 @@ function KalenderForm() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const payload1 = {
+    const payload = {
       pb: "",
       propinsi: provinsi,
       kabupaten: kabupaten,
-      cabang: selectedCabang,
+      cabang: cabang,
       sanduka: "",
-      bulan: selectedBulan,
-      tahun: selectedYear,
+      iuran: "KALENDER",
     };
 
     const payload2 = {
@@ -263,8 +262,8 @@ function KalenderForm() {
     };
 
     try {
-      const result1 = await GlobalApi.createKalenderData(payload1);
-
+      const id = 1;
+      const result1 = await GlobalApi.updateIuranData(id, payload);
       const result2 = await GlobalApi.createTargetKalender(payload2);
 
       setFilteredTableData((prevTableData) => [
@@ -395,7 +394,7 @@ function KalenderForm() {
   const kalenderData = JSON.parse(sessionStorage.getItem("kalenderData"));
 
   const firstItem = kalenderData
-    ? kalenderData[0]
+    ? kalenderData
     : { cabang: 0, kabupaten: 0, propinsi: 0 };
 
   const calculateTotal = (jumlah, cabang, kabupaten, propinsi) => {
@@ -437,7 +436,7 @@ function KalenderForm() {
 
     if (storedData) {
       const data = JSON.parse(storedData);
-      const firstItem = data[0];
+      const firstItem = data;
 
       if (firstItem) {
         setProvinsi(firstItem.propinsi || 0);

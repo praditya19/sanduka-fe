@@ -29,19 +29,32 @@ const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const startNumber = (currentPage - 1) * itemsPerPage;
-  const [selectedStatus, setSelectedStatus] = useState("");
   const [statusSegeraCount, setStatusSegeraCount] = useState(0);
+  const [selectedStatus, setSelectedStatus] = useState("");
 
   const handleStatusChange = (event) => {
-    const status = event.target.value;
-    setSelectedStatus(status);
-
+    const status = event.target.value; // Ambil nilai dari dropdown
+    setSelectedStatus(status); // Set nilai status ke state
+  
+    // Filter data berdasarkan status
     const filteredItems = pensiunList.filter((pensiun) => {
-      return status ? pensiun.status === status : true;
+      // Jika status yang dipilih adalah "Pensiun", hanya tampilkan keterangan "Pensiun"
+      if (status === "Pensiun") {
+        return pensiun.keterangan === "Pensiun";
+      }
+  
+      // Jika status yang dipilih adalah "Segera", tampilkan jika keterangan null dan status "Segera"
+      if (status === "Segera") {
+        return pensiun.keterangan === null && pensiun.status === "Segera";
+      }
+  
+      // Jika tidak ada status yang dipilih, tampilkan semua data
+      return true;
     });
-
+  
+    // Update state dengan hasil filter
     setFilteredPensiunList(filteredItems);
-  };
+  };   
 
   useEffect(() => {
     const fetchBulan = async () => {
@@ -74,44 +87,43 @@ const Page = () => {
     const fetchPensiunData = async () => {
       try {
         const fetchedData = await GlobalApi.getAllPensiun();
-        if (fetchedData && fetchedData.data.content && fetchedData.data.content) {
-          const filteredPensiunList = fetchedData.data.content;
-          
-          // Filter untuk status "Segera"
-          const segeraItems = filteredPensiunList.filter(item => item.status === 'Segera');
-          
-          // Hitung jumlah "Segera"
+        console.log(fetchedData.data.content);
+  
+        if (fetchedData && fetchedData.data.content) {
+          const allPensiunList = fetchedData.data.content;
+  
+          // Filter item dengan keterangan null dan status Segera
+          const segeraItems = allPensiunList.filter(
+            (item) => item.keterangan === null && item.status === "Segera"
+          );          
+  
+          // Hitung jumlah "Segera" jika keterangan null
           const countSegera = segeraItems.length;
   
-          // Simpan jumlah "Segera" ke sessionStorage
-          sessionStorage.setItem('statusSegera', countSegera);
+          // Hanya simpan ke sessionStorage jika countSegera lebih dari 0
+          // if (countSegera > 0) {
+          //   sessionStorage.setItem("statusSegera", countSegera);
+          // }
   
-          // Set statusSegeraCount di state
+          // Set jumlah "Segera" di state
           setStatusSegeraCount(countSegera);
+  
+          // Set data utama (tetap utuh) di state
+          setPensiunList(allPensiunList);
+  
+          // Default: tampilkan semua data
+          setFilteredPensiunList(allPensiunList);
         }
-        console.log(fetchedData.data.content)
-        const pensiunList = fetchedData.data.content;
-
-        setPensiunList(pensiunList);
-        setFilteredPensiunList(pensiunList);
-
-        const years = Array.from(
-          new Set(
-            pensiunList.map((pensiun) =>
-              new Date(pensiun.prediksiPensiun).getFullYear()
-            )
-          )
-        );
-        setYearOptions(years);
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchPensiunData();
   }, []);
+  
 
   const applyFilters = (month, year) => {
     const filteredList = pensiunList.filter((pensiun) => {
@@ -143,7 +155,7 @@ const Page = () => {
       ).length;
       setStatusSegeraCount(countSegera);
 
-      sessionStorage.setItem("statusSegera", countSegera);
+      // sessionStorage.setItem("statusSegera", countSegera);
     }
   }, [currentItems]);
 
@@ -423,6 +435,7 @@ const Page = () => {
                 >
                   <option value="">Pilih Status</option>
                   <option value="Segera">Segera</option>
+                  <option value="Pensiun">Pensiun</option>
                 </select>
               </div>
 
@@ -501,8 +514,14 @@ const Page = () => {
                           <td className="py-2 px-3 text-center hidden lg:table-cell">
                             {pensiun.cabang}
                           </td>
-                          <td className="py-2 px-3 text-center hidden lg:table-cell">
-                            {pensiun.status}
+                          <td className="py-2 px-3 text-center">
+                            {pensiun.keterangan === "Pensiun"
+                              ? "Pensiun"
+                              : pensiun.keterangan === null
+                              ? pensiun.status === "Segera"
+                                ? "Segera"
+                                : "Aktif"
+                              : "Aktif"}
                           </td>
                           <td className="py-2 px-3 text-center hidden lg:table-cell">
                             <button

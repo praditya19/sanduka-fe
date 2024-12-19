@@ -407,23 +407,24 @@ const Page = () => {
     if (!isFormValid) return;
     setIsSubmitClicked(true); 
     
-    const formattedTanggalLahir = new Date(data.tanggalLahir)
-      .toISOString()
-      .split("T")[0];
-    const formattedTahunDiangkat = new Date(data.tahunDiangkat)
-      .toISOString()
-      .split("T")[0];
-    const formattedMulaiJadiAnggota = new Date(data.mulaiJadiAnggotaPgri)
-      .toISOString()
-      .split("T")[0];
+    // const formattedTanggalLahir = new Date(data.tanggalLahir)
+    //   .toISOString()
+    //   .split("T")[0];
+    // const formattedTahunDiangkat = new Date(data.tahunDiangkat)
+    //   .toISOString()
+    //   .split("T")[0];
+    // const formattedMulaiJadiAnggota = new Date(data.mulaiJadiAnggotaPgri)
+    //   .toISOString()
+    //   .split("T")[0];
 
     const cleanBase64 = base64String.split(",")[1] || base64String;
 
     const finalData = {
       ...data,
-      tanggalLahir: formattedTanggalLahir,
-      tahunDiangkat: formattedTahunDiangkat,
-      mulaiJadiAnggotaPgri: formattedMulaiJadiAnggota,
+      // tanggalLahir: formattedTanggalLahir,
+      // tahunDiangkat: formattedTahunDiangkat,
+      // mulaiJadiAnggotaPgri: formattedMulaiJadiAnggota,
+      email,
       namaAnak: namaAnak.filter((name) => name.trim() !== ""),
       latitude,
       longitude,
@@ -682,73 +683,73 @@ const Page = () => {
   };
 
   return (
-    <div className="w-full mx-auto  py-6 bg-slate-200">
-      <div className="w-full mx-auto">
-        <div className="flex flex-row items-center justify-center space-x-2 sm:space-x-4 mb-2">
-          <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm ${
-              step === 1
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
-            // onClick={() => handleNavigation(1)}
-          >
-            1. SYARAT & KETENTUAN
-          </div>
-
-          <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
-
-          <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
-              step === 2
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
-            onClick={() => handleNavigation(2)}
-          >
-            2. DATA PRIBADI
-          </div>
-
-          <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
-
-          <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
-              step === 3
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
-            onClick={() => handleNavigation(3)}
-          >
-            3. DATA PEKERJAAN
-          </div>
-
-          <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
-
-          <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
-              step === 4
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
-            // onClick={() => handleNavigation(4)}
-          >
-            4. MENUNGGU VERIFIKASI ADMIN
-          </div>
-
-          <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
-
-          <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
-              step === 5
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
-            // onClick={() => handleNavigation(5)}
-          >
-            5. SELESAI
-          </div>
-        </div>
+    <div className="w-full mx-auto py-6 bg-slate-200">
+  <div className="w-full mx-auto overflow-x-auto">
+    <div className="flex flex-row items-center justify-start space-x-2 sm:space-x-4 mb-2 whitespace-nowrap">
+      <div
+        className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+          step === 1
+            ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+            : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+        }`}
+        // onClick={() => handleNavigation(1)}
+      >
+        1. SYARAT & KETENTUAN
       </div>
+
+      <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
+
+      <div
+        className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+          step === 2
+            ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+            : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+        }`}
+        onClick={() => handleNavigation(2)}
+      >
+        2. DATA PRIBADI
+      </div>
+
+      <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
+
+      <div
+        className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+          step === 3
+            ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+            : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+        }`}
+        onClick={() => handleNavigation(3)}
+      >
+        3. DATA PEKERJAAN
+      </div>
+
+      <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
+
+      <div
+        className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+          step === 4
+            ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+            : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+        }`}
+        // onClick={() => handleNavigation(4)}
+      >
+        4. MENUNGGU VERIFIKASI ADMIN
+      </div>
+
+      <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
+
+      <div
+        className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+          step === 5
+            ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+            : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+        }`}
+        // onClick={() => handleNavigation(5)}
+      >
+        5. SELESAI
+      </div>
+    </div>
+  </div>
       <div className="container mx-auto max-w-screen-lg sm:max-w-full md:max-w-screen-lg px-4">
         <Toaster
           toastOptions={{

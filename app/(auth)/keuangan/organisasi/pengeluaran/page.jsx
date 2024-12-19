@@ -14,23 +14,36 @@ import toast, { Toaster } from "react-hot-toast";
 function Pengeluaran() {
   const tableRef = useRef();
   const [transactions, setTransactions] = useState([]);
-  const [bulanList, setBulanList] = useState([]);
+  const bulanList = [
+    { id: "01", angkaBulan: 0, namaBulan: "Januari" },
+    { id: "02", angkaBulan: 1, namaBulan: "Februari" },
+    { id: "03", angkaBulan: 2, namaBulan: "Maret" },
+    { id: "04", angkaBulan: 3, namaBulan: "April" },
+    { id: "05", angkaBulan: 4, namaBulan: "Mei" },
+    { id: "06", angkaBulan: 5, namaBulan: "Juni" },
+    { id: "07", angkaBulan: 6, namaBulan: "Juli" },
+    { id: "08", angkaBulan: 7, namaBulan: "Agustus" },
+    { id: "09", angkaBulan: 8, namaBulan: "September" },
+    { id: "10", angkaBulan: 9, namaBulan: "Oktober" },
+    { id: "11", angkaBulan: 10, namaBulan: "November" },
+    { id: "12", angkaBulan: 11, namaBulan: "Desember" },
+  ];
   const [cabangList, setCabangList] = useState([]);
   const currentYear = new Date().getFullYear();
   const startYear = 2020;
   const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
   const [selectedBulan, setSelectedBulan] = useState("");
   const [formValues, setFormValues] = useState({
-    noBukti: "",
-    tanggalTransaksi: "", // Automatically set current date
+    // noBukti: "",
+    tanggalTransaksi: "",
     posPenerimaan: "",
     jenisPenerimaan: "",
     cabang: "",
     setoranBulan: "",
     nominal: "",
-    bulanSantunan: "", // Make sure to add this if needed
-    yangMeninggal: "", // Add this if it's required
-    namaPenerima: "", // Add this if it's required
+    bulanSantunan: "",
+    yangMeninggal: "",
+    namaPenerima: "",
     keterangan: "",
   });
 
@@ -39,20 +52,6 @@ function Pengeluaran() {
   const dropdownRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  const totalPages = Math.ceil(transactions.length / itemsPerPage);
-
-  const getVisiblePages = () => {
-    const pageRange = 2;
-    let start = Math.max(1, currentPage - pageRange);
-    let end = Math.min(totalPages, currentPage + pageRange);
-
-    const pages = [];
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  };
 
   const paginatedTransactions = transactions.slice(
     (currentPage - 1) * itemsPerPage,
@@ -68,17 +67,45 @@ function Pengeluaran() {
     }));
   };
 
+  const getBulanAngka = (bulanNama) => {
+    const bulanObj = bulanList.find((bulan) => bulan.namaBulan === bulanNama);
+    return bulanObj ? bulanObj.angkaBulan : null;
+  };
+  useEffect(() => {
+    const tanggalStr = formValues.tanggalTransaksi;
+
+    if (!tanggalStr) {
+      return;
+    }
+
+    const [dayPart, monthPart, yearPart] = tanggalStr.split(" ");
+
+    const bulanId = getBulanAngka(monthPart);
+
+    if (!bulanId) {
+      console.error("Bulan tidak valid:", monthPart);
+      return;
+    }
+
+    const formattedDate = `${yearPart}-${bulanId}-${dayPart.padStart(2, "0")}`;
+
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      tanggalTransaksi: formattedDate,
+    }));
+  }, [formValues.tanggalTransaksi]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const dataToSend = {
-        noBukti: formValues.noBukti,
+        // noBukti: formValues.noBukti,
         tanggalTransaksi: formValues.tanggalTransaksi,
         posTransaksi: formValues.posPenerimaan,
         masukKe: formValues.jenisPenerimaan,
         cabang: formValues.cabang,
         bulan: formValues.setoranBulan,
-        debet: formValues.nominal,
+        debet: "",
         kredit: formValues.nominal,
         bulanSantunan: formValues.setoranBulan,
         keterangan: formValues.keterangan,
@@ -88,7 +115,55 @@ function Pengeluaran() {
       };
 
       const response = await GlobalApi.createPembayaranSanduka(dataToSend);
-      toast.success("Data berhasil disimpan!");
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+Data berhasil dikirim!            </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 4000,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     } catch (error) {
       toast.error(`Gagal menyimpan data: ${error.message}`);
     }
@@ -97,39 +172,57 @@ function Pengeluaran() {
   const fetchData = async () => {
     try {
       if (selectedBulan && newSelectedYear) {
-        // Ensure both filters are selected
         const data = await GlobalApi.getTablePemasukanSanduka(
           selectedBulan,
           newSelectedYear
         );
-        setTransactions(data); // Set fetched data into transactions state
+        setTransactions(data);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
 
-  // Fetch data whenever selectedBulan or newSelectedYear changes
   useEffect(() => {
     fetchData();
   }, [selectedBulan, newSelectedYear]);
 
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentTransactions = transactions.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(transactions.length / itemsPerPage);
+
+  const getVisiblePages = () => {
+    const pageRange = 2;
+    let start = Math.max(1, currentPage - pageRange);
+    let end = Math.min(totalPages, currentPage + pageRange);
+
+    const pages = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
   useEffect(() => {
-    // Get the current date
     const today = new Date();
 
-    // Format the date as "Tanggal Bulan Tahun"
-    const options = { day: "numeric", month: "long", year: "numeric" };
-    const formattedDate = today.toLocaleDateString("id-ID", options); // Use 'id-ID' for Indonesian locale
+    const year = today.getFullYear();
+    const month = (today.getMonth() + 1).toString().padStart(2, "0");
+    const day = today.getDate().toString().padStart(2, "0");
 
+    const formattedDate = `${year}-${month}-${day}`;
     setFormValues((prevValues) => ({
       ...prevValues,
       tanggalTransaksi: formattedDate,
     }));
   }, []);
 
-  const handleBulanChange = (e) => {
-    setSelectedBulan(e.target.value);
+  const handleBulanChange = (bulanAngka) => {
+    setSelectedBulan(parseInt(bulanAngka));
   };
 
   const years = Array.from(
@@ -138,24 +231,11 @@ function Pengeluaran() {
   );
 
   useEffect(() => {
-    const fetchBulan = async () => {
-      try {
-        const response = await GlobalApi.getBulan();
-        setBulanList(response.data); // Simpan data bulan dari API ke state
-      } catch (error) {
-        console.error("Error fetching bulan:", error);
-      }
-    };
-
-    fetchBulan(); // Panggil fungsi ketika komponen pertama kali dimuat
-  }, []);
-
-  useEffect(() => {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setCabangList(response.data); // Assuming the response data is an array
-      } catch (error) { }
+        setCabangList(response.data);
+      } catch (error) {}
     };
 
     fetchCabangData();
@@ -167,7 +247,7 @@ function Pengeluaran() {
 
     if (value === "") {
       setFilteredNames([]);
-      setIsDropdownVisible(false); // Sembunyikan dropdown jika input kosong
+      setIsDropdownVisible(false);
       return;
     }
 
@@ -180,7 +260,7 @@ function Pengeluaran() {
       );
 
       setFilteredNames(filtered);
-      setIsDropdownVisible(true); // Tampilkan dropdown jika ada hasil pencarian
+      setIsDropdownVisible(true);
     } catch (error) {
       console.error("Error fetching names:", error);
     }
@@ -190,28 +270,23 @@ function Pengeluaran() {
     const printContent = tableRef.current;
     const originalContent = document.body.innerHTML;
 
-    // Temporarily replace body content with table content
     document.body.innerHTML = printContent.innerHTML;
 
-    window.print(); // Trigger the print dialog
+    window.print();
 
-    // Restore the original content after printing
     document.body.innerHTML = originalContent;
-    window.location.reload(); // Refresh the page to re-apply React events
+    window.location.reload();
   };
 
   useEffect(() => {
-    // Function to handle clicks outside the dropdown
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownVisible(false); // Hide dropdown when clicking outside
+        setIsDropdownVisible(false);
       }
     };
 
-    // Add event listener to the document to capture clicks outside the dropdown
     document.addEventListener("mousedown", handleClickOutside);
 
-    // Cleanup event listener when component is unmounted
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -222,7 +297,7 @@ function Pengeluaran() {
       ...prevFormValues,
       yangMeninggal: selectedName,
     }));
-    setFilteredNames([]); // Clear the dropdown after selection
+    setFilteredNames([]);
   };
 
   const handleReset = () => {
@@ -371,24 +446,25 @@ function Pengeluaran() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <Toaster
             toastOptions={{
               style: {
-                fontSize: "1.25rem", // Ukuran font yang lebih besar
-                padding: "16px", // Menambah padding jika diperlukan
+                fontSize: "1.25rem",
+                padding: "16px",
               },
               success: {
                 style: {
-                  background: "white", // Warna background hijau untuk pesan sukses
+                  background: "white",
                   color: "black",
                 },
               },
               error: {
                 style: {
-                  background: "#f44336", // Warna background merah untuk pesan error
+                  background: "#f44336",
                   color: "#fff",
                 },
               },
@@ -400,7 +476,7 @@ function Pengeluaran() {
                 POS PENGELUARAN
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="flex flex-col">
+                {/* <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
                     htmlFor="noBukti"
@@ -415,7 +491,7 @@ function Pengeluaran() {
                     value={formValues.noBukti}
                     onChange={handleChange}
                   />
-                </div>
+                </div> */}
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -428,8 +504,24 @@ function Pengeluaran() {
                     id="tanggalTransaksi"
                     type="text"
                     name="tanggalTransaksi"
-                    value={formValues.tanggalTransaksi}
-                    onChange={handleChange}
+                    value={(() => {
+                      const dateStr = formValues.tanggalTransaksi;
+                      if (!dateStr) return "";
+
+                      const [yearPart, monthPart, dayPart] = dateStr.split("-");
+
+                      const bulanObj = bulanList.find(
+                        (bulan) => bulan.id === monthPart
+                      );
+                      const namaBulan = bulanObj
+                        ? bulanObj.namaBulan
+                        : "Invalid Month";
+
+                      return `${parseInt(
+                        dayPart,
+                        10
+                      )} ${namaBulan} ${yearPart}`;
+                    })()}
                     readOnly
                   />
                 </div>
@@ -570,11 +662,11 @@ function Pengeluaran() {
                   <select
                     className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                     value={selectedBulan}
-                    onChange={handleBulanChange}
+                    onChange={(e) => handleBulanChange(e.target.value)}
                   >
                     <option value="">Pilih Bulan</option>
                     {bulanList.map((bulan) => (
-                      <option key={bulan.angkaBulan} value={bulan.id}>
+                      <option key={bulan.angkaBulan} value={bulan.angkaBulan}>
                         {bulan.namaBulan}
                       </option>
                     ))}
@@ -629,133 +721,141 @@ function Pengeluaran() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedTransactions.map((transaction, index) => (
-                    <tr
-                      key={index}
-                      className={`border-b text-black text-center ${transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
+                  {currentTransactions.map((transaction, index) =>
+                    transaction.tglTransaksi ? (
+                      <tr
+                        key={index}
+                        className={`border-b text-black text-center ${
+                          transaction.checked
+                            ? "bg-gray-100"
+                            : "hover:bg-gray-50"
                         }`}
-                    >
-                      <td className="px-6 py-4 text-sm">
-                        {(currentPage - 1) * itemsPerPage + index + 1}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {transaction["Tgl Transaksi"]}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {transaction["No. Bukti"]}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {transaction["Uraian"]}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {formatCurrency(transaction["Debet"])}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {formatCurrency(transaction["Kredit"])}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {formatCurrency(
-                          transaction["Debet"] && transaction["Kredit"]
-                            ? Number(transaction["Debet"]) -
-                            Number(transaction["Kredit"])
-                            : transaction["Debet"] || transaction["Kredit"]
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <div className="flex items-center space-x-2">
-                          <Input
-                            type="checkbox"
-                            className="form-checkbox h-4 w-4"
-                            checked={transaction.checked}
-                            onChange={() => handleCheck(transaction.id)}
-                          />
-                          <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">
-                            Edit
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  <tr className="bg-gray-200 text-base text-black text-center">
+                      >
+                        <td className="px-6 py-4 text-sm">{index + 1}</td>
+                        <td className="px-6 py-4 text-sm">
+                          {transaction.tglTransaksi}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {transaction.noBukti}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {transaction.uraian}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {formatCurrency(
+                            parseFloat(transaction.debet.replace(",")) || 0
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {formatCurrency(
+                            parseFloat(transaction.kredit.replace(",")) || 0
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {formatCurrency(transaction.saldo || 0)}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              type="checkbox"
+                              className="form-checkbox h-4 w-4"
+                              checked={transaction.checked}
+                              onChange={() => handleCheck(transaction.id)}
+                            />
+                            <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                              Edit
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : null
+                  )}
+
+                  <tr className="bg-gray-200 text-base text-black text-center font-bold">
                     <td className="px-6 py-4 text-left" colSpan="4">
                       TOTAL
                     </td>
                     <td className="px-6 py-4 text-sm">
                       {formatCurrency(
-                        transactions.reduce(
-                          (total, transaction) =>
-                            total + Number(transaction["Debet"] || 0),
-                          0
-                        )
+                        transactions.reduce((total, transaction) => {
+                          const debet = Math.floor(
+                            parseFloat(transaction.debet.replace(",")) || 0
+                          );
+                          return debet;
+                        }, 0)
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       {formatCurrency(
-                        transactions.reduce(
-                          (total, transaction) =>
-                            total + Number(transaction["Kredit"] || 0),
-                          0
-                        )
+                        transactions.reduce((total, transaction) => {
+                          const kredit = Math.floor(
+                            parseFloat(transaction.kredit.replace(",")) || 0
+                          );
+                          return kredit;
+                        }, 0)
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       {formatCurrency(
-                        transactions.reduce(
-                          (total, transaction) =>
-                            total +
-                            (Number(transaction["Debet"]) -
-                              Number(transaction["Kredit"] || 0)),
-                          0
-                        )
+                        transactions.reduce((total, transaction) => {
+                          const saldo = Math.floor(
+                            parseFloat(transaction.saldo.replace(",")) || 0
+                          );
+                          return saldo;
+                        }, 0)
                       )}
                     </td>
+
                     <td className="px-6 py-4 text-sm"></td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <div className="flex justify-center mt-4 gap-1">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                First
+              </button>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Prev
+              </button>
+              {getVisiblePages().map((page) => (
                 <button
-                  onClick={() => setCurrentPage(1)}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                >
-                  First
-                </button>
-                <button
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                >
-                  Prev
-                </button>
-                {getVisiblePages().map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1 border rounded text-sm ${
+                    page === currentPage
                       ? "bg-blue-500 text-white"
                       : "bg-white hover:bg-gray-50"
-                      }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  }`}
                 >
-                  Next
+                  {page}
                 </button>
-                <button
-                  onClick={() => setCurrentPage(totalPages)}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                >
-                  Last
-                </button>
-              </div>
+              ))}
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Next
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Last
+              </button>
+            </div>
           </div>
         </div>
       </div>

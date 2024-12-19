@@ -45,6 +45,7 @@ function Pengeluaran() {
     yangMeninggal: "",
     namaPenerima: "",
     keterangan: "",
+    terbilang: "",
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -98,7 +99,7 @@ function Pengeluaran() {
       masukKe: formValues.jenisPenerimaan,
       cabang: formValues.cabang,
       bulan: formValues.setoranBulan,
-      debet: formValues.nominal,
+      debet: "",
       kredit: formValues.nominal,
       bulanSantunan: formValues.bulanSantunan,
       yangMeninggal: formValues.yangMeninggal,
@@ -250,8 +251,19 @@ function Pengeluaran() {
     }
 
     try {
-      const response = await GlobalApi.searchUsers(value);
-      const allNames = response.data;
+      const idList = JSON.parse(sessionStorage.getItem("idTerlaporList"));
+
+      if (!idList || idList.length === 0) {
+        console.warn("Tidak ada ID dalam sessionStorage");
+        setFilteredNames([]);
+        setIsDropdownVisible(false);
+        return;
+      }
+
+      const userPromises = idList.map((id) => GlobalApi.getUserById(id));
+      const userResponses = await Promise.all(userPromises);
+
+      const allNames = userResponses.filter((data) => data && data.namaLengkap);
 
       const filtered = allNames.filter((data) =>
         data.namaLengkap.toLowerCase().includes(value.toLowerCase())
@@ -364,7 +376,6 @@ function Pengeluaran() {
         });
 
         const gambarUrl = URL.createObjectURL(response.data);
-        console.log("URL Gambar Kwitansi:", gambarUrl);
 
         setKwitansiData(gambarUrl);
         setPopupVisible(true);
@@ -533,55 +544,7 @@ function Pengeluaran() {
                     <option value="lain-lain">Lain - Lain</option>
                   </select>
                 </div>
-                <div className="flex flex-col">
-                  <Label
-                    className="block text-gray-700 text-sm font-semibold mb-2"
-                    htmlFor="jenisPenerimaan"
-                  >
-                    Nama Penerima
-                  </Label>
-                  <Input
-                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="namaPenerima"
-                    type="text"
-                    name="namaPenerima"
-                    value={formValues.namaPenerima}
-                    onChange={handleChange}
-                  />
-                  <Button className="mt-2" onClick={handleKwitansiClick}>
-                    Kwitansi
-                  </Button>
-                  {isPopupVisible && (
-                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                      <div className="bg-white rounded-lg p-6 w-3/4 max-w-lg">
-                        <h2 className="text-xl font-bold mb-4">Kwitansi</h2>
 
-                        {kwitansiData ? (
-                          <div className="flex justify-center">
-                            <img
-                              src={kwitansiData}
-                              alt="Gambar Kwitansi"
-                              className="w-full max-h-96 object-contain"
-                            />
-                          </div>
-                        ) : (
-                          <p>Gambar kwitansi tidak tersedia.</p>
-                        )}
-
-                        <button
-                          className="mt-4 bg-teal-500 text-white py-2 px-4 rounded"
-                          onClick={() => {
-                            setPopupVisible(false);
-                            URL.revokeObjectURL(kwitansiData);
-                            setKwitansiData(null);
-                          }}
-                        >
-                          Tutup
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -606,11 +569,30 @@ function Pengeluaran() {
                   <div className="relative" ref={dropdownRef}>
                     <input
                       type="text"
-                      className="mb-5 w-full shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent "
+                      className="mb-5 w-full shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       id="yangMeninggal"
                       name="yangMeninggal"
                       value={formValues.yangMeninggal}
                       onChange={handleSearch}
+                      onFocus={async () => {
+                        try {
+                          const idList =
+                            JSON.parse(
+                              sessionStorage.getItem("idTerlaporList")
+                            ) || [];
+                          const userPromises = idList.map((id) =>
+                            GlobalApi.getUserById(id)
+                          );
+                          const userResponses = await Promise.all(userPromises);
+                          const allNames = userResponses.filter(
+                            (data) => data && data.namaLengkap
+                          );
+                          setFilteredNames(allNames);
+                          setIsDropdownVisible(true);
+                        } catch (error) {
+                          console.error("Error fetching initial names:", error);
+                        }
+                      }}
                       placeholder="Cari nama yang meninggal"
                     />
 
@@ -642,6 +624,55 @@ function Pengeluaran() {
                       </option>
                     ))}
                   </select>
+                  <div className="flex flex-col">
+                    <Label
+                      className="block text-gray-700 text-sm font-semibold mb-2"
+                      htmlFor="jenisPenerimaan"
+                    >
+                      Nama Penerima
+                    </Label>
+                    <Input
+                      className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      id="namaPenerima"
+                      type="text"
+                      name="namaPenerima"
+                      value={formValues.namaPenerima}
+                      onChange={handleChange}
+                    />
+                    <Button className="mt-2" onClick={handleKwitansiClick}>
+                      Kwitansi
+                    </Button>
+                    {isPopupVisible && (
+                      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                        <div className="bg-white rounded-lg p-6 w-3/4 max-w-lg">
+                          <h2 className="text-xl font-bold mb-4">Kwitansi</h2>
+
+                          {kwitansiData ? (
+                            <div className="flex justify-center">
+                              <img
+                                src={kwitansiData}
+                                alt="Gambar Kwitansi"
+                                className="w-full max-h-96 object-contain"
+                              />
+                            </div>
+                          ) : (
+                            <p>Gambar kwitansi tidak tersedia.</p>
+                          )}
+
+                          <button
+                            className="mt-4 bg-teal-500 text-white py-2 px-4 rounded"
+                            onClick={() => {
+                              setPopupVisible(false);
+                              URL.revokeObjectURL(kwitansiData);
+                              setKwitansiData(null);
+                            }}
+                          >
+                            Tutup
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-col">
                   <Label
@@ -659,6 +690,21 @@ function Pengeluaran() {
                     onChange={handleChange}
                   />
 
+                  <div className="flex flex-col mt-5">
+                    <Label
+                      className="block text-gray-700 text-sm font-semibold mb-2"
+                      htmlFor="terbilang"
+                    >
+                      Terbilang
+                    </Label>
+                    <Textarea
+                      className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-24"
+                      id="terbilang"
+                      name="terbilang"
+                      value={formValues.terbilang}
+                      onChange={handleChange}
+                    />
+                  </div>
                   <div className="flex flex-col mt-5">
                     <Label
                       className="block text-gray-700 text-sm font-semibold mb-2"

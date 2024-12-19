@@ -13,6 +13,7 @@ import {
 import GlobalApi from "../_utils/GlobalApi";
 
 const HeaderHome = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
@@ -23,7 +24,92 @@ const HeaderHome = () => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
   const [profileImageUrl, setProfileImageUrl] = useState("/profile.png");
+  const [statusSegeraCount, setStatusSegeraCount] = useState(0);
 
+  const getPensiunDataAndCountSegera = async () => {
+      setLoader(true);
+    
+      try {
+        // Ambil data pensiun dari API
+        const pensiunResponse = await GlobalApi.getAllPensiun();
+    
+        if (pensiunResponse && pensiunResponse.data.content) {
+          const allPensiunList = pensiunResponse.data.content;
+    
+          // Filter data: Hitung jumlah "Segera" jika keterangan null
+          const segeraItems = allPensiunList.filter(
+            (item) => item.keterangan === null && item.status === "Segera"
+          );
+    
+          const countSegera = segeraItems.length;
+    
+          // Simpan jumlah "Segera" ke sessionStorage
+          sessionStorage.setItem("statusSegera", countSegera.toString());
+    
+          // Set jumlah "Segera" ke state
+          setStatusSegeraCount(countSegera);
+    
+          // Simpan data utama ke state (tetap utuh)
+          setPensiunList(allPensiunList);
+    
+          // Filter final (keterangan dan status)
+          const finalFilteredPensiunList = allPensiunList.filter((item) => {
+            // Jika keterangan null, tampilkan data dengan status "Segera"
+            if (item.keterangan === null) {
+              return item.status === "Segera";
+            }
+    
+            // Jika keterangan bukan null, tampilkan semua kecuali "Pensiun"
+            return item.keterangan !== "Pensiun";
+          });
+    
+          // Set hasil filter ke state
+          setFilteredPensiunList(finalFilteredPensiunList);
+        }
+      } catch (error) {
+        console.error("Terjadi kesalahan saat mengambil data pensiun:", error);
+      } finally {
+        setLoader(false);
+      }
+    };
+    
+    useEffect(() => {
+      // Cek status login saat komponen pertama kali dimuat
+      checkLoginStatus();
+    }, []);
+    
+    useEffect(() => {
+      // Jika sudah login, jalankan fungsi untuk mengambil data pensiun
+      if (isLoggedIn) {
+        // Mengecek jika statusSegera sudah ada di sessionStorage
+        const statusSegera = sessionStorage.getItem('statusSegera');
+        if (statusSegera) {
+          // Jika sudah ada, tidak perlu refresh
+          setStatusSegeraCount(parseInt(statusSegera)); // Set statusSegeraCount langsung dari sessionStorage
+        } else {
+          // Jika tidak ada, jalankan fungsi untuk mendapatkan data pensiun tanpa refresh
+          getPensiunDataAndCountSegera();
+        }
+      }
+    }, [isLoggedIn]);
+    
+    const checkLoginStatus = () => {
+      const userToken = sessionStorage.getItem('authToken');
+    
+      if (userToken) {
+        setIsLoggedIn(true); // Set isLoggedIn true jika token ada
+    
+        // Jika statusSegera ada, ambil data pensiun langsung tanpa perlu refresh halaman
+        const statusSegera = sessionStorage.getItem('statusSegera');
+        if (!statusSegera) {
+          // Jika statusSegera belum ada, jalankan fungsi untuk mendapatkan data pensiun tanpa refresh
+          getPensiunDataAndCountSegera();
+        }
+      } else {
+        router.push('/login');  // Jika belum login, arahkan ke halaman login
+      }
+    };
+  
   const getAnggotaById = async () => {
     try {
       const userId = sessionStorage.getItem("userId");

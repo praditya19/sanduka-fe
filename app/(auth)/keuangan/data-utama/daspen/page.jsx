@@ -218,7 +218,7 @@ export default function Daspen() {
     if (storedData) {
       const data = JSON.parse(storedData);
 
-      const firstItem = data[0];
+      const firstItem = data;
 
       if (firstItem) {
         setKuota(Number(firstItem.pb));
@@ -254,18 +254,19 @@ export default function Daspen() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
+  
     const payload = {
-      kategori1: katagori1,
-      kategori2: katagori2,
-      kategori3: katagori3,
-      kuota: kuota,
-      bulan: selectedBulan,
-      tahun: selectedYear,
+      propinsi: katagori1,
+      kabupaten: katagori2,
+      cabang: katagori3,
+      pb: kuota,
+      sanduka: "",
+      iuran: "DASPEN",
     };
-
+  
     try {
-      const result = await GlobalApi.createDaspenData(payload);
+      const id = 4;
+      const result = await GlobalApi.updateIuranData(id, payload);
       toast.success(
         <div
           style={{
@@ -292,7 +293,7 @@ export default function Daspen() {
           <strong
             style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
           >
-            Data berhasil disimpan!
+            Data berhasil diperbarui!
           </strong>
         </div>,
         {
@@ -348,7 +349,7 @@ export default function Daspen() {
               marginBottom: "8px",
             }}
           >
-            Gagal Menyimpan Data.
+            Gagal Memperbarui Data.
           </strong>
         </div>,
         {
@@ -373,6 +374,7 @@ export default function Daspen() {
       );
     }
   };
+  
 
   const handleSubmitTarget = async (event) => {
     event.preventDefault();
@@ -508,7 +510,6 @@ export default function Daspen() {
       );
     }
   };
-  
 
   useEffect(() => {
     setValueKat1(kat1 * katagori1Lainnya);

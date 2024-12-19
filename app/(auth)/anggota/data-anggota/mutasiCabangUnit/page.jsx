@@ -58,10 +58,18 @@ const page = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const anggotaId = sessionStorage.getItem("anggotaId");
-      if (anggotaId) {
+      const role = sessionStorage.getItem("role");
+      let userId;
+
+      if (role === "ADMIN" || role === "SUPER ADMIN") {
+        userId = sessionStorage.getItem("anggotaId");
+      } else if (role === "USER") {
+        userId = sessionStorage.getItem("userId");
+      }
+  
+      if (userId) {
         try {
-          const response = await GlobalApi.getUserById(anggotaId);
+          const response = await GlobalApi.getUserById(userId);
           setUserData(response);
           setCabang(response.cabang || "");
           setSelectedUnitKerja(response.unitKerja || "");
@@ -69,12 +77,13 @@ const page = () => {
           console.error("Error fetching user data:", error);
         }
       } else {
+        console.warn("User ID tidak ditemukan di sessionStorage.");
       }
     };
-
+  
     fetchUserData();
   }, []);
-
+  
   const handleCabangSelect = (cabangItem) => {
     setCabang(cabangItem.kecamatan);
     setShowDropdownCabangUnit(false);
@@ -90,7 +99,6 @@ const page = () => {
     const value = event.target.value.toLowerCase();
     setSearchTerm(value);
 
-    // Filter data cabang berdasarkan input
     const filtered = cabangOptions.filter((cabangItem) =>
       cabangItem.kecamatan.toLowerCase().includes(value)
     );
@@ -112,26 +120,40 @@ const page = () => {
   };
 
   const handleSaveCabangUnit = async () => {
-    // Tampilkan popup konfirmasi terlebih dahulu
     setIsPopupVisible(true);
   };
 
   const handleConfirmSave = async () => {
-    const idAnggota = sessionStorage.getItem("anggotaId");
-
+    const role = sessionStorage.getItem("role"); // Ambil role dari sessionStorage
+    let idAnggota;
+  
+    // Tentukan ID berdasarkan role
+    if (role === "ADMIN" || role === "SUPER ADMIN") {
+      idAnggota = sessionStorage.getItem("anggotaId");
+    } else if (role === "USER") {
+      idAnggota = sessionStorage.getItem("userId");
+    }
+  
+    if (!idAnggota) {
+      console.error("ID tidak ditemukan. Periksa role atau sessionStorage.");
+      alert("ID anggota tidak valid. Silakan login ulang.");
+      return;
+    }
+  
     if (!cabang || !selectedUnitKerja) {
       console.error("Cabang atau Unit Kerja tidak boleh kosong");
       alert("Silakan pilih Cabang dan Unit Kerja sebelum menyimpan.");
-      setIsPopupVisible(false); // Tutup popup
+      setIsPopupVisible(false);
       return;
     }
-
+  
     try {
       const response = await GlobalApi.mutasiCabangUnitKerja(
         idAnggota,
         cabang,
         selectedUnitKerja
       );
+  
       toast.success(
         <div
           style={{
@@ -190,26 +212,26 @@ const page = () => {
       );
       setShowDropdownCabangUnit(false);
       setIsDropdownVisible(false);
-
+  
       setTimeout(() => {
         router.back();
       }, 5000);
     } catch (error) {
       console.error("Error saat memutasikan anggota:", error);
       console.error("Response data:", error.response?.data);
-
+  
       toast.error(
         `Terjadi kesalahan: ${
           error?.response?.data?.message || "Silakan coba lagi."
         }`
       );
     } finally {
-      setIsPopupVisible(false); // Tutup popup setelah proses selesai
+      setIsPopupVisible(false);
     }
   };
-
+  
   const handleCancelSave = () => {
-    setIsPopupVisible(false); // Tutup popup jika user membatalkan
+    setIsPopupVisible(false);
   };
 
   useEffect(() => {
