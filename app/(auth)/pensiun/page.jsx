@@ -74,22 +74,27 @@ const Page = () => {
     const fetchPensiunData = async () => {
       try {
         const fetchedData = await GlobalApi.getAllPensiun();
-        if (fetchedData && fetchedData.data.content && fetchedData.data.content) {
+        if (
+          fetchedData &&
+          fetchedData.data.content &&
+          fetchedData.data.content
+        ) {
           const filteredPensiunList = fetchedData.data.content;
-          
+
           // Filter untuk status "Segera"
-          const segeraItems = filteredPensiunList.filter(item => item.status === 'Segera');
-          
+          const segeraItems = filteredPensiunList.filter(
+            (item) => item.status === "Segera"
+          );
+
           // Hitung jumlah "Segera"
           const countSegera = segeraItems.length;
-  
+
           // Simpan jumlah "Segera" ke sessionStorage
-          sessionStorage.setItem('statusSegera', countSegera);
-  
+          sessionStorage.setItem("statusSegera", countSegera);
+
           // Set statusSegeraCount di state
           setStatusSegeraCount(countSegera);
         }
-        console.log(fetchedData.data.content)
         const pensiunList = fetchedData.data.content;
 
         setPensiunList(pensiunList);

@@ -148,33 +148,35 @@ export default function IconGrid() {
       color: "text-teal-500",
     });
   }
-  
+
   const getPensiunDataAndCountSegera = async () => {
     setLoader(true);
-  
+
     try {
       // Ambil data pensiun
       const pensiunResponse = await GlobalApi.getAllPensiun();
-  
+
       if (pensiunResponse && pensiunResponse.data.content) {
         const filteredPensiunList = pensiunResponse.data.content;
-        
+
         // Filter untuk status "Segera"
-        const segeraItems = filteredPensiunList.filter(item => item.status === 'Segera');
-        
+        const segeraItems = filteredPensiunList.filter(
+          (item) => item.status === "Segera"
+        );
+
         // Hitung jumlah "Segera"
         const countSegera = segeraItems.length;
-  
+
         // Simpan jumlah "Segera" ke sessionStorage
-        sessionStorage.setItem('statusSegera', countSegera);
-  
+        sessionStorage.setItem("statusSegera", countSegera);
+
         // Set statusSegeraCount di state
         setStatusSegeraCount(countSegera);
-  
+
         // Jika statusSegera belum ada di sessionStorage, set dan refresh halaman
-        if (countSegera > 0 && !sessionStorage.getItem('statusSegera')) {
-          sessionStorage.setItem('statusSegera', countSegera.toString());
-          
+        if (countSegera > 0 && !sessionStorage.getItem("statusSegera")) {
+          sessionStorage.setItem("statusSegera", countSegera.toString());
+
           // Tambahkan delay 3 detik sebelum melakukan refresh
           setTimeout(() => {
             window.location.reload(); // Refresh hanya setelah 3 detik
@@ -188,17 +190,17 @@ export default function IconGrid() {
       setLoader(false);
     }
   };
-  
+
   useEffect(() => {
     // Cek status login saat komponen pertama kali dimuat
     checkLoginStatus();
   }, []);
-  
+
   useEffect(() => {
     // Jika sudah login, jalankan fungsi untuk mengambil data pensiun
     if (isLoggedIn) {
       // Mengecek jika statusSegera sudah ada di sessionStorage
-      const statusSegera = sessionStorage.getItem('statusSegera');
+      const statusSegera = sessionStorage.getItem("statusSegera");
       if (statusSegera) {
         // Jika sudah ada, tidak perlu refresh
         setStatusSegeraCount(parseInt(statusSegera)); // Set statusSegeraCount langsung dari sessionStorage
@@ -208,16 +210,16 @@ export default function IconGrid() {
       }
     }
   }, [isLoggedIn]);
-  
+
   const checkLoginStatus = () => {
-    const userToken = sessionStorage.getItem('authToken');
-    const hasRefreshed = sessionStorage.getItem('hasRefreshed'); // Cek apakah halaman sudah di-refresh
-  
+    const userToken = sessionStorage.getItem("authToken");
+    const hasRefreshed = sessionStorage.getItem("hasRefreshed"); // Cek apakah halaman sudah di-refresh
+
     if (userToken) {
-      setIsLoggedIn(true);  // Set isLoggedIn true jika token ada
-  
+      setIsLoggedIn(true); // Set isLoggedIn true jika token ada
+
       // Hanya refresh jika statusSegera belum ada di sessionStorage
-      const statusSegera = sessionStorage.getItem('statusSegera');
+      const statusSegera = sessionStorage.getItem("statusSegera");
       if (!statusSegera) {
         // Jika statusSegera belum ada, refresh halaman setelah 3 detik
         setTimeout(() => {
@@ -228,10 +230,9 @@ export default function IconGrid() {
         getPensiunDataAndCountSegera();
       }
     } else {
-      router.push('/login');  // Jika belum login, arahkan ke halaman login
+      router.push("/login"); // Jika belum login, arahkan ke halaman login
     }
   };
-  
 
   const handleMainMenuClick = (e, index, href) => {
     e.preventDefault();
@@ -311,7 +312,6 @@ export default function IconGrid() {
 
       try {
         const response = await GlobalApi.getUserById(userId);
-        console.log("Data user diterima:", response);
         setUserData(response);
       } catch (error) {
         console.error("Error saat mendapatkan data user:", error);
@@ -323,7 +323,12 @@ export default function IconGrid() {
   const renderCheckmark = (value) => {
     if (value === "Ya") {
       return <span className="text-green-500">✔</span>;
-    } else if (value === "" || value === null || value === undefined || value === "TIDAK") {
+    } else if (
+      value === "" ||
+      value === null ||
+      value === undefined ||
+      value === "TIDAK"
+    ) {
       return <span className="text-red-500">✘</span>;
     }
     return null;
