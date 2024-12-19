@@ -172,7 +172,7 @@ const Page = () => {
 
   const handleEdit = (item) => {
     const npa = item.npaDetail?.npaPgri;
-    sessionStorage.setItem("npa", npa);
+    sessionStorage.setItem("npaDetailHistory", npa);
     router.push(`/history-data/detail`);
   };
 
@@ -353,7 +353,7 @@ const Page = () => {
                             )}
                           </td>
                           <td className="text-center border hidden lg:table-cell">
-                            {item.cabang}
+                            {item.npaDetail.cabang}
                           </td>
                           <td className="border hidden lg:table-cell">
                             {item.uraian}

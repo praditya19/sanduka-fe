@@ -248,7 +248,7 @@ const page = () => {
     const bulan = now.toLocaleString("id-ID", { month: "long" });
     const tahun = now.getFullYear();
 
-    const npaPgri = sessionStorage.getItem("npa");
+    const npaPgri = sessionStorage.getItem("npaPgri");
     const namaLengkap = sessionStorage.getItem("nama");
 
     const historyData = {
@@ -257,7 +257,7 @@ const page = () => {
       jam: jam,
       npa: npaPgri,
       nama: namaLengkap,
-      cabang: cabang,
+      cabang: userData.cabangSebelumnya,
       uraian: "Pindah Cabang",
       masuk: "Baru",
       keluar: "",
