@@ -89,81 +89,83 @@ const Page = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((item, index) => (
-                <>
-                  <TableRow
-                    key={index}
-                    className={`hover:bg-gray-100 transition duration-200 ${
-                      index % 2 === 0 ? "bg-gray-200" : "bg-white"
-                    }`}
-                  >
-                    <TableCell className="text-center border border-gray-300 p-2">
-                      {item.hari}, {item.tanggal}, {item.jam}
-                    </TableCell>
-                    <TableCell className="border border-gray-300 p-2">
-                      <div className="font-semibold">{item.nama}</div>
-                      <div className="text-gray-600">{item.npa}</div>
-                    </TableCell>
-                    <TableCell className="text-center border border-gray-300 p-2">
-                      {item.cabang}
-                    </TableCell>
-                    <TableCell className="border border-gray-300 p-2 hidden lg:table-cell">
-                      {item.uraian}
-                    </TableCell>
-                    <TableCell className="border text-center border-gray-300 p-2 hidden lg:table-cell">
-                      {item.bulan}
-                    </TableCell>
-                    <TableCell className="border text-center border-gray-300 p-2 hidden lg:table-cell">
-                      {item.tahun}
-                    </TableCell>
-                    <TableCell className="border text-center border-gray-300 p-2 hidden lg:table-cell">
-                      {item.cabang_ke_2}
-                    </TableCell>
-                    <TableCell className="border text-center border-gray-300 p-2 hidden lg:table-cell">
-                      {item.user}
-                    </TableCell>
+              {data.map((item, index) => {
+                return (
+                  <>
+                    <TableRow
+                      key={index}
+                      className={`hover:bg-gray-100 transition duration-200 ${
+                        index % 2 === 0 ? "bg-gray-200" : "bg-white"
+                      }`}
+                    >
+                      <TableCell className="text-center border border-gray-300 p-2">
+                        {item.hari}, {item.tanggal}, {item.jam}
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2">
+                        <div className="font-semibold">{item.nama}</div>
+                        <div className="text-gray-600">{item.npa}</div>
+                      </TableCell>
+                      <TableCell className="text-center border border-gray-300 p-2">
+                        {item.cabang}
+                      </TableCell>
+                      <TableCell className="border border-gray-300 p-2 hidden lg:table-cell">
+                        {item.uraian}
+                      </TableCell>
+                      <TableCell className="border text-center border-gray-300 p-2 hidden lg:table-cell">
+                        {item.bulan}
+                      </TableCell>
+                      <TableCell className="border text-center border-gray-300 p-2 hidden lg:table-cell">
+                        {item.tahun}
+                      </TableCell>
+                      <TableCell className="border text-center border-gray-300 p-2 hidden lg:table-cell">
+                        {item.cabang_ke_2}
+                      </TableCell>
+                      <TableCell className="border text-center border-gray-300 p-2 hidden lg:table-cell">
+                        {item.user}
+                      </TableCell>
 
-                    <TableCell className="text-center border border-gray-300 p-2 lg:hidden">
-                      <Button
-                        className="text-blue-500"
-                        onClick={() => handleExpand(index)}
-                      >
-                        {expandedIndex === index ? (
-                          <FaMinusCircle />
-                        ) : (
-                          <FaPlusCircle />
-                        )}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-
-                  {expandedIndex === index && (
-                    <TableRow className="bg-gray-100 lg:hidden">
-                      <TableCell
-                        colSpan="4"
-                        className="border border-gray-300 p-4 text-sm"
-                      >
-                        <div>
-                          <strong>Uraian:</strong> {item.uraian ?? "-"}
-                        </div>
-                        <div>
-                          <strong>Bulan:</strong> {item.bulan ?? "-"}
-                        </div>
-                        <div>
-                          <strong>Tahun:</strong> {item.tahun ?? "-"}
-                        </div>
-                        <div>
-                          <strong>Cabang ke 2:</strong>{" "}
-                          {item.cabang_ke_2 ?? "-"}
-                        </div>
-                        <div>
-                          <strong>User:</strong> {item.user ?? "-"}
-                        </div>
+                      <TableCell className="text-center border border-gray-300 p-2 lg:hidden">
+                        <Button
+                          className="text-blue-500"
+                          onClick={() => handleExpand(index)}
+                        >
+                          {expandedIndex === index ? (
+                            <FaMinusCircle />
+                          ) : (
+                            <FaPlusCircle />
+                          )}
+                        </Button>
                       </TableCell>
                     </TableRow>
-                  )}
-                </>
-              ))}
+
+                    {expandedIndex === index && (
+                      <TableRow className="bg-gray-100 lg:hidden">
+                        <TableCell
+                          colSpan="4"
+                          className="border border-gray-300 p-4 text-sm"
+                        >
+                          <div>
+                            <strong>Uraian:</strong> {item.uraian ?? "-"}
+                          </div>
+                          <div>
+                            <strong>Bulan:</strong> {item.bulan ?? "-"}
+                          </div>
+                          <div>
+                            <strong>Tahun:</strong> {item.tahun ?? "-"}
+                          </div>
+                          <div>
+                            <strong>Cabang ke 2:</strong>{" "}
+                            {item.cabang_ke_2 ?? "-"}
+                          </div>
+                          <div>
+                            <strong>User:</strong> {item.user ?? "-"}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

@@ -257,6 +257,7 @@ const getUnverifiedUsers = (
 
   return axiosClient.get(`/api/auth/unverified-users?${params.toString()}`);
 };
+
 const verifyUser = async (userId) => {
   try {
     const response = await axiosClient.put(`/api/auth/user/${userId}/verify`);
@@ -472,44 +473,6 @@ const getHistoryData = async (page = 0, size = 10) => {
   }
 };
 
-const getHistoryDataById = async (userId) => {
-  try {
-    // Ambil data login berdasarkan userId
-    const loginHistoryResponse = await axiosClient.get(
-      `/api/history/user/${userId}/login`
-    );
-    const loginHistory = loginHistoryResponse.data;
-
-    // Ambil data mutasi cabang/unit kerja berdasarkan userId
-    const mutasiHistoryResponse = await axiosClient.get(
-      `/api/history/user/${userId}/mutasi`
-    );
-    const mutasiHistory = mutasiHistoryResponse.data;
-
-    // Gabungkan kedua data menjadi satu histori
-    const combinedHistory = [
-      ...loginHistory.map((item) => ({
-        ...item,
-        type: "Login", // Tambahkan tipe data untuk membedakan
-      })),
-      ...mutasiHistory.map((item) => ({
-        ...item,
-        type: "Mutasi", // Tambahkan tipe data untuk membedakan
-      })),
-    ];
-
-    // Sortir data berdasarkan timestamp (jika ada)
-    combinedHistory.sort(
-      (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
-    );
-
-    return combinedHistory;
-  } catch (error) {
-    console.error("Error fetching history data:", error);
-    throw error;
-  }
-};
-
 const cekNpaList = async (npaList) => {
   try {
     const response = await axiosClient.get(
@@ -656,6 +619,16 @@ const getTotalAnggotaStatistik = async () => {
   } catch (error) {
     console.error("Error fetching total anggota:", error);
     throw error;
+  }
+};
+
+const updateIuranById = async (id, payload) => {
+  try {
+    const response = await axiosClient.put(`/api/iuran/${id}`, payload); // Mengirim payload di body
+    return response.data; // Mengembalikan data dari respon API
+  } catch (error) {
+    console.error("Error fetching data from API:", error);
+    throw error; // Melempar error agar bisa ditangani di tempat lain
   }
 };
 
@@ -1266,6 +1239,35 @@ const deleteUser = async (id) => {
   }
 };
 
+const createHistoryData = async (historyData) => {
+  try {
+    const response = await axiosClient.post("/api/history", historyData, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error creating history data:", error);
+    throw error;
+  }
+};
+
+const getAllHistoryData = async (page = 0, size = 10) => {
+  try {
+    const response = await axiosClient.get(`/api/history`, {
+      params: {
+        page: page,
+        size: size,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all history data:", error);
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1349,7 +1351,6 @@ export default {
   getKwitansiByIdAndNpa,
   searchUsersByName,
   deleteUser,
-  getHistoryDataById,
   getCalculateSandukaBaru,
   getCalculateSandukaMeninggal,
   getCalculateSandukaPensiun,
@@ -1357,7 +1358,7 @@ export default {
   getTotalAnggotaStatistik,
   getTotalAnggotaByCabang,
   getFileByNip,
-  getDefaultIuranById,
-  updateIuranData,
-  getAdminById,
+  updateIuranById,
+  createHistoryData,
+  getAllHistoryData,
 };

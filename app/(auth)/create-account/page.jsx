@@ -22,7 +22,7 @@ import {
   AiOutlineInfoCircle,
   AiOutlineEye,
   AiOutlineEyeInvisible,
-  AiOutlineWarning 
+  AiOutlineWarning,
 } from "react-icons/ai";
 
 const MapComponent = dynamic(() => import("../../_components/MapComponent"), {
@@ -104,8 +104,11 @@ const Page = () => {
   }, [selectedCabang, searchTermUnitKerja, allUnitKerja]);
 
   useEffect(() => {
-    const currentDate = new Date().toISOString().split("T")[0];
-    setToday(currentDate);
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = (currentDate.getMonth() + 1).toString().padStart(2, "0"); // Bulan dalam dua digit
+    const day = currentDate.getDate().toString().padStart(2, "0"); // Hari dalam dua digit
+    setToday(`${year}-${month}-${day}`);
 
     updateUnitKerja();
     setIsClient(true);
@@ -314,9 +317,9 @@ const Page = () => {
         const formattedField = field
           .replace(/([A-Z])/g, " $1") // Menambahkan spasi sebelum huruf kapital
           .replace(/^./, (str) => str.toUpperCase()); // Mengubah huruf pertama menjadi kapital
-    
+
         toast.error(`${formattedField} wajib diisi.`);
-    
+
         if (formRefs[field]?.current) {
           formRefs[field].current.scrollIntoView({
             behavior: "smooth",
@@ -401,157 +404,150 @@ const Page = () => {
 
     return isValid;
   };
+  const showToastSuccess = (cabang, unitKerja) => {
+    toast.success(
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+        }}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          style={{
+            width: "48px",
+            height: "48px",
+            color: "#06D001",
+            marginBottom: "16px",
+          }}
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+        </svg>
+        <strong
+          style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+        >
+          Selamat Anda Sudah Mendaftar Di New Sanduka
+        </strong>
+        <span style={{ fontSize: "1.75rem" }}>
+          Anda Berhasil Mendaftar Menjadi Anggota Sanduka
+        </span>
+      </div>,
+      {
+        icon: null,
+        duration: 4000,
+        autoClose: 3000,
+        style: {
+          marginTop: "16%",
+          fontSize: "1.75rem",
+          padding: "10px",
+          width: "80%",
+          maxWidth: "700px",
+          height: "50%",
+          maxHeight: "400px",
+          transform: "translate(-50%, -50%)",
+          textAlign: "center",
+          zIndex: 9999,
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+        },
+      }
+    );
+  };
 
+  const showToastError = (errorMessage) => {
+    toast.error(
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+        }}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          style={{
+            width: "48px",
+            height: "48px",
+            color: "red",
+            marginBottom: "16px",
+          }}
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+          <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+        </svg>
+        <strong
+          style={{
+            fontSize: "1.75rem",
+            display: "block",
+            marginBottom: "8px",
+          }}
+        >
+          Anda Belum Berhasil Mendaftar
+        </strong>
+        <span style={{ fontSize: "1.75rem" }}>{errorMessage}</span>
+      </div>,
+      {
+        icon: null,
+        duration: 4000,
+        style: {
+          marginTop: "16%",
+          fontSize: "1.75rem",
+          padding: "10px",
+          width: "80%",
+          maxWidth: "700px",
+          height: "50%",
+          maxHeight: "400px",
+          transform: "translate(-50%, -50%)",
+          textAlign: "center",
+          zIndex: 9999,
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+        },
+      }
+    );
+  };
+  
   const onSubmit = async (data) => {
     const isFormValid = validateForm();
     if (!isFormValid) return;
     setIsSubmitClicked(true); 
-    
-    // const formattedTanggalLahir = new Date(data.tanggalLahir)
-    //   .toISOString()
-    //   .split("T")[0];
-    // const formattedTahunDiangkat = new Date(data.tahunDiangkat)
-    //   .toISOString()
-    //   .split("T")[0];
-    // const formattedMulaiJadiAnggota = new Date(data.mulaiJadiAnggotaPgri)
-    //   .toISOString()
-    //   .split("T")[0];
 
     const cleanBase64 = base64String.split(",")[1] || base64String;
 
     const finalData = {
       ...data,
-      // tanggalLahir: formattedTanggalLahir,
-      // tahunDiangkat: formattedTahunDiangkat,
-      // mulaiJadiAnggotaPgri: formattedMulaiJadiAnggota,
-      email,
       namaAnak: namaAnak.filter((name) => name.trim() !== ""),
       latitude,
       longitude,
       foto: cleanBase64,
     };
-
-    console.log("Data yang akan dikirim ke database:", finalData);
-
+    
+    console.log("Payload yang dikirim ke API:", finalData);
+    
     try {
       const response = await GlobalApi.registerUser(finalData);
       console.log("Response dari API:", response);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "48px",
-              height: "48px",
-              color: "#06D001",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Selamat Anda Sudah Mendaftar Di New Sanduka
-          </strong>
-          <span style={{ fontSize: "1.75rem" }}>
-            Anda Berhasil Mendaftar Menjadi Anggota Sanduka
-          </span>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          autoClose: 3000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      showToastSuccess();
       setTimeout(() => {
         router.push("/tunggu-admin");
       }, 4000);
     } catch (error) {
-      const errorMessage = error.response?.data || "Terjadi kesalahan saat registrasi.";
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "48px",
-              height: "48px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <strong
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Anda Belum Berhasil Mendaftar
-          </strong>
-          <span style={{ fontSize: "1.75rem" }}>
-          {errorMessage}
-        </span>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
-    }
+      const errorMessage =
+        error.response?.data || "Terjadi kesalahan saat registrasi.";
+      console.error("Error payload:", finalData); // Tambahkan log error
+      showToastError(errorMessage);
+    }    
   };
 
   const togglePassword = () => {
@@ -680,6 +676,44 @@ const Page = () => {
 
   const handleNavigation = (stepNumber) => {
     setStep(stepNumber);
+  };
+
+  const handleCreateHistory = async () => {
+    const now = new Date();
+
+    const options = { weekday: "long" };
+    const hari = now.toLocaleDateString("id-ID", options);
+    const tanggal = now.toISOString().split("T")[0];
+    const jam = now.toTimeString().split(" ")[0];
+
+    const bulan = now.toLocaleString("id-ID", { month: "long" });
+    const tahun = now.getFullYear();
+
+    const npaPgri = watch("npaPgri");
+    const namaLengkap = watch("namaLengkap");
+
+    const historyData = {
+      hari: hari,
+      tanggal: tanggal,
+      jam: jam,
+      npa: npaPgri,
+      nama: namaLengkap,
+      cabang: selectedCabang,
+      uraian: "Menjadi Anggota Sanduka",
+      masuk: "Baru",
+      keluar: "",
+      bulan: bulan,
+      tahun: tahun,
+      cabang_ke_2: "",
+      user: "",
+    };
+
+    try {
+      const response = await GlobalApi.createHistoryData(historyData);
+      console.log("History data created successfully:", response);
+    } catch (error) {
+      console.error("Failed to create history data:", error);
+    }
   };
 
   return (
@@ -1706,7 +1740,8 @@ const Page = () => {
                   type="date"
                   id="mulaiJadiAnggotaPgri"
                   placeholder="dd/mm/yyyy"
-                  max={today}
+                  value={today}
+                readOnly
                   {...register("mulaiJadiAnggotaPgri")}
                   className="border-teal-500"
                 />
@@ -1781,45 +1816,45 @@ const Page = () => {
                   Kembali
                 </Button>
                 <Button
-        type="button"
-        onClick={() => {
-          if (isSubmitClicked) {
-            const isValid = validateForm(errors, {
-              jabatan: jabatanRef,
-              pangkatGolongan: pangkatGolonganRef,
-              tingkatSekolah: tingkatSekolahRef,
-              statusSekolah: statusSekolahRef,
-              statusPegawai: statusPegawaiRef,
-              pangkatGolongan: pangkatGolonganRef,
-              tahunDiangkat: tahunDiangkatRef,
-              pendidikanTerakhir: pendidikanTerakhirRef,
-              sertifikatPendidik: sertifikatPendidikRef,
-              golonganJabatan: golonganJabatanRef,
-              cabang: dropdownRef,
-              unitKerja: dropdownRefUnitKerja,
-            });
+                  type="button"
+                  onClick={() => {
+                    if (isSubmitClicked) {
+                      const isValid = validateForm(errors, {
+                        jabatan: jabatanRef,
+                        pangkatGolongan: pangkatGolonganRef,
+                        tingkatSekolah: tingkatSekolahRef,
+                        statusSekolah: statusSekolahRef,
+                        statusPegawai: statusPegawaiRef,
+                        pangkatGolongan: pangkatGolonganRef,
+                        tahunDiangkat: tahunDiangkatRef,
+                        pendidikanTerakhir: pendidikanTerakhirRef,
+                        sertifikatPendidik: sertifikatPendidikRef,
+                        golonganJabatan: golonganJabatanRef,
+                        cabang: dropdownRef,
+                        unitKerja: dropdownRefUnitKerja,
+                      });
 
-            if (isValid) {
-              alert("Form sudah lengkap!");
-            }
-          } else {
-            alert("Klik Submit terlebih dahulu!");
-          }
-        }}
-        className="text-white bg-red-500 hover:bg-red-600 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
-        disabled={!isSubmitClicked} 
+                      if (isValid) {
+                        alert("Form sudah lengkap!");
+                      }
+                    } else {
+                      alert("Klik Submit terlebih dahulu!");
+                    }
+                  }}
+                  className="text-white bg-red-500 hover:bg-red-600 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
+                  disabled={!isSubmitClicked}
                 >
-                    <AiOutlineWarning className="h-5 w-5 mr-2 text-yellow-400" />
-        Belum Terisi
-      </Button>
+                  <AiOutlineWarning className="h-5 w-5 mr-2 text-yellow-400" />
+                  Belum Terisi
+                </Button>
 
-      <Button
-        type="submit"
-        onClick={onSubmit}
-        className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
-      >
-        Submit
-      </Button>
+                <Button
+                  type="submit"
+                  onClick={onSubmit}
+                  className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
+                >
+                  Submit
+                </Button>
               </div>
             </form>
           </div>

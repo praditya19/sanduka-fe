@@ -153,7 +153,7 @@ const page = () => {
         cabang,
         selectedUnitKerja
       );
-  
+
       toast.success(
         <div
           style={{
@@ -210,6 +210,7 @@ const page = () => {
           },
         }
       );
+      handleCreateHistory();
       setShowDropdownCabangUnit(false);
       setIsDropdownVisible(false);
   
@@ -231,7 +232,45 @@ const page = () => {
   };
   
   const handleCancelSave = () => {
-    setIsPopupVisible(false);
+    setIsPopupVisible(false); // Tutup popup jika user membatalkan
+  };
+
+  const handleCreateHistory = async () => {
+    const now = new Date();
+
+    const options = { weekday: "long" };
+    const hari = now.toLocaleDateString("id-ID", options);
+    const tanggal = now.toISOString().split("T")[0];
+    const jam = now.toTimeString().split(" ")[0];
+
+    const bulan = now.toLocaleString("id-ID", { month: "long" });
+    const tahun = now.getFullYear();
+
+    const npaPgri = sessionStorage.getItem("npa");
+    const namaLengkap = sessionStorage.getItem("nama");
+
+    const historyData = {
+      hari: hari,
+      tanggal: tanggal,
+      jam: jam,
+      npa: npaPgri,
+      nama: namaLengkap,
+      cabang: cabang,
+      uraian: "Pindah Cabang",
+      masuk: "Baru",
+      keluar: "",
+      bulan: bulan,
+      tahun: tahun,
+      cabang_ke_2: cabang,
+      user: namaLengkap,
+    };
+
+    try {
+      const response = await GlobalApi.createHistoryData(historyData);
+      console.log("History data created successfully:", response);
+    } catch (error) {
+      console.error("Failed to create history data:", error);
+    }
   };
 
   useEffect(() => {
