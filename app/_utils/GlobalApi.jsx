@@ -2,7 +2,7 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
- baseURL: "https://1ffe-103-134-212-202.ngrok-free.app",
+  baseURL: "http://localhost:8080",
   headers: {
     "ngrok-skip-browser-warning": "true",
   },
@@ -113,27 +113,25 @@ const searchUsersByName = (namaLengkap) => {
 //   return axiosClient.get(`/api/auth/users?page=${page}&size=${size}`);
 // };
 
-const getAllAnggota = async (
-  page = 0,
-  cabang = null,
-  unitKerja = null
-) => {
+const getAllAnggota = async (page = 0, cabang = null, unitKerja = null) => {
   const fetchAllPages = async () => {
     let currentPage = page;
     let allData = [];
     let hasMoreData = true;
 
     while (hasMoreData) {
-      const params = new URLSearchParams({ 
-        page: currentPage, 
-        size: 500 // Gunakan ukuran batch yang masuk akal
+      const params = new URLSearchParams({
+        page: currentPage,
+        size: 500, // Gunakan ukuran batch yang masuk akal
       });
 
       if (cabang) params.append("cabang", cabang);
       if (unitKerja) params.append("unitKerja", unitKerja);
 
       try {
-        const response = await axiosClient.get(`/api/auth/users?${params.toString()}`);
+        const response = await axiosClient.get(
+          `/api/auth/users?${params.toString()}`
+        );
         const pageData = response.data.content;
         const totalPages = response.data.totalPages;
 
@@ -181,7 +179,7 @@ const getFileByNip = async (nip) => {
       throw new Error("Terjadi kesalahan pada jaringan");
     }
   }
-}
+};
 
 // Update DATA
 const updateUserById = async (userId, formData) => {
@@ -467,44 +465,6 @@ const getHistoryData = async (page = 0, size = 10) => {
   }
 };
 
-const getHistoryDataById = async (userId) => {
-  try {
-    // Ambil data login berdasarkan userId
-    const loginHistoryResponse = await axiosClient.get(
-      `/api/history/user/${userId}/login`
-    );
-    const loginHistory = loginHistoryResponse.data;
-
-    // Ambil data mutasi cabang/unit kerja berdasarkan userId
-    const mutasiHistoryResponse = await axiosClient.get(
-      `/api/history/user/${userId}/mutasi`
-    );
-    const mutasiHistory = mutasiHistoryResponse.data;
-
-    // Gabungkan kedua data menjadi satu histori
-    const combinedHistory = [
-      ...loginHistory.map((item) => ({
-        ...item,
-        type: "Login", // Tambahkan tipe data untuk membedakan
-      })),
-      ...mutasiHistory.map((item) => ({
-        ...item,
-        type: "Mutasi", // Tambahkan tipe data untuk membedakan
-      })),
-    ];
-
-    // Sortir data berdasarkan timestamp (jika ada)
-    combinedHistory.sort(
-      (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
-    );
-
-    return combinedHistory;
-  } catch (error) {
-    console.error("Error fetching history data:", error);
-    throw error;
-  }
-};
-
 const cekNpaList = async (npaList) => {
   try {
     const response = await axiosClient.get(
@@ -657,10 +617,10 @@ const getTotalAnggotaStatistik = async () => {
 const updateIuranById = async (id, payload) => {
   try {
     const response = await axiosClient.put(`/api/iuran/${id}`, payload); // Mengirim payload di body
-    return response.data;  // Mengembalikan data dari respon API
+    return response.data; // Mengembalikan data dari respon API
   } catch (error) {
-    console.error('Error fetching data from API:', error);
-    throw error;  // Melempar error agar bisa ditangani di tempat lain
+    console.error("Error fetching data from API:", error);
+    throw error; // Melempar error agar bisa ditangani di tempat lain
   }
 };
 
@@ -1133,20 +1093,20 @@ const getAllPensiun = (page = 0, size = 560) => {
 //     let currentPage = page;
 //     let allData = [];
 //     let hasMoreData = true;
- 
+
 //     while (hasMoreData) {
-//       const params = new URLSearchParams({ 
-//         page: currentPage, 
+//       const params = new URLSearchParams({
+//         page: currentPage,
 //         size: 0
 //       });
- 
+
 //       try {
 //         const response = await axiosClient.get(`/api/pensiun?${params.toString()}`);
 //         const pageData = response.data.content;
 //         const totalPages = response.data.totalPages;
- 
+
 //         allData = [...allData, ...pageData];
- 
+
 //         hasMoreData = currentPage + 1 < totalPages;
 //         currentPage++;
 //       } catch (error) {
@@ -1154,10 +1114,10 @@ const getAllPensiun = (page = 0, size = 560) => {
 //         break;
 //       }
 //     }
- 
+
 //     return allData;
 //   };
- 
+
 //   return fetchAllPages();
 // };
 // ENd
@@ -1259,6 +1219,35 @@ const deleteUser = async (id) => {
   }
 };
 
+const createHistoryData = async (historyData) => {
+  try {
+    const response = await axiosClient.post("/api/history", historyData, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error creating history data:", error);
+    throw error;
+  }
+};
+
+const getAllHistoryData = async (page = 0, size = 10) => {
+  try {
+    const response = await axiosClient.get(`/api/history`, {
+      params: {
+        page: page,
+        size: size,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all history data:", error);
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1343,7 +1332,6 @@ export default {
   getKwitansiByIdAndNpa,
   searchUsersByName,
   deleteUser,
-  getHistoryDataById,
   getCalculateSandukaBaru,
   getCalculateSandukaMeninggal,
   getCalculateSandukaPensiun,
@@ -1352,4 +1340,6 @@ export default {
   getTotalAnggotaByCabang,
   getFileByNip,
   updateIuranById,
+  createHistoryData,
+  getAllHistoryData,
 };

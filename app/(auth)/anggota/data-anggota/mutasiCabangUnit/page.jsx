@@ -58,10 +58,18 @@ const page = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const anggotaId = sessionStorage.getItem("anggotaId");
-      if (anggotaId) {
+      const role = sessionStorage.getItem("role");
+      let userId;
+
+      if (role === "ADMIN" || role === "SUPER ADMIN") {
+        userId = sessionStorage.getItem("anggotaId");
+      } else if (role === "USER") {
+        userId = sessionStorage.getItem("userId");
+      }
+
+      if (userId) {
         try {
-          const response = await GlobalApi.getUserById(anggotaId);
+          const response = await GlobalApi.getUserById(userId);
           setUserData(response);
           setCabang(response.cabang || "");
           setSelectedUnitKerja(response.unitKerja || "");
@@ -69,6 +77,7 @@ const page = () => {
           console.error("Error fetching user data:", error);
         }
       } else {
+        console.warn("User ID tidak ditemukan di sessionStorage.");
       }
     };
 
@@ -117,12 +126,26 @@ const page = () => {
   };
 
   const handleConfirmSave = async () => {
-    const idAnggota = sessionStorage.getItem("anggotaId");
+    const role = sessionStorage.getItem("role"); // Ambil role dari sessionStorage
+    let idAnggota;
+
+    // Tentukan ID berdasarkan role
+    if (role === "ADMIN" || role === "SUPER ADMIN") {
+      idAnggota = sessionStorage.getItem("anggotaId");
+    } else if (role === "USER") {
+      idAnggota = sessionStorage.getItem("userId");
+    }
+
+    if (!idAnggota) {
+      console.error("ID tidak ditemukan. Periksa role atau sessionStorage.");
+      alert("ID anggota tidak valid. Silakan login ulang.");
+      return;
+    }
 
     if (!cabang || !selectedUnitKerja) {
       console.error("Cabang atau Unit Kerja tidak boleh kosong");
       alert("Silakan pilih Cabang dan Unit Kerja sebelum menyimpan.");
-      setIsPopupVisible(false); // Tutup popup
+      setIsPopupVisible(false);
       return;
     }
 
@@ -132,6 +155,7 @@ const page = () => {
         cabang,
         selectedUnitKerja
       );
+
       toast.success(
         <div
           style={{
@@ -188,6 +212,7 @@ const page = () => {
           },
         }
       );
+      handleCreateHistory();
       setShowDropdownCabangUnit(false);
       setIsDropdownVisible(false);
 
@@ -204,12 +229,50 @@ const page = () => {
         }`
       );
     } finally {
-      setIsPopupVisible(false); // Tutup popup setelah proses selesai
+      setIsPopupVisible(false);
     }
   };
 
   const handleCancelSave = () => {
     setIsPopupVisible(false); // Tutup popup jika user membatalkan
+  };
+
+  const handleCreateHistory = async () => {
+    const now = new Date();
+
+    const options = { weekday: "long" };
+    const hari = now.toLocaleDateString("id-ID", options);
+    const tanggal = now.toISOString().split("T")[0];
+    const jam = now.toTimeString().split(" ")[0];
+
+    const bulan = now.toLocaleString("id-ID", { month: "long" });
+    const tahun = now.getFullYear();
+
+    const npaPgri = sessionStorage.getItem("npa");
+    const namaLengkap = sessionStorage.getItem("nama");
+
+    const historyData = {
+      hari: hari,
+      tanggal: tanggal,
+      jam: jam,
+      npa: npaPgri,
+      nama: namaLengkap,
+      cabang: cabang,
+      uraian: "Pindah Cabang",
+      masuk: "Baru",
+      keluar: "",
+      bulan: bulan,
+      tahun: tahun,
+      cabang_ke_2: cabang,
+      user: namaLengkap,
+    };
+
+    try {
+      const response = await GlobalApi.createHistoryData(historyData);
+      console.log("History data created successfully:", response);
+    } catch (error) {
+      console.error("Failed to create history data:", error);
+    }
   };
 
   useEffect(() => {

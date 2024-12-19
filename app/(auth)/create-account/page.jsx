@@ -22,7 +22,7 @@ import {
   AiOutlineInfoCircle,
   AiOutlineEye,
   AiOutlineEyeInvisible,
-  AiOutlineWarning 
+  AiOutlineWarning,
 } from "react-icons/ai";
 
 const MapComponent = dynamic(() => import("../../_components/MapComponent"), {
@@ -314,9 +314,9 @@ const Page = () => {
         const formattedField = field
           .replace(/([A-Z])/g, " $1") // Menambahkan spasi sebelum huruf kapital
           .replace(/^./, (str) => str.toUpperCase()); // Mengubah huruf pertama menjadi kapital
-    
+
         toast.error(`${formattedField} wajib diisi.`);
-    
+
         if (formRefs[field]?.current) {
           formRefs[field].current.scrollIntoView({
             behavior: "smooth",
@@ -405,8 +405,8 @@ const Page = () => {
   const onSubmit = async (data) => {
     const isFormValid = validateForm();
     if (!isFormValid) return;
-    setIsSubmitClicked(true); 
-    
+    setIsSubmitClicked(true);
+
     const formattedTanggalLahir = new Date(data.tanggalLahir)
       .toISOString()
       .split("T")[0];
@@ -430,7 +430,7 @@ const Page = () => {
       foto: cleanBase64,
     };
 
-    console.log("Data yang akan dikirim ke database:", finalData);
+    handleCreateHistory();
 
     try {
       const response = await GlobalApi.registerUser(finalData);
@@ -492,7 +492,8 @@ const Page = () => {
         router.push("/tunggu-admin");
       }, 4000);
     } catch (error) {
-      const errorMessage = error.response?.data || "Terjadi kesalahan saat registrasi.";
+      const errorMessage =
+        error.response?.data || "Terjadi kesalahan saat registrasi.";
       toast.error(
         <div
           style={{
@@ -526,9 +527,7 @@ const Page = () => {
           >
             Anda Belum Berhasil Mendaftar
           </strong>
-          <span style={{ fontSize: "1.75rem" }}>
-          {errorMessage}
-        </span>
+          <span style={{ fontSize: "1.75rem" }}>{errorMessage}</span>
         </div>,
         {
           icon: null,
@@ -679,6 +678,44 @@ const Page = () => {
 
   const handleNavigation = (stepNumber) => {
     setStep(stepNumber);
+  };
+
+  const handleCreateHistory = async () => {
+    const now = new Date();
+
+    const options = { weekday: "long" };
+    const hari = now.toLocaleDateString("id-ID", options);
+    const tanggal = now.toISOString().split("T")[0];
+    const jam = now.toTimeString().split(" ")[0];
+
+    const bulan = now.toLocaleString("id-ID", { month: "long" });
+    const tahun = now.getFullYear();
+
+    const npaPgri = watch("npaPgri");
+    const namaLengkap = watch("namaLengkap");
+
+    const historyData = {
+      hari: hari,
+      tanggal: tanggal,
+      jam: jam,
+      npa: npaPgri,
+      nama: namaLengkap,
+      cabang: selectedCabang,
+      uraian: "Menjadi Anggota Sanduka",
+      masuk: "Baru",
+      keluar: "",
+      bulan: bulan,
+      tahun: tahun,
+      cabang_ke_2: "",
+      user: "",
+    };
+
+    try {
+      const response = await GlobalApi.createHistoryData(historyData);
+      console.log("History data created successfully:", response);
+    } catch (error) {
+      console.error("Failed to create history data:", error);
+    }
   };
 
   return (
@@ -1780,45 +1817,45 @@ const Page = () => {
                   Kembali
                 </Button>
                 <Button
-        type="button"
-        onClick={() => {
-          if (isSubmitClicked) {
-            const isValid = validateForm(errors, {
-              jabatan: jabatanRef,
-              pangkatGolongan: pangkatGolonganRef,
-              tingkatSekolah: tingkatSekolahRef,
-              statusSekolah: statusSekolahRef,
-              statusPegawai: statusPegawaiRef,
-              pangkatGolongan: pangkatGolonganRef,
-              tahunDiangkat: tahunDiangkatRef,
-              pendidikanTerakhir: pendidikanTerakhirRef,
-              sertifikatPendidik: sertifikatPendidikRef,
-              golonganJabatan: golonganJabatanRef,
-              cabang: dropdownRef,
-              unitKerja: dropdownRefUnitKerja,
-            });
+                  type="button"
+                  onClick={() => {
+                    if (isSubmitClicked) {
+                      const isValid = validateForm(errors, {
+                        jabatan: jabatanRef,
+                        pangkatGolongan: pangkatGolonganRef,
+                        tingkatSekolah: tingkatSekolahRef,
+                        statusSekolah: statusSekolahRef,
+                        statusPegawai: statusPegawaiRef,
+                        pangkatGolongan: pangkatGolonganRef,
+                        tahunDiangkat: tahunDiangkatRef,
+                        pendidikanTerakhir: pendidikanTerakhirRef,
+                        sertifikatPendidik: sertifikatPendidikRef,
+                        golonganJabatan: golonganJabatanRef,
+                        cabang: dropdownRef,
+                        unitKerja: dropdownRefUnitKerja,
+                      });
 
-            if (isValid) {
-              alert("Form sudah lengkap!");
-            }
-          } else {
-            alert("Klik Submit terlebih dahulu!");
-          }
-        }}
-        className="text-white bg-red-500 hover:bg-red-600 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
-        disabled={!isSubmitClicked} 
+                      if (isValid) {
+                        alert("Form sudah lengkap!");
+                      }
+                    } else {
+                      alert("Klik Submit terlebih dahulu!");
+                    }
+                  }}
+                  className="text-white bg-red-500 hover:bg-red-600 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
+                  disabled={!isSubmitClicked}
                 >
-                    <AiOutlineWarning className="h-5 w-5 mr-2 text-yellow-400" />
-        Belum Terisi
-      </Button>
+                  <AiOutlineWarning className="h-5 w-5 mr-2 text-yellow-400" />
+                  Belum Terisi
+                </Button>
 
-      <Button
-        type="submit"
-        onClick={onSubmit}
-        className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
-      >
-        Submit
-      </Button>
+                <Button
+                  type="submit"
+                  onClick={onSubmit}
+                  className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
+                >
+                  Submit
+                </Button>
               </div>
             </form>
           </div>
