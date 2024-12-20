@@ -11,6 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "../_utils/GlobalApi";
 import { useRouter } from "next/navigation";
+import { useMute } from "../MuteContext";
 
 const HeaderMobile = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,6 +26,7 @@ const HeaderMobile = () => {
   const profileMenuRef = useRef(null);
   const [role, setRole] = useState(null);
   const [profileImageUrl, setProfileImageUrl] = useState("/profile.png");
+  const { isMuted, handleMuteToggle } = useMute();
 
   const getAnggotaById = async () => {
     try {
@@ -87,12 +89,14 @@ const HeaderMobile = () => {
 
   useEffect(() => {
     const storedRole = sessionStorage.getItem("role");
-    setRole(storedRole); 
+    setRole(storedRole);
   }, []);
 
   useEffect(() => {
     getAnggotaById();
-
+    if (isMuted) {
+      return;
+    }
     const storedStatusSegeraCount = sessionStorage.getItem("statusSegera");
     if (storedStatusSegeraCount) {
       setEmailCount(parseInt(storedStatusSegeraCount));
@@ -117,10 +121,14 @@ const HeaderMobile = () => {
     notificationCount,
     previousNotificationCount,
     isNotificationSoundPlaying,
+    isMuted,
   ]);
 
   useEffect(() => {
     getAnggotaById();
+    if (isMuted) {
+      return;
+    }
     if (notificationCount > 0 && !isNotificationSoundPlaying) {
       const playNotificationSound = () => {
         const audio = new Audio("/sound-notification.wav");
@@ -142,7 +150,7 @@ const HeaderMobile = () => {
 
       playNotificationSound();
     }
-  }, [notificationCount, isNotificationSoundPlaying]);
+  }, [notificationCount, isNotificationSoundPlaying, isMuted]);
 
   useEffect(() => {
     if (isProfileMenuOpen) {
@@ -228,9 +236,15 @@ const HeaderMobile = () => {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                  className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
                 >
                   Logout
+                </button>
+                <button
+                  onClick={handleMuteToggle}
+                  className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                >
+                  {isMuted ? "Hidupkan Suara" : "Matikan Suara"} Notifikasi
                 </button>
               </div>
             )}

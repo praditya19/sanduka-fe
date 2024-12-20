@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AuthProvider } from "./AuthContext";
 import "./globals.css";
+import { MuteProvider } from "./MuteContext";
 
 export default function RootLayout({ children }) {
   const router = useRouter();
@@ -20,7 +21,9 @@ export default function RootLayout({ children }) {
           fontFamily: "Source Sans Pro",
         }}
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <MuteProvider>{children}</MuteProvider>
+        </AuthProvider>
       </body>
     </html>
   );
