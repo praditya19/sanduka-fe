@@ -246,15 +246,25 @@ const page = () => {
     const bulan = now.toLocaleString("id-ID", { month: "long" });
     const tahun = now.getFullYear();
 
-    const npaPgri = sessionStorage.getItem("npaPgri");
-    const namaLengkap = sessionStorage.getItem("nama");
+    const userRole = sessionStorage.getItem("role");
+
+    let namaLengkapUser;
+    let npaPgri;
+
+    if (userRole !== "USER") {
+      namaLengkapUser = sessionStorage.getItem("nama");
+      npaPgri = userData.npaPgri;
+    } else {
+      namaLengkapUser = userData.namaLengkap;
+      npaPgri = userData.npaPgri;
+    }
 
     const historyData = {
       hari: hari,
       tanggal: tanggal,
       jam: jam,
       npa: npaPgri,
-      nama: namaLengkap,
+      nama: userData.namaLengkap,
       cabang: userData.cabangSebelumnya,
       uraian: "Pindah Cabang",
       masuk: "Baru",
@@ -262,12 +272,11 @@ const page = () => {
       bulan: bulan,
       tahun: tahun,
       cabang_ke_2: cabang,
-      user: namaLengkap,
+      user: namaLengkapUser,
     };
 
     try {
       const response = await GlobalApi.createHistoryData(historyData);
-      console.log("History data created successfully:", response);
     } catch (error) {
       console.error("Failed to create history data:", error);
     }
