@@ -72,7 +72,7 @@ const page = () => {
           const response = await GlobalApi.getUserById(userId);
           setUserData(response);
           setCabang(response.cabang || "");
-          setSelectedUnitKerja(response.unitKerja || "");
+          setSelectedUnitKerja(response.unitKerja  || "");
         } catch (error) {
           console.error("Error fetching user data:", error);
         }

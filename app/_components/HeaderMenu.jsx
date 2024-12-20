@@ -26,79 +26,54 @@ const HeaderHome = () => {
   const [profileImageUrl, setProfileImageUrl] = useState("/profile.png");
   const [statusSegeraCount, setStatusSegeraCount] = useState(0);
 
-  const getPensiunDataAndCountSegera = async () => {
-    setLoader(true);
-  
-    try {
-      const pensiunResponse = await GlobalApi.getAllPensiun();
-  
-      if (!pensiunResponse || !pensiunResponse.data || !pensiunResponse.data.content) {
-        throw new Error("Response dari API tidak valid");
-      }
-  
-      const allPensiunList = pensiunResponse.data.content;
-  
-      // Filter untuk menghitung jumlah "Segera" jika keterangan null
-      const segeraItems = allPensiunList.filter(
-        (item) => item.keterangan === null && item.status === "Segera"
-      );
-  
-      const countSegera = segeraItems.length;
-  
+  useEffect(() => {
+    const fetchPensiunData = async () => {
+      setLoader(true);
       try {
-        sessionStorage.setItem("statusSegera", countSegera.toString());
-      } catch (error) {
-        console.error("Tidak dapat menyimpan ke sessionStorage:", error);
-      }
+        const pensiunResponse = await GlobalApi.getAllPensiun();
   
-      setStatusSegeraCount(countSegera);
-      setPensiunList(allPensiunList);
-  
-      // Filter untuk tampilan akhir
-      const finalFilteredPensiunList = allPensiunList.filter((item) => {
-        if (item.keterangan === null) {
-          return item.status === "Segera";
+        if (!pensiunResponse || !pensiunResponse.data || !pensiunResponse.data.content) {
+          throw new Error("Response dari API tidak valid");
         }
-        return item.keterangan !== "Pensiun";
-      });
   
-      setFilteredPensiunList(finalFilteredPensiunList);
-    } catch (error) {
-      console.error("Terjadi kesalahan saat mengambil data pensiun:", error);
-    } finally {
-      setLoader(false);
-    }
-  };
+        const allPensiunList = pensiunResponse.data.content;
   
-  useEffect(() => {
-    checkLoginStatus();
-  }, []);
+        const segeraItems = allPensiunList.filter(
+          (item) => item.keterangan === null && item.status === "Segera"
+        );
+        const countSegera = segeraItems.length;
   
-  useEffect(() => {
+        sessionStorage.setItem("statusSegera", countSegera.toString());
+  
+        setStatusSegeraCount(countSegera);
+        setPensiunList(allPensiunList);
+  
+        const finalFilteredPensiunList = allPensiunList.filter((item) => {
+          if (item.keterangan === null) {
+            return item.status === "Segera";
+          }
+          return item.keterangan !== "Pensiun";
+        });
+  
+        setFilteredPensiunList(finalFilteredPensiunList);
+      } catch (error) {
+        console.error("Terjadi kesalahan saat mengambil data pensiun:", error);
+      } finally {
+        setLoader(false);
+      }
+    };
+  
     if (isLoggedIn) {
-      const statusSegera = sessionStorage.getItem("statusSegera") || "0";
+      const statusSegera = sessionStorage.getItem("statusSegera");
       if (statusSegera) {
         setStatusSegeraCount(parseInt(statusSegera, 10));
+        fetchPensiunData(); // Tetap *fetch* untuk mendapatkan data terbaru
       } else {
-        getPensiunDataAndCountSegera();
+        fetchPensiunData();
       }
     }
-  }, [isLoggedIn]);
-  
-  const checkLoginStatus = () => {
-    const userToken = sessionStorage.getItem("authToken");
-  
-    if (userToken) {
-      setIsLoggedIn(true);
-  
-      const statusSegera = sessionStorage.getItem("statusSegera");
-      if (!statusSegera) {
-        getPensiunDataAndCountSegera();
-      }
-    } else {
-      router.push("/login");
-    }
-  };
+  }, [isLoggedIn]);  
+
   const getAnggotaById = async () => {
     try {
       const userId = sessionStorage.getItem("userId");
