@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
@@ -19,6 +20,11 @@ const Page = () => {
   const startYear = 2020;
   const [originalData, setOriginalData] = useState([]); // State untuk menyimpan data asli
   const router = useRouter();
+  const dropdownRef = useRef(null);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false); // Add this state
+  const [formValues, setFormValues] = useState({ // Add this state
+    searchCabang: "",
+  });
 
   // Fungsi untuk fetch data realisasi
   const fetchData = async (bulan, tahun) => {
@@ -112,6 +118,19 @@ const Page = () => {
     document.body.innerHTML = originalContent;
     window.location.reload(); // Refresh the page to re-apply React events
   };
+
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setIsDropdownVisible(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // useEffect untuk filter data berdasarkan selectedCabang
   useEffect(() => {
@@ -220,9 +239,8 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="container mx-auto p-6">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
@@ -233,46 +251,124 @@ const Page = () => {
               <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
                 <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
                   <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5 w-full sm:w-auto">
-                    <select
-                      className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
-                      id="cabang"
-                      name="cabang"
-                      value={selectedCabang}
-                      onChange={handleCabangChange}
-                    >
-                      <option value="">-- Cabang --</option>
-                      {cabangList.map((cabang) => (
-                        <option key={cabang.id} value={cabang.kecamatan}>
-                          {cabang.kecamatan}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
-                      value={selectedBulan}
-                      onChange={handleBulanChange}
-                    >
-                      <option value="">-- Bulan --</option>
-                      {bulanList.map((bulan) => (
-                        <option key={bulan.angkaBulan} value={bulan.namaBulan}>
-                          {bulan.namaBulan}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
-                      id="tahun"
-                      name="tahun"
-                      value={selectedYear}
-                      onChange={handleYearChange} // Pastikan handler untuk tahun diaktifkan
-                    >
-                      <option value="">-- Tahun --</option>
-                      {years.map((year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ))}
-                    </select>
+                    {/* Updated Cabang Filter */}
+                    <div className="flex flex-col relative" ref={dropdownRef}>
+                      <Label className="block text-white text-sm font-semibold mb-2" htmlFor="cabang">
+                        Cabang
+                      </Label>
+
+                      <input
+                        type="text"
+                        placeholder="Cabang yang dipilih"
+                        className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={selectedCabang || ""}
+                        readOnly
+                        onFocus={() => setIsDropdownVisible(true)}
+                      />
+
+                      {isDropdownVisible && (
+                        <div className="absolute top-full left-0 w-full z-10 mt-1 border bg-white shadow-lg rounded-b">
+                          <ul className="max-h-48 overflow-y-auto">
+                            <li className="py-2 px-4">
+                              <input
+                                type="text"
+                                placeholder="Cari Cabang..."
+                                className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                value={formValues.searchCabang || ""}
+                                autoFocus
+                                onChange={(e) => {
+                                  const searchValue = e.target.value;
+                                  setFormValues((prevValues) => ({
+                                    ...prevValues,
+                                    searchCabang: searchValue,
+                                  }));
+                                }}
+                              />
+                            </li>
+
+                            <li className="py-2 px-4 hover:bg-blue-500 hover:text-white">
+                              <button
+                                onClick={() => {
+                                  setSelectedCabang("");
+                                  setFormValues((prevValues) => ({
+                                    ...prevValues,
+                                    searchCabang: "",
+                                  }));
+                                  setIsDropdownVisible(false);
+                                }}
+                              >
+                                Pilih Cabang
+                              </button>
+                            </li>
+
+                            {cabangList
+                              .filter((cabang) =>
+                                cabang.kecamatan
+                                  .toLowerCase()
+                                  .includes(formValues.searchCabang?.toLowerCase() || "")
+                              )
+                              .map((cabang) => (
+                                <li
+                                  key={cabang.id}
+                                  className="py-1 px-4 hover:bg-blue-500 hover:text-white"
+                                >
+                                  <button
+                                    onClick={() => {
+                                      setSelectedCabang(cabang.kecamatan);
+                                      setFormValues((prevValues) => ({
+                                        ...prevValues,
+                                        searchCabang: "",
+                                      }));
+                                      setIsDropdownVisible(false);
+                                    }}
+                                  >
+                                    {cabang.kecamatan}
+                                  </button>
+                                </li>
+                              ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Update Bulan and Tahun selects with Labels */}
+                    <div>
+                      <Label className="block text-white text-sm font-semibold mb-2" htmlFor="bulan">
+                        Bulan
+                      </Label>
+                      <select
+                        className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 mt-1 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                        value={selectedBulan}
+                        onChange={handleBulanChange}
+                      >
+                        <option value=""> Bulan </option>
+                        {bulanList.map((bulan) => (
+                          <option key={bulan.angkaBulan} value={bulan.namaBulan}>
+                            {bulan.namaBulan}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <Label className="block text-white text-sm font-semibold mb-2" htmlFor="tahun">
+                        Tahun
+                      </Label>
+                      <select
+                        className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 mt-1 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                        id="tahun"
+                        name="tahun"
+                        value={selectedYear}
+                        onChange={handleYearChange}
+                      >
+                        <option value="">Tahun</option>
+                        {Array.from({ length: currentYear - startYear + 1 }, (_, index) => startYear + index).map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <div className="flex-1 flex justify-center">
                     <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">

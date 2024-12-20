@@ -113,7 +113,7 @@ const VerifikasiAnggotaMutasi = () => {
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
           <strong style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
-          Anggota Berhasil Diverifikasi!
+            Anggota Berhasil Diverifikasi!
           </strong>
         </div>,
         {
@@ -430,18 +430,18 @@ const VerifikasiAnggotaMutasi = () => {
         toastOptions={{
           style: {
             marginTop: "16%",
-            fontSize: "1.75rem", 
-            padding: "10px", 
+            fontSize: "1.75rem",
+            padding: "10px",
             width: "80%",
             maxWidth: "700px",
             height: "50%",
             maxHeight: "400px",
             transform: "translate(-50%, -50%)",
-            textAlign: "center", 
-            zIndex: 9999, 
+            textAlign: "center",
+            zIndex: 9999,
             backgroundColor: "#fff",
-            borderRadius: "8px", 
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)", 
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
           },
           success: {
             style: {
@@ -461,9 +461,8 @@ const VerifikasiAnggotaMutasi = () => {
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="container mx-auto p-4 md:p-6">
             <FilterSection
@@ -704,9 +703,8 @@ const DropdownUnitKerja = ({
       <label className="block mb-2 font-semibold text-gray-800">{label}</label>
       <input
         type="text"
-        className={`border rounded-lg p-2 w-full bg-white shadow-sm ${
-          disabled ? "bg-gray-200 cursor-not-allowed" : ""
-        }`}
+        className={`border rounded-lg p-2 w-full bg-white shadow-sm ${disabled ? "bg-gray-200 cursor-not-allowed" : ""
+          }`}
         placeholder={`Pilih ${label}`}
         value={query}
         readOnly
@@ -787,6 +785,40 @@ const DataTable = ({
     setExpandedRow(expandedRow === index ? null : index);
   };
 
+  const formatCreatedAt = (createdAt) => {
+    const date = new Date(
+      createdAt[0], // Tahun
+      createdAt[1] - 1, // Bulan (0-based)
+      createdAt[2], // Hari
+      createdAt[3], // Jam
+      createdAt[4], // Menit
+      createdAt[5] // Detik
+    );
+  
+    const dayNames = [
+      "Minggu",
+      "Senin",
+      "Selasa",
+      "Rabu",
+      "Kamis",
+      "Jumat",
+      "Sabtu",
+    ];
+    
+    const dayName = dayNames[date.getDay()]; // Ambil nama hari
+  
+    return `${dayName}, ${date.toLocaleString("id-ID", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false, // Format 24-jam
+    })}`;
+  };
+  
+
   return (
     <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
       <thead className="bg-teal-700 text-white text-center">
@@ -801,6 +833,7 @@ const DataTable = ({
               <th className="py-2 px-4 border-b">NPA PGRI</th>
               <th className="py-2 px-4 border-b">Status</th>
               <th className="py-2 px-4 border-b">Aksi</th>
+              <th className="py-2 px-4 border-b">Registrasi</th>
             </>
           )}
           {isMobile && <th className="py-2 px-4 border-b">Lihat Data</th>}
@@ -884,6 +917,7 @@ const DataTable = ({
                         onClick={() => handleUserClick(item.id)}
                       />
                     </td>
+                    <td className="px-4 py-2 border-b">{formatCreatedAt(item.createdAt)}</td>
                   </>
                 )}
                 {isMobile && (
@@ -979,115 +1013,149 @@ const PopupDetail = ({
   fotoBase64,
   handleVerifyUserClick,
   handleRejectUserClick,
-}) => (
-  <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-60 z-50 transition-opacity duration-300 ease-in-out">
-    <div className="bg-white p-4 sm:p-8 rounded-lg shadow-xl w-full max-w-lg transform transition-transform duration-300 ease-in-out">
-      <div className="flex justify-between items-center mb-4 sm:mb-6">
-        <h2 className="text-lg sm:text-xl font-bold text-gray-900">
-          Detail Anggota
-        </h2>
-        <button
-          onClick={handleClosePopup}
-          className="text-gray-500 hover:text-gray-900 transition-colors duration-300 ease-in-out"
-        >
-          <FontAwesomeIcon icon={faTimesCircle} size="lg" />
-        </button>
-      </div>
-      <div className="flex flex-col space-y-4 sm:space-y-6">
-        <div className="flex justify-center">
-          <Image
-            src={
-              fotoBase64
-                ? "/profile.png"
-                : `data:image/jpeg;base64,${fotoBase64}`
-            }
-            width={80}
-            height={80}
-            alt="Anggota Foto"
-            className="rounded-full"
-          />
+}) => {
+  const [showConfirmReject, setShowConfirmReject] = useState(false);
+
+  const handleRejectConfirmation = () => {
+    setShowConfirmReject(false); // Close the confirmation pop-up
+    handleRejectUserClick(selectedRow.id); // Trigger reject action
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-60 z-50 transition-opacity duration-300 ease-in-out">
+      <div className="bg-white p-4 sm:p-8 rounded-lg shadow-xl w-full max-w-lg transform transition-transform duration-300 ease-in-out">
+        <div className="flex justify-between items-center mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900">Detail Anggota</h2>
+          <button
+            onClick={handleClosePopup}
+            className="text-red-500 hover:text-gray-900 transition-colors duration-300 ease-in-out"
+          >
+            <FontAwesomeIcon icon={faTimesCircle} size="lg" />
+          </button>
         </div>
-        <div className="text-center">
-          {!selectedRow.isVerified && (
-            <Badge variant="destructive" className="">
-              <FontAwesomeIcon
-                icon={faTimesCircle}
-                className="mr-1 p-1 text-white"
-                size="lg"
-              />
-              <span>Belum Terverifikasi</span>
-            </Badge>
-          )}
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700 mb-4">
-          <div>
-            <p className="font-medium text-gray-600">Nama Lengkap:</p>
-            <p>{selectedRow.namaLengkap}</p>
+
+        <div className="flex flex-col space-y-4 sm:space-y-6">
+          {/* Profile Image */}
+          <div className="flex justify-center">
+            <Image
+              src={
+                fotoBase64
+                  ? "/profile.png"
+                  : `data:image/jpeg;base64,${fotoBase64}`
+              }
+              width={80}
+              height={80}
+              alt="Anggota Foto"
+              className="rounded-full"
+            />
           </div>
-          <div>
-            <p className="font-medium text-gray-600">Email:</p>
-            <p>{selectedRow.email}</p>
-          </div>
-          <div>
-            <p className="font-medium text-gray-600">NPA PGRI:</p>
-            <p>{selectedRow.npaPgri}</p>
-          </div>
-          <div>
-            <p className="font-medium text-gray-600">NIK:</p>
-            <p>{selectedRow.nik}</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
-          <div>
-            <p className="font-medium text-gray-600">Cabang:</p>
-            <p>{selectedRow.cabang}</p>
-          </div>
-          <div>
-            <p className="font-medium text-gray-600">Unit Kerja:</p>
-            <p>{selectedRow.unitKerja}</p>
-          </div>
-          <div>
-            <p className="font-medium text-gray-600">Nomor Hp:</p>
-            <a
-              href={`https://wa.me/${selectedRow.nomorHp}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center text-green-500"
-            >
-              <FontAwesomeIcon icon={faWhatsapp} className="mr-2" size="lg" />
-              <span>{selectedRow.nomorHp}</span>
-            </a>
-          </div>
-          <div>
-            <p className="font-medium text-gray-600 mr-4">Status:</p>
-            <div className="flex text-center justify-between px-1">
-              <Button className="w-24 hover:bg-green-600">
-                <FontAwesomeIcon
-                  icon={faCheckCircle}
-                  size="2xl"
-                  className=" cursor-pointer"
-                  onClick={() => {
-                    handleVerifyUserClick(selectedRow.id);
-                  }}
-                />
-              </Button>
-              <Button className="w-24 bg-red-500 hover:bg-red-600">
+
+          {/* Verification Badge */}
+          <div className="text-center">
+            {!selectedRow.isVerified && (
+              <Badge variant="destructive" className="">
                 <FontAwesomeIcon
                   icon={faTimesCircle}
-                  size="2xl"
-                  className=" cursor-pointer"
-                  onClick={() => {
-                    handleRejectUserClick(selectedRow.id);
-                  }}
+                  className="mr-1 p-1 text-white"
+                  size="lg"
                 />
-              </Button>
+                <span>Belum Terverifikasi</span>
+              </Badge>
+            )}
+          </div>
+
+          {/* User Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700 mb-4">
+            <div>
+              <p className="font-medium text-gray-600">Nama Lengkap:</p>
+              <p>{selectedRow.namaLengkap}</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-600">Email:</p>
+              <p>{selectedRow.email}</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-600">NPA PGRI:</p>
+              <p>{selectedRow.npaPgri}</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-600">NIK:</p>
+              <p>{selectedRow.nik}</p>
+            </div>
+          </div>
+
+          {/* Additional Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+            <div>
+              <p className="font-medium text-gray-600">Cabang:</p>
+              <p>{selectedRow.cabang}</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-600">Unit Kerja:</p>
+              <p>{selectedRow.unitKerja}</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-600">Nomor Hp:</p>
+              <a
+                href={`https://wa.me/${selectedRow.nomorHp}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-green-500"
+              >
+                <FontAwesomeIcon icon={faWhatsapp} className="mr-2" size="lg" />
+                <span>{selectedRow.nomorHp}</span>
+              </a>
+            </div>
+            <div>
+              <p className="font-medium text-gray-600 mr-4">Status:</p>
+              <div className="flex text-center justify-between px-1">
+                <Button className="w-24 hover:bg-green-600">
+                  <FontAwesomeIcon
+                    icon={faCheckCircle}
+                    size="2xl"
+                    className="cursor-pointer"
+                    onClick={() => handleVerifyUserClick(selectedRow.id)}
+                  />
+                </Button>
+                <Button
+                  className="w-24 bg-red-500 hover:bg-red-600"
+                  onClick={() => setShowConfirmReject(true)}
+                >
+                  <FontAwesomeIcon icon={faTimesCircle} size="2xl" className="cursor-pointer" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Confirmation Popup */}
+      {showConfirmReject && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-60">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <p className="text-center text-gray-800 font-semibold mb-4">
+              Apa Anda yakin tidak memverifikasi Anggota ini?
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                onClick={handleRejectConfirmation}
+              >
+                Ya
+              </button>
+              <button
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                onClick={() => setShowConfirmReject(false)}
+              >
+                Tidak
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const getVisiblePages = () => {
@@ -1131,11 +1199,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         <button
           key={page}
           onClick={() => onPageChange(page - 1)}
-          className={`px-3 py-1 border rounded text-sm ${
-            page - 1 === currentPage
-              ? "bg-blue-500 text-white"
-              : "bg-white hover:bg-gray-50"
-          }`}
+          className={`px-3 py-1 border rounded text-sm ${page - 1 === currentPage
+            ? "bg-blue-500 text-white"
+            : "bg-white hover:bg-gray-50"
+            }`}
         >
           {page}
         </button>

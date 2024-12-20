@@ -16,7 +16,9 @@ import {
   FaSortUp,
   FaSortDown,
   FaSort,
+  FaTimes,
 } from "react-icons/fa";
+import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import HeaderHome from "@/app/_components/HeaderHome";
 import Sidebar from "@/app/_components/Sidebar";
@@ -26,7 +28,7 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 
 function PencarianAnggota() {
   const [maxItems, setMaxItems] = useState(10);
-  const [selectedCabang, setSelectedCabang] = useState("Pilih Cabang");
+  const [selectedCabang, setSelectedCabang] = useState("");
   const [selectedUnitKerja, setSelectedUnitKerja] =
     useState("Pilih Unit Kerja");
   const [selectedStatus, setSelectedStatus] = useState("Semua");
@@ -56,9 +58,101 @@ function PencarianAnggota() {
   const [searchUnitKerja, setSearchUnitKerja] = useState('');
   const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
   const [filteredUnitKerjaOptions, setFilteredUnitKerjaOptions] = useState([]);
+  const [role, setRole] = useState("");
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [popupVisibleKeluar, setPopupVisibleKeluar] = useState(false);
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [isPopupDaspen, setIsPopupDaspen] = useState(false);
+  const [daspenData, setDaspenData] = useState(null);
+  const [kategoriDaspen, setKategoriDaspen] = useState("");
+  const [previousKategoriDaspen, setPreviousKategoriDaspen] =
+    useState(kategoriDaspen);
+  const [isKategoriChanged, setIsKategoriChanged] = useState(false);
 
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
+
+  const handleDataDaspen = async () => {
+    const anggotaId = sessionStorage.getItem("anggotaId");
+    if (anggotaId) {
+      try {
+        const response = await GlobalApi.getUserById(anggotaId);
+        // console.log("data", response)
+        if (response) {
+          // console.log("Data anggota yang diterima dari getUserById:", response);
+
+          // Set kategoriDaspen dengan nilai dari response
+          setKategoriDaspen(response.kategoriDaspen || "Tidak tersedia");
+
+          const nip = response.nip;
+
+          if (nip) {
+            const fileResponse = await GlobalApi.getFileByNip(nip);
+
+            if (fileResponse) {
+              // console.log("Data file untuk NIP:", nip, fileResponse);
+              setDaspenData(fileResponse);
+              setIsPopupDaspen(true);
+            } else {
+              console.log("File tidak ditemukan untuk NIP:", nip);
+            }
+          } else {
+            console.log("NIP tidak ditemukan dalam data anggota");
+          }
+        } else {
+          console.log("Data anggota tidak ditemukan");
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error(
+          <div style={{ textAlign: "center" }}>
+            {/* Ikon silang di atas */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "8px",
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                style={{ width: "48px", height: "48px", color: "red" }}
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+                <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+              </svg>
+            </div>
+            {/* Teks di bawah ikon */}
+            <strong style={{ fontSize: "1.75rem", display: "block" }}>
+              NIP tidak ditemukan, silahkan melakukan sinkronisasi dahulu.
+            </strong>
+          </div>,
+          {
+            icon: false,
+            duration: 5000,
+            style: {
+              borderRadius: "10px",
+              background: "white",
+              padding: "16px",
+            },
+          }
+        );
+      }
+    } else {
+      console.log("Anggota ID tidak ditemukan di sessionStorage");
+    }
+  };
+
+  const closePopup = () => {
+    setIsPopupDaspen(false);
+  };
+
+  useEffect(() => {
+    const storedRole = sessionStorage.getItem("role");
+    setRole(storedRole || "");
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -105,6 +199,14 @@ function PencarianAnggota() {
 
     setFilteredUnitKerjaOptions(filtered);
   };
+
+  useEffect(() => {
+    const role = sessionStorage.getItem("role");
+    const cabang = sessionStorage.getItem("cabang");
+    if (role === "ADMIN" && cabang) {
+      setSelectedCabang(cabang);
+    }
+  }, []);
 
   // Select Cabang
   const handleCabangSelect = (selectedItem) => {
@@ -173,15 +275,15 @@ function PencarianAnggota() {
   }, [token, router, selectedCabang]);
 
   const fetchAnggota = async (
-    page = 0, 
-    cabang = "", 
+    page = 0,
+    cabang = "",
     unitKerja = ""
   ) => {
     setLoading(true);
     try {
       const fotoBase64Array = [];
       const fetchedData = await GlobalApi.getAllAnggota(page, cabang, unitKerja);
-  
+
       if (fetchedData.length > 0) {
         fetchedData.forEach((item) => {
           if (item.foto) {
@@ -199,7 +301,7 @@ function PencarianAnggota() {
       } else {
         console.warn("No data found.");
       }
-  
+
       setFotoBase64(fotoBase64Array);
       setLoading(false);
       setAnggota(fetchedData);
@@ -209,6 +311,14 @@ function PencarianAnggota() {
       setAnggota([]);
       setLoading(false);
     }
+  };
+
+  const handleKategoriChange = (e) => {
+    // Simpan kategori Daspen sebelumnya
+    setPreviousKategoriDaspen(kategoriDaspen);
+    // Set kategoriDaspen dengan nilai baru yang dipilih
+    setKategoriDaspen(e.target.value);
+    setIsKategoriChanged(true); // Menampilkan popup konfirmasi
   };
 
   const fetchData = async () => {
@@ -386,6 +496,7 @@ function PencarianAnggota() {
         item.namaLengkap?.toLowerCase().includes(searchLower) ||
         item.npaPgri?.toLowerCase().includes(searchLower) ||
         item.jabatan?.toLowerCase().includes(searchLower) ||
+        item.nip?.toLowerCase().includes(searchLower) ||
         item.tempatLahir?.toLowerCase().includes(searchLower) ||
         item.cabang?.toLowerCase().includes(searchLower) ||
         item.unitKerja?.toLowerCase().includes(searchLower) ||
@@ -470,6 +581,325 @@ function PencarianAnggota() {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
+  const handlePindahCabangUnit = () => {
+    router.push("/anggota/data-anggota/mutasiCabangUnit");
+  };
+
+  const handleEditClick = () => {
+    router.push("/anggota/edit-anggota");
+  };
+
+  const handlePopupKeluar = () => {
+    setPopupVisibleKeluar(true);
+  };
+
+  const handleKeluarAnggota = async () => {
+    try {
+      const anggotaId = sessionStorage.getItem("anggotaId");
+      await GlobalApi.keluarAnggota(anggotaId);
+      setPopupVisibleKeluar(false);
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Anggota berhasil dikeluar!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          autoClose: 3000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Gagal mengeluarkan anggota:", error);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal mengeluarkan anggota.
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 3000,
+          duration: 2000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+    }
+  };
+
+  const handleDeleteClick = async () => {
+    try {
+      const anggotaId = sessionStorage.getItem("anggotaId");
+
+      if (!anggotaId) {
+        toast.error(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                width: "48px",
+                height: "48px",
+                color: "red",
+                marginBottom: "16px",
+              }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+            </svg>
+            <strong
+              style={{
+                fontSize: "1.75rem",
+                display: "block",
+                marginBottom: "8px",
+              }}
+            >
+              ID Anggota tidak ditemukan.
+            </strong>
+          </div>,
+          {
+            icon: null,
+            duration: 2000,
+            style: {
+              marginTop: "16%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "700px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
+        );
+        return;
+      }
+
+      const result = await GlobalApi.deleteUser(anggotaId);
+
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Data Anggota Berhasil Dihapus!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 4000,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+
+      // Reload the page after success
+      setTimeout(() => {
+        window.location.reload();
+      }, 4000);
+
+      setTimeout(() => {
+        setIsPopupVisible(false);
+      }, 4000);
+    } catch (error) {
+      console.error("Gagal Menghapus Data:", error);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal pensiun anggota.
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 3000,
+          duration: 3000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+    }
+  };
+
+  const handleCancelKeluar = () => {
+    setPopupVisibleKeluar(false);
+    setPopupVisible(false);
+  };
+
+  const handlePopup = () => {
+    setPopupVisible(true);
+  };
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentData = useMemo(() => {
@@ -551,7 +981,7 @@ function PencarianAnggota() {
       </div>
     );
   };
-useEffect(() => {
+  useEffect(() => {
     fetchAnggota();
   }, []);
   if (loading) {
@@ -593,15 +1023,17 @@ useEffect(() => {
                       type="text"
                       placeholder="Pilih Cabang"
                       value={selectedCabang}
-                      readOnly
+                      readOnly={sessionStorage.getItem("role") === "ADMIN"}
                       onFocus={() => {
-                        setShowDropdownCabang(true);
-                        setFilteredCabangOptions(cabang);
+                        if (sessionStorage.getItem("role") !== "ADMIN") {
+                          setShowDropdownCabang(true);
+                          setFilteredCabangOptions(cabang);
+                        }
                       }}
                       className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                     />
 
-                    {showDropdownCabang && (
+                    {showDropdownCabang && sessionStorage.getItem("role") !== "ADMIN" && (
                       <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
                         <div className="p-2">
                           <Input
@@ -843,6 +1275,14 @@ useEffect(() => {
                             </div>
                             <div className="text-sm">{item.npaPgri}</div>
                             <div className="text-sm">{item.jabatan}</div>
+                            <div
+                              className={`text-sm p-1 inline-block ${item.nip
+                                ? "bg-green-500 text-white rounded-full px-3"
+                                : "bg-red-500 text-white rounded-full px-3"
+                                }`}
+                            >
+                              {item.nip ? item.nip : "NIP tidak ada"}
+                            </div>
                           </td>
                           <td className="p-2 md:p-3 border md:table-cell hidden">
                             <div className="text-sm">{item.tempatLahir},</div>
@@ -885,38 +1325,333 @@ useEffect(() => {
                           <td className="p-2 md:p-3 border md:table-cell hidden">
                             <div className="flex justify-center space-x-2">
                               <Button
+                                type="button"
                                 className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
                                 title="Edit Data"
-                                onClick={() =>
-                                  router.push("/anggota/edit-anggota")
-                                }
+                                onClick={() => {
+                                  sessionStorage.setItem("anggotaId", item.id);
+                                  handleEditClick();
+                                }}
                               >
                                 <FaEdit className="w-4 h-4" />
                               </Button>
-                              <Button
-                                className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
-                                title="Mutasi"
-                                onClick={() => openModal(item)}
-                              >
-                                <FaExchangeAlt className="w-4 h-4" />
-                              </Button>
-                              <Link
-                                href="#"
-                                className="text-white bg-red-500 p-2 border rounded-md"
-                              >
-                                <FaExclamationTriangle
-                                  className="w-4 h-4"
-                                  title="Lapor"
-                                />
-                              </Link>
-                              <Link
-                                href={`https://wa.me/${item.hp}`}
-                                className="text-white bg-green-500 p-2 border rounded-md"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <FaWhatsapp className="w-4 h-4" title="WA" />
-                              </Link>
+                              {sessionStorage.getItem("role") === "USER" ? (
+                                <>
+                                  <Link
+                                    href="#"
+                                    className="text-white bg-cyan-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                    title="Mutasi"
+                                    type="button"
+                                    disabled
+                                  >
+                                    <FaExchangeAlt className="w-4 h-4" />
+                                  </Link>
+
+                                  <Link
+                                    href="#"
+                                    className="text-white bg-red-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                    title="Lapor"
+                                    onClick={(e) => e.preventDefault()}
+                                  >
+                                    <FaExclamationTriangle className="w-4 h-4" />
+                                  </Link>
+
+                                  <Link
+                                    href="#"
+                                    className="text-white bg-green-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                    title="WhatsApp"
+                                    onClick={(e) => e.preventDefault()}
+                                  >
+                                    <FaWhatsapp className="w-4 h-4" />
+                                  </Link>
+                                </>
+                              ) : (
+                                <>
+                                  <Button
+                                    className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                    title="Mutasi"
+                                    type="button"
+                                    onClick={() => {
+                                      sessionStorage.setItem(
+                                        "anggotaId",
+                                        item.id
+                                      );
+                                      openModal(item);
+                                    }}
+                                  >
+                                    <FaExchangeAlt className="w-4 h-4" />
+                                  </Button>
+
+                                  {sessionStorage.getItem("role") ===
+                                    "SUPER ADMIN" ? (
+                                    <Button
+                                      className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
+                                      onClick={() => {
+                                        sessionStorage.setItem(
+                                          "anggotaId",
+                                          item.id
+                                        );
+                                        setIsPopupVisible(true);
+                                      }}
+                                    >
+                                      <FaExclamationTriangle className="w-4 h-4" />
+                                    </Button>
+                                  ) : (
+                                    <Link
+                                      href="#"
+                                      className="text-white bg-red-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                      title="Lapor"
+                                      type="button"
+                                      disabled
+                                    >
+                                      <FaExclamationTriangle className="w-4 h-4" />
+                                    </Link>
+                                  )}
+
+                                  {isPopupVisible && (
+                                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-10 z-40 w-screen h-screen">
+                                      <div className="bg-white p-6 rounded-lg shadow-md w-96">
+                                        <h2 className="text-xl font-semibold text-center mb-4">
+                                          Apakah Anda Yakin ingin Menghapus Data
+                                          Anggota ini?
+                                        </h2>
+                                        <div className="flex justify-end gap-4">
+                                          <button
+                                            onClick={() =>
+                                              setIsPopupVisible(false)
+                                            }
+                                            className="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-md"
+                                          >
+                                            Batal
+                                          </button>
+                                          <button
+                                            onClick={handleDeleteClick}
+                                            className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                                          >
+                                            Ya, Saya Sakin
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  <Link
+                                    href={`https://wa.me/${item.nomorHp}`}
+                                    className="text-white bg-green-500 hover:bg-green-600 p-2 border rounded-md"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title="WhatsApp"
+                                  >
+                                    <FaWhatsapp className="w-4 h-4" />
+                                  </Link>
+                                </>
+                              )}
+                              <div>
+                                <Button
+                                  type="button"
+                                  className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                                  title="Data Daspen"
+                                  onClick={() => {
+                                    sessionStorage.setItem("anggotaId", item.id);
+                                    handleDataDaspen();
+                                  }}
+                                >
+                                  Daspen
+                                </Button>
+                                {isPopupDaspen && daspenData && (
+                                  <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-10 z-50">
+                                    <div className="bg-white p-6 rounded-md w-5/12 relative">
+                                      <button
+                                        onClick={closePopup}
+                                        className="absolute top-2 right-2 p-2 bg-white rounded-full"
+                                      >
+                                        <FaTimes className="h-6 w-6 text-red-600" />
+                                      </button>
+
+                                      <h2 className="text-xl font-bold">
+                                        Data Daspen
+                                      </h2>
+
+                                      <div className="mt-4 grid grid-cols-2 gap-4">
+                                        <div>
+                                          <p className="font-semibold">
+                                            Nama Anggota:
+                                          </p>
+                                          <p>
+                                            {daspenData.namaAnggota ||
+                                              "Tidak tersedia"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">
+                                            Kategori Daspen:
+                                          </p>
+                                          <select
+                                            className="w-full p-2 border rounded-md border-teal-500"
+                                            value={kategoriDaspen}
+                                            onChange={handleKategoriChange}
+                                          >
+                                            <option value="I">I</option>
+                                            <option value="II">II</option>
+                                            <option value="III">III</option>
+                                          </select>
+
+                                          {isKategoriChanged && (
+                                            <div className="popup">
+                                              <p>
+                                                Apakah Anda yakin ingin mengganti
+                                                kategori Daspen?
+                                              </p>
+
+                                              <button
+                                                onClick={handleConfirmChange}
+                                                className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition duration-200 px-6"
+                                              >
+                                                Ya
+                                              </button>
+
+                                              <button
+                                                onClick={() => {
+                                                  setKategoriDaspen(
+                                                    previousKategoriDaspen
+                                                  );
+                                                  setIsKategoriChanged(false);
+                                                }}
+                                                className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-200 ml-2 px-4"
+                                              >
+                                                Tidak
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">
+                                            Tanggal Lahir:
+                                          </p>
+                                          <p>
+                                            {daspenData.tanggalLahir
+                                              ? new Intl.DateTimeFormat("id-ID", {
+                                                day: "2-digit",
+                                                month: "long",
+                                                year: "numeric",
+                                              }).format(
+                                                new Date(
+                                                  daspenData.tanggalLahir
+                                                )
+                                              )
+                                              : "Tidak tersedia"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">Usia:</p>
+                                          <p>
+                                            {calculateAge(
+                                              daspenData.tanggalLahir
+                                            ) || "Tidak tersedia"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">NIP:</p>
+                                          <p>
+                                            {daspenData.nip || "Tidak tersedia"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">
+                                            Mulai Jadi Anggota:
+                                          </p>
+                                          <p>
+                                            {daspenData.mulaiJadiAnggotaDaspen
+                                              ? new Intl.DateTimeFormat("id-ID", {
+                                                day: "2-digit",
+                                                month: "long",
+                                                year: "numeric",
+                                              }).format(
+                                                new Date(
+                                                  daspenData.mulaiJadiAnggotaDaspen
+                                                )
+                                              )
+                                              : "Tidak tersedia"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">
+                                            Kelompok Jabatan:
+                                          </p>
+                                          <p>
+                                            {daspenData.kelompokJabatan || "-"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">
+                                            Prediksi Pensiun:
+                                          </p>
+                                          <p>
+                                            {daspenData.prediksiPensiun
+                                              ? (() => {
+                                                const prediksiPensiunDate =
+                                                  new Date(
+                                                    daspenData.prediksiPensiun
+                                                  );
+                                                prediksiPensiunDate.setMonth(
+                                                  prediksiPensiunDate.getMonth() +
+                                                  1
+                                                );
+                                                return new Intl.DateTimeFormat(
+                                                  "id-ID",
+                                                  {
+                                                    day: "2-digit",
+                                                    month: "long",
+                                                    year: "numeric",
+                                                  }
+                                                ).format(prediksiPensiunDate);
+                                              })()
+                                              : "Tidak tersedia"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">
+                                            Sumbangan:
+                                          </p>
+                                          <p>
+                                            {daspenData.sumbangan
+                                              ? new Intl.NumberFormat("id-ID", {
+                                                style: "currency",
+                                                currency: "IDR",
+                                              }).format(daspenData.sumbangan)
+                                              : "Tidak tersedia"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">
+                                            Untuk Lihat Data Lengkap:
+                                          </p>
+                                          <div className="flex items-center">
+                                            <p className="text-sm mr-1">
+                                              Link Website:
+                                            </p>
+                                            <Link
+                                              href="https://www.dansetjateng.org/"
+                                              className="text-blue-400"
+                                              target="_blank"
+                                            >
+                                              www.dansetjateng.org
+                                            </Link>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex justify-end mt-4">
+                                        <button
+                                          className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                                          onClick={closePopup}
+                                        >
+                                          Tutup
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </td>
                         </tr>
@@ -924,76 +1659,332 @@ useEffect(() => {
                         {expandedIndex === index && (
                           <tr className="md:hidden">
                             <td colSpan="7" className="p-2 border">
-                              <div className="mt-2">
-                                <div className="font-bold">
-                                  {item.namaLengkap}
-                                </div>
-                                <div>{item.npaPgri}</div>
-                                <div>{item.jabatan}</div>
-                                <div>
-                                  {item.tempatLahir},{" "}
-                                  {formatDate(item.tanggalLahir)}
-                                </div>
-                                <div>
-                                  {calculateAge(item.tanggalLahir)} Tahun
-                                </div>
-                                <div>
-                                  Pensiun:{" "}
-                                  {calculateRetirementDate(
-                                    item.tanggalLahir,
-                                    item.statusPegawai
-                                  )}
-                                </div>
-                                <div>{item.cabang},</div>
-                                <div>{item.unitKerja}</div>
-                                <div>Anggota: {item.tahunDiangkat || "-"}</div>
-                                <div>{item.golongan}</div>
-                                <div
-                                  className={`text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${itemStatusClass}`}
-                                >
-                                  {item.role === "USER"
-                                    ? "Aktif"
-                                    : item.status_keanggotaan}
-                                </div>
-                                <div className="flex justify-center space-x-2 mt-2">
-                                  <Link
-                                    href="#"
-                                    className="text-white bg-blue-500 p-2 border rounded-md"
+                              {expandedIndex === index && (
+                                <div className="mt-2">
+                                  <div className="font-bold">
+                                    {item.namaLengkap}
+                                  </div>
+                                  <div>{item.npaPgri}</div>
+                                  <div>{item.tugas}</div>
+                                  <div>
+                                    {item.tempatLahir},{" "}
+                                    {formatDate(item.tanggalLahir)}
+                                  </div>
+                                  <div>{calculateAge(item.tanggalLahir)} Tahun</div>
+                                  <div>
+                                    Prediksi Pensiun:{" "}
+                                    {calculateRetirementDate(
+                                      item.tanggalLahir,
+                                      item.statusPegawai
+                                    )}
+                                  </div>
+                                  <div>{item.cabang},</div>
+                                  <div>{item.unitKerja}</div>
+                                  <div>Anggota: {item.gabung}</div>
+                                  <div>{item.golongan}</div>
+                                  <div
+                                    className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${item.status === "BUKAN ANGGOTA"
+                                      ? "bg-red-200 text-red-900"
+                                      : "bg-green-200 text-green-900"
+                                      }`}
                                   >
-                                    <FaEdit
-                                      className="w-4 h-4"
+                                    {item.role === "USER"
+                                      ? "Aktif"
+                                      : item.status_keanggotaan}
+                                  </div>
+                                  <div className="flex justify-center space-x-2 mt-2">
+                                    <Button
+                                      className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
                                       title="Edit Data"
-                                    />
-                                  </Link>
-                                  <Button
-                                    className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
-                                    title="Mutasi"
-                                    onClick={() => openModal(item)}
-                                  >
-                                    <FaExchangeAlt className="w-4 h-4" />
-                                  </Button>
-                                  <Link
-                                    href="#"
-                                    className="text-white bg-red-500 p-2 border rounded-md"
-                                  >
-                                    <FaExclamationTriangle
-                                      className="w-4 h-4"
-                                      title="Lapor"
-                                    />
-                                  </Link>
-                                  <Link
-                                    href={`https://wa.me/${item.hp}`}
-                                    className="text-white bg-green-500 p-2 border rounded-md"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <FaWhatsapp
-                                      className="w-4 h-4"
-                                      title="WA"
-                                    />
-                                  </Link>
+                                      onClick={() =>
+                                        router.push(
+                                          `/anggota/edit-anggota?id=${item.id}`
+                                        )
+                                      }
+                                    >
+                                      <FaEdit className="w-4 h-4" />
+                                    </Button>
+                                    {sessionStorage.getItem("role") ===
+                                      "SUPER ADMIN" ? (
+                                      <Button
+                                        className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                        title="Mutasi"
+                                        onClick={() => openModal(item)}
+                                      >
+                                        <FaExchangeAlt className="w-4 h-4" />
+                                      </Button>
+                                    ) : (
+                                      <Button
+                                        className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                        title="Mutasi"
+                                      >
+                                        <FaExchangeAlt className="w-4 h-4" />
+                                      </Button>
+                                    )}
+                                    {sessionStorage.getItem("role") ===
+                                      "SUPER ADMIN" ? (
+                                      <Button
+                                        className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
+                                        onClick={() => {
+                                          sessionStorage.setItem(
+                                            "anggotaId",
+                                            item.id
+                                          );
+                                          setIsPopupVisible(true);
+                                        }}
+                                      >
+                                        <FaExclamationTriangle className="w-4 h-4" />
+                                      </Button>
+                                    ) : (
+                                      <Button
+                                        className="text-white bg-red-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                        title="Lapor"
+                                        type="button"
+                                        disabled
+                                      >
+                                        <FaExclamationTriangle className="w-4 h-4" />
+                                      </Button>
+                                    )}
+
+                                    <Link
+                                      href={`https://wa.me/${item.nomorHp}`}
+                                      className="text-white bg-green-500 p-2 border rounded-md"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      <FaWhatsapp className="w-4 h-4" title="WA" />
+                                    </Link>
+                                    <div>
+                                      <Button
+                                        type="button"
+                                        className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                                        title="Data Daspen"
+                                        onClick={() => {
+                                          sessionStorage.setItem(
+                                            "anggotaId",
+                                            item.id
+                                          );
+                                          handleDataDaspen();
+                                        }}
+                                      >
+                                        Daspen
+                                      </Button>
+
+                                      {isPopupDaspen && daspenData && (
+                                        <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
+                                          <div className="bg-white p-6 rounded-md w-11/12 sm:w-8/12 md:w-6/12 lg:w-5/12 xl:w-4/12 relative max-h-[80vh] overflow-y-auto">
+                                            <button
+                                              onClick={closePopup}
+                                              className="absolute top-2 right-2 p-2 bg-white rounded-full"
+                                            >
+                                              <FaTimes className="h-6 w-6 text-red-600" />
+                                            </button>
+
+                                            <h2 className="text-xl font-bold">
+                                              Data Daspen
+                                            </h2>
+
+                                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                              <div>
+                                                <p className="font-semibold">
+                                                  Nama Anggota:
+                                                </p>
+                                                <p>
+                                                  {daspenData.namaAnggota ||
+                                                    "Tidak tersedia"}
+                                                </p>
+                                              </div>
+                                              <div>
+                                                <p className="font-semibold">
+                                                  Kategori Daspen:
+                                                </p>
+                                                <select
+                                                  className="w-full p-2 border rounded-md border-teal-500"
+                                                  value={kategoriDaspen}
+                                                  onChange={handleKategoriChange}
+                                                >
+                                                  <option value="I">I</option>
+                                                  <option value="II">II</option>
+                                                  <option value="III">III</option>
+                                                </select>
+
+                                                {isKategoriChanged && (
+                                                  <div className="popup">
+                                                    <p>
+                                                      Apakah Anda yakin ingin
+                                                      mengganti kategori Daspen?
+                                                    </p>
+
+                                                    <button
+                                                      onClick={handleConfirmChange}
+                                                      className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition duration-200 px-6"
+                                                    >
+                                                      Ya
+                                                    </button>
+
+                                                    <button
+                                                      onClick={() => {
+                                                        setKategoriDaspen(
+                                                          previousKategoriDaspen
+                                                        );
+                                                        setIsKategoriChanged(false);
+                                                      }}
+                                                      className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-200 ml-2 px-4"
+                                                    >
+                                                      Tidak
+                                                    </button>
+                                                  </div>
+                                                )}
+                                              </div>
+                                              <div>
+                                                <p className="font-semibold">
+                                                  Tanggal Lahir:
+                                                </p>
+                                                <p>
+                                                  {daspenData.tanggalLahir
+                                                    ? new Intl.DateTimeFormat(
+                                                      "id-ID",
+                                                      {
+                                                        day: "2-digit",
+                                                        month: "long",
+                                                        year: "numeric",
+                                                      }
+                                                    ).format(
+                                                      new Date(
+                                                        daspenData.tanggalLahir
+                                                      )
+                                                    )
+                                                    : "Tidak tersedia"}
+                                                </p>
+                                              </div>
+                                              <div>
+                                                <p className="font-semibold">
+                                                  Usia:
+                                                </p>
+                                                <p>
+                                                  {calculateAge(
+                                                    daspenData.tanggalLahir
+                                                  ) || "Tidak tersedia"}
+                                                </p>
+                                              </div>
+                                              <div>
+                                                <p className="font-semibold">
+                                                  NIP:
+                                                </p>
+                                                <p>
+                                                  {daspenData.nip ||
+                                                    "Tidak tersedia"}
+                                                </p>
+                                              </div>
+                                              <div>
+                                                <p className="font-semibold">
+                                                  Mulai Jadi Anggota:
+                                                </p>
+                                                <p>
+                                                  {daspenData.mulaiJadiAnggotaDaspen
+                                                    ? new Intl.DateTimeFormat(
+                                                      "id-ID",
+                                                      {
+                                                        day: "2-digit",
+                                                        month: "long",
+                                                        year: "numeric",
+                                                      }
+                                                    ).format(
+                                                      new Date(
+                                                        daspenData.mulaiJadiAnggotaDaspen
+                                                      )
+                                                    )
+                                                    : "Tidak tersedia"}
+                                                </p>
+                                              </div>
+                                              <div>
+                                                <p className="font-semibold">
+                                                  Kelompok Jabatan:
+                                                </p>
+                                                <p>
+                                                  {daspenData.kelompokJabatan ||
+                                                    "-"}
+                                                </p>
+                                              </div>
+                                              <div>
+                                                <p className="font-semibold">
+                                                  Prediksi Pensiun:
+                                                </p>
+                                                <p>
+                                                  {daspenData.prediksiPensiun
+                                                    ? (() => {
+                                                      const prediksiPensiunDate =
+                                                        new Date(
+                                                          daspenData.prediksiPensiun
+                                                        );
+                                                      prediksiPensiunDate.setMonth(
+                                                        prediksiPensiunDate.getMonth() +
+                                                        1
+                                                      );
+                                                      return new Intl.DateTimeFormat(
+                                                        "id-ID",
+                                                        {
+                                                          day: "2-digit",
+                                                          month: "long",
+                                                          year: "numeric",
+                                                        }
+                                                      ).format(
+                                                        prediksiPensiunDate
+                                                      );
+                                                    })()
+                                                    : "Tidak tersedia"}
+                                                </p>
+                                              </div>
+                                              <div>
+                                                <p className="font-semibold">
+                                                  Sumbangan:
+                                                </p>
+                                                <p>
+                                                  {daspenData.sumbangan
+                                                    ? new Intl.NumberFormat(
+                                                      "id-ID",
+                                                      {
+                                                        style: "currency",
+                                                        currency: "IDR",
+                                                      }
+                                                    ).format(daspenData.sumbangan)
+                                                    : "Tidak tersedia"}
+                                                </p>
+                                              </div>
+                                              <div>
+                                                <p className="font-semibold">
+                                                  Untuk Lihat Data Lengkap:
+                                                </p>
+                                                <div className="flex items-center">
+                                                  <p className="text-sm mr-1">
+                                                    Link Website:
+                                                  </p>
+                                                  <Link
+                                                    href="https://www.dansetjateng.org/"
+                                                    className="text-blue-400"
+                                                    target="_blank"
+                                                  >
+                                                    www.dansetjateng.org
+                                                  </Link>
+                                                </div>
+                                              </div>
+                                            </div>
+
+                                            <div className="flex justify-end mt-4">
+                                              <button
+                                                className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                                                onClick={closePopup}
+                                              >
+                                                Tutup
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
+                              )}
                             </td>
                           </tr>
                         )}
@@ -1024,31 +2015,121 @@ useEffect(() => {
                     x
                   </button>
                 </div>
-                <div className="space-y-2">
-                  <Button
-                    className="w-full bg-teal-700 hover:bg-teal-500"
-                    onClick={() => alert("Pindah Cabang")}
-                  >
-                    Pindah Cabang
-                  </Button>
-                  <Button
-                    className="w-full bg-teal-700 hover:bg-teal-500"
-                    onClick={() => alert("Unit Kerja")}
-                  >
-                    Unit Kerja
-                  </Button>
-                  <Button
-                    className="w-full bg-teal-700 hover:bg-teal-500"
-                    onClick={() => alert("Keluar Anggota")}
-                  >
-                    Keluar Anggota
-                  </Button>
-                  <Button
-                    className="w-full bg-teal-700 hover:bg-teal-500"
-                    onClick={() => alert("Tidak Jelas")}
-                  >
-                    Tidak Jelas
-                  </Button>
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-full flex justify-center mb-2">
+                    <Image
+                      src={
+                        fotoBase64
+                          ? "/profile.png"
+                          : `data:image/jpeg;base64,${fotoBase64}`
+                      }
+                      width={80}
+                      height={80}
+                      alt="Anggota Foto"
+                      className="rounded-full"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 justify-around">
+                    <div className="flex flex-col text-left">
+                      <p className="font-medium text-gray-600 justify-start ">
+                        Nama Lengkap:
+                      </p>
+                      <p className="text-sm">{currentItem?.namaLengkap || ""}</p>
+                      <p className="font-medium text-gray-600 mt-3">Cabang:</p>
+                      <p className="text-sm">{currentItem?.cabang || ""}</p>
+                    </div>
+
+                    <div className="flex flex-col text-left ">
+                      <p className="font-medium text-gray-600">NPA:</p>
+                      <p className=" text-sm">{currentItem?.npaPgri || ""}</p>
+                      <p className="font-medium text-gray-600 text-left mt-3">
+                        Unit Kerja:
+                      </p>
+                      <p className="ml-0 text-sm">
+                        {currentItem?.unitKerja || ""}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2 mt-4">
+                  <div>
+                    <Button
+                      className="w-full bg-teal-700 hover:bg-teal-500"
+                      onClick={handlePindahCabangUnit}
+                    >
+                      Pindah Cabang dan Unit Kerja
+                    </Button>
+                  </div>
+                  <div>
+                    <Button
+                      className="w-full bg-teal-700 hover:bg-teal-500"
+                      onClick={handlePopupKeluar}
+                    >
+                      Keluar Anggota
+                    </Button>
+
+                    {popupVisibleKeluar && (
+                      <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+                        <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
+                          <h2 className="text-lg font-semibold text-gray-800">
+                            Apakah Anda yakin?
+                          </h2>
+                          <p className="text-gray-600 mt-2 mb-4">
+                            Apakah Anda yakin akan menghapus anggota ini?
+                          </p>
+                          <div className="flex justify-center gap-4">
+                            <button
+                              onClick={handleCancelKeluar}
+                              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                            >
+                              Batal
+                            </button>
+                            <button
+                              onClick={handleKeluarAnggota}
+                              className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                            >
+                              Ya, Saya Yakin
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <Button
+                      className="w-full bg-teal-700 hover:bg-teal-500"
+                      onClick={handlePopup}
+                    >
+                      Pensiun
+                    </Button>
+                    {popupVisible && (
+                      <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+                        <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
+                          <h2 className="text-lg font-semibold text-gray-800">
+                            Apakah Anda yakin ?
+                          </h2>
+                          <p className="text-gray-600 mt-2 mb-4">
+                            Apakah Anda yakin untuk mengubah anggota menjadi
+                            pensiun?
+                          </p>
+                          <div className="flex justify-center gap-4">
+                            <button
+                              onClick={handleCancelKeluar}
+                              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                            >
+                              Batal
+                            </button>
+                            <button
+                              onClick={handlePensiunAnggota}
+                              className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                            >
+                              Ya, Saya Yakin
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </Modal>

@@ -107,8 +107,12 @@ const Page = () => {
       { length: 5 },
       (_, index) => currentYear - index
     );
+
+    // const yearRange = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
+
     setYears(yearRange);
 
+  
     // Fetch daftar bulan dari API
     const fetchBulan = async () => {
       try {
