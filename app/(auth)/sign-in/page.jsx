@@ -32,16 +32,90 @@ function SignIn() {
           "NPA PGRI harus 6 digit dan Tanggal Lahir harus 8 digit."
         );
       }
-
+  
       if (!isVerified) {
         throw new Error("Harap verifikasi reCAPTCHA.");
       }
-
+  
+      // Cek NPA menggunakan GlobalApi.cekNpa
+      const npaResponse = await GlobalApi.cekNpa(npaPgri);
+      console.log("Data NPA:", npaResponse);
+  
+      if (!npaResponse || !npaResponse.id) {
+        throw new Error("Data NPA tidak valid atau ID tidak ditemukan.");
+      }
+  
+      // Ambil ID dari data NPA dan gunakan untuk mendapatkan data pengguna
+      const userId = npaResponse.id;
+      const userResponse = await GlobalApi.getUserById(userId);
+      console.log("Data User by ID:", userResponse);
+  
+      // Cek apakah pengguna sudah terverifikasi
+      if (!userResponse.isVerified) {
+        toast.error(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                width: "150px",
+                height: "150px",
+                color: "red",
+                marginBottom: "16px",
+              }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 1 1-1.414 0.414z" />
+            </svg>
+            <strong
+              style={{
+                fontSize: "1.75rem",
+                display: "block",
+                marginBottom: "8px",
+              }}
+            >
+              Menunggu Verifikasi Admin {userResponse.cabang}
+            </strong>
+          </div>,
+          {
+            icon: null,
+            duration: 5000,
+            style: {
+              marginTop: "16%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "700px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
+        );
+        setLoader(false);
+        return;
+      }
+  
+      // Melanjutkan proses login
       const loginData = {
         npaPgri: npaPgri,
         tanggalLahir: tanggalLahir,
       };
-
+  
       const response = await GlobalApi.login(loginData);
       setToken(response.token);
       sessionStorage.setItem("userId", response.id);
@@ -49,8 +123,10 @@ function SignIn() {
       sessionStorage.setItem("nama", response.namaLengkap);
       sessionStorage.setItem("role", response.role);
       sessionStorage.setItem("npaPgri", npaPgri);
-
+  
       const nama = sessionStorage.getItem("nama");
+      const cabang = userResponse.cabang; // Tambahkan properti cabang
+  
       toast.success(
         <div
           style={{
@@ -80,6 +156,9 @@ function SignIn() {
             Selamat Datang Di Sanduka
           </strong>
           <span style={{ fontSize: "1.75rem" }}>{response.namaLengkap}</span>
+          <span style={{ fontSize: "1.5rem", color: "#333", marginTop: "8px" }}>
+            Cabang: {cabang}
+          </span>
         </div>,
         {
           icon: null,
@@ -101,10 +180,12 @@ function SignIn() {
           },
         }
       );
+  
       setTimeout(() => {
         router.push("/home");
       }, 4000);
     } catch (error) {
+      console.error("Error:", error);
       toast.error(
         <div
           style={{
@@ -127,7 +208,7 @@ function SignIn() {
             viewBox="0 0 24 24"
           >
             <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 1 1-1.414 0.414z" />
           </svg>
           <strong
             style={{
@@ -163,7 +244,7 @@ function SignIn() {
       setLoader(false);
     }
   };
-
+  
   const onSignInAdmin = async () => {
     setLoader(true);
     setError("");

@@ -1064,7 +1064,7 @@ const Page = () => {
   const handleSubmit = async () => {
     try {
       const currentDate = new Date().toISOString().split("T")[0];
-
+  
       const reportData = {
         idTerlapor: formData.id,
         tanggalPelaporan: currentDate,
@@ -1078,19 +1078,19 @@ const Page = () => {
         waktuMeninggalTerlapor: formData.deathDate,
         keteranganTerlapor: formData.description,
       };
-
+  
       await GlobalApi.submitReport(reportData);
-
+  
       const idList = JSON.parse(sessionStorage.getItem("idTerlaporList")) || [];
       const npaList =
         JSON.parse(sessionStorage.getItem("npaTerlaporList")) || [];
-
+  
       idList.push(formData.id);
       npaList.push(formData.npaPgri);
-
+  
       sessionStorage.setItem("idTerlaporList", JSON.stringify(idList));
       sessionStorage.setItem("npaTerlaporList", JSON.stringify(npaList));
-
+  
       toast.success(
         <div
           style={{
@@ -1144,12 +1144,14 @@ const Page = () => {
           },
         }
       );
-      Pelapor;
-
+  
       setTimeout(() => {
         window.location.href = "/home";
       }, 4000);
     } catch (error) {
+      // Tambahkan ini untuk mencetak error ke konsol
+      console.error("Error saat menambahkan laporan:", error);
+  
       toast.error(
         <div
           style={{
@@ -1172,7 +1174,7 @@ const Page = () => {
             viewBox="0 0 24 24"
           >
             <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
           </svg>
           <strong
             style={{
@@ -1206,6 +1208,7 @@ const Page = () => {
       );
     }
   };
+  
 
   const handleFormDataUpdate = (data) => {
     setFormData((prevData) => ({

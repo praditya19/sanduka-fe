@@ -186,9 +186,8 @@ export default function ReportCard() {
         }
       );
       setLaporan(null);
-
       setTimeout(() => {
-        window.location.reload();
+        window.location.href = "/home";
       }, 2000);
     } catch (error) {
       console.error("Gagal menghapus laporan:", error);

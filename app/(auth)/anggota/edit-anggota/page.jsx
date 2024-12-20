@@ -141,29 +141,28 @@ const Page = () => {
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+  const handleChange = (index, e) => {
+    const { value } = e.target;
+    setNamaAnak((prevNamaAnak) => {
+      const updatedNamaAnak = [...prevNamaAnak];
+      updatedNamaAnak[index] = value;
+      return updatedNamaAnak;
+    });
   };
-
+  
   const onSubmit = async (e) => {
     e.preventDefault();
-
+  
     const anggotaId = sessionStorage.getItem("anggotaId");
     const userId = sessionStorage.getItem("userId");
-
+  
     const id = anggotaId || userId;
-
+  
     if (!id) {
-      console.error(
-        "User ID atau Anggota ID tidak ditemukan atau tidak valid."
-      );
+      console.error("User ID atau Anggota ID tidak ditemukan atau tidak valid.");
       return;
     }
-
+  
     const formatTanggal = (tanggal) => {
       const date = new Date(tanggal);
       const year = date.getFullYear();
@@ -171,11 +170,11 @@ const Page = () => {
       const day = String(date.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
     };
-
+  
     const formattedTanggalLahir = formatTanggal(tanggalLahir);
     const formattedTahunDiangkat = formatTanggal(tahunDiangkat);
     const formattedMulaiJadiAnggota = formatTanggal(mulaiJadiAnggotaPgri);
-
+  
     const formData = new FormData();
     formData.append("email", email);
     formData.append("password", password);
@@ -194,11 +193,19 @@ const Page = () => {
     formData.append("kodePos", kodePos);
     formData.append("nomorHp", nomorHp);
     formData.append("namaSuamiIstri", namaSuamiIstri);
-
+    const normalizedNamaAnak = namaAnak.map((anak) =>
+      typeof anak === "string" && anak.startsWith("[")
+        ? JSON.parse(anak)
+        : anak
+    );
+    
+    formData.append("namaAnak", JSON.stringify(normalizedNamaAnak));
+    
+    
     if (selectedFile) {
       formData.append("foto", selectedFile);
     }
-
+  
     formData.append("cabang", selectedCabang);
     formData.append("unitKerja", selectedUnitKerja);
     formData.append("jabatan", valueJabatan);
@@ -213,128 +220,34 @@ const Page = () => {
     formData.append("golonganJabatan", valueGolonganJabatan);
     formData.append("kategoriDaspen", valueKategoriDaspen);
     formData.append("mengajar", mengajar);
-
+  
     formData.append("pesertaSanduka", pesertaSanduka ? "Ya" : "");
     formData.append("pesertaDaspen", pesertaDaspen ? "Ya" : "");
     formData.append("pesertaKtaDigital", pesertaKtaDigital ? "Ya" : "");
-
+  
+    // Convert FormData to plain object for debugging
     const plainData = {};
     formData.forEach((value, key) => {
       plainData[key] = value;
     });
+  
+    console.log("Data yang akan dikirim ke API (plainData):", plainData);
+    console.log("Data namaAnak yang dikirim:", JSON.stringify(namaAnak));
+    console.log("Nama Anak yang akan dikirim:", JSON.stringify(normalizedNamaAnak));
 
     try {
       const response = await GlobalApi.updateUserById(id, formData);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "48px",
-              height: "48px",
-              color: "#06D001",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Data Anda Berhasil Diupdate!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      console.log("Response dari API:", response);
+      toast.success("Data berhasil diperbarui!");
       setTimeout(() => {
         router.push("/anggota/data-anggota");
       }, 4000);
     } catch (error) {
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "48px",
-              height: "48px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <strong
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Mohon Untuk Mengisi Selurh Form yang Tersedia
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
-      console.error("Update gagal:", error);
+      console.error("Gagal mengupdate data:", error);
+      toast.error("Terjadi kesalahan saat memperbarui data.");
     }
   };
+  
 
   const handleConfirmAndSendData = async () => {
     try {
@@ -624,7 +537,9 @@ const Page = () => {
         setValueKategoriDaspen(response.kategoriDaspen || "");
         setValue("golonganJabatan", response.golonganJabatan);
         setJabatan(response.jabatan);
-        setValue("jabatan", response.jabatan);
+
+        setValue("jabatan", response.jabatan || "");
+
         setValueJabatan(response.jabatan);
         setMengajar(response.mengajar);
         setValue("mengajar", response.mengajar || "");
@@ -984,12 +899,21 @@ const Page = () => {
   };
 
   const handleRemoveInput = (index) => {
-    const updatedNames = namaAnak.filter((_, i) => i !== index);
-    setNamaAnak(updatedNames);
+    setNamaAnak((prevNamaAnak) => {
+      const updatedNamaAnak = prevNamaAnak.filter((_, i) => i !== index);
+  
+      // Update formData setelah menghapus
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        namaAnak: updatedNamaAnak,
+      }));
+  
+      return updatedNamaAnak;
+    });
   };
 
   const handleAddInput = () => {
-    setNamaAnak([...namaAnak, ""]);
+    setNamaAnak((prevNamaAnak) => [...prevNamaAnak, ""]);
   };
 
   const handleResize = () => {
@@ -1546,30 +1470,32 @@ const Page = () => {
                     />
                   </div>
                   <div className="w-full">
-                    {Array.isArray(namaAnak) &&
-                      namaAnak.map((name, index) => (
-                        <div key={index} className="mb-3 flex items-center">
-                          <div className="flex-1">
-                            <Label className="block text-sm font-medium mb-1">
-                              Nama Anak {index + 1}
-                            </Label>
-                            <Input
-                              className="block w-full text-sm p-2 mt-2 mb-2 border-teal-500 rounded"
-                              type="text"
-                              placeholder={`Tuliskan Nama Anak ${index + 1}`}
-                              value={name}
-                              onChange={(e) => handleChange(index, e)}
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            onClick={() => handleRemoveInput(index)}
-                            className="ml-2 p-2 bg-red-500 text-white rounded mt-4 hover:bg-red-500"
-                          >
-                            Hapus
-                          </Button>
-                        </div>
-                      ))}
+                  {Array.isArray(namaAnak) &&
+  namaAnak.map((name, index) => (
+    <div key={index} className="mb-3 flex items-center">
+      <div className="flex-1">
+        <Label className="block text-sm font-medium mb-1">
+          Nama Anak {index + 1}
+        </Label>
+        <Input
+          className="block w-full text-sm p-2 mt-2 mb-2 border-teal-500 rounded"
+          type="text"
+          name={`namaAnak-${index}`}
+          placeholder={`Tuliskan Nama Anak ${index + 1}`}
+          value={name || ""} // Pastikan value tidak undefined
+          onChange={(e) => handleChange(index, e)}
+        />
+      </div>
+      <Button
+        type="button"
+        onClick={() => handleRemoveInput(index)}
+        className="ml-2 p-2 bg-red-500 text-white rounded mt-4 hover:bg-red-500"
+      >
+        Hapus
+      </Button>
+    </div>
+  ))}
+
                     <Button
                       type="button"
                       onClick={handleAddInput}
@@ -1766,37 +1692,38 @@ const Page = () => {
                 </div>
 
                 <div className="w-full">
-                  <Label className="block text-sm font-medium mb-3">
-                    Jabatan
-                  </Label>
-                  <Controller
-                    name="jabatan"
-                    control={control}
-                    defaultValue={valueJabatan}
-                    render={({ field: { onChange, value } }) => (
-                      <Select
-                        value={value}
-                        onValueChange={(e) => {
-                          onChange(e);
-                        }}
-                      >
-                        <SelectTrigger className="border-teal-500">
-                          <SelectValue placeholder="Pilih Jabatan" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            {Array.isArray(jabatan) &&
-                              jabatan.map((item) => (
-                                <SelectItem key={item.id} value={item.jabatan}>
-                                  {item.jabatan}
-                                </SelectItem>
-                              ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
+  <Label className="block text-sm font-medium mb-3">Jabatan</Label>
+  <Controller
+    name="jabatan"
+    control={control}
+    defaultValue={valueJabatan}
+    render={({ field: { onChange, value } }) => (
+      <Select
+        value={value}
+        onValueChange={(e) => {
+          onChange(e);
+          setValue(e); // Menyinkronkan state lokal
+          setValueJabatan(e); // Menyinkronkan state lokal
+        }}
+      >
+        <SelectTrigger className="border-teal-500">
+          <SelectValue placeholder="Pilih Jabatan" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            {Array.isArray(jabatan) &&
+              jabatan.map((item) => (
+                <SelectItem key={item.id} value={item.jabatan}>
+                  {item.jabatan}
+                </SelectItem>
+              ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    )}
+  />
+</div>
+
                 <div className="w-full">
                   <Label className="block text-sm font-medium mb-3">
                     Tingkat Sekolah

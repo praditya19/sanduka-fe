@@ -140,14 +140,14 @@ export default function IconGrid() {
       color: "text-green-600",
     },
   ];
-  if (role === "SUPER ADMIN") {
-    icons.push({
-      icon: faUserGraduate,
-      label: "Upload Galeri",
-      href: "/galeri",
-      color: "text-teal-500",
-    });
-  }
+  // if (role === "SUPER ADMIN") {
+  //   icons.push({
+  //     icon: faUserGraduate,
+  //     label: "Upload Galeri",
+  //     href: "/galeri",
+  //     color: "text-teal-500",
+  //   });
+  // }
 
   const getPensiunDataAndCountSegera = async () => {
     setLoader(true);

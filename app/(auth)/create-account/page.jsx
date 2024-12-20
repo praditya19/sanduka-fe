@@ -35,7 +35,7 @@ const Page = () => {
   const [error, setError] = useState("");
   const [isClient, setIsClient] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [namaAnak, setNamesanak] = useState([""]);
+  const [namaAnak, setNamaAnak] = useState([]);
   const [step, setStep] = useState(2);
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -291,20 +291,24 @@ const Page = () => {
   };
 
   const handleChange = (index, event) => {
-    const newNamesanak = [...namaAnak];
-    newNamesanak[index] = event.target.value;
-    setNamesanak(newNamesanak);
+    const newNamesAnak = [...namaAnak];
+    newNamesAnak[index] = event.target.value;
+    setNamaAnak(newNamesAnak);
+    setValue("namaAnak", newNamesAnak); // Sinkronkan dengan React Hook Form
   };
-
+  
   const handleAddInput = () => {
-    setNamesanak([...namaAnak, ""]);
+    const newNamesAnak = [...namaAnak, ""];
+    setNamaAnak(newNamesAnak);
+    setValue("namaAnak", newNamesAnak); // Sinkronkan dengan React Hook Form
   };
-
+  
   const handleRemoveInput = (index) => {
-    const newNamesanak = namaAnak.filter((_, i) => i !== index);
-    setNamesanak(newNamesanak);
+    const newNamesAnak = namaAnak.filter((_, i) => i !== index);
+    setNamaAnak(newNamesAnak);
+    setValue("namaAnak", newNamesAnak); // Sinkronkan dengan React Hook Form
   };
-
+  
   const {
     register,
     handleSubmit,
@@ -508,7 +512,7 @@ const Page = () => {
       tahunDiangkat: formattedTahunDiangkat,
       mulaiJadiAnggotaPgri: formattedMulaiJadiAnggotaPgri,
     };
-
+    console.log("Data yang dikirim:", finalData);
     handleCreateHistory();
 
     try {
@@ -541,7 +545,7 @@ const Page = () => {
           <strong
             style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
           >
-            Selamat Anda Sudah Mendaftar Di New Sanduka
+            Selamat Anda Berhasil Mendaftar Di New Sanduka
           </strong>
           <span style={{ fontSize: "1.75rem" }}>
             Anda Berhasil Mendaftar Menjadi Anggota Sanduka
@@ -1366,37 +1370,38 @@ const Page = () => {
                   )}
                 </div>
                 <div className="w-full">
-                  {namaAnak.map((name, index) => (
-                    <div key={index} className="mb-3 flex items-center">
-                      <div className="flex-1">
-                        <Label className="block text-sm font-medium mb-1">
-                          Nama Anak {index + 1}
-                        </Label>
-                        <Input
-                          className="block w-full text-sm p-2 mt-2 mb-2 border-teal-500 rounded"
-                          type="text"
-                          placeholder={`Tuliskan Nama Anak ${index + 1}`}
-                          value={name}
-                          onChange={(e) => handleChange(index, e)}
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        onClick={() => handleRemoveInput(index)}
-                        className="ml-2 p-2 bg-red-500 text-white rounded mt-4 hover:bg-red-500"
-                      >
-                        Hapus
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    onClick={handleAddInput}
-                    className="mt-3 p-2 bg-teal-500 text-white rounded hover:bg-teal-500"
-                  >
-                    + Tambah Anak
-                  </Button>
-                </div>
+  {namaAnak.map((name, index) => (
+    <div key={index} className="mb-3 flex items-center">
+      <div className="flex-1">
+        <Label className="block text-sm font-medium mb-1">
+          Nama Anak {index + 1}
+        </Label>
+        <Input
+          className="block w-full text-sm p-2 mt-2 mb-2 border-teal-500 rounded"
+          type="text"
+          placeholder={`Tuliskan Nama Anak ${index + 1}`}
+          value={name}
+          onChange={(e) => handleChange(index, e)}
+        />
+      </div>
+      <Button
+        type="button"
+        onClick={() => handleRemoveInput(index)}
+        className="ml-2 p-2 bg-red-500 text-white rounded mt-4 hover:bg-red-500"
+      >
+        Hapus
+      </Button>
+    </div>
+  ))}
+  <Button
+    type="button"
+    onClick={handleAddInput}
+    className="mt-3 p-2 bg-teal-500 text-white rounded hover:bg-teal-500"
+  >
+    + Tambah Anak
+  </Button>
+</div>
+
               </div>
 
               <div className="w-full col-span-2">
@@ -1619,7 +1624,8 @@ const Page = () => {
                           <SelectItem value="TK_RA">TK/RA</SelectItem>
                           <SelectItem value="SD_MI">SD/MI</SelectItem>
                           <SelectItem value="SMP_MTS">SMP/MTS</SelectItem>
-                          <SelectItem value="SMA_SMK_MA">SMA/SMK/MA</SelectItem>
+                          <SelectItem value="SMA_MA">SMA/MA</SelectItem>
+                          <SelectItem value="SMK">SMK</SelectItem>
                           <SelectItem value="SEKOLAH_LUAR_BIASA">
                             SEKOLAH LUAR BIASA
                           </SelectItem>

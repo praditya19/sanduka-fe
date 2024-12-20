@@ -1371,83 +1371,83 @@ function DataAnggota() {
                     )}
                   </div>
 
-                  <div className="flex flex-col md:flex">
-                    <div className="relative" ref={unitKerjaRef}>
-                      <Input
-                        type="text"
-                        className="border rounded-lg p-2 w-full bg-white shadow-sm "
-                        placeholder="Pilih Unit Kerja"
-                        readOnly
-                        value={formData.unit}
-                        onChange={handleUnitKerjaChange}
-                        onFocus={() => {
-                          setShowDropdownUnit(true);
-                          setSearchUnit("");
-                        }}
-                        disabled={isUnitKerjaDisabled}
-                      />
+                    <div className="flex flex-col md:flex">
+                      <div className="relative" ref={unitKerjaRef}>
+                        <Input
+                          type="text"
+                          className="border rounded-lg p-2 w-full bg-white shadow-sm "
+                          placeholder="Pilih Unit Kerja"
+                          readOnly
+                          value={formData.unit}
+                          onChange={handleUnitKerjaChange}
+                          onFocus={() => {
+                            setShowDropdownUnit(true);
+                            setSearchUnit("");
+                          }}
+                          disabled={isUnitKerjaDisabled}
+                        />
 
-                      {showDropdownUnit && (
-                        <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-2 w-full">
-                          <ul className="max-h-44 overflow-y-auto">
-                            <li className="py-2 px-2">
-                              <Input
-                                type="text"
-                                value={searchUnit}
-                                onChange={(e) => {
-                                  setSearchUnit(e.target.value);
-                                }}
-                                placeholder="Cari Unit Kerja..."
-                                autoFocus
-                                className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-0"
-                              />
-                            </li>
-                            <li
-                              onClick={() => {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  unit: "",
-                                }));
-                                setShowDropdownUnit(false);
-                                setSearchUnit("");
-                              }}
-                              className="p-2 cursor-pointer hover:bg-gray-100"
-                            >
-                              Pilihan Kosong
-                            </li>
-
-                            {filteredUnitKerja.length > 0 ? (
-                              filteredUnitKerja
-                                .filter((unit) =>
-                                  unit.unitKerja
-                                    .toLowerCase()
-                                    .includes(searchUnit.toLowerCase())
-                                )
-                                .map((unit) => (
-                                  <li
-                                    key={unit.id}
-                                    className="p-2 cursor-pointer hover:bg-gray-100"
-                                    onClick={() => {
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        unit: unit.unitKerja,
-                                      }));
-                                      setShowDropdownUnit(false);
-                                    }}
-                                  >
-                                    {unit.unitKerja}
-                                  </li>
-                                ))
-                            ) : (
-                              <li className="px-4 py-2 text-gray-500 cursor-default">
-                                Tidak ada hasil
+                        {showDropdownUnit && (
+                          <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-2 w-full">
+                            <ul className="max-h-44 overflow-y-auto">
+                              <li className="py-2 px-2">
+                                <Input
+                                  type="text"
+                                  value={searchUnit}
+                                  onChange={(e) => {
+                                    setSearchUnit(e.target.value);
+                                  }}
+                                  placeholder="Cari Unit Kerja..."
+                                  autoFocus
+                                  className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-0"
+                                />
                               </li>
-                            )}
-                          </ul>
-                        </div>
-                      )}
+                              <li
+                                onClick={() => {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    unit: "",
+                                  }));
+                                  setShowDropdownUnit(false);
+                                  setSearchUnit("");
+                                }}
+                                className="p-2 cursor-pointer hover:bg-gray-100"
+                              >
+                                Pilihan Kosong
+                              </li>
+
+                              {filteredUnitKerja.length > 0 ? (
+                                filteredUnitKerja
+                                  .filter((unit) =>
+                                    unit.unitKerja
+                                      .toLowerCase()
+                                      .includes(searchUnit.toLowerCase())
+                                  )
+                                  .map((unit) => (
+                                    <li
+                                      key={unit.id}
+                                      className="p-2 cursor-pointer hover:bg-gray-100"
+                                      onClick={() => {
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          unit: unit.unitKerja,
+                                        }));
+                                        setShowDropdownUnit(false);
+                                      }}
+                                    >
+                                      {unit.unitKerja}
+                                    </li>
+                                  ))
+                              ) : (
+                                <li className="px-4 py-2 text-gray-500 cursor-default">
+                                  Tidak ada hasil
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
                 </>
                 <select
                   className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -1761,7 +1761,7 @@ function DataAnggota() {
                                 {isPopupVisible && (
                                   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-10 z-40 w-screen h-screen">
                                     <div className="bg-white p-6 rounded-lg shadow-md w-96">
-                                      <h2 className="text-xl font-semibold text-center mb-4">
+                                      <h2 className="text-xl text-center mb-4">
                                         Apakah Anda Yakin ingin Menghapus Data
                                         Anggota ini?
                                       </h2>

@@ -462,7 +462,7 @@ const page = () => {
         {isPopupVisible && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-6 rounded shadow-lg max-w-xs sm:max-w-sm md:max-w-md w-full">
-              <p className="text-lg font-medium">
+              <p className="text-lg">
                 Apakah Anda yakin Ingin Pindah Cabang?
               </p>
               <div className="mt-4 flex justify-end">
