@@ -11,6 +11,7 @@ import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 
 function RekapAnggota() {
+  const [data, setData] = useState([]);
   const [maxItems, setMaxItems] = useState(10);
   const { token } = useAuth();
   const router = useRouter();
@@ -25,7 +26,7 @@ function RekapAnggota() {
   const [unitKerjaInput, setUnitKerjaInput] = useState("");
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(rekapData.length / maxItems);
+  const totalPages = Math.ceil(data.length / maxItems);
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
   const [originalRekapData, setOriginalRekapData] = useState([]);
@@ -221,15 +222,13 @@ function RekapAnggota() {
 
   const fetchRekapData = async (cabang) => {
     try {
-      const data = await GlobalApi.getRekapAnggotaByCabang(cabang);
-      setRekapData(data.data);
-      setOriginalRekapData(data.data);
-      setTotalSumbanganPerCabang(data.totalSumbanganPerCabang);
+      const response = await GlobalApi.getRekapAnggota(cabang);
+      console.log("Respon:", response); // Debugging
+      setData(response); // Simpan data ke state
     } catch (error) {
       console.error("Error fetching rekap data:", error);
     }
   };
-
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
@@ -280,7 +279,7 @@ function RekapAnggota() {
   };
 
   const startIndex = (currentPage - 1) * maxItems;
-  const paginatedData = rekapData.slice(startIndex, startIndex + maxItems);
+  const paginatedData = data.slice(startIndex, startIndex + maxItems);
 
   const jumlahPns = rekapData.reduce((acc, curr) => acc + curr.totalPns, 0);
   const jumlahPppk = rekapData.reduce((acc, curr) => acc + curr.totalPppk, 0);
@@ -355,7 +354,7 @@ function RekapAnggota() {
                 <div className="flex flex-col relative w-64" ref={unitKerjaRef}>
                   <Input
                     type="text"
-                    value={unitKerjaInput}
+                    value={selectedUnitKerja}
                     onFocus={handleUnitKerjaFocus}
                     onChange={handleUnitKerjaChange}
                     placeholder="Pilih Unit Kerja"
@@ -496,19 +495,19 @@ function RekapAnggota() {
                           {item.alamatKerja}
                         </td>
                         <td className="p-2 md:p-3 border text-center">
-                          {item.pesertaKtaDigitalCount}
+                          {item.jumlah}
                         </td>
                         <td className="p-2 md:p-3 border text-center">
-                          {item.pesertaSandukaCount}
+                          {item.totalPns}
                         </td>
                         <td className="p-2 md:p-3 border text-center">
-                          {item.pesertaDaspenCount}
+                          {item.totalNonPns}
                         </td>
                         <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
-                          {item.totalCount}
+                          {item.totalPppk}
                         </td>
                         <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
-                          {item.totalSumbangan}
+                        Rp. {parseInt(item.totalIuran).toLocaleString("id-ID")}
                         </td>
                       </tr>
  
@@ -539,7 +538,7 @@ function RekapAnggota() {
                   </tr>
                 )}
               </tbody>
-              <tfoot>
+              {/* <tfoot>
                 <tr>
                   <td
                     colSpan="2"
@@ -558,7 +557,7 @@ function RekapAnggota() {
                       : "Data tidak tersedia"}
                   </td>
                 </tr>
-              </tfoot>
+              </tfoot> */}
             </table>
           </div>
 

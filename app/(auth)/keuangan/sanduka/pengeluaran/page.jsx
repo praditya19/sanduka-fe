@@ -554,6 +554,20 @@ function Pengeluaran() {
                   </Label>
                   <select
                     className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-5"
+                    id="tahun"
+                    name="tahun"
+                    value={formValues.bulan}
+                    onChange={handleChange}
+                  >
+                    <option value="">Tahun Lapor</option>
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-5"
                     id="bulan"
                     name="bulan"
                     value={formValues.bulan}
@@ -566,6 +580,7 @@ function Pengeluaran() {
                       </option>
                     ))}
                   </select>
+                 
                   <div className="relative" ref={dropdownRef}>
                     <input
                       type="text"
@@ -610,20 +625,6 @@ function Pengeluaran() {
                       </ul>
                     )}
                   </div>
-                  <select
-                    className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-5"
-                    id="tahun"
-                    name="tahun"
-                    value={formValues.bulan}
-                    onChange={handleChange}
-                  >
-                    <option value="">Tahun Lapor</option>
-                    {years.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
                   <div className="flex flex-col">
                     <Label
                       className="block text-gray-700 text-sm font-semibold mb-2"
@@ -690,7 +691,7 @@ function Pengeluaran() {
                     onChange={handleChange}
                   />
 
-                  <div className="flex flex-col mt-5">
+                  {/* <div className="flex flex-col mt-5">
                     <Label
                       className="block text-gray-700 text-sm font-semibold mb-2"
                       htmlFor="terbilang"
@@ -704,7 +705,7 @@ function Pengeluaran() {
                       value={formValues.terbilang}
                       onChange={handleChange}
                     />
-                  </div>
+                  </div> */}
                   <div className="flex flex-col mt-5">
                     <Label
                       className="block text-gray-700 text-sm font-semibold mb-2"

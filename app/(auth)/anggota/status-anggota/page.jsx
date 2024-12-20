@@ -893,7 +893,7 @@ function StatusAnggota() {
                   </th>
                   <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
                     <div className="flex justify-between items-center">
-                      <span>Tingkat Sekolah</span>
+                      <span>Jenjang Sekolah</span>
                     </div>
                   </th>
                   <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">

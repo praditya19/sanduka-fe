@@ -1361,4 +1361,5 @@ export default {
   updateIuranById,
   createHistoryData,
   getAllHistoryData,
+  getAdminById,
 };

@@ -35,26 +35,26 @@ const Page = () => {
   const handleStatusChange = (event) => {
     const status = event.target.value; // Ambil nilai dari dropdown
     setSelectedStatus(status); // Set nilai status ke state
-  
+
     // Filter data berdasarkan status
     const filteredItems = pensiunList.filter((pensiun) => {
       // Jika status yang dipilih adalah "Pensiun", hanya tampilkan keterangan "Pensiun"
       if (status === "Pensiun") {
         return pensiun.keterangan === "Pensiun";
       }
-  
+
       // Jika status yang dipilih adalah "Segera", tampilkan jika keterangan null dan status "Segera"
       if (status === "Segera") {
         return pensiun.keterangan === null && pensiun.status === "Segera";
       }
-  
+
       // Jika tidak ada status yang dipilih, tampilkan semua data
       return true;
     });
-  
+
     // Update state dengan hasil filter
     setFilteredPensiunList(filteredItems);
-  };   
+  };
 
   useEffect(() => {
     const fetchBulan = async () => {
@@ -88,27 +88,27 @@ const Page = () => {
       try {
         const fetchedData = await GlobalApi.getAllPensiun();
         console.log(fetchedData.data.content);
-  
+
         if (fetchedData && fetchedData.data.content) {
           const allPensiunList = fetchedData.data.content;
-  
+
           // Filter item dengan keterangan null dan status Segera
           const segeraItems = allPensiunList.filter(
             (item) => item.keterangan === null && item.status === "Segera"
           );
-  
+
           // Hitung jumlah "Segera" jika keterangan null
           const countSegera = segeraItems.length;
-  
+
           // Perbarui sessionStorage
           sessionStorage.setItem("statusSegera", countSegera.toString());
-  
+
           // Set jumlah "Segera" di state
           setStatusSegeraCount(countSegera);
-  
+
           // Set data utama (tetap utuh) di state
           setPensiunList(allPensiunList);
-  
+
           // Default: tampilkan semua data
           setFilteredPensiunList(allPensiunList);
         }
@@ -118,18 +118,17 @@ const Page = () => {
         setLoading(false);
       }
     };
-  
+
     // Cek apakah ada data di sessionStorage saat halaman direfresh
     const storedStatusSegera = sessionStorage.getItem("statusSegera");
     if (storedStatusSegera) {
       // Jika ada data di sessionStorage, gunakan sementara
       setStatusSegeraCount(parseInt(storedStatusSegera, 10));
     }
-  
+
     // Selalu panggil fetch untuk memperbarui data
     fetchPensiunData();
   }, []);
-  
 
   const applyFilters = (month, year) => {
     const filteredList = pensiunList.filter((pensiun) => {
@@ -241,7 +240,7 @@ const Page = () => {
       const idPensiun = sessionStorage.getItem("idPensiun");
       await GlobalApi.pensiunAnggota(idPensiun);
       setPopupVisible(false);
-  
+
       toast.success(
         <div
           style={{
@@ -292,7 +291,7 @@ const Page = () => {
           },
         }
       );
-  
+
       // Tambahkan reload halaman setelah pemberitahuan sukses
       setTimeout(() => {
         window.location.reload();
@@ -355,7 +354,6 @@ const Page = () => {
       );
     }
   };
-  
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -487,116 +485,56 @@ const Page = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {currentItems.map((pensiun, index) => (
-                      <>
-                        <tr key={pensiun.id} className="border-t">
-                          <td className="py-2 px-3 text-center">
-                            {startNumber + index + 1}
-                            <Button
-                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
-                              onClick={() => handleExpand(index)}
-                            >
-                              {expandedIndex === index ? (
-                                <FaMinusCircle />
-                              ) : (
-                                <FaPlusCircle />
-                              )}
-                            </Button>
-                          </td>
-                          <td className="py-2 px-3 text-center">
-                            <img
-                              src="/profile.png"
-                              alt="Foto"
-                              className="w-10 h-10 rounded-full"
-                            />
-                          </td>
-                          <td className="py-2 px-3 text-center hidden lg:table-cell">
-                            {formatDate(pensiun.prediksiPensiun)}
-                          </td>
-                          <td className="py-2 px-3 text-center">
-                            <div>{pensiun.namaLengkap}</div>
-                            <div>{pensiun.npa}</div>
-                            <div>{pensiun.tempatLahir}</div>
-                            <div>{formatDate(pensiun.tanggalLahir)}</div>
-                          </td>
-                          <td className="py-2 px-3 text-center hidden lg:table-cell">
-                            <div>{pensiun.jabatan}</div>
-                            <div>{pensiun.unitKerja}</div>
-                            <div>Usia: {pensiun.usia}</div>
-                          </td>
-                          <td className="py-2 px-3 text-center hidden lg:table-cell">
-                            {pensiun.cabang}
-                          </td>
-                          <td className="py-2 px-3 text-center">
-                            {pensiun.keterangan === "Pensiun"
-                              ? "Pensiun"
-                              : pensiun.keterangan === null
-                              ? pensiun.status === "Segera"
-                                ? "Segera"
-                                : "Aktif"
-                              : "Aktif"}
-                          </td>
-                          <td className="py-2 px-3 text-center hidden lg:table-cell">
-                            <button
-                              type="button"
-                              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                              onClick={() => handlePopup(pensiun.npa)}
-                            >
-                              Pensiun
-                            </button>
-
-                            {popupVisible && (
-                              <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex justify-center items-center z-50">
-                                <div className="bg-white rounded-lg p-6 w-2/5 text-center shadow-lg">
-                                  <h2 className="text-lg font-semibold text-gray-800">
-                                    Apakah Anda yakin ?
-                                  </h2>
-                                  <p className="text-gray-600 mt-2 mb-4">
-                                    Apakah Anda yakin untuk mengubah anggota
-                                    menjadi pensiun?
-                                  </p>
-                                  <div className="flex justify-center gap-4">
-                                    <button
-                                      onClick={handleCancelKeluar}
-                                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
-                                    >
-                                      Batal
-                                    </button>
-                                    <button
-                                      onClick={handlePensiunAnggota}
-                                      className="bg-teal-500 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition duration-200"
-                                    >
-                                      Ya, Saya Yakin
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                        {expandedIndex === index && (
-                          <tr className="bg-gray-100 lg:hidden">
-                            <td
-                              colSpan="3"
-                              className="py-2 px-3 text-sm border-t"
-                            >
-                              <div>
-                                <strong>Prediksi Pensiun:</strong>{" "}
-                                {formatDate(pensiun.prediksiPensiun)}
-                              </div>
-                              <div>
-                                <strong>Keanggotaan:</strong> {pensiun.jabatan},{" "}
-                                {pensiun.unitKerja}
-                              </div>
-                              <div>
-                                <strong>Usia:</strong> {pensiun.usia}
-                              </div>
-                              <div>
-                                <strong>Cabang ke-2:</strong> {pensiun.cabang}
-                              </div>
-                              <div>
-                                <strong>Status:</strong> {pensiun.status}
-                              </div>
+                    {currentItems
+                      .filter((pensiun) => pensiun.keterangan !== "Pensiun")
+                      .map((pensiun, index) => (
+                        <>
+                          <tr key={pensiun.id} className="border-t">
+                            <td className="py-2 px-3 text-center">
+                              {startNumber + index + 1}
+                              <Button
+                                className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
+                                onClick={() => handleExpand(index)}
+                              >
+                                {expandedIndex === index ? (
+                                  <FaMinusCircle />
+                                ) : (
+                                  <FaPlusCircle />
+                                )}
+                              </Button>
+                            </td>
+                            <td className="py-2 px-3 text-center">
+                              <img
+                                src="/profile.png"
+                                alt="Foto"
+                                className="w-10 h-10 rounded-full"
+                              />
+                            </td>
+                            <td className="py-2 px-3 text-center hidden lg:table-cell">
+                              {formatDate(pensiun.prediksiPensiun)}
+                            </td>
+                            <td className="py-2 px-3 text-center">
+                              <div>{pensiun.namaLengkap}</div>
+                              <div>{pensiun.npa}</div>
+                              <div>{pensiun.tempatLahir}</div>
+                              <div>{formatDate(pensiun.tanggalLahir)}</div>
+                            </td>
+                            <td className="py-2 px-3 text-center hidden lg:table-cell">
+                              <div>{pensiun.jabatan}</div>
+                              <div>{pensiun.unitKerja}</div>
+                              <div>Usia: {pensiun.usia}</div>
+                            </td>
+                            <td className="py-2 px-3 text-center hidden lg:table-cell">
+                              {pensiun.cabang}
+                            </td>
+                            <td className="py-2 px-3 text-center">
+                              {pensiun.keterangan === null
+                                ? pensiun.status === "Segera"
+                                  ? "Segera"
+                                  : "Aktif"
+                                : "Aktif"}
+                            </td>
+                            <td className="py-2 px-3 text-center hidden lg:table-cell">
                               <button
                                 type="button"
                                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -607,7 +545,7 @@ const Page = () => {
 
                               {popupVisible && (
                                 <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex justify-center items-center z-50">
-                                  <div className="bg-white rounded-lg p-6 w-4/5 sm:w-2/5 md:w-1/3 text-center shadow-lg">
+                                  <div className="bg-white rounded-lg p-6 w-2/5 text-center shadow-lg">
                                     <h2 className="text-lg font-semibold text-gray-800">
                                       Apakah Anda yakin ?
                                     </h2>
@@ -634,9 +572,69 @@ const Page = () => {
                               )}
                             </td>
                           </tr>
-                        )}
-                      </>
-                    ))}
+                          {expandedIndex === index && (
+                            <tr className="bg-gray-100 lg:hidden">
+                              <td
+                                colSpan="3"
+                                className="py-2 px-3 text-sm border-t"
+                              >
+                                <div>
+                                  <strong>Prediksi Pensiun:</strong>{" "}
+                                  {formatDate(pensiun.prediksiPensiun)}
+                                </div>
+                                <div>
+                                  <strong>Keanggotaan:</strong>{" "}
+                                  {pensiun.jabatan}, {pensiun.unitKerja}
+                                </div>
+                                <div>
+                                  <strong>Usia:</strong> {pensiun.usia}
+                                </div>
+                                <div>
+                                  <strong>Cabang ke-2:</strong> {pensiun.cabang}
+                                </div>
+                                <div>
+                                  <strong>Status:</strong> {pensiun.status}
+                                </div>
+                                <button
+                                  type="button"
+                                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                  onClick={() => handlePopup(pensiun.npa)}
+                                >
+                                  Pensiun
+                                </button>
+
+                                {popupVisible && (
+                                  <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex justify-center items-center z-50">
+                                    <div className="bg-white rounded-lg p-6 w-4/5 sm:w-2/5 md:w-1/3 text-center shadow-lg">
+                                      <h2 className="text-lg font-semibold text-gray-800">
+                                        Apakah Anda yakin ?
+                                      </h2>
+                                      <p className="text-gray-600 mt-2 mb-4">
+                                        Apakah Anda yakin untuk mengubah anggota
+                                        menjadi pensiun?
+                                      </p>
+                                      <div className="flex justify-center gap-4">
+                                        <button
+                                          onClick={handleCancelKeluar}
+                                          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                                        >
+                                          Batal
+                                        </button>
+                                        <button
+                                          onClick={handlePensiunAnggota}
+                                          className="bg-teal-500 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition duration-200"
+                                        >
+                                          Ya, Saya Yakin
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      ))}
                   </tbody>
                 </table>
               </div>
