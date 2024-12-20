@@ -104,11 +104,8 @@ const Page = () => {
   }, [selectedCabang, searchTermUnitKerja, allUnitKerja]);
 
   useEffect(() => {
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = (currentDate.getMonth() + 1).toString().padStart(2, "0"); // Bulan dalam dua digit
-    const day = currentDate.getDate().toString().padStart(2, "0"); // Hari dalam dua digit
-    setToday(`${year}-${month}-${day}`);
+    const currentDate = new Date().toISOString().split("T")[0];
+    setToday(currentDate);
 
     updateUnitKerja();
     setIsClient(true);
@@ -190,7 +187,18 @@ const Page = () => {
         const response = await GlobalApi.cekNpa(npaValue);
 
         if (response?.id) {
-          setNpaMessage("NPA Sudah Terdaftar, silakan login di sini");
+          setNpaMessage(
+            <span style={{ color: "green" }}>
+              "NPA Sudah Terdaftar, silakan login di sini{" "}
+              <a
+                href="/sign-in"
+                style={{ textDecoration: "underline", color: "blue" }}
+              >
+                LOGIN
+              </a>
+              "
+            </span>
+          );
         }
       } catch (error) {
         if (error.response?.status === 404) {
@@ -404,150 +412,232 @@ const Page = () => {
 
     return isValid;
   };
-  const showToastSuccess = (cabang, unitKerja) => {
-    toast.success(
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          textAlign: "center",
-        }}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          style={{
-            width: "48px",
-            height: "48px",
-            color: "#06D001",
-            marginBottom: "16px",
-          }}
-          fill="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-        </svg>
-        <strong
-          style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-        >
-          Selamat Anda Sudah Mendaftar Di New Sanduka
-        </strong>
-        <span style={{ fontSize: "1.75rem" }}>
-          Anda Berhasil Mendaftar Menjadi Anggota Sanduka
-        </span>
-      </div>,
-      {
-        icon: null,
-        duration: 4000,
-        autoClose: 3000,
-        style: {
-          marginTop: "16%",
-          fontSize: "1.75rem",
-          padding: "10px",
-          width: "80%",
-          maxWidth: "700px",
-          height: "50%",
-          maxHeight: "400px",
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          zIndex: 9999,
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      }
-    );
+  const formatDateToTanggalBulanTahun = (dateInput) => {
+    if (!dateInput) return null;
+
+    const bulanList = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
+
+    let dateObj;
+    if (Array.isArray(dateInput)) {
+      // Jika input adalah array [yyyy, MM, dd]
+      const [year, month, day] = dateInput;
+      dateObj = new Date(year, month - 1, day); // Bulan dikurangi 1 karena index bulan dimulai dari 0
+    } else if (typeof dateInput === "string") {
+      // Jika input adalah string (misalnya "2024-12-19")
+      dateObj = new Date(dateInput);
+    } else {
+      return null; // Format tidak valid
+    }
+
+    const day = dateObj.getDate().toString().padStart(2, "0");
+    const month = bulanList[dateObj.getMonth()]; // Nama bulan
+    const year = dateObj.getFullYear();
+
+    return `${day} ${month} ${year}`;
   };
 
-  const showToastError = (errorMessage) => {
-    toast.error(
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          textAlign: "center",
-        }}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          style={{
-            width: "48px",
-            height: "48px",
-            color: "red",
-            marginBottom: "16px",
-          }}
-          fill="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-          <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-        </svg>
-        <strong
-          style={{
-            fontSize: "1.75rem",
-            display: "block",
-            marginBottom: "8px",
-          }}
-        >
-          Anda Belum Berhasil Mendaftar
-        </strong>
-        <span style={{ fontSize: "1.75rem" }}>{errorMessage}</span>
-      </div>,
-      {
-        icon: null,
-        duration: 4000,
-        style: {
-          marginTop: "16%",
-          fontSize: "1.75rem",
-          padding: "10px",
-          width: "80%",
-          maxWidth: "700px",
-          height: "50%",
-          maxHeight: "400px",
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          zIndex: 9999,
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      }
-    );
-  };
-  
-  const onSubmit = async (data) => {
+  const onSubmit = async (response) => {
     const isFormValid = validateForm();
     if (!isFormValid) return;
-    setIsSubmitClicked(true); 
+    setIsSubmitClicked(true);
 
     const cleanBase64 = base64String.split(",")[1] || base64String;
 
+    const formattedTanggalLahir = response.tanggalLahir
+      ? new Date(response.tanggalLahir).toISOString().split("T")[0] // Format ke yyyy-MM-dd
+      : null;
+    const formattedTahunDiangkat = response.tahunDiangkat
+      ? new Date(response.tahunDiangkat).toISOString().split("T")[0]
+      : null;
+    const formattedMulaiJadiAnggotaPgri = response.mulaiJadiAnggotaPgri
+      ? new Date(response.mulaiJadiAnggotaPgri).toISOString().split("T")[0]
+      : null;
+
+    console.log("Tanggal Lahir:", formattedTanggalLahir);
+    console.log("Tahun Diangkat:", formattedTahunDiangkat);
+    console.log("Mulai Jadi Anggota PGRI:", formattedMulaiJadiAnggotaPgri);
+
     const finalData = {
-      ...data,
-      namaAnak: namaAnak.filter((name) => name.trim() !== ""),
-      latitude,
-      longitude,
+      id: response.id || null,
+      email: response.email || "",
+      password: response.password || "",
+      npaPgri: response.npaPgri || "",
+      nip: response.nip || "",
+      nik: response.nik || "",
+      namaLengkap: response.namaLengkap || "",
+      tempatLahir: response.tempatLahir || "",
+      tanggalLahir: formattedTanggalLahir,
+      namaAnak: response.namaAnak || [],
+      latitude: response.latitude || 0,
+      longitude: response.longitude || 0,
       foto: cleanBase64,
+      agama: response.agama || "",
+      alamat: response.alamat || "",
+      cabang: response.cabang || "",
+      golonganDarah: response.golonganDarah || "",
+      golonganJabatan: response.golonganJabatan || "",
+      isVerified: response.isVerified || false,
+      jabatan: response.jabatan || "",
+      jenisKelamin: response.jenisKelamin || "",
+      kodePos: response.kodePos || "",
+      pangkatGolongan: response.pangkatGolongan || "",
+      pendidikanTerakhir: response.pendidikanTerakhir || "",
+      pesertaKtaDigital: response.pesertaKtaDigital || "",
+      pesertaSanduka: response.pesertaSanduka || "",
+      statusPegawai: response.statusPegawai || "",
+      statusSekolah: response.statusSekolah || "",
+      tingkatSekolah: response.tingkatSekolah || "",
+      unitKerja: response.unitKerja || "",
+      nomorHp: response.nomorHp || "",
+      namaSuamiIstri: response.namaSuamiIstri || "",
+      sertifikatPendidik: response.sertifikatPendidik || "",
+      mengajar: response.mengajar || "",
+      tahunDiangkat: formattedTahunDiangkat,
+      mulaiJadiAnggotaPgri: formattedMulaiJadiAnggotaPgri,
     };
-    
-    console.log("Payload yang dikirim ke API:", finalData);
-    
+
+    handleCreateHistory();
+
     try {
-      const response = await GlobalApi.registerUser(finalData);
-      console.log("Response dari API:", response);
-      showToastSuccess();
+      const apiResponse = await GlobalApi.registerUser(finalData);
+      console.log("Response dari API:", apiResponse);
+
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Selamat Anda Sudah Mendaftar Di New Sanduka
+          </strong>
+          <span style={{ fontSize: "1.75rem" }}>
+            Anda Berhasil Mendaftar Menjadi Anggota Sanduka
+          </span>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          autoClose: 3000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+
+      // Hanya arahkan ke halaman berikutnya jika berhasil
       setTimeout(() => {
         router.push("/tunggu-admin");
       }, 4000);
     } catch (error) {
+      if (error.response?.status === 500) {
+        console.log("Server mengembalikan respon 500. Abaikan error ini.");
+        return;
+      }
+
+      // Untuk error lainnya, tampilkan toast error dan tetap di halaman
       const errorMessage =
         error.response?.data || "Terjadi kesalahan saat registrasi.";
-      console.error("Error payload:", finalData); // Tambahkan log error
-      showToastError(errorMessage);
-    }    
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Anda Belum Berhasil Mendaftar.
+          </strong>
+          <span style={{ fontSize: "1.75rem" }}>{errorMessage}</span>
+        </div>,
+        {
+          icon: null,
+          duration: 5000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+    }
   };
 
   const togglePassword = () => {
@@ -718,72 +808,72 @@ const Page = () => {
 
   return (
     <div className="w-full mx-auto py-6 bg-slate-200">
-  <div className="w-full mx-auto overflow-x-auto">
-    <div className="flex flex-row items-center justify-start space-x-2 sm:space-x-4 mb-2 whitespace-nowrap">
-      <div
-        className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
-          step === 1
-            ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-            : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-        }`}
-        // onClick={() => handleNavigation(1)}
-      >
-        1. SYARAT & KETENTUAN
+      <div className="w-full mx-auto overflow-x-auto">
+        <div className="flex flex-row items-center justify-start space-x-2 sm:space-x-4 mb-2 whitespace-nowrap">
+          <div
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+              step === 1
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
+            // onClick={() => handleNavigation(1)}
+          >
+            1. SYARAT & KETENTUAN
+          </div>
+
+          <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
+
+          <div
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+              step === 2
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
+            onClick={() => handleNavigation(2)}
+          >
+            2. DATA PRIBADI
+          </div>
+
+          <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
+
+          <div
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+              step === 3
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
+            onClick={() => handleNavigation(3)}
+          >
+            3. DATA PEKERJAAN
+          </div>
+
+          <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
+
+          <div
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+              step === 4
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
+            // onClick={() => handleNavigation(4)}
+          >
+            4. MENUNGGU VERIFIKASI ADMIN
+          </div>
+
+          <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
+
+          <div
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
+              step === 5
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+            }`}
+            // onClick={() => handleNavigation(5)}
+          >
+            5. SELESAI
+          </div>
+        </div>
       </div>
-
-      <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
-
-      <div
-        className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
-          step === 2
-            ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-            : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-        }`}
-        onClick={() => handleNavigation(2)}
-      >
-        2. DATA PRIBADI
-      </div>
-
-      <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
-
-      <div
-        className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
-          step === 3
-            ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-            : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-        }`}
-        onClick={() => handleNavigation(3)}
-      >
-        3. DATA PEKERJAAN
-      </div>
-
-      <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
-
-      <div
-        className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
-          step === 4
-            ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-            : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-        }`}
-        // onClick={() => handleNavigation(4)}
-      >
-        4. MENUNGGU VERIFIKASI ADMIN
-      </div>
-
-      <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
-
-      <div
-        className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
-          step === 5
-            ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-            : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-        }`}
-        // onClick={() => handleNavigation(5)}
-      >
-        5. SELESAI
-      </div>
-    </div>
-  </div>
       <div className="container mx-auto max-w-screen-lg sm:max-w-full md:max-w-screen-lg px-4">
         <Toaster
           toastOptions={{
@@ -858,6 +948,7 @@ const Page = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
                 <div className="w-full">
                   <Label className="block text-sm font-medium mb-3">
+                    <span className="text-red-500 text-xl">* </span>
                     Email
                     <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
                       *Harap Diingat
@@ -1714,7 +1805,7 @@ const Page = () => {
                         className="border border-teal-500"
                         ref={sertifikatPendidikRef}
                       >
-                        <SelectValue placeholder="Sertifikat" />
+                        <SelectValue placeholder="Pilih Sertifikat" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
@@ -1740,8 +1831,7 @@ const Page = () => {
                   type="date"
                   id="mulaiJadiAnggotaPgri"
                   placeholder="dd/mm/yyyy"
-                  value={today}
-                readOnly
+                  max={today}
                   {...register("mulaiJadiAnggotaPgri")}
                   className="border-teal-500"
                 />

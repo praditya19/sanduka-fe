@@ -352,6 +352,7 @@ function DataAnggota() {
   }, [token, router, selectedCabang, filterCabang, filterUnitKerja]);
 
   const fetchAnggota = async (page = 0, cabang = "", unitKerja = "") => {
+    setLoading(true); 
     try {
       const role = sessionStorage.getItem("role");
       const userId = sessionStorage.getItem("userId");
@@ -373,7 +374,6 @@ function DataAnggota() {
         } else {
           fotoBase64Array.push(null);
         }
-
         fetchedData = [userData];
       } else {
         fetchedData = await GlobalApi.getAllAnggota(page, cabang, unitKerja);
@@ -1258,7 +1258,9 @@ function DataAnggota() {
 
     return visiblePages;
   };
-
+  useEffect(() => {
+    fetchAnggota();
+  }, []);
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -1493,6 +1495,11 @@ function DataAnggota() {
           </div>
 
           <div className="overflow-x-auto">
+          {loading ? (
+    <div className="flex justify-center items-center py-10">
+      <div className="text-teal-500 text-lg font-semibold">Loading data...</div>
+    </div>
+  ) : (
             <table className="container w-full table-auto mb-8">
               <thead>
                 <tr>
@@ -2335,6 +2342,7 @@ function DataAnggota() {
                 })}
               </tbody>
             </table>
+                )}
             <div className="flex justify-center mt-4 gap-1">
               <button
                 onClick={() => setCurrentPage(1)}

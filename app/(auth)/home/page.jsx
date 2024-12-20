@@ -57,7 +57,7 @@ export default function IconGrid() {
     {
       icon: faCheckCircle,
       label: "Verifikasi",
-      href: "#",
+      href: "/verifikasi-anggota-mutasi",
       color: "text-blue-500",
     },
     {
@@ -148,44 +148,44 @@ export default function IconGrid() {
       color: "text-teal-500",
     });
   }
-  
+
   const getPensiunDataAndCountSegera = async () => {
     setLoader(true);
-  
+
     try {
       // Ambil data pensiun dari API
       const pensiunResponse = await GlobalApi.getAllPensiun();
-  
+
       if (pensiunResponse && pensiunResponse.data.content) {
         const allPensiunList = pensiunResponse.data.content;
-  
+
         // Filter data: Hitung jumlah "Segera" jika keterangan null
         const segeraItems = allPensiunList.filter(
           (item) => item.keterangan === null && item.status === "Segera"
         );
-  
+
         const countSegera = segeraItems.length;
-  
+
         // Simpan jumlah "Segera" ke sessionStorage
         sessionStorage.setItem("statusSegera", countSegera.toString());
-  
+
         // Set jumlah "Segera" ke state
         setStatusSegeraCount(countSegera);
-  
+
         // Simpan data utama ke state (tetap utuh)
         setPensiunList(allPensiunList);
-  
+
         // Filter final (keterangan dan status)
         const finalFilteredPensiunList = allPensiunList.filter((item) => {
           // Jika keterangan null, tampilkan data dengan status "Segera"
           if (item.keterangan === null) {
             return item.status === "Segera";
           }
-  
+
           // Jika keterangan bukan null, tampilkan semua kecuali "Pensiun"
           return item.keterangan !== "Pensiun";
         });
-  
+
         // Set hasil filter ke state
         setFilteredPensiunList(finalFilteredPensiunList);
       }
@@ -195,17 +195,17 @@ export default function IconGrid() {
       setLoader(false);
     }
   };
-  
+
   useEffect(() => {
     // Cek status login saat komponen pertama kali dimuat
     checkLoginStatus();
   }, []);
-  
+
   useEffect(() => {
     // Jika sudah login, jalankan fungsi untuk mengambil data pensiun
     if (isLoggedIn) {
       // Mengecek jika statusSegera sudah ada di sessionStorage
-      const statusSegera = sessionStorage.getItem('statusSegera');
+      const statusSegera = sessionStorage.getItem("statusSegera");
       if (statusSegera) {
         // Jika sudah ada, tidak perlu refresh
         setStatusSegeraCount(parseInt(statusSegera)); // Set statusSegeraCount langsung dari sessionStorage
@@ -215,21 +215,21 @@ export default function IconGrid() {
       }
     }
   }, [isLoggedIn]);
-  
+
   const checkLoginStatus = () => {
-    const userToken = sessionStorage.getItem('authToken');
-  
+    const userToken = sessionStorage.getItem("authToken");
+
     if (userToken) {
       setIsLoggedIn(true); // Set isLoggedIn true jika token ada
-  
+
       // Jika statusSegera ada, ambil data pensiun langsung tanpa perlu refresh halaman
-      const statusSegera = sessionStorage.getItem('statusSegera');
+      const statusSegera = sessionStorage.getItem("statusSegera");
       if (!statusSegera) {
         // Jika statusSegera belum ada, jalankan fungsi untuk mendapatkan data pensiun tanpa refresh
         getPensiunDataAndCountSegera();
       }
     } else {
-      router.push('/login');  // Jika belum login, arahkan ke halaman login
+      router.push("/login"); // Jika belum login, arahkan ke halaman login
     }
   };
 
@@ -323,7 +323,12 @@ export default function IconGrid() {
   const renderCheckmark = (value) => {
     if (value === "Ya") {
       return <span className="text-green-500">✔</span>;
-    } else if (value === "" || value === null || value === undefined || value === "TIDAK") {
+    } else if (
+      value === "" ||
+      value === null ||
+      value === undefined ||
+      value === "TIDAK"
+    ) {
       return <span className="text-red-500">✘</span>;
     }
     return null;
@@ -606,31 +611,6 @@ export default function IconGrid() {
                     {item.label}
                   </span>
                 </div>
-
-                {dropdownOpen === index && item.label === "Verifikasi" && (
-                  <div
-                    ref={dropdownRef}
-                    className="absolute -left-14 sm:left-3 flex space-x-1 p-2 bg-transparent border-gray-300 rounded shadow-lg z-10 "
-                  >
-                    <button
-                      onClick={() =>
-                        handleDropdownClick("/verifikasi-anggota-mutasi")
-                      }
-                      className={`text-white bg-blue-600 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800`}
-                    >
-                      Verifikasi Anggota
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        handleDropdownClick("/verifikasi-anggota-pindah-cabang")
-                      }
-                      className={`text-white bg-blue-600 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800`}
-                    >
-                      Verifikasi Pindah Cabang
-                    </button>
-                  </div>
-                )}
               </div>
             ))}
           </div>

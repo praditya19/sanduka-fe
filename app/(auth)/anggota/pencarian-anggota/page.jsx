@@ -177,6 +177,7 @@ function PencarianAnggota() {
     cabang = "", 
     unitKerja = ""
   ) => {
+    setLoading(true);
     try {
       const fotoBase64Array = [];
       const fetchedData = await GlobalApi.getAllAnggota(page, cabang, unitKerja);
@@ -209,10 +210,6 @@ function PencarianAnggota() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchAnggota();
-  }, []);
 
   const fetchData = async () => {
     try {
@@ -554,9 +551,11 @@ function PencarianAnggota() {
       </div>
     );
   };
-
+useEffect(() => {
+    fetchAnggota();
+  }, []);
   if (loading) {
-    return <div className="text-center">Loading...</div>;  // Menampilkan loading saat data diambil
+    return <div>Loading...</div>;
   }
 
   return (
@@ -722,9 +721,9 @@ function PencarianAnggota() {
                   </div>
                 </div>
               </div>
-              <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
+              {/* <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
                 Pencarian Anggota
-              </p>
+              </p> */}
             </div>
 
             <div className="overflow-x-auto">
