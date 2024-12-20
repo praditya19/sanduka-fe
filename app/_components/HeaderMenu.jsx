@@ -11,6 +11,7 @@ import {
   faEnvelope,
 } from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "../_utils/GlobalApi";
+import { useMute } from "../MuteContext";
 
 const HeaderHome = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -25,36 +26,41 @@ const HeaderHome = () => {
   const profileMenuRef = useRef(null);
   const [profileImageUrl, setProfileImageUrl] = useState("/profile.png");
   const [statusSegeraCount, setStatusSegeraCount] = useState(0);
+  const { isMuted } = useMute();
 
   useEffect(() => {
     const fetchPensiunData = async () => {
       setLoader(true);
       try {
         const pensiunResponse = await GlobalApi.getAllPensiun();
-  
-        if (!pensiunResponse || !pensiunResponse.data || !pensiunResponse.data.content) {
+
+        if (
+          !pensiunResponse ||
+          !pensiunResponse.data ||
+          !pensiunResponse.data.content
+        ) {
           throw new Error("Response dari API tidak valid");
         }
-  
+
         const allPensiunList = pensiunResponse.data.content;
-  
+
         const segeraItems = allPensiunList.filter(
           (item) => item.keterangan === null && item.status === "Segera"
         );
         const countSegera = segeraItems.length;
-  
+
         sessionStorage.setItem("statusSegera", countSegera.toString());
-  
+
         setStatusSegeraCount(countSegera);
         setPensiunList(allPensiunList);
-  
+
         const finalFilteredPensiunList = allPensiunList.filter((item) => {
           if (item.keterangan === null) {
             return item.status === "Segera";
           }
           return item.keterangan !== "Pensiun";
         });
-  
+
         setFilteredPensiunList(finalFilteredPensiunList);
       } catch (error) {
         console.error("Terjadi kesalahan saat mengambil data pensiun:", error);
@@ -62,7 +68,7 @@ const HeaderHome = () => {
         setLoader(false);
       }
     };
-  
+
     if (isLoggedIn) {
       const statusSegera = sessionStorage.getItem("statusSegera");
       if (statusSegera) {
@@ -72,7 +78,7 @@ const HeaderHome = () => {
         fetchPensiunData();
       }
     }
-  }, [isLoggedIn]);  
+  }, [isLoggedIn]);
 
   const getAnggotaById = async () => {
     try {
@@ -144,6 +150,10 @@ const HeaderHome = () => {
   useEffect(() => {
     getAnggotaById();
 
+    if (isMuted) {
+      // Jangan mainkan suara jika mute aktif
+      return;
+    }
     const storedStatusSegeraCount = sessionStorage.getItem("statusSegera");
     if (storedStatusSegeraCount) {
       setEmailCount(parseInt(storedStatusSegeraCount));
@@ -168,6 +178,7 @@ const HeaderHome = () => {
     notificationCount,
     previousNotificationCount,
     isNotificationSoundPlaying,
+    isMuted,
   ]);
 
   useEffect(() => {
@@ -268,6 +279,9 @@ const HeaderHome = () => {
                       className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       Logout
+                    </button>
+                    <button className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full">
+                      {isMuted ? "Unmute" : "Mute"} Notifications
                     </button>
                   </div>
                 )}
