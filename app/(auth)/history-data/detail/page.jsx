@@ -20,7 +20,7 @@ const Page = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const npa = sessionStorage.getItem("npa");
+  const npa = sessionStorage.getItem("npaDetailHistory");
   const [expandedIndex, setExpandedIndex] = useState(null);
 
   useEffect(() => {

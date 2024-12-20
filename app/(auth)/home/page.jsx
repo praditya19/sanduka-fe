@@ -311,7 +311,6 @@ export default function IconGrid() {
 
       try {
         const response = await GlobalApi.getUserById(userId);
-        console.log("Data user diterima:", response);
         setUserData(response);
       } catch (error) {
         console.error("Error saat mendapatkan data user:", error);

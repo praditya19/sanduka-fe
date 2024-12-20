@@ -11,10 +11,6 @@ import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import {
-  faCheckCircle,
-  faTimesCircle,
-} from "@fortawesome/free-solid-svg-icons";
 
 const TemanUnitKerja = () => {
   const [cardsData, setCardsData] = useState([]);
@@ -23,6 +19,7 @@ const TemanUnitKerja = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [unitKerja, setUnitKerja] = useState("");
+  const [fotoBase64, setFotoBase64] = useState("");
 
   useEffect(() => {
     const storedUnitKerja = sessionStorage.getItem("unitKerja");
@@ -40,8 +37,22 @@ const TemanUnitKerja = () => {
         currentPage - 1,
         itemsPerPage
       );
-      console.log("Fetched Data:", result.content);
+
       setCardsData(result.content);
+
+      const fotoBase64Array = result.content.map((item) => {
+        if (item.foto) {
+          try {
+            return atob(item.foto);
+          } catch (error) {
+            console.error("Error decoding Base64 for item:", item, error);
+            return null;
+          }
+        }
+        return null;
+      });
+
+      setFotoBase64(fotoBase64Array);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -126,20 +137,10 @@ const TemanUnitKerja = () => {
           <div className="min-h-screen flex flex-col items-center justify-start bg-gray-300 pt-4 px-4">
             <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
               {currentItems.map((data, index) => {
-                const base64Image = data.foto
-                  ? `data:image/jpeg;base64,${data.foto}`
+                const fotoFromState = fotoBase64[index];
+                const base64Image = fotoFromState
+                  ? `data:image/jpeg;base64,${fotoFromState}`
                   : profileImageUrl;
-                const imageAlt = data.foto
-                  ? "Anggota Foto"
-                  : `Fallback Image: ${profileImageUrl}`;
-
-                const renderResponseIcon = (response) => {
-                  if (response === "Ya") {
-                    return <span className="text-green-500">✔</span>;
-                  } else {
-                    return <span className="text-red-500">✘</span>;
-                  }
-                };
 
                 return (
                   <div
@@ -159,7 +160,11 @@ const TemanUnitKerja = () => {
                           src={base64Image}
                           width={80}
                           height={80}
-                          alt={imageAlt}
+                          alt={
+                            fotoFromState
+                              ? "Anggota Foto"
+                              : `Fallback Image: ${profileImageUrl}`
+                          }
                           className="rounded-full border-2 border-gray-200 max-w-[80px] max-h-[80px]"
                         />
                       </div>
@@ -196,19 +201,19 @@ const TemanUnitKerja = () => {
                         <div className="flex items-center">
                           <span className="font-semibold">Daspen:</span>
                           <span className="ml-2">
-                            {renderResponseIcon(data.pesertaDaspen)}
+                            {data.pesertaDaspen ? "✔" : "✘"}
                           </span>
                         </div>
                         <div className="flex items-center">
                           <span className="font-semibold">KTA Digital:</span>
                           <span className="ml-2">
-                            {renderResponseIcon(data.pesertaKtaDigital)}
+                            {data.pesertaKtaDigital ? "✔" : "✘"}
                           </span>
                         </div>
                         <div className="flex items-center">
                           <span className="font-semibold">Sanduka:</span>
                           <span className="ml-2">
-                            {renderResponseIcon(data.pesertaSanduka)}
+                            {data.pesertaSanduka ? "✔" : "✘"}
                           </span>
                         </div>
                       </div>

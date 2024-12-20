@@ -87,7 +87,7 @@ const Page = () => {
   const [mengajar, setMengajar] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [valueJabatan, setValueJabatan] = useState("");
-  const [foto, setFoto] = useState("");
+  const [fotoBase64, setFotoBase64] = useState("");
   const [preview, setPreview] = useState(null);
 
   const [error, setError] = useState("");
@@ -577,8 +577,7 @@ const Page = () => {
 
     try {
       const response = await GlobalApi.getUserById(id);
-// 35
-      console.log("data", response);
+      // 35
       if (response) {
         setNamaLengkap(response.namaLengkap || "");
         setPassword(response.password || "");
@@ -634,6 +633,20 @@ const Page = () => {
         setPesertaDaspen(response.pesertaDaspen === "Ya");
         setPesertaKtaDigital(response.pesertaKtaDigital === "Ya");
       }
+
+      const fotoBase64Array = [];
+      if (response.foto) {
+        try {
+          const decodedString = atob(response.foto);
+          fotoBase64Array.push(decodedString);
+        } catch (error) {
+          console.error("Error decoding Base64:", error);
+          fotoBase64Array.push(null);
+        }
+      } else {
+        fotoBase64Array.push(null);
+      }
+      setFotoBase64(fotoBase64Array);
     } catch (error) {
       console.error("Error Saat Mendapatkan Data:", error);
     }
@@ -1076,7 +1089,7 @@ const Page = () => {
                     width={150}
                     height={150}
                     className="border border-gray-300"
-                    src={preview || "https://via.placeholder.com/100"}
+                    src={preview || `data:image/jpeg;base64,${fotoBase64}`}
                     alt="Photo Preview"
                   />
                   <Input

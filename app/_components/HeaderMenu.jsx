@@ -27,89 +27,78 @@ const HeaderHome = () => {
   const [statusSegeraCount, setStatusSegeraCount] = useState(0);
 
   const getPensiunDataAndCountSegera = async () => {
-      setLoader(true);
-    
-      try {
-        // Ambil data pensiun dari API
-        const pensiunResponse = await GlobalApi.getAllPensiun();
-    
-        if (pensiunResponse && pensiunResponse.data.content) {
-          const allPensiunList = pensiunResponse.data.content;
-    
-          // Filter data: Hitung jumlah "Segera" jika keterangan null
-          const segeraItems = allPensiunList.filter(
-            (item) => item.keterangan === null && item.status === "Segera"
-          );
-    
-          const countSegera = segeraItems.length;
-    
-          // Simpan jumlah "Segera" ke sessionStorage
-          sessionStorage.setItem("statusSegera", countSegera.toString());
-    
-          // Set jumlah "Segera" ke state
-          setStatusSegeraCount(countSegera);
-    
-          // Simpan data utama ke state (tetap utuh)
-          setPensiunList(allPensiunList);
-    
-          // Filter final (keterangan dan status)
-          const finalFilteredPensiunList = allPensiunList.filter((item) => {
-            // Jika keterangan null, tampilkan data dengan status "Segera"
-            if (item.keterangan === null) {
-              return item.status === "Segera";
-            }
-    
-            // Jika keterangan bukan null, tampilkan semua kecuali "Pensiun"
-            return item.keterangan !== "Pensiun";
-          });
-    
-          // Set hasil filter ke state
-          setFilteredPensiunList(finalFilteredPensiunList);
-        }
-      } catch (error) {
-        console.error("Terjadi kesalahan saat mengambil data pensiun:", error);
-      } finally {
-        setLoader(false);
-      }
-    };
-    
-    useEffect(() => {
-      // Cek status login saat komponen pertama kali dimuat
-      checkLoginStatus();
-    }, []);
-    
-    useEffect(() => {
-      // Jika sudah login, jalankan fungsi untuk mengambil data pensiun
-      if (isLoggedIn) {
-        // Mengecek jika statusSegera sudah ada di sessionStorage
-        const statusSegera = sessionStorage.getItem('statusSegera');
-        if (statusSegera) {
-          // Jika sudah ada, tidak perlu refresh
-          setStatusSegeraCount(parseInt(statusSegera)); // Set statusSegeraCount langsung dari sessionStorage
-        } else {
-          // Jika tidak ada, jalankan fungsi untuk mendapatkan data pensiun tanpa refresh
-          getPensiunDataAndCountSegera();
-        }
-      }
-    }, [isLoggedIn]);
-    
-    const checkLoginStatus = () => {
-      const userToken = sessionStorage.getItem('authToken');
-    
-      if (userToken) {
-        setIsLoggedIn(true); // Set isLoggedIn true jika token ada
-    
-        // Jika statusSegera ada, ambil data pensiun langsung tanpa perlu refresh halaman
-        const statusSegera = sessionStorage.getItem('statusSegera');
-        if (!statusSegera) {
-          // Jika statusSegera belum ada, jalankan fungsi untuk mendapatkan data pensiun tanpa refresh
-          getPensiunDataAndCountSegera();
-        }
-      } else {
-        router.push('/login');  // Jika belum login, arahkan ke halaman login
-      }
-    };
+    setLoader(true);
   
+    try {
+      const pensiunResponse = await GlobalApi.getAllPensiun();
+  
+      if (!pensiunResponse || !pensiunResponse.data || !pensiunResponse.data.content) {
+        throw new Error("Response dari API tidak valid");
+      }
+  
+      const allPensiunList = pensiunResponse.data.content;
+  
+      // Filter untuk menghitung jumlah "Segera" jika keterangan null
+      const segeraItems = allPensiunList.filter(
+        (item) => item.keterangan === null && item.status === "Segera"
+      );
+  
+      const countSegera = segeraItems.length;
+  
+      try {
+        sessionStorage.setItem("statusSegera", countSegera.toString());
+      } catch (error) {
+        console.error("Tidak dapat menyimpan ke sessionStorage:", error);
+      }
+  
+      setStatusSegeraCount(countSegera);
+      setPensiunList(allPensiunList);
+  
+      // Filter untuk tampilan akhir
+      const finalFilteredPensiunList = allPensiunList.filter((item) => {
+        if (item.keterangan === null) {
+          return item.status === "Segera";
+        }
+        return item.keterangan !== "Pensiun";
+      });
+  
+      setFilteredPensiunList(finalFilteredPensiunList);
+    } catch (error) {
+      console.error("Terjadi kesalahan saat mengambil data pensiun:", error);
+    } finally {
+      setLoader(false);
+    }
+  };
+  
+  useEffect(() => {
+    checkLoginStatus();
+  }, []);
+  
+  useEffect(() => {
+    if (isLoggedIn) {
+      const statusSegera = sessionStorage.getItem("statusSegera") || "0";
+      if (statusSegera) {
+        setStatusSegeraCount(parseInt(statusSegera, 10));
+      } else {
+        getPensiunDataAndCountSegera();
+      }
+    }
+  }, [isLoggedIn]);
+  
+  const checkLoginStatus = () => {
+    const userToken = sessionStorage.getItem("authToken");
+  
+    if (userToken) {
+      setIsLoggedIn(true);
+  
+      const statusSegera = sessionStorage.getItem("statusSegera");
+      if (!statusSegera) {
+        getPensiunDataAndCountSegera();
+      }
+    } else {
+      router.push("/login");
+    }
+  };
   const getAnggotaById = async () => {
     try {
       const userId = sessionStorage.getItem("userId");
