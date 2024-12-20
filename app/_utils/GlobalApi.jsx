@@ -150,7 +150,15 @@ const getAllAnggota = async (page = 0, cabang = null, unitKerja = null) => {
 
   return fetchAllPages();
 };
-
+const getAdminById = async (adminId) => {
+  try {
+    const response = await axiosClient.get(`/api/register-admin/${adminId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error get admin:", error);
+    throw error;
+  }
+};
 const getUserById = async (userId) => {
   try {
     const response = await axiosClient.get(`/api/auth/user/${userId}`);
@@ -724,6 +732,28 @@ const editPemasukanUangMasuk = async (noBukti) => {
     throw error;
   }
 };
+const getDefaultIuranById = async (id) => {
+  try {
+    const response = await axiosClient.get(`/api/defaultIuran/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching default iuaran", error);
+    throw error;
+  }
+};
+const updateIuranData = async (id, payload) => {
+  try {
+    const response = await axiosClient.put(`/api/defaultIuran/${id}`, payload, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating data:", error);
+    throw error;
+  }
+};
 // end
 // START IURAN PGRI
 const getTotalAnggota = async () => {
@@ -743,16 +773,6 @@ const getIuranByFilter = async (iuran) => {
     return response.data;
   } catch (error) {
     console.error("Error fetching iuran by filter:", error);
-    throw error;
-  }
-};
-
-const createIuranData = async (payload) => {
-  try {
-    const response = await axiosClient.post("/api/iuran", payload);
-    return response.data;
-  } catch (error) {
-    console.error("Error creating iuran data:", error);
     throw error;
   }
 };
@@ -1285,7 +1305,6 @@ export default {
   getSaldoOrganisasi,
   getRekapAnggotaByCabang,
   getHistoryByNpa,
-  createIuranData,
   createDaspenData,
   getAllPensiun,
   getIuranByFilter,

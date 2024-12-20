@@ -57,7 +57,7 @@ export default function IconGrid() {
     {
       icon: faCheckCircle,
       label: "Verifikasi",
-      href: "#",
+      href: "/verifikasi-anggota-mutasi",
       color: "text-blue-500",
     },
     {
@@ -153,39 +153,44 @@ export default function IconGrid() {
     setLoader(true);
 
     try {
-      // Ambil data pensiun
+      // Ambil data pensiun dari API
       const pensiunResponse = await GlobalApi.getAllPensiun();
 
       if (pensiunResponse && pensiunResponse.data.content) {
-        const filteredPensiunList = pensiunResponse.data.content;
+        const allPensiunList = pensiunResponse.data.content;
 
-        // Filter untuk status "Segera"
-        const segeraItems = filteredPensiunList.filter(
-          (item) => item.status === "Segera"
+        // Filter data: Hitung jumlah "Segera" jika keterangan null
+        const segeraItems = allPensiunList.filter(
+          (item) => item.keterangan === null && item.status === "Segera"
         );
 
-        // Hitung jumlah "Segera"
         const countSegera = segeraItems.length;
 
         // Simpan jumlah "Segera" ke sessionStorage
-        sessionStorage.setItem("statusSegera", countSegera);
+        sessionStorage.setItem("statusSegera", countSegera.toString());
 
-        // Set statusSegeraCount di state
+        // Set jumlah "Segera" ke state
         setStatusSegeraCount(countSegera);
 
-        // Jika statusSegera belum ada di sessionStorage, set dan refresh halaman
-        if (countSegera > 0 && !sessionStorage.getItem("statusSegera")) {
-          sessionStorage.setItem("statusSegera", countSegera.toString());
+        // Simpan data utama ke state (tetap utuh)
+        setPensiunList(allPensiunList);
 
-          // Tambahkan delay 3 detik sebelum melakukan refresh
-          setTimeout(() => {
-            window.location.reload(); // Refresh hanya setelah 3 detik
-          }, 3000); // 3000 milidetik = 3 detik
-        }
+        // Filter final (keterangan dan status)
+        const finalFilteredPensiunList = allPensiunList.filter((item) => {
+          // Jika keterangan null, tampilkan data dengan status "Segera"
+          if (item.keterangan === null) {
+            return item.status === "Segera";
+          }
+
+          // Jika keterangan bukan null, tampilkan semua kecuali "Pensiun"
+          return item.keterangan !== "Pensiun";
+        });
+
+        // Set hasil filter ke state
+        setFilteredPensiunList(finalFilteredPensiunList);
       }
     } catch (error) {
       console.error("Terjadi kesalahan saat mengambil data pensiun:", error);
-      toast.error("Gagal mengambil data pensiun");
     } finally {
       setLoader(false);
     }
@@ -205,7 +210,7 @@ export default function IconGrid() {
         // Jika sudah ada, tidak perlu refresh
         setStatusSegeraCount(parseInt(statusSegera)); // Set statusSegeraCount langsung dari sessionStorage
       } else {
-        // Jika tidak ada, jalankan fungsi untuk mendapatkan data pensiun
+        // Jika tidak ada, jalankan fungsi untuk mendapatkan data pensiun tanpa refresh
         getPensiunDataAndCountSegera();
       }
     }
@@ -213,20 +218,14 @@ export default function IconGrid() {
 
   const checkLoginStatus = () => {
     const userToken = sessionStorage.getItem("authToken");
-    const hasRefreshed = sessionStorage.getItem("hasRefreshed"); // Cek apakah halaman sudah di-refresh
 
     if (userToken) {
       setIsLoggedIn(true); // Set isLoggedIn true jika token ada
 
-      // Hanya refresh jika statusSegera belum ada di sessionStorage
+      // Jika statusSegera ada, ambil data pensiun langsung tanpa perlu refresh halaman
       const statusSegera = sessionStorage.getItem("statusSegera");
       if (!statusSegera) {
-        // Jika statusSegera belum ada, refresh halaman setelah 3 detik
-        setTimeout(() => {
-          window.location.reload();
-        }, 3000); // 3 detik
-      } else {
-        // Jika statusSegera ada, ambil data pensiun langsung
+        // Jika statusSegera belum ada, jalankan fungsi untuk mendapatkan data pensiun tanpa refresh
         getPensiunDataAndCountSegera();
       }
     } else {
@@ -611,31 +610,6 @@ export default function IconGrid() {
                     {item.label}
                   </span>
                 </div>
-
-                {dropdownOpen === index && item.label === "Verifikasi" && (
-                  <div
-                    ref={dropdownRef}
-                    className="absolute -left-14 sm:left-3 flex space-x-1 p-2 bg-transparent border-gray-300 rounded shadow-lg z-10 "
-                  >
-                    <button
-                      onClick={() =>
-                        handleDropdownClick("/verifikasi-anggota-mutasi")
-                      }
-                      className={`text-white bg-blue-600 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800`}
-                    >
-                      Verifikasi Anggota
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        handleDropdownClick("/verifikasi-anggota-pindah-cabang")
-                      }
-                      className={`text-white bg-blue-600 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800`}
-                    >
-                      Verifikasi Pindah Cabang
-                    </button>
-                  </div>
-                )}
               </div>
             ))}
           </div>

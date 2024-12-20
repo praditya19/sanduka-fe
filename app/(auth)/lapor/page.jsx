@@ -93,10 +93,22 @@ const FormStep1 = ({
   useEffect(() => {
     const fetchPelaporData = async () => {
       const userId = sessionStorage.getItem("userId");
-      if (!userId) return;
+      const role = sessionStorage.getItem("role");
+
+      if (!userId || !role) return;
 
       try {
-        const response = await GlobalApi.getUserById(userId);
+        let response;
+
+        if (role === "SUPER ADMIN" || role === "ADMIN") {
+          response = await GlobalApi.getAdminById(userId);
+        } else if (role === "USER") {
+          response = await GlobalApi.getUserById(userId);
+        } else {
+          console.warn("Role not recognized:", role);
+          return;
+        }
+
         setSilaporData(response);
       } catch (error) {
         console.error("Error fetching pelapor data:", error);
@@ -149,7 +161,8 @@ const FormStep1 = ({
   }, [selectedCabang, unitKerjaOptions]);
 
   const handleCabangSelect = (cabang) => {
-    setQueryCabang("");
+    console.log("Cabang selected:", cabang);
+    setQueryCabang(cabang.kecamatan);
     setSelectedCabang(cabang.kecamatan);
     setShowDropdownCabang(false);
 
@@ -432,7 +445,18 @@ const FormStep1 = ({
                       id="name"
                       placeholder="Nama"
                       className="text-sm cursor-not-allowed"
-                      value={silaporData?.namaLengkap}
+                      value={(() => {
+                        const role = sessionStorage.getItem("role");
+                        let name = "";
+                        if (role === "ADMIN" || role === "SUPER ADMIN") {
+                          name = silaporData?.nama || "";
+                        } else if (role === "USER") {
+                          name = silaporData?.namaLengkap || "";
+                        }
+
+                        return name;
+                      })()}
+                      readOnly
                     />
                   </div>
                   <div className="w-full flex flex-col items-start mt-2">
@@ -441,7 +465,14 @@ const FormStep1 = ({
                       id="branch"
                       placeholder="Cabang / Khusus"
                       className="text-sm cursor-not-allowed"
-                      value={silaporData?.cabang}
+                      value={(() => {
+                        const role = sessionStorage.getItem("role");
+                        if (role === "SUPER ADMIN") {
+                          return "-";
+                        }
+                        return silaporData?.cabang || "";
+                      })()}
+                      readOnly
                     />
                   </div>
                   <div className="w-full flex flex-col items-start mt-2">
@@ -455,11 +486,20 @@ const FormStep1 = ({
                   </div>
                   <div className="w-full flex flex-col items-start mt-2">
                     <Input
-                      type="number"
+                      type="text"
                       id="phone"
                       placeholder="Nomor Whatsapp"
                       className="text-sm cursor-not-allowed"
-                      value={formatPhoneNumber(silaporData?.nomorHp)}
+                      value={(() => {
+                        const role = sessionStorage.getItem("role");
+                        let phoneNumber = "";
+                        if (role === "ADMIN" || role === "SUPER ADMIN") {
+                          phoneNumber = silaporData?.nohp || "";
+                        } else if (role === "USER") {
+                          phoneNumber = silaporData?.nomorHp || "";
+                        }
+                        return formatPhoneNumber(phoneNumber);
+                      })()}
                     />
                   </div>
                 </div>
@@ -480,7 +520,11 @@ const FormStep1 = ({
                         type="text"
                         className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
                         placeholder="Pilih Cabang"
-                        value={queryCabang || selectedCabang}
+                        value={
+                          sessionStorage.getItem("role") === "SUPER ADMIN"
+                            ? queryCabang
+                            : selectedCabang
+                        } // SUPER ADMIN hanya bisa mengatur cabang manual
                         disabled={
                           sessionStorage.getItem("role") !== "SUPER ADMIN"
                         }
@@ -719,7 +763,7 @@ const Resume = ({
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [pelaporData, setPelaporData] = useState(null);
-  const profileImageUrl = "/profile.png";
+  const [profileImageUrl, setProfileImageUrl] = useState("/profile.png");
 
   const getAnggotaById = async () => {
     try {
@@ -1086,7 +1130,7 @@ const Page = () => {
           style: {
             marginTop: "16%",
             fontSize: "1.75rem",
-            padding: "16px", 
+            padding: "16px",
             width: "80%",
             maxWidth: "500px",
             height: "auto",
@@ -1099,7 +1143,8 @@ const Page = () => {
             boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
           },
         }
-      );      
+      );
+      Pelapor;
 
       setTimeout(() => {
         window.location.href = "/home";

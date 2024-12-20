@@ -18,7 +18,7 @@ export default function DataUtama() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
 
-  const [data, setData] = useState([]); 
+  const [data, setData] = useState([]);
 
   const handleBackClick = () => {
     router.back();
@@ -47,40 +47,37 @@ export default function DataUtama() {
     };
   }, []);
 
-   
   useEffect(() => {
     const fetchData = async () => {
       let response;
-      
+
       if (activeTab === "iuran-pgri") {
-        // Mengambil data untuk semua tab (daspen, derap, kalender)
-        const pgriResponse = await GlobalApi.getIuranByFilter("Iuran PGRI");
-        const daspenResponse = await GlobalApi.getIuranByFilter("Daspen");
-        const derapResponse = await GlobalApi.getIuranByFilter("Derap");
-        const kalenderResponse = await GlobalApi.getIuranByFilter("Kalender");
-  
-        // Menyimpan semua data di sessionStorage
+        const pgriResponse = await GlobalApi.getDefaultIuranById(2);
+        const daspenResponse = await GlobalApi.getDefaultIuranById(4);
+        const derapResponse = await GlobalApi.getDefaultIuranById(3);
+        const kalenderResponse = await GlobalApi.getDefaultIuranById(1);
+
         sessionStorage.setItem("PGRIData", JSON.stringify(pgriResponse));
         sessionStorage.setItem("daspenData", JSON.stringify(daspenResponse));
         sessionStorage.setItem("derapData", JSON.stringify(derapResponse));
-        sessionStorage.setItem("kalenderData", JSON.stringify(kalenderResponse));
-  
-        // Menggabungkan semua data ke dalam satu objek atau array
+        sessionStorage.setItem(
+          "kalenderData",
+          JSON.stringify(kalenderResponse)
+        );
+
         response = {
           pgri: pgriResponse,
           daspen: daspenResponse,
           derap: derapResponse,
-          kalender: kalenderResponse
+          kalender: kalenderResponse,
         };
       } else if (activeTab === "iuran-pgri") {
-        
         sessionStorage.setItem("PGRIData", JSON.stringify(response));
       }
-      
+
       setData(response);
     };
-  
-    // Mengecek apakah data sudah ada di sessionStorage untuk tab yang aktif
+
     const storedData = sessionStorage.getItem(`${activeTab}Data`);
     if (storedData) {
       const parsedData = JSON.parse(storedData);
@@ -89,7 +86,6 @@ export default function DataUtama() {
       fetchData();
     }
   }, [activeTab]);
-  
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 ">
@@ -120,18 +116,30 @@ export default function DataUtama() {
           }`}
         >
           <div className="min-h-screen bg-gray-50 py-3   ">
-          <nav className="container mt-12">
+            <nav className="container mt-12">
               <ul className="flex flex-wrap space-x-4 md:space-x-6">
-                <NavItem isActive={activeTab === "iuran-pgri"} onClick={() => handleTabChange("iuran-pgri")}>
+                <NavItem
+                  isActive={activeTab === "iuran-pgri"}
+                  onClick={() => handleTabChange("iuran-pgri")}
+                >
                   Iuran PGRI
                 </NavItem>
-                <NavItem isActive={activeTab === "daspen"} onClick={() => handleTabChange("daspen")}>
+                <NavItem
+                  isActive={activeTab === "daspen"}
+                  onClick={() => handleTabChange("daspen")}
+                >
                   Daspen
                 </NavItem>
-                <NavItem isActive={activeTab === "derap"} onClick={() => handleTabChange("derap")}>
+                <NavItem
+                  isActive={activeTab === "derap"}
+                  onClick={() => handleTabChange("derap")}
+                >
                   Derap
                 </NavItem>
-                <NavItem isActive={activeTab === "kalender"} onClick={() => handleTabChange("kalender")}>
+                <NavItem
+                  isActive={activeTab === "kalender"}
+                  onClick={() => handleTabChange("kalender")}
+                >
                   Kalender
                 </NavItem>
               </ul>

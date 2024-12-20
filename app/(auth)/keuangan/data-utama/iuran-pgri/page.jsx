@@ -163,82 +163,30 @@ export default function Iuran() {
 
   useEffect(() => {
     const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1; 
-    const currentYear = currentDate.getFullYear(); 
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
 
-    setBulan(currentMonth); 
-    setTahun(currentYear);  
+    setBulan(currentMonth);
+    setTahun(currentYear);
   }, []);
 
-   const handleSubmit = async (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-  
+
     const payload = {
-      pb: iuranPB,
-      propinsi: iuranProvinsi,
-      kabupaten: iuranKabupaten,
-      cabang: iuranCabang,
-      sanduka: sumbanganSanduka,
-      bulan: bulan, 
-      tahun: tahun, 
+      pb: iuranPB || "",
+      propinsi: iuranProvinsi || "",
+      kabupaten: iuranKabupaten || "",
+      cabang: iuranCabang || "",
+      sanduka: sumbanganSanduka || "",
+      iuran: "IURAN PGRI",
     };
-  
+
     try {
-      
-      const createResult = await GlobalApi.createIuranData(payload);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Data berhasil disimpan!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          autoClose: 4000,
-          duration: 4000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );  
-      
-      const id = createResult?.id || 1; 
-      const updateResult = await GlobalApi.updateIuranById(id, payload);
+      const id = 2; // Default ID untuk pembaruan
+      const updateResult = await GlobalApi.updateIuranData(id, payload); // Kirim payload ke API dengan ID default
+      console.log("Iuran updated:", updateResult);
+
       toast.success(
         <div
           style={{
@@ -289,16 +237,13 @@ export default function Iuran() {
           },
         }
       );
-  
-      
+
       handleReset();
-  
-      
-      setTimeout(() => {
-        window.location.reload(); 
-      }, 2000);
     } catch (error) {
-      console.error("Error saat menyimpan atau memperbarui data iuran:", error.message);
+      console.error(
+        "Error saat menyimpan atau memperbarui data iuran:",
+        error.message
+      );
       toast.error(
         <div
           style={{
@@ -352,8 +297,9 @@ export default function Iuran() {
             boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
           },
         }
-      );    }
-  };     
+      );
+    }
+  };
 
   const handleSubmitTarget = async (event) => {
     event.preventDefault();
@@ -393,7 +339,7 @@ export default function Iuran() {
           <strong
             style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
           >
-           Data berhasil disimpan!
+            Data berhasil disimpan!
           </strong>
         </div>,
         {
@@ -479,7 +425,8 @@ export default function Iuran() {
             boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
           },
         }
-      );    }
+      );
+    }
   };
 
   useEffect(() => {
@@ -492,7 +439,9 @@ export default function Iuran() {
     const storedData = sessionStorage.getItem("PGRIData");
     if (storedData) {
       const data = JSON.parse(storedData);
-      const firstItem = data[0];
+
+      // Karena data adalah objek, langsung gunakan
+      const firstItem = data;
 
       if (firstItem) {
         setIuranPB(Number(firstItem.pb));
@@ -518,7 +467,7 @@ export default function Iuran() {
   };
 
   const getVisiblePages = () => {
-    const range = 2; 
+    const range = 2;
     let start = Math.max(1, currentPage - range);
     let end = Math.min(totalPages, currentPage + range);
 
@@ -591,11 +540,11 @@ export default function Iuran() {
   };
 
   const handleReset = () => {
-    const storedData = sessionStorage.getItem("iuranPGRIData");
+    const storedData = sessionStorage.getItem("PGRIData");
 
     if (storedData) {
       const data = JSON.parse(storedData);
-      const firstItem = data[0];
+      const firstItem = data;
 
       if (firstItem) {
         setIuranPB(parseInt(firstItem.pb) || 0);
@@ -711,8 +660,9 @@ export default function Iuran() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <Toaster
             toastOptions={{
@@ -1225,7 +1175,9 @@ export default function Iuran() {
                       First
                     </button>
                     <button
-                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      }
                       disabled={currentPage === 1}
                       className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                     >
@@ -1236,17 +1188,20 @@ export default function Iuran() {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                        className={`px-3 py-1 border rounded text-sm ${
+                          page === currentPage
                             ? "bg-blue-500 text-white"
                             : "bg-white hover:bg-gray-50"
-                          }`}
+                        }`}
                       >
                         {page}
                       </button>
                     ))}
 
                     <button
-                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                      }
                       disabled={currentPage === totalPages}
                       className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                     >

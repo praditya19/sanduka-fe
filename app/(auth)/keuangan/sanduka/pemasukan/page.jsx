@@ -322,7 +322,7 @@ Data berhasil dikirim!            </strong>
         cabang: formValues.cabang,
         bulan: formValues.setoranBulan,
         debet: formValues.nominal,
-        kredit: formValues.kredit,
+        kredit: "",
         bulanSantunan: formValues.bulanSantunan,
         keterangan: formValues.keterangan,
         jenisPembayaran: "Sanduka",
@@ -444,11 +444,7 @@ Data berhasil disimpan!          </strong>
 
   const handleEditClick = async (noBukti) => {
     try {
-      console.log("No Bukti yang dipilih:", noBukti);
-
       const data = await GlobalApi.editPemasukanUangMasuk(noBukti);
-
-      console.log("Data yang diperoleh:", data);
 
       setFormValues({
         tanggalTransaksi: data.tglTransaksi || "",
@@ -587,6 +583,7 @@ Data berhasil disimpan!          </strong>
                     name="tanggalTransaksi"
                     value={formValues.tanggalTransaksi || ""}
                     onChange={handleChange}
+                    readOnly
                   />
                 </div>
 

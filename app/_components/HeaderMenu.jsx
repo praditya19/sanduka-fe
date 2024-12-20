@@ -13,6 +13,7 @@ import {
 import GlobalApi from "../_utils/GlobalApi";
 
 const HeaderHome = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
@@ -23,7 +24,81 @@ const HeaderHome = () => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
   const [profileImageUrl, setProfileImageUrl] = useState("/profile.png");
+  const [statusSegeraCount, setStatusSegeraCount] = useState(0);
 
+  const getPensiunDataAndCountSegera = async () => {
+    setLoader(true);
+  
+    try {
+      const pensiunResponse = await GlobalApi.getAllPensiun();
+  
+      if (!pensiunResponse || !pensiunResponse.data || !pensiunResponse.data.content) {
+        throw new Error("Response dari API tidak valid");
+      }
+  
+      const allPensiunList = pensiunResponse.data.content;
+  
+      // Filter untuk menghitung jumlah "Segera" jika keterangan null
+      const segeraItems = allPensiunList.filter(
+        (item) => item.keterangan === null && item.status === "Segera"
+      );
+  
+      const countSegera = segeraItems.length;
+  
+      try {
+        sessionStorage.setItem("statusSegera", countSegera.toString());
+      } catch (error) {
+        console.error("Tidak dapat menyimpan ke sessionStorage:", error);
+      }
+  
+      setStatusSegeraCount(countSegera);
+      setPensiunList(allPensiunList);
+  
+      // Filter untuk tampilan akhir
+      const finalFilteredPensiunList = allPensiunList.filter((item) => {
+        if (item.keterangan === null) {
+          return item.status === "Segera";
+        }
+        return item.keterangan !== "Pensiun";
+      });
+  
+      setFilteredPensiunList(finalFilteredPensiunList);
+    } catch (error) {
+      console.error("Terjadi kesalahan saat mengambil data pensiun:", error);
+    } finally {
+      setLoader(false);
+    }
+  };
+  
+  useEffect(() => {
+    checkLoginStatus();
+  }, []);
+  
+  useEffect(() => {
+    if (isLoggedIn) {
+      const statusSegera = sessionStorage.getItem("statusSegera") || "0";
+      if (statusSegera) {
+        setStatusSegeraCount(parseInt(statusSegera, 10));
+      } else {
+        getPensiunDataAndCountSegera();
+      }
+    }
+  }, [isLoggedIn]);
+  
+  const checkLoginStatus = () => {
+    const userToken = sessionStorage.getItem("authToken");
+  
+    if (userToken) {
+      setIsLoggedIn(true);
+  
+      const statusSegera = sessionStorage.getItem("statusSegera");
+      if (!statusSegera) {
+        getPensiunDataAndCountSegera();
+      }
+    } else {
+      router.push("/login");
+    }
+  };
   const getAnggotaById = async () => {
     try {
       const userId = sessionStorage.getItem("userId");

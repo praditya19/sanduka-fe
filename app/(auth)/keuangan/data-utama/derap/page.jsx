@@ -211,7 +211,7 @@ function DerapForm() {
 
     if (storedData) {
       const data = JSON.parse(storedData);
-      const firstItem = data[0];
+      const firstItem = data;
 
       if (firstItem) {
         setProvinsi(firstItem.propinsi);
@@ -244,14 +244,13 @@ function DerapForm() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const payload1 = {
+    const payload = {
       pb: "",
       propinsi: provinsi,
       kabupaten: kabupaten,
-      cabang: selectedCabang,
+      cabang: cabang,
       sanduka: "",
-      bulan: selectedBulan,
-      tahun: selectedYear,
+      iuran: "DERAP",
     };
 
     const payload2 = {
@@ -264,7 +263,8 @@ function DerapForm() {
     };
 
     try {
-      const result1 = await GlobalApi.createDerapData(payload1);
+      const id = 3;
+      const result1 = await GlobalApi.updateIuranData(id, payload);
       const result2 = await GlobalApi.createTargetDerap(payload2);
 
       setFilteredTableData((prevTableData) => [
@@ -465,7 +465,7 @@ function DerapForm() {
   const derapData = JSON.parse(sessionStorage.getItem("derapData"));
 
   const firstItem = derapData
-    ? derapData[0]
+    ? derapData
     : { cabang: 0, kabupaten: 0, propinsi: 0 };
 
   const calculateTotal = (jumlah, cabang, kabupaten, propinsi) => {

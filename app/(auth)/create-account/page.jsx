@@ -187,7 +187,18 @@ const Page = () => {
         const response = await GlobalApi.cekNpa(npaValue);
 
         if (response?.id) {
-          setNpaMessage("NPA Sudah Terdaftar, silakan login di sini");
+          setNpaMessage(
+            <span style={{ color: "green" }}>
+              "NPA Sudah Terdaftar, silakan login di sini{" "}
+              <a
+                href="/sign-in"
+                style={{ textDecoration: "underline", color: "blue" }}
+              >
+                LOGIN
+              </a>
+              "
+            </span>
+          );
         }
       } catch (error) {
         if (error.response?.status === 404) {
@@ -401,40 +412,109 @@ const Page = () => {
 
     return isValid;
   };
+  const formatDateToTanggalBulanTahun = (dateInput) => {
+    if (!dateInput) return null;
 
-  const onSubmit = async (data) => {
+    const bulanList = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
+
+    let dateObj;
+    if (Array.isArray(dateInput)) {
+      // Jika input adalah array [yyyy, MM, dd]
+      const [year, month, day] = dateInput;
+      dateObj = new Date(year, month - 1, day); // Bulan dikurangi 1 karena index bulan dimulai dari 0
+    } else if (typeof dateInput === "string") {
+      // Jika input adalah string (misalnya "2024-12-19")
+      dateObj = new Date(dateInput);
+    } else {
+      return null; // Format tidak valid
+    }
+
+    const day = dateObj.getDate().toString().padStart(2, "0");
+    const month = bulanList[dateObj.getMonth()]; // Nama bulan
+    const year = dateObj.getFullYear();
+
+    return `${day} ${month} ${year}`;
+  };
+
+  const onSubmit = async (response) => {
     const isFormValid = validateForm();
     if (!isFormValid) return;
     setIsSubmitClicked(true);
 
-    const formattedTanggalLahir = new Date(data.tanggalLahir)
-      .toISOString()
-      .split("T")[0];
-    const formattedTahunDiangkat = new Date(data.tahunDiangkat)
-      .toISOString()
-      .split("T")[0];
-    const formattedMulaiJadiAnggota = new Date(data.mulaiJadiAnggotaPgri)
-      .toISOString()
-      .split("T")[0];
-
     const cleanBase64 = base64String.split(",")[1] || base64String;
 
+    const formattedTanggalLahir = response.tanggalLahir
+      ? new Date(response.tanggalLahir).toISOString().split("T")[0] // Format ke yyyy-MM-dd
+      : null;
+    const formattedTahunDiangkat = response.tahunDiangkat
+      ? new Date(response.tahunDiangkat).toISOString().split("T")[0]
+      : null;
+    const formattedMulaiJadiAnggotaPgri = response.mulaiJadiAnggotaPgri
+      ? new Date(response.mulaiJadiAnggotaPgri).toISOString().split("T")[0]
+      : null;
+
+    console.log("Tanggal Lahir:", formattedTanggalLahir);
+    console.log("Tahun Diangkat:", formattedTahunDiangkat);
+    console.log("Mulai Jadi Anggota PGRI:", formattedMulaiJadiAnggotaPgri);
+
     const finalData = {
-      ...data,
+      id: response.id || null,
+      email: response.email || "",
+      password: response.password || "",
+      npaPgri: response.npaPgri || "",
+      nip: response.nip || "",
+      nik: response.nik || "",
+      namaLengkap: response.namaLengkap || "",
+      tempatLahir: response.tempatLahir || "",
       tanggalLahir: formattedTanggalLahir,
-      tahunDiangkat: formattedTahunDiangkat,
-      mulaiJadiAnggotaPgri: formattedMulaiJadiAnggota,
-      namaAnak: namaAnak.filter((name) => name.trim() !== ""),
-      latitude,
-      longitude,
+      namaAnak: response.namaAnak || [],
+      latitude: response.latitude || 0,
+      longitude: response.longitude || 0,
       foto: cleanBase64,
+      agama: response.agama || "",
+      alamat: response.alamat || "",
+      cabang: response.cabang || "",
+      golonganDarah: response.golonganDarah || "",
+      golonganJabatan: response.golonganJabatan || "",
+      isVerified: response.isVerified || false,
+      jabatan: response.jabatan || "",
+      jenisKelamin: response.jenisKelamin || "",
+      kodePos: response.kodePos || "",
+      pangkatGolongan: response.pangkatGolongan || "",
+      pendidikanTerakhir: response.pendidikanTerakhir || "",
+      pesertaKtaDigital: response.pesertaKtaDigital || "",
+      pesertaSanduka: response.pesertaSanduka || "",
+      statusPegawai: response.statusPegawai || "",
+      statusSekolah: response.statusSekolah || "",
+      tingkatSekolah: response.tingkatSekolah || "",
+      unitKerja: response.unitKerja || "",
+      nomorHp: response.nomorHp || "",
+      namaSuamiIstri: response.namaSuamiIstri || "",
+      sertifikatPendidik: response.sertifikatPendidik || "",
+      mengajar: response.mengajar || "",
+      tahunDiangkat: formattedTahunDiangkat,
+      mulaiJadiAnggotaPgri: formattedMulaiJadiAnggotaPgri,
     };
 
     handleCreateHistory();
 
     try {
-      const response = await GlobalApi.registerUser(finalData);
-      console.log("Response dari API:", response);
+      const apiResponse = await GlobalApi.registerUser(finalData);
+      console.log("Response dari API:", apiResponse);
+
       toast.success(
         <div
           style={{
@@ -488,10 +568,18 @@ const Page = () => {
           },
         }
       );
+
+      // Hanya arahkan ke halaman berikutnya jika berhasil
       setTimeout(() => {
         router.push("/tunggu-admin");
       }, 4000);
     } catch (error) {
+      if (error.response?.status === 500) {
+        console.log("Server mengembalikan respon 500. Abaikan error ini.");
+        return;
+      }
+
+      // Untuk error lainnya, tampilkan toast error dan tetap di halaman
       const errorMessage =
         error.response?.data || "Terjadi kesalahan saat registrasi.";
       toast.error(
@@ -507,8 +595,8 @@ const Page = () => {
           <svg
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              width: "48px",
-              height: "48px",
+              width: "150px",
+              height: "150px",
               color: "red",
               marginBottom: "16px",
             }}
@@ -525,13 +613,13 @@ const Page = () => {
               marginBottom: "8px",
             }}
           >
-            Anda Belum Berhasil Mendaftar
+            Anda Belum Berhasil Mendaftar.
           </strong>
           <span style={{ fontSize: "1.75rem" }}>{errorMessage}</span>
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 5000,
           style: {
             marginTop: "16%",
             fontSize: "1.75rem",
@@ -719,11 +807,11 @@ const Page = () => {
   };
 
   return (
-    <div className="w-full mx-auto  py-6 bg-slate-200">
-      <div className="w-full mx-auto">
-        <div className="flex flex-row items-center justify-center space-x-2 sm:space-x-4 mb-2">
+    <div className="w-full mx-auto py-6 bg-slate-200">
+      <div className="w-full mx-auto overflow-x-auto">
+        <div className="flex flex-row items-center justify-start space-x-2 sm:space-x-4 mb-2 whitespace-nowrap">
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm ${
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
               step === 1
                 ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
                 : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
@@ -733,10 +821,10 @@ const Page = () => {
             1. SYARAT & KETENTUAN
           </div>
 
-          <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
+          <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
               step === 2
                 ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
                 : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
@@ -746,10 +834,10 @@ const Page = () => {
             2. DATA PRIBADI
           </div>
 
-          <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
+          <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
               step === 3
                 ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
                 : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
@@ -759,10 +847,10 @@ const Page = () => {
             3. DATA PEKERJAAN
           </div>
 
-          <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
+          <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
               step === 4
                 ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
                 : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
@@ -772,10 +860,10 @@ const Page = () => {
             4. MENUNGGU VERIFIKASI ADMIN
           </div>
 
-          <hr className="border-t-2 border-gray-400 w-24 mx-2 sm:w-24 md:w-32" />
+          <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-xs ${
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
               step === 5
                 ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
                 : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
@@ -860,6 +948,7 @@ const Page = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
                 <div className="w-full">
                   <Label className="block text-sm font-medium mb-3">
+                    <span className="text-red-500 text-xl">* </span>
                     Email
                     <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
                       *Harap Diingat
@@ -1716,7 +1805,7 @@ const Page = () => {
                         className="border border-teal-500"
                         ref={sertifikatPendidikRef}
                       >
-                        <SelectValue placeholder="Sertifikat" />
+                        <SelectValue placeholder="Pilih Sertifikat" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
