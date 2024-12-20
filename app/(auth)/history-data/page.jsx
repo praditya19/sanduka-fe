@@ -149,14 +149,11 @@ const Page = () => {
   };
 
   const filteredData = data.filter((item) => {
-    const matchesSearchTerm =
-      item.npaDetail?.namaLengkap
-        ?.toLowerCase()
-        .includes(filter.toLowerCase()) ||
-      item.cabang?.toLowerCase().includes(filter.toLowerCase());
+    console.log(item);
 
     const matchesCabang = selectedCabang
-      ? item.cabang?.toLowerCase() === selectedCabang.toLowerCase()
+      ? (item.npaDetail.cabang?.toLowerCase() || item.cabang?.toLowerCase()) ===
+        selectedCabang.toLowerCase()
       : true;
 
     const matchesMonth = selectedMonth
@@ -167,7 +164,7 @@ const Page = () => {
       ? new Date(item.tanggal).getFullYear() === parseInt(selectedYear, 10)
       : true;
 
-    return matchesSearchTerm && matchesCabang && matchesMonth && matchesYear;
+    return matchesCabang && matchesMonth && matchesYear;
   });
 
   const handleEdit = (item) => {

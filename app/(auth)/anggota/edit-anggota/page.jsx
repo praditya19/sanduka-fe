@@ -1703,7 +1703,7 @@ const Page = () => {
                       <div className="relative">
                         <Input
                           type="text"
-                          className="border-teal-500 rounded-lg p-2 w-56 bg-white shadow-sm w-full"
+                          className="border-teal-500 rounded-lg p-2 bg-white shadow-sm w-full"
                           placeholder="Pilih Unit Kerja"
                           value={selectedUnitKerja || ""}
                           readOnly
