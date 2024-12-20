@@ -193,14 +193,6 @@ const Page = () => {
     formData.append("kodePos", kodePos);
     formData.append("nomorHp", nomorHp);
     formData.append("namaSuamiIstri", namaSuamiIstri);
-    const normalizedNamaAnak = namaAnak.map((anak) =>
-      typeof anak === "string" && anak.startsWith("[")
-        ? JSON.parse(anak)
-        : anak
-    );
-    
-    formData.append("namaAnak", JSON.stringify(normalizedNamaAnak));
-    
     
     if (selectedFile) {
       formData.append("foto", selectedFile);
@@ -225,16 +217,6 @@ const Page = () => {
     formData.append("pesertaDaspen", pesertaDaspen ? "Ya" : "");
     formData.append("pesertaKtaDigital", pesertaKtaDigital ? "Ya" : "");
   
-    // Convert FormData to plain object for debugging
-    const plainData = {};
-    formData.forEach((value, key) => {
-      plainData[key] = value;
-    });
-  
-    console.log("Data yang akan dikirim ke API (plainData):", plainData);
-    console.log("Data namaAnak yang dikirim:", JSON.stringify(namaAnak));
-    console.log("Nama Anak yang akan dikirim:", JSON.stringify(normalizedNamaAnak));
-
     try {
       const response = await GlobalApi.updateUserById(id, formData);
       console.log("Response dari API:", response);
