@@ -1294,8 +1294,8 @@ const Page = () => {
 
                     <p className="text-red-500">
                       {!latitude &&
-                        !longitude &&
-                        "Silahkan Klik Jika Anda Dirumah"}
+                        !longitude 
+                       }
                     </p>
 
                     {latitude && longitude && (

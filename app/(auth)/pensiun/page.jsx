@@ -95,15 +95,13 @@ const Page = () => {
           // Filter item dengan keterangan null dan status Segera
           const segeraItems = allPensiunList.filter(
             (item) => item.keterangan === null && item.status === "Segera"
-          );          
+          );
   
           // Hitung jumlah "Segera" jika keterangan null
           const countSegera = segeraItems.length;
   
-          // Hanya simpan ke sessionStorage jika countSegera lebih dari 0
-          // if (countSegera > 0) {
-          //   sessionStorage.setItem("statusSegera", countSegera);
-          // }
+          // Perbarui sessionStorage
+          sessionStorage.setItem("statusSegera", countSegera.toString());
   
           // Set jumlah "Segera" di state
           setStatusSegeraCount(countSegera);
@@ -121,6 +119,14 @@ const Page = () => {
       }
     };
   
+    // Cek apakah ada data di sessionStorage saat halaman direfresh
+    const storedStatusSegera = sessionStorage.getItem("statusSegera");
+    if (storedStatusSegera) {
+      // Jika ada data di sessionStorage, gunakan sementara
+      setStatusSegeraCount(parseInt(storedStatusSegera, 10));
+    }
+  
+    // Selalu panggil fetch untuk memperbarui data
     fetchPensiunData();
   }, []);
   
@@ -235,6 +241,7 @@ const Page = () => {
       const idPensiun = sessionStorage.getItem("idPensiun");
       await GlobalApi.pensiunAnggota(idPensiun);
       setPopupVisible(false);
+  
       toast.success(
         <div
           style={{
@@ -285,6 +292,11 @@ const Page = () => {
           },
         }
       );
+  
+      // Tambahkan reload halaman setelah pemberitahuan sukses
+      setTimeout(() => {
+        window.location.reload();
+      }, 4000); // Sesuaikan waktu tunggu dengan durasi toast (4 detik)
     } catch (error) {
       console.error("Gagal pensiun anggota:", error);
       toast.error(
@@ -343,6 +355,7 @@ const Page = () => {
       );
     }
   };
+  
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
