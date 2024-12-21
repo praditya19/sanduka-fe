@@ -1,9 +1,11 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { faWhatsapp} from "@fortawesome/free-brands-svg-icons";
+import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import {
   FaPlusCircle,
-  FaMinusCircle
+  FaMinusCircle,
+  FaExclamationTriangle,
+  FaTrash,
 } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -13,6 +15,8 @@ import HeaderMenu from "@/app/_components/HeaderMenu";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import * as XLSX from "xlsx";
 import { Input } from "@/components/ui/input";
+import { LoaderIcon } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 
 const SyncData = () => {
   const [cabangList, setCabangList] = useState([]);
@@ -39,6 +43,9 @@ const SyncData = () => {
     file: null,
     category: "",
   });
+  const [loader, setLoader] = useState(false);
+  const [totalFiles, setTotalFiles] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -189,10 +196,8 @@ const SyncData = () => {
   }, []);
 
   const toggleRowExpand = (index) => {
-    setExpandedRows(prev =>
-      prev.includes(index)
-        ? prev.filter(i => i !== index)
-        : [...prev, index]
+    setExpandedRows((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
     );
   };
 
@@ -204,22 +209,33 @@ const SyncData = () => {
     return cabangMatch && unitKerjaMatch;
   });
 
+  const fetchData = async () => {
+    try {
+      const result = await GlobalApi.getAllFiles();
+      setData(result);
+
+      const uniqueCabang = [...new Set(result.map((item) => item.cabang))];
+      setCabangList(
+        uniqueCabang.map((cabang, id) => ({ id, kecamatan: cabang }))
+      );
+    } catch (error) {
+      console.error("Error fetching files:", error);
+    }
+  };
+
+  const fetchTotalFiles = async () => {
+    try {
+      const total = await GlobalApi.getJumlahDataUpload();
+      setTotalFiles(total);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const result = await GlobalApi.getAllFiles();
-        setData(result);
-
-        const uniqueCabang = [...new Set(result.map((item) => item.cabang))];
-        setCabangList(
-          uniqueCabang.map((cabang, id) => ({ id, kecamatan: cabang }))
-        );
-      } catch (error) {
-        console.error("Error fetching files:", error);
-      }
-    };
-
     fetchData();
+    fetchTotalFiles();
   }, []);
 
   const handleInputChange = (e) => {
@@ -243,32 +259,47 @@ const SyncData = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoader(true);
     let fileToSend = formData.file;
 
-    if (
-      fileToSend &&
-      (fileToSend.type ===
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-        fileToSend.type === "application/vnd.ms-excel")
-    ) {
-      try {
-        const reader = new FileReader();
+    const validExtensions = [".xls", ".xlsx"];
+    const fileName = fileToSend.name.toLowerCase();
+    const isValidExtension = validExtensions.some((ext) =>
+      fileName.endsWith(ext)
+    );
 
-        reader.onload = async (event) => {
+    const fileType = fileToSend.type;
+    const validMimeTypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+    ];
+
+    if (!fileToSend) {
+      alert("Tidak ada file yang dipilih.");
+      setLoader(false);
+      return;
+    }
+
+    if (!isValidExtension || !validMimeTypes.includes(fileType)) {
+      alert(
+        "Format file tidak valid. Harap unggah file Excel (.xls atau .xlsx)."
+      );
+      return;
+    }
+
+    try {
+      const reader = new FileReader();
+
+      reader.onload = async (event) => {
+        try {
           const data = new Uint8Array(event.target.result);
           const workbook = XLSX.read(data, { type: "array" });
 
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
 
-          const csvString = XLSX.utils.sheet_to_csv(worksheet);
-
           const dataToSend = new FormData();
-          dataToSend.append(
-            "file",
-            new Blob([csvString], { type: "text/csv" }),
-            "converted.csv"
-          );
+          dataToSend.append("file", fileToSend);
           dataToSend.append("category", formData.category);
           dataToSend.append("cabang", formData.cabang);
           dataToSend.append("unitKerja", formData.unitKerja);
@@ -282,44 +313,82 @@ const SyncData = () => {
 
           try {
             const response = await GlobalApi.uploadFile(dataToSend);
-            console.log("Data successfully submitted:", response);
+            toast.success(
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textAlign: "center",
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{
+                    width: "150px",
+                    height: "150px",
+                    color: "#06D001",
+                    marginBottom: "16px",
+                  }}
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+                </svg>
+                <strong
+                  style={{
+                    fontSize: "2rem",
+                    display: "block",
+                    marginBottom: "8px",
+                  }}
+                >
+                  Data Berhasil diUpload
+                </strong>
+              </div>,
+              {
+                icon: null,
+                duration: 4000,
+                style: {
+                  marginTop: "16%",
+                  fontSize: "1.75rem",
+                  padding: "10px",
+                  width: "80%",
+                  maxWidth: "700px",
+                  height: "50%",
+                  maxHeight: "400px",
+                  transform: "translate(-50%, -50%)",
+                  textAlign: "center",
+                  zIndex: 9999,
+                  backgroundColor: "#fff",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                },
+              }
+            );
+            fetchData();
             setIsModalOpen(false);
           } catch (error) {
             console.error(
-              "Error submitting data:",
+              "Error saat mengirim data:",
               error.response?.data || error.message
             );
+            alert(
+              `Gagal mengunggah data: ${error.response?.data || error.message}`
+            );
+            setLoader(false);
           }
-        };
+        } catch (error) {
+          console.error("Error saat memproses file:", error);
+          alert("Gagal memproses file. Harap coba lagi.");
+        }
+      };
 
-        reader.readAsArrayBuffer(fileToSend);
-      } catch (error) {
-        console.error("Error processing file:", error);
-      }
-    } else {
-      const dataToSend = new FormData();
-      dataToSend.append("file", fileToSend);
-      dataToSend.append("category", formData.category);
-      dataToSend.append("cabang", formData.cabang);
-      dataToSend.append("unitKerja", formData.unitKerja);
-      dataToSend.append("namaAnggota", formData.namaLengkap);
-      dataToSend.append("npaNip", formData.npaNip);
-      dataToSend.append("nomorHp", formData.nomorHp);
-      dataToSend.append("dataSanduka", formData.dataSanduka);
-      dataToSend.append("dataKtaDigital", formData.dataKtaDigital);
-      dataToSend.append("dataDaspen", formData.dataDaspen);
-      dataToSend.append("verifikasi", formData.verifikasi);
-
-      try {
-        const response = await GlobalApi.uploadFile(dataToSend);
-        console.log("Data successfully submitted:", response);
-        setIsModalOpen(false);
-      } catch (error) {
-        console.error(
-          "Error submitting data:",
-          error.response?.data || error.message
-        );
-      }
+      reader.readAsArrayBuffer(fileToSend);
+    } catch (error) {
+      console.error("Error saat membaca file:", error);
+      alert("Gagal membaca file. Harap coba lagi.");
+      setLoader(false);
     }
   };
 
@@ -351,8 +420,219 @@ const SyncData = () => {
     };
   }, []);
 
+  const handleDeleteClick = async (id) => {
+    try {
+      if (!id) {
+        toast.error(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                width: "48px",
+                height: "48px",
+                color: "red",
+                marginBottom: "16px",
+              }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+            </svg>
+            <strong
+              style={{
+                fontSize: "1.75rem",
+                display: "block",
+                marginBottom: "8px",
+              }}
+            >
+              Id tidak ditemukan.
+            </strong>
+          </div>,
+          {
+            icon: null,
+            duration: 2000,
+            style: {
+              marginTop: "16%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "700px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
+        );
+        return;
+      }
+
+      const result = await GlobalApi.deleteFiles(id);
+
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            File Berhasil Dihapus!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 4000,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 4000);
+
+      setTimeout(() => {
+        setIsPopupVisible(false);
+      }, 4000);
+    } catch (error) {
+      console.error("Gagal Menghapus Data:", error);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal Menghapus Data.
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 3000,
+          duration: 3000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
+      <Toaster
+        toastOptions={{
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+          success: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+          error: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+        }}
+      />
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
@@ -373,24 +653,6 @@ const SyncData = () => {
       <div>
         <div>
           <div className="min-h-screen flex-grow bg-gray-50 py-10 pt-16">
-            <div className="flex flex-col md:flex-row justify-center md:space-x-4 mb-6">
-              <Button className="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300 mb-2 md:mb-0">
-                Rekap Hasil Upload
-              </Button>
-              <Button
-                className="bg-green-600 hover:bg-green-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300 mb-2 md:mb-0"
-                onClick={() => setIsModalOpen(true)}
-              >
-                Upload Data
-              </Button>
-              <Button
-                onClick={handlePrint}
-                className="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300"
-              >
-                Cetak
-              </Button>
-            </div>
-
             {isModalOpen && (
               <>
                 <div
@@ -459,7 +721,11 @@ const SyncData = () => {
                           onClick={handleSubmit}
                           className="bg-green-600 hover:bg-green-800 text-white py-2 px-4 rounded-lg"
                         >
-                          Submit
+                          {loader ? (
+                            <LoaderIcon className="animate-spin mr-2" />
+                          ) : (
+                            "Submit"
+                          )}
                         </Button>
                       </div>
                     </form>
@@ -468,100 +734,130 @@ const SyncData = () => {
               </>
             )}
 
-            <div className="flex flex-wrap items-center space-x-2 mb-4">
-              <div className="flex flex-col relative w-64" ref={cabangRef}>
-                <Input
-                  type="text"
-                  value={selectedCabang}
-                  readOnly
-                  onClick={handleCabangClick}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                  placeholder="Pilih Cabang"
-                />
-                {showCabangDropdown && (
-                  <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
-                    <ul className="max-h-44 overflow-y-auto">
-                      <li className="py-2 px-2">
-                        <Input
-                          type="text"
-                          onChange={(e) => handleCabangSearch(e.target.value)}
-                          className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
-                          placeholder="Cari atau ketik Cabang..."
-                          autoFocus
-                        />
-                      </li>
+            <div className="flex flex-wrap items-center space-x-2 mb-4 justify-between">
+              <div className="flex space-x-2">
+                <div className="flex flex-col relative w-64" ref={cabangRef}>
+                  <Input
+                    type="text"
+                    value={selectedCabang}
+                    readOnly
+                    onClick={handleCabangClick}
+                    className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                    placeholder="Pilih Cabang"
+                  />
+                  {showCabangDropdown && (
+                    <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                      <ul className="max-h-44 overflow-y-auto">
+                        <li className="py-2 px-2">
+                          <Input
+                            type="text"
+                            onChange={(e) => handleCabangSearch(e.target.value)}
+                            className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                            placeholder="Cari atau ketik Cabang..."
+                            autoFocus
+                          />
+                        </li>
 
-                      <li
-                        onClick={() => handleSelectCabang({ kecamatan: "" })}
-                        className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                      >
-                        Pilih Cabang
-                      </li>
-                      {filteredCabangList.map((cabang) => (
                         <li
-                          key={cabang.id}
-                          onClick={() => handleSelectCabang(cabang)}
+                          onClick={() => handleSelectCabang({ kecamatan: "" })}
                           className="px-4 py-2 cursor-pointer hover:bg-gray-200"
                         >
-                          {cabang.kecamatan}
+                          Pilih Cabang
                         </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col relative w-64" ref={unitKerjaRef}>
-                <Input
-                  type="text"
-                  value={unitKerjaInput}
-                  onFocus={handleUnitKerjaFocus}
-                  onChange={handleUnitKerjaChange}
-                  placeholder="Pilih Unit Kerja"
-                  readOnly
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
-                  disabled={!selectedCabang}
-                />
-                {showUnitKerjaDropdown && (
-                  <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
-                    <ul className="max-h-44 overflow-y-auto">
-                      <li className="py-2 px-2">
-                        <Input
-                          type="text"
-                          onChange={(e) =>
-                            handleUnitKerjaSearch(e.target.value)
-                          }
-                          placeholder="Cari atau ketik Unit Kerja..."
-                          autoFocus
-                          className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-2"
-                        />
-                      </li>
-                      <li
-                        onClick={() => handleUnitKerjaSelect({ unitKerja: "" })}
-                        className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                      >
-                        Pilih Unit Kerja
-                      </li>
-                      {filteredUnitKerja.length > 0 ? (
-                        filteredUnitKerja.map((unitKerja) => (
+                        {filteredCabangList.map((cabang) => (
                           <li
-                            key={unitKerja.id}
-                            onClick={() => handleUnitKerjaSelect(unitKerja)}
+                            key={cabang.id}
+                            onClick={() => handleSelectCabang(cabang)}
                             className="px-4 py-2 cursor-pointer hover:bg-gray-200"
                           >
-                            {unitKerja.unitKerja}
+                            {cabang.kecamatan}
                           </li>
-                        ))
-                      ) : (
-                        <li className="px-4 py-2 text-gray-500 cursor-default">
-                          Tidak ada hasil
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col relative w-64" ref={unitKerjaRef}>
+                  <Input
+                    type="text"
+                    value={unitKerjaInput}
+                    onFocus={handleUnitKerjaFocus}
+                    onChange={handleUnitKerjaChange}
+                    placeholder="Pilih Unit Kerja"
+                    readOnly
+                    className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
+                    disabled={!selectedCabang}
+                  />
+                  {showUnitKerjaDropdown && (
+                    <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                      <ul className="max-h-44 overflow-y-auto">
+                        <li className="py-2 px-2">
+                          <Input
+                            type="text"
+                            onChange={(e) =>
+                              handleUnitKerjaSearch(e.target.value)
+                            }
+                            placeholder="Cari atau ketik Unit Kerja..."
+                            autoFocus
+                            className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-2"
+                          />
                         </li>
-                      )}
-                    </ul>
-                  </div>
-                )}
+                        <li
+                          onClick={() =>
+                            handleUnitKerjaSelect({ unitKerja: "" })
+                          }
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                        >
+                          Pilih Unit Kerja
+                        </li>
+                        {filteredUnitKerja.length > 0 ? (
+                          filteredUnitKerja.map((unitKerja) => (
+                            <li
+                              key={unitKerja.id}
+                              onClick={() => handleUnitKerjaSelect(unitKerja)}
+                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                            >
+                              {unitKerja.unitKerja}
+                            </li>
+                          ))
+                        ) : (
+                          <li className="px-4 py-2 text-gray-500 cursor-default">
+                            Tidak ada hasil
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center space-x-2 mb-4">
+                <div className="flex flex-col md:flex-row justify-center md:space-x-4">
+                  <h1>
+                    {loading
+                      ? "Loading..."
+                      : `Total Data Terupload: ${totalFiles}`}
+                  </h1>
+                </div>
+              </div>
+
+              <div className="flex flex-col md:flex-row justify-center md:space-x-4">
+                <Button
+                  className="bg-green-600 hover:bg-green-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300 mb-2 md:mb-0"
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  Upload Data
+                </Button>
+                <Button
+                  onClick={handlePrint}
+                  className="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300"
+                >
+                  Cetak
+                </Button>
               </div>
             </div>
+
             <div
               ref={tableRef}
               className="overflow-x-auto relative shadow-md sm:rounded-lg"
@@ -569,17 +865,41 @@ const SyncData = () => {
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-white uppercase bg-teal-700 text-center">
                   <tr>
-                    <th scope="col" className="py-3 px-6">No</th>
-                    <th scope="col" className="py-3 px-6">Cabang</th>
-                    <th scope="col" className="py-3 px-6">Unit Kerja</th>
+                    <th scope="col" className="py-3 px-6">
+                      No
+                    </th>
+                    <th scope="col" className="py-3 px-6">
+                      Cabang
+                    </th>
+                    <th scope="col" className="py-3 px-6">
+                      Unit Kerja
+                    </th>
                     {!isMobile && (
                       <>
-                        <th scope="col" className="py-3 px-6">Nama</th>
-                        <th scope="col" className="py-3 px-6">NPA/NIP</th>
-                        <th scope="col" className="py-3 px-6">Data Sanduka</th>
-                        <th scope="col" className="py-3 px-6">Data KTA Digital</th>
-                        <th scope="col" className="py-3 px-6">Data Daspen</th>
-                        <th scope="col" className="py-3 px-6">Wa</th>
+                        <th scope="col" className="py-3 px-6">
+                          Nama
+                        </th>
+                        <th scope="col" className="py-3 px-6">
+                          NPA
+                        </th>
+                        <th scope="col" className="py-3 px-6">
+                          NIP
+                        </th>
+                        <th scope="col" className="py-3 px-6">
+                          Data Sanduka
+                        </th>
+                        <th scope="col" className="py-3 px-6">
+                          Data KTA Digital
+                        </th>
+                        <th scope="col" className="py-3 px-6">
+                          Data Daspen
+                        </th>
+                        <th scope="col" className="py-3 px-6">
+                          Wa
+                        </th>
+                        <th scope="col" className="py-3 px-6">
+                          Aksi
+                        </th>
                       </>
                     )}
                   </tr>
@@ -596,7 +916,8 @@ const SyncData = () => {
                       <td className="py-4 px-6">{item.cabang}</td>
                       <td className="py-4 px-6">{item.unitKerja}</td>
                       <td className="py-4 px-6">{item.namaAnggota}</td>
-                      <td className="py-4 px-6">{item.npaNip}</td>
+                      <td className="py-4 px-6">{item.npa ? item.npa : "-"}</td>
+                      <td className="py-4 px-6">{item.nip}</td>
                       <td className="py-4 px-6">
                         <span
                           className={`inline-block px-2 py-1 rounded ${
@@ -643,6 +964,16 @@ const SyncData = () => {
                         >
                           <FontAwesomeIcon icon={faWhatsapp} size="lg" />
                         </button>
+                      </td>
+                      <td>
+                        <Button
+                          className="bg-red-500 p-2 border rounded-md"
+                          title="Hapus"
+                          type="button"
+                          onClick={() => handleDeleteClick(item.id)}
+                        >
+                          <FaTrash className="w-4 h-4" />
+                        </Button>
                       </td>
                     </tr>
                   ))}

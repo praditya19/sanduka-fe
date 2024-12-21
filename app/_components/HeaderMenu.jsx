@@ -27,6 +27,8 @@ const HeaderHome = () => {
   const [profileImageUrl, setProfileImageUrl] = useState("/profile.png");
   const [statusSegeraCount, setStatusSegeraCount] = useState(0);
   const { isMuted } = useMute();
+  const [isIconBlinking, setIsIconBlinking] = useState(false);
+
   const role = sessionStorage.getItem("role");
 
   useEffect(() => {
@@ -175,6 +177,12 @@ const HeaderHome = () => {
       };
       playNotificationSound();
     }
+    // Update blinking state
+    if (notificationCount > 1) {
+      setIsIconBlinking(true);
+    } else {
+      setIsIconBlinking(false);
+    }
   }, [
     notificationCount,
     previousNotificationCount,
@@ -211,28 +219,36 @@ const HeaderHome = () => {
           </div>
 
           <div className="hidden md:block">
-          <ul className="flex space-x-6 items-center">
-    {/* Icon Email */}
-    {sessionStorage.getItem("role") !== "USER" && (
-      <li className="relative">
-        <button
-          className="relative"
-          onClick={() => (window.location.href = "/pensiun")}
-        >
-          <FontAwesomeIcon
-            icon={faEnvelope}
-            className="w-5 h-5 text-gray-700"
-          />
-          {emailCount > 0 && (
-            <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
-              {emailCount}
-            </span>
-          )}
-        </button>
-      </li>
-    )}
+            <ul className="flex space-x-6 items-center">
+              {/* Icon Email */}
+              {sessionStorage.getItem("role") !== "USER" && (
+                <li
+                  className={`relative ${
+                    emailCount > 1 ? "animate-blink" : ""
+                  }`}
+                >
+                  <button
+                    className="relative"
+                    onClick={() => (window.location.href = "/pensiun")}
+                  >
+                    <FontAwesomeIcon
+                      icon={faEnvelope}
+                      className="w-5 h-5 text-gray-700"
+                    />
+                    {emailCount > 0 && (
+                      <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+                        {emailCount}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              )}
               {/* Icon Bell */}
-              <li className="relative">
+              <li
+                className={`relative ${
+                  notificationCount > 1 ? "animate-blink" : ""
+                }`}
+              >
                 <button onClick={handleNotificationClick} className="relative">
                   <FontAwesomeIcon
                     icon={faBell}
