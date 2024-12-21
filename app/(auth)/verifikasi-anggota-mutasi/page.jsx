@@ -832,8 +832,8 @@ const DataTable = ({
             <>
               <th className="py-2 px-4 border-b">NPA PGRI</th>
               <th className="py-2 px-4 border-b">Status</th>
-              <th className="py-2 px-4 border-b">Aksi</th>
               <th className="py-2 px-4 border-b">Registrasi</th>
+              <th className="py-2 px-4 border-b">Aksi</th>
             </>
           )}
           {isMobile && <th className="py-2 px-4 border-b">Lihat Data</th>}
@@ -885,7 +885,7 @@ const DataTable = ({
                         </Badge>
                       )}
                     </td>
-
+                    <td className="px-4 py-2 border-b">{formatCreatedAt(item.createdAt)}</td>
                     <td className="px-4 py-2 border-b">
                       {/* <a
                         href={`https://wa.me/${item.nomorHp}`}
@@ -917,7 +917,7 @@ const DataTable = ({
                         onClick={() => handleUserClick(item.id)}
                       />
                     </td>
-                    <td className="px-4 py-2 border-b">{formatCreatedAt(item.createdAt)}</td>
+                    
                   </>
                 )}
                 {isMobile && (

@@ -188,7 +188,20 @@ const Page = () => {
         </div>
       </div>
     </div>
-  ) : null;
+  )  : (
+    <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-40 z-50">
+    <div className="bg-white p-5 rounded-md w-5/12 mt-4 sm:mt-0 text-center">
+      <h2 className="text-xl font-bold text-red-500">Data belum tersinkronkan</h2>
+      <p className="mt-4">Silakan coba lagi atau hubungi administrator jika masalah berlanjut.</p>
+      <button 
+        onClick={() => window.location.href = '/home'}
+        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+      >
+        Kembali ke Halaman Home
+      </button>
+    </div>
+  </div>
+  );
 };
 
 export default Page;

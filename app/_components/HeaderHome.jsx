@@ -153,20 +153,26 @@ const HeaderHome = () => {
           </div>
 
           <div className="hidden md:block">
-            <ul className="flex space-x-6 items-center">
-              <li className="relative">
-                <button className="relative" onClick={handleEmailClick}>
-                  <FontAwesomeIcon
-                    icon={faEnvelope}
-                    className="w-5 h-5 text-gray-700"
-                  />
-                  {emailCount > 0 && (
-                    <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
-                      {emailCount}
-                    </span>
-                  )}
-                </button>
-              </li>
+          <ul className="flex space-x-6 items-center">
+    {/* Icon Email */}
+    {sessionStorage.getItem("role") !== "USER" && (
+      <li className="relative">
+        <button
+          className="relative"
+          onClick={() => (window.location.href = "/pensiun")}
+        >
+          <FontAwesomeIcon
+            icon={faEnvelope}
+            className="w-5 h-5 text-gray-700"
+          />
+          {emailCount > 0 && (
+            <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+              {emailCount}
+            </span>
+          )}
+        </button>
+      </li>
+    )}
               <li className="relative">
                 <button onClick={handleNotificationClick} className="relative">
                   <FontAwesomeIcon

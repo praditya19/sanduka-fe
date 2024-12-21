@@ -952,7 +952,7 @@ const Page = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
                 <div className="w-full">
                   <Label className="block text-sm font-medium mb-3">
-                    <span className="text-red-500 text-xl">* </span>
+                    {/* <span className="text-red-500 text-xl">* </span> */}
                     Email
                     <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
                       *Harap Diingat

@@ -331,19 +331,21 @@ useEffect(() => {
     }
   }, [token, router, selectedCabang]);
 
-  const handleCabangSelect = (selectedItem) => {
-    setSelectedCabang(selectedItem.kecamatan || "Pilih Cabang");
-    setShowDropdownCabang(false);
-    setSearchCabang('');
-    setFilteredCabangOptions(cabang);
-
-    // Reset Unit Kerja when Cabang changes
-    setSelectedUnitKerja("Pilih Unit Kerja");
+  const handleCabangSelect = (cabang) => {
+    setSelectedCabang(cabang.kecamatan);
+    setFormData((prev) => ({
+      ...prev,
+      unit: "",
+    }));
     setFilteredUnitKerja(
-      allUnitKerja.filter(uk => uk.cabang === selectedItem.kecamatan)
+      allUnitKerja.filter(
+        (unit) => unit.cabang.toLowerCase() === cabang.kecamatan.toLowerCase()
+      )
     );
+    setIsUnitKerjaDisabled(false);
+    setShowDropdownCabang(false);
   };
-
+  
   const handleUnitKerjaSelect = (selectedItem) => {
     setSelectedUnitKerja(selectedItem.unitKerja || "Pilih Unit Kerja");
     setShowDropdownUnitKerja(false);
