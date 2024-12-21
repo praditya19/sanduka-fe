@@ -322,6 +322,7 @@ const VerifikasiAnggotaMutasi = () => {
   const fetchUnitKerja = async () => {
     try {
       const response = await GlobalApi.getUnitKerja();
+      console.log("Unit Kerja from API:", response.data);
       setUnitKerja(response.data);
     } catch (error) {
       console.error("Error fetching unit kerja:", error);
@@ -576,9 +577,12 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
   const [query, setQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [filterQuery, setFilterQuery] = useState("");
+  const [isDisabled, setIsDisabled] = useState(false);
+  const [sessionCabang, setSessionCabang] = useState("");
   const dropdownRef = useRef(null);
 
   useEffect(() => {
+    // Set event listener untuk klik di luar dropdown
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
@@ -589,6 +593,18 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
+  }, []);
+
+  useEffect(() => {
+    // Ambil data dari sessionStorage
+    const cabangFromSession = sessionStorage.getItem("cabang") || "";
+    const roleFromSession = sessionStorage.getItem("role");
+
+    // Set nilai cabang dan disable jika role adalah ADMIN
+    setSessionCabang(cabangFromSession);
+    if (roleFromSession === "ADMIN") {
+      setIsDisabled(true);
+    }
   }, []);
 
   const filteredOptions = options.filter((option) =>
@@ -602,16 +618,19 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
         type="text"
         className="border rounded-lg p-2 w-full bg-white shadow-sm"
         placeholder={`Pilih ${label}`}
-        value={selectedCabang || query}
+        value={isDisabled ? sessionCabang : selectedCabang || query}
         readOnly
         onFocus={() => {
-          setQuery("");
-          setShowDropdown(true);
-          setFilterQuery("");
+          if (!isDisabled) {
+            setQuery("");
+            setShowDropdown(true);
+            setFilterQuery("");
+          }
         }}
+        disabled={isDisabled} // Input akan ter-disable jika role adalah ADMIN
       />
 
-      {showDropdown && (
+      {showDropdown && !isDisabled && (
         <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-full">
           <ul className="max-h-44 overflow-y-auto">
             <li className="py-2 px-2">
@@ -665,19 +684,48 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
 
 const DropdownUnitKerja = ({
   label,
-  options,
-  disabled,
   selectedUnitKerja,
   handleChange,
 }) => {
   const [query, setQuery] = React.useState(selectedUnitKerja || "");
   const [showDropdown, setShowDropdown] = React.useState(false);
-  const [filterQuery, setFilterQuery] = useState("");
-  const dropdownRef = useRef(null);
+  const [filterQuery, setFilterQuery] = React.useState("");
+  const [unitKerja, setUnitKerja] = React.useState([]); // Data dari API
+  const [selectedCabang, setSelectedCabang] = React.useState(""); // Cabang dari sessionStorage
+  const dropdownRef = React.useRef(null);
 
-  const filteredOptions = options.filter((option) =>
-    option.unitKerja.toLowerCase().includes(filterQuery.toLowerCase())
-  );
+  React.useEffect(() => {
+    // Fetch data unit kerja dari API
+    const fetchUnitKerja = async () => {
+      try {
+        const response = await GlobalApi.getUnitKerja();
+        console.log("Unit Kerja from API:", response.data); // Log data dari API
+        setUnitKerja(response.data);
+      } catch (error) {
+        console.error("Error fetching unit kerja:", error);
+      }
+    };
+
+    fetchUnitKerja();
+
+    // Ambil cabang dari sessionStorage
+    const cabangFromSession = sessionStorage.getItem("cabang");
+    console.log("Selected Cabang from sessionStorage:", cabangFromSession);
+    if (cabangFromSession) {
+      setSelectedCabang(cabangFromSession);
+    }
+  }, []);
+
+  const filteredOptions = unitKerja
+    .filter(
+      (option) =>
+        option.cabang.trim().toLowerCase() === selectedCabang.trim().toLowerCase()
+    )
+    .filter((option) =>
+      option.unitKerja.toLowerCase().includes(filterQuery.toLowerCase())
+    );
+
+  console.log("Filtered Options:", filteredOptions);
 
   const handleOptionSelect = (item) => {
     setQuery(item.unitKerja);
@@ -685,7 +733,7 @@ const DropdownUnitKerja = ({
     handleChange(item.unitKerja);
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
@@ -703,53 +751,49 @@ const DropdownUnitKerja = ({
       <label className="block mb-2 font-semibold text-gray-800">{label}</label>
       <input
         type="text"
-        className={`border rounded-lg p-2 w-full bg-white shadow-sm ${disabled ? "bg-gray-200 cursor-not-allowed" : ""
-          }`}
+        className="border rounded-lg p-2 w-full bg-white shadow-sm"
         placeholder={`Pilih ${label}`}
         value={query}
         readOnly
         onFocus={() => {
-          if (!disabled) {
-            setFilterQuery("");
-            setShowDropdown(true);
-          }
+          setFilterQuery("");
+          setShowDropdown(true);
         }}
-        disabled={disabled}
       />
 
-      {showDropdown && !disabled && (
-        <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-full">
+      {showDropdown && (
+        <div className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full">
           <ul className="max-h-44 overflow-y-auto">
-            <li className="py-2 px-2">
-              <input
-                type="text"
-                className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder={`Filter ${label}`}
-                value={filterQuery}
-                onChange={(e) => setFilterQuery(e.target.value)}
-                autoFocus
-              />
-            </li>
-
-            <li
-              className="p-2 cursor-pointer hover:bg-gray-100"
-              onClick={() => handleOptionSelect({ unitKerja: "" })}
-            >
-              Pilih Unit Kerja
-            </li>
-
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((item) => (
-                <li
-                  key={item.id}
-                  className="p-2 cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleOptionSelect(item)}
-                >
-                  {item.unitKerja}
-                </li>
-              ))
+            {unitKerja.length === 0 ? (
+              <div className="p-2 text-gray-500">Loading...</div>
             ) : (
-              <li className="p-2 text-gray-500">No results found</li>
+              <>
+                <li className="py-2 px-2">
+                  <input
+                    type="text"
+                    className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder={`Filter ${label}`}
+                    value={filterQuery}
+                    onChange={(e) => setFilterQuery(e.target.value)}
+                    autoFocus
+                  />
+                </li>
+                <li
+                  className="p-2 cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleOptionSelect({ unitKerja: "" })}
+                >
+                  Pilih Unit Kerja
+                </li>
+                {filteredOptions.map((item) => (
+                  <li
+                    key={item.id}
+                    className="p-2 cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleOptionSelect(item)}
+                  >
+                    {item.unitKerja}
+                  </li>
+                ))}
+              </>
             )}
           </ul>
         </div>
@@ -825,6 +869,7 @@ const DataTable = ({
         <tr>
           <th className="py-2 px-4 border-b">No</th>
           {!isMobile && <th className="py-2 px-4 border-b">Foto</th>}
+          <th className="py-2 px-4 border-b">Registrasi</th>
           <th className="py-2 px-4 border-b">Cabang</th>
           <th className="py-2 px-4 border-b">Unit Kerja</th>
           <th className="py-2 px-4 border-b">Nama</th>
@@ -832,7 +877,7 @@ const DataTable = ({
             <>
               <th className="py-2 px-4 border-b">NPA PGRI</th>
               <th className="py-2 px-4 border-b">Status</th>
-              <th className="py-2 px-4 border-b">Registrasi</th>
+            
               <th className="py-2 px-4 border-b">Aksi</th>
             </>
           )}
@@ -866,6 +911,7 @@ const DataTable = ({
                     />
                   </td>
                 )}
+                <td className="px-4 py-2 border-b">{formatCreatedAt(item.createdAt)}</td>
                 <td className="py-2 px-4 border-b">{item.cabang}</td>
                 <td className="py-2 px-4 border-b">{item.unitKerja}</td>
                 <td className="py-2 px-4 border-b">{item.namaLengkap}</td>
@@ -885,7 +931,7 @@ const DataTable = ({
                         </Badge>
                       )}
                     </td>
-                    <td className="px-4 py-2 border-b">{formatCreatedAt(item.createdAt)}</td>
+                    
                     <td className="px-4 py-2 border-b">
                       {/* <a
                         href={`https://wa.me/${item.nomorHp}`}
