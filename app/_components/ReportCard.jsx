@@ -14,13 +14,17 @@ export default function ReportCard() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [dataList, setDataList] = useState([]);
   const [laporan, setLaporan] = useState(null);
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const data = await GlobalApi.getDataLapor();
         setDataList(data);
-        console.log(data);
+        setLatitude(data.latitude || 0);
+        setLongitude(data.longitude || 0);
+        console.log("respon",data);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -29,6 +33,54 @@ export default function ReportCard() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const fetchIdAndLocation = async () => {
+      const npa = dataList[currentSlide]?.npaPgri || "N/A";
+      console.log("NPA saat ini:", npa);
+
+      if (npa !== "N/A") {
+        try {
+          // Langkah 1: Panggil API untuk mendapatkan ID
+          const response = await GlobalApi.cekNpa(npa);
+          const id = response?.id;
+
+          if (id) {
+            console.log("ID yang didapatkan dari GlobalApi:", id);
+
+            // Langkah 2: Panggil API untuk mendapatkan latitude dan longitude
+            const locationResponse = await GlobalApi.getUserById(id);
+            const lat = locationResponse?.latitude;
+            const lon = locationResponse?.longitude;
+
+            if (lat && lon) {
+              setLatitude(lat);
+              setLongitude(lon);
+              console.log("Latitude dan Longitude yang didapat:", lat, lon);
+            } else {
+              console.error("Latitude atau Longitude tidak ditemukan");
+            }
+          }
+        } catch (error) {
+          console.error("Error saat mengambil data:", error);
+        }
+      }
+    };
+
+    if (currentSlide !== undefined && dataList.length > 0) {
+      fetchIdAndLocation();
+    }
+  }, [currentSlide, dataList]);
+
+  const handleLokasiClick = () => {
+    if (latitude !== null && longitude !== null) {
+      const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      window.open(mapsUrl, "_blank"); 
+    } else {
+      alert("Lokasi belum tersedia. Silakan coba lagi.");
+    }
+  };
+
+  
   useEffect(() => {
     const npaList = dataList.map((item) => item?.npaPgri).filter((npa) => npa);
 
@@ -592,9 +644,12 @@ export default function ReportCard() {
           Catatan :{dataList[currentSlide]?.keteranganTerlapor}
         </p>
         <div className="flex justify-around mb-4">
-          <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-1 px-3 rounded-full transition duration-300">
-            <FontAwesomeIcon icon={faLocation} className="mr-2" /> Lokasi
-          </button>
+        <button
+      onClick={handleLokasiClick}
+      className="bg-green-600 hover:bg-green-700 text-white font-medium py-1 px-3 rounded-full transition duration-300"
+    >
+      <FontAwesomeIcon icon={faLocation} className="mr-2" /> Lokasi
+    </button>
           <button
             className={`${
               ["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
