@@ -1,26 +1,88 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/app/_components/Sidebar";
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 const Page = () => {
-  const [selectAll, setSelectAll] = useState(false);
+  // State management for filters
+  const [bulanList, setBulanList] = useState([]);
+  const [cabangList, setCabangList] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [displayedPeriod, setDisplayedPeriod] = useState("");
+  const [filterType, setFilterType] = useState("all"); // for Tampil Semua dropdown
+  const dropdownRef = useRef(null);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false); // Add this state
+  const [formValues, setFormValues] = useState({ // Add this state
+    searchCabang: "",
+  });
 
-  const handleSelectAll = (e) => {
-    setSelectAll(e.target.checked);
-  };
+  // Calculate years range
+  const currentYear = new Date().getFullYear();
+  const startYear = 2020;
+  const years = Array.from(
+    { length: currentYear - startYear + 1 },
+    (_, index) => startYear + index
+  );
 
-  useEffect(() => {
-    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-    setIsSidebarOpen(sidebarState);
-  }, []);
-
+  // Sidebar and mobile states
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
+
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setIsDropdownVisible(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Fetch initial data
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        // Fetch cabang data
+        const cabangResponse = await GlobalApi.getCabang();
+        setCabangList(cabangResponse.data);
+
+        // Fetch bulan data
+        const bulanResponse = await GlobalApi.getBulan();
+        setBulanList(bulanResponse.data);
+
+        // Set default values
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+
+        if (bulanResponse.data && bulanResponse.data.length > 0) {
+          setSelectedMonth(bulanResponse.data[currentMonth].namaBulan);
+        }
+
+        setSelectedYear(currentYear.toString());
+        updateDisplayedPeriod(bulanResponse.data[currentMonth]?.namaBulan, currentYear.toString());
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+      }
+    };
+
+    fetchInitialData();
+  }, []);
+
+  // Update displayed period whenever month or year changes
+  const updateDisplayedPeriod = (month, year) => {
+    setDisplayedPeriod(`Transaksi ${month} ${year}`);
+  };
 
   const handleBackClick = () => {
     router.back();
@@ -32,18 +94,37 @@ const Page = () => {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+  // Handle filter changes
+  const handleCabangChange = (e) => {
+    setSelectedCabang(e.target.value);
+  };
 
-    handleResize();
-    window.addEventListener("resize", handleResize);
+  const handleMonthChange = (e) => {
+    const newMonth = e.target.value;
+    setSelectedMonth(newMonth);
+    updateDisplayedPeriod(newMonth, selectedYear);
+  };
 
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+  const handleYearChange = (e) => {
+    const newYear = e.target.value;
+    setSelectedYear(newYear);
+    updateDisplayedPeriod(selectedMonth, newYear);
+  };
+
+  const handleFilterTypeChange = (e) => {
+    setFilterType(e.target.value);
+  };
+
+  // Handle print action
+  const handlePrint = () => {
+    // Implement print functionality here
+    console.log("Printing with filters:", {
+      cabang: selectedCabang,
+      month: selectedMonth,
+      year: selectedYear,
+      filterType: filterType
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
@@ -81,11 +162,8 @@ const Page = () => {
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-        <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
-        >
+        <div className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+          }`}>
           <div className="container mx-auto p-6">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
               <h2 className="bg-blue-500 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
@@ -95,34 +173,136 @@ const Page = () => {
               <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
                 <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
                   <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5 w-full sm:w-auto">
-                    <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                      <option>-- Cabang --</option>
-                      <option>Bangsri</option>
-                      <option>Welahan</option>
-                    </select>
-                    <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                      <option>Januari</option>
-                      <option>Agustus</option>
-                      <option>September</option>
-                    </select>
-                    <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                      <option>2023</option>
-                      <option>2024</option>
-                      <option>2025</option>
-                    </select>
+                    <div className="flex flex-col relative" ref={dropdownRef}>
+                      <Label className="block text-white text-sm font-semibold mb-2" htmlFor="cabang">
+                        Cabang
+                      </Label>
+                      <input
+                        type="text"
+                        placeholder="Cabang yang dipilih"
+                        className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={selectedCabang || ""}
+                        readOnly
+                        onFocus={() => setIsDropdownVisible(true)}
+                      />
+
+                      {isDropdownVisible && (
+                        <div className="absolute top-full left-0 w-full z-10 mt-1 border bg-white shadow-lg rounded-b">
+                          <ul className="max-h-48 overflow-y-auto">
+                            <li className="py-2 px-4">
+                              <input
+                                type="text"
+                                placeholder="Cari Cabang..."
+                                className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                value={formValues.searchCabang || ""}
+                                autoFocus
+                                onChange={(e) => {
+                                  const searchValue = e.target.value;
+                                  setFormValues((prevValues) => ({
+                                    ...prevValues,
+                                    searchCabang: searchValue,
+                                  }));
+                                }}
+                              />
+                            </li>
+
+                            <li className="py-2 px-4 hover:bg-blue-500 hover:text-white">
+                              <button
+                                onClick={() => {
+                                  setSelectedCabang("");
+                                  setFormValues((prevValues) => ({
+                                    ...prevValues,
+                                    searchCabang: "",
+                                  }));
+                                  setIsDropdownVisible(false);
+                                }}
+                              >
+                                Pilih Cabang
+                              </button>
+                            </li>
+
+                            {cabangList
+                              .filter((cabang) =>
+                                cabang.kecamatan
+                                  .toLowerCase()
+                                  .includes(formValues.searchCabang?.toLowerCase() || "")
+                              )
+                              .map((cabang) => (
+                                <li
+                                  key={cabang.id}
+                                  className="py-1 px-4 hover:bg-blue-500 hover:text-white"
+                                >
+                                  <button
+                                    onClick={() => {
+                                      setSelectedCabang(cabang.kecamatan);
+                                      setFormValues((prevValues) => ({
+                                        ...prevValues,
+                                        searchCabang: "",
+                                      }));
+                                      setIsDropdownVisible(false);
+                                    }}
+                                  >
+                                    {cabang.kecamatan}
+                                  </button>
+                                </li>
+                              ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <Label className="block text-white text-sm font-semibold mb-2" htmlFor="bulan">
+                        Bulan
+                      </Label>
+
+                      <select
+                        className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                        value={selectedMonth}
+                        onChange={handleMonthChange}
+                      >
+                        {bulanList.map((bulan) => (
+                          <option key={bulan.angkaBulan} value={bulan.namaBulan}>
+                            {bulan.namaBulan}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label className="block text-white text-sm font-semibold mb-2" htmlFor="tahun">
+                        Tahun
+                      </Label>
+                      <select
+                        className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                        value={selectedYear}
+                        onChange={handleYearChange}
+                      >
+                        {years.map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <div className="flex-1 flex justify-center items-center mt-4 sm:mt-3">
                     <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 text-center">
-                      Transaksi Juli 2024
+                      {displayedPeriod}
                     </h1>
                   </div>
                   <div className="flex flex-wrap justify-center space-x-4 mt-4 sm:mt-3 mr-0 sm:mr-10 w-full sm:w-auto">
-                    <select className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                      <option>Tampil Semua</option>
-                      <option>Iuran/Sanduka</option>
-                      <option>DASPEN</option>
+                    <select
+                      className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                      value={filterType}
+                      onChange={handleFilterTypeChange}
+                    >
+                      <option value="all">Tampil Semua</option>
+                      <option value="iuran">Iuran/Sanduka</option>
+                      <option value="daspen">DASPEN</option>
                     </select>
-                    <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 sm:mt-0 mt-3 px-4 rounded transition duration-300">
+                    <Button
+                      className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 sm:mt-0 mt-3 px-4 rounded transition duration-300"
+                      onClick={handlePrint}
+                    >
                       Cetak
                     </Button>
                   </div>

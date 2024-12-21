@@ -295,6 +295,16 @@ function RekapAnggota() {
 
   const jumlahIuran = rekapData.reduce((acc, curr) => acc + curr.totalIuran, 0);
 
+  // useEffect(() => {
+  //   const role = sessionStorage.getItem("role");
+  //   const cabang = sessionStorage.getItem("cabang");
+    
+  //   if (role === "ADMIN" && cabang) {
+  //     setSelectedCabang(cabang);
+  //     setIsAdmin(true); // Mark as admin if role is ADMIN
+  //   }
+  // }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
