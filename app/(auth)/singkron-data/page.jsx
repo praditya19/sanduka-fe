@@ -46,6 +46,36 @@ const SyncData = () => {
   const [loader, setLoader] = useState(false);
   const [totalFiles, setTotalFiles] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [displayedPages, setDisplayedPages] = useState([1, 2, 3]);
+  const [visiblePages, setVisiblePages] = useState([1, 2, 3]);
+  const totalData = data.length; // Hitung total data
+
+  const paginateData = (data) => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return data.slice(startIndex, endIndex);
+  };
+
+  useEffect(() => {
+    setTotalPages(Math.ceil(totalData / itemsPerPage));
+  }, [totalData]);
+
+  useEffect(() => {
+    updateVisiblePages(currentPage);
+  }, [currentPage, totalPages]);
+
+  const updateVisiblePages = (current) => {
+    if (current === 1) {
+      setVisiblePages([1, 2, 3].filter(page => page <= totalPages));
+    } else if (current === totalPages) {
+      setVisiblePages([current - 2, current - 1, current].filter(page => page > 0));
+    } else {
+      setVisiblePages([current - 1, current, current + 1].filter(page => page > 0 && page <= totalPages));
+    }
+  };
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -86,28 +116,18 @@ const SyncData = () => {
   const handleUnitKerjaChange = (e) => {
     const input = e.target.value;
     setUnitKerjaInput(input);
+    setSelectedUnitKerja(input);
 
     const filteredUnitKerja = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang &&
         unitKerja.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
-        unitKerja.unitKerja.toLowerCase().startsWith(input.toLowerCase())
+        unitKerja.unitKerja.toLowerCase().includes(input.toLowerCase())
     );
 
-    setShowUnitKerjaDropdown(filteredUnitKerja.length > 0);
+    setShowUnitKerjaDropdown(true);
     setFilteredUnitKerja(filteredUnitKerja);
-
-    const rekapFilteredByUnitKerja = originalRekapData.filter(
-      (item) =>
-        item.alamatKerja &&
-        item.alamatKerja.toLowerCase().includes(input.toLowerCase())
-    );
-
-    if (input === "") {
-      setRekapData(originalRekapData);
-    } else {
-      setRekapData(rekapFilteredByUnitKerja);
-    }
+    setCurrentPage(1); // Reset pagination when typing in unit kerja
   };
 
   const handleCabangSearch = (query) => {
@@ -153,12 +173,13 @@ const SyncData = () => {
     setSelectedUnitKerja(unitKerja.unitKerja);
     setUnitKerjaInput(unitKerja.unitKerja);
     setShowUnitKerjaDropdown(false);
-
-    const filteredRekapData = originalRekapData.filter(
-      (item) => item.alamatKerja === unitKerja.unitKerja
-    );
-    setRekapData(filteredRekapData);
+    setCurrentPage(1); // Reset to first page when unit kerja is selected
   };
+
+  useEffect(() => {
+    setSelectedUnitKerja("");
+    setUnitKerjaInput("");
+  }, [selectedCabang]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -201,27 +222,47 @@ const SyncData = () => {
     );
   };
 
-  const filteredData = data.filter((item) => {
-    const cabangMatch = selectedCabang ? item.cabang === selectedCabang : true;
-    const unitKerjaMatch = searchTerm
-      ? item.unitKerja.toLowerCase().includes(searchTerm.toLowerCase())
-      : true;
-    return cabangMatch && unitKerjaMatch;
-  });
+  const filteredData = data
+    .filter((item) => {
+      const cabangMatch = selectedCabang ? item.cabang === selectedCabang : true;
+      const unitKerjaMatch = selectedUnitKerja
+        ? item.unitKerja.toLowerCase() === selectedUnitKerja.toLowerCase()
+        : true;
+      return cabangMatch && unitKerjaMatch;
+    });
 
-  const fetchData = async () => {
-    try {
-      const result = await GlobalApi.getAllFiles();
-      setData(result);
+  // Update useEffect for pagination reset
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCabang, selectedUnitKerja]);
 
-      const uniqueCabang = [...new Set(result.map((item) => item.cabang))];
-      setCabangList(
-        uniqueCabang.map((cabang, id) => ({ id, kecamatan: cabang }))
-      );
-    } catch (error) {
-      console.error("Error fetching files:", error);
-    }
-  };
+  const paginatedData = paginateData(filteredData);
+
+  useEffect(() => {
+    // Update total pages whenever filtered data changes
+    setTotalPages(Math.ceil(filteredData.length / itemsPerPage));
+  }, [filteredData, itemsPerPage]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCabang, searchTerm]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const result = await GlobalApi.getAllFiles();
+        setData(result);
+        setTotalPages(Math.ceil(result.length / itemsPerPage));
+
+        const uniqueCabang = [...new Set(result.map((item) => item.cabang))];
+        setCabangList(uniqueCabang.map((cabang, id) => ({ id, kecamatan: cabang })));
+      } catch (error) {
+        console.error("Error fetching files:", error);
+      }
+    };
+    fetchData();
+  }, [itemsPerPage]);
 
   const fetchTotalFiles = async () => {
     try {
@@ -234,7 +275,6 @@ const SyncData = () => {
   };
 
   useEffect(() => {
-    fetchData();
     fetchTotalFiles();
   }, []);
 
@@ -419,6 +459,150 @@ const SyncData = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  const renderTableBody = () => {
+    return (
+      <tbody className="text-center">
+        {paginatedData.map((item, index) => {
+          const actualIndex = (currentPage - 1) * itemsPerPage + index + 1;
+          return (
+            <tr
+              key={item.id || index}
+              className={`bg-white border-b ${index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                } hover:bg-gray-200 transition duration-150`}
+            >
+              <td className="py-4 px-6">{actualIndex}</td>
+              <td className="py-4 px-6">{item.cabang}</td>
+              <td className="py-4 px-6">{item.unitKerja}</td>
+              {!isMobile && (
+                <>
+                  <td className="py-4 px-6">{item.namaAnggota}</td>
+                  <td className="py-4 px-6">{item.npa ? item.npa : "-"}</td>
+                  <td className="py-4 px-6">{item.nip}</td>
+                  <td className="py-4 px-6">
+                    <span
+                      className={`inline-block px-2 py-1 rounded ${item.dataSanduka
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                        }`}
+                    >
+                      {item.dataSanduka ? "YES" : "NO"}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <span
+                      className={`inline-block px-2 py-1 rounded ${item.dataKtaDigital
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                        }`}
+                    >
+                      {item.dataKtaDigital ? "YES" : "NO"}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <span
+                      className={`inline-block px-2 py-1 rounded ${item.dataDaspen
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                        }`}
+                    >
+                      {item.dataDaspen ? "YES" : "NO"}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <button
+                      onClick={() =>
+                        window.open(`https://wa.me/${item.nomorHp}`, "_blank")
+                      }
+                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
+                    >
+                      <FontAwesomeIcon icon={faWhatsapp} size="lg" />
+                    </button>
+                  </td>
+                  <td>
+                    <Button
+                      className="bg-red-500 p-2 border rounded-md"
+                      title="Hapus"
+                      type="button"
+                      onClick={() => handleDeleteClick(item.id)}
+                    >
+                      <FaTrash className="w-4 h-4" />
+                    </Button>
+                  </td>
+                </>
+              )}
+            </tr>
+          );
+        })}
+      </tbody>
+    );
+  };
+
+  useEffect(() => {
+    updateDisplayedPages(currentPage);
+  }, [currentPage]);
+
+  const updateDisplayedPages = (current) => {
+    let pages = [];
+    if (current <= 2) {
+      pages = [1, 2, 3];
+    } else if (current >= totalPages - 1) {
+      pages = [totalPages - 2, totalPages - 1, totalPages];
+    } else {
+      pages = [current - 1, current, current + 1];
+    }
+    pages = pages.filter(page => page > 0 && page <= totalPages);
+    setDisplayedPages(pages);
+  };
+
+  const renderPagination = () => {
+    return (
+      <div className="flex justify-center mt-4 gap-2">
+        <button
+          onClick={() => setCurrentPage(1)}
+          disabled={currentPage === 1}
+          className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
+        >
+          First
+        </button>
+        <button
+          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
+        >
+          Prev
+        </button>
+
+        {visiblePages.map(page => (
+          <button
+            key={page}
+            onClick={() => setCurrentPage(page)}
+            className={`px-3 py-1 border rounded-md ${page === currentPage
+              ? "bg-blue-500 text-white"
+              : "bg-white hover:bg-gray-50"
+              }`}
+          >
+            {page}
+          </button>
+        ))}
+
+        <button
+          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
+        >
+          Next
+        </button>
+        <button
+          onClick={() => setCurrentPage(totalPages)}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
+        >
+          Last
+        </button>
+      </div>
+    );
+  };
 
   const handleDeleteClick = async (id) => {
     try {
@@ -785,7 +969,6 @@ const SyncData = () => {
                     onFocus={handleUnitKerjaFocus}
                     onChange={handleUnitKerjaChange}
                     placeholder="Pilih Unit Kerja"
-                    readOnly
                     className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
                     disabled={!selectedCabang}
                   />
@@ -904,82 +1087,10 @@ const SyncData = () => {
                     )}
                   </tr>
                 </thead>
-                <tbody className="text-center">
-                  {filteredData.map((item, index) => (
-                    <tr
-                      key={index}
-                      className={`bg-white border-b ${
-                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                      } hover:bg-gray-200 transition duration-150`}
-                    >
-                      <td className="py-4 px-6">{index + 1}</td>
-                      <td className="py-4 px-6">{item.cabang}</td>
-                      <td className="py-4 px-6">{item.unitKerja}</td>
-                      <td className="py-4 px-6">{item.namaAnggota}</td>
-                      <td className="py-4 px-6">{item.npa ? item.npa : "-"}</td>
-                      <td className="py-4 px-6">{item.nip}</td>
-                      <td className="py-4 px-6">
-                        <span
-                          className={`inline-block px-2 py-1 rounded ${
-                            item.dataSanduka
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {item.dataSanduka ? "YES" : "NO"}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span
-                          className={`inline-block px-2 py-1 rounded ${
-                            item.dataKtaDigital
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {item.dataKtaDigital ? "YES" : "NO"}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span
-                          className={`inline-block px-2 py-1 rounded ${
-                            item.dataDaspen
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {item.dataDaspen ? "YES" : "NO"}
-                        </span>
-                      </td>
-
-                      <td className="py-4 px-6">
-                        <button
-                          onClick={() =>
-                            window.open(
-                              `https://wa.me/${item.nomorHp}`,
-                              "_blank"
-                            )
-                          }
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
-                        >
-                          <FontAwesomeIcon icon={faWhatsapp} size="lg" />
-                        </button>
-                      </td>
-                      <td>
-                        <Button
-                          className="bg-red-500 p-2 border rounded-md"
-                          title="Hapus"
-                          type="button"
-                          onClick={() => handleDeleteClick(item.id)}
-                        >
-                          <FaTrash className="w-4 h-4" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+                {renderTableBody()}
               </table>
             </div>
+            {renderPagination()}
           </div>
         </div>
       </div>
