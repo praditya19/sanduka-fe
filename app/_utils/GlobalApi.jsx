@@ -1017,6 +1017,33 @@ const getLaporanPengeluaran = async (tanggal) => {
     throw error;
   }
 };
+// Get anggota meninggal
+const getNamaKwitansi = async (year, month) => {
+  try {
+    const response = await axiosClient.get(`/api/auth/users-deceased`, {
+      params: { year, month },
+    });
+    return response.data; // Mengembalikan data dari respons
+  } catch (error) {
+    console.error("Error fetching users deceased:", error);
+    throw error; // Melempar error agar dapat ditangani di luar
+  }
+};
+// Generate Kwitansi
+const generateKwitansi = async (data) => {
+  try {
+    const response = await axiosClient.post(`/api/kwitansi/generate`, data, {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+
+    return response.data;
+} catch (error) {
+    console.error('Error generating kwitansi:', error);
+    throw error;
+}
+}
 // Create Kwitansi
 const createKwitansiByIdAndNpa = async (id, npaPgri, formData) => {
   try {
@@ -1041,16 +1068,16 @@ const createKwitansiByIdAndNpa = async (id, npaPgri, formData) => {
 // Get Kwitansi
 const getKwitansiByIdAndNpa = async (id, npaPgri) => {
   try {
-    // Menambahkan responseType sebagai "blob"
     const response = await axiosClient.get(`/api/kwitansi/${id}/${npaPgri}`, {
-      responseType: "blob",
+      responseType: "blob", // Jika file yang dikembalikan berupa gambar atau PDF
     });
-    return response; // Mengembalikan seluruh respons, bukan hanya data
+    return response;
   } catch (error) {
     console.error("Error fetching kwitansi data:", error);
     throw error;
   }
 };
+
 
 // (Laporan Pemasukan Tahunan)
 const getLaporanPemasukanTahunan = async (tahun) => {
@@ -1105,7 +1132,7 @@ const getRekapAnggotaByCabang = async (cabang) => {
 // end
 
 //Start Pensiun
-const getAllPensiun = (page = 0, size = 560) => {
+const getAllPensiun = (page = 0, size = 570) => {
   return axiosClient.get(`/api/pensiun?page=${page}&size=${size}`);
 };
 // const getAllPensiun = async (page = 0) => {
@@ -1364,4 +1391,6 @@ export default {
   getAdminById,
   getDefaultIuranById,
   updateIuranData,
+  generateKwitansi,
+  getNamaKwitansi,
 };

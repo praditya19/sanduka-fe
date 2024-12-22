@@ -244,7 +244,7 @@ const SyncData = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     let fileToSend = formData.file;
-
+  
     if (
       fileToSend &&
       (fileToSend.type ===
@@ -252,51 +252,34 @@ const SyncData = () => {
         fileToSend.type === "application/vnd.ms-excel")
     ) {
       try {
-        const reader = new FileReader();
-
-        reader.onload = async (event) => {
-          const data = new Uint8Array(event.target.result);
-          const workbook = XLSX.read(data, { type: "array" });
-
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
-
-          const csvString = XLSX.utils.sheet_to_csv(worksheet);
-
-          const dataToSend = new FormData();
-          dataToSend.append(
-            "file",
-            new Blob([csvString], { type: "text/csv" }),
-            "converted.csv"
+        const dataToSend = new FormData();
+        dataToSend.append("file", fileToSend);
+        dataToSend.append("category", formData.category);
+        dataToSend.append("cabang", formData.cabang);
+        dataToSend.append("unitKerja", formData.unitKerja);
+        dataToSend.append("namaAnggota", formData.namaLengkap);
+        dataToSend.append("npaNip", formData.npaNip);
+        dataToSend.append("nomorHp", formData.nomorHp);
+        dataToSend.append("dataSanduka", formData.dataSanduka);
+        dataToSend.append("dataKtaDigital", formData.dataKtaDigital);
+        dataToSend.append("dataDaspen", formData.dataDaspen);
+        dataToSend.append("verifikasi", formData.verifikasi);
+  
+        try {
+          const response = await GlobalApi.uploadFile(dataToSend);
+          console.log("Data successfully submitted:", response);
+          setIsModalOpen(false);
+        } catch (error) {
+          console.error(
+            "Error submitting data:",
+            error.response?.data || error.message
           );
-          dataToSend.append("category", formData.category);
-          dataToSend.append("cabang", formData.cabang);
-          dataToSend.append("unitKerja", formData.unitKerja);
-          dataToSend.append("namaAnggota", formData.namaLengkap);
-          dataToSend.append("npaNip", formData.npaNip);
-          dataToSend.append("nomorHp", formData.nomorHp);
-          dataToSend.append("dataSanduka", formData.dataSanduka);
-          dataToSend.append("dataKtaDigital", formData.dataKtaDigital);
-          dataToSend.append("dataDaspen", formData.dataDaspen);
-          dataToSend.append("verifikasi", formData.verifikasi);
-
-          try {
-            const response = await GlobalApi.uploadFile(dataToSend);
-            console.log("Data successfully submitted:", response);
-            setIsModalOpen(false);
-          } catch (error) {
-            console.error(
-              "Error submitting data:",
-              error.response?.data || error.message
-            );
-          }
-        };
-
-        reader.readAsArrayBuffer(fileToSend);
+        }
       } catch (error) {
         console.error("Error processing file:", error);
       }
     } else {
+      // Jika file bukan tipe Excel, tetap kirim data seperti biasa
       const dataToSend = new FormData();
       dataToSend.append("file", fileToSend);
       dataToSend.append("category", formData.category);
@@ -309,7 +292,7 @@ const SyncData = () => {
       dataToSend.append("dataKtaDigital", formData.dataKtaDigital);
       dataToSend.append("dataDaspen", formData.dataDaspen);
       dataToSend.append("verifikasi", formData.verifikasi);
-
+  
       try {
         const response = await GlobalApi.uploadFile(dataToSend);
         console.log("Data successfully submitted:", response);
@@ -322,7 +305,7 @@ const SyncData = () => {
       }
     }
   };
-
+  
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };

@@ -6,9 +6,11 @@ import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
+import { FaPlusCircle, FaMinusCircle, FaWhatsapp } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import toast, { Toaster } from "react-hot-toast";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const Page = () => {
   const [pensiunList, setPensiunList] = useState([]);
@@ -56,6 +58,39 @@ const Page = () => {
     setFilteredPensiunList(filteredItems);
   };
 
+  const handleFiltersChange = (event) => {
+    const { name, value } = event.target;
+
+    // Update state berdasarkan filter yang diubah
+    if (name === "status") {
+      setSelectedStatus(value);
+    } else if (name === "year") {
+      setSelectedYear(value);
+    }
+
+    // Gabungkan filter
+    const filteredItems = pensiunList.filter((pensiun) => {
+      // Filter berdasarkan status
+      const statusFilter =
+        selectedStatus === "Pensiun"
+          ? pensiun.keterangan === "Pensiun"
+          : selectedStatus === "Segera"
+          ? pensiun.keterangan === null && pensiun.status === "Segera"
+          : true;
+
+      // Filter berdasarkan tahun
+      const tahunPrediksi = new Date(pensiun.prediksiPensiun).getFullYear();
+      const yearFilter =
+        selectedYear === "" || tahunPrediksi.toString() === selectedYear;
+
+      // Gabungkan kedua filter
+      return statusFilter && yearFilter;
+    });
+
+    // Update state dengan hasil filter
+    setFilteredPensiunList(filteredItems);
+  };
+
   useEffect(() => {
     const fetchBulan = async () => {
       try {
@@ -69,11 +104,26 @@ const Page = () => {
     fetchBulan();
   }, []);
 
-  const handleMonthChange = (e) => {
-    const month = e.target.value;
+  // const handleMonthChange = (e) => {
+  //   const month = e.target.value;
+  //   setSelectedMonth(month);
+  //   applyFilters(month, selectedYear);
+  //   setCurrentPage(1);
+  // };
+
+  const handleMonthChange = (event) => {
+    const month = event.target.value;
     setSelectedMonth(month);
-    applyFilters(month, selectedYear);
-    setCurrentPage(1);
+
+    if (month) {
+      const filtered = pensiunList.filter((item) => {
+        const itemMonth = new Date(item.tanggalLahir).getMonth() + 2;
+        return itemMonth === parseInt(month);
+      });
+      setFilteredPensiunList(filtered); // Tampilkan data yang difilter
+    } else {
+      setFilteredPensiunList(pensiunList); // Tampilkan semua data
+    }
   };
 
   const handleYearChange = (e) => {
@@ -83,11 +133,46 @@ const Page = () => {
     setCurrentPage(1);
   };
 
+  const handleWhatsApp = async (npa) => {
+    try {
+      // Step 1: Cek NPA untuk mendapatkan ID
+      const cekNpaResponse = await GlobalApi.cekNpa(npa);
+
+      if (cekNpaResponse && cekNpaResponse.id) {
+        const userId = cekNpaResponse.id;
+
+        // Step 2: Dapatkan data user berdasarkan ID
+        const userData = await GlobalApi.getUserById(userId);
+
+        if (userData && userData.nomorHp) {
+          let phoneNumber = userData.nomorHp;
+
+          // Step 3: Perbaiki nomor HP dengan menambahkan kode negara Indonesia (+62)
+          if (phoneNumber.startsWith("0")) {
+            phoneNumber = `+62${phoneNumber.slice(1)}`;
+          }
+
+          // Step 4: Arahkan ke WhatsApp
+          const whatsappUrl = `https://wa.me/${phoneNumber}`;
+          window.open(whatsappUrl, "_blank");
+        } else {
+          console.error("Nomor HP tidak ditemukan untuk pengguna ini.");
+        }
+      } else {
+        console.error("NPA tidak valid atau ID tidak ditemukan.");
+      }
+    } catch (error) {
+      console.error(
+        "Terjadi kesalahan saat memproses permintaan:",
+        error.message
+      );
+    }
+  };
+
   useEffect(() => {
     const fetchPensiunData = async () => {
       try {
         const fetchedData = await GlobalApi.getAllPensiun();
-        console.log(fetchedData.data.content);
 
         if (fetchedData && fetchedData.data.content) {
           const allPensiunList = fetchedData.data.content;
@@ -159,8 +244,6 @@ const Page = () => {
         (item) => item.status === "Segera"
       ).length;
       setStatusSegeraCount(countSegera);
-
-      // sessionStorage.setItem("statusSegera", countSegera);
     }
   }, [currentItems]);
 
@@ -190,6 +273,17 @@ const Page = () => {
   };
 
   useEffect(() => {
+    const uniqueYears = Array.from(
+      new Set(
+        pensiunList.map((pensiun) =>
+          new Date(pensiun.prediksiPensiun).getFullYear()
+        )
+      )
+    ).sort();
+    setYearOptions(uniqueYears); // Simpan ke state yearOptions
+  }, [pensiunList]);
+
+  useEffect(() => {
     if (!token) {
       router.push("/sign-in");
     }
@@ -212,6 +306,76 @@ const Page = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  const downloadTableAsExcel = (dataToExport) => {
+    try {
+      // 1. Konversi data tabel ke format array of arrays
+      const exportData = dataToExport.map((row, index) => ({
+        "No.": index + 1,
+        "Prediksi Pensiun": formatDate(row.prediksiPensiun),
+        Nama: row.namaLengkap,
+        NPA: row.npa,
+        "Tempat Lahir": row.tempatLahir,
+        "Tanggal Lahir": formatDate(row.tanggalLahir),
+        Jabatan: row.jabatan,
+        "Unit Kerja": row.unitKerja,
+        Usia: row.usia,
+        Cabang: row.cabang,
+        Status:
+          row.keterangan === null
+            ? row.status === "Segera"
+              ? "Segera"
+              : "Aktif"
+            : "Aktif",
+      }));
+
+      // 2. Buat worksheet dari data
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+      // 3. Atur format kolom untuk tanggal agar terbaca sebagai tipe date
+      worksheet["!cols"] = [
+        { wpx: 50 }, // No.
+        { wpx: 120 }, // Prediksi Pensiun
+        { wpx: 200 }, // Nama
+        { wpx: 100 }, // NPA
+        { wpx: 120 }, // Tempat Lahir
+        { wpx: 120 }, // Tanggal Lahir
+        { wpx: 150 }, // Jabatan
+        { wpx: 150 }, // Unit Kerja
+        { wpx: 50 }, // Usia
+        { wpx: 150 }, // Cabang
+        { wpx: 100 }, // Status
+      ];
+
+      // 4. Buat workbook dan tambahkan worksheet
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Data Anggota");
+
+      // 5. Buat file Excel dan simpan
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const blob = new Blob([excelBuffer], {
+        type: "application/octet-stream",
+      });
+      saveAs(blob, "Data_Anggota.xlsx");
+    } catch (error) {
+      console.error("Gagal mengunduh file Excel:", error.message);
+    }
+  };
+
+  const handleExportExcel = () => {
+    const dataToExport = selectedMonth
+      ? pensiunList.filter(
+          (item) =>
+            new Date(item.tanggalLahir).getMonth() + 2 ===
+            parseInt(selectedMonth)
+        )
+      : pensiunList;
+
+    downloadTableAsExcel(dataToExport);
+  };
 
   const handlePopup = async (npa) => {
     try {
@@ -258,6 +422,7 @@ const Page = () => {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
+              marginTop: "14px",
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
@@ -272,14 +437,13 @@ const Page = () => {
         </div>,
         {
           icon: null,
-          autoClose: 4000,
           duration: 4000,
           style: {
-            marginTop: "16%",
+            marginTop: "12%",
             fontSize: "1.75rem",
             padding: "10px",
             width: "80%",
-            maxWidth: "700px",
+            maxWidth: "450px",
             height: "50%",
             maxHeight: "400px",
             transform: "translate(-50%, -50%)",
@@ -368,6 +532,13 @@ const Page = () => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
+  const filteredData = pensiunList.filter((pensiun) => {
+    return (
+      (selectedMonth === "" || pensiun.bulan === selectedMonth) &&
+      pensiun.keterangan !== "Pensiun"
+    );
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
       <Toaster
@@ -427,8 +598,13 @@ const Page = () => {
                 </select>
 
                 <select
+                  name="year"
                   value={selectedYear}
-                  onChange={handleYearChange}
+                  onChange={(e) => {
+                    const selectedYear = e.target.value;
+                    setSelectedYear(selectedYear);
+                    applyFilters(selectedMonth, selectedYear);
+                  }}
                   className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
                 >
                   <option value="">Pilih Tahun</option>
@@ -441,18 +617,25 @@ const Page = () => {
 
                 <select
                   value={selectedStatus}
-                  onChange={handleStatusChange}
+                  onChange={handleFiltersChange}
                   className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
                 >
                   <option value="">Pilih Status</option>
                   <option value="Segera">Segera</option>
-                  <option value="Pensiun">Pensiun</option>
                 </select>
               </div>
 
-              <button className="p-2 px-4 bg-blue-500 text-white rounded w-full sm:w-auto transition duration-300 hover:bg-blue-700">
-                Cetak
-              </button>
+              <div className="space-x-2">
+                <button
+                  className="p-2 px-4 bg-green-500 text-white rounded w-full sm:w-auto transition duration-300 hover:bg-green-700"
+                  onClick={handleExportExcel}
+                >
+                  Excel
+                </button>
+                <button className="p-2 px-4 bg-blue-500 text-white rounded w-full sm:w-auto transition duration-300 hover:bg-blue-700">
+                  Cetak
+                </button>
+              </div>
             </div>
 
             <div className="bg-white p-4 rounded-lg shadow-md">
@@ -535,13 +718,25 @@ const Page = () => {
                                 : "Aktif"}
                             </td>
                             <td className="py-2 px-3 text-center hidden lg:table-cell">
-                              <button
-                                type="button"
-                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                onClick={() => handlePopup(pensiun.npa)}
-                              >
-                                Pensiun
-                              </button>
+                              <div className="flex items-center justify-center space-x-2">
+                                {/* Tombol Pensiun */}
+                                <button
+                                  type="button"
+                                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                  onClick={() => handlePopup(pensiun.npa)}
+                                >
+                                  Pensiun
+                                </button>
+
+                                {/* Ikon WhatsApp */}
+                                <button
+                                  type="button"
+                                  className="flex items-center text-green-500 hover:text-green-600"
+                                  onClick={() => handleWhatsApp(pensiun.npa)}
+                                >
+                                  <FaWhatsapp className="h-6 w-6 mr-2" />
+                                </button>
+                              </div>
 
                               {popupVisible && (
                                 <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex justify-center items-center z-50">
@@ -595,13 +790,22 @@ const Page = () => {
                                 <div>
                                   <strong>Status:</strong> {pensiun.status}
                                 </div>
-                                <button
-                                  type="button"
-                                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                  onClick={() => handlePopup(pensiun.npa)}
-                                >
-                                  Pensiun
-                                </button>
+                                <div className="flex items-center space-x-2">
+                                  <button
+                                    type="button"
+                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                    onClick={() => handlePopup(pensiun.npa)}
+                                  >
+                                    Pensiun
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="flex items-center text-green-500 hover:text-green-600"
+                                    onClick={() => handleWhatsApp(pensiun.npa)}
+                                  >
+                                    <FaWhatsapp className="h-6 w-6 mr-2" />
+                                  </button>
+                                </div>
 
                                 {popupVisible && (
                                   <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex justify-center items-center z-50">

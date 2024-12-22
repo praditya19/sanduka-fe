@@ -583,7 +583,6 @@ Data berhasil disimpan!          </strong>
                     name="tanggalTransaksi"
                     value={formValues.tanggalTransaksi || ""}
                     onChange={handleChange}
-                    readOnly
                   />
                 </div>
 
