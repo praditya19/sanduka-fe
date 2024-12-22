@@ -1295,6 +1295,26 @@ const getAllHistoryData = async (page = 0, size = 10) => {
   }
 };
 
+const getJumlahDataUpload = async () => {
+  try {
+    const response = await axiosClient.get("/api/files/total");
+    return response.data;
+  } catch (error) {
+    console.error("Error creating jumlah data terupload:", error);
+    throw error;
+  }
+};
+
+const deleteFiles = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/files/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching files data: ", error);
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1393,4 +1413,6 @@ export default {
   updateIuranData,
   generateKwitansi,
   getNamaKwitansi,
+  deleteFiles,
+  getJumlahDataUpload,
 };

@@ -1,9 +1,11 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { faWhatsapp} from "@fortawesome/free-brands-svg-icons";
+import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import {
   FaPlusCircle,
-  FaMinusCircle
+  FaMinusCircle,
+  FaExclamationTriangle,
+  FaTrash,
 } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -13,6 +15,8 @@ import HeaderMenu from "@/app/_components/HeaderMenu";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import * as XLSX from "xlsx";
 import { Input } from "@/components/ui/input";
+import { LoaderIcon } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 
 const SyncData = () => {
   const [cabangList, setCabangList] = useState([]);
@@ -39,6 +43,39 @@ const SyncData = () => {
     file: null,
     category: "",
   });
+  const [loader, setLoader] = useState(false);
+  const [totalFiles, setTotalFiles] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [displayedPages, setDisplayedPages] = useState([1, 2, 3]);
+  const [visiblePages, setVisiblePages] = useState([1, 2, 3]);
+  const totalData = data.length; // Hitung total data
+
+  const paginateData = (data) => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return data.slice(startIndex, endIndex);
+  };
+
+  useEffect(() => {
+    setTotalPages(Math.ceil(totalData / itemsPerPage));
+  }, [totalData]);
+
+  useEffect(() => {
+    updateVisiblePages(currentPage);
+  }, [currentPage, totalPages]);
+
+  const updateVisiblePages = (current) => {
+    if (current === 1) {
+      setVisiblePages([1, 2, 3].filter(page => page <= totalPages));
+    } else if (current === totalPages) {
+      setVisiblePages([current - 2, current - 1, current].filter(page => page > 0));
+    } else {
+      setVisiblePages([current - 1, current, current + 1].filter(page => page > 0 && page <= totalPages));
+    }
+  };
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -79,28 +116,18 @@ const SyncData = () => {
   const handleUnitKerjaChange = (e) => {
     const input = e.target.value;
     setUnitKerjaInput(input);
+    setSelectedUnitKerja(input);
 
     const filteredUnitKerja = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang &&
         unitKerja.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
-        unitKerja.unitKerja.toLowerCase().startsWith(input.toLowerCase())
+        unitKerja.unitKerja.toLowerCase().includes(input.toLowerCase())
     );
 
-    setShowUnitKerjaDropdown(filteredUnitKerja.length > 0);
+    setShowUnitKerjaDropdown(true);
     setFilteredUnitKerja(filteredUnitKerja);
-
-    const rekapFilteredByUnitKerja = originalRekapData.filter(
-      (item) =>
-        item.alamatKerja &&
-        item.alamatKerja.toLowerCase().includes(input.toLowerCase())
-    );
-
-    if (input === "") {
-      setRekapData(originalRekapData);
-    } else {
-      setRekapData(rekapFilteredByUnitKerja);
-    }
+    setCurrentPage(1); // Reset pagination when typing in unit kerja
   };
 
   const handleCabangSearch = (query) => {
@@ -146,12 +173,13 @@ const SyncData = () => {
     setSelectedUnitKerja(unitKerja.unitKerja);
     setUnitKerjaInput(unitKerja.unitKerja);
     setShowUnitKerjaDropdown(false);
-
-    const filteredRekapData = originalRekapData.filter(
-      (item) => item.alamatKerja === unitKerja.unitKerja
-    );
-    setRekapData(filteredRekapData);
+    setCurrentPage(1); // Reset to first page when unit kerja is selected
   };
+
+  useEffect(() => {
+    setSelectedUnitKerja("");
+    setUnitKerjaInput("");
+  }, [selectedCabang]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -189,37 +217,65 @@ const SyncData = () => {
   }, []);
 
   const toggleRowExpand = (index) => {
-    setExpandedRows(prev =>
-      prev.includes(index)
-        ? prev.filter(i => i !== index)
-        : [...prev, index]
+    setExpandedRows((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
     );
   };
 
-  const filteredData = data.filter((item) => {
-    const cabangMatch = selectedCabang ? item.cabang === selectedCabang : true;
-    const unitKerjaMatch = searchTerm
-      ? item.unitKerja.toLowerCase().includes(searchTerm.toLowerCase())
-      : true;
-    return cabangMatch && unitKerjaMatch;
-  });
+  const filteredData = data
+    .filter((item) => {
+      const cabangMatch = selectedCabang ? item.cabang === selectedCabang : true;
+      const unitKerjaMatch = selectedUnitKerja
+        ? item.unitKerja.toLowerCase() === selectedUnitKerja.toLowerCase()
+        : true;
+      return cabangMatch && unitKerjaMatch;
+    });
+
+  // Update useEffect for pagination reset
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCabang, selectedUnitKerja]);
+
+  const paginatedData = paginateData(filteredData);
+
+  useEffect(() => {
+    // Update total pages whenever filtered data changes
+    setTotalPages(Math.ceil(filteredData.length / itemsPerPage));
+  }, [filteredData, itemsPerPage]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCabang, searchTerm]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const result = await GlobalApi.getAllFiles();
         setData(result);
+        setTotalPages(Math.ceil(result.length / itemsPerPage));
 
         const uniqueCabang = [...new Set(result.map((item) => item.cabang))];
-        setCabangList(
-          uniqueCabang.map((cabang, id) => ({ id, kecamatan: cabang }))
-        );
+        setCabangList(uniqueCabang.map((cabang, id) => ({ id, kecamatan: cabang })));
       } catch (error) {
         console.error("Error fetching files:", error);
       }
     };
-
     fetchData();
+  }, [itemsPerPage]);
+
+  const fetchTotalFiles = async () => {
+    try {
+      const total = await GlobalApi.getJumlahDataUpload();
+      setTotalFiles(total);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTotalFiles();
   }, []);
 
   const handleInputChange = (e) => {
@@ -243,6 +299,7 @@ const SyncData = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoader(true);
     let fileToSend = formData.file;
   
     if (
@@ -334,8 +391,363 @@ const SyncData = () => {
     };
   }, []);
 
+  const renderTableBody = () => {
+    return (
+      <tbody className="text-center">
+        {paginatedData.map((item, index) => {
+          const actualIndex = (currentPage - 1) * itemsPerPage + index + 1;
+          return (
+            <tr
+              key={item.id || index}
+              className={`bg-white border-b ${index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                } hover:bg-gray-200 transition duration-150`}
+            >
+              <td className="py-4 px-6">{actualIndex}</td>
+              <td className="py-4 px-6">{item.cabang}</td>
+              <td className="py-4 px-6">{item.unitKerja}</td>
+              {!isMobile && (
+                <>
+                  <td className="py-4 px-6">{item.namaAnggota}</td>
+                  <td className="py-4 px-6">{item.npa ? item.npa : "-"}</td>
+                  <td className="py-4 px-6">{item.nip}</td>
+                  <td className="py-4 px-6">
+                    <span
+                      className={`inline-block px-2 py-1 rounded ${item.dataSanduka
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                        }`}
+                    >
+                      {item.dataSanduka ? "YES" : "NO"}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <span
+                      className={`inline-block px-2 py-1 rounded ${item.dataKtaDigital
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                        }`}
+                    >
+                      {item.dataKtaDigital ? "YES" : "NO"}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <span
+                      className={`inline-block px-2 py-1 rounded ${item.dataDaspen
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                        }`}
+                    >
+                      {item.dataDaspen ? "YES" : "NO"}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <button
+                      onClick={() =>
+                        window.open(`https://wa.me/${item.nomorHp}`, "_blank")
+                      }
+                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
+                    >
+                      <FontAwesomeIcon icon={faWhatsapp} size="lg" />
+                    </button>
+                  </td>
+                  <td>
+                    <Button
+                      className="bg-red-500 p-2 border rounded-md"
+                      title="Hapus"
+                      type="button"
+                      onClick={() => handleDeleteClick(item.id)}
+                    >
+                      <FaTrash className="w-4 h-4" />
+                    </Button>
+                  </td>
+                </>
+              )}
+            </tr>
+          );
+        })}
+      </tbody>
+    );
+  };
+
+  useEffect(() => {
+    updateDisplayedPages(currentPage);
+  }, [currentPage]);
+
+  const updateDisplayedPages = (current) => {
+    let pages = [];
+    if (current <= 2) {
+      pages = [1, 2, 3];
+    } else if (current >= totalPages - 1) {
+      pages = [totalPages - 2, totalPages - 1, totalPages];
+    } else {
+      pages = [current - 1, current, current + 1];
+    }
+    pages = pages.filter(page => page > 0 && page <= totalPages);
+    setDisplayedPages(pages);
+  };
+
+  const renderPagination = () => {
+    return (
+      <div className="flex justify-center mt-4 gap-2">
+        <button
+          onClick={() => setCurrentPage(1)}
+          disabled={currentPage === 1}
+          className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
+        >
+          First
+        </button>
+        <button
+          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
+        >
+          Prev
+        </button>
+
+        {visiblePages.map(page => (
+          <button
+            key={page}
+            onClick={() => setCurrentPage(page)}
+            className={`px-3 py-1 border rounded-md ${page === currentPage
+              ? "bg-blue-500 text-white"
+              : "bg-white hover:bg-gray-50"
+              }`}
+          >
+            {page}
+          </button>
+        ))}
+
+        <button
+          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
+        >
+          Next
+        </button>
+        <button
+          onClick={() => setCurrentPage(totalPages)}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
+        >
+          Last
+        </button>
+      </div>
+    );
+  };
+
+  const handleDeleteClick = async (id) => {
+    try {
+      if (!id) {
+        toast.error(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                width: "48px",
+                height: "48px",
+                color: "red",
+                marginBottom: "16px",
+              }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+            </svg>
+            <strong
+              style={{
+                fontSize: "1.75rem",
+                display: "block",
+                marginBottom: "8px",
+              }}
+            >
+              Id tidak ditemukan.
+            </strong>
+          </div>,
+          {
+            icon: null,
+            duration: 2000,
+            style: {
+              marginTop: "16%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "700px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
+        );
+        return;
+      }
+
+      const result = await GlobalApi.deleteFiles(id);
+
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            File Berhasil Dihapus!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 4000,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 4000);
+
+      setTimeout(() => {
+        setIsPopupVisible(false);
+      }, 4000);
+    } catch (error) {
+      console.error("Gagal Menghapus Data:", error);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal Menghapus Data.
+          </strong>
+        </div>,
+        {
+          icon: null,
+          autoClose: 3000,
+          duration: 3000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
+      <Toaster
+        toastOptions={{
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+          success: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+          error: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+        }}
+      />
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
@@ -356,24 +768,6 @@ const SyncData = () => {
       <div>
         <div>
           <div className="min-h-screen flex-grow bg-gray-50 py-10 pt-16">
-            <div className="flex flex-col md:flex-row justify-center md:space-x-4 mb-6">
-              <Button className="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300 mb-2 md:mb-0">
-                Rekap Hasil Upload
-              </Button>
-              <Button
-                className="bg-green-600 hover:bg-green-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300 mb-2 md:mb-0"
-                onClick={() => setIsModalOpen(true)}
-              >
-                Upload Data
-              </Button>
-              <Button
-                onClick={handlePrint}
-                className="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300"
-              >
-                Cetak
-              </Button>
-            </div>
-
             {isModalOpen && (
               <>
                 <div
@@ -442,7 +836,11 @@ const SyncData = () => {
                           onClick={handleSubmit}
                           className="bg-green-600 hover:bg-green-800 text-white py-2 px-4 rounded-lg"
                         >
-                          Submit
+                          {loader ? (
+                            <LoaderIcon className="animate-spin mr-2" />
+                          ) : (
+                            "Submit"
+                          )}
                         </Button>
                       </div>
                     </form>
@@ -451,100 +849,129 @@ const SyncData = () => {
               </>
             )}
 
-            <div className="flex flex-wrap items-center space-x-2 mb-4">
-              <div className="flex flex-col relative w-64" ref={cabangRef}>
-                <Input
-                  type="text"
-                  value={selectedCabang}
-                  readOnly
-                  onClick={handleCabangClick}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                  placeholder="Pilih Cabang"
-                />
-                {showCabangDropdown && (
-                  <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
-                    <ul className="max-h-44 overflow-y-auto">
-                      <li className="py-2 px-2">
-                        <Input
-                          type="text"
-                          onChange={(e) => handleCabangSearch(e.target.value)}
-                          className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
-                          placeholder="Cari atau ketik Cabang..."
-                          autoFocus
-                        />
-                      </li>
+            <div className="flex flex-wrap items-center space-x-2 mb-4 justify-between">
+              <div className="flex space-x-2">
+                <div className="flex flex-col relative w-64" ref={cabangRef}>
+                  <Input
+                    type="text"
+                    value={selectedCabang}
+                    readOnly
+                    onClick={handleCabangClick}
+                    className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                    placeholder="Pilih Cabang"
+                  />
+                  {showCabangDropdown && (
+                    <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                      <ul className="max-h-44 overflow-y-auto">
+                        <li className="py-2 px-2">
+                          <Input
+                            type="text"
+                            onChange={(e) => handleCabangSearch(e.target.value)}
+                            className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                            placeholder="Cari atau ketik Cabang..."
+                            autoFocus
+                          />
+                        </li>
 
-                      <li
-                        onClick={() => handleSelectCabang({ kecamatan: "" })}
-                        className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                      >
-                        Pilih Cabang
-                      </li>
-                      {filteredCabangList.map((cabang) => (
                         <li
-                          key={cabang.id}
-                          onClick={() => handleSelectCabang(cabang)}
+                          onClick={() => handleSelectCabang({ kecamatan: "" })}
                           className="px-4 py-2 cursor-pointer hover:bg-gray-200"
                         >
-                          {cabang.kecamatan}
+                          Pilih Cabang
                         </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col relative w-64" ref={unitKerjaRef}>
-                <Input
-                  type="text"
-                  value={unitKerjaInput}
-                  onFocus={handleUnitKerjaFocus}
-                  onChange={handleUnitKerjaChange}
-                  placeholder="Pilih Unit Kerja"
-                  readOnly
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
-                  disabled={!selectedCabang}
-                />
-                {showUnitKerjaDropdown && (
-                  <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
-                    <ul className="max-h-44 overflow-y-auto">
-                      <li className="py-2 px-2">
-                        <Input
-                          type="text"
-                          onChange={(e) =>
-                            handleUnitKerjaSearch(e.target.value)
-                          }
-                          placeholder="Cari atau ketik Unit Kerja..."
-                          autoFocus
-                          className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-2"
-                        />
-                      </li>
-                      <li
-                        onClick={() => handleUnitKerjaSelect({ unitKerja: "" })}
-                        className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                      >
-                        Pilih Unit Kerja
-                      </li>
-                      {filteredUnitKerja.length > 0 ? (
-                        filteredUnitKerja.map((unitKerja) => (
+                        {filteredCabangList.map((cabang) => (
                           <li
-                            key={unitKerja.id}
-                            onClick={() => handleUnitKerjaSelect(unitKerja)}
+                            key={cabang.id}
+                            onClick={() => handleSelectCabang(cabang)}
                             className="px-4 py-2 cursor-pointer hover:bg-gray-200"
                           >
-                            {unitKerja.unitKerja}
+                            {cabang.kecamatan}
                           </li>
-                        ))
-                      ) : (
-                        <li className="px-4 py-2 text-gray-500 cursor-default">
-                          Tidak ada hasil
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col relative w-64" ref={unitKerjaRef}>
+                  <Input
+                    type="text"
+                    value={unitKerjaInput}
+                    onFocus={handleUnitKerjaFocus}
+                    onChange={handleUnitKerjaChange}
+                    placeholder="Pilih Unit Kerja"
+                    className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
+                    disabled={!selectedCabang}
+                  />
+                  {showUnitKerjaDropdown && (
+                    <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                      <ul className="max-h-44 overflow-y-auto">
+                        <li className="py-2 px-2">
+                          <Input
+                            type="text"
+                            onChange={(e) =>
+                              handleUnitKerjaSearch(e.target.value)
+                            }
+                            placeholder="Cari atau ketik Unit Kerja..."
+                            autoFocus
+                            className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-2"
+                          />
                         </li>
-                      )}
-                    </ul>
-                  </div>
-                )}
+                        <li
+                          onClick={() =>
+                            handleUnitKerjaSelect({ unitKerja: "" })
+                          }
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                        >
+                          Pilih Unit Kerja
+                        </li>
+                        {filteredUnitKerja.length > 0 ? (
+                          filteredUnitKerja.map((unitKerja) => (
+                            <li
+                              key={unitKerja.id}
+                              onClick={() => handleUnitKerjaSelect(unitKerja)}
+                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                            >
+                              {unitKerja.unitKerja}
+                            </li>
+                          ))
+                        ) : (
+                          <li className="px-4 py-2 text-gray-500 cursor-default">
+                            Tidak ada hasil
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center space-x-2 mb-4">
+                <div className="flex flex-col md:flex-row justify-center md:space-x-4">
+                  <h1>
+                    {loading
+                      ? "Loading..."
+                      : `Total Data Terupload: ${totalFiles}`}
+                  </h1>
+                </div>
+              </div>
+
+              <div className="flex flex-col md:flex-row justify-center md:space-x-4">
+                <Button
+                  className="bg-green-600 hover:bg-green-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300 mb-2 md:mb-0"
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  Upload Data
+                </Button>
+                <Button
+                  onClick={handlePrint}
+                  className="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300"
+                >
+                  Cetak
+                </Button>
               </div>
             </div>
+
             <div
               ref={tableRef}
               className="overflow-x-auto relative shadow-md sm:rounded-lg"
@@ -552,86 +979,49 @@ const SyncData = () => {
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-white uppercase bg-teal-700 text-center">
                   <tr>
-                    <th scope="col" className="py-3 px-6">No</th>
-                    <th scope="col" className="py-3 px-6">Cabang</th>
-                    <th scope="col" className="py-3 px-6">Unit Kerja</th>
+                    <th scope="col" className="py-3 px-6">
+                      No
+                    </th>
+                    <th scope="col" className="py-3 px-6">
+                      Cabang
+                    </th>
+                    <th scope="col" className="py-3 px-6">
+                      Unit Kerja
+                    </th>
                     {!isMobile && (
                       <>
-                        <th scope="col" className="py-3 px-6">Nama</th>
-                        <th scope="col" className="py-3 px-6">NPA/NIP</th>
-                        <th scope="col" className="py-3 px-6">Data Sanduka</th>
-                        <th scope="col" className="py-3 px-6">Data KTA Digital</th>
-                        <th scope="col" className="py-3 px-6">Data Daspen</th>
-                        <th scope="col" className="py-3 px-6">Wa</th>
+                        <th scope="col" className="py-3 px-6">
+                          Nama
+                        </th>
+                        <th scope="col" className="py-3 px-6">
+                          NPA
+                        </th>
+                        <th scope="col" className="py-3 px-6">
+                          NIP
+                        </th>
+                        <th scope="col" className="py-3 px-6">
+                          Data Sanduka
+                        </th>
+                        <th scope="col" className="py-3 px-6">
+                          Data KTA Digital
+                        </th>
+                        <th scope="col" className="py-3 px-6">
+                          Data Daspen
+                        </th>
+                        <th scope="col" className="py-3 px-6">
+                          Wa
+                        </th>
+                        <th scope="col" className="py-3 px-6">
+                          Aksi
+                        </th>
                       </>
                     )}
                   </tr>
                 </thead>
-                <tbody className="text-center">
-                  {filteredData.map((item, index) => (
-                    <tr
-                      key={index}
-                      className={`bg-white border-b ${
-                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                      } hover:bg-gray-200 transition duration-150`}
-                    >
-                      <td className="py-4 px-6">{index + 1}</td>
-                      <td className="py-4 px-6">{item.cabang}</td>
-                      <td className="py-4 px-6">{item.unitKerja}</td>
-                      <td className="py-4 px-6">{item.namaAnggota}</td>
-                      <td className="py-4 px-6">{item.npaNip}</td>
-                      <td className="py-4 px-6">
-                        <span
-                          className={`inline-block px-2 py-1 rounded ${
-                            item.dataSanduka
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {item.dataSanduka ? "YES" : "NO"}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span
-                          className={`inline-block px-2 py-1 rounded ${
-                            item.dataKtaDigital
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {item.dataKtaDigital ? "YES" : "NO"}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span
-                          className={`inline-block px-2 py-1 rounded ${
-                            item.dataDaspen
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {item.dataDaspen ? "YES" : "NO"}
-                        </span>
-                      </td>
-
-                      <td className="py-4 px-6">
-                        <button
-                          onClick={() =>
-                            window.open(
-                              `https://wa.me/${item.nomorHp}`,
-                              "_blank"
-                            )
-                          }
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
-                        >
-                          <FontAwesomeIcon icon={faWhatsapp} size="lg" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+                {renderTableBody()}
               </table>
             </div>
+            {renderPagination()}
           </div>
         </div>
       </div>

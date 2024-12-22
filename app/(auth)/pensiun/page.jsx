@@ -126,6 +126,7 @@ const Page = () => {
     }
   };
 
+
   const handleYearChange = (e) => {
     const year = e.target.value;
     setSelectedYear(year);
@@ -539,6 +540,7 @@ const Page = () => {
     );
   });
 
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
       <Toaster
@@ -577,9 +579,8 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="min-h-screen bg-gray-100 p-4">
             <div className="w-full flex flex-wrap items-center justify-between mb-4 mt-16 gap-4">
@@ -864,11 +865,10 @@ const Page = () => {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 border rounded text-sm ${
-                        page === currentPage
-                          ? "bg-blue-500 text-white"
-                          : "bg-white hover:bg-gray-50"
-                      }`}
+                      className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                        ? "bg-blue-500 text-white"
+                        : "bg-white hover:bg-gray-50"
+                        }`}
                     >
                       {page}
                     </button>
