@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -7,12 +7,15 @@ import Modal from "react-modal";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import {
-  FaPlus,
+  FaPlusCircle,
+  FaMinusCircle,
   FaEdit,
   FaExchangeAlt,
   FaExclamationTriangle,
   FaWhatsapp,
+  FaTimes
 } from "react-icons/fa";
+import toast, { Toaster } from "react-hot-toast";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
@@ -34,8 +37,6 @@ function StatusAnggota() {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
-  const [isCabangEnabled, setIsCabangEnabled] = useState(false);
-  const [isUnitKerjaEnabled, setIsUnitKerjaEnabled] = useState(false);
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -44,9 +45,29 @@ function StatusAnggota() {
   const [loading, setLoading] = useState(true);
   const [showCabangDropdown, setShowCabangDropdown] = useState(false);
   const [originalCabangList, setOriginalCabangList] = useState([]);
-  const [isPopupVisible, setPopupVisible] = useState(false);
+  const [popupVisible, setPopupVisible] = useState(false);
   const [fotoBase64, setFotoBase64] = useState("");
-
+  const dropdownRef = useRef(null);
+  const [showDropdownCabang, setShowDropdownCabang] = useState(false);
+  const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
+  const [searchCabang, setSearchCabang] = useState("");
+  const [cabangOptions, setCabangOptions] = useState([]);
+  const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
+  const [listCabang, setListCabang] = useState([]);
+  const [allUnitKerja, setAllUnitKerja] = useState([]);
+  const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
+  const [formData, setFormData] = useState({ unit: "" });
+  const [isUnitKerjaDisabled, setIsUnitKerjaDisabled] = useState(true);
+  const [searchUnitKerja, setSearchUnitKerja] = useState('');
+  const [filteredUnitKerjaOptions, setFilteredUnitKerjaOptions] = useState([]);
+  const [expandedIndex, setExpandedIndex] = useState(null);
+  const [isPopupDaspen, setIsPopupDaspen] = useState(false);
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [popupVisibleKeluar, setPopupVisibleKeluar] = useState(false);
+  const [kategoriDaspen, setKategoriDaspen] = useState("");
+  const [daspenData, setDaspenData] = useState(null);
+  const [isKategoriChanged, setIsKategoriChanged] = useState(false);
+  const [role, setRole] = useState("");
   const [rekapData, setRekapData] = useState([]);
   const profileImageUrl = "/profile.png";
   const [cabangList, setCabangList] = useState([]);
@@ -64,13 +85,86 @@ function StatusAnggota() {
 
   const [originalRekapData, setOriginalRekapData] = useState([]);
 
+  const handleDataDaspen = async () => {
+    const anggotaId = sessionStorage.getItem("anggotaId");
+    if (anggotaId) {
+      try {
+        const response = await GlobalApi.getUserById(anggotaId);
+        // console.log("data", response)
+        if (response) {
+          // console.log("Data anggota yang diterima dari getUserById:", response);
+
+          // Set kategoriDaspen dengan nilai dari response
+          setKategoriDaspen(response.kategoriDaspen || "Tidak tersedia");
+
+          const nip = response.nip;
+
+          if (nip) {
+            const fileResponse = await GlobalApi.getFileByNip(nip);
+
+            if (fileResponse) {
+              // console.log("Data file untuk NIP:", nip, fileResponse);
+              setDaspenData(fileResponse);
+              setIsPopupDaspen(true);
+            } else {
+              console.log("File tidak ditemukan untuk NIP:", nip);
+            }
+          } else {
+            console.log("NIP tidak ditemukan dalam data anggota");
+          }
+        } else {
+          console.log("Data anggota tidak ditemukan");
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error(
+          <div style={{ textAlign: "center" }}>
+            {/* Ikon silang di atas */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "8px",
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                style={{ width: "48px", height: "48px", color: "red" }}
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+                <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+              </svg>
+            </div>
+            {/* Teks di bawah ikon */}
+            <strong style={{ fontSize: "1.75rem", display: "block" }}>
+              NIP tidak ditemukan, silahkan melakukan sinkronisasi dahulu.
+            </strong>
+          </div>,
+          {
+            icon: false,
+            duration: 5000,
+            style: {
+              borderRadius: "10px",
+              background: "white",
+              padding: "16px",
+            },
+          }
+        );
+      }
+    } else {
+      console.log("Anggota ID tidak ditemukan di sessionStorage");
+    }
+  };
 
   useEffect(() => {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
-        setOriginalCabangList(response.data);
-        setFilteredCabangList(response.data);
+        setListCabang(response.data);
+        setCabangOptions(response.data);
+        setFilteredCabangOptions(response.data);
       } catch (error) {
         console.error("Error fetching cabang data:", error);
       }
@@ -82,7 +176,8 @@ function StatusAnggota() {
     const fetchUnitKerjaData = async () => {
       try {
         const response = await GlobalApi.getUnitKerja();
-        setUnitKerjaList(response.data);
+        setAllUnitKerja(response.data);
+        setUnitKerjaOptions(response.data);
       } catch (error) {
         console.error("Error fetching unit kerja data:", error);
       }
@@ -90,11 +185,21 @@ function StatusAnggota() {
     fetchUnitKerjaData();
   }, []);
 
-  const handleUnitKerjaFocus = () => {
-    if (selectedCabang) {
-      setShowUnitKerjaDropdown(true);
-    }
+  const handleCabangSelect = (cabang) => {
+    setSelectedCabang(cabang.kecamatan);
+    setFormData((prev) => ({
+      ...prev,
+      unit: "",
+    }));
+    setFilteredUnitKerja(
+      allUnitKerja.filter(
+        (unit) => unit.cabang.toLowerCase() === cabang.kecamatan.toLowerCase()
+      )
+    );
+    setIsUnitKerjaDisabled(false);
+    setShowDropdownCabang(false);
   };
+
 
   const handleUnitKerjaChange = (e) => {
     const input = e.target.value;
@@ -123,60 +228,19 @@ function StatusAnggota() {
     }
   };
 
-  const handleCabangSearch = (query) => {
-    const filtered = originalCabangList.filter((cabang) =>
-      cabang.kecamatan.toLowerCase().includes(query.toLowerCase())
-    );
-    setFilteredCabangList(filtered);
+  const handleUnitKerjaSelect = (selectedItem) => {
+    setSelectedUnitKerja(selectedItem.unitKerja || "Pilih Unit Kerja");
+    setShowDropdownUnitKerja(false);
+    setSearchUnitKerja('');
   };
 
-  const handleSelectCabang = async (cabang) => {
-    setSelectedCabang(cabang.kecamatan);
-    setShowCabangDropdown(false);
-
-    await fetchRekapData(cabang.kecamatan);
-    const filtered = unitKerjaList.filter(
-      (unitKerja) =>
-        unitKerja.cabang &&
-        unitKerja.cabang.toLowerCase() === cabang.kecamatan.toLowerCase()
-    );
-    setFilteredUnitKerja(filtered);
-  };
-
-  const handleUnitKerjaSearch = (searchTerm) => {
-    if (searchTerm === "") {
-      const allFiltered = unitKerjaList.filter(
-        (unitKerja) => unitKerja.cabang === selectedCabang
-      );
-      setFilteredUnitKerja(allFiltered);
-    } else {
-      const filtered = unitKerjaList.filter(
-        (unitKerja) =>
-          unitKerja.unitKerja
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) &&
-          unitKerja.cabang === selectedCabang
-      );
-      setFilteredUnitKerja(filtered);
+  useEffect(() => {
+    const role = sessionStorage.getItem("role");
+    const cabang = sessionStorage.getItem("cabang");
+    if (role === "ADMIN" && cabang) {
+      setSelectedCabang(cabang);
     }
-
-    setShowUnitKerjaDropdown(true);
-  };
-
-  const handleUnitKerjaSelect = (unitKerja) => {
-    setSelectedUnitKerja(unitKerja.unitKerja);
-    setUnitKerjaInput(unitKerja.unitKerja);
-    setShowUnitKerjaDropdown(false);
-
-
-    const filteredRekapData = Array.isArray(originalRekapData)
-      ? originalRekapData.filter(
-        (item) => item.alamatKerja === unitKerja.unitKerja
-      )
-      : [];
-
-    setRekapData(filteredRekapData);
-  };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -212,17 +276,6 @@ function StatusAnggota() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-
-  const fetchRekapData = async (cabang) => {
-    try {
-      const data = await GlobalApi.getRekapAnggotaByCabang(cabang);
-      setRekapData(data);
-      setOriginalRekapData(data);
-    } catch (error) {
-      console.error("Error fetching rekap data:", error);
-    }
-  };
 
   useEffect(() => {
     if (!token) {
@@ -277,14 +330,14 @@ function StatusAnggota() {
 
   useEffect(() => {
     const fetchAnggota = async (
-      page = 0, 
-      cabang = "", 
+      page = 0,
+      cabang = "",
       unitKerja = ""
     ) => {
       try {
         const fotoBase64Array = [];
         const fetchedData = await GlobalApi.getAllAnggota(page, cabang, unitKerja);
-    
+
         if (fetchedData.length > 0) {
           fetchedData.forEach((item) => {
             if (item.foto) {
@@ -302,7 +355,7 @@ function StatusAnggota() {
         } else {
           console.warn("No data found.");
         }
-    
+
         setFotoBase64(fotoBase64Array);
         setLoading(false);
         setAnggota(fetchedData);
@@ -312,11 +365,10 @@ function StatusAnggota() {
         setAnggota([]);
         setLoading(false);
       }
-    };    
+    };
     fetchAnggota();
   }, []);
 
-  const jumlahAnggota = anggota.length;
 
   const countMembersByLevel = (level) => {
     return anggota.filter((member) => member.tingkatSekolah === level).length;
@@ -381,7 +433,8 @@ function StatusAnggota() {
     TK_RA: "TK/RA",
     SD_MI: "SD/MI",
     SMP_MTS: "SMP/MTS",
-    SMA_SMK_MA: "SMA/SMK/MA",
+    SMA_MA: "SMA/MA",
+    SMK: "SMK",
     PERGURUAN_TINGGI: "Perguruan Tinggi",
     PAUD: "PAUD",
   };
@@ -391,9 +444,9 @@ function StatusAnggota() {
   };
 
   const categories = [
-    { title: "PNS", count: JumlahPNS, items: ["PAUD", "SMP_MTS"] },
-    { title: "NON PNS", count: JumlahNON_PNS, items: ["TK_RA", "SMA_SMK_MA"] },
-    { title: "PPPK", count: JumlahPPPK, items: ["SD_MI", "PERGURUAN_TINGGI"] },
+    { title: "PNS", count: JumlahPNS, items: ["PAUD", "SMP_MTS", "PERGURUAN_TINGGI"] },
+    { title: "NON PNS", count: JumlahNON_PNS, items: ["TK_RA", "SMA_MA", "SEKOLAH_LUAR_BIASA"] },
+    { title: "PPPK", count: JumlahPPPK, items: ["SD_MI", "SMK", "LAINNYA"] },
   ];
 
   const handlePrint = () => {
@@ -516,10 +569,9 @@ function StatusAnggota() {
       const statusFilter =
         selectedStatus === "Semua" || item.anggota === selectedStatus;
       const cabangFilter =
-        selectedCabang === "-- Cabang --" || item.cabang === selectedCabang;
+        selectedCabang === "" || item.cabang === selectedCabang;
       const unitKerjaFilter =
-        selectedUnitKerja === "-- Unit Kerja --" ||
-        item.unitKerja === selectedUnitKerja;
+        selectedUnitKerja === "" || item.unitKerja === selectedUnitKerja;
 
       const searchCabangFilter = item.cabang
         .toLowerCase()
@@ -537,7 +589,7 @@ function StatusAnggota() {
         unitKerjaFilter &&
         (filterCabang ? searchCabangFilter : true) &&
         (filterUnitKerja ? searchUnitKerjaFilter : true) &&
-        tingkatSekolahFilter
+        tingkatSekolahFilter // Tambahkan filter tingkat sekolah di sini
       );
     });
   }, [
@@ -547,8 +599,10 @@ function StatusAnggota() {
     selectedUnitKerja,
     filterCabang,
     filterUnitKerja,
-    selectedTingkat,
+    selectedTingkat, // Tambahkan dependensi tingkat
   ]);
+
+  const jumlahAnggota = filteredData.length;
 
   const openModal = (item) => {
     setCurrentItem(item);
@@ -586,42 +640,25 @@ function StatusAnggota() {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalItems = filteredData.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  const handleKeluarAnggotaClick = () => {
-    setPopupVisible(true);
-  };
+  const filteredMembersData = anggota.filter((member) => {
+    const isCabangMatch =
+      selectedCabang === "-- Cabang --" || member.cabang === selectedCabang;
+    const isTingkatMatch =
+      !selectedTingkat || member.tingkatSekolah === selectedTingkat;
 
-  const handleConfirm = () => {
-    alert("Anggota dikeluarkan");
-    setPopupVisible(false);
-  };
+    return isCabangMatch && isTingkatMatch;
+  });
 
-  const handleCancel = () => {
-    setPopupVisible(false);
-  };
-
-  const filteredMembersData =
-    selectedCabang === "-- Cabang --"
-      ? anggota
-      : anggota.filter((member) => member.cabang === selectedCabang);
-
-  const totalItems = filteredMembersData.length;
-  const totalPages = Math.ceil(totalItems / maxItems);
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handlePageClick = (number) => {
-    setCurrentPage(number);
+  const handleCabangChange = (e) => {
+    const value = e.target.value;
+    setSearchCabang(value);
+    const filtered = cabangOptions.filter((cabang) =>
+      cabang.kecamatan.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredCabangOptions(filtered);
   };
 
   const startIndex = (currentPage - 1) * maxItems;
@@ -633,23 +670,144 @@ function StatusAnggota() {
     PAUD: "paud.png",
     SMP_MTS: "smp.png",
     TK_RA: "tk.png",
-    SMA_SMK_MA: "sma.png",
+    SMA_MA: "sma.png",
+    SMK: "sma.png",
     SD_MI: "sd.png",
     PERGURUAN_TINGGI: "perguruan_tinggi.png",
   };
 
-  const getVisiblePages = () => {
-    const visiblePages = [];
-    const leftLimit = Math.max(1, currentPage - 1);
-    const rightLimit = Math.min(totalPages, currentPage + 1);
- 
-    for (let i = leftLimit; i <= rightLimit; i++) {
-      visiblePages.push(i);
-    }
- 
-    return visiblePages;
+  const handlePindahCabangUnit = () => {
+    router.push("/anggota/data-anggota/mutasiCabangUnit");
   };
-  
+
+  const handleEditClick = () => {
+    router.push("/anggota/edit-anggota");
+  };
+
+  const closePopup = () => {
+    setIsPopupDaspen(false);
+  };
+
+  const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+    const getVisiblePages = () => {
+      let pages = [];
+      const maxVisiblePages = 5;
+
+      if (totalPages <= maxVisiblePages) {
+        for (let i = 1; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+
+        let startPage = Math.max(2, currentPage - 1);
+        let endPage = Math.min(totalPages, currentPage + 1);
+
+        if (currentPage <= 2) {
+          endPage = 2;
+        }
+        if (currentPage >= totalPages - 1) {
+          startPage = totalPages - 2;
+        }
+
+        if (startPage > 2) {
+          pages.push('...');
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+          pages.push(i);
+        }
+
+        // if (endPage < totalPages - 1) {
+        //   pages.push('...');
+        // }
+
+        // if (totalPages > 1) {
+        //   pages.push(totalPages);
+        // }
+      }
+
+      return pages;
+    };
+
+    return (
+      <div className="flex justify-center mt-4 gap-1">
+        <button
+          onClick={() => onPageChange(1)}
+          disabled={currentPage === 1}
+          className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+        >
+          First
+        </button>
+
+        <button
+          onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
+          disabled={currentPage === 1}
+          className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+        >
+          Prev
+        </button>
+
+        {getVisiblePages().map((page, index) => (
+          <button
+            key={index}
+            onClick={() => typeof page === 'number' && onPageChange(page)}
+            disabled={typeof page !== 'number'}
+            className={`px-3 py-1 border rounded text-sm ${page === currentPage
+              ? "bg-blue-500 text-white"
+              : page === '...'
+                ? "bg-white cursor-default"
+                : "bg-white hover:bg-gray-50"
+              }`}
+          >
+            {page}
+          </button>
+        ))}
+
+        <button
+          onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+        >
+          Next
+        </button>
+
+        <button
+          onClick={() => onPageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+        >
+          Last
+        </button>
+      </div>
+    );
+  };
+
+  const handlePopup = () => {
+    setPopupVisible(true);
+  };
+
+  const handlePopupKeluar = () => {
+    setPopupVisibleKeluar(true);
+  };
+
+  const handleKategoriChange = (e) => {
+    // Simpan kategori Daspen sebelumnya
+    setPreviousKategoriDaspen(kategoriDaspen);
+    // Set kategoriDaspen dengan nilai baru yang dipilih
+    setKategoriDaspen(e.target.value);
+    setIsKategoriChanged(true); // Menampilkan popup konfirmasi
+  };
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    setExpandedIndex(null); // Reset expanded row when changing pages
+  };
+
+  const handleExpand = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -716,95 +874,55 @@ function StatusAnggota() {
           <div className="mb-4">
             <div className="flex flex-wrap items-start mt-2 justify-between">
               <div className="flex flex-wrap items-center space-x-2">
-                <div className="flex flex-col relative w-64" ref={cabangRef}>
-                  <Input
-                    type="text"
-                    value={selectedCabang}
-                    readOnly
-                    onFocus={() => setShowCabangDropdown(true)}
-                    className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                    placeholder="Pilih Cabang"
-                  />
-                  {showCabangDropdown && (
-                    <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
-                      <ul className="max-h-44 overflow-y-auto">
-                        <li className="py-2 px-2">
-                          <Input
-                            type="text"
-                            onChange={(e) => handleCabangSearch(e.target.value)}
-                            className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
-                            placeholder="Cari Cabang..."
-                            autoFocus
-                          />
-                        </li>
-
-                        <li
-                          onClick={() =>
-                            handleSelectCabang({ kecamatan: "" })
-                          }
-                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                        >
-                          Pilih Cabang
-                        </li>
-                        {filteredCabangList.map((cabang) => (
-                          <li
-                            key={cabang.id}
-                            onClick={() => handleSelectCabang(cabang)}
-                            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                          >
-                            {cabang.kecamatan}
-                          </li>
-                        ))}
-                      </ul>
-
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-col md:flex">
+                <>
                   <div
-                    className="flex flex-col relative w-64"
-                    ref={unitKerjaRef}
+                    ref={dropdownRef}
+                    className="relative flex flex-col md:flex ml-2"
                   >
                     <Input
                       type="text"
-                      value={unitKerjaInput}
-                      onFocus={handleUnitKerjaFocus}
-                      onChange={handleUnitKerjaChange}
-                      placeholder="Pilih Unit Kerja"
-                      className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
-                      disabled={!selectedCabang}
+                      placeholder="Pilih Cabang"
+                      value={selectedCabang}
+                      readOnly
+                      disabled={role !== "ADMIN"}
+                      onFocus={() => {
+                        if (role === "ADMIN") {
+                          setShowDropdownCabang(true);
+                          setFilteredCabangOptions(cabangOptions);
+                        }
+                      }}
+                      className="border rounded-lg p-2 w-full bg-white shadow-sm"
                     />
-                    {showUnitKerjaDropdown && (
-                      <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+
+                    {showDropdownCabang && role === "ADMIN" && (
+                      <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full ">
                         <ul className="max-h-44 overflow-y-auto">
                           <li className="py-2 px-2">
                             <Input
                               type="text"
-                              onChange={(e) =>
-                                handleUnitKerjaSearch(e.target.value)
-                              }
-                              placeholder="Cari atau ketik Unit Kerja..."
+                              value={searchCabang}
+                              onChange={handleCabangChange}
+                              className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Cari Cabang..."
                               autoFocus
-                              className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-1"
                             />
                           </li>
                           <li
-                            onClick={() =>
-                              handleUnitKerjaSelect({ unitKerja: "" })
-                            }
-                            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                            className="p-2 cursor-pointer hover:bg-gray-100"
+                            onClick={() => {
+                              handleCabangSelect({ kecamatan: "" });
+                            }}
                           >
-                            Pilih Unit Kerja
+                            Pilih Cabang
                           </li>
-                          {filteredUnitKerja.length > 0 ? (
-                            filteredUnitKerja.map((unitKerja) => (
+                          {filteredCabangOptions.length > 0 ? (
+                            filteredCabangOptions.map((cabang) => (
                               <li
-                                key={unitKerja.id}
-                                onClick={() => handleUnitKerjaSelect(unitKerja)}
-                                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                                key={cabang.idKecamatan}
+                                className="p-2 cursor-pointer hover:bg-gray-100"
+                                onClick={() => handleCabangSelect(cabang)}
                               >
-                                {unitKerja.unitKerja}
+                                {cabang.kecamatan}
                               </li>
                             ))
                           ) : (
@@ -816,19 +934,70 @@ function StatusAnggota() {
                       </div>
                     )}
                   </div>
-                </div>
+
+                  <div ref={unitKerjaRef} className="relative w-full md:w-40">
+                    <Input
+                      type="text"
+                      placeholder="Pilih Unit Kerja"
+                      value={selectedUnitKerja}
+                      readOnly
+                      onFocus={() => {
+                        if (role !== "ADMIN") {
+                          setShowDropdownCabang(true);
+                          setFilteredCabangOptions(cabangOptions);
+                        }
+                      }}
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      disabled={selectedCabang === "Pilih Cabang"}
+                    />
+
+                    {showDropdownUnitKerja && (
+                      <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
+                        <div className="p-2">
+                          <Input
+                            type="text"
+                            value={searchUnitKerja}
+                            onChange={handleUnitKerjaChange}
+                            placeholder="Cari Unit Kerja..."
+                            className="w-full border rounded py-2 px-3 mb-2"
+                          />
+                        </div>
+                        <ul className="max-h-44 overflow-y-auto">
+                          <li
+                            className="p-2 cursor-pointer hover:bg-gray-100"
+                            onClick={() => handleUnitKerjaSelect({})}
+                          >
+                            Semua Unit Kerja
+                          </li>
+                          {filteredUnitKerjaOptions.map((item) => (
+                            <li
+                              key={item.id}
+                              className="p-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleUnitKerjaSelect(item)}
+                            >
+                              {item.unitKerja}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </>
                 <select
                   className="shadow appearance-none border rounded w-full md:w-44 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline md:mb-0"
                   value={selectedTingkat}
                   onChange={(e) => setSelectedTingkat(e.target.value)}
                 >
-                  <option value="">Pilih Tingkat Sekolah</option>
+                  <option value="">Pilih Jenjang</option>
                   <option value="PAUD">PAUD</option>
                   <option value="TK_RA">TK/RA</option>
                   <option value="SD_MI">SD/MI</option>
                   <option value="SMP_MTS">SMP/MTS</option>
-                  <option value="SMA_SMK_MA">SMA/SMK/MA</option>
+                  <option value="SMA_MA">SMA/MA</option>
+                  <option value="SMK">SMK</option>
                   <option value="PERGURUAN_TINGGI">Perguruan Tinggi</option>
+                  <option value="SEKOLAH_LUAR_BIASA">Sekolah Luar Biasa</option>
+                  <option value="LAINNYA">Lainnya</option>
                 </select>
                 <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
                   Jumlah Anggota : {jumlahAnggota}
@@ -863,32 +1032,20 @@ function StatusAnggota() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="container w-full table-auto mb-8">
               <thead>
                 <tr>
                   <th className="p-2 md:p-3 border text-white bg-teal-700">
                     <div className="flex justify-between items-center">
                       <span>No</span>
-                      <span
-                        className="ml-1 cursor-pointer"
-                        onClick={() => requestSort("index")}
-                      >
-
-                      </span>
                     </div>
                   </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
+                  <th className="p-2 md:p-3 border text-white bg-teal-700">
                     Foto
                   </th>
                   <th className="p-2 md:p-3 border text-white bg-teal-700">
                     <div className="flex justify-between items-center">
                       <span>Nama</span>
-                      <span
-                        className="ml-1 cursor-pointer"
-                        onClick={() => requestSort("nama")}
-                      >
-
-                      </span>
                     </div>
                   </th>
                   <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
@@ -898,13 +1055,7 @@ function StatusAnggota() {
                   </th>
                   <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
                     <div className="flex justify-between items-center">
-                      <span>Cabang</span>
-                      <span
-                        className="ml-1 cursor-pointer"
-                        onClick={() => requestSort("kerja")}
-                      >
-
-                      </span>
+                      <span>Unit Kerja</span>
                     </div>
                   </th>
                   <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
@@ -914,249 +1065,761 @@ function StatusAnggota() {
                         className="ml-1 cursor-pointer"
                         onClick={() => requestSort("keterangan")}
                       >
-
                       </span>
                     </div>
                   </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
                     Aksi
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedMembersData.map((item, index) => (
-                  <tr
-                    key={index}
-                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                  >
-                    <td className="p-2 md:p-3 border text-center">
-                      {startIndex + index + 1}
-                    </td>
-                    <td className="p-2 md:p-3 border">
-                      <Image
-                        src={
-                          fotoBase64[index]
-                            ? `data:image/jpeg;base64,${fotoBase64[index]}`
-                            : profileImageUrl
-                        }
-                        alt={`Foto ${item.namaPelapor || "User"}`}
-                        width={50}
-                        height={50}
-                        className="rounded"
-                        unoptimized={true}
-                      />
-                    </td>
-                    <td className="p-2 md:p-3 border">
-                      <div className="font-bold text-sm">
-                        {item.namaLengkap}
-                      </div>
-                      <div className="text-sm">{item.npaPgri}</div>
-                      <div className="text-sm">
-                        {item.tempatLahir}, {formatDate(item.tanggalLahir)}
-                      </div>
-                      <div className="text-sm">
-                        Usia {calculateAge(item.tanggalLahir)} Tahun
-                      </div>
-                      <div className="text-sm">{item.unitKerja}</div>
-                      <div className="text-sm">{item.jabatan}</div>
-                      <div className="text-sm">{item.nomorHp}</div>
-                    </td>
-                    <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
-                      {formatTingkat(item.tingkatSekolah)}
-                    </td>
-                    <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
-                      {item.cabang}
-                    </td>
-                    <td className="p-2 text-center md:p-3 border md:table-cell hidden">
-                      <div
-                        className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
-                          ? "bg-red-200 text-red-900"
-                          : "bg-green-200 text-green-900"
-                          }`}
+                {currentData.map((item, index) => {
+                  const globalIndex = ((currentPage - 1) * itemsPerPage) + index + 1;
+                  return (
+                    <React.Fragment key={index}>
+                      <tr
+                        className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
                       >
-                        {item.role === "USER"
-                          ? "Aktif"
-                          : item.status_keanggotaan}
-                      </div>
-                    </td>
-                    <td className="p-2 md:p-3 border text-center">
-                      <div className="flex justify-center space-x-2">
-                        <Button
-                          type="button"
-                          className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
-                          title="Edit Data"
-                          onClick={() => {
-                            sessionStorage.setItem("anggotaId", item.id);
-                            handleEditClick();
-                          }}
-                        >
-                          <FaEdit className="w-4 h-4" />
-                        </Button>
-
-                        {sessionStorage.getItem("role") === "USER" ? (
-                          <>
-                            <Link
-                              href="#"
-                              className="text-white bg-cyan-500 p-2 border rounded-md cursor-not-allowed opacity-50"
-                              title="Mutasi"
-                              type="button"
-                              disabled
-                            >
-                              <FaExchangeAlt className="w-4 h-4" />
-                            </Link>
-
-                            <Link
-                              href="#"
-                              className="text-white bg-red-500 p-2 border rounded-md cursor-not-allowed opacity-50"
-                              title="Lapor"
-                              onClick={(e) => e.preventDefault()}
-                            >
-                              <FaExclamationTriangle className="w-4 h-4" />
-                            </Link>
-
-                            <Link
-                              href="#"
-                              className="text-white bg-green-500 p-2 border rounded-md cursor-not-allowed opacity-50"
-                              title="WhatsApp"
-                              onClick={(e) => e.preventDefault()}
-                            >
-                              <FaWhatsapp className="w-4 h-4" />
-                            </Link>
-                          </>
-                        ) : (
-                          <>
+                        <td className="p-2 md:p-3 border text-center">
+                          <div className="flex justify-center items-center">
+                            {globalIndex}
                             <Button
-                              className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
-                              title="Mutasi"
+                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
+                              onClick={() => handleExpand(index)}
+                            >
+                              {expandedIndex === index ? (
+                                <FaMinusCircle />
+                              ) : (
+                                <FaPlusCircle />
+                              )}
+                            </Button>
+                          </div>
+                        </td>
+                        <td className="p-2 md:p-3 border">
+                          <Image
+                            src={
+                              fotoBase64[index]
+                                ? `data:image/jpeg;base64,${fotoBase64[index]}`
+                                : profileImageUrl
+                            }
+                            alt={`Foto ${item.namaPelapor || "User"}`}
+                            width={50}
+                            height={50}
+                            className="rounded"
+                            unoptimized={true}
+                          />
+                        </td>
+                        <td className="p-2 md:p-3 border">
+                          <div className="font-bold text-sm">
+                            {item.namaLengkap}
+                          </div>
+                          <div className="text-sm">{item.tempatLahir},</div>
+                          <div className="text-sm">
+                            {formatDate(item.tanggalLahir)}
+                          </div>
+                          <div className="text-sm"> Usia
+                            {calculateAge(item.tanggalLahir)} Tahun
+                          </div>
+                          <div className="text-sm">{item.unitKerja}</div>
+                          <div className="text-sm">{item.npaPgri}</div>
+                          <div className="text-sm">{item.jabatan}</div>
+                          <div className="text-sm">{item.nomorHp}</div>
+                          {/* <div
+                            className={`text-sm p-1 inline-block ${item.nip
+                              ? "bg-green-500 text-white rounded-full px-3"
+                              : "bg-red-500 text-white rounded-full px-3"
+                              }`}
+                          >
+                            {item.nip ? item.nip : "NIP tidak ada"}
+                          </div> */}
+                        </td>
+                        <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
+                          <div className="text-sm">{formatTingkat(item.tingkatSekolah)}</div>
+                        </td>
+                        <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
+                          <div className="text-sm">{item.cabang}</div>
+                        </td>
+                        <td className="p-2 text-center md:p-3 border md:table-cell hidden">
+                          <div
+                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
+                              ? "bg-red-200 text-red-900"
+                              : "bg-green-200 text-green-900"
+                              }`}
+                          >
+                            {item.role === "USER"
+                              ? "Aktif"
+                              : item.status_keanggotaan}
+                          </div>
+                        </td>
+                        <td className="p-2 md:p-3 border md:table-cell hidden">
+                          <div className="flex justify-center space-x-2">
+                            <Button
                               type="button"
+                              className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                              title="Edit Data"
                               onClick={() => {
-                                sessionStorage.setItem(
-                                  "anggotaId",
-                                  item.id
-                                );
-                                openModal(item);
+                                sessionStorage.setItem("anggotaId", item.id);
+                                handleEditClick();
                               }}
                             >
-                              <FaExchangeAlt className="w-4 h-4" />
+                              <FaEdit className="w-4 h-4" />
                             </Button>
 
-                            {sessionStorage.getItem("role") ===
-                              "SUPERADMIN" ? (
+                            {sessionStorage.getItem("role") === "USER" ? (
+                              <>
+                                <Link
+                                  href="#"
+                                  className="text-white bg-cyan-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                  title="Mutasi"
+                                  type="button"
+                                  disabled
+                                >
+                                  <FaExchangeAlt className="w-4 h-4" />
+                                </Link>
+
+                                <Link
+                                  href="#"
+                                  className="text-white bg-red-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                  title="Lapor"
+                                  onClick={(e) => e.preventDefault()}
+                                >
+                                  <FaExclamationTriangle className="w-4 h-4" />
+                                </Link>
+
+                                <Link
+                                  href="#"
+                                  className="text-white bg-green-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                  title="WhatsApp"
+                                  onClick={(e) => e.preventDefault()}
+                                >
+                                  <FaWhatsapp className="w-4 h-4" />
+                                </Link>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                  title="Mutasi"
+                                  type="button"
+                                  onClick={() => {
+                                    sessionStorage.setItem(
+                                      "anggotaId",
+                                      item.id
+                                    );
+                                    openModal(item);
+                                  }}
+                                >
+                                  <FaExchangeAlt className="w-4 h-4" />
+                                </Button>
+
+                                {sessionStorage.getItem("role") ===
+                                  "SUPER ADMIN" ? (
+                                  <Button
+                                    className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
+                                    onClick={() => {
+                                      sessionStorage.setItem(
+                                        "anggotaId",
+                                        item.id
+                                      );
+                                      setIsPopupVisible(true);
+                                    }}
+                                  >
+                                    <FaExclamationTriangle className="w-4 h-4" />
+                                  </Button>
+                                ) : (
+                                  <Link
+                                    href="#"
+                                    className="text-white bg-red-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                    title="Lapor"
+                                    type="button"
+                                    disabled
+                                  >
+                                    <FaExclamationTriangle className="w-4 h-4" />
+                                  </Link>
+                                )}
+
+                                {isPopupVisible && (
+                                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-10 z-40 w-screen h-screen">
+                                    <div className="bg-white p-6 rounded-lg shadow-md w-96">
+                                      <h2 className="text-xl text-center mb-4">
+                                        Apakah Anda Yakin ingin Menghapus Data
+                                        Anggota ini?
+                                      </h2>
+                                      <div className="flex justify-end gap-4">
+                                        <button
+                                          onClick={() =>
+                                            setIsPopupVisible(false)
+                                          }
+                                          className="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-md"
+                                        >
+                                          Batal
+                                        </button>
+                                        <button
+                                          onClick={handleDeleteClick}
+                                          className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                                        >
+                                          Ya, Saya Sakin
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                                <Link
+                                  href={`https://wa.me/${item.nomorHp}`}
+                                  className="text-white bg-green-500 hover:bg-green-600 p-2 border rounded-md"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title="WhatsApp"
+                                >
+                                  <FaWhatsapp className="w-4 h-4" />
+                                </Link>
+                              </>
+                            )}
+                            <div>
                               <Button
-                                className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
+                                type="button"
+                                className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                                title="Data Daspen"
                                 onClick={() => {
-                                  sessionStorage.setItem(
-                                    "anggotaId",
-                                    item.id
-                                  );
-                                  setIsPopupVisible(true);
+                                  sessionStorage.setItem("anggotaId", item.id);
+                                  handleDataDaspen();
                                 }}
                               >
-                                <FaExclamationTriangle className="w-4 h-4" />
+                                Daspen
                               </Button>
-                            ) : (
-                              <Link
-                                href="#"
-                                className="text-white bg-red-500 p-2 border rounded-md cursor-not-allowed opacity-50"
-                                title="Lapor"
-                                type="button"
-                                disabled
-                              >
-                                <FaExclamationTriangle className="w-4 h-4" />
-                              </Link>
-                            )}
+                              {isPopupDaspen && daspenData && (
+                                <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-10 z-50">
+                                  <div className="bg-white p-6 rounded-md w-5/12 relative">
+                                    <button
+                                      onClick={closePopup}
+                                      className="absolute top-2 right-2 p-2 bg-white rounded-full"
+                                    >
+                                      <FaTimes className="h-6 w-6 text-red-600" />
+                                    </button>
 
-                            {isPopupVisible && (
-                              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-10 z-40 w-screen h-screen">
-                                <div className="bg-white p-6 rounded-lg shadow-md w-96">
-                                  <h2 className="text-xl font-semibold text-center mb-4">
-                                    Apakah Anda Yakin ingin Menghapus Data
-                                    Anggota ini?
-                                  </h2>
-                                  <div className="flex justify-end gap-4">
-                                    <button
-                                      onClick={() =>
-                                        setIsPopupVisible(false)
-                                      }
-                                      className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md"
-                                    >
-                                      Batal
-                                    </button>
-                                    <button
-                                      onClick={handleDeleteClick}
-                                      className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
-                                    >
-                                      Ya, Saya Sakin
-                                    </button>
+                                    <h2 className="text-xl font-bold">
+                                      Data Daspen
+                                    </h2>
+
+                                    <div className="mt-4 grid grid-cols-2 gap-4">
+                                      <div>
+                                        <p className="font-semibold">
+                                          Nama Anggota:
+                                        </p>
+                                        <p>
+                                          {daspenData.namaAnggota ||
+                                            "Tidak tersedia"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">
+                                          Kategori Daspen:
+                                        </p>
+                                        <select
+                                          className="w-full p-2 border rounded-md border-teal-500"
+                                          value={kategoriDaspen}
+                                          onChange={handleKategoriChange}
+                                        >
+                                          <option value="I">I</option>
+                                          <option value="II">II</option>
+                                          <option value="III">III</option>
+                                        </select>
+
+                                        {isKategoriChanged && (
+                                          <div className="popup">
+                                            <p>
+                                              Apakah Anda yakin ingin mengganti
+                                              kategori Daspen?
+                                            </p>
+
+                                            <button
+                                              onClick={handleConfirmChange}
+                                              className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition duration-200 px-6"
+                                            >
+                                              Ya
+                                            </button>
+
+                                            <button
+                                              onClick={() => {
+                                                setKategoriDaspen(
+                                                  previousKategoriDaspen
+                                                );
+                                                setIsKategoriChanged(false);
+                                              }}
+                                              className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-200 ml-2 px-4"
+                                            >
+                                              Tidak
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">
+                                          Tanggal Lahir:
+                                        </p>
+                                        <p>
+                                          {daspenData.tanggalLahir
+                                            ? new Intl.DateTimeFormat("id-ID", {
+                                              day: "2-digit",
+                                              month: "long",
+                                              year: "numeric",
+                                            }).format(
+                                              new Date(
+                                                daspenData.tanggalLahir
+                                              )
+                                            )
+                                            : "Tidak tersedia"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">Usia:</p>
+                                        <p>
+                                          {calculateAge(
+                                            daspenData.tanggalLahir
+                                          ) || "Tidak tersedia"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">NIP:</p>
+                                        <p>
+                                          {daspenData.nip || "Tidak tersedia"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">
+                                          Mulai Jadi Anggota:
+                                        </p>
+                                        <p>
+                                          {daspenData.mulaiJadiAnggotaDaspen
+                                            ? new Intl.DateTimeFormat("id-ID", {
+                                              day: "2-digit",
+                                              month: "long",
+                                              year: "numeric",
+                                            }).format(
+                                              new Date(
+                                                daspenData.mulaiJadiAnggotaDaspen
+                                              )
+                                            )
+                                            : "Tidak tersedia"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">
+                                          Kelompok Jabatan:
+                                        </p>
+                                        <p>
+                                          {daspenData.kelompokJabatan || "-"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">
+                                          Prediksi Pensiun:
+                                        </p>
+                                        <p>
+                                          {daspenData.prediksiPensiun
+                                            ? (() => {
+                                              const prediksiPensiunDate =
+                                                new Date(
+                                                  daspenData.prediksiPensiun
+                                                );
+                                              prediksiPensiunDate.setMonth(
+                                                prediksiPensiunDate.getMonth() +
+                                                1
+                                              );
+                                              return new Intl.DateTimeFormat(
+                                                "id-ID",
+                                                {
+                                                  day: "2-digit",
+                                                  month: "long",
+                                                  year: "numeric",
+                                                }
+                                              ).format(prediksiPensiunDate);
+                                            })()
+                                            : "Tidak tersedia"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">
+                                          Sumbangan:
+                                        </p>
+                                        <p>
+                                          {daspenData.sumbangan
+                                            ? new Intl.NumberFormat("id-ID", {
+                                              style: "currency",
+                                              currency: "IDR",
+                                            }).format(daspenData.sumbangan)
+                                            : "Tidak tersedia"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold">
+                                          Untuk Lihat Data Lengkap:
+                                        </p>
+                                        <div className="flex items-center">
+                                          <p className="text-sm mr-1">
+                                            Link Website:
+                                          </p>
+                                          <Link
+                                            href="https://www.dansetjateng.org/"
+                                            className="text-blue-400"
+                                            target="_blank"
+                                          >
+                                            www.dansetjateng.org
+                                          </Link>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex justify-end mt-4">
+                                      <button
+                                        className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                                        onClick={closePopup}
+                                      >
+                                        Tutup
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+
+                      <tr className="md:hidden">
+                        <td colSpan="7" className="p-2 border">
+                          {expandedIndex === index && (
+                            <div className="mt-2">
+                              <div className="font-bold">
+                                {item.namaLengkap}
                               </div>
-                            )}
-                            <Link
-                              href={`https://wa.me/${item.nomorHp}`}
-                              className="text-white bg-green-500 hover:bg-green-600 p-2 border rounded-md"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title="WhatsApp"
-                            >
-                              <FaWhatsapp className="w-4 h-4" />
-                            </Link>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                              <div>{item.npaPgri}</div>
+                              <div>{item.tugas}</div>
+                              <div>
+                                {item.tempatLahir},{" "}
+                                {formatDate(item.tanggalLahir)}
+                              </div>
+                              <div>{calculateAge(item.tanggalLahir)} Tahun</div>
+                              <div>{item.cabang},</div>
+                              <div>{item.unitKerja}</div>
+                              <div>Anggota: {item.gabung}</div>
+                              <div>{item.golongan}</div>
+                              <div
+                                className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${item.status === "BUKAN ANGGOTA"
+                                  ? "bg-red-200 text-red-900"
+                                  : "bg-green-200 text-green-900"
+                                  }`}
+                              >
+                                {item.role === "USER"
+                                  ? "Aktif"
+                                  : item.status_keanggotaan}
+                              </div>
+                              <div className="flex justify-center space-x-2 mt-2">
+                                <Button
+                                  className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                                  title="Edit Data"
+                                  onClick={() =>
+                                    router.push(
+                                      `/anggota/edit-anggota?id=${item.id}`
+                                    )
+                                  }
+                                >
+                                  <FaEdit className="w-4 h-4" />
+                                </Button>
+                                {sessionStorage.getItem("role") ===
+                                  "SUPER ADMIN" ? (
+                                  <Button
+                                    className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                    title="Mutasi"
+                                    onClick={() => openModal(item)}
+                                  >
+                                    <FaExchangeAlt className="w-4 h-4" />
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                    title="Mutasi"
+                                  >
+                                    <FaExchangeAlt className="w-4 h-4" />
+                                  </Button>
+                                )}
+                                {sessionStorage.getItem("role") ===
+                                  "SUPER ADMIN" ? (
+                                  <Button
+                                    className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
+                                    onClick={() => {
+                                      sessionStorage.setItem(
+                                        "anggotaId",
+                                        item.id
+                                      );
+                                      setIsPopupVisible(true);
+                                    }}
+                                  >
+                                    <FaExclamationTriangle className="w-4 h-4" />
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    className="text-white bg-red-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                    title="Lapor"
+                                    type="button"
+                                    disabled
+                                  >
+                                    <FaExclamationTriangle className="w-4 h-4" />
+                                  </Button>
+                                )}
+
+                                <Link
+                                  href={`https://wa.me/${item.nomorHp}`}
+                                  className="text-white bg-green-500 p-2 border rounded-md"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <FaWhatsapp className="w-4 h-4" title="WA" />
+                                </Link>
+                                <div>
+                                  <Button
+                                    type="button"
+                                    className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                                    title="Data Daspen"
+                                    onClick={() => {
+                                      sessionStorage.setItem(
+                                        "anggotaId",
+                                        item.id
+                                      );
+                                      handleDataDaspen();
+                                    }}
+                                  >
+                                    Daspen
+                                  </Button>
+
+                                  {isPopupDaspen && daspenData && (
+                                    <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
+                                      <div className="bg-white p-6 rounded-md w-11/12 sm:w-8/12 md:w-6/12 lg:w-5/12 xl:w-4/12 relative max-h-[80vh] overflow-y-auto">
+                                        <button
+                                          onClick={closePopup}
+                                          className="absolute top-2 right-2 p-2 bg-white rounded-full"
+                                        >
+                                          <FaTimes className="h-6 w-6 text-red-600" />
+                                        </button>
+
+                                        <h2 className="text-xl font-bold">
+                                          Data Daspen
+                                        </h2>
+
+                                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                          <div>
+                                            <p className="font-semibold">
+                                              Nama Anggota:
+                                            </p>
+                                            <p>
+                                              {daspenData.namaAnggota ||
+                                                "Tidak tersedia"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              Kategori Daspen:
+                                            </p>
+                                            <select
+                                              className="w-full p-2 border rounded-md border-teal-500"
+                                              value={kategoriDaspen}
+                                              onChange={handleKategoriChange}
+                                            >
+                                              <option value="I">I</option>
+                                              <option value="II">II</option>
+                                              <option value="III">III</option>
+                                            </select>
+
+                                            {isKategoriChanged && (
+                                              <div className="popup">
+                                                <p>
+                                                  Apakah Anda yakin ingin
+                                                  mengganti kategori Daspen?
+                                                </p>
+
+                                                <button
+                                                  onClick={handleConfirmChange}
+                                                  className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition duration-200 px-6"
+                                                >
+                                                  Ya
+                                                </button>
+
+                                                <button
+                                                  onClick={() => {
+                                                    setKategoriDaspen(
+                                                      previousKategoriDaspen
+                                                    );
+                                                    setIsKategoriChanged(false);
+                                                  }}
+                                                  className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-200 ml-2 px-4"
+                                                >
+                                                  Tidak
+                                                </button>
+                                              </div>
+                                            )}
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              Tanggal Lahir:
+                                            </p>
+                                            <p>
+                                              {daspenData.tanggalLahir
+                                                ? new Intl.DateTimeFormat(
+                                                  "id-ID",
+                                                  {
+                                                    day: "2-digit",
+                                                    month: "long",
+                                                    year: "numeric",
+                                                  }
+                                                ).format(
+                                                  new Date(
+                                                    daspenData.tanggalLahir
+                                                  )
+                                                )
+                                                : "Tidak tersedia"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              Usia:
+                                            </p>
+                                            <p>
+                                              {calculateAge(
+                                                daspenData.tanggalLahir
+                                              ) || "Tidak tersedia"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              NIP:
+                                            </p>
+                                            <p>
+                                              {daspenData.nip ||
+                                                "Tidak tersedia"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              Mulai Jadi Anggota:
+                                            </p>
+                                            <p>
+                                              {daspenData.mulaiJadiAnggotaDaspen
+                                                ? new Intl.DateTimeFormat(
+                                                  "id-ID",
+                                                  {
+                                                    day: "2-digit",
+                                                    month: "long",
+                                                    year: "numeric",
+                                                  }
+                                                ).format(
+                                                  new Date(
+                                                    daspenData.mulaiJadiAnggotaDaspen
+                                                  )
+                                                )
+                                                : "Tidak tersedia"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              Kelompok Jabatan:
+                                            </p>
+                                            <p>
+                                              {daspenData.kelompokJabatan ||
+                                                "-"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              Prediksi Pensiun:
+                                            </p>
+                                            <p>
+                                              {daspenData.prediksiPensiun
+                                                ? (() => {
+                                                  const prediksiPensiunDate =
+                                                    new Date(
+                                                      daspenData.prediksiPensiun
+                                                    );
+                                                  prediksiPensiunDate.setMonth(
+                                                    prediksiPensiunDate.getMonth() +
+                                                    1
+                                                  );
+                                                  return new Intl.DateTimeFormat(
+                                                    "id-ID",
+                                                    {
+                                                      day: "2-digit",
+                                                      month: "long",
+                                                      year: "numeric",
+                                                    }
+                                                  ).format(
+                                                    prediksiPensiunDate
+                                                  );
+                                                })()
+                                                : "Tidak tersedia"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              Sumbangan:
+                                            </p>
+                                            <p>
+                                              {daspenData.sumbangan
+                                                ? new Intl.NumberFormat(
+                                                  "id-ID",
+                                                  {
+                                                    style: "currency",
+                                                    currency: "IDR",
+                                                  }
+                                                ).format(daspenData.sumbangan)
+                                                : "Tidak tersedia"}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <p className="font-semibold">
+                                              Untuk Lihat Data Lengkap:
+                                            </p>
+                                            <div className="flex items-center">
+                                              <p className="text-sm mr-1">
+                                                Link Website:
+                                              </p>
+                                              <Link
+                                                href="https://www.dansetjateng.org/"
+                                                className="text-blue-400"
+                                                target="_blank"
+                                              >
+                                                www.dansetjateng.org
+                                              </Link>
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        <div className="flex justify-end mt-4">
+                                          <button
+                                            className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                                            onClick={closePopup}
+                                          >
+                                            Tutup
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
-            <div className="flex justify-center mt-4 gap-1">
-              {totalItems >= maxItems && (
-                <div className="flex justify-center mt-4 gap-1">
-                  <button
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    First
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Prev
-                  </button>
-
-                  {getVisiblePages().map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 border rounded text-sm ${page === currentPage
-                        ? "bg-blue-500 text-white"
-                        : "bg-white hover:bg-gray-50"
-                        }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Next
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Last
-                  </button>
-                </div>
-              )}
-          </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </div>
 
           <Modal
@@ -1178,97 +1841,119 @@ function StatusAnggota() {
               </div>
               <div className="flex flex-col items-center gap-2">
                 <div className="w-full flex justify-center mb-2">
-                  <img
-                    src={currentItem?.photo || "default-photo-url"}
-                    alt="Anggota"
-                    className="w-32 h-32 object-cover rounded-full border border-gray-300"
+                  <Image
+                    src={
+                      fotoBase64
+                        ? "/profile.png"
+                        : `data:image/jpeg;base64,${fotoBase64}`
+                    }
+                    width={80}
+                    height={80}
+                    alt="Anggota Foto"
+                    className="rounded-full"
                   />
                 </div>
-                <div className="flex flex-col items-center mb-2">
-                  <Input
-                    className="block text-sm font-medium w-full text-center"
-                    placeholder="Nama"
-                    value={currentItem?.namaLengkap || ""}
-                    disabled
-                  />
-                  <Input
-                    className="block text-sm font-medium mt-2 text-center"
-                    placeholder="NPA"
-                    value={currentItem?.npaPgri || ""}
-                    disabled
-                  />
-                  <Input
-                    className="block text-sm font-medium mt-2 text-center"
-                    placeholder="Cabang"
-                    value={currentItem?.cabang || ""}
-                    disabled={!isCabangEnabled}
-                  />
-                  <Input
-                    className="block text-sm font-medium mt-2 text-center"
-                    placeholder="Unit Kerja"
-                    value={currentItem?.unitKerja || ""}
-                    disabled={!isUnitKerjaEnabled}
-                  />
+                <div className="grid grid-cols-2 gap-4 justify-around">
+                  <div className="flex flex-col text-left">
+                    <p className="font-medium text-gray-600 justify-start ">
+                      Nama Lengkap:
+                    </p>
+                    <p className="text-sm">{currentItem?.namaLengkap || ""}</p>
+                    <p className="font-medium text-gray-600 mt-3">Cabang:</p>
+                    <p className="text-sm">{currentItem?.cabang || ""}</p>
+                  </div>
+
+                  <div className="flex flex-col text-left ">
+                    <p className="font-medium text-gray-600">NPA:</p>
+                    <p className=" text-sm">{currentItem?.npaPgri || ""}</p>
+                    <p className="font-medium text-gray-600 text-left mt-3">
+                      Unit Kerja:
+                    </p>
+                    <p className="ml-0 text-sm">
+                      {currentItem?.unitKerja || ""}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Button
-                  className="w-full bg-teal-700 hover:bg-teal-500"
-                  onClick={() => handlePindahCabangClick()}
-                >
-                  {isCabangEnabled
-                    ? "Konfirmasi Pindah Cabang"
-                    : "Pindah Cabang"}
-                </Button>
-                <Button
-                  className="w-full bg-teal-700 hover:bg-teal-500"
-                  onClick={() => handleUnitKerjaClick()}
-                >
-                  {isUnitKerjaEnabled ? "Konfirmasi Unit Kerja" : "Unit Kerja"}
-                </Button>
-                <Button
-                  className="w-full bg-teal-700 hover:bg-teal-500"
-                  onClick={handleKeluarAnggotaClick}
-                >
-                  Keluar Anggota
-                </Button>
-                <Button
-                  className="w-full bg-teal-700 hover:bg-teal-500"
-                  onClick={() => alert("Tidak Jelas")}
-                >
-                  Pensiun
-                </Button>
+              <div className="space-y-2 mt-4">
+                <div>
+                  <Button
+                    className="w-full bg-teal-700 hover:bg-teal-500"
+                    onClick={handlePindahCabangUnit}
+                  >
+                    Pindah Cabang dan Unit Kerja
+                  </Button>
+                </div>
+                <div>
+                  <Button
+                    className="w-full bg-teal-700 hover:bg-teal-500"
+                    onClick={handlePopupKeluar}
+                  >
+                    Keluar Anggota
+                  </Button>
 
-                {isPopupVisible && (
-                  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-4 rounded-lg shadow-lg">
-                      <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold">Keluar Anggota</h2>
-                        <button
-                          className=" text-xl font-bold text-gray-700 hover:text-red-500 focus:outline-none"
-                          onClick={handleCancel}
-                        >
-                          x
-                        </button>
-                      </div>
-                      <p>Apakah Anggota dikeluarkan?</p>
-                      <div className="flex justify-end mt-4 space-x-2">
-                        <Button
-                          className="bg-green-500 hover:bg-green-400 text-white px-4 py-2 rounded"
-                          onClick={handleConfirm}
-                        >
-                          Ya
-                        </Button>
-                        <Button
-                          className="bg-red-500 hover:bg-red-400 text-white px-4 py-2 rounded"
-                          onClick={handleCancel}
-                        >
-                          Tidak
-                        </Button>
+                  {popupVisibleKeluar && (
+                    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+                      <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
+                        <h2 className="text-lg font-semibold text-gray-800">
+                          Apakah Anda yakin?
+                        </h2>
+                        <p className="text-gray-600 mt-2 mb-4">
+                          Apakah Anda yakin akan menghapus anggota ini?
+                        </p>
+                        <div className="flex justify-center gap-4">
+                          <button
+                            onClick={handleCancelKeluar}
+                            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                          >
+                            Batal
+                          </button>
+                          <button
+                            onClick={handleKeluarAnggota}
+                            className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                          >
+                            Ya, Saya Yakin
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
+                <div>
+                  <Button
+                    className="w-full bg-teal-700 hover:bg-teal-500"
+                    onClick={handlePopup}
+                  >
+                    Pensiun
+                  </Button>
+                  {popupVisible && (
+                    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+                      <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
+                        <h2 className="text-lg font-semibold text-gray-800">
+                          Apakah Anda yakin ?
+                        </h2>
+                        <p className="text-gray-600 mt-2 mb-4">
+                          Apakah Anda yakin untuk mengubah anggota menjadi
+                          pensiun?
+                        </p>
+                        <div className="flex justify-center gap-4">
+                          <button
+                            onClick={handleCancelKeluar}
+                            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                          >
+                            Batal
+                          </button>
+                          <button
+                            onClick={handlePensiunAnggota}
+                            className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                          >
+                            Ya, Saya Yakin
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </Modal>
