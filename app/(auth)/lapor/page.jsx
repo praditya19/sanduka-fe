@@ -1108,41 +1108,42 @@ const Page = () => {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
+               marginTop: "14px"
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
-          <strong
+          <h3
             style={{
               fontSize: "2rem",
               display: "block",
-              marginBottom: "8px",
+              marginBottom: "28px",
             }}
           >
             Laporan Berhasil!
-          </strong>
+          </h3>
         </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "16px",
-            width: "80%",
-            maxWidth: "500px",
-            height: "auto",
-            maxHeight: "500px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
+       {
+        icon: null,
+        duration: 4000,
+        style: {
+          marginTop: "12%",
+          fontSize: "1.75rem",
+          padding: "10px",
+          width: "80%",
+          maxWidth: "450px",
+          height: "50%",
+          maxHeight: "400px",
+          transform: "translate(-50%, -50%)",
+          textAlign: "center",
+          zIndex: 9999,
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+        },
+      }
       );
   
       setTimeout(() => {
@@ -1176,7 +1177,7 @@ const Page = () => {
             <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
             <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
           </svg>
-          <strong
+          <h3
             style={{
               fontSize: "1.75rem",
               display: "block",
@@ -1184,7 +1185,7 @@ const Page = () => {
             }}
           >
             Gagal menambahkan laporan.
-          </strong>
+          </h3>
         </div>,
         {
           icon: null,

@@ -58,6 +58,39 @@ const Page = () => {
     setFilteredPensiunList(filteredItems);
   };
 
+  const handleFiltersChange = (event) => {
+    const { name, value } = event.target;
+
+    // Update state berdasarkan filter yang diubah
+    if (name === "status") {
+      setSelectedStatus(value);
+    } else if (name === "year") {
+      setSelectedYear(value);
+    }
+
+    // Gabungkan filter
+    const filteredItems = pensiunList.filter((pensiun) => {
+      // Filter berdasarkan status
+      const statusFilter =
+        selectedStatus === "Pensiun"
+          ? pensiun.keterangan === "Pensiun"
+          : selectedStatus === "Segera"
+          ? pensiun.keterangan === null && pensiun.status === "Segera"
+          : true;
+
+      // Filter berdasarkan tahun
+      const tahunPrediksi = new Date(pensiun.prediksiPensiun).getFullYear();
+      const yearFilter =
+        selectedYear === "" || tahunPrediksi.toString() === selectedYear;
+
+      // Gabungkan kedua filter
+      return statusFilter && yearFilter;
+    });
+
+    // Update state dengan hasil filter
+    setFilteredPensiunList(filteredItems);
+  };
+
   useEffect(() => {
     const fetchBulan = async () => {
       try {
@@ -130,7 +163,10 @@ const Page = () => {
         console.error("NPA tidak valid atau ID tidak ditemukan.");
       }
     } catch (error) {
-      console.error("Terjadi kesalahan saat memproses permintaan:", error.message);
+      console.error(
+        "Terjadi kesalahan saat memproses permintaan:",
+        error.message
+      );
     }
   };
 
@@ -209,8 +245,6 @@ const Page = () => {
         (item) => item.status === "Segera"
       ).length;
       setStatusSegeraCount(countSegera);
-
-      // sessionStorage.setItem("statusSegera", countSegera);
     }
   }, [currentItems]);
 
@@ -240,6 +274,17 @@ const Page = () => {
   };
 
   useEffect(() => {
+    const uniqueYears = Array.from(
+      new Set(
+        pensiunList.map((pensiun) =>
+          new Date(pensiun.prediksiPensiun).getFullYear()
+        )
+      )
+    ).sort();
+    setYearOptions(uniqueYears); // Simpan ke state yearOptions
+  }, [pensiunList]);
+
+  useEffect(() => {
     if (!token) {
       router.push("/sign-in");
     }
@@ -262,12 +307,6 @@ const Page = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
-
-  // const formatDate = (date) => {
-  //   if (!date) return "-";
-  //   const options = { year: "numeric", month: "2-digit", day: "2-digit" };
-  //   return new Date(date).toLocaleDateString("id-ID", options);
-  // };
 
   const downloadTableAsExcel = (dataToExport) => {
     try {
@@ -314,8 +353,13 @@ const Page = () => {
       XLSX.utils.book_append_sheet(workbook, worksheet, "Data Anggota");
 
       // 5. Buat file Excel dan simpan
-      const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-      const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const blob = new Blob([excelBuffer], {
+        type: "application/octet-stream",
+      });
       saveAs(blob, "Data_Anggota.xlsx");
     } catch (error) {
       console.error("Gagal mengunduh file Excel:", error.message);
@@ -324,14 +368,15 @@ const Page = () => {
 
   const handleExportExcel = () => {
     const dataToExport = selectedMonth
-      ? pensiunList.filter((item) =>
-        new Date(item.tanggalLahir).getMonth() + 2 === parseInt(selectedMonth)
-      )
+      ? pensiunList.filter(
+          (item) =>
+            new Date(item.tanggalLahir).getMonth() + 2 ===
+            parseInt(selectedMonth)
+        )
       : pensiunList;
 
     downloadTableAsExcel(dataToExport);
   };
-
 
   const handlePopup = async (npa) => {
     try {
@@ -378,6 +423,7 @@ const Page = () => {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
+              marginTop: "14px",
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
@@ -392,14 +438,13 @@ const Page = () => {
         </div>,
         {
           icon: null,
-          autoClose: 4000,
           duration: 4000,
           style: {
-            marginTop: "16%",
+            marginTop: "12%",
             fontSize: "1.75rem",
             padding: "10px",
             width: "80%",
-            maxWidth: "700px",
+            maxWidth: "450px",
             height: "50%",
             maxHeight: "400px",
             transform: "translate(-50%, -50%)",
@@ -554,8 +599,13 @@ const Page = () => {
                 </select>
 
                 <select
+                  name="year"
                   value={selectedYear}
-                  onChange={handleYearChange}
+                  onChange={(e) => {
+                    const selectedYear = e.target.value;
+                    setSelectedYear(selectedYear);
+                    applyFilters(selectedMonth, selectedYear);
+                  }}
                   className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
                 >
                   <option value="">Pilih Tahun</option>
@@ -568,12 +618,11 @@ const Page = () => {
 
                 <select
                   value={selectedStatus}
-                  onChange={handleStatusChange}
+                  onChange={handleFiltersChange}
                   className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
                 >
                   <option value="">Pilih Status</option>
                   <option value="Segera">Segera</option>
-                  <option value="Pensiun">Pensiun</option>
                 </select>
               </div>
 

@@ -21,6 +21,10 @@ export default function Home() {
     }
   }, [router]);
 
+  const handleLogin = () => {
+    router.push("/sign-in");
+  };
+
   return (
     <div>
       {/* Popup Section */}
@@ -36,7 +40,7 @@ export default function Home() {
 
             <Image
               className="w-full h-auto max-h-80 rounded-lg mb-4"
-              src={"/login.png"}
+              src={"/gif_hal_depan.gif"}
               alt="Popup"
               width={110}
               height={110}
@@ -44,9 +48,9 @@ export default function Home() {
 
             <button
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
-              onClick={closePopup}
+              onClick={handleLogin}
             >
-              Informasi Selengkapnya
+              Update Data
             </button>
           </div>
         </div>
@@ -54,7 +58,9 @@ export default function Home() {
 
       <Header />
       <Slider />
-      <LayananKami />
+      <div className="relative z-40 mt-0 md:-mt-24 -mt-16">
+        <LayananKami />
+      </div>
       <GaleriKegiatan />
       <Flowchart />
       <Footer />

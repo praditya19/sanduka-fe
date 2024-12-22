@@ -66,13 +66,13 @@ const page = () => {
       } else if (role === "USER") {
         userId = sessionStorage.getItem("userId");
       }
-  
+
       if (userId) {
         try {
           const response = await GlobalApi.getUserById(userId);
           setUserData(response);
           setCabang(response.cabang || "");
-          setSelectedUnitKerja(response.unitKerja  || "");
+          setSelectedUnitKerja(response.unitKerja || "");
         } catch (error) {
           console.error("Error fetching user data:", error);
         }
@@ -80,10 +80,10 @@ const page = () => {
         console.warn("User ID tidak ditemukan di sessionStorage.");
       }
     };
-  
+
     fetchUserData();
   }, []);
-  
+
   const handleCabangSelect = (cabangItem) => {
     setCabang(cabangItem.kecamatan);
     setShowDropdownCabangUnit(false);
@@ -126,27 +126,27 @@ const page = () => {
   const handleConfirmSave = async () => {
     const role = sessionStorage.getItem("role"); // Ambil role dari sessionStorage
     let idAnggota;
-  
+
     // Tentukan ID berdasarkan role
     if (role === "ADMIN" || role === "SUPER ADMIN") {
       idAnggota = sessionStorage.getItem("anggotaId");
     } else if (role === "USER") {
       idAnggota = sessionStorage.getItem("userId");
     }
-  
+
     if (!idAnggota) {
       console.error("ID tidak ditemukan. Periksa role atau sessionStorage.");
       alert("ID anggota tidak valid. Silakan login ulang.");
       return;
     }
-  
+
     if (!cabang || !selectedUnitKerja) {
       console.error("Cabang atau Unit Kerja tidak boleh kosong");
       alert("Silakan pilih Cabang dan Unit Kerja sebelum menyimpan.");
       setIsPopupVisible(false);
       return;
     }
-  
+
     try {
       const response = await GlobalApi.mutasiCabangUnitKerja(
         idAnggota,
@@ -171,56 +171,58 @@ const page = () => {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
+               marginTop: "14px"
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
-          <strong
+          <h3
             style={{
-              fontSize: "1.75rem",
+              fontSize: "1.25rem",
               display: "block",
               marginBottom: "8px",
             }}
           >
             {`Mutasi Berhasil!`}
-          </strong>
-          <span style={{ fontSize: "1.75rem" }}>
-            {` Cabang: ${cabang}, Unit Kerja: ${selectedUnitKerja}`}
+          </h3>
+          <span style={{ fontSize: "1.25rem", marginBottom:"14px" }}>
+            <div>{`Cabang: ${cabang}`}</div>
+            <div>{`Unit Kerja: ${selectedUnitKerja}`}</div>
           </span>
         </div>,
-        {
-          icon: null,
-          duration: 5000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
+       {
+        icon: null,
+        duration: 4000,
+        style: {
+          marginTop: "12%",
+          fontSize: "1.75rem",
+          padding: "10px",
+          width: "80%",
+          maxWidth: "450px",
+          height: "50%",
+          maxHeight: "400px",
+          transform: "translate(-50%, -50%)",
+          textAlign: "center",
+          zIndex: 9999,
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+        },
+      }
       );
       handleCreateHistory();
       setShowDropdownCabangUnit(false);
       setIsDropdownVisible(false);
-  
+
       setTimeout(() => {
         router.back();
-      }, 5000);
+      }, 4000);
     } catch (error) {
       console.error("Error saat memutasikan anggota:", error);
       console.error("Response data:", error.response?.data);
-  
+
       toast.error(
         `Terjadi kesalahan: ${
           error?.response?.data?.message || "Silakan coba lagi."
@@ -230,7 +232,7 @@ const page = () => {
       setIsPopupVisible(false);
     }
   };
-  
+
   const handleCancelSave = () => {
     setIsPopupVisible(false); // Tutup popup jika user membatalkan
   };
@@ -461,8 +463,8 @@ const page = () => {
 
         {isPopupVisible && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div className="bg-white p-6 rounded shadow-lg max-w-xs sm:max-w-sm md:max-w-md w-full">
-              <p className="text-lg">
+            <div className="bg-white p-6 py-9 rounded shadow-lg max-w-xs sm:max-w-sm md:max-w-md w-full">
+              <p className="text-lg mb-12">
                 Apakah Anda yakin Ingin Pindah Cabang?
               </p>
               <div className="mt-4 flex justify-end">

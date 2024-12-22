@@ -291,6 +291,7 @@ function SignIn() {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
+              marginTop: "14px"
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
@@ -302,17 +303,17 @@ function SignIn() {
           >
             Selamat Datang Di Sanduka
           </strong>
-          <span style={{ fontSize: "1.75rem" }}>{response.namaLengkap}</span>
+          <span style={{ fontSize: "1.75rem", marginBottom:"28px" }}>{response.namaLengkap}</span>
         </div>,
         {
           icon: null,
           duration: 4000,
           style: {
-            marginTop: "16%",
+            marginTop: "12%",
             fontSize: "1.75rem",
             padding: "10px",
             width: "80%",
-            maxWidth: "700px",
+            maxWidth: "450px",
             height: "50%",
             maxHeight: "400px",
             transform: "translate(-50%, -50%)",

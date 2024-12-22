@@ -46,6 +46,8 @@ function Pengeluaran() {
     namaPenerima: "",
     keterangan: "",
     terbilang: "",
+    tahun: "",
+    bulan: "",
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -57,14 +59,114 @@ function Pengeluaran() {
   const [tanggal, setTanggal] = useState("");
   const [bulan, setBulan] = useState("");
   const [tahun, setTahun] = useState("");
-
+  const [allNames, setAllNames] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  const handleChange = (e) => {
+
+  const handleChange = async (e) => {
     const { name, value } = e.target;
-    setFormValues((prevValues) => ({
-      ...prevValues,
-      [name]: value,
-    }));
+
+    setFormValues((prevValues) => {
+      const updatedValues = { ...prevValues, [name]: value };
+
+      if (name === "nominal") {
+        if (value === "") {
+          updatedValues.terbilang = "";
+        } else if (!isNaN(value)) {
+          updatedValues.terbilang = convertToTerbilangWithRupiah(Number(value));
+        }
+      }
+
+      return updatedValues;
+    });
+
+    if (name === "tahun" || name === "bulan") {
+      const year = name === "tahun" ? value : formValues.tahun;
+      const month = name === "bulan" ? value : formValues.bulan;
+
+      if (year && month) {
+        try {
+          const data = await GlobalApi.getNamaKwitansi(year, month);
+          setAllNames(data);
+          setFilteredNames(data);
+          setIsDropdownVisible(true);
+        } catch (error) {
+          console.error("Error fetching deceased users:", error);
+        }
+      }
+    }
+  };
+  const capitalizeFirstLetter = (text) => {
+    return text
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+  const convertToTerbilang = (number) => {
+    const satuan = [
+      "",
+      "satu",
+      "dua",
+      "tiga",
+      "empat",
+      "lima",
+      "enam",
+      "tujuh",
+      "delapan",
+      "sembilan",
+    ];
+    const belasan = [
+      "sepuluh",
+      "sebelas",
+      "dua belas",
+      "tiga belas",
+      "empat belas",
+      "lima belas",
+      "enam belas",
+      "tujuh belas",
+      "delapan belas",
+      "sembilan belas",
+    ];
+
+    const ribuan = "ribu";
+    const jutaan = "juta";
+    const miliaran = "miliar";
+    const rupiah = "rupiah";
+
+    if (number < 10) return satuan[number];
+    if (number < 20) return belasan[number - 10];
+    if (number < 100)
+      return `${satuan[Math.floor(number / 10)]} puluh ${
+        satuan[number % 10]
+      }`.trim();
+
+    if (number < 1000)
+      return `${satuan[Math.floor(number / 100)]} ratus ${convertToTerbilang(
+        number % 100
+      )}`.trim();
+
+    if (number < 1000000)
+      return `${convertToTerbilang(
+        Math.floor(number / 1000)
+      )} ${ribuan} ${convertToTerbilang(number % 1000)}`.trim();
+
+    if (number < 1000000000)
+      return `${convertToTerbilang(
+        Math.floor(number / 1000000)
+      )} ${jutaan} ${convertToTerbilang(number % 1000000)}`.trim();
+
+    if (number < 1000000000000)
+      return `${convertToTerbilang(
+        Math.floor(number / 1000000000)
+      )} ${miliaran} ${convertToTerbilang(number % 1000000000)}`.trim();
+
+    return "Jumlah terlalu besar";
+  };
+
+  const convertToTerbilangWithRupiah = (number) => {
+    const terbilang = convertToTerbilang(number);
+    return `${capitalizeFirstLetter(terbilang)} ${
+      number > 0 ? "Rupiah" : ""
+    }`.trim();
   };
 
   const getBulanAngka = (bulanNama) => {
@@ -240,40 +342,20 @@ function Pengeluaran() {
     (_, index) => startYear + index
   );
 
-  const handleSearch = async (e) => {
-    const value = e.target.value;
-    setFormValues((prevValues) => ({ ...prevValues, yangMeninggal: value }));
+  const handleSearch = (e) => {
+    const searchTerm = e.target.value.toLowerCase();
 
-    if (value === "") {
-      setFilteredNames([]);
-      setIsDropdownVisible(false);
-      return;
-    }
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      yangMeninggal: e.target.value,
+    }));
 
-    try {
-      const idList = JSON.parse(sessionStorage.getItem("idTerlaporList"));
+    const filtered = allNames.filter((name) =>
+      name.namaLengkap.toLowerCase().includes(searchTerm)
+    );
 
-      if (!idList || idList.length === 0) {
-        console.warn("Tidak ada ID dalam sessionStorage");
-        setFilteredNames([]);
-        setIsDropdownVisible(false);
-        return;
-      }
-
-      const userPromises = idList.map((id) => GlobalApi.getUserById(id));
-      const userResponses = await Promise.all(userPromises);
-
-      const allNames = userResponses.filter((data) => data && data.namaLengkap);
-
-      const filtered = allNames.filter((data) =>
-        data.namaLengkap.toLowerCase().includes(value.toLowerCase())
-      );
-
-      setFilteredNames(filtered);
-      setIsDropdownVisible(true);
-    } catch (error) {
-      console.error("Error fetching names:", error);
-    }
+    setFilteredNames(filtered);
+    setIsDropdownVisible(true);
   };
 
   const printTable = () => {
@@ -301,15 +383,7 @@ function Pengeluaran() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  const handleSelectName = (selectedName) => {
-    setFormValues((prevFormValues) => ({
-      ...prevFormValues,
-      yangMeninggal: selectedName,
-    }));
-    setFilteredNames([]);
-  };
-
+  
   const handleReset = () => {
     setFormValues({
       noBukti: "",
@@ -360,33 +434,121 @@ function Pengeluaran() {
     }).format(value);
   };
 
-  const handleKwitansiClick = async () => {
-    const fetchKwitansiData = async () => {
-      const id = sessionStorage.getItem("idTerlapor");
-      const npaPgri = sessionStorage.getItem("npaTerlapor");
-
-      if (!id || !npaPgri) {
-        console.error("ID atau NPA PGRI tidak ditemukan di sessionStorage.");
-        return;
-      }
-
-      try {
-        const response = await GlobalApi.getKwitansiByIdAndNpa(id, npaPgri, {
-          responseType: "blob",
-        });
-
-        const gambarUrl = URL.createObjectURL(response.data);
-
-        setKwitansiData(gambarUrl);
-        setPopupVisible(true);
-      } catch (error) {
-        console.error("Gagal mengambil data kwitansi:", error.message);
-      }
-    };
-
-    await fetchKwitansiData();
+  const handleSelectName = async (name) => {
+    try {
+      // Perbarui formValues dengan nama yang dipilih
+      setFormValues((prevValues) => ({
+        ...prevValues,
+        yangMeninggal: name.namaLengkap, // Update input dengan nama yang dipilih
+      }));
+  
+      // Panggil API dengan nama untuk mendapatkan data detail
+      const userDataByName = await GlobalApi.searchUsersByName(name.namaLengkap);
+  
+      // Tampilkan data detail berdasarkan nama ke console
+      console.log("Data User berdasarkan Nama yang Dipilih:", userDataByName.data.users);
+  
+      // Sembunyikan dropdown setelah memilih nama
+      setIsDropdownVisible(false);
+    } catch (error) {
+      console.error("Error fetching user data by name:", error.message);
+    }
   };
 
+  const handleKwitansiClick = async () => {
+    const generateKwitansi = async () => {
+      try {
+        const selectedName = formValues.yangMeninggal;
+  
+        if (!selectedName) {
+          console.error("Nama yang meninggal belum diisi.");
+          return;
+        }
+  
+        const userDataList = await GlobalApi.searchUsersByName(selectedName);
+  
+        if (!userDataList.data || !userDataList.data.users || userDataList.data.users.length === 0) {
+          console.error("Tidak ditemukan pengguna dengan nama:", selectedName);
+          return;
+        }
+  
+        const userData = userDataList.data.users[0];
+  
+        console.log("ID:", userData.id);
+        console.log("NPA PGRI:", userData.npaPgri);
+  
+        // Format tanggal menjadi "YYYY-MM-DD"
+        const formatDate = (dateArray, separator = "-") => {
+          if (!dateArray || dateArray.length !== 3) return "Tanggal tidak valid";
+          const [year, month, day] = dateArray;
+          return `${year}${separator}${String(month).padStart(2, "0")}${separator}${String(day).padStart(2, "0")}`;
+        };
+  
+        // Ambil data pelaporan dan tanggal meninggal
+        const dataPelaporan = formatDate(userData.tanggalPelaporan); // Ambil dari tanggalPelaporan
+        const tanggalMeninggal = formatDate(userData.waktuMeninggalTerlapor); // Ambil dari waktuMeninggalTerlapor
+  
+        // Hitung umur berdasarkan tanggal lahir dan tanggal hari ini
+        const calculateAge = (tanggalLahir) => {
+          const today = new Date();
+          const birthDate = new Date(
+            tanggalLahir[0],
+            tanggalLahir[1] - 1,
+            tanggalLahir[2]
+          );
+  
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          const dayDiff = today.getDate() - birthDate.getDate();
+  
+          if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+            age--;
+          }
+  
+          return age;
+        };
+  
+        const umur = calculateAge(userData.tanggalLahir);
+  
+        const mulaiJadiAnggotaPgri = userData.mulaiJadiAnggotaPgri
+          ? formatDate(userData.mulaiJadiAnggotaPgri)
+          : "Tanggal tidak valid";
+  
+        const generateData = {
+          dataPelaporan,
+          nama: userData.namaLengkap,
+          tanggalMeninggal,
+          umur,
+          dataDukung: userData.unitKerja,
+          alamat: userData.alamat,
+          nomorHp: userData.nomorHp,
+          mulaiJadiAnggotaPgri,
+          jabatan: userData.jabatan,
+          terbilang: formValues.terbilang,
+          nominal: formValues.nominal,
+          menyerahkan: sessionStorage.getItem("nama"),
+          penerima: formValues.namaPenerima,
+        };
+  
+        console.log("Data yang akan dikirim:", generateData);
+  
+        await GlobalApi.generateKwitansi(generateData);
+        console.log("Kwitansi berhasil di-generate.");
+  
+        const response = await GlobalApi.getKwitansiByIdAndNpa(userData.id, userData.npaPgri);
+        const blobUrl = URL.createObjectURL(response.data);
+        console.log("URL Kwitansi Blob:", blobUrl);
+  
+        setKwitansiData(blobUrl);
+      } catch (error) {
+        console.error("Error:", error.message);
+      }
+    };
+  
+    await generateKwitansi();
+  };
+  
+      
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
     setIsSidebarOpen(sidebarState);
@@ -556,7 +718,7 @@ function Pengeluaran() {
                     className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-5"
                     id="tahun"
                     name="tahun"
-                    value={formValues.bulan}
+                    value={formValues.tahun}
                     onChange={handleChange}
                   >
                     <option value="">Tahun Lapor</option>
@@ -575,12 +737,12 @@ function Pengeluaran() {
                   >
                     <option>Bulan Lapor</option>
                     {bulanList.map((bulan) => (
-                      <option key={bulan.angkaBulan} value={bulan.namaBulan}>
+                      <option key={bulan.angkaBulan} value={bulan.id}>
                         {bulan.namaBulan}
                       </option>
                     ))}
                   </select>
-                 
+
                   <div className="relative" ref={dropdownRef}>
                     <input
                       type="text"
@@ -588,36 +750,25 @@ function Pengeluaran() {
                       id="yangMeninggal"
                       name="yangMeninggal"
                       value={formValues.yangMeninggal}
-                      onChange={handleSearch}
-                      onFocus={async () => {
-                        try {
-                          const idList =
-                            JSON.parse(
-                              sessionStorage.getItem("idTerlaporList")
-                            ) || [];
-                          const userPromises = idList.map((id) =>
-                            GlobalApi.getUserById(id)
-                          );
-                          const userResponses = await Promise.all(userPromises);
-                          const allNames = userResponses.filter(
-                            (data) => data && data.namaLengkap
-                          );
-                          setFilteredNames(allNames);
+                      onChange={(e) => {
+                        handleSearch(e);
+                      }}
+                      onFocus={() => {
+                        if (filteredNames.length > 0) {
                           setIsDropdownVisible(true);
-                        } catch (error) {
-                          console.error("Error fetching initial names:", error);
                         }
                       }}
                       placeholder="Cari nama yang meninggal"
                     />
 
+                    {/* Dropdown */}
                     {filteredNames.length > 0 && isDropdownVisible && (
                       <ul className="absolute z-10 shadow-lg bg-white border border-gray-300 rounded-md w-full max-h-48 overflow-y-auto -mt-3">
                         {filteredNames.map((name) => (
                           <li
                             key={name.id}
                             className="px-4 py-2 hover:bg-blue-100 cursor-pointer"
-                            onClick={() => handleSelectName(name.namaLengkap)}
+                            onClick={() => handleSelectName(name)}
                           >
                             {name.namaLengkap}
                           </li>
@@ -691,7 +842,7 @@ function Pengeluaran() {
                     onChange={handleChange}
                   />
 
-                  {/* <div className="flex flex-col mt-5">
+                  <div className="flex flex-col mt-5">
                     <Label
                       className="block text-gray-700 text-sm font-semibold mb-2"
                       htmlFor="terbilang"
@@ -703,9 +854,9 @@ function Pengeluaran() {
                       id="terbilang"
                       name="terbilang"
                       value={formValues.terbilang}
-                      onChange={handleChange}
+                      readOnly
                     />
-                  </div> */}
+                  </div>
                   <div className="flex flex-col mt-5">
                     <Label
                       className="block text-gray-700 text-sm font-semibold mb-2"

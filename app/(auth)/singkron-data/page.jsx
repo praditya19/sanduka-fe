@@ -301,137 +301,68 @@ const SyncData = () => {
     e.preventDefault();
     setLoader(true);
     let fileToSend = formData.file;
-
-    const validExtensions = [".xls", ".xlsx"];
-    const fileName = fileToSend.name.toLowerCase();
-    const isValidExtension = validExtensions.some((ext) =>
-      fileName.endsWith(ext)
-    );
-
-    const fileType = fileToSend.type;
-    const validMimeTypes = [
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "application/vnd.ms-excel",
-    ];
-
-    if (!fileToSend) {
-      alert("Tidak ada file yang dipilih.");
-      setLoader(false);
-      return;
-    }
-
-    if (!isValidExtension || !validMimeTypes.includes(fileType)) {
-      alert(
-        "Format file tidak valid. Harap unggah file Excel (.xls atau .xlsx)."
-      );
-      return;
-    }
-
-    try {
-      const reader = new FileReader();
-
-      reader.onload = async (event) => {
+  
+    if (
+      fileToSend &&
+      (fileToSend.type ===
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+        fileToSend.type === "application/vnd.ms-excel")
+    ) {
+      try {
+        const dataToSend = new FormData();
+        dataToSend.append("file", fileToSend);
+        dataToSend.append("category", formData.category);
+        dataToSend.append("cabang", formData.cabang);
+        dataToSend.append("unitKerja", formData.unitKerja);
+        dataToSend.append("namaAnggota", formData.namaLengkap);
+        dataToSend.append("npaNip", formData.npaNip);
+        dataToSend.append("nomorHp", formData.nomorHp);
+        dataToSend.append("dataSanduka", formData.dataSanduka);
+        dataToSend.append("dataKtaDigital", formData.dataKtaDigital);
+        dataToSend.append("dataDaspen", formData.dataDaspen);
+        dataToSend.append("verifikasi", formData.verifikasi);
+  
         try {
-          const data = new Uint8Array(event.target.result);
-          const workbook = XLSX.read(data, { type: "array" });
-
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
-
-          const dataToSend = new FormData();
-          dataToSend.append("file", fileToSend);
-          dataToSend.append("category", formData.category);
-          dataToSend.append("cabang", formData.cabang);
-          dataToSend.append("unitKerja", formData.unitKerja);
-          dataToSend.append("namaAnggota", formData.namaLengkap);
-          dataToSend.append("npaNip", formData.npaNip);
-          dataToSend.append("nomorHp", formData.nomorHp);
-          dataToSend.append("dataSanduka", formData.dataSanduka);
-          dataToSend.append("dataKtaDigital", formData.dataKtaDigital);
-          dataToSend.append("dataDaspen", formData.dataDaspen);
-          dataToSend.append("verifikasi", formData.verifikasi);
-
-          try {
-            const response = await GlobalApi.uploadFile(dataToSend);
-            toast.success(
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  textAlign: "center",
-                }}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  style={{
-                    width: "150px",
-                    height: "150px",
-                    color: "#06D001",
-                    marginBottom: "16px",
-                  }}
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-                </svg>
-                <strong
-                  style={{
-                    fontSize: "2rem",
-                    display: "block",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Data Berhasil diUpload
-                </strong>
-              </div>,
-              {
-                icon: null,
-                duration: 4000,
-                style: {
-                  marginTop: "16%",
-                  fontSize: "1.75rem",
-                  padding: "10px",
-                  width: "80%",
-                  maxWidth: "700px",
-                  height: "50%",
-                  maxHeight: "400px",
-                  transform: "translate(-50%, -50%)",
-                  textAlign: "center",
-                  zIndex: 9999,
-                  backgroundColor: "#fff",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                },
-              }
-            );
-            fetchData();
-            setIsModalOpen(false);
-          } catch (error) {
-            console.error(
-              "Error saat mengirim data:",
-              error.response?.data || error.message
-            );
-            alert(
-              `Gagal mengunggah data: ${error.response?.data || error.message}`
-            );
-            setLoader(false);
-          }
+          const response = await GlobalApi.uploadFile(dataToSend);
+          console.log("Data successfully submitted:", response);
+          setIsModalOpen(false);
         } catch (error) {
-          console.error("Error saat memproses file:", error);
-          alert("Gagal memproses file. Harap coba lagi.");
+          console.error(
+            "Error submitting data:",
+            error.response?.data || error.message
+          );
         }
-      };
-
-      reader.readAsArrayBuffer(fileToSend);
-    } catch (error) {
-      console.error("Error saat membaca file:", error);
-      alert("Gagal membaca file. Harap coba lagi.");
-      setLoader(false);
+      } catch (error) {
+        console.error("Error processing file:", error);
+      }
+    } else {
+      // Jika file bukan tipe Excel, tetap kirim data seperti biasa
+      const dataToSend = new FormData();
+      dataToSend.append("file", fileToSend);
+      dataToSend.append("category", formData.category);
+      dataToSend.append("cabang", formData.cabang);
+      dataToSend.append("unitKerja", formData.unitKerja);
+      dataToSend.append("namaAnggota", formData.namaLengkap);
+      dataToSend.append("npaNip", formData.npaNip);
+      dataToSend.append("nomorHp", formData.nomorHp);
+      dataToSend.append("dataSanduka", formData.dataSanduka);
+      dataToSend.append("dataKtaDigital", formData.dataKtaDigital);
+      dataToSend.append("dataDaspen", formData.dataDaspen);
+      dataToSend.append("verifikasi", formData.verifikasi);
+  
+      try {
+        const response = await GlobalApi.uploadFile(dataToSend);
+        console.log("Data successfully submitted:", response);
+        setIsModalOpen(false);
+      } catch (error) {
+        console.error(
+          "Error submitting data:",
+          error.response?.data || error.message
+        );
+      }
     }
   };
-
+  
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
