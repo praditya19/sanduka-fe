@@ -42,24 +42,24 @@ const Page = () => {
   const [totalAnggota, setTotalAnggota] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentTableData = tableData.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(tableData.length / itemsPerPage);
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const [itemsPerPage, setItemsPerPage] = useState(10);
+  // const indexOfLastItem = currentPage * itemsPerPage;
+  // const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  // const currentTableData = tableData.slice(indexOfFirstItem, indexOfLastItem);
+  // const totalPages = Math.ceil(tableData.length / itemsPerPage);
 
-  const getVisiblePages = () => {
-    const range = 2; // Number of pages to show on each side of current page
-    let start = Math.max(1, currentPage - range);
-    let end = Math.min(totalPages, currentPage + range);
+  // const getVisiblePages = () => {
+  //   const range = 2; // Number of pages to show on each side of current page
+  //   let start = Math.max(1, currentPage - range);
+  //   let end = Math.min(totalPages, currentPage + range);
 
-    const pages = [];
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  };
+  //   const pages = [];
+  //   for (let i = start; i <= end; i++) {
+  //     pages.push(i);
+  //   }
+  //   return pages;
+  // };
 
   useEffect(() => {
     const today = new Date();
@@ -433,7 +433,7 @@ const Page = () => {
 
                 <div className="overflow-x-auto">
                   <table className="table-auto w-full border-collapse border border-gray-300 text-sm">
-                  <thead className="bg-gray-100">
+                    <thead className="bg-gray-100">
                       <tr>
                         <th
                           rowSpan="2"
@@ -494,8 +494,8 @@ const Page = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {Array.isArray(currentTableData) && currentTableData.length > 0 ? (
-                        currentTableData.map((item, index) => (
+                      {Array.isArray(tableData) && tableData.length > 0 ? (
+                        tableData.map((item, index) => (
                           <tr
                             key={index}
                             className={
@@ -503,7 +503,7 @@ const Page = () => {
                             }
                           >
                             <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                              {indexOfFirstItem + index + 1}
+                              {index + 1}
                             </td>
                             <td className="border border-gray-300 p-2 text-xs">
                               {item.cabang}
@@ -547,7 +547,7 @@ const Page = () => {
                     </tbody>
                   </table>
                 </div>
-                {tableData.length > itemsPerPage && (
+                {/* {tableData.length > itemsPerPage && (
                   <div className="flex justify-center mt-4 gap-1">
                     <button
                       onClick={() => setCurrentPage(1)}
@@ -594,7 +594,7 @@ const Page = () => {
                       Last
                     </button>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
             <div

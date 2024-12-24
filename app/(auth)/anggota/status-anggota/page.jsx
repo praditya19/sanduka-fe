@@ -229,7 +229,20 @@ function StatusAnggota() {
   };
 
   const handleUnitKerjaSelect = (selectedItem) => {
-    setSelectedUnitKerja(selectedItem.unitKerja || "Pilih Unit Kerja");
+    if (!selectedItem.unitKerja) {
+      // Case: "Semua Unit Kerja" selected
+      setSelectedUnitKerja("");
+      setFilteredUnitKerja(allUnitKerja);
+      setRekapData(originalRekapData); // Reset to original data
+    } else {
+      // Case: Specific unit kerja selected
+      setSelectedUnitKerja(selectedItem.unitKerja);
+      setFilteredUnitKerja([selectedItem]);
+      const filteredRekap = originalRekapData.filter(
+        item => item.alamatKerja === selectedItem.unitKerja
+      );
+      setRekapData(filteredRekap);
+    }
     setShowDropdownUnitKerja(false);
     setSearchUnitKerja('');
   };
@@ -437,6 +450,8 @@ function StatusAnggota() {
     SMK: "SMK",
     PERGURUAN_TINGGI: "Perguruan Tinggi",
     PAUD: "PAUD",
+    SEKOLAH_LUAR_BIASA: "SEKOLAH LUAR BIASA",
+    LAINNYA: "LAINNYA"
   };
 
   const formatTingkat = (tingkat) => {
@@ -671,9 +686,11 @@ function StatusAnggota() {
     SMP_MTS: "smp.png",
     TK_RA: "tk.png",
     SMA_MA: "sma.png",
-    SMK: "sma.png",
+    SMK: "smk.png",
     SD_MI: "sd.png",
     PERGURUAN_TINGGI: "perguruan_tinggi.png",
+    SEKOLAH_LUAR_BIASA: "slb.png",
+    LAINNYA: "lainnya.png",
   };
 
   const handlePindahCabangUnit = () => {
@@ -856,7 +873,7 @@ function StatusAnggota() {
 
                       {/* Nama Kategori */}
                       <p className="text-md font-semibold text-gray-800 mb-2">
-                        {item === "PERGURUAN_TINGGI"
+                        {item === "PERGURUAN_TINGGI" || item === "SEKOLAH_LUAR_BIASA"
                           ? item.replace(/_/g, ' ')
                           : item.replace(/_/g, '/')}
                       </p>
@@ -875,66 +892,54 @@ function StatusAnggota() {
             <div className="flex flex-wrap items-start mt-2 justify-between">
               <div className="flex flex-wrap items-center space-x-2">
                 <>
-                  <div
-                    ref={dropdownRef}
-                    className="relative flex flex-col md:flex ml-2"
-                  >
+                  <div ref={cabangRef} className="relative w-full md:w-40">
                     <Input
                       type="text"
                       placeholder="Pilih Cabang"
                       value={selectedCabang}
-                      readOnly
-                      disabled={role !== "ADMIN"}
+                      readOnly={sessionStorage.getItem("role") === "ADMIN"}
                       onFocus={() => {
-                        if (role === "ADMIN") {
+                        if (sessionStorage.getItem("role") !== "ADMIN") {
                           setShowDropdownCabang(true);
                           setFilteredCabangOptions(cabangOptions);
                         }
                       }}
-                      className="border rounded-lg p-2 w-full bg-white shadow-sm"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                     />
 
-                    {showDropdownCabang && role === "ADMIN" && (
-                      <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full ">
+                    {showDropdownCabang && sessionStorage.getItem("role") !== "ADMIN" && (
+                      <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
+                        <div className="p-2">
+                          <Input
+                            type="text"
+                            value={searchCabang}
+                            onChange={handleCabangChange}
+                            placeholder="Cari Cabang..."
+                            className="w-full border rounded py-2 px-3 mb-2"
+                          />
+                        </div>
                         <ul className="max-h-44 overflow-y-auto">
-                          <li className="py-2 px-2">
-                            <Input
-                              type="text"
-                              value={searchCabang}
-                              onChange={handleCabangChange}
-                              className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              placeholder="Cari Cabang..."
-                              autoFocus
-                            />
-                          </li>
                           <li
                             className="p-2 cursor-pointer hover:bg-gray-100"
-                            onClick={() => {
-                              handleCabangSelect({ kecamatan: "" });
-                            }}
+                            onClick={() => handleCabangSelect({})}
                           >
-                            Pilih Cabang
+                            Semua Cabang
                           </li>
-                          {filteredCabangOptions.length > 0 ? (
-                            filteredCabangOptions.map((cabang) => (
-                              <li
-                                key={cabang.idKecamatan}
-                                className="p-2 cursor-pointer hover:bg-gray-100"
-                                onClick={() => handleCabangSelect(cabang)}
-                              >
-                                {cabang.kecamatan}
-                              </li>
-                            ))
-                          ) : (
-                            <li className="px-4 py-2 text-gray-500 cursor-default">
-                              Tidak ada hasil
+                          {filteredCabangOptions.map((item) => (
+                            <li
+                              key={item.id}
+                              className="p-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleCabangSelect(item)}
+                            >
+                              {item.kecamatan}
                             </li>
-                          )}
+                          ))}
                         </ul>
                       </div>
                     )}
                   </div>
 
+                  {/* Unit Kerja Dropdown */}
                   <div ref={unitKerjaRef} className="relative w-full md:w-40">
                     <Input
                       type="text"
@@ -942,10 +947,12 @@ function StatusAnggota() {
                       value={selectedUnitKerja}
                       readOnly
                       onFocus={() => {
-                        if (role !== "ADMIN") {
-                          setShowDropdownCabang(true);
-                          setFilteredCabangOptions(cabangOptions);
-                        }
+                        setShowDropdownUnitKerja(true);
+                        setFilteredUnitKerjaOptions(
+                          selectedCabang === "Pilih Cabang"
+                            ? allUnitKerja
+                            : allUnitKerja.filter(uk => uk.cabang === selectedCabang)
+                        );
                       }}
                       className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                       disabled={selectedCabang === "Pilih Cabang"}
