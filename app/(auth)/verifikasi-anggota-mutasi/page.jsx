@@ -8,7 +8,6 @@ import {
   faSearch,
   faTimesCircle,
   faUser,
-  faArrowLeft,
   faUndo,
   faPlusCircle,
   faMinusCircle,
@@ -40,19 +39,22 @@ const VerifikasiAnggotaMutasi = () => {
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [fotoBase64, setFotoBase64] = useState("");
+  const [nama, setNama] = useState("");
 
   const fetchDataAnggota = async (
     page = 0,
     size = 10,
     cabang = "",
-    unitKerja = ""
+    unitKerja = "",
+    nama = ""
   ) => {
     try {
       const response = await GlobalApi.getUnverifiedUsers(
         page,
         size,
         cabang,
-        unitKerja
+        unitKerja,
+        nama
       );
 
       const fetchedData = response.data.content;
@@ -91,51 +93,53 @@ const VerifikasiAnggotaMutasi = () => {
       const response = await GlobalApi.verifyUser(userId);
       toast.success(
         <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          textAlign: "center",
-        }}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
           style={{
-            width: "150px",
-            height: "150px",
-            color: "#06D001",
-            marginBottom: "16px",
-             marginTop: "14px"
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
           }}
-          fill="currentColor"
-          viewBox="0 0 24 24"
         >
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-        </svg>
-          <h3 style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+              marginTop: "14px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <h3
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
             Anggota Berhasil Diverifikasi!
           </h3>
         </div>,
-       {
-        icon: null,
-        duration: 4000,
-        style: {
-          marginTop: "12%",
-          fontSize: "1.75rem",
-          padding: "10px",
-          width: "80%",
-          maxWidth: "450px",
-          height: "50%",
-          maxHeight: "400px",
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          zIndex: 9999,
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      }
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
       );
       setTimeout(() => {
         window.location.reload();
@@ -219,36 +223,38 @@ const VerifikasiAnggotaMutasi = () => {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
-               marginTop: "14px"
+              marginTop: "14px",
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
-          <h3 style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>
+          <h3
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
             Pengguna berhasil diHapus!
           </h3>
         </div>,
-      {
-        icon: null,
-        duration: 4000,
-        style: {
-          marginTop: "12%",
-          fontSize: "1.75rem",
-          padding: "10px",
-          width: "80%",
-          maxWidth: "450px",
-          height: "50%",
-          maxHeight: "400px",
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          zIndex: 9999,
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      }
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
       );
       setTimeout(() => {
         window.location.reload();
@@ -331,6 +337,10 @@ const VerifikasiAnggotaMutasi = () => {
     }
   };
 
+  const handleNamaChange = (e) => {
+    setNama(e.target.value);
+  };
+
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
@@ -371,10 +381,6 @@ const VerifikasiAnggotaMutasi = () => {
     setSelectedRow(null);
   };
 
-  const handleBackClick = () => {
-    router.back();
-  };
-
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
@@ -410,7 +416,13 @@ const VerifikasiAnggotaMutasi = () => {
   };
 
   const handleSearchClick = () => {
-    fetchDataAnggota(currentPage, pageSize, selectedCabang, selectedUnitKerja);
+    fetchDataAnggota(
+      currentPage,
+      pageSize,
+      selectedCabang,
+      selectedUnitKerja,
+      nama
+    );
   };
 
   const handleVerifyUserClick = (rowId) => {
@@ -464,8 +476,9 @@ const VerifikasiAnggotaMutasi = () => {
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="container mx-auto p-4 md:p-6">
             <FilterSection
@@ -476,6 +489,8 @@ const VerifikasiAnggotaMutasi = () => {
               handleUnitKerjaChange={handleUnitKerjaChange}
               handleSearchClick={handleSearchClick}
               handleResetClick={handleResetClick}
+              handleNamaChange={handleNamaChange}
+              nama={nama}
             />
 
             <div className="overflow-x-auto">
@@ -511,20 +526,6 @@ const VerifikasiAnggotaMutasi = () => {
   );
 };
 
-const MobileHeader = ({ handleBackClick }) => (
-  <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-    <div className="container mx-auto flex items-center">
-      <FontAwesomeIcon
-        icon={faArrowLeft}
-        size="sm"
-        onClick={handleBackClick}
-        className="cursor-pointer mr-4"
-      />
-      <h1 className="text-base">Verifikasi Anggota</h1>
-    </div>
-  </header>
-);
-
 const FilterSection = ({
   cabang,
   unitKerja,
@@ -534,6 +535,8 @@ const FilterSection = ({
   handleUnitKerjaChange,
   handleSearchClick,
   handleResetClick,
+  handleNamaChange,
+  nama,
 }) => (
   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-16 text-sm">
     <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
@@ -553,6 +556,20 @@ const FilterSection = ({
           selectedUnitKerja={selectedUnitKerja}
           handleChange={handleUnitKerjaChange}
         />
+      </div>
+      <div className="flex flex-col gap-2">
+        <label htmlFor="searchInput" className="font-semibold text-gray-800">
+          Cari Anggota
+        </label>
+        <div className="w-full">
+          <input
+            className="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 w-56"
+            type="text"
+            placeholder="Cari Anggota"
+            value={nama}
+            onChange={handleNamaChange}
+          />
+        </div>
       </div>
       <div className="flex gap-4 w-full md:w-auto mt-4 md:mt-0">
         <Button
@@ -684,11 +701,7 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
   );
 };
 
-const DropdownUnitKerja = ({
-  label,
-  selectedUnitKerja,
-  handleChange,
-}) => {
+const DropdownUnitKerja = ({ label, selectedUnitKerja, handleChange }) => {
   const [query, setQuery] = React.useState(selectedUnitKerja || "");
   const [showDropdown, setShowDropdown] = React.useState(false);
   const [filterQuery, setFilterQuery] = React.useState("");
@@ -721,7 +734,8 @@ const DropdownUnitKerja = ({
   const filteredOptions = unitKerja
     .filter(
       (option) =>
-        option.cabang.trim().toLowerCase() === selectedCabang.trim().toLowerCase()
+        option.cabang.trim().toLowerCase() ===
+        selectedCabang.trim().toLowerCase()
     )
     .filter((option) =>
       option.unitKerja.toLowerCase().includes(filterQuery.toLowerCase())
@@ -804,13 +818,7 @@ const DropdownUnitKerja = ({
   );
 };
 
-const DataTable = ({
-  anggotaData,
-  handleUserClick,
-  fotoBase64,
-  handleVerifyUserClick,
-  handleRejectUserClick,
-}) => {
+const DataTable = ({ anggotaData, handleUserClick, fotoBase64 }) => {
   const [expandedRow, setExpandedRow] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -840,7 +848,7 @@ const DataTable = ({
       createdAt[4], // Menit
       createdAt[5] // Detik
     );
-  
+
     const dayNames = [
       "Minggu",
       "Senin",
@@ -850,9 +858,9 @@ const DataTable = ({
       "Jumat",
       "Sabtu",
     ];
-    
+
     const dayName = dayNames[date.getDay()]; // Ambil nama hari
-  
+
     return `${dayName}, ${date.toLocaleString("id-ID", {
       year: "numeric",
       month: "long",
@@ -863,7 +871,6 @@ const DataTable = ({
       hour12: false, // Format 24-jam
     })}`;
   };
-  
 
   return (
     <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
@@ -879,7 +886,7 @@ const DataTable = ({
             <>
               <th className="py-2 px-4 border-b">NPA PGRI</th>
               <th className="py-2 px-4 border-b">Status</th>
-            
+
               <th className="py-2 px-4 border-b">Aksi</th>
             </>
           )}
@@ -913,7 +920,9 @@ const DataTable = ({
                     />
                   </td>
                 )}
-                <td className="px-4 py-2 border-b">{formatCreatedAt(item.createdAt)}</td>
+                <td className="px-4 py-2 border-b">
+                  {formatCreatedAt(item.createdAt)}
+                </td>
                 <td className="py-2 px-4 border-b">{item.cabang}</td>
                 <td className="py-2 px-4 border-b">{item.unitKerja}</td>
                 <td className="py-2 px-4 border-b">{item.namaLengkap}</td>
@@ -933,7 +942,7 @@ const DataTable = ({
                         </Badge>
                       )}
                     </td>
-                    
+
                     <td className="px-4 py-2 border-b">
                       {/* <a
                         href={`https://wa.me/${item.nomorHp}`}
@@ -965,7 +974,6 @@ const DataTable = ({
                         onClick={() => handleUserClick(item.id)}
                       />
                     </td>
-                    
                   </>
                 )}
                 {isMobile && (
@@ -1073,7 +1081,9 @@ const PopupDetail = ({
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-60 z-50 transition-opacity duration-300 ease-in-out">
       <div className="bg-white p-4 sm:p-8 rounded-lg shadow-xl w-full max-w-lg transform transition-transform duration-300 ease-in-out">
         <div className="flex justify-between items-center mb-4 sm:mb-6">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900">Detail Anggota</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+            Detail Anggota
+          </h2>
           <button
             onClick={handleClosePopup}
             className="text-red-500 hover:text-gray-900 transition-colors duration-300 ease-in-out"
@@ -1169,7 +1179,11 @@ const PopupDetail = ({
                   className="w-24 bg-red-500 hover:bg-red-600"
                   onClick={() => setShowConfirmReject(true)}
                 >
-                  <FontAwesomeIcon icon={faTimesCircle} size="2xl" className="cursor-pointer" />
+                  <FontAwesomeIcon
+                    icon={faTimesCircle}
+                    size="2xl"
+                    className="cursor-pointer"
+                  />
                 </Button>
               </div>
             </div>
@@ -1247,10 +1261,11 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         <button
           key={page}
           onClick={() => onPageChange(page - 1)}
-          className={`px-3 py-1 border rounded text-sm ${page - 1 === currentPage
-            ? "bg-blue-500 text-white"
-            : "bg-white hover:bg-gray-50"
-            }`}
+          className={`px-3 py-1 border rounded text-sm ${
+            page - 1 === currentPage
+              ? "bg-blue-500 text-white"
+              : "bg-white hover:bg-gray-50"
+          }`}
         >
           {page}
         </button>
