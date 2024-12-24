@@ -249,12 +249,14 @@ const getUnverifiedUsers = (
   page = 0,
   size = 10,
   cabang = null,
-  unitKerja = null
+  unitKerja = null,
+  nama = null
 ) => {
   const params = new URLSearchParams({ page, size });
 
   if (cabang) params.append("cabang", cabang);
   if (unitKerja) params.append("unitKerja", unitKerja);
+  if (nama) params.append("nama", nama);
 
   return axiosClient.get(`/api/auth/unverified-users?${params.toString()}`);
 };
