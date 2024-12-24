@@ -4,7 +4,8 @@ import { ReceiptEuro } from "lucide-react";
 const axiosClient = axios.create({
   baseURL: "http://sanduka.my.id",
   headers: {
-    "ngrok-skip-browser-warning": "true",
+    "Accept": "application/json",
+    "Content-Type": "application/json"
   },
 });
 
