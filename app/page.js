@@ -39,7 +39,7 @@ export default function Home() {
             </button>
 
             <Image
-              className="w-full h-auto max-h-80 rounded-lg mb-4"
+              className="w-full h-auto max-h-80 rounded-lg"
               src={"/gif_hal_depan.gif"}
               alt="Popup"
               width={110}
@@ -47,7 +47,7 @@ export default function Home() {
             />
 
             <button
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg -mt-4"
               onClick={handleLogin}
             >
               Update Data

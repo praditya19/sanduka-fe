@@ -151,6 +151,7 @@ const getAllAnggota = async (page = 0, cabang = null, unitKerja = null) => {
 
   return fetchAllPages();
 };
+
 const getAdminById = async (adminId) => {
   try {
     const response = await axiosClient.get(`/api/register-admin/${adminId}`);

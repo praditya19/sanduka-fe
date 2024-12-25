@@ -11,11 +11,13 @@ import toast, { Toaster } from "react-hot-toast";
 import ReCAPTCHA from "react-google-recaptcha";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/AuthContext";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
 function SignIn() {
   const [npaPgri, setNpaPgri] = useState("");
   const [tanggalLahir, setTanggalLahir] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loader, setLoader] = useState(false);
   const [error, setError] = useState("");
   const [isVerified, setIsVerified] = useState(false);
@@ -32,24 +34,24 @@ function SignIn() {
           "NPA PGRI harus 6 digit dan Tanggal Lahir harus 8 digit."
         );
       }
-  
+
       if (!isVerified) {
         throw new Error("Harap verifikasi reCAPTCHA.");
       }
-  
+
       // Cek NPA menggunakan GlobalApi.cekNpa
       const npaResponse = await GlobalApi.cekNpa(npaPgri);
       console.log("Data NPA:", npaResponse);
-  
+
       if (!npaResponse || !npaResponse.id) {
         throw new Error("Data NPA tidak valid atau ID tidak ditemukan.");
       }
-  
+
       // Ambil ID dari data NPA dan gunakan untuk mendapatkan data pengguna
       const userId = npaResponse.id;
       const userResponse = await GlobalApi.getUserById(userId);
       console.log("Data User by ID:", userResponse);
-  
+
       // Cek apakah pengguna sudah terverifikasi
       if (!userResponse.isVerified) {
         toast.error(
@@ -109,13 +111,13 @@ function SignIn() {
         setLoader(false);
         return;
       }
-  
+
       // Melanjutkan proses login
       const loginData = {
         npaPgri: npaPgri,
         tanggalLahir: tanggalLahir,
       };
-  
+
       const response = await GlobalApi.login(loginData);
       setToken(response.token);
       sessionStorage.setItem("userId", response.id);
@@ -123,10 +125,10 @@ function SignIn() {
       sessionStorage.setItem("nama", response.namaLengkap);
       sessionStorage.setItem("role", response.role);
       sessionStorage.setItem("npaPgri", npaPgri);
-  
+
       const nama = sessionStorage.getItem("nama");
       const cabang = userResponse.cabang; // Tambahkan properti cabang
-  
+
       toast.success(
         <div
           style={{
@@ -180,7 +182,7 @@ function SignIn() {
           },
         }
       );
-  
+
       setTimeout(() => {
         router.push("/home");
       }, 4000);
@@ -244,7 +246,7 @@ function SignIn() {
       setLoader(false);
     }
   };
-  
+
   const onSignInAdmin = async () => {
     setLoader(true);
     setError("");
@@ -291,7 +293,7 @@ function SignIn() {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
-              marginTop: "14px"
+              marginTop: "14px",
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
@@ -303,7 +305,9 @@ function SignIn() {
           >
             Selamat Datang Di Sanduka
           </strong>
-          <span style={{ fontSize: "1.75rem", marginBottom:"28px" }}>{response.namaLengkap}</span>
+          <span style={{ fontSize: "1.75rem", marginBottom: "28px" }}>
+            {response.namaLengkap}
+          </span>
         </div>,
         {
           icon: null,
@@ -507,7 +511,7 @@ function SignIn() {
                 />
               </div>
 
-              <div className="mb-6">
+              <div className="mb-6 relative">
                 <Label htmlFor="password" className="block text-sm">
                   Password
                 </Label>
@@ -516,9 +520,21 @@ function SignIn() {
                   placeholder="********"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 focus:outline-none"
+                  style={{ top: "70%", transform: "translateY(-50%)" }}
+                >
+                  {showPassword ? (
+                    <AiOutlineEyeInvisible className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <AiOutlineEye className="h-5 w-5 text-gray-500" />
+                  )}
+                </button>
               </div>
             </div>
           )}
