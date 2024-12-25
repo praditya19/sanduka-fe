@@ -2,9 +2,10 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "https://sanduka.my.id",
   headers: {
-    "ngrok-skip-browser-warning": "true",
+    "Accept": "application/json",
+    "Content-Type": "application/json"
   },
 });
 
@@ -249,12 +250,14 @@ const getUnverifiedUsers = (
   page = 0,
   size = 10,
   cabang = null,
-  unitKerja = null
+  unitKerja = null,
+  nama = null
 ) => {
   const params = new URLSearchParams({ page, size });
 
   if (cabang) params.append("cabang", cabang);
   if (unitKerja) params.append("unitKerja", unitKerja);
+  if (nama) params.append("nama", nama);
 
   return axiosClient.get(`/api/auth/unverified-users?${params.toString()}`);
 };

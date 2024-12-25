@@ -24,6 +24,9 @@ import {
   faChevronRight,
   faExchangeAlt,
   faRightLeft,
+  faLocation, 
+  faCancel, 
+  faCheck, 
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
@@ -253,8 +256,15 @@ export default function IconGrid() {
     setRole(storedRole);
   }, []);
 
+  const formatDate = (dateArray) => {
+    if (Array.isArray(dateArray) && dateArray.length === 3) {
+      return `${String(dateArray[2]).padStart(2, "0")}-${String(dateArray[1]).padStart(2, "0")}-${dateArray[0]}`;
+    }
+    return "Tanggal tidak valid";
+  };
+
   const handleNext = () => {
-    if (currentIndex + itemsPerPage < dataArray.length) {
+    if (currentIndex + itemsPerPage < anggotaMeninggal.length) {
       setCurrentIndex(currentIndex + itemsPerPage);
     }
   };
@@ -364,28 +374,28 @@ export default function IconGrid() {
   const filteredIcons =
     role === "USER"
       ? icons
-          .filter((item) =>
-            [
-              "Lapor",
-              "Teman Unit",
-              "Ketentuan",
-              "Bantuan",
-              "Data Anggota",
-              "History data",
-            ].includes(item.label)
-          )
-          .concat({
-            icon: faRightLeft,
-            label: "Mutasi",
-            href: "/anggota/data-anggota/mutasiCabangUnit",
-            color: "text-cyan-500",
-          })
-          .concat({
-            icon: faFileAlt,
-            label: "Daspen",
-            href: "/daspen",
-            color: "text-teal-700",
-          })
+        .filter((item) =>
+          [
+            "Lapor",
+            "Teman Unit",
+            "Ketentuan",
+            "Bantuan",
+            "Data Anggota",
+            "History data",
+          ].includes(item.label)
+        )
+        .concat({
+          icon: faRightLeft,
+          label: "Mutasi",
+          href: "/anggota/data-anggota/mutasiCabangUnit",
+          color: "text-cyan-500",
+        })
+        .concat({
+          icon: faFileAlt,
+          label: "Daspen",
+          href: "/daspen",
+          color: "text-teal-700",
+        })
       : icons;
 
   return (
@@ -395,9 +405,8 @@ export default function IconGrid() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="flex-1 mt-[3.1%]">
             <img
@@ -616,9 +625,8 @@ export default function IconGrid() {
         </div>
 
         <div
-          className={` flex flex-col items-center my-4 ${
-            isSidebarOpen ? "ml-32" : "ml-0"
-          }`}
+          className={` flex flex-col items-center my-4 ${isSidebarOpen ? "ml-32" : "ml-0"
+            }`}
         >
           <hr className="mt-2 border-gray-300 w-full" />
           <h5 className="text-lg sm:text-xl font-semibold text-gray-800 mt-4 text-center">
@@ -627,9 +635,8 @@ export default function IconGrid() {
         </div>
 
         <div
-          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${
-            isSidebarOpen ? "ml-32" : "ml-0"
-          }`}
+          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${isSidebarOpen ? "ml-32" : "ml-0"
+            }`}
         >
           <button
             onClick={handlePrev}
@@ -642,60 +649,86 @@ export default function IconGrid() {
             {anggotaMeninggal
               .slice(currentIndex, currentIndex + itemsPerPage)
               .map((currentData, index) => (
-                <button
-                  key={index}
-                  className="min-w-[45%] sm:min-w-[30%]  bg-white rounded-lg shadow-lg overflow-hidden"
-                >
-                  <Image
-                    className="ml-10 sm:ml-16 h-20 w-20 object-cover"
-                    src="/profile.png"
-                    alt="Profile Image"
-                    width={100}
-                    height={100}
-                  />
-                  <div className="p-4">
-                    <h2 className="text-base font-semibold text-gray-800">
+                <div key={index} className="mb-3 max-w-xs mx-auto">
+                  {/* Gradient Header */}
+                  <div className="bg-gradient-to-r from-purple-400 to-pink-500 p-2 text-center rounded-lg mb-2 relative">
+                    <div className="flex justify-center mb-1">
+                      <Image
+                        src="/profile.png"
+                        width={50}
+                        height={50}
+                        alt="Profile"
+                        className="rounded-full border-2 border-white shadow-md"
+                      />
+                    </div>
+                    <h2 className="text-sm font-bold text-white mb-0.5">
                       {currentData.namaLengkap}
                     </h2>
-                    <p className="text-sm text-gray-600 mb-2">
-                      {currentData.npaPgri}
+                    <p className="text-xs font-medium text-white">
+                      Meninggal {formatDate(currentData.waktuMeninggalTerlapor)}
                     </p>
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <div className="flex items-center">
-                        <FontAwesomeIcon
-                          icon={faCalendarAlt}
-                          className="text-gray-600"
-                        />
-                        <span className="ml-2">
-                          {Array.isArray(currentData.waktuMeninggalTerlapor) &&
-                          currentData.waktuMeninggalTerlapor.length === 3
-                            ? `${String(
-                                currentData.waktuMeninggalTerlapor[2]
-                              ).padStart(2, "0")}-${String(
-                                currentData.waktuMeninggalTerlapor[1]
-                              ).padStart(2, "0")}-${
-                                currentData.waktuMeninggalTerlapor[0]
-                              }`
-                            : "Tanggal tidak valid"}
-                        </span>
-                      </div>
-                      <div className="flex items-center">
-                        <FontAwesomeIcon
-                          icon={faUserTie}
-                          className="text-gray-600"
-                        />
-                        <span className="ml-2">{currentData.jabatan}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <FontAwesomeIcon
-                          icon={faHome}
-                          className="text-gray-600"
-                        />
-                        <span className="ml-2">{currentData.unitKerja}</span>
-                      </div>
-                    </div>
                   </div>
-                </button>
+
+                  {/* Detailed Information */}
+                  <div className="text-center text-gray-700 mb-2 space-y-0.5">
+                    <p className="text-xs">{currentData.npaPgri || "N/A"}</p>
+                    <p className="text-xs">
+                      {currentData.tempatLahir}, {formatDate(currentData.tanggalLahir)}
+                    </p>
+                    <p className="text-xs">{currentData.jabatan}</p>
+                    <p className="text-xs">{currentData.unitKerja}</p>
+                    <p className="text-xs">{currentData.cabang}</p>
+                    <p className="text-xs">{currentData.alamat}</p>
+                  </div>
+
+                  {/* Notes */}
+                  <p className="text-center text-gray-600 mb-2 text-xs font-medium">
+                    Catatan: {currentData.keteranganTerlapor}
+                  </p>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-around mb-2 gap-1">
+                    <button className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-0.5 px-2 rounded-full transition duration-300">
+                      <FontAwesomeIcon icon={faLocation} className="mr-1" /> Lokasi
+                    </button>
+                    {/* <button
+                      className={`${["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
+                          ? "bg-red-600 hover:bg-red-700"
+                          : "bg-gray-400 cursor-not-allowed"
+                        } text-white text-xs font-medium py-0.5 px-2 rounded-full transition duration-300`}
+                      disabled={
+                        !["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
+                      }
+                    >
+                      <FontAwesomeIcon icon={faCancel} className="mr-1" /> Batal
+                    </button>
+                    <button
+                      className={`${["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
+                          ? "bg-purple-600 hover:bg-purple-700"
+                          : "bg-gray-400 cursor-not-allowed"
+                        } text-white text-xs font-medium py-0.5 px-2 rounded-full transition duration-300`}
+                      disabled={
+                        !["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
+                      }
+                    >
+                      <FontAwesomeIcon icon={faCheck} className="mr-1" /> Verifikasi
+                    </button> */}
+                  </div>
+
+                  {/* Reporter Section */}
+                  <div className="bg-blue-700 text-white text-xs font-medium py-1 px-3 rounded-full text-center flex items-center justify-center mb-2">
+                    <FontAwesomeIcon icon={faBullhorn} className="mr-1" /> PELAPOR
+                  </div>
+                  <p className="text-center text-gray-600 mt-1 text-xs">
+                    {formatDate(currentData.tanggalPelaporan)}, {currentData.jamLapor}
+                  </p>
+                  <p className="text-center text-gray-600 text-xs">
+                    {currentData.namaPelapor || "N/A"}
+                  </p>
+                  <p className="text-center text-gray-600 text-xs">
+                    📞 {currentData.nomorHpPelapor || "N/A"}
+                  </p>
+                </div>
               ))}
           </div>
 

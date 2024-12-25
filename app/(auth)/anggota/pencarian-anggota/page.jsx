@@ -44,6 +44,8 @@ function PencarianAnggota() {
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const profileImageUrl = "/profile.png";
+  const dropdownRef = useRef(null);
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -71,6 +73,50 @@ function PencarianAnggota() {
 
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
+
+  useEffect(() => {
+    fetchAnggota();
+    fetchData();
+    fetchUnitKerja();
+
+    const role = sessionStorage.getItem("role");
+    const cabang = sessionStorage.getItem("cabang");
+    if (role === "ADMIN" && cabang) {
+      setSelectedCabang(cabang);
+    }
+
+    const storedRole = sessionStorage.getItem("role");
+    setRole(storedRole || "");
+
+    if (selectedCabang) {
+      const filtered = unitKerja.filter((uk) => uk.cabang === selectedCabang);
+      setFilteredUnitKerja(filtered);
+    } else {
+      setFilteredUnitKerja([]);
+    }
+
+    if (!token) {
+      router.push("/sign-in");
+    } else {
+      setLoading(false);
+      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+      setIsSidebarOpen(sidebarState);
+
+      const handleResize = () => {
+        setIsMobile(window.innerWidth <= 768);
+      };
+
+      handleResize();
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
+    }
+
+    setCurrentPage(1);
+
+  }, [token, router, selectedCabang, selectedStatus, selectedUnitKerja, searchQuery]);
 
   const handleDataDaspen = async () => {
     const anggotaId = sessionStorage.getItem("anggotaId");
@@ -200,13 +246,13 @@ function PencarianAnggota() {
     setFilteredUnitKerjaOptions(filtered);
   };
 
-  useEffect(() => {
-    const role = sessionStorage.getItem("role");
-    const cabang = sessionStorage.getItem("cabang");
-    if (role === "ADMIN" && cabang) {
-      setSelectedCabang(cabang);
-    }
-  }, []);
+  // useEffect(() => {
+  //   const role = sessionStorage.getItem("role");
+  //   const cabang = sessionStorage.getItem("cabang");
+  //   if (role === "ADMIN" && cabang) {
+  //     setSelectedCabang(cabang);
+  //   }
+  // }, []);
 
   // Select Cabang
   const handleCabangSelect = (selectedItem) => {
@@ -242,37 +288,7 @@ function PencarianAnggota() {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   };
 
-  useEffect(() => {
-    if (selectedCabang) {
-      const filtered = unitKerja.filter((uk) => uk.cabang === selectedCabang);
-      setFilteredUnitKerja(filtered);
-    } else {
-      setFilteredUnitKerja([]);
-    }
 
-    fetchAnggota();
-    fetchData();
-    fetchUnitKerja();
-
-    if (!token) {
-      router.push("/sign-in");
-    } else {
-      setLoading(false);
-      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-      setIsSidebarOpen(sidebarState);
-
-      const handleResize = () => {
-        setIsMobile(window.innerWidth <= 768);
-      };
-
-      handleResize();
-      window.addEventListener("resize", handleResize);
-
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
-    }
-  }, [token, router, selectedCabang]);
 
   const fetchAnggota = async (
     page = 0,
@@ -485,7 +501,7 @@ function PencarianAnggota() {
       const statusFilter =
         selectedStatus === "Semua" || item.anggota === selectedStatus;
       const cabangFilter =
-        selectedCabang === "Pilih Cabang" || item.cabang === selectedCabang;
+        selectedCabang === "" || item.cabang === selectedCabang;
       const unitKerjaFilter =
         selectedUnitKerja === "Pilih Unit Kerja" ||
         item.unitKerja === selectedUnitKerja;
@@ -912,10 +928,10 @@ function PencarianAnggota() {
     return Math.ceil(filteredData.length / itemsPerPage);
   }, [filteredData, itemsPerPage]);
 
-  useEffect(() => {
-    // Reset halaman ke 1 ketika filter atau pencarian berubah
-    setCurrentPage(1);
-  }, [selectedStatus, selectedCabang, selectedUnitKerja, searchQuery]);
+  // useEffect(() => {
+  //   // Reset halaman ke 1 ketika filter atau pencarian berubah
+  //   setCurrentPage(1);
+  // }, [selectedStatus, selectedCabang, selectedUnitKerja, searchQuery]);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -981,9 +997,7 @@ function PencarianAnggota() {
       </div>
     );
   };
-  useEffect(() => {
-    fetchAnggota();
-  }, []);
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -1018,103 +1032,117 @@ function PencarianAnggota() {
             <div className="mb-4">
               <div className="flex flex-wrap items-start mt-16 justify-between">
                 <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
-                  <div ref={cabangRef} className="relative w-full md:w-40">
-                    <Input
-                      type="text"
-                      placeholder="Pilih Cabang"
-                      value={selectedCabang}
-                      readOnly={sessionStorage.getItem("role") === "ADMIN"}
-                      onFocus={() => {
-                        if (sessionStorage.getItem("role") !== "ADMIN") {
-                          setShowDropdownCabang(true);
-                          setFilteredCabangOptions(cabang);
-                        }
-                      }}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    />
+                  <>
+                    <div
+                      ref={dropdownRef}
+                      className="relative flex flex-col md:flex ml-2"
+                    >
+                      <Input
+                        type="text"
+                        placeholder="Pilih Cabang"
+                        value={selectedCabang}
+                        readOnly
+                        disabled={role !== "SUPER ADMIN"}
+                        onFocus={() => {
+                          if (role === "SUPER ADMIN") {
+                            setShowDropdownCabang(true);
+                            setFilteredCabangOptions(cabang);
+                          }
+                        }}
+                        className="border rounded-lg p-2 w-full bg-white shadow-sm"
+                      />
 
-                    {showDropdownCabang && sessionStorage.getItem("role") !== "ADMIN" && (
-                      <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
-                        <div className="p-2">
-                          <Input
-                            type="text"
-                            value={searchCabang}
-                            onChange={handleCabangChange}
-                            placeholder="Cari Cabang..."
-                            className="w-full border rounded py-2 px-3 mb-2"
-                          />
-                        </div>
-                        <ul className="max-h-44 overflow-y-auto">
-                          <li
-                            className="p-2 cursor-pointer hover:bg-gray-100"
-                            onClick={() => handleCabangSelect({})}
-                          >
-                            Semua Cabang
-                          </li>
-                          {filteredCabangOptions.map((item) => (
-                            <li
-                              key={item.id}
-                              className="p-2 cursor-pointer hover:bg-gray-100"
-                              onClick={() => handleCabangSelect(item)}
-                            >
-                              {item.kecamatan}
+                      {showDropdownCabang && role === "SUPER ADMIN" && (
+                        <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full ">
+                          <ul className="max-h-44 overflow-y-auto">
+                            <li className="py-2 px-2">
+                              <Input
+                                type="text"
+                                value={searchCabang}
+                                onChange={handleCabangChange}
+                                className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="Cari Cabang..."
+                                autoFocus
+                              />
                             </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Unit Kerja Dropdown */}
-                  <div ref={unitKerjaRef} className="relative w-full md:w-40">
-                    <Input
-                      type="text"
-                      placeholder="Pilih Unit Kerja"
-                      value={selectedUnitKerja}
-                      readOnly
-                      onFocus={() => {
-                        setShowDropdownUnitKerja(true);
-                        setFilteredUnitKerjaOptions(
-                          selectedCabang === "Pilih Cabang"
-                            ? unitKerja
-                            : unitKerja.filter(uk => uk.cabang === selectedCabang)
-                        );
-                      }}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                      disabled={selectedCabang === "Pilih Cabang"}
-                    />
-
-                    {showDropdownUnitKerja && (
-                      <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
-                        <div className="p-2">
-                          <Input
-                            type="text"
-                            value={searchUnitKerja}
-                            onChange={handleUnitKerjaChange}
-                            placeholder="Cari Unit Kerja..."
-                            className="w-full border rounded py-2 px-3 mb-2"
-                          />
-                        </div>
-                        <ul className="max-h-44 overflow-y-auto">
-                          <li
-                            className="p-2 cursor-pointer hover:bg-gray-100"
-                            onClick={() => handleUnitKerjaSelect({})}
-                          >
-                            Semua Unit Kerja
-                          </li>
-                          {filteredUnitKerjaOptions.map((item) => (
                             <li
-                              key={item.id}
                               className="p-2 cursor-pointer hover:bg-gray-100"
-                              onClick={() => handleUnitKerjaSelect(item)}
+                              onClick={() => {
+                                handleCabangSelect({ kecamatan: "" });
+                              }}
                             >
-                              {item.unitKerja}
+                              Pilih Cabang
                             </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
+                            {filteredCabangOptions.length > 0 ? (
+                              filteredCabangOptions.map((cabang) => (
+                                <li
+                                  key={cabang.idKecamatan}
+                                  className="p-2 cursor-pointer hover:bg-gray-100"
+                                  onClick={() => handleCabangSelect(cabang)}
+                                >
+                                  {cabang.kecamatan}
+                                </li>
+                              ))
+                            ) : (
+                              <li className="px-4 py-2 text-gray-500 cursor-default">
+                                Tidak ada hasil
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    <div ref={unitKerjaRef} className="relative w-full md:w-40">
+                      <Input
+                        type="text"
+                        placeholder="Pilih Unit Kerja"
+                        value={selectedUnitKerja}
+                        readOnly
+                        onFocus={() => {
+                          setShowDropdownUnitKerja(true);
+                          setFilteredUnitKerjaOptions(
+                            selectedCabang === "Pilih Cabang"
+                              ? unitKerja
+                              : unitKerja.filter(uk => uk.cabang === selectedCabang)
+                          );
+                        }}
+                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        disabled={selectedCabang === "Pilih Cabang"}
+                      />
+
+                      {showDropdownUnitKerja && (
+                        <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
+                          <div className="p-2">
+                            <Input
+                              type="text"
+                              value={searchUnitKerja}
+                              onChange={handleUnitKerjaChange}
+                              placeholder="Cari Unit Kerja..."
+                              className="w-full border rounded py-2 px-3 mb-2"
+                            />
+                          </div>
+                          <ul className="max-h-44 overflow-y-auto">
+                            <li
+                              className="p-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleUnitKerjaSelect({})}
+                            >
+                              Semua Unit Kerja
+                            </li>
+                            {filteredUnitKerjaOptions.map((item) => (
+                              <li
+                                key={item.id}
+                                className="p-2 cursor-pointer hover:bg-gray-100"
+                                onClick={() => handleUnitKerjaSelect(item)}
+                              >
+                                {item.unitKerja}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </>
 
                   <input
                     className="shadow appearance-none border rounded w-full md:w-80 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
@@ -1226,18 +1254,11 @@ function PencarianAnggota() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentData.slice(0, maxItems).map((item, index) => {
-                    const isEvenRow = index % 2 === 0;
-                    const isNotMember = item.status === "BUKAN ANGGOTA";
-                    const itemStatusClass = isNotMember
-                      ? "bg-red-200 text-red-900"
-                      : "bg-green-200 text-green-900";
-                    const globalIndex =
-                      (currentPage - 1) * maxItems + index + 1;
-
+                  {currentData.map((item, index) => {
+                    const globalIndex = (currentPage - 1) * itemsPerPage + index + 1;
                     return (
                       <React.Fragment key={index}>
-                        <tr className={isEvenRow ? "bg-gray-50" : "bg-white"}>
+                        <tr className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
                           <td className="p-2 md:p-3 border text-center">
                             <div className="flex justify-center items-center">
                               {globalIndex}
@@ -1245,29 +1266,23 @@ function PencarianAnggota() {
                                 className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
                                 onClick={() => handleExpand(index)}
                               >
-                                {expandedIndex === index ? (
-                                  <FaMinusCircle />
-                                ) : (
-                                  <FaPlusCircle />
-                                )}
+                                {expandedIndex === index ? <FaMinusCircle /> : <FaPlusCircle />}
                               </Button>
                             </div>
                           </td>
-
                           <td className="p-2 md:p-3 border">
-                            <div className="w-full flex justify-center mb-2">
-                              <Image
-                                src={
-                                  fotoBase64
-                                    ? "/profile.png"
-                                    : `data:image/jpeg;base64,${fotoBase64}`
-                                }
-                                width={60}
-                                height={60}
-                                alt="Anggota Foto"
-                                className="rounded-full"
-                              />
-                            </div>
+                            <Image
+                              src={
+                                fotoBase64[index]
+                                  ? `data:image/jpeg;base64,${fotoBase64[index]}`
+                                  : profileImageUrl
+                              }
+                              alt={`Foto ${item.namaPelapor || "User"}`}
+                              width={50}
+                              height={50}
+                              className="rounded"
+                              unoptimized={true}
+                            />
                           </td>
                           <td className="p-2 md:p-3 border">
                             <div className="font-bold text-sm">
@@ -1293,7 +1308,7 @@ function PencarianAnggota() {
                               {calculateAge(item.tanggalLahir)} Tahun
                             </div>
                             <div className="text-sm">
-                              Pensiun:{" "}
+                              Pensiun :{" "}
                               {calculateRetirementDate(
                                 item.tanggalLahir,
                                 item.statusPegawai
@@ -1304,11 +1319,24 @@ function PencarianAnggota() {
                             <div className="text-sm">{item.cabang},</div>
                             <div className="text-sm">{item.unitKerja}</div>
                             <div className="text-sm">
-                              Anggota: {item.tahunDiangkat || "-"}
+                              Anggota:{" "}
+                              {item.tahunDiangkat
+                                ? (() => {
+                                  const date = new Date(item.tahunDiangkat);
+                                  const day = String(date.getDate()).padStart(
+                                    2,
+                                    "0"
+                                  );
+                                  const month = String(
+                                    date.getMonth() + 1
+                                  ).padStart(2, "0");
+                                  const year = date.getFullYear();
+                                  return `${day}-${month}-${year}`;
+                                })()
+                                : "-"}
                             </div>
-                            <div className="text-sm">
-                              {item.pangkatGolongan}
-                            </div>
+
+                            <div className="text-sm">{item.pangkatGolongan}</div>
                           </td>
                           <td className="p-2 text-center md:p-3 border md:table-cell hidden">
                             <div
@@ -1335,6 +1363,7 @@ function PencarianAnggota() {
                               >
                                 <FaEdit className="w-4 h-4" />
                               </Button>
+
                               {sessionStorage.getItem("role") === "USER" ? (
                                 <>
                                   <Link
@@ -1411,7 +1440,7 @@ function PencarianAnggota() {
                                   {isPopupVisible && (
                                     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-10 z-40 w-screen h-screen">
                                       <div className="bg-white p-6 rounded-lg shadow-md w-96">
-                                        <h2 className="text-xl font-semibold text-center mb-4">
+                                        <h2 className="text-xl text-center mb-4">
                                           Apakah Anda Yakin ingin Menghapus Data
                                           Anggota ini?
                                         </h2>
@@ -1656,338 +1685,336 @@ function PencarianAnggota() {
                           </td>
                         </tr>
 
-                        {expandedIndex === index && (
-                          <tr className="md:hidden">
-                            <td colSpan="7" className="p-2 border">
-                              {expandedIndex === index && (
-                                <div className="mt-2">
-                                  <div className="font-bold">
-                                    {item.namaLengkap}
-                                  </div>
-                                  <div>{item.npaPgri}</div>
-                                  <div>{item.tugas}</div>
-                                  <div>
-                                    {item.tempatLahir},{" "}
-                                    {formatDate(item.tanggalLahir)}
-                                  </div>
-                                  <div>{calculateAge(item.tanggalLahir)} Tahun</div>
-                                  <div>
-                                    Prediksi Pensiun:{" "}
-                                    {calculateRetirementDate(
-                                      item.tanggalLahir,
-                                      item.statusPegawai
-                                    )}
-                                  </div>
-                                  <div>{item.cabang},</div>
-                                  <div>{item.unitKerja}</div>
-                                  <div>Anggota: {item.gabung}</div>
-                                  <div>{item.golongan}</div>
-                                  <div
-                                    className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${item.status === "BUKAN ANGGOTA"
-                                      ? "bg-red-200 text-red-900"
-                                      : "bg-green-200 text-green-900"
-                                      }`}
+                        <tr className="md:hidden">
+                          <td colSpan="7" className="p-2 border">
+                            {expandedIndex === index && (
+                              <div className="mt-2">
+                                <div className="font-bold">
+                                  {item.namaLengkap}
+                                </div>
+                                <div>{item.npaPgri}</div>
+                                <div>{item.tugas}</div>
+                                <div>
+                                  {item.tempatLahir},{" "}
+                                  {formatDate(item.tanggalLahir)}
+                                </div>
+                                <div>{calculateAge(item.tanggalLahir)} Tahun</div>
+                                <div>
+                                  Prediksi Pensiun:{" "}
+                                  {calculateRetirementDate(
+                                    item.tanggalLahir,
+                                    item.statusPegawai
+                                  )}
+                                </div>
+                                <div>{item.cabang},</div>
+                                <div>{item.unitKerja}</div>
+                                <div>Anggota: {item.gabung}</div>
+                                <div>{item.golongan}</div>
+                                <div
+                                  className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${item.status === "BUKAN ANGGOTA"
+                                    ? "bg-red-200 text-red-900"
+                                    : "bg-green-200 text-green-900"
+                                    }`}
+                                >
+                                  {item.role === "USER"
+                                    ? "Aktif"
+                                    : item.status_keanggotaan}
+                                </div>
+                                <div className="flex justify-center space-x-2 mt-2">
+                                  <Button
+                                    className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                                    title="Edit Data"
+                                    onClick={() =>
+                                      router.push(
+                                        `/anggota/edit-anggota?id=${item.id}`
+                                      )
+                                    }
                                   >
-                                    {item.role === "USER"
-                                      ? "Aktif"
-                                      : item.status_keanggotaan}
-                                  </div>
-                                  <div className="flex justify-center space-x-2 mt-2">
+                                    <FaEdit className="w-4 h-4" />
+                                  </Button>
+                                  {sessionStorage.getItem("role") ===
+                                    "SUPER ADMIN" ? (
                                     <Button
-                                      className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
-                                      title="Edit Data"
-                                      onClick={() =>
-                                        router.push(
-                                          `/anggota/edit-anggota?id=${item.id}`
-                                        )
-                                      }
+                                      className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                      title="Mutasi"
+                                      onClick={() => openModal(item)}
                                     >
-                                      <FaEdit className="w-4 h-4" />
+                                      <FaExchangeAlt className="w-4 h-4" />
                                     </Button>
-                                    {sessionStorage.getItem("role") ===
-                                      "SUPER ADMIN" ? (
-                                      <Button
-                                        className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
-                                        title="Mutasi"
-                                        onClick={() => openModal(item)}
-                                      >
-                                        <FaExchangeAlt className="w-4 h-4" />
-                                      </Button>
-                                    ) : (
-                                      <Button
-                                        className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
-                                        title="Mutasi"
-                                      >
-                                        <FaExchangeAlt className="w-4 h-4" />
-                                      </Button>
-                                    )}
-                                    {sessionStorage.getItem("role") ===
-                                      "SUPER ADMIN" ? (
-                                      <Button
-                                        className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
-                                        onClick={() => {
-                                          sessionStorage.setItem(
-                                            "anggotaId",
-                                            item.id
-                                          );
-                                          setIsPopupVisible(true);
-                                        }}
-                                      >
-                                        <FaExclamationTriangle className="w-4 h-4" />
-                                      </Button>
-                                    ) : (
-                                      <Button
-                                        className="text-white bg-red-500 p-2 border rounded-md cursor-not-allowed opacity-50"
-                                        title="Lapor"
-                                        type="button"
-                                        disabled
-                                      >
-                                        <FaExclamationTriangle className="w-4 h-4" />
-                                      </Button>
-                                    )}
-
-                                    <Link
-                                      href={`https://wa.me/${item.nomorHp}`}
-                                      className="text-white bg-green-500 p-2 border rounded-md"
-                                      target="_blank"
-                                      rel="noopener noreferrer"
+                                  ) : (
+                                    <Button
+                                      className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                      title="Mutasi"
                                     >
-                                      <FaWhatsapp className="w-4 h-4" title="WA" />
-                                    </Link>
-                                    <div>
-                                      <Button
-                                        type="button"
-                                        className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
-                                        title="Data Daspen"
-                                        onClick={() => {
-                                          sessionStorage.setItem(
-                                            "anggotaId",
-                                            item.id
-                                          );
-                                          handleDataDaspen();
-                                        }}
-                                      >
-                                        Daspen
-                                      </Button>
+                                      <FaExchangeAlt className="w-4 h-4" />
+                                    </Button>
+                                  )}
+                                  {sessionStorage.getItem("role") ===
+                                    "SUPER ADMIN" ? (
+                                    <Button
+                                      className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
+                                      onClick={() => {
+                                        sessionStorage.setItem(
+                                          "anggotaId",
+                                          item.id
+                                        );
+                                        setIsPopupVisible(true);
+                                      }}
+                                    >
+                                      <FaExclamationTriangle className="w-4 h-4" />
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      className="text-white bg-red-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                      title="Lapor"
+                                      type="button"
+                                      disabled
+                                    >
+                                      <FaExclamationTriangle className="w-4 h-4" />
+                                    </Button>
+                                  )}
 
-                                      {isPopupDaspen && daspenData && (
-                                        <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
-                                          <div className="bg-white p-6 rounded-md w-11/12 sm:w-8/12 md:w-6/12 lg:w-5/12 xl:w-4/12 relative max-h-[80vh] overflow-y-auto">
-                                            <button
-                                              onClick={closePopup}
-                                              className="absolute top-2 right-2 p-2 bg-white rounded-full"
-                                            >
-                                              <FaTimes className="h-6 w-6 text-red-600" />
-                                            </button>
+                                  <Link
+                                    href={`https://wa.me/${item.nomorHp}`}
+                                    className="text-white bg-green-500 p-2 border rounded-md"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <FaWhatsapp className="w-4 h-4" title="WA" />
+                                  </Link>
+                                  <div>
+                                    <Button
+                                      type="button"
+                                      className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                                      title="Data Daspen"
+                                      onClick={() => {
+                                        sessionStorage.setItem(
+                                          "anggotaId",
+                                          item.id
+                                        );
+                                        handleDataDaspen();
+                                      }}
+                                    >
+                                      Daspen
+                                    </Button>
 
-                                            <h2 className="text-xl font-bold">
-                                              Data Daspen
-                                            </h2>
+                                    {isPopupDaspen && daspenData && (
+                                      <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
+                                        <div className="bg-white p-6 rounded-md w-11/12 sm:w-8/12 md:w-6/12 lg:w-5/12 xl:w-4/12 relative max-h-[80vh] overflow-y-auto">
+                                          <button
+                                            onClick={closePopup}
+                                            className="absolute top-2 right-2 p-2 bg-white rounded-full"
+                                          >
+                                            <FaTimes className="h-6 w-6 text-red-600" />
+                                          </button>
 
-                                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                              <div>
-                                                <p className="font-semibold">
-                                                  Nama Anggota:
-                                                </p>
-                                                <p>
-                                                  {daspenData.namaAnggota ||
-                                                    "Tidak tersedia"}
-                                                </p>
-                                              </div>
-                                              <div>
-                                                <p className="font-semibold">
-                                                  Kategori Daspen:
-                                                </p>
-                                                <select
-                                                  className="w-full p-2 border rounded-md border-teal-500"
-                                                  value={kategoriDaspen}
-                                                  onChange={handleKategoriChange}
-                                                >
-                                                  <option value="I">I</option>
-                                                  <option value="II">II</option>
-                                                  <option value="III">III</option>
-                                                </select>
+                                          <h2 className="text-xl font-bold">
+                                            Data Daspen
+                                          </h2>
 
-                                                {isKategoriChanged && (
-                                                  <div className="popup">
-                                                    <p>
-                                                      Apakah Anda yakin ingin
-                                                      mengganti kategori Daspen?
-                                                    </p>
-
-                                                    <button
-                                                      onClick={handleConfirmChange}
-                                                      className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition duration-200 px-6"
-                                                    >
-                                                      Ya
-                                                    </button>
-
-                                                    <button
-                                                      onClick={() => {
-                                                        setKategoriDaspen(
-                                                          previousKategoriDaspen
-                                                        );
-                                                        setIsKategoriChanged(false);
-                                                      }}
-                                                      className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-200 ml-2 px-4"
-                                                    >
-                                                      Tidak
-                                                    </button>
-                                                  </div>
-                                                )}
-                                              </div>
-                                              <div>
-                                                <p className="font-semibold">
-                                                  Tanggal Lahir:
-                                                </p>
-                                                <p>
-                                                  {daspenData.tanggalLahir
-                                                    ? new Intl.DateTimeFormat(
-                                                      "id-ID",
-                                                      {
-                                                        day: "2-digit",
-                                                        month: "long",
-                                                        year: "numeric",
-                                                      }
-                                                    ).format(
-                                                      new Date(
-                                                        daspenData.tanggalLahir
-                                                      )
-                                                    )
-                                                    : "Tidak tersedia"}
-                                                </p>
-                                              </div>
-                                              <div>
-                                                <p className="font-semibold">
-                                                  Usia:
-                                                </p>
-                                                <p>
-                                                  {calculateAge(
-                                                    daspenData.tanggalLahir
-                                                  ) || "Tidak tersedia"}
-                                                </p>
-                                              </div>
-                                              <div>
-                                                <p className="font-semibold">
-                                                  NIP:
-                                                </p>
-                                                <p>
-                                                  {daspenData.nip ||
-                                                    "Tidak tersedia"}
-                                                </p>
-                                              </div>
-                                              <div>
-                                                <p className="font-semibold">
-                                                  Mulai Jadi Anggota:
-                                                </p>
-                                                <p>
-                                                  {daspenData.mulaiJadiAnggotaDaspen
-                                                    ? new Intl.DateTimeFormat(
-                                                      "id-ID",
-                                                      {
-                                                        day: "2-digit",
-                                                        month: "long",
-                                                        year: "numeric",
-                                                      }
-                                                    ).format(
-                                                      new Date(
-                                                        daspenData.mulaiJadiAnggotaDaspen
-                                                      )
-                                                    )
-                                                    : "Tidak tersedia"}
-                                                </p>
-                                              </div>
-                                              <div>
-                                                <p className="font-semibold">
-                                                  Kelompok Jabatan:
-                                                </p>
-                                                <p>
-                                                  {daspenData.kelompokJabatan ||
-                                                    "-"}
-                                                </p>
-                                              </div>
-                                              <div>
-                                                <p className="font-semibold">
-                                                  Prediksi Pensiun:
-                                                </p>
-                                                <p>
-                                                  {daspenData.prediksiPensiun
-                                                    ? (() => {
-                                                      const prediksiPensiunDate =
-                                                        new Date(
-                                                          daspenData.prediksiPensiun
-                                                        );
-                                                      prediksiPensiunDate.setMonth(
-                                                        prediksiPensiunDate.getMonth() +
-                                                        1
-                                                      );
-                                                      return new Intl.DateTimeFormat(
-                                                        "id-ID",
-                                                        {
-                                                          day: "2-digit",
-                                                          month: "long",
-                                                          year: "numeric",
-                                                        }
-                                                      ).format(
-                                                        prediksiPensiunDate
-                                                      );
-                                                    })()
-                                                    : "Tidak tersedia"}
-                                                </p>
-                                              </div>
-                                              <div>
-                                                <p className="font-semibold">
-                                                  Sumbangan:
-                                                </p>
-                                                <p>
-                                                  {daspenData.sumbangan
-                                                    ? new Intl.NumberFormat(
-                                                      "id-ID",
-                                                      {
-                                                        style: "currency",
-                                                        currency: "IDR",
-                                                      }
-                                                    ).format(daspenData.sumbangan)
-                                                    : "Tidak tersedia"}
-                                                </p>
-                                              </div>
-                                              <div>
-                                                <p className="font-semibold">
-                                                  Untuk Lihat Data Lengkap:
-                                                </p>
-                                                <div className="flex items-center">
-                                                  <p className="text-sm mr-1">
-                                                    Link Website:
-                                                  </p>
-                                                  <Link
-                                                    href="https://www.dansetjateng.org/"
-                                                    className="text-blue-400"
-                                                    target="_blank"
-                                                  >
-                                                    www.dansetjateng.org
-                                                  </Link>
-                                                </div>
-                                              </div>
+                                          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                              <p className="font-semibold">
+                                                Nama Anggota:
+                                              </p>
+                                              <p>
+                                                {daspenData.namaAnggota ||
+                                                  "Tidak tersedia"}
+                                              </p>
                                             </div>
-
-                                            <div className="flex justify-end mt-4">
-                                              <button
-                                                className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
-                                                onClick={closePopup}
+                                            <div>
+                                              <p className="font-semibold">
+                                                Kategori Daspen:
+                                              </p>
+                                              <select
+                                                className="w-full p-2 border rounded-md border-teal-500"
+                                                value={kategoriDaspen}
+                                                onChange={handleKategoriChange}
                                               >
-                                                Tutup
-                                              </button>
+                                                <option value="I">I</option>
+                                                <option value="II">II</option>
+                                                <option value="III">III</option>
+                                              </select>
+
+                                              {isKategoriChanged && (
+                                                <div className="popup">
+                                                  <p>
+                                                    Apakah Anda yakin ingin
+                                                    mengganti kategori Daspen?
+                                                  </p>
+
+                                                  <button
+                                                    onClick={handleConfirmChange}
+                                                    className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition duration-200 px-6"
+                                                  >
+                                                    Ya
+                                                  </button>
+
+                                                  <button
+                                                    onClick={() => {
+                                                      setKategoriDaspen(
+                                                        previousKategoriDaspen
+                                                      );
+                                                      setIsKategoriChanged(false);
+                                                    }}
+                                                    className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-200 ml-2 px-4"
+                                                  >
+                                                    Tidak
+                                                  </button>
+                                                </div>
+                                              )}
+                                            </div>
+                                            <div>
+                                              <p className="font-semibold">
+                                                Tanggal Lahir:
+                                              </p>
+                                              <p>
+                                                {daspenData.tanggalLahir
+                                                  ? new Intl.DateTimeFormat(
+                                                    "id-ID",
+                                                    {
+                                                      day: "2-digit",
+                                                      month: "long",
+                                                      year: "numeric",
+                                                    }
+                                                  ).format(
+                                                    new Date(
+                                                      daspenData.tanggalLahir
+                                                    )
+                                                  )
+                                                  : "Tidak tersedia"}
+                                              </p>
+                                            </div>
+                                            <div>
+                                              <p className="font-semibold">
+                                                Usia:
+                                              </p>
+                                              <p>
+                                                {calculateAge(
+                                                  daspenData.tanggalLahir
+                                                ) || "Tidak tersedia"}
+                                              </p>
+                                            </div>
+                                            <div>
+                                              <p className="font-semibold">
+                                                NIP:
+                                              </p>
+                                              <p>
+                                                {daspenData.nip ||
+                                                  "Tidak tersedia"}
+                                              </p>
+                                            </div>
+                                            <div>
+                                              <p className="font-semibold">
+                                                Mulai Jadi Anggota:
+                                              </p>
+                                              <p>
+                                                {daspenData.mulaiJadiAnggotaDaspen
+                                                  ? new Intl.DateTimeFormat(
+                                                    "id-ID",
+                                                    {
+                                                      day: "2-digit",
+                                                      month: "long",
+                                                      year: "numeric",
+                                                    }
+                                                  ).format(
+                                                    new Date(
+                                                      daspenData.mulaiJadiAnggotaDaspen
+                                                    )
+                                                  )
+                                                  : "Tidak tersedia"}
+                                              </p>
+                                            </div>
+                                            <div>
+                                              <p className="font-semibold">
+                                                Kelompok Jabatan:
+                                              </p>
+                                              <p>
+                                                {daspenData.kelompokJabatan ||
+                                                  "-"}
+                                              </p>
+                                            </div>
+                                            <div>
+                                              <p className="font-semibold">
+                                                Prediksi Pensiun:
+                                              </p>
+                                              <p>
+                                                {daspenData.prediksiPensiun
+                                                  ? (() => {
+                                                    const prediksiPensiunDate =
+                                                      new Date(
+                                                        daspenData.prediksiPensiun
+                                                      );
+                                                    prediksiPensiunDate.setMonth(
+                                                      prediksiPensiunDate.getMonth() +
+                                                      1
+                                                    );
+                                                    return new Intl.DateTimeFormat(
+                                                      "id-ID",
+                                                      {
+                                                        day: "2-digit",
+                                                        month: "long",
+                                                        year: "numeric",
+                                                      }
+                                                    ).format(
+                                                      prediksiPensiunDate
+                                                    );
+                                                  })()
+                                                  : "Tidak tersedia"}
+                                              </p>
+                                            </div>
+                                            <div>
+                                              <p className="font-semibold">
+                                                Sumbangan:
+                                              </p>
+                                              <p>
+                                                {daspenData.sumbangan
+                                                  ? new Intl.NumberFormat(
+                                                    "id-ID",
+                                                    {
+                                                      style: "currency",
+                                                      currency: "IDR",
+                                                    }
+                                                  ).format(daspenData.sumbangan)
+                                                  : "Tidak tersedia"}
+                                              </p>
+                                            </div>
+                                            <div>
+                                              <p className="font-semibold">
+                                                Untuk Lihat Data Lengkap:
+                                              </p>
+                                              <div className="flex items-center">
+                                                <p className="text-sm mr-1">
+                                                  Link Website:
+                                                </p>
+                                                <Link
+                                                  href="https://www.dansetjateng.org/"
+                                                  className="text-blue-400"
+                                                  target="_blank"
+                                                >
+                                                  www.dansetjateng.org
+                                                </Link>
+                                              </div>
                                             </div>
                                           </div>
+
+                                          <div className="flex justify-end mt-4">
+                                            <button
+                                              className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                                              onClick={closePopup}
+                                            >
+                                              Tutup
+                                            </button>
+                                          </div>
                                         </div>
-                                      )}
-                                    </div>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
-                              )}
-                            </td>
-                          </tr>
-                        )}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
                       </React.Fragment>
                     );
                   })}
