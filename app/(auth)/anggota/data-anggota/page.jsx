@@ -51,15 +51,13 @@ function DataAnggota() {
   const [fotoBase64, setFotoBase64] = useState("");
   const [rekapData, setRekapData] = useState([]);
   const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
-  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [searchCabang, setSearchCabang] = useState("");
-  const [showDropdownCabangUnit, setShowDropdownCabangUnit] = useState(false);
   const [listCabang, setListCabang] = useState([]);
   const [showDropdownCabang, setShowDropdownCabang] = useState(false);
   const [showDropdownUnit, setShowDropdownUnit] = useState(false);
   const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
-  const [searchUnitKerja, setSearchUnitKerja] = useState('');
+  const [searchUnitKerja, setSearchUnitKerja] = useState("");
   const [filteredUnitKerjaOptions, setFilteredUnitKerjaOptions] = useState([]);
   const [formData, setFormData] = useState({ unit: "" });
   const [isUnitKerjaDisabled, setIsUnitKerjaDisabled] = useState(true);
@@ -68,8 +66,6 @@ function DataAnggota() {
   const [allUnitKerja, setAllUnitKerja] = useState([]);
   const [cabangOptions, setCabangOptions] = useState([]);
   const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
-  const [searchUnit, setSearchUnit] = useState("");
-  const [unitKerjaInput, setUnitKerjaInput] = useState("");
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const unitKerjaRef = useRef(null);
@@ -82,6 +78,73 @@ function DataAnggota() {
   const [previousKategoriDaspen, setPreviousKategoriDaspen] =
     useState(kategoriDaspen);
   const [isKategoriChanged, setIsKategoriChanged] = useState(false);
+
+  useEffect(() => {
+    if (!token) {
+      router.push("/sign-in");
+    } else {
+      setLoading(false);
+
+      // Fetch anggota data
+      const fetchAnggota = async () => {
+        try {
+          const anggotaResponse = await GlobalApi.getAllAnggota();
+          setAnggota(anggotaResponse);
+          console.log("Anggota Data:", anggotaResponse);
+        } catch (error) {
+          console.error("Error fetching anggota data:", error);
+        }
+      };
+      fetchAnggota();
+
+      const storedRole = sessionStorage.getItem("role");
+      const storedCabang = sessionStorage.getItem("cabang");
+
+      setRole(storedRole || "");
+      if (storedRole === "ADMIN" && storedCabang) {
+        setSelectedCabang(storedCabang);
+      }
+
+      // Fetch cabang data
+      const fetchCabangData = async () => {
+        try {
+          const cabangResponse = await GlobalApi.getCabang();
+          setListCabang(cabangResponse.data);
+          setCabangOptions(cabangResponse.data);
+          setFilteredCabangOptions(cabangResponse.data);
+        } catch (error) {
+          console.error("Error fetching cabang data:", error);
+        }
+      };
+      fetchCabangData();
+
+      // Fetch unit kerja data
+      const fetchUnitKerjaData = async () => {
+        try {
+          const unitKerjaResponse = await GlobalApi.getUnitKerja();
+          setAllUnitKerja(unitKerjaResponse.data);
+          setUnitKerjaOptions(unitKerjaResponse.data);
+        } catch (error) {
+          console.error("Error fetching unit kerja data:", error);
+        }
+      };
+      fetchUnitKerjaData();
+
+      // Sidebar state and screen size listener
+      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+      setIsSidebarOpen(sidebarState);
+
+      const handleResize = () => {
+        setIsMobile(window.innerWidth <= 768);
+      };
+      handleResize();
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
+    }
+  }, [token, router]);
 
   const handleDataDaspen = async () => {
     const anggotaId = sessionStorage.getItem("anggotaId");
@@ -108,7 +171,58 @@ function DataAnggota() {
               console.log("File tidak ditemukan untuk NIP:", nip);
             }
           } else {
-            console.log("NIP tidak ditemukan dalam data anggota");
+            toast.error(
+              <div style={{ textAlign: "center" }}>
+                {/* Ikon silang di atas */}
+                <div
+                 style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textAlign: "center",
+                }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{
+                      width: "150px",
+                      height: "150px",
+                      color: "red",
+                      marginBottom: "16px",
+                    }}
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+                    <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+                  </svg>
+                </div>
+                {/* Teks di bawah ikon */}
+                <h3 style={{ fontSize: "1.75rem", display: "block" }}>
+                  NIP tidak ditemukan, silahkan melakukan sinkronisasi dahulu.
+                </h3>
+              </div>,
+{
+  icon: null,
+  duration: 4000,
+  style: {
+    marginTop: "12%",
+    fontSize: "1.75rem",
+    padding: "10px",
+    width: "80%",
+    maxWidth: "450px",
+    height: "50%",
+    maxHeight: "400px",
+    transform: "translate(-50%, -50%)",
+    textAlign: "center",
+    zIndex: 9999,
+    backgroundColor: "#fff",
+    borderRadius: "8px",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+  },
+}
+            );
           }
         } else {
           console.log("Data anggota tidak ditemukan");
@@ -160,58 +274,11 @@ function DataAnggota() {
     setIsPopupDaspen(false);
   };
 
-  useEffect(() => {
-    const storedRole = sessionStorage.getItem("role");
-    setRole(storedRole || "");
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownVisible(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdownCabangUnit(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdownCabang(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
   const handleClickOutside = (event) => {
     if (unitKerjaRef.current && !unitKerjaRef.current.contains(event.target)) {
       setShowDropdownUnit(false);
     }
   };
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   const fetchRekapData = async (cabang) => {
     try {
@@ -223,113 +290,16 @@ function DataAnggota() {
     }
   };
 
-  useEffect(() => {
-    const fetchCabangData = async () => {
-      try {
-        const response = await GlobalApi.getCabang();
-        setListCabang(response.data);
-        setCabangOptions(response.data);
-        setFilteredCabangOptions(response.data);
-      } catch (error) {
-        console.error("Error fetching cabang data:", error);
-      }
-    };
-    fetchCabangData();
-  }, []);
-
-  useEffect(() => {
-    const fetchUnitKerjaData = async () => {
-      try {
-        const response = await GlobalApi.getUnitKerja();
-        setAllUnitKerja(response.data);
-        setUnitKerjaOptions(response.data);
-      } catch (error) {
-        console.error("Error fetching unit kerja data:", error);
-      }
-    };
-    fetchUnitKerjaData();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCabang) {
-      const units = allUnitKerja.filter(
-        (unit) => unit.cabang.toLowerCase() === selectedCabang.toLowerCase()
-      );
-      setFilteredUnitKerja(units);
-      setIsUnitKerjaDisabled(false);
-    } else {
-      setFilteredUnitKerja([]);
-      setIsUnitKerjaDisabled(true);
-    }
-  }, [selectedCabang, allUnitKerja]);
-
-  useEffect(() => {
-    const role = sessionStorage.getItem("role");
-    const cabang = sessionStorage.getItem("cabang");
-    if (role === "ADMIN" && cabang) {
-      setSelectedCabang(cabang);
-    }
-  }, []);
-
-  // const handleCabangSelect = (cabang) => {
-  //   setSelectedCabang(cabang.kecamatan);
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     unit: "",
-  //   }));
-  //   setFilteredUnitKerja(
-  //     allUnitKerja.filter(
-  //       (unit) => unit.cabang.toLowerCase() === cabang.kecamatan.toLowerCase()
-  //     )
-  //   );
-  //   setIsUnitKerjaDisabled(false);
-  //   setShowDropdownCabang(false);
-  // };
-
   const handleUnitKerjaChange = (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    setSearchUnit(searchTerm);
-    const filtered = allUnitKerja.filter((unit) =>
-      unit.unitKerja.toLowerCase().includes(searchTerm)
+    const value = e.target.value.toLowerCase();
+    setSearchUnitKerja(value);
+
+    const filteredOptions = allUnitKerja.filter((uk) =>
+      uk.unitKerja.toLowerCase().includes(value)
     );
-    setFilteredUnitKerja(filtered);
+
+    setFilteredUnitKerjaOptions(filteredOptions);
   };
-
-  useEffect(() => {
-    if (!unitKerjaInput && selectedCabang) {
-      fetchRekapData(selectedCabang);
-    }
-  }, [unitKerjaInput, selectedCabang]);
-
-useEffect(() => {
-    if (selectedCabang) {
-      const filtered = allUnitKerja.filter((uk) => uk.cabang === selectedCabang);
-      setFilteredUnitKerja(filtered);
-    } else {
-      setFilteredUnitKerja([]);
-    }
-
-    fetchAnggota();
-
-    if (!token) {
-      router.push("/sign-in");
-    } else {
-      setLoading(false);
-      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-      setIsSidebarOpen(sidebarState);
-
-      const handleResize = () => {
-        setIsMobile(window.innerWidth <= 768);
-      };
-
-      handleResize();
-      window.addEventListener("resize", handleResize);
-
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
-    }
-  }, [token, router, selectedCabang]);
 
   const handleCabangSelect = (cabang) => {
     setSelectedCabang(cabang.kecamatan);
@@ -345,59 +315,18 @@ useEffect(() => {
     setIsUnitKerjaDisabled(false);
     setShowDropdownCabang(false);
   };
-  
-  const handleUnitKerjaSelect = (selectedItem) => {
-    setSelectedUnitKerja(selectedItem.unitKerja || "Pilih Unit Kerja");
-    setShowDropdownUnitKerja(false);
-    setSearchUnitKerja('');
-  };
 
-  useEffect(() => {
-    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-    setIsSidebarOpen(sidebarState);
-  }, []);
+  const handleUnitKerjaSelect = (selectedItem) => {
+    setSelectedUnitKerja(selectedItem.unitKerja || "");
+    setShowDropdownUnitKerja(false);
+    setSearchUnitKerja("");
+  };
 
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  useEffect(() => {
-    fetchAnggota();
-
-    if (!token) {
-      router.push("/sign-in");
-    } else {
-      setLoading(false);
-      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-      setIsSidebarOpen(sidebarState);
-
-      const handleResize = () => {
-        setIsMobile(window.innerWidth <= 768);
-      };
-
-      handleResize();
-      window.addEventListener("resize", handleResize);
-
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
-    }
-  }, [token, router, selectedCabang, filterCabang, filterUnitKerja]);
 
   const fetchAnggota = async (page = 0, cabang = "", unitKerja = "") => {
     setLoading(true);
@@ -548,28 +477,28 @@ useEffect(() => {
 
           toast.success(
             <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-               marginTop: "14px"
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                style={{
+                  width: "150px",
+                  height: "150px",
+                  color: "#06D001",
+                  marginBottom: "16px",
+                  marginTop: "14px",
+                }}
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+              </svg>
               <h3
                 style={{
                   fontSize: "2rem",
@@ -580,7 +509,66 @@ useEffect(() => {
                 Kategori Daspen Berhasil Diupdate!
               </h3>
             </div>,
-           {
+            {
+              icon: null,
+              duration: 4000,
+              style: {
+                marginTop: "12%",
+                fontSize: "1.75rem",
+                padding: "10px",
+                width: "80%",
+                maxWidth: "450px",
+                height: "50%",
+                maxHeight: "400px",
+                transform: "translate(-50%, -50%)",
+                textAlign: "center",
+                zIndex: 9999,
+                backgroundColor: "#fff",
+                borderRadius: "8px",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              },
+            }
+          );
+        } else {
+          console.log("Data pengguna tidak ditemukan.");
+        }
+      } catch (error) {
+        console.error("Terjadi kesalahan:", error);
+        toast.error(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                width: "150px",
+                height: "150px",
+                color: "red",
+                marginBottom: "16px",
+              }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
+            </svg>
+            <h3
+              style={{
+                fontSize: "1.75rem",
+                display: "block",
+                marginBottom: "8px",
+              }}
+            >
+              Gagal memperbarui data. Periksa kembali input.
+            </h3>
+          </div>,
+          {
             icon: null,
             duration: 4000,
             style: {
@@ -599,13 +587,7 @@ useEffect(() => {
               boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
             },
           }
-          );
-        } else {
-          console.log("Data pengguna tidak ditemukan.");
-        }
-      } catch (error) {
-        console.error("Terjadi kesalahan:", error);
-        toast.error("Gagal memperbarui data. Periksa kembali input.");
+        );
       }
     } else {
       console.log("Anggota ID tidak ditemukan di sessionStorage");
@@ -648,8 +630,8 @@ useEffect(() => {
             </thead>
             <tbody>
               ${filteredDataForPrint
-        .map(
-          (item, index) => `
+                .map(
+                  (item, index) => `
                     <tr>
                       <td>${index + 1}</td>
                       <td></td>
@@ -663,19 +645,20 @@ useEffect(() => {
                         <div>${formatDate(item.tanggalLahir)}</div>
                         <div>${calculateAge(item.tanggalLahir)} Tahun</div>
                         <div>${calculateRetirementDate(
-            item.tanggalLahir,
-            item.statusPegawai
-          )}</div>
+                          item.tanggalLahir,
+                          item.statusPegawai
+                        )}</div>
                       </td>
                       <td>
                         <div>${item.cabang},</div>
                         <div>${item.unitKerja}</div>
-                        <div>Anggota: ${item.tahunDiangkat ? item.tahunDiangkat : "-"
-            }</div>
+                        <div>Anggota: ${
+                          item.tahunDiangkat ? item.tahunDiangkat : "-"
+                        }</div>
                         <div>
                           ${item.pangkatGolongan} || ${formatCurrency(
-              item.iuran
-            )}
+                    item.iuran
+                  )}
                         </div>
                       </td>
                       <td>
@@ -683,8 +666,8 @@ useEffect(() => {
                       </td>
                     </tr>
                   `
-        )
-        .join("")}
+                )
+                .join("")}
             </tbody>
           </table>
         </body>
@@ -883,7 +866,7 @@ useEffect(() => {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
-               marginTop: "14px"
+              marginTop: "14px",
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
@@ -894,6 +877,62 @@ useEffect(() => {
             style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
           >
             Anggota berhasil dikeluar!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Gagal mengeluarkan anggota:", error);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal mengeluarkan anggota.
           </h3>
         </div>,
        {
@@ -916,63 +955,6 @@ useEffect(() => {
         },
       }
       );
-    } catch (error) {
-      console.error("Gagal mengeluarkan anggota:", error);
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "48px",
-              height: "48px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Gagal mengeluarkan anggota.
-          </h3>
-        </div>,
-        {
-          icon: null,
-          autoClose: 3000,
-          duration: 2000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
     }
   };
 
@@ -994,8 +976,8 @@ useEffect(() => {
             <svg
               xmlns="http://www.w3.org/2000/svg"
               style={{
-                width: "48px",
-                height: "48px",
+                width: "150px",
+                height: "150px",
                 color: "red",
                 marginBottom: "16px",
               }}
@@ -1015,25 +997,25 @@ useEffect(() => {
               ID Anggota tidak ditemukan.
             </h3>
           </div>,
-          {
-            icon: null,
-            duration: 2000,
-            style: {
-              marginTop: "16%",
-              fontSize: "1.75rem",
-              padding: "10px",
-              width: "80%",
-              maxWidth: "700px",
-              height: "50%",
-              maxHeight: "400px",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 9999,
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            },
-          }
+         {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
         );
         return;
       }
@@ -1057,7 +1039,7 @@ useEffect(() => {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
-               marginTop: "14px"
+              marginTop: "14px",
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
@@ -1070,25 +1052,25 @@ useEffect(() => {
             Data Anggota Berhasil Dihapus!
           </h3>
         </div>,
-      {
-        icon: null,
-        duration: 4000,
-        style: {
-          marginTop: "12%",
-          fontSize: "1.75rem",
-          padding: "10px",
-          width: "80%",
-          maxWidth: "450px",
-          height: "50%",
-          maxHeight: "400px",
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          zIndex: 9999,
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      }
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
       );
 
       // Reload the page after success
@@ -1114,8 +1096,8 @@ useEffect(() => {
           <svg
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              width: "48px",
-              height: "48px",
+              width: "150px",
+              height: "150px",
               color: "red",
               marginBottom: "16px",
             }}
@@ -1135,26 +1117,25 @@ useEffect(() => {
             Gagal pensiun anggota.
           </h3>
         </div>,
-        {
-          icon: null,
-          autoClose: 3000,
-          duration: 3000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
+      {
+        icon: null,
+        duration: 4000,
+        style: {
+          marginTop: "12%",
+          fontSize: "1.75rem",
+          padding: "10px",
+          width: "80%",
+          maxWidth: "450px",
+          height: "50%",
+          maxHeight: "400px",
+          transform: "translate(-50%, -50%)",
+          textAlign: "center",
+          zIndex: 9999,
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+        },
+      }
       );
     }
   };
@@ -1194,7 +1175,7 @@ useEffect(() => {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
-               marginTop: "14px"
+              marginTop: "14px",
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
@@ -1207,7 +1188,7 @@ useEffect(() => {
             Anggota berhasil Pensiun!
           </h3>
         </div>,
-         {
+        {
           icon: null,
           duration: 4000,
           style: {
@@ -1242,8 +1223,8 @@ useEffect(() => {
           <svg
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              width: "48px",
-              height: "48px",
+              width: "150px",
+              height: "150px",
               color: "red",
               marginBottom: "16px",
             }}
@@ -1263,26 +1244,25 @@ useEffect(() => {
             Gagal pensiun anggota.
           </h3>
         </div>,
-        {
-          icon: null,
-          autoClose: 3000,
-          duration: 3000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
+       {
+        icon: null,
+        duration: 4000,
+        style: {
+          marginTop: "12%",
+          fontSize: "1.75rem",
+          padding: "10px",
+          width: "80%",
+          maxWidth: "450px",
+          height: "50%",
+          maxHeight: "400px",
+          transform: "translate(-50%, -50%)",
+          textAlign: "center",
+          zIndex: 9999,
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+        },
+      }
       );
     }
   };
@@ -1306,9 +1286,7 @@ useEffect(() => {
 
     return visiblePages;
   };
-  useEffect(() => {
-    fetchAnggota();
-  }, []);
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -1320,8 +1298,9 @@ useEffect(() => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <Toaster
             toastOptions={{
@@ -1367,7 +1346,7 @@ useEffect(() => {
                       placeholder="Pilih Cabang"
                       value={selectedCabang}
                       readOnly
-                      disabled={role !== "SUPER ADMIN"}
+                      disabled={role === "ADMIN"}
                       onFocus={() => {
                         if (role === "SUPER ADMIN") {
                           setShowDropdownCabang(true);
@@ -1429,7 +1408,9 @@ useEffect(() => {
                         setFilteredUnitKerjaOptions(
                           selectedCabang === "Pilih Cabang"
                             ? allUnitKerja
-                            : allUnitKerja.filter(uk => uk.cabang === selectedCabang)
+                            : allUnitKerja.filter(
+                                (uk) => uk.cabang === selectedCabang
+                              )
                         );
                       }}
                       className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -1447,7 +1428,7 @@ useEffect(() => {
                             className="w-full border rounded py-2 px-3 mb-2"
                           />
                         </div>
-                        <ul className="max-h-44 overflow-y-auto">
+                        <ul className="max-h-44 overflow-y-auto -mt-3">
                           <li
                             className="p-2 cursor-pointer hover:bg-gray-100"
                             onClick={() => handleUnitKerjaSelect({})}
@@ -1516,7 +1497,9 @@ useEffect(() => {
           <div className="overflow-x-auto">
             {loading ? (
               <div className="flex justify-center items-center py-10">
-                <div className="text-teal-500 text-lg font-semibold">Loading data...</div>
+                <div className="text-teal-500 text-lg font-semibold">
+                  Loading data...
+                </div>
               </div>
             ) : (
               <table className="container w-full table-auto mb-8">
@@ -1591,7 +1574,9 @@ useEffect(() => {
                     return (
                       <React.Fragment key={index}>
                         <tr
-                          className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                          className={
+                            index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                          }
                         >
                           <td className="p-2 md:p-3 border text-center">
                             <div className="flex justify-center items-center">
@@ -1629,10 +1614,11 @@ useEffect(() => {
                             <div className="text-sm">{item.npaPgri}</div>
                             <div className="text-sm">{item.jabatan}</div>
                             <div
-                              className={`text-sm p-1 inline-block ${item.nip
-                                ? "bg-green-500 text-white rounded-full px-3"
-                                : "bg-red-500 text-white rounded-full px-3"
-                                }`}
+                              className={`text-sm p-1 inline-block ${
+                                item.nip
+                                  ? "bg-green-500 text-white rounded-full px-3"
+                                  : "bg-red-500 text-white rounded-full px-3"
+                              }`}
                             >
                               {item.nip ? item.nip : "NIP tidak ada"}
                             </div>
@@ -1660,28 +1646,31 @@ useEffect(() => {
                               Anggota:{" "}
                               {item.tahunDiangkat
                                 ? (() => {
-                                  const date = new Date(item.tahunDiangkat);
-                                  const day = String(date.getDate()).padStart(
-                                    2,
-                                    "0"
-                                  );
-                                  const month = String(
-                                    date.getMonth() + 1
-                                  ).padStart(2, "0");
-                                  const year = date.getFullYear();
-                                  return `${day}-${month}-${year}`;
-                                })()
+                                    const date = new Date(item.tahunDiangkat);
+                                    const day = String(date.getDate()).padStart(
+                                      2,
+                                      "0"
+                                    );
+                                    const month = String(
+                                      date.getMonth() + 1
+                                    ).padStart(2, "0");
+                                    const year = date.getFullYear();
+                                    return `${day}-${month}-${year}`;
+                                  })()
                                 : "-"}
                             </div>
 
-                            <div className="text-sm">{item.pangkatGolongan}</div>
+                            <div className="text-sm">
+                              {item.pangkatGolongan}
+                            </div>
                           </td>
                           <td className="p-2 text-center md:p-3 border md:table-cell hidden">
                             <div
-                              className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
-                                ? "bg-red-200 text-red-900"
-                                : "bg-green-200 text-green-900"
-                                }`}
+                              className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${
+                                item.status === "BUKAN ANGGOTA"
+                                  ? "bg-red-200 text-red-900"
+                                  : "bg-green-200 text-green-900"
+                              }`}
                             >
                               {item.role === "USER"
                                 ? "Aktif"
@@ -1750,7 +1739,7 @@ useEffect(() => {
                                   </Button>
 
                                   {sessionStorage.getItem("role") ===
-                                    "SUPER ADMIN" ? (
+                                  "SUPER ADMIN" ? (
                                     <Button
                                       className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
                                       onClick={() => {
@@ -1818,7 +1807,10 @@ useEffect(() => {
                                   className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
                                   title="Data Daspen"
                                   onClick={() => {
-                                    sessionStorage.setItem("anggotaId", item.id);
+                                    sessionStorage.setItem(
+                                      "anggotaId",
+                                      item.id
+                                    );
                                     handleDataDaspen();
                                   }}
                                 >
@@ -1865,8 +1857,8 @@ useEffect(() => {
                                           {isKategoriChanged && (
                                             <div className="popup">
                                               <p>
-                                                Apakah Anda yakin ingin mengganti
-                                                kategori Daspen?
+                                                Apakah Anda yakin ingin
+                                                mengganti kategori Daspen?
                                               </p>
 
                                               <button
@@ -1896,15 +1888,18 @@ useEffect(() => {
                                           </p>
                                           <p>
                                             {daspenData.tanggalLahir
-                                              ? new Intl.DateTimeFormat("id-ID", {
-                                                day: "2-digit",
-                                                month: "long",
-                                                year: "numeric",
-                                              }).format(
-                                                new Date(
-                                                  daspenData.tanggalLahir
+                                              ? new Intl.DateTimeFormat(
+                                                  "id-ID",
+                                                  {
+                                                    day: "2-digit",
+                                                    month: "long",
+                                                    year: "numeric",
+                                                  }
+                                                ).format(
+                                                  new Date(
+                                                    daspenData.tanggalLahir
+                                                  )
                                                 )
-                                              )
                                               : "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -1928,15 +1923,18 @@ useEffect(() => {
                                           </p>
                                           <p>
                                             {daspenData.mulaiJadiAnggotaDaspen
-                                              ? new Intl.DateTimeFormat("id-ID", {
-                                                day: "2-digit",
-                                                month: "long",
-                                                year: "numeric",
-                                              }).format(
-                                                new Date(
-                                                  daspenData.mulaiJadiAnggotaDaspen
+                                              ? new Intl.DateTimeFormat(
+                                                  "id-ID",
+                                                  {
+                                                    day: "2-digit",
+                                                    month: "long",
+                                                    year: "numeric",
+                                                  }
+                                                ).format(
+                                                  new Date(
+                                                    daspenData.mulaiJadiAnggotaDaspen
+                                                  )
                                                 )
-                                              )
                                               : "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -1955,23 +1953,23 @@ useEffect(() => {
                                           <p>
                                             {daspenData.prediksiPensiun
                                               ? (() => {
-                                                const prediksiPensiunDate =
-                                                  new Date(
-                                                    daspenData.prediksiPensiun
+                                                  const prediksiPensiunDate =
+                                                    new Date(
+                                                      daspenData.prediksiPensiun
+                                                    );
+                                                  prediksiPensiunDate.setMonth(
+                                                    prediksiPensiunDate.getMonth() +
+                                                      1
                                                   );
-                                                prediksiPensiunDate.setMonth(
-                                                  prediksiPensiunDate.getMonth() +
-                                                  1
-                                                );
-                                                return new Intl.DateTimeFormat(
-                                                  "id-ID",
-                                                  {
-                                                    day: "2-digit",
-                                                    month: "long",
-                                                    year: "numeric",
-                                                  }
-                                                ).format(prediksiPensiunDate);
-                                              })()
+                                                  return new Intl.DateTimeFormat(
+                                                    "id-ID",
+                                                    {
+                                                      day: "2-digit",
+                                                      month: "long",
+                                                      year: "numeric",
+                                                    }
+                                                  ).format(prediksiPensiunDate);
+                                                })()
                                               : "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -1982,9 +1980,9 @@ useEffect(() => {
                                           <p>
                                             {daspenData.sumbangan
                                               ? new Intl.NumberFormat("id-ID", {
-                                                style: "currency",
-                                                currency: "IDR",
-                                              }).format(daspenData.sumbangan)
+                                                  style: "currency",
+                                                  currency: "IDR",
+                                                }).format(daspenData.sumbangan)
                                               : "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -2036,7 +2034,9 @@ useEffect(() => {
                                   {item.tempatLahir},{" "}
                                   {formatDate(item.tanggalLahir)}
                                 </div>
-                                <div>{calculateAge(item.tanggalLahir)} Tahun</div>
+                                <div>
+                                  {calculateAge(item.tanggalLahir)} Tahun
+                                </div>
                                 <div>
                                   Prediksi Pensiun:{" "}
                                   {calculateRetirementDate(
@@ -2049,10 +2049,11 @@ useEffect(() => {
                                 <div>Anggota: {item.gabung}</div>
                                 <div>{item.golongan}</div>
                                 <div
-                                  className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${item.status === "BUKAN ANGGOTA"
-                                    ? "bg-red-200 text-red-900"
-                                    : "bg-green-200 text-green-900"
-                                    }`}
+                                  className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${
+                                    item.status === "BUKAN ANGGOTA"
+                                      ? "bg-red-200 text-red-900"
+                                      : "bg-green-200 text-green-900"
+                                  }`}
                                 >
                                   {item.role === "USER"
                                     ? "Aktif"
@@ -2071,7 +2072,7 @@ useEffect(() => {
                                     <FaEdit className="w-4 h-4" />
                                   </Button>
                                   {sessionStorage.getItem("role") ===
-                                    "SUPER ADMIN" ? (
+                                  "SUPER ADMIN" ? (
                                     <Button
                                       className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
                                       title="Mutasi"
@@ -2088,7 +2089,7 @@ useEffect(() => {
                                     </Button>
                                   )}
                                   {sessionStorage.getItem("role") ===
-                                    "SUPER ADMIN" ? (
+                                  "SUPER ADMIN" ? (
                                     <Button
                                       className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
                                       onClick={() => {
@@ -2118,7 +2119,10 @@ useEffect(() => {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                   >
-                                    <FaWhatsapp className="w-4 h-4" title="WA" />
+                                    <FaWhatsapp
+                                      className="w-4 h-4"
+                                      title="WA"
+                                    />
                                   </Link>
                                   <div>
                                     <Button
@@ -2182,7 +2186,9 @@ useEffect(() => {
                                                   </p>
 
                                                   <button
-                                                    onClick={handleConfirmChange}
+                                                    onClick={
+                                                      handleConfirmChange
+                                                    }
                                                     className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition duration-200 px-6"
                                                   >
                                                     Ya
@@ -2193,7 +2199,9 @@ useEffect(() => {
                                                       setKategoriDaspen(
                                                         previousKategoriDaspen
                                                       );
-                                                      setIsKategoriChanged(false);
+                                                      setIsKategoriChanged(
+                                                        false
+                                                      );
                                                     }}
                                                     className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-200 ml-2 px-4"
                                                   >
@@ -2209,17 +2217,17 @@ useEffect(() => {
                                               <p>
                                                 {daspenData.tanggalLahir
                                                   ? new Intl.DateTimeFormat(
-                                                    "id-ID",
-                                                    {
-                                                      day: "2-digit",
-                                                      month: "long",
-                                                      year: "numeric",
-                                                    }
-                                                  ).format(
-                                                    new Date(
-                                                      daspenData.tanggalLahir
+                                                      "id-ID",
+                                                      {
+                                                        day: "2-digit",
+                                                        month: "long",
+                                                        year: "numeric",
+                                                      }
+                                                    ).format(
+                                                      new Date(
+                                                        daspenData.tanggalLahir
+                                                      )
                                                     )
-                                                  )
                                                   : "Tidak tersedia"}
                                               </p>
                                             </div>
@@ -2249,17 +2257,17 @@ useEffect(() => {
                                               <p>
                                                 {daspenData.mulaiJadiAnggotaDaspen
                                                   ? new Intl.DateTimeFormat(
-                                                    "id-ID",
-                                                    {
-                                                      day: "2-digit",
-                                                      month: "long",
-                                                      year: "numeric",
-                                                    }
-                                                  ).format(
-                                                    new Date(
-                                                      daspenData.mulaiJadiAnggotaDaspen
+                                                      "id-ID",
+                                                      {
+                                                        day: "2-digit",
+                                                        month: "long",
+                                                        year: "numeric",
+                                                      }
+                                                    ).format(
+                                                      new Date(
+                                                        daspenData.mulaiJadiAnggotaDaspen
+                                                      )
                                                     )
-                                                  )
                                                   : "Tidak tersedia"}
                                               </p>
                                             </div>
@@ -2279,25 +2287,25 @@ useEffect(() => {
                                               <p>
                                                 {daspenData.prediksiPensiun
                                                   ? (() => {
-                                                    const prediksiPensiunDate =
-                                                      new Date(
-                                                        daspenData.prediksiPensiun
+                                                      const prediksiPensiunDate =
+                                                        new Date(
+                                                          daspenData.prediksiPensiun
+                                                        );
+                                                      prediksiPensiunDate.setMonth(
+                                                        prediksiPensiunDate.getMonth() +
+                                                          1
                                                       );
-                                                    prediksiPensiunDate.setMonth(
-                                                      prediksiPensiunDate.getMonth() +
-                                                      1
-                                                    );
-                                                    return new Intl.DateTimeFormat(
-                                                      "id-ID",
-                                                      {
-                                                        day: "2-digit",
-                                                        month: "long",
-                                                        year: "numeric",
-                                                      }
-                                                    ).format(
-                                                      prediksiPensiunDate
-                                                    );
-                                                  })()
+                                                      return new Intl.DateTimeFormat(
+                                                        "id-ID",
+                                                        {
+                                                          day: "2-digit",
+                                                          month: "long",
+                                                          year: "numeric",
+                                                        }
+                                                      ).format(
+                                                        prediksiPensiunDate
+                                                      );
+                                                    })()
                                                   : "Tidak tersedia"}
                                               </p>
                                             </div>
@@ -2308,12 +2316,14 @@ useEffect(() => {
                                               <p>
                                                 {daspenData.sumbangan
                                                   ? new Intl.NumberFormat(
-                                                    "id-ID",
-                                                    {
-                                                      style: "currency",
-                                                      currency: "IDR",
-                                                    }
-                                                  ).format(daspenData.sumbangan)
+                                                      "id-ID",
+                                                      {
+                                                        style: "currency",
+                                                        currency: "IDR",
+                                                      }
+                                                    ).format(
+                                                      daspenData.sumbangan
+                                                    )
                                                   : "Tidak tersedia"}
                                               </p>
                                             </div>
@@ -2379,10 +2389,11 @@ useEffect(() => {
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`px-3 py-1 border rounded text-sm ${page === currentPage
-                    ? "bg-blue-500 text-white"
-                    : "bg-white hover:bg-gray-50"
-                    }`}
+                  className={`px-3 py-1 border rounded text-sm ${
+                    page === currentPage
+                      ? "bg-blue-500 text-white"
+                      : "bg-white hover:bg-gray-50"
+                  }`}
                 >
                   {page}
                 </button>
@@ -2424,42 +2435,51 @@ useEffect(() => {
                   x
                 </button>
               </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-full flex justify-center mb-2">
+              <div className="flex flex-col items-center gap-4 p-4 rounded-md shadow-md bg-white">
+                <div className="w-full flex justify-center mb-4">
                   <Image
                     src={
                       fotoBase64
                         ? "/profile.png"
                         : `data:image/jpeg;base64,${fotoBase64}`
                     }
-                    width={80}
-                    height={80}
+                    width={100}
+                    height={100}
                     alt="Anggota Foto"
-                    className="rounded-full"
+                    className="rounded-full border-2 border-gray-300"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4 justify-around">
-                  <div className="flex flex-col text-left">
-                    <p className="font-medium text-gray-600 justify-start ">
+                <div className="grid grid-cols-2 gap-6 w-full">
+                  <div className="flex flex-col">
+                    <p className="font-semibold text-gray-700 text-sm">
                       Nama Lengkap:
                     </p>
-                    <p className="text-sm">{currentItem?.namaLengkap || ""}</p>
-                    <p className="font-medium text-gray-600 mt-3">Cabang:</p>
-                    <p className="text-sm">{currentItem?.cabang || ""}</p>
+                    <p className="text-base text-gray-900">
+                      {currentItem?.namaLengkap || "-"}
+                    </p>
+                    <p className="font-semibold text-gray-700 text-sm mt-4">
+                      Cabang:
+                    </p>
+                    <p className="text-base text-gray-900">
+                      {currentItem?.cabang || "-"}
+                    </p>
                   </div>
 
-                  <div className="flex flex-col text-left ">
-                    <p className="font-medium text-gray-600">NPA:</p>
-                    <p className=" text-sm">{currentItem?.npaPgri || ""}</p>
-                    <p className="font-medium text-gray-600 text-left mt-3">
+                  <div className="flex flex-col">
+                    <p className="font-semibold text-gray-700 text-sm">NPA:</p>
+                    <p className="text-base text-gray-900">
+                      {currentItem?.npaPgri || "-"}
+                    </p>
+                    <p className="font-semibold text-gray-700 text-sm mt-4">
                       Unit Kerja:
                     </p>
-                    <p className="ml-0 text-sm">
-                      {currentItem?.unitKerja || ""}
+                    <p className="text-base text-gray-900">
+                      {currentItem?.unitKerja || "-"}
                     </p>
                   </div>
                 </div>
               </div>
+
               <div className="space-y-2 mt-4">
                 <div>
                   <Button

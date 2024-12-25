@@ -1189,13 +1189,13 @@ const Page = () => {
         </div>,
         {
           icon: null,
-          duration: 5000,
+          duration: 4000,
           style: {
-            marginTop: "16%",
+            marginTop: "12%",
             fontSize: "1.75rem",
             padding: "10px",
             width: "80%",
-            maxWidth: "700px",
+            maxWidth: "450px",
             height: "50%",
             maxHeight: "400px",
             transform: "translate(-50%, -50%)",
