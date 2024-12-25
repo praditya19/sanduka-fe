@@ -82,7 +82,7 @@ const Page = () => {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
-               marginTop: "14px"
+              marginTop: "14px",
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
@@ -145,7 +145,7 @@ const Page = () => {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
-               marginTop: "14px"
+              marginTop: "14px",
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
@@ -239,98 +239,118 @@ const Page = () => {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-        <main className="min-h-screen bg-gray-50 p-4 md:p-6">
-          <nav className=" mt-6">
-            <ul className="flex flex-wrap space-x-4 md:space-x-6">
-              <li>
-                <Link
-                  href="/pengaturan/user"
-                  className="text-gray-700 hover:text-teal-600"
-                >
-                  User
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/pengaturan/unit-kerja"
-                  className="text-gray-700 hover:text-teal-600"
-                >
-                  Unit Kerja
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/pengaturan/tambah"
-                  className="text-gray-700 hover:text-teal-600"
-                >
-                  Tambah Cabang
-                </Link>
-              </li>
-            </ul>
-          </nav>
-          <div className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-4">
-            <div className="mb-2">
-              <h3 className="text-base font-bold mb-2">Tambah Cabang</h3>
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <Input
-                  placeholder="Tambah Cabang"
-                  value={newCabang}
-                  onChange={(e) => setNewCabang(e.target.value)}
-                />
-                <div className="flex justify-end space-x-2 mt-5">
-                  <Button
-                    type="button"
-                    className="bg-blue-500 text-white px-4 py-2 rounded"
-                    onClick={addCabang}
+          <main className="min-h-screen bg-gray-50 p-4 md:p-6">
+            <nav className=" mt-6">
+              <ul className="flex flex-wrap space-x-4 md:space-x-6">
+                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                  <li>
+                    <Link
+                      href="/pengaturan/user"
+                      className="text-gray-700 hover:text-teal-600"
+                    >
+                      User
+                    </Link>
+                  </li>
+                )}
+                <li>
+                  <Link
+                    href="/pengaturan/unit-kerja"
+                    className="text-gray-700 hover:text-teal-600"
                   >
-                    Tambah
-                  </Button>
+                    Unit Kerja
+                  </Link>
+                </li>
+                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                  <li>
+                    <Link
+                      href="/pengaturan/tambah"
+                      className="text-gray-700 hover:text-teal-600"
+                    >
+                      Tambah Cabang
+                    </Link>
+                  </li>
+                )}
+                <li>
+                  <Link
+                    href="/pengaturan/tambah-ranting"
+                    className="text-gray-700 hover:text-teal-600"
+                  >
+                    Tambah Ranting
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/pengaturan/tambah-ranting/data"
+                    className="text-gray-700 hover:text-teal-600"
+                  >
+                    Data Ranting
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+            <div className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-4">
+              <div className="mb-2">
+                <h3 className="text-base font-bold mb-2">Tambah Cabang</h3>
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                  <Input
+                    placeholder="Tambah Cabang"
+                    value={newCabang}
+                    onChange={(e) => setNewCabang(e.target.value)}
+                  />
+                  <div className="flex justify-end space-x-2 mt-5">
+                    <Button
+                      type="button"
+                      className="bg-blue-500 text-white px-4 py-2 rounded"
+                      onClick={addCabang}
+                    >
+                      Tambah
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-col md:flex-row justify-between mb-2 mt-4 items-center">
+                  <div className="flex items-center mb-2 md:mb-0">
+                    <label htmlFor="entries" className="mr-2">
+                      Show
+                    </label>
+                    <select
+                      id="entries"
+                      className="border rounded p-1"
+                      onChange={handleEntriesChange}
+                    >
+                      <option value="10">10</option>
+                      <option value="25">25</option>
+                      <option value="50">50</option>
+                    </select>
+                    <span className="ml-2">entries</span>
+                  </div>
+                  <div className="relative mb-2 md:mb-0 w-full text-sm md:max-w-sm">
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      className="p-2 pl-10 border rounded w-full"
+                      onChange={handleSearchChange}
+                    />
+                    <FontAwesomeIcon
+                      icon={faMagnifyingGlass}
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500"
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="flex flex-col md:flex-row justify-between mb-2 mt-4 items-center">
-                <div className="flex items-center mb-2 md:mb-0">
-                  <label htmlFor="entries" className="mr-2">
-                    Show
-                  </label>
-                  <select
-                    id="entries"
-                    className="border rounded p-1"
-                    onChange={handleEntriesChange}
-                  >
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                  </select>
-                  <span className="ml-2">entries</span>
-                </div>
-                <div className="relative mb-2 md:mb-0 w-full text-sm md:max-w-sm">
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="p-2 pl-10 border rounded w-full"
-                    onChange={handleSearchChange}
-                  />
-                  <FontAwesomeIcon
-                    icon={faMagnifyingGlass}
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500"
-                  />
-                </div>
-              </div>
+              <DataTable
+                data={selectedData}
+                startIndex={startIndex}
+                handleDelete={handleDelete}
+              />
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                handlePageChange={handlePageChange}
+              />
             </div>
-            <DataTable
-              data={selectedData}
-              startIndex={startIndex}
-              handleDelete={handleDelete}
-            />
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              handlePageChange={handlePageChange}
-            />
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
-    </div>
     </div>
   );
 };
