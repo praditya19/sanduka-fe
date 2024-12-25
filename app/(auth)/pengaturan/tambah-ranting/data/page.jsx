@@ -286,12 +286,6 @@ const Page = () => {
                     </select>
                     <span className="ml-2">entries</span>
                   </div>
-                  <Button
-                    className="bg-blue-500 text-white text-xs px-4 py-2 rounded"
-                    onClick={handleAddUserClick}
-                  >
-                    Tambah Ranting
-                  </Button>
                 </div>
                 <div className="relative mb-4">
                   <input
