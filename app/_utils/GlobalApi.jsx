@@ -276,6 +276,7 @@ const verifyUser = async (userId) => {
     }
   }
 };
+
 const RejectUser = async (userId) => {
   try {
     const response = await axiosClient.delete(`/api/auth/user/${userId}`);
