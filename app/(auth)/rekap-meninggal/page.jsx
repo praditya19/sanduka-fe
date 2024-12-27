@@ -83,6 +83,7 @@ const Page = () => {
 
   useEffect(() => {
     let filtered = data;
+
     if (filter) {
       const lowercasedFilter = filter.toLowerCase();
       filtered = filtered.filter(
@@ -109,8 +110,16 @@ const Page = () => {
       });
     }
 
+    // Sort by waktuMeninggalTerlapor (newest to oldest)
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.waktuMeninggalTerlapor);
+      const dateB = new Date(b.waktuMeninggalTerlapor);
+      return dateB - dateA; // Newest first
+    });
+
     setFilteredData(filtered);
   }, [filter, selectedMonth, selectedYear, data]);
+
 
   const currentData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
@@ -143,9 +152,8 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="flex justify-center bg-red-600 py-2 rounded-b-lg shadow-md sm:mt-14 mt-12 sm:-mb-5 -mb-10">
             <h1 className="text-xl font-semibold text-white">
@@ -381,9 +389,8 @@ const Page = () => {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 border rounded text-sm ${
-                        page === currentPage ? "bg-blue-500 text-white" : "bg-white hover:bg-gray-50"
-                      }`}
+                      className={`px-3 py-1 border rounded text-sm ${page === currentPage ? "bg-blue-500 text-white" : "bg-white hover:bg-gray-50"
+                        }`}
                     >
                       {page}
                     </button>
