@@ -37,6 +37,7 @@ const VerifikasiAnggotaMutasi = () => {
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [fotoBase64, setFotoBase64] = useState("");
+  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
   const [nama, setNama] = useState("");
 
   const fetchDataAnggota = async (
@@ -407,11 +408,10 @@ const VerifikasiAnggotaMutasi = () => {
     return <div>Loading...</div>;
   }
 
-  const handleUserClick = (rowId) => {
-    const row = anggotaData.find((item) => {
-      return item.id === rowId;
-    });
+  const handleUserClick = (rowId, index) => {
+    const row = anggotaData.find((item) => item.id === rowId);
     setSelectedRow(row);
+    setSelectedRowIndex(index); // Add this line to store the index
   };
 
   const handleClosePopup = () => {
@@ -519,7 +519,7 @@ const VerifikasiAnggotaMutasi = () => {
             <div className="overflow-x-auto">
               <DataTable
                 anggotaData={anggotaData}
-                handleUser Click={handleUserClick}
+                handleUserClick={handleUserClick}
                 fotoBase64={fotoBase64}
                 currentPage={currentPage}
                 pageSize={pageSize}
@@ -1032,7 +1032,7 @@ const DataTable = ({ anggotaData, handleUserClick, fotoBase64, currentPage, page
                           icon={faUser}
                           size="lg"
                           className="text-yellow-500 cursor-pointer"
-                          onClick={() => handleUserClick(item.id)}
+                          onClick={() => handleUserClick(item.id, index)} // Pass the index here
                         />
                       </td>
                     </>
@@ -1118,6 +1118,7 @@ const PopupDetail = ({
   fotoBase64,
   handleVerifyUserClick,
   handleRejectUserClick,
+  selectedRowIndex,
 }) => {
   const [showConfirmReject, setShowConfirmReject] = useState(false);
   const profileImageUrl = "/profile.png";
@@ -1147,8 +1148,8 @@ const PopupDetail = ({
           <div className="flex justify-center">
             <Image
               src={
-                fotoBase64[index]
-                  ? `data:image/jpeg;base64,${fotoBase64[index]}`
+                fotoBase64[selectedRowIndex]
+                  ? `data:image/jpeg;base64,${fotoBase64[selectedRowIndex]}`
                   : profileImageUrl
               }
               width={80}
