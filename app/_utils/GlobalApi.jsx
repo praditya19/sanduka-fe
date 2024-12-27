@@ -89,7 +89,6 @@ const loginAdmin = async (npaPgri, password) => {
       }
     );
 
-    console.log("Response login:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error saat login:", error);
@@ -1323,6 +1322,7 @@ const getRantingSummary = async (
   page = 0,
   size = 10,
   cabang = "",
+  unitKerja = "",
   namaRanting = ""
 ) => {
   try {
@@ -1330,6 +1330,7 @@ const getRantingSummary = async (
       page,
       size,
       ...(cabang && { cabang: encodeURIComponent(cabang) }),
+      ...(unitKerja && { unitKerja: unitKerja }),
       ...(namaRanting && { namaRanting: encodeURIComponent(namaRanting) }),
     };
 
@@ -1372,7 +1373,11 @@ const processNamaAnggota = (namaAnggotaArray) => {
     let currentPart = "";
 
     namaParts.forEach((part) => {
-      if (part.match(/.*(S\.Pd\.I|M\.Pd\.I|S\.Ag|M\.Pd).*/i)) {
+      if (
+        part.match(
+          /.*(S\.Pd\.I|M\.Pd\.I|S\.Ag|M\.Pd|S\.Pd|S\.PDi|S\.M\.|M\.Pd\.I|S\.Si|S\.Sos|S\.Kom|S\.Ak|S\.Or|S\.Fil\.I|S\.Ps\.I|M\.Kom|A\.Md|Gr|SPd\.SD|S\.Ps|S\.Pust).*/i
+        )
+      ) {
         currentPart = currentPart ? `${currentPart} ${part}` : part;
         processedNama.push(currentPart);
         currentPart = "";
@@ -1388,7 +1393,7 @@ const processNamaAnggota = (namaAnggotaArray) => {
     return processedNama.join(" ");
   });
 
-  return processedNames.join(", ");
+  return processedNames.join("\n");
 };
 
 const createRanting = async (rantingData) => {

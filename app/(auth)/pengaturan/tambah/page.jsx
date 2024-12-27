@@ -260,32 +260,6 @@ const Page = () => {
                     Unit Kerja
                   </Link>
                 </li>
-                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
-                  <li>
-                    <Link
-                      href="/pengaturan/tambah"
-                      className="text-gray-700 hover:text-teal-600"
-                    >
-                      Tambah Cabang
-                    </Link>
-                  </li>
-                )}
-                <li>
-                  <Link
-                    href="/pengaturan/tambah-ranting"
-                    className="text-gray-700 hover:text-teal-600"
-                  >
-                    Tambah Ranting
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/pengaturan/tambah-ranting/data"
-                    className="text-gray-700 hover:text-teal-600"
-                  >
-                    Data Ranting
-                  </Link>
-                </li>
               </ul>
             </nav>
             <div className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-4">

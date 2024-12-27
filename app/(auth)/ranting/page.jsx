@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,7 @@ import Link from "next/link";
 import { Label } from "@/components/ui/label";
 import { faMagnifyingGlass, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { ClipLoader } from "react-spinners";
 
 const Page = () => {
   const [entries, setEntries] = useState(10);
@@ -69,15 +70,11 @@ const Page = () => {
           >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
-          <h3
-            style={{
-              fontSize: "2rem",
-              display: "block",
-              marginBottom: "28px",
-            }}
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
           >
             Ranting berhasil ditambahkan!
-          </h3>
+          </strong>
         </div>,
         {
           icon: null,
@@ -101,7 +98,9 @@ const Page = () => {
       );
       setNewCabang("");
       setSelectedCabang("");
-      window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 4000);
     } catch (error) {
       toast.error(
         <div
@@ -265,7 +264,20 @@ const Page = () => {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <ClipLoader color="#3498db" size={50} />
+      </div>
+    );
+  }
 
   const handleCabangClick = () => {
     setFilteredCabangList(originalCabangList);
@@ -345,37 +357,9 @@ const Page = () => {
           <main className="min-h-screen bg-gray-50 p-4 md:p-6">
             <nav className=" mt-6">
               <ul className="flex flex-wrap space-x-4 md:space-x-6">
-                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
-                  <li>
-                    <Link
-                      href="/pengaturan/user"
-                      className="text-gray-700 hover:text-teal-600"
-                    >
-                      User
-                    </Link>
-                  </li>
-                )}
                 <li>
                   <Link
-                    href="/pengaturan/unit-kerja"
-                    className="text-gray-700 hover:text-teal-600"
-                  >
-                    Unit Kerja
-                  </Link>
-                </li>
-                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
-                  <li>
-                    <Link
-                      href="/pengaturan/tambah"
-                      className="text-gray-700 hover:text-teal-600"
-                    >
-                      Tambah Cabang
-                    </Link>
-                  </li>
-                )}
-                <li>
-                  <Link
-                    href="/pengaturan/tambah-ranting"
+                    href="/ranting"
                     className="text-gray-700 hover:text-teal-600"
                   >
                     Tambah Ranting
@@ -383,7 +367,7 @@ const Page = () => {
                 </li>
                 <li>
                   <Link
-                    href="/pengaturan/tambah-ranting/data"
+                    href="/ranting/data"
                     className="text-gray-700 hover:text-teal-600"
                   >
                     Data Ranting

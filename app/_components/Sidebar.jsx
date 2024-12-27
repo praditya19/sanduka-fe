@@ -16,8 +16,8 @@ import {
   faCog,
   faBars,
   faTimes,
-  faChevronDown,
-  faChevronUp,
+  faChartPie,
+  faSitemap,
 } from "@fortawesome/free-solid-svg-icons";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
 import { Button } from "@/components/ui/button";
@@ -97,6 +97,12 @@ const icons = [
     label: "Bantuan",
     href: "/bantuan",
     color: "text-purple-500",
+  },
+  {
+    icon: faSitemap,
+    label: "Data Ranting",
+    href: "/ranting",
+    color: "text-blue-500",
   },
   {
     icon: faCog,
