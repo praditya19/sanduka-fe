@@ -2,7 +2,7 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "https://sanduka.my.id",
+  baseURL: "http://localhost:8080",
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -193,11 +193,11 @@ const getFileByNip = async (nip) => {
 // Update DATA
 const updateUserById = async (userId, formData) => {
   try {
-    const response = await axiosClient.put(
-      `/api/auth/user/${userId}`,
-      formData
-    );
-    return response.data;
+    const response = await axiosClient.put(`/api/auth/user/${userId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
   } catch (error) {
     console.error("Error updating user:", error);
     throw error;

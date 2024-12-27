@@ -142,7 +142,6 @@ const Page = () => {
   const unitKerjaRef = useRef(null);
   const [errorFields, setErrorFields] = useState({});
 
-
   const handleChange = (index, e) => {
     const { value } = e.target;
     setNamaAnak((prevNamaAnak) => {
@@ -152,497 +151,12 @@ const Page = () => {
     });
   };
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    const anggotaId = sessionStorage.getItem("anggotaId");
-    const userId = sessionStorage.getItem("userId");
-
-    const id = anggotaId || userId;
-
-    if (!id) {
-        console.error("User ID atau Anggota ID tidak ditemukan atau tidak valid.");
-        return;
-    }
-
-    // Validasi input
-    const errors = [];
-    const newErrorFields = {};
-
-    if (!email) {
-        errors.push("Email");
-        newErrorFields.email = true;
-    }
-    if (!password) {
-        errors.push("Password");
-        newErrorFields.password = true;
-    }
-    if (!npaPgri) {
-        errors.push("NPA PGRI");
-        newErrorFields.npaPgri = true;
-    }
-    if (!nip) {
-        errors.push("NIP");
-        newErrorFields.nip = true;
-    }
-    if (!nik) {
-        errors.push("NIK");
-        newErrorFields.nik = true;
-    }
-    if (!namaLengkap) {
-        errors.push("Nama Lengkap");
-        newErrorFields.namaLengkap = true;
-    }
-    if (!tempatLahir) {
-        errors.push("Tempat Lahir");
-        newErrorFields.tempatLahir = true;
-    }
-    if (!tanggalLahir) {
-        errors.push("Tanggal Lahir");
-        newErrorFields.formattedTanggalLahir = true;
-    }
-    if (!jenisKelamin) {
-        errors.push("Jenis Kelamin");
-        newErrorFields.jenisKelamin = true;
-    }
-    if (!agama) {
-        errors.push("Agama");
-        newErrorFields.agama = true;
-    }
-    if (!golonganDarah) {
-        errors.push("Golongan Darah");
-        newErrorFields.golonganDarah = true;
-    }
-    if (!alamat) {
-        errors.push("Alamat");
-        newErrorFields.alamat = true;
-    }
-    if (!kodePos) {
-        errors.push("Kode Pos");
-        newErrorFields.kodePos = true;
-    }
-    if (!nomorHp) {
-        errors.push("Nomor HP");
-        newErrorFields.nomorHp = true;
-    }
-    if (!selectedCabang) {
-        errors.push("Cabang");
-        newErrorFields.selectedCabang = true;
-    }
-    if (!selectedUnitKerja) {
-        errors.push("Unit Kerja");
-        newErrorFields.selectedUnitKerja = true;
-    }
-    if (!valueJabatan) {
-        errors.push("Jabatan");
-        newErrorFields.valueJabatan = true;
-    }
-    if (!tingkatSekolah) {
-        errors.push("Tingkat Sekolah");
-        newErrorFields.tingkatSekolah = true;
-    }
-    if (!statusSekolah) {
-        errors.push("Status Sekolah");
-        newErrorFields.statusSekolah = true;
-    }
-    if (!statusPegawai) {
-        errors.push("Status Pegawai");
-        newErrorFields.statusPegawai = true;
-    }
-    if (!tahunDiangkat) {
-        errors.push("Tahun Diangkat");
-        newErrorFields.tahunDiangkat = true;
-    }
-    if (!pangkatGolongan) {
-        errors.push("Pangkat/Golongan");
-        newErrorFields.pangkatGolongan = true;
-    }
-    if (!pendidikanTerakhir) {
-        errors.push("Pendidikan Terakhir");
-        newErrorFields.pendidikanTerakhir = true;
-    }
-    if (!sertifikatPendidik) {
-        errors.push("Sertifikat Pendidik");
-        newErrorFields.sertifikatPendidik = true;
-    }
-    if (!mulaiJadiAnggotaPgri) {
-        errors.push("Mulai Jadi Anggota PGRI");
-        newErrorFields.mulaiJadiAnggotaPgri = true;
-    }
-    if (!valueGolonganJabatan) {
-        errors.push("Golongan Jabatan");
-        newErrorFields.valueGolonganJabatan = true;
-    }
-    if (!valueKategoriDaspen) {
-        errors.push("Kategori Daspen");
-        newErrorFields.valueKategoriDaspen = true;
-    }
-    if (!mengajar) {
-        errors.push("Mengajar");
-        newErrorFields.mengajar = true;
-    }
-
-    if (errors.length > 0) {
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "100px",
-              height: "100px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.5rem",
-              display: "block",
-              marginBottom: "8px",
-              color: "#333",
-            }}
-          >
-            Harap Lengkapi Formulir Berikut:
-          </h3>
-          <ul style={{ textAlign: "left", color: "#555", fontSize: "1rem" }}>
-            {errors.map((error, index) => (
-              <li key={index} style={{ marginBottom: "4px" }}>
-                {error}
-              </li>
-            ))}
-          </ul>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.25rem",
-            padding: "20px",
-            width: "80%",
-            maxWidth: "450px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
-        setErrorFields(newErrorFields);
-        return;
-    }
-
-    const formatTanggal = (tanggal) => {
-        const date = new Date(tanggal);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        return `${year}-${month}-${day}`;
-    };
-
-    const formattedTanggalLahir = formatTanggal(tanggalLahir);
-    const formattedTahunDiangkat = formatTanggal(tahunDiangkat);
-    const formattedMulaiJadiAnggota = formatTanggal(mulaiJadiAnggotaPgri);
-
-    const formData = new FormData();
-    formData.append("email", email);
-    formData.append("password", password);
-    formData.append("npaPgri", npaPgri);
-    formData.append("nip", nip);
-    formData.append("nik", nik);
-    formData.append("namaLengkap", namaLengkap);
-    formData.append("tempatLahir", tempatLahir);
-    formData.append("tanggalLahir", formattedTanggalLahir);
-    formData.append("jenisKelamin", jenisKelamin);
-    formData.append("agama", agama);
-    formData.append("golonganDarah", golonganDarah);
-    formData.append("alamat", alamat);
-    formData.append("latitude", latitude);
-    formData.append("longitude", longitude);
-    formData.append("kodePos", kodePos);
-    formData.append("nomorHp", nomorHp);
-    formData.append("namaSuamiIstri", namaSuamiIstri);
-
-    if (selectedFile) {
-        formData.append("foto", selectedFile);
-    }
-
-    formData.append("cabang", selectedCabang);
-    formData.append("unitKerja", selectedUnitKerja);
-    formData.append("jabatan", valueJabatan);
-    formData.append("tingkatSekolah", tingkatSekolah);
-    formData.append("statusSekolah", statusSekolah);
-    formData.append("statusPegawai", statusPegawai);
-    formData.append("tahunDiangkat", formattedTahunDiangkat);
-    formData.append("pangkatGolongan", pangkatGolongan);
-    formData.append("pendidikanTerakhir", pendidikanTerakhir);
-    formData.append("sertifikatPendidik", sertifikatPendidik);
-    formData.append("mulaiJadiAnggotaPgri", formattedMulaiJadiAnggota);
-    formData.append("golonganJabatan", valueGolonganJabatan);
-    formData.append("kategoriDaspen", valueKategoriDaspen);
-    formData.append("mengajar", mengajar);
-
-    formData.append("pesertaSanduka", pesertaSanduka ? "Ya" : "");
-    formData.append("pesertaDaspen", pesertaDaspen ? "Ya" : "");
-    formData.append("pesertaKtaDigital", pesertaKtaDigital ? "Ya" : "");
-
-    try {
-        const response = await GlobalApi.updateUserById(id, formData);
-        console.log("Response dari API:", response);
-        toast.success("Data berhasil diperbarui!");
-        setTimeout(() => {
-            router.push("/anggota/data-anggota");
-        }, 4000);
-    } catch (error) {
-        console.error("Gagal mengupdate data:", error);
-    }
-};
-
-  const handleConfirmAndSendData = async () => {
-    try {
-      const userId = sessionStorage.getItem("userId");
-      if (!userId) {
-        toast.error(
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                width: "150px",
-                height: "150px",
-                color: "red",
-                marginBottom: "16px",
-              }}
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-            </svg>
-            <strong
-              style={{
-                fontSize: "1.75rem",
-                display: "block",
-                marginBottom: "8px",
-              }}
-            >
-              User ID tidak ditemukan.
-            </strong>
-          </div>,
-         {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-        );
-        return;
-      }
-
-      const response = await GlobalApi.updateRegisUser(userId, data);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "48px",
-              height: "48px",
-              color: "#06D001",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Data berhasil disinkronkan!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
-      handleClosePopup();
-    } catch (error) {
-      console.error("Error saat mengirim data:", error);
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <strong
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Terjadi kesalahan saat mengirim data.
-          </strong>
-        </div>,
-       {
-        icon: null,
-        duration: 4000,
-        style: {
-          marginTop: "12%",
-          fontSize: "1.75rem",
-          padding: "10px",
-          width: "80%",
-          maxWidth: "450px",
-          height: "50%",
-          maxHeight: "400px",
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          zIndex: 9999,
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      }
-      );
-    }
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (cabangRef.current && !cabangRef.current.contains(e.target)) {
-        setShowDropdown(false);
-      }
-      if (unitKerjaRef.current && !unitKerjaRef.current.contains(e.target)) {
-        setShowDropdownUnitKerja(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const handleBackClick = () => {
-    router.push("/anggota/data-anggota");
-  };
-
-  const handleCloseLocationInfo = () => {
-    setIsLocationInfoOpen(false);
-  };
-
-  const nextStep = () => {
-    if (!latitude || !longitude) {
-      setIsLocationInfoOpen(true);
-    } else {
-      setStep(step + 1);
-    }
-  };
-
-  const handleOpenPasswordInfo = () => {
-    setIsPasswordInfoOpen(true);
-    setIsLocationInfoOpen(false);
-  };
-
-  const handleClosePasswordInfo = () => {
-    setIsPasswordInfoOpen(false);
-  };
-
-  const prevStep = () => {
-    setStep(step - 1);
-  };
-
-  const filteredOptions = cabang.filter((item) =>
-    item.kecamatan.toLowerCase().includes(query.toLowerCase())
-  );
-
-  const handleUnitKerjaChange = (item) => {
-    setSelectedUnitKerja(item.unitKerja);
-    setShowDropdownUnitKerja(false);
-  };
-
   const getAnggotaById = async () => {
     const anggotaId = sessionStorage.getItem("anggotaId");
     const userId = sessionStorage.getItem("userId");
+    const adminId = sessionStorage.getItem("adminId");
 
-    const id = anggotaId || userId;
+    const id = anggotaId || userId || adminId;
 
     if (!id) {
       console.error(
@@ -734,6 +248,572 @@ const Page = () => {
     getAnggotaById();
   }, []);
 
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    const anggotaId = sessionStorage.getItem("anggotaId");
+    const userId = sessionStorage.getItem("userId");
+    const adminId = sessionStorage.getItem("adminId");
+
+    const id = anggotaId || userId || adminId;
+
+    if (!id) {
+      console.error(
+        "User ID atau Anggota ID tidak ditemukan atau tidak valid."
+      );
+      return;
+    }
+    console.log("User ID:", id);
+
+    const formatTanggal = (tanggal) => {
+      const date = new Date(tanggal);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+    const formattedTahunDiangkat = formatTanggal(tahunDiangkat);
+
+    // Validasi field yang wajib diisi
+    const requiredFieldsStep2 = [
+    { field: selectedCabang, name: "Cabang", id: "cabang" },
+    { field: selectedUnitKerja, name: "Unit Kerja", id: "unitKerja" },
+    { field: valueJabatan, name: "Jabatan", id: "jabatan" },
+    { field: tingkatSekolah, name: "Tingkat Sekolah", id: "tingkatSekolah" },
+    { field: statusSekolah, name: "Status Sekolah", id: "statusSekolah" },
+    { field: statusPegawai, name: "Status Pegawai", id: "statusPegawai" },
+    { field: formattedTahunDiangkat, name: "Tahun Diangkat", id: "tahunDiangkat" },
+    { field: pangkatGolongan, name: "Pangkat Golongan", id: "pangkatGolongan" },
+    { field: pendidikanTerakhir, name: "Pendidikan Terakhir", id: "pendidikanTerakhir" },
+    { field: sertifikatPendidik, name: "Sertifikat Pendidik", id: "sertifikatPendidik" },
+    { field: mulaiJadiAnggotaPgri, name: "Mulai Jadi Anggota PGRI", id: "mulaiJadiAnggotaPgri" },
+    { field: valueKategoriDaspen, name: "Kategori Daspen", id: "kategoriDaspen" },
+    { field: valueGolonganJabatan, name: "Golongan Jabatan", id: "golonganJabatan" },
+    { field: mengajar, name: "Mengajar", id: "mengajar" },
+  ];
+
+  const emptyFields = requiredFieldsStep2.filter(({ field }) => !field);
+
+  if (emptyFields.length > 0) {
+    // Ambil field pertama yang kosong
+    const firstEmptyField = emptyFields[0];
+
+    // Tampilkan pesan error dengan toast
+    toast.error(`Field ${firstEmptyField.name} wajib diisi!`, {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+
+    // Scroll ke elemen pertama yang kosong
+    const element = document.getElementById(firstEmptyField.id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.focus();
+    }
+
+    return;
+    }
+
+    const formattedTanggalLahir = formatTanggal(tanggalLahir);
+    const formattedMulaiJadiAnggota = formatTanggal(mulaiJadiAnggotaPgri);
+
+    const formData = new FormData();
+    formData.append("email", email);
+    formData.append("password", password);
+    formData.append("npaPgri", npaPgri);
+    formData.append("nip", nip);
+    formData.append("nik", nik);
+    formData.append("namaLengkap", namaLengkap);
+    formData.append("tempatLahir", tempatLahir);
+    formData.append("tanggalLahir", formattedTanggalLahir);
+    formData.append("jenisKelamin", jenisKelamin);
+    formData.append("agama", agama);
+    formData.append("golonganDarah", golonganDarah);
+    formData.append("alamat", alamat);
+    formData.append("latitude", latitude);
+    formData.append("longitude", longitude);
+    formData.append("kodePos", kodePos);
+    formData.append("nomorHp", nomorHp);
+    formData.append("namaSuamiIstri", namaSuamiIstri);
+
+    if (selectedFile) {
+      formData.append("foto", selectedFile);
+    }
+
+    formData.append("cabang", selectedCabang);
+    formData.append("unitKerja", selectedUnitKerja);
+    formData.append("jabatan", valueJabatan);
+    formData.append("tingkatSekolah", tingkatSekolah);
+    formData.append("statusSekolah", statusSekolah);
+    formData.append("statusPegawai", statusPegawai);
+    formData.append("tahunDiangkat", formattedTahunDiangkat);
+    formData.append("pangkatGolongan", pangkatGolongan);
+    formData.append("pendidikanTerakhir", pendidikanTerakhir);
+    formData.append("sertifikatPendidik", sertifikatPendidik);
+    formData.append("mulaiJadiAnggotaPgri", formattedMulaiJadiAnggota);
+    formData.append("golonganJabatan", valueGolonganJabatan);
+    formData.append("kategoriDaspen", valueKategoriDaspen);
+    formData.append("mengajar", mengajar);
+
+    formData.append("pesertaSanduka", pesertaSanduka ? "Ya" : "");
+    formData.append("pesertaDaspen", pesertaDaspen ? "Ya" : "");
+    formData.append("pesertaKtaDigital", pesertaKtaDigital ? "Ya" : "");
+
+    for (let [key, value] of formData.entries()) {
+  console.log(`${key}: ${value}`);
+}
+
+    console.log("Nilai email sebelum submit:", email);
+
+    if (!email) {
+      console.error("Email tidak boleh kosong!");
+      toast.error("Email wajib diisi sebelum melanjutkan.");
+      return;
+    }
+    try {
+      const response = await GlobalApi.updateUserById(id, formData);
+      console.log("Response dari API:", response);
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+               marginTop: "14px"
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "2rem",
+              display: "block",
+              marginBottom: "28px",
+            }}
+          >
+            Data berhasil diperbarui!
+          </h3>
+        </div>,
+       {
+        icon: null,
+        duration: 4000,
+        style: {
+          marginTop: "12%",
+          fontSize: "1.75rem",
+          padding: "10px",
+          width: "80%",
+          maxWidth: "450px",
+          height: "50%",
+          maxHeight: "400px",
+          transform: "translate(-50%, -50%)",
+          textAlign: "center",
+          zIndex: 9999,
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+        },
+      }
+      );
+      sessionStorage.removeItem("anggotaId");
+      setTimeout(() => {
+        router.push("/anggota/data-anggota");
+      }, 4000);
+    } catch (error) {
+      console.error("Gagal mengupdate data:", error);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Terjadi kesalahan saat mengupdate data.
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      }
+  };
+
+  const handleConfirmAndSendData = async () => {
+    try {
+      const userId = sessionStorage.getItem("anggotaId");
+      if (!userId) {
+        toast.error(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                width: "150px",
+                height: "150px",
+                color: "red",
+                marginBottom: "16px",
+              }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+            </svg>
+            <strong
+              style={{
+                fontSize: "1.75rem",
+                display: "block",
+                marginBottom: "8px",
+              }}
+            >
+              User ID tidak ditemukan.
+            </strong>
+          </div>,
+          {
+            icon: null,
+            duration: 4000,
+            style: {
+              marginTop: "12%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "450px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
+        );
+        return;
+      }
+
+      const response = await GlobalApi.updateRegisUser(userId, data);
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "48px",
+              height: "48px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Data berhasil disinkronkan!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      handleClosePopup();
+    } catch (error) {
+      console.error("Error saat mengirim data:", error);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <strong
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Terjadi kesalahan saat mengirim data.
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (cabangRef.current && !cabangRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+      if (unitKerjaRef.current && !unitKerjaRef.current.contains(e.target)) {
+        setShowDropdownUnitKerja(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleBackClick = () => {
+    router.push("/anggota/data-anggota");
+    sessionStorage.removeItem("anggotaId");
+  };
+
+  const handleCloseLocationInfo = () => {
+    setIsLocationInfoOpen(false);
+  };
+
+  const nextStep = () => {
+    const requiredFieldsStep1 = [
+      { field: email, fieldName: "Email", id: "email" },
+      { field: password, fieldName: "Password Login", id: "password" },
+      { field: npaPgri, fieldName: "NPA PGRI", id: "npaPgri" },
+      { field: nip, fieldName: "NIP", id: "nip" },
+      { field: nik, fieldName: "NIK", id: "nik" },
+      { field: namaLengkap, fieldName: "Nama Lengkap", id: "namaLengkap" },
+      { field: tanggalLahir, fieldName: "Tanggal Lahir", id: "tanggalLahir" },
+      { field: jenisKelamin, fieldName: "Jenis Kelamin", id: "jenisKelamin" },
+      { field: agama, fieldName: "Agama", id: "agama" },
+      {
+        field: golonganDarah,
+        fieldName: "Golongan Darah",
+        id: "golonganDarah",
+      },
+      { field: kodePos, fieldName: "Kode Pos", id: "kodePos" },
+      { field: nomorHp, fieldName: "Nomor Handphone", id: "nomorHp" },
+    ];
+
+    const emptyFields = requiredFieldsStep1.filter(({ field }) => !field);
+
+    if (emptyFields.length > 0) {
+      const firstEmptyField = emptyFields[0];
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Harap isi form {firstEmptyField.fieldName}!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      const newErrorFields = {};
+      emptyFields.forEach(({ fieldName }) => {
+        newErrorFields[fieldName] = true;
+      });
+
+      setErrorFields(newErrorFields);
+      const element = document.getElementById(firstEmptyField.id);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.focus();
+      }
+
+      return;
+    }
+
+    if (!latitude || !longitude) {
+      setIsLocationInfoOpen(true);
+    } else {
+      setErrorFields({});
+      setStep(step + 1);
+    }
+  };
+
+  const handleOpenPasswordInfo = () => {
+    setIsPasswordInfoOpen(true);
+    setIsLocationInfoOpen(false);
+  };
+
+  const handleClosePasswordInfo = () => {
+    setIsPasswordInfoOpen(false);
+  };
+
+  const prevStep = () => {
+    setStep(step - 1);
+  };
+
+  const filteredOptions = cabang.filter((item) =>
+    item.kecamatan.toLowerCase().includes(query.toLowerCase())
+  );
+
+  const handleUnitKerjaChange = (item) => {
+    setSelectedUnitKerja(item.unitKerja);
+    setShowDropdownUnitKerja(false);
+  };
+
   const handleCekNip = async () => {
     try {
       const data = await GlobalApi.getByNIP(nip);
@@ -824,25 +904,25 @@ const Page = () => {
             Data NIP tidak ada
           </strong>
         </div>,
-    {
-      icon: null,
-      duration: 4000,
-      style: {
-        marginTop: "12%",
-        fontSize: "1.75rem",
-        padding: "10px",
-        width: "80%",
-        maxWidth: "450px",
-        height: "50%",
-        maxHeight: "400px",
-        transform: "translate(-50%, -50%)",
-        textAlign: "center",
-        zIndex: 9999,
-        backgroundColor: "#fff",
-        borderRadius: "8px",
-        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-      },
-    }
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
       );
     }
   };
@@ -951,7 +1031,7 @@ const Page = () => {
 
       try {
         const response = await GlobalApi.getUserById(id);
-        const data = response.data;
+        const data = response;
 
         if (data.tahunDiangkat) {
           const formattedDate = new Date(data.tahunDiangkat)
@@ -1065,7 +1145,6 @@ const Page = () => {
     setNamaAnak((prevNamaAnak) => {
       const updatedNamaAnak = prevNamaAnak.filter((_, i) => i !== index);
 
-      // Update formData setelah menghapus
       setFormData((prevFormData) => ({
         ...prevFormData,
         namaAnak: updatedNamaAnak,
@@ -1170,8 +1249,9 @@ const Page = () => {
             className="bg-white p-4 sm:p-8 rounded-lg shadow-lg"
           >
             {step === 1 && (
+            
               <div>
-                <div className="w-full flex flex-col items-center">
+                  <div className="w-full flex flex-col items-center">
                   <Image
                     width={150}
                     height={150}
@@ -1215,7 +1295,9 @@ const Page = () => {
                       defaultValue={email}
                       render={({ field: { onChange, value } }) => (
                         <Input
-                          className="border-teal-500"
+                          className={`border-teal-500 ${
+                            errorFields.email ? "border-red-500" : ""
+                          }`}
                           type="email"
                           id="email"
                           placeholder="Email"
@@ -1247,7 +1329,9 @@ const Page = () => {
                       placeholder="contoh: Kat45and!"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="border-teal-500"
+                      className={`border-teal-500 ${
+                        errorFields.email ? "border-red-500" : ""
+                      }`}
                     />
 
                     {isPasswordInfoOpen && (
@@ -1290,7 +1374,9 @@ const Page = () => {
                       value={npaPgri}
                       onChange={(e) => setNpaPgri(e.target.value)}
                       maxLength={11}
-                      className={`border-teal-500 ${errorFields.npaPgri ? "border-red-500" : ""}`}
+                      className={`border-teal-500 ${
+                        errorFields.npaPgri ? "border-red-500" : ""
+                      }`}
                     />
                   </div>
 
@@ -1307,8 +1393,9 @@ const Page = () => {
                       placeholder="Nomor Induk Pendidik (NIP)"
                       value={nip}
                       onChange={(e) => setNip(e.target.value)}
-                      className={`border-teal-500 ${errorFields.nip ? "border-red-500" : ""}`}
-
+                      className={`border-teal-500 ${
+                        errorFields.nip ? "border-red-500" : ""
+                      }`}
                     />
                     <Button
                       type="button"
@@ -1352,7 +1439,7 @@ const Page = () => {
                               Belum
                             </Button>
                             <Button
-                              type="submit"
+                              type="button"
                               onClick={handleConfirmAndSendData}
                               className="p-2 w-16 bg-teal-500 text-white rounded hover:bg-teal-600"
                             >
@@ -1379,8 +1466,9 @@ const Page = () => {
                       placeholder="16 Digit"
                       value={nik}
                       onChange={(e) => setNik(e.target.value)}
-                      className={`border-teal-500 ${errorFields.nik ? "border-red-500" : ""}`}
-
+                      className={`border-teal-500 ${
+                        errorFields.nik ? "border-red-500" : ""
+                      }`}
                     />
                   </div>
                   <div className="w-full">
@@ -1396,8 +1484,9 @@ const Page = () => {
                       placeholder="Sesuai Dengan KTP"
                       value={namaLengkap}
                       onChange={(e) => setNamaLengkap(e.target.value)}
-                      className={`border-teal-500 ${errorFields.namaLengkap ? "border-red-500" : ""}`}
-
+                      className={`border-teal-500 ${
+                        errorFields.namaLengkap ? "border-red-500" : ""
+                      }`}
                     />
                   </div>
                 </div>
@@ -1413,8 +1502,9 @@ const Page = () => {
                       placeholder="Tempat Kelahiran"
                       value={tempatLahir}
                       onChange={(e) => setTempatLahir(e.target.value)}
-                      className={`border-teal-500 ${errorFields.tempatLahir ? "border-red-500" : ""}`}
-
+                      className={`border-teal-500 ${
+                        errorFields.tempatLahir ? "border-red-500" : ""
+                      }`}
                     />
                   </div>
 
@@ -1428,8 +1518,11 @@ const Page = () => {
                       defaultValue={formattedTanggalLahir}
                       render={({ field: { onChange, value } }) => (
                         <Input
-                        className={`border-teal-500 ${errorFields.formattedTanggalLahir ? "border-red-500" : ""}`}
-
+                          className={`border-teal-500 ${
+                            errorFields.formattedTanggalLahir
+                              ? "border-red-500"
+                              : ""
+                          }`}
                           type="date"
                           id="tanggalLahir"
                           value={value || formattedTanggalLahir}
@@ -1461,7 +1554,10 @@ const Page = () => {
                             setJenisKelamin(e);
                           }}
                         >
-                          <SelectTrigger   className={`border-teal-500 ${errorFields.jenisKelamin ? "border-red-500" : ""}`}
+                          <SelectTrigger
+                            className={`border-teal-500 ${
+                              errorFields.jenisKelamin ? "border-red-500" : ""
+                            }`}
                           >
                             <SelectValue placeholder="Pilih Jenis Kelamin" />
                           </SelectTrigger>
@@ -1495,7 +1591,10 @@ const Page = () => {
                             setAgama(e);
                           }}
                         >
-                          <SelectTrigger   className={`border-teal-500 ${errorFields.agama ? "border-red-500" : ""}`}
+                          <SelectTrigger
+                            className={`border-teal-500 ${
+                              errorFields.agama ? "border-red-500" : ""
+                            }`}
                           >
                             <SelectValue placeholder="Pilih Agama" />
                           </SelectTrigger>
@@ -1533,7 +1632,10 @@ const Page = () => {
                             setGolonganDarah(e);
                           }}
                         >
-                          <SelectTrigger   className={`border-teal-500 ${errorFields.golonganDarah ? "border-red-500" : ""}`}
+                          <SelectTrigger
+                            className={`border-teal-500 ${
+                              errorFields.golonganDarah ? "border-red-500" : ""
+                            }`}
                           >
                             <SelectValue placeholder="Pilih Golongan Darah" />
                           </SelectTrigger>
@@ -1565,8 +1667,9 @@ const Page = () => {
                             placeholder="JL. RT.  RW.  Desa, Kecamatan, Kabupaten"
                             value={alamat}
                             onChange={(e) => setAlamat(e.target.value)}
-                            className={`border-teal-500 ${errorFields.alamat ? "border-red-500" : ""}`}
-
+                            className={`border-teal-500 ${
+                              errorFields.alamat ? "border-red-500" : ""
+                            }`}
                           />
                         )}
                       />
@@ -1606,7 +1709,8 @@ const Page = () => {
                       placeholder="Tuliskan Kode Pos"
                       value={kodePos}
                       onChange={(e) => setKodePos(e.target.value)}
-                      className={`border-teal-500 ${errorFields.kodePos ? "border-red-500" : ""}`}/>
+                      className="border-teal-500"
+                    />
                   </div>
                   <div className="w-full">
                     <Label className="block text-sm font-medium mb-3 sm:flex  sm:items-center">
@@ -1621,7 +1725,10 @@ const Page = () => {
                       placeholder="Nomor Handphone Aktif"
                       value={nomorHp}
                       onChange={(e) => setNomorHp(e.target.value)}
-                      className={`border-teal-500 ${errorFields.nomorHp ? "border-red-500" : ""}`}/>
+                      className={`border-teal-500 ${
+                        errorFields.nomorHp ? "border-red-500" : ""
+                      }`}
+                    />
                   </div>
                 </div>
 
@@ -1636,7 +1743,10 @@ const Page = () => {
                       placeholder=" Nama Suami/Istri"
                       value={namaSuamiIstri}
                       onChange={(e) => setNamaSuamiIstri(e.target.value)}
-                      className={`border-teal-500 ${errorFields.namaSuamiIstri ? "border-red-500" : ""}`} />
+                      className={`border-teal-500 ${
+                        errorFields.namaSuamiIstri ? "border-red-500" : ""
+                      }`}
+                    />
                   </div>
                   <div className="w-full">
                     {Array.isArray(namaAnak) &&
@@ -1647,11 +1757,13 @@ const Page = () => {
                               Nama Anak {index + 1}
                             </Label>
                             <Input
-                              className={`block w-full text-sm p-2 mt-2 mb-2 border-teal-500 ${errorFields.kodePos ? "border-red-500" : ""} rounded`}
+                              className={`block w-full text-sm p-2 mt-2 mb-2 border-teal-500 ${
+                                errorFields.kodePos ? "border-red-500" : ""
+                              } rounded`}
                               type="text"
                               name={`namaAnak-${index}`}
                               placeholder={`Tuliskan Nama Anak ${index + 1}`}
-                              value={name || ""} // Pastikan value tidak undefined
+                              value={name || ""} 
                               onChange={(e) => handleChange(index, e)}
                             />
                           </div>
@@ -1693,7 +1805,7 @@ const Page = () => {
                   >
                     Kembali
                   </Button>
-                  <Button onClick={nextStep}>Next</Button>
+                  <Button type="button" onClick={nextStep}>Next</Button>
                 </div>
 
                 {isLocationInfoOpen && (
@@ -1714,9 +1826,10 @@ const Page = () => {
                     </div>
                   </div>
                 )}
-              </div>
+                </div>
             )}
             {step === 2 && (
+            
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white rounded-lg shadow-lg">
                 <div className="w-full" ref={cabangRef}>
                   <Label className="block text-sm font-medium mb-3">
@@ -1733,7 +1846,9 @@ const Page = () => {
                       <div className="relative">
                         <Input
                           type="text"
-                          className={`border-teal-500 ${errorFields.cabang ? "border-red-500" : ""} rounded-lg p-2 w-56 bg-white shadow-sm w-full`}
+                          className={`border-teal-500 ${
+                            errorFields.cabang ? "border-red-500" : ""
+                          } rounded-lg p-2 w-56 bg-white shadow-sm w-full`}
                           placeholder="Pilih Cabang"
                           value={selectedCabang || ""}
                           readOnly
@@ -1798,7 +1913,9 @@ const Page = () => {
                       <div className="relative">
                         <Input
                           type="text"
-                          className={`border-teal-500 rounded-lg p-2 bg-white shadow-sm w-full ${errorFields.unitKerja ? "border-red-500" : ""}`}
+                          className={`border-teal-500 rounded-lg p-2 bg-white shadow-sm w-full ${
+                            errorFields.unitKerja ? "border-red-500" : ""
+                          }`}
                           placeholder="Pilih Unit Kerja"
                           value={selectedUnitKerja || ""}
                           readOnly
@@ -1873,11 +1990,15 @@ const Page = () => {
                         value={value}
                         onValueChange={(e) => {
                           onChange(e);
-                          setValue(e); // Menyinkronkan state lokal
-                          setValueJabatan(e); // Menyinkronkan state lokal
+                          setValue(e); 
+                          setValueJabatan(e); 
                         }}
                       >
-                        <SelectTrigger className={`border-teal-500 ${errorFields.jabatan ? "border-red-500" : ""}`}>
+                        <SelectTrigger
+                          className={`border-teal-500 ${
+                            errorFields.jabatan ? "border-red-500" : ""
+                          }`}
+                        >
                           <SelectValue placeholder="Pilih Jabatan" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1911,7 +2032,11 @@ const Page = () => {
                           setTingkatSekolah(e);
                         }}
                       >
-                        <SelectTrigger className={`border-teal-500 ${errorFields.tingkatSekolah ? "border-red-500" : ""}`}>
+                        <SelectTrigger
+                          className={`border-teal-500 ${
+                            errorFields.tingkatSekolah ? "border-red-500" : ""
+                          }`}
+                        >
                           <SelectValue placeholder="Pilih Jenjang Sekolah" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1952,7 +2077,11 @@ const Page = () => {
                           setStatusSekolah(e);
                         }}
                       >
-                        <SelectTrigger className={`border-teal-500 ${errorFields.statusSekolah ? "border-red-500" : ""}`}>
+                        <SelectTrigger
+                          className={`border-teal-500 ${
+                            errorFields.statusSekolah ? "border-red-500" : ""
+                          }`}
+                        >
                           <SelectValue placeholder="Pilih Status Sekolah" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1981,7 +2110,11 @@ const Page = () => {
                           setStatusPegawai(e);
                         }}
                       >
-                        <SelectTrigger className={`border-teal-500 ${errorFields.statusPegawai ? "border-red-500" : ""}`}>
+                        <SelectTrigger
+                          className={`border-teal-500 ${
+                            errorFields.statusPegawai ? "border-red-500" : ""
+                          }`}
+                        >
                           <SelectValue placeholder="Pilih Status Pegawai" />
                         </SelectTrigger>
                         <SelectContent>
@@ -2004,13 +2137,15 @@ const Page = () => {
                   <Controller
                     name="tahunDiangkat"
                     control={control}
-                    defaultValue={formattedTahunDiangkat}
+                    defaultValue={formattedTahunDiangkat || ""}
                     render={({ field: { onChange, value } }) => (
                       <Input
-                      className={`border-teal-500 ${errorFields.tahunDiangkat ? "border-red-500" : ""}`}
+                        className={`border-teal-500 ${
+                          errorFields.tahunDiangkat ? "border-red-500" : ""
+                        }`}
                         type="date"
                         id="tahunDiangkat"
-                        value={value || tahunDiangkat}
+                        value={value || tahunDiangkat || ""}
                         onChange={(e) => {
                           const selectedDate = e.target.value;
                           setTahunDiangkat(selectedDate);
@@ -2037,7 +2172,11 @@ const Page = () => {
                           setPangkatGolongan(e);
                         }}
                       >
-                        <SelectTrigger className={`border-teal-500 ${errorFields.pangkatGolongan ? "border-red-500" : ""}`}>
+                        <SelectTrigger
+                          className={`border-teal-500 ${
+                            errorFields.pangkatGolongan ? "border-red-500" : ""
+                          }`}
+                        >
                           <SelectValue placeholder="Pilih Golongan" />
                         </SelectTrigger>
                         <SelectContent>
@@ -2071,7 +2210,13 @@ const Page = () => {
                           setPendidikanTerakhir(e);
                         }}
                       >
-                        <SelectTrigger className={`border-teal-500 ${errorFields.pendidikanTerakhir ? "border-red-500" : ""}`}>
+                        <SelectTrigger
+                          className={`border-teal-500 ${
+                            errorFields.pendidikanTerakhir
+                              ? "border-red-500"
+                              : ""
+                          }`}
+                        >
                           <SelectValue placeholder="Pilih Pendidikan" />
                         </SelectTrigger>
                         <SelectContent>
@@ -2103,7 +2248,13 @@ const Page = () => {
                           setSertifikatPendidik(e);
                         }}
                       >
-                        <SelectTrigger className={`border-teal-500 ${errorFields.sertifikatPendidik ? "border-red-500" : ""}`}>
+                        <SelectTrigger
+                          className={`border-teal-500 ${
+                            errorFields.sertifikatPendidik
+                              ? "border-red-500"
+                              : ""
+                          }`}
+                        >
                           <SelectValue placeholder="Sertifikat" />
                         </SelectTrigger>
                         <SelectContent>
@@ -2127,7 +2278,11 @@ const Page = () => {
                     defaultValue={formattedMulaiJadiAnggota}
                     render={({ field: { onChange, value } }) => (
                       <Input
-                      className={`border-teal-500 ${errorFields.mulaiJadiAnggotaPgri ? "border-red-500" : ""}`}
+                        className={`border-teal-500 ${
+                          errorFields.mulaiJadiAnggotaPgri
+                            ? "border-red-500"
+                            : ""
+                        }`}
                         type="date"
                         id="mulaiJadiAnggotaPgri"
                         value={value || formattedMulaiJadiAnggota}
@@ -2159,7 +2314,11 @@ const Page = () => {
                             setValueKategoriDaspen(e);
                           }}
                         >
-                          <SelectTrigger className={`border-teal-500 ${errorFields.kategoriDaspen ? "border-red-500" : ""}`}>
+                          <SelectTrigger
+                            className={`border-teal-500 ${
+                              errorFields.kategoriDaspen ? "border-red-500" : ""
+                            }`}
+                          >
                             <SelectValue placeholder="Pilih Kategori Daspen" />
                           </SelectTrigger>
                           <SelectContent>
@@ -2190,7 +2349,13 @@ const Page = () => {
                           setValueGolonganJabatan(e);
                         }}
                       >
-                        <SelectTrigger className={`border-teal-500 ${errorFields.valueGolonganJabatan ? "border-red-500" : ""}`}>
+                        <SelectTrigger
+                          className={`border-teal-500 ${
+                            errorFields.valueGolonganJabatan
+                              ? "border-red-500"
+                              : ""
+                          }`}
+                        >
                           <SelectValue placeholder="Pilih Golongan Jabatan" />
                         </SelectTrigger>
                         <SelectContent>
@@ -2219,7 +2384,9 @@ const Page = () => {
                     defaultValue={mengajar}
                     render={({ field: { onChange, value } }) => (
                       <Input
-                      className={`border-teal-500 ${errorFields.mengajar ? "border-red-500" : ""}`}
+                        className={`border-teal-500 ${
+                          errorFields.mengajar ? "border-red-500" : ""
+                        }`}
                         type="text"
                         id="mengajar"
                         placeholder="Mengajar"
@@ -2306,7 +2473,7 @@ const Page = () => {
                 </div>
               </div>
             )}
-          </form>
+            </form>
         </div>
       </div>
     </div>

@@ -33,6 +33,7 @@ const Page = () => {
   const startNumber = (currentPage - 1) * itemsPerPage;
   const [statusSegeraCount, setStatusSegeraCount] = useState(0);
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [searchText, setSearchText] = useState("");
 
   const handleStatusChange = (event) => {
     const status = event.target.value;
@@ -53,20 +54,12 @@ const Page = () => {
     setFilteredPensiunList(filteredItems);
   };
 
-  const handleFiltersChange = (event) => {
-    const { name, value } = event.target;
-
-    if (name === "status") {
-      setSelectedStatus(value);
-    } else if (name === "year") {
-      setSelectedYear(value);
-    }
-
+  const handleFiltersChange = (newStatus) => {
     const filteredItems = pensiunList.filter((pensiun) => {
       const statusFilter =
-        value === "Pensiun"
+        newStatus === "Pensiun"
           ? pensiun.keterangan === "Pensiun"
-          : value === "Segera"
+          : newStatus === "Segera"
           ? pensiun.keterangan === null && pensiun.status === "Segera"
           : true;
 
@@ -78,6 +71,12 @@ const Page = () => {
     });
 
     setFilteredPensiunList(filteredItems);
+  };
+
+  const toggleStatus = () => {
+    const newStatus = selectedStatus === "Segera" ? "" : "Segera";
+    setSelectedStatus(newStatus);
+    handleFiltersChange(newStatus);
   };
 
   useEffect(() => {
@@ -235,8 +234,20 @@ const Page = () => {
     return visiblePages;
   };
 
+  const handleSearchChange = (event) => {
+    const value = event.target.value.toLowerCase();
+    setSearchText(value);
+
+    const filtered = pensiunList.filter((item) =>
+      Object.values(item).some((val) =>
+        val ? val.toString().toLowerCase().includes(value) : false
+      )
+    );
+    setFilteredPensiunList(filtered);
+  };
+
   const formatDate = (dateString) => {
-    const options = { day: "numeric", month: "long", year: "numeric" };
+    const options = { day: "2-digit", month: "2-digit", year: "numeric" };
     const date = new Date(dateString);
     return date.toLocaleDateString("id-ID", options);
   };
@@ -579,63 +590,66 @@ const Page = () => {
           }`}
         >
           <div className="min-h-screen bg-gray-100 p-4">
-          <div className="w-full flex flex-wrap items-center justify-between mb-4 mt-16 gap-4">
-  <div className="flex flex-wrap w-full gap-4 md:w-auto">
-    <select
-      value={selectedMonth}
-      onChange={handleMonthChange}
-      className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
-    >
-      <option value="">Pilih Bulan</option>
-      {bulanOptions.map((bulan) => (
-        <option key={bulan.id} value={bulan.angkaBulan}>
-          {bulan.namaBulan}
-        </option>
-      ))}
-    </select>
+            <div className="w-full flex flex-wrap items-center justify-between mb-4 mt-16 gap-4">
+              <div className="flex flex-wrap w-full gap-4 md:w-auto">
+                <select
+                  value={selectedMonth}
+                  onChange={handleMonthChange}
+                  className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
+                >
+                  <option value="">Pilih Bulan</option>
+                  {bulanOptions.map((bulan) => (
+                    <option key={bulan.id} value={bulan.angkaBulan}>
+                      {bulan.namaBulan}
+                    </option>
+                  ))}
+                </select>
 
-    <select
-      name="year"
-      value={selectedYear}
-      onChange={(e) => {
-        const selectedYear = e.target.value;
-        setSelectedYear(selectedYear);
-        applyFilters(selectedMonth, selectedYear);
-      }}
-      className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
-    >
-      <option value="">Pilih Tahun</option>
-      {yearOptions.map((year) => (
-        <option key={year} value={year}>
-          {year}
-        </option>
-      ))}
-    </select>
+                <select
+                  name="year"
+                  value={selectedYear}
+                  onChange={(e) => {
+                    const selectedYear = e.target.value;
+                    setSelectedYear(selectedYear);
+                    applyFilters(selectedMonth, selectedYear);
+                  }}
+                  className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
+                >
+                  <option value="">Pilih Tahun</option>
+                  {yearOptions.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
 
-    <select
-      name="status"
-      value={selectedStatus}
-      onChange={handleFiltersChange}
-      className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
-    >
-      <option value="">Pilih Status</option>
-      <option value="Segera">Segera</option>
-    </select>
-  </div>
+                <input
+                  type="text"
+                  placeholder="Cari ..."
+                  value={searchText}
+                  onChange={handleSearchChange}
+                  className="p-2 border rounded w-full md:w-1/3"
+                />
+              </div>
 
-  {/* Bagian tombol */}
-  <div className="w-full flex justify-center gap-2 md:w-auto">
-    <button
-      className="p-2 px-4 bg-green-500 text-white rounded w-full sm:w-auto transition duration-300 hover:bg-green-700"
-      onClick={handleExportExcel}
-    >
-      Excel
-    </button>
-    <button className="p-2 px-4 bg-blue-500 text-white rounded w-full sm:w-auto transition duration-300 hover:bg-blue-700">
-      Cetak
-    </button>
-  </div>
-</div>
+              <div className="w-full flex justify-center gap-2 md:w-auto">
+                <button
+                  onClick={toggleStatus}
+                  className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
+                >
+                  {selectedStatus === "Segera" ? "Aktif" : "Segera"}
+                </button>
+                <button
+                  className="p-2 px-4 bg-green-500 text-white rounded w-full sm:w-auto transition duration-300 hover:bg-green-700"
+                  onClick={handleExportExcel}
+                >
+                  Excel
+                </button>
+                <button className="p-2 px-4 bg-blue-500 text-white rounded w-full sm:w-auto transition duration-300 hover:bg-blue-700">
+                  Cetak
+                </button>
+              </div>
+            </div>
 
             <div className="bg-white p-4 rounded-lg shadow-md">
               <div className="flex justify-between mb-4">
@@ -658,9 +672,7 @@ const Page = () => {
                       <th className="py-2 px-3 text-center hidden lg:table-cell">
                         Cabang
                       </th>
-                      <th className="py-2 px-3 text-center">
-                        Status
-                      </th>
+                      <th className="py-2 px-3 text-center">Status</th>
                       <th className="py-2 px-3 text-center hidden lg:table-cell">
                         Aksi
                       </th>
@@ -698,8 +710,10 @@ const Page = () => {
                             <td className="py-2 px-3 text-center">
                               <div>{pensiun.namaLengkap}</div>
                               <div>{pensiun.npa}</div>
-                              <div>{pensiun.tempatLahir}</div>
-                              <div>{formatDate(pensiun.tanggalLahir)}</div>
+                              <div>
+                                {pensiun.tempatLahir},{" "}
+                                {formatDate(pensiun.tanggalLahir)}
+                              </div>
                             </td>
                             <td className="py-2 px-3 text-center hidden lg:table-cell">
                               <div>{pensiun.jabatan}</div>
