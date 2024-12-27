@@ -4,8 +4,8 @@ import { ReceiptEuro } from "lucide-react";
 const axiosClient = axios.create({
   baseURL: "http://localhost:8080",
   headers: {
-    "Accept": "application/json",
-    "Content-Type": "application/json"
+    Accept: "application/json",
+    "Content-Type": "application/json",
   },
 });
 
@@ -89,7 +89,6 @@ const loginAdmin = async (npaPgri, password) => {
       }
     );
 
-    console.log("Response login:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error saat login:", error);
@@ -276,6 +275,7 @@ const verifyUser = async (userId) => {
     }
   }
 };
+
 const RejectUser = async (userId) => {
   try {
     const response = await axiosClient.delete(`/api/auth/user/${userId}`);
@@ -1037,17 +1037,17 @@ const getNamaKwitansi = async (year, month) => {
 const generateKwitansi = async (data) => {
   try {
     const response = await axiosClient.post(`/api/kwitansi/generate`, data, {
-        headers: {
-            'Content-Type': 'application/json'
-        }
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
 
     return response.data;
-} catch (error) {
-    console.error('Error generating kwitansi:', error);
+  } catch (error) {
+    console.error("Error generating kwitansi:", error);
     throw error;
-}
-}
+  }
+};
 // Create Kwitansi
 const createKwitansiByIdAndNpa = async (id, npaPgri, formData) => {
   try {
@@ -1081,7 +1081,6 @@ const getKwitansiByIdAndNpa = async (id, npaPgri) => {
     throw error;
   }
 };
-
 
 // (Laporan Pemasukan Tahunan)
 const getLaporanPemasukanTahunan = async (tahun) => {
@@ -1319,6 +1318,129 @@ const deleteFiles = async (id) => {
   }
 };
 
+const getRantingSummary = async (
+  page = 0,
+  size = 10,
+  cabang = "",
+  unitKerja = "",
+  namaRanting = ""
+) => {
+  try {
+    const params = {
+      page,
+      size,
+      ...(cabang && { cabang: encodeURIComponent(cabang) }),
+      ...(unitKerja && { unitKerja: unitKerja }),
+      ...(namaRanting && { namaRanting: encodeURIComponent(namaRanting) }),
+    };
+
+    const response = await axiosClient.get("/api/ranting", { params });
+
+    return {
+      content: Array.isArray(response.data.content)
+        ? response.data.content.map((data) => ({
+            cabang: data.cabang,
+            namaRanting: data.namaRanting,
+            lokasi: data.unitKerja,
+            namaAnggota: processNamaAnggota(data.namaAnggota),
+            totalAnggota: data.jumlahAnggotaRanting,
+            totalKegiatan: data.totalAnggotaCabang,
+          }))
+        : [],
+      totalElements: response.data.totalElements,
+      totalPages: response.data.totalPages,
+      number: response.data.number,
+      size: response.data.size,
+      first: response.data.first,
+      last: response.data.last,
+    };
+  } catch (error) {
+    console.error("Error fetching ranting summary:", error);
+    throw error;
+  }
+};
+
+const processNamaAnggota = (namaAnggotaArray) => {
+  if (!namaAnggotaArray || !Array.isArray(namaAnggotaArray)) return "";
+
+  const filteredArray = namaAnggotaArray.filter((nama) => nama && nama.trim());
+
+  if (filteredArray.length === 0) return "";
+
+  const processedNames = filteredArray.map((nama) => {
+    const namaParts = nama.trim().split(/\s+/);
+    let processedNama = [];
+    let currentPart = "";
+
+    namaParts.forEach((part) => {
+      if (
+        part.match(
+          /.*(S\.Pd\.I|M\.Pd\.I|S\.Ag|M\.Pd|S\.Pd|S\.PDi|S\.M\.|M\.Pd\.I|S\.Si|S\.Sos|S\.Kom|S\.Ak|S\.Or|S\.Fil\.I|S\.Ps\.I|M\.Kom|A\.Md|Gr|SPd\.SD|S\.Ps|S\.Pust).*/i
+        )
+      ) {
+        currentPart = currentPart ? `${currentPart} ${part}` : part;
+        processedNama.push(currentPart);
+        currentPart = "";
+      } else {
+        currentPart = currentPart ? `${currentPart} ${part}` : part;
+      }
+    });
+
+    if (currentPart) {
+      processedNama.push(currentPart);
+    }
+
+    return processedNama.join(" ");
+  });
+
+  return processedNames.join("\n");
+};
+
+const createRanting = async (rantingData) => {
+  try {
+    const response = await axiosClient.post("/api/ranting", rantingData, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error creating ranting:", error);
+    throw error;
+  }
+};
+
+const getGroupedNamaRantingWithCabang = async (page = 0, size = 10) => {
+  try {
+    const params = {
+      page,
+      size,
+    };
+    const response = await axiosClient.get(
+      "/api/ranting/grouped-nama-ranting",
+      { params }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching grouped ranting:", error);
+    throw error;
+  }
+};
+
+const deleteRanting = async (namaRanting) => {
+  try {
+    const response = await axiosClient.delete(
+      `/api/ranting/deleteByNamaRanting?namaRanting=${encodeURIComponent(
+        namaRanting
+      )}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching files data: ", error);
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1419,4 +1541,8 @@ export default {
   getNamaKwitansi,
   deleteFiles,
   getJumlahDataUpload,
+  getRantingSummary,
+  createRanting,
+  getGroupedNamaRantingWithCabang,
+  deleteRanting,
 };

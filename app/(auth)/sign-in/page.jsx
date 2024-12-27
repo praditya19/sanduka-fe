@@ -263,11 +263,6 @@ function SignIn() {
         throw new Error("NPA PGRI dan Password tidak boleh kosong.");
       }
 
-      console.log("Payload untuk login:", {
-        npaPgri: npaPgriValue,
-        password: passwordValue,
-      });
-
       const response = await GlobalApi.loginAdmin(npaPgriValue, passwordValue);
       setToken(response.token);
       sessionStorage.setItem("nama", response.namaLengkap);

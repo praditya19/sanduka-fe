@@ -131,7 +131,7 @@ const Page = () => {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
-               marginTop: "14px"
+              marginTop: "14px",
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
@@ -270,7 +270,7 @@ const Page = () => {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
-               marginTop: "14px"
+              marginTop: "14px",
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
@@ -332,11 +332,7 @@ const Page = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
       <Toaster />
-      {isMobile ? (
-       <HeaderMobile />
-      ) : (
-        <HeaderMenu />
-      )}
+      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
@@ -346,31 +342,24 @@ const Page = () => {
           }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-          <nav className="ml-6 mt-12">
+            <nav className="ml-6 mt-12">
               <ul className="flex flex-wrap space-x-4 md:space-x-6">
-                <li>
-                  <Link 
-                    href="/pengaturan/user"
-                    className="text-gray-700 hover:text-teal-600"
-                  >
-                    User
-
-                  </Link>
-                </li>
+                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                  <li>
+                    <Link
+                      href="/pengaturan/user"
+                      className="text-gray-700 hover:text-teal-600"
+                    >
+                      User
+                    </Link>
+                  </li>
+                )}
                 <li>
                   <Link
                     href="/pengaturan/unit-kerja"
                     className="text-gray-700 hover:text-teal-600"
                   >
                     Unit Kerja
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/pengaturan/tambah"
-                    className="text-gray-700 hover:text-teal-600"
-                  >
-                     Tambah Cabang
                   </Link>
                 </li>
               </ul>

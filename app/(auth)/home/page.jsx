@@ -24,9 +24,10 @@ import {
   faChevronRight,
   faExchangeAlt,
   faRightLeft,
-  faLocation, 
-  faCancel, 
-  faCheck, 
+  faLocation,
+  faCancel,
+  faCheck,
+  faSitemap,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
@@ -130,6 +131,12 @@ export default function IconGrid() {
       color: "text-purple-500",
     },
     {
+      icon: faSitemap,
+      label: "Data Ranting",
+      href: "/ranting",
+      color: "text-blue-500",
+    },
+    {
       icon: faCog,
       label: "Pengaturan",
       href: "/pengaturan/user",
@@ -231,7 +238,9 @@ export default function IconGrid() {
 
   const formatDate = (dateArray) => {
     if (Array.isArray(dateArray) && dateArray.length === 3) {
-      return `${String(dateArray[2]).padStart(2, "0")}-${String(dateArray[1]).padStart(2, "0")}-${dateArray[0]}`;
+      return `${String(dateArray[2]).padStart(2, "0")}-${String(
+        dateArray[1]
+      ).padStart(2, "0")}-${dateArray[0]}`;
     }
     return "Tanggal tidak valid";
   };
@@ -328,28 +337,28 @@ export default function IconGrid() {
   const filteredIcons =
     role === "USER"
       ? icons
-        .filter((item) =>
-          [
-            "Lapor",
-            "Teman Unit",
-            "Ketentuan",
-            "Bantuan",
-            "Data Anggota",
-            "History data",
-          ].includes(item.label)
-        )
-        .concat({
-          icon: faRightLeft,
-          label: "Mutasi",
-          href: "/anggota/data-anggota/mutasiCabangUnit",
-          color: "text-cyan-500",
-        })
-        .concat({
-          icon: faFileAlt,
-          label: "Daspen",
-          href: "/daspen",
-          color: "text-teal-700",
-        })
+          .filter((item) =>
+            [
+              "Lapor",
+              "Teman Unit",
+              "Ketentuan",
+              "Bantuan",
+              "Data Anggota",
+              "History data",
+            ].includes(item.label)
+          )
+          .concat({
+            icon: faRightLeft,
+            label: "Mutasi",
+            href: "/anggota/data-anggota/mutasiCabangUnit",
+            color: "text-cyan-500",
+          })
+          .concat({
+            icon: faFileAlt,
+            label: "Daspen",
+            href: "/daspen",
+            color: "text-teal-700",
+          })
       : icons;
 
   return (
@@ -359,8 +368,9 @@ export default function IconGrid() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="flex-1 mt-[3.1%]">
             <img
@@ -579,8 +589,9 @@ export default function IconGrid() {
         </div>
 
         <div
-          className={` flex flex-col items-center my-4 ${isSidebarOpen ? "ml-32" : "ml-0"
-            }`}
+          className={` flex flex-col items-center my-4 ${
+            isSidebarOpen ? "ml-32" : "ml-0"
+          }`}
         >
           <hr className="mt-2 border-gray-300 w-full" />
           <h5 className="text-lg sm:text-xl font-semibold text-gray-800 mt-4 text-center">
@@ -589,8 +600,9 @@ export default function IconGrid() {
         </div>
 
         <div
-          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${isSidebarOpen ? "ml-32" : "ml-0"
-            }`}
+          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${
+            isSidebarOpen ? "ml-32" : "ml-0"
+          }`}
         >
           <button
             onClick={handlePrev}
@@ -627,7 +639,8 @@ export default function IconGrid() {
                   <div className="text-center text-gray-700 mb-2 space-y-0.5">
                     <p className="text-xs">{currentData.npaPgri || "N/A"}</p>
                     <p className="text-xs">
-                      {currentData.tempatLahir}, {formatDate(currentData.tanggalLahir)}
+                      {currentData.tempatLahir},{" "}
+                      {formatDate(currentData.tanggalLahir)}
                     </p>
                     <p className="text-xs">{currentData.jabatan}</p>
                     <p className="text-xs">{currentData.unitKerja}</p>
@@ -643,7 +656,8 @@ export default function IconGrid() {
                   {/* Action Buttons */}
                   <div className="flex justify-around mb-2 gap-1">
                     <button className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-0.5 px-2 rounded-full transition duration-300">
-                      <FontAwesomeIcon icon={faLocation} className="mr-1" /> Lokasi
+                      <FontAwesomeIcon icon={faLocation} className="mr-1" />{" "}
+                      Lokasi
                     </button>
                     {/* <button
                       className={`${["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
@@ -671,10 +685,12 @@ export default function IconGrid() {
 
                   {/* Reporter Section */}
                   <div className="bg-blue-700 text-white text-xs font-medium py-1 px-3 rounded-full text-center flex items-center justify-center mb-2">
-                    <FontAwesomeIcon icon={faBullhorn} className="mr-1" /> PELAPOR
+                    <FontAwesomeIcon icon={faBullhorn} className="mr-1" />{" "}
+                    PELAPOR
                   </div>
                   <p className="text-center text-gray-600 mt-1 text-xs">
-                    {formatDate(currentData.tanggalPelaporan)}, {currentData.jamLapor}
+                    {formatDate(currentData.tanggalPelaporan)},{" "}
+                    {currentData.jamLapor}
                   </p>
                   <p className="text-center text-gray-600 text-xs">
                     {currentData.namaPelapor || "N/A"}

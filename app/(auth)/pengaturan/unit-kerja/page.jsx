@@ -114,7 +114,7 @@ const AddUnitForm = () => {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
-               marginTop: "14px"
+              marginTop: "14px",
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
@@ -220,14 +220,6 @@ const AddUnitForm = () => {
                     className="text-gray-700 hover:text-teal-600"
                   >
                     Unit Kerja
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/pengaturan/tambah"
-                    className="text-gray-700 hover:text-teal-600"
-                  >
-                    Tambah Cabang
                   </Link>
                 </li>
               </ul>

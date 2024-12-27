@@ -5,10 +5,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheckCircle,
-  faSearch,
   faTimesCircle,
   faUser,
-  faUndo,
   faPlusCircle,
   faMinusCircle,
 } from "@fortawesome/free-solid-svg-icons";
@@ -330,15 +328,10 @@ const VerifikasiAnggotaMutasi = () => {
   const fetchUnitKerja = async () => {
     try {
       const response = await GlobalApi.getUnitKerja();
-      console.log("Unit Kerja from API:", response.data);
       setUnitKerja(response.data);
     } catch (error) {
       console.error("Error fetching unit kerja:", error);
     }
-  };
-
-  const handleNamaChange = (e) => {
-    setNama(e.target.value);
   };
 
   useEffect(() => {
@@ -348,7 +341,15 @@ const VerifikasiAnggotaMutasi = () => {
       setLoading(false);
       fetchData();
       fetchUnitKerja();
-      fetchDataAnggota(currentPage, pageSize);
+
+      const role = sessionStorage.getItem("role");
+      const cabang = sessionStorage.getItem("cabang");
+
+      if (role === "ADMIN" && cabang) {
+        fetchDataAnggota(currentPage, pageSize, cabang, "", "");
+      } else {
+        fetchDataAnggota(currentPage, pageSize);
+      }
 
       const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
       setIsSidebarOpen(sidebarState);
@@ -392,37 +393,44 @@ const VerifikasiAnggotaMutasi = () => {
       (item) => item.cabang === kecamatan
     );
     setFilteredUnitKerja(filteredUnitKerja);
+    console.log(filteredUnitKerja);
+  };
+
+  const handleUnitKerjaChange = (value) => {
+    setSelectedUnitKerja(value);
+    fetchDataAnggota(0, pageSize, selectedCabang, value, nama);
   };
 
   const handleCabangChange = (value) => {
     const selectedKecamatan = value;
     setSelectedCabang(selectedKecamatan);
     updateUnitKerja(selectedKecamatan);
+    fetchDataAnggota(0, pageSize, selectedKecamatan, "", "");
   };
 
-  const handleUnitKerjaChange = (value) => {
-    setSelectedUnitKerja(value);
+  const handleNamaChange = (e) => {
+    const namaAnggota = e.target.value;
+    setNama(namaAnggota);
+    fetchDataAnggota(0, pageSize, "", "", namaAnggota);
   };
 
   const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
-    fetchDataAnggota(newPage, pageSize);
+    if (newPage >= 0 && newPage < totalPages) {
+      setCurrentPage(newPage);
+      fetchDataAnggota(
+        newPage,
+        pageSize,
+        selectedCabang,
+        selectedUnitKerja,
+        nama
+      );
+    }
   };
 
   const handleSizeChange = (newSize) => {
     setPageSize(newSize);
     setCurrentPage(0);
-    fetchDataAnggota(0, newSize);
-  };
-
-  const handleSearchClick = () => {
-    fetchDataAnggota(
-      currentPage,
-      pageSize,
-      selectedCabang,
-      selectedUnitKerja,
-      nama
-    );
+    fetchDataAnggota(0, newSize, selectedCabang, selectedUnitKerja, nama);
   };
 
   const handleVerifyUserClick = (rowId) => {
@@ -431,12 +439,6 @@ const VerifikasiAnggotaMutasi = () => {
 
   const handleRejectUserClick = (rowId) => {
     rejectUser(rowId);
-  };
-
-  const handleResetClick = () => {
-    setSelectedCabang("");
-    setFilteredUnitKerja([]);
-    fetchDataAnggota(currentPage, pageSize);
   };
 
   return (
@@ -487,8 +489,6 @@ const VerifikasiAnggotaMutasi = () => {
               selectedCabang={selectedCabang}
               handleCabangChange={handleCabangChange}
               handleUnitKerjaChange={handleUnitKerjaChange}
-              handleSearchClick={handleSearchClick}
-              handleResetClick={handleResetClick}
               handleNamaChange={handleNamaChange}
               nama={nama}
             />
@@ -533,8 +533,6 @@ const FilterSection = ({
   selectedUnitKerja,
   handleCabangChange,
   handleUnitKerjaChange,
-  handleSearchClick,
-  handleResetClick,
   handleNamaChange,
   nama,
 }) => (
@@ -554,6 +552,7 @@ const FilterSection = ({
           options={unitKerja}
           disabled={!selectedCabang}
           selectedUnitKerja={selectedUnitKerja}
+          selectedCabang={selectedCabang}
           handleChange={handleUnitKerjaChange}
         />
       </div>
@@ -570,23 +569,6 @@ const FilterSection = ({
             onChange={handleNamaChange}
           />
         </div>
-      </div>
-      <div className="flex gap-4 w-full md:w-auto mt-4 md:mt-0">
-        <Button
-          className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg flex items-center w-full md:w-auto h-9"
-          onClick={handleSearchClick}
-        >
-          <FontAwesomeIcon icon={faSearch} size="lg" />
-          <span className="ml-2">Cari data filter</span>
-        </Button>
-
-        <Button
-          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center w-full md:w-auto h-9"
-          onClick={handleResetClick}
-        >
-          <FontAwesomeIcon icon={faUndo} size="lg" />
-          <span className="ml-2">Reset Filter</span>
-        </Button>
       </div>
     </div>
   </div>
@@ -705,16 +687,14 @@ const DropdownUnitKerja = ({ label, selectedUnitKerja, handleChange }) => {
   const [query, setQuery] = React.useState(selectedUnitKerja || "");
   const [showDropdown, setShowDropdown] = React.useState(false);
   const [filterQuery, setFilterQuery] = React.useState("");
-  const [unitKerja, setUnitKerja] = React.useState([]); // Data dari API
-  const [selectedCabang, setSelectedCabang] = React.useState(""); // Cabang dari sessionStorage
+  const [unitKerja, setUnitKerja] = React.useState([]);
+  const [selectedCabang, setSelectedCabang] = React.useState("");
   const dropdownRef = React.useRef(null);
 
   React.useEffect(() => {
-    // Fetch data unit kerja dari API
     const fetchUnitKerja = async () => {
       try {
         const response = await GlobalApi.getUnitKerja();
-        console.log("Unit Kerja from API:", response.data); // Log data dari API
         setUnitKerja(response.data);
       } catch (error) {
         console.error("Error fetching unit kerja:", error);
@@ -722,26 +702,22 @@ const DropdownUnitKerja = ({ label, selectedUnitKerja, handleChange }) => {
     };
 
     fetchUnitKerja();
-
-    // Ambil cabang dari sessionStorage
     const cabangFromSession = sessionStorage.getItem("cabang");
-    console.log("Selected Cabang from sessionStorage:", cabangFromSession);
     if (cabangFromSession) {
       setSelectedCabang(cabangFromSession);
     }
   }, []);
 
   const filteredOptions = unitKerja
-    .filter(
-      (option) =>
-        option.cabang.trim().toLowerCase() ===
-        selectedCabang.trim().toLowerCase()
+    .filter((option) =>
+      selectedCabang
+        ? option.cabang.trim().toLowerCase() ===
+          selectedCabang.trim().toLowerCase()
+        : true
     )
     .filter((option) =>
       option.unitKerja.toLowerCase().includes(filterQuery.toLowerCase())
     );
-
-  console.log("Filtered Options:", filteredOptions);
 
   const handleOptionSelect = (item) => {
     setQuery(item.unitKerja);
