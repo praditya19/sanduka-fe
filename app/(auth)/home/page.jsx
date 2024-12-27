@@ -159,90 +159,63 @@ export default function IconGrid() {
   //   });
   // }
 
-  const getPensiunDataAndCountSegera = async () => {
-    setLoader(true);
-
-    try {
-      // Ambil data pensiun dari API
-      const pensiunResponse = await GlobalApi.getAllPensiun();
-
-      if (pensiunResponse && pensiunResponse.data.content) {
-        const allPensiunList = pensiunResponse.data.content;
-
-        // Filter data: Hitung jumlah "Segera" jika keterangan null
-        const segeraItems = allPensiunList.filter(
-          (item) => item.keterangan === null && item.status === "Segera"
-        );
-
-        const countSegera = segeraItems.length;
-
-        // Simpan jumlah "Segera" ke sessionStorage
-        sessionStorage.setItem("statusSegera", countSegera.toString());
-
-        // Set jumlah "Segera" ke state
-        setStatusSegeraCount(countSegera);
-
-        // Simpan data utama ke state (tetap utuh)
-        setPensiunList(allPensiunList);
-
-        // Filter final (keterangan dan status)
-        const finalFilteredPensiunList = allPensiunList.filter((item) => {
-          // Jika keterangan null, tampilkan data dengan status "Segera"
-          if (item.keterangan === null) {
-            return item.status === "Segera";
-          }
-
-          // Jika keterangan bukan null, tampilkan semua kecuali "Pensiun"
-          return item.keterangan !== "Pensiun";
-        });
-
-        // Set hasil filter ke state
-        setFilteredPensiunList(finalFilteredPensiunList);
-      }
-    } catch (error) {
-      console.error("Terjadi kesalahan saat mengambil data pensiun:", error);
-    } finally {
-      setLoader(false);
-    }
-  };
-
   useEffect(() => {
-    // Cek status login saat komponen pertama kali dimuat
-    checkLoginStatus();
-  }, []);
-
-  useEffect(() => {
-    // Jika sudah login, jalankan fungsi untuk mengambil data pensiun
-    if (isLoggedIn) {
-      // Mengecek jika statusSegera sudah ada di sessionStorage
-      const statusSegera = sessionStorage.getItem("statusSegera");
-      if (statusSegera) {
-        // Jika sudah ada, tidak perlu refresh
-        setStatusSegeraCount(parseInt(statusSegera)); // Set statusSegeraCount langsung dari sessionStorage
-      } else {
-        // Jika tidak ada, jalankan fungsi untuk mendapatkan data pensiun tanpa refresh
-        getPensiunDataAndCountSegera();
-      }
+    if (!token) {
+      router.push("/sign-in");
+      return; // Pastikan kode di bawahnya tidak dieksekusi jika tidak ada token
     }
-  }, [isLoggedIn]);
-
-  const checkLoginStatus = () => {
-    const userToken = sessionStorage.getItem("authToken");
-
-    if (userToken) {
-      setIsLoggedIn(true); // Set isLoggedIn true jika token ada
-
-      // Jika statusSegera ada, ambil data pensiun langsung tanpa perlu refresh halaman
-      const statusSegera = sessionStorage.getItem("statusSegera");
-      if (!statusSegera) {
-        // Jika statusSegera belum ada, jalankan fungsi untuk mendapatkan data pensiun tanpa refresh
-        getPensiunDataAndCountSegera();
+  
+    const fetchAndStoreAdminId = async () => {
+      try {
+        // Ambil NPA dari sessionStorage
+        const npaPgri = sessionStorage.getItem("npaPgri");
+  
+        // Periksa apakah NPA ada di sessionStorage
+        if (!npaPgri) {
+          throw new Error("NPA tidak ditemukan di sessionStorage.");
+        }
+  
+        console.log("NPA diambil dari sessionStorage:", npaPgri);
+  
+        // Panggil GlobalApi.cekNpa untuk mendapatkan id
+        const cekNpaResponse = await GlobalApi.cekNpa(npaPgri);
+  
+        // Pastikan respon mengandung id
+        if (!cekNpaResponse || !cekNpaResponse.id) {
+          throw new Error("Respon cekNpa tidak valid atau ID tidak ditemukan.");
+        }
+  
+        console.log("ID yang didapatkan dari cekNpa:", cekNpaResponse.id);
+  
+        // Simpan id ke sessionStorage dengan nama adminId
+        sessionStorage.setItem("adminId", cekNpaResponse.id);
+  
+        console.log("Admin ID berhasil disimpan ke sessionStorage.");
+      } catch (error) {
+        console.error("Terjadi kesalahan:", error.message);
       }
-    } else {
-      router.push("/login"); // Jika belum login, arahkan ke halaman login
-    }
-  };
-
+    };
+  
+    setLoading(false);
+  
+    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+    setIsSidebarOpen(sidebarState);
+  
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+  
+    handleResize();
+    window.addEventListener("resize", handleResize);
+  
+    // Panggil fungsi fetchAndStoreAdminId setelah token divalidasi
+    fetchAndStoreAdminId();
+  
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [token, router]);
+  
   const handleMainMenuClick = (e, index, href) => {
     e.preventDefault();
     if (index !== dropdownOpen) {
@@ -284,25 +257,6 @@ export default function IconGrid() {
     }
   };
 
-  useEffect(() => {
-    if (!token) {
-      router.push("/sign-in");
-    } else {
-      setLoading(false);
-      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-      setIsSidebarOpen(sidebarState);
-      const handleResize = () => {
-        setIsMobile(window.innerWidth <= 768);
-      };
-
-      handleResize();
-      window.addEventListener("resize", handleResize);
-
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
-    }
-  }, [token, router]);
 
   useEffect(() => {
     const fetchAnggotaMeninggal = async () => {
@@ -339,7 +293,7 @@ export default function IconGrid() {
     fetchUserData();
   }, []);
   const renderCheckmark = (value) => {
-    if (value === "Ya") {
+    if (value === "YA") {
       return <span className="text-green-500">✔</span>;
     } else if (
       value === "" ||
@@ -462,8 +416,14 @@ export default function IconGrid() {
                         <p className="text-xs font-semibold text-gray-500 uppercase">
                           1 Orang
                         </p>
-                        <p className="text-xs text-green-500 font-medium mt-1">
-                          <span className="mr-1">↑</span>3.48% Since last month
+                        <p className="text-sm text-red-500 font-medium mt-1">
+                          <span className="mr-1">
+                            {new Date().toLocaleDateString("id-ID", {
+                              day: "2-digit",
+                              month: "long",
+                              year: "numeric",
+                            })}
+                          </span>
                         </p>
                       </div>
                     </div>
@@ -476,8 +436,14 @@ export default function IconGrid() {
                         <p className="text-xs font-semibold text-gray-500 uppercase">
                           173 Orang
                         </p>
-                        <p className="text-xs text-red-500 font-medium mt-1">
-                          <span className="mr-1">↓</span>1.10% Since yesterday
+                        <p className="text-sm text-green-500 font-medium mt-1">
+                          <span className="mr-1">
+                            2020 -{" "}
+                            {new Date().toLocaleDateString("id-ID", {
+                              month: "long",
+                              year: "numeric",
+                            })}
+                          </span>
                         </p>
                       </div>
                     </div>
@@ -490,8 +456,14 @@ export default function IconGrid() {
                         <p className="text-xs font-semibold text-gray-500 uppercase">
                           Rp.432.500.000,-
                         </p>
-                        <p className="text-xs text-red-500 font-medium mt-1">
-                          <span className="mr-1">↓</span>3.48% Since last week
+                        <p className="text-sm text-green-500 font-medium mt-1">
+                          <span className="mr-1">
+                            2020 -{" "}
+                            {new Date().toLocaleDateString("id-ID", {
+                              month: "long",
+                              year: "numeric",
+                            })}
+                          </span>
                         </p>
                       </div>
                     </div>

@@ -155,7 +155,10 @@ const HeaderHome = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-12">
           <div className="flex items-center">
-            <Link href="/home">
+            <Link
+              href="/home"
+              onClick={() => sessionStorage.removeItem("anggotaId")}
+            >
               <Image src="/sanduka.png" width={70} height={60} alt="logo" />
             </Link>
           </div>
@@ -213,10 +216,24 @@ const HeaderHome = () => {
                   </Link>
                 </li>
               )}
-              <li className="relative" ref={profileMenuRef}>
+              <li
+                className="relative flex items-center space-x-4"
+                ref={profileMenuRef}
+              >
+                {/* Nama dan Cabang */}
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-gray-800">
+                    {sessionStorage.getItem("nama") || "Nama Pengguna"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {sessionStorage.getItem("cabang") ||
+                      "Cabang Belum Terdaftar"}
+                  </p>
+                </div>
+                {/* Gambar Profil */}
                 <button
                   onClick={toggleProfileMenu}
-                  className="flex items-center focus:outline-none"
+                  className="relative flex items-center focus:outline-none border-2 border-gray-200 hover:border-gray-400 rounded-full p-1"
                 >
                   <Image
                     src={
@@ -224,14 +241,14 @@ const HeaderHome = () => {
                         ? "/profile.png"
                         : `data:image/jpeg;base64,${profileImageUrl}`
                     }
-                    width={30}
-                    height={30}
+                    width={40}
+                    height={40}
                     alt="Foto Profile"
                     className="rounded-full"
                   />
                 </button>
                 {isProfileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                  <div className="absolute right-0 mt-40 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
                     <Link
                       href={`/anggota/edit-anggota`}
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
