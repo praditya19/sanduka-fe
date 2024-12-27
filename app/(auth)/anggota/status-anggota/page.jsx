@@ -186,20 +186,33 @@ function StatusAnggota() {
   }, []);
 
   const handleCabangSelect = (cabang) => {
-    setSelectedCabang(cabang.kecamatan);
-    setFormData((prev) => ({
-      ...prev,
-      unit: "",
-    }));
-    setFilteredUnitKerja(
-      allUnitKerja.filter(
-        (unit) => unit.cabang.toLowerCase() === cabang.kecamatan.toLowerCase()
-      )
-    );
-    setIsUnitKerjaDisabled(false);
+    if (!cabang.kecamatan) {
+      // Handle "Semua Cabang" selection
+      setSelectedCabang("");
+      setSelectedUnitKerja(""); // Reset selected unit kerja
+      setFormData((prev) => ({
+        ...prev,
+        unit: "",
+      }));
+      setFilteredUnitKerja(allUnitKerja);
+      setIsUnitKerjaDisabled(true);
+    } else {
+      setSelectedCabang(cabang.kecamatan);
+      setSelectedUnitKerja(""); // Reset selected unit kerja
+      setFormData((prev) => ({
+        ...prev,
+        unit: "",
+      }));
+      setFilteredUnitKerja(
+        allUnitKerja.filter(
+          (unit) => unit.cabang.toLowerCase() === cabang.kecamatan.toLowerCase()
+        )
+      );
+      setIsUnitKerjaDisabled(false);
+    }
     setShowDropdownCabang(false);
+    setCurrentPage(1); // Reset to first page when changing cabang
   };
-
 
   const handleUnitKerjaChange = (e) => {
     const input = e.target.value;
@@ -230,12 +243,10 @@ function StatusAnggota() {
 
   const handleUnitKerjaSelect = (selectedItem) => {
     if (!selectedItem.unitKerja) {
-      // Case: "Semua Unit Kerja" selected
       setSelectedUnitKerja("");
       setFilteredUnitKerja(allUnitKerja);
-      setRekapData(originalRekapData); // Reset to original data
+      setRekapData(originalRekapData);
     } else {
-      // Case: Specific unit kerja selected
       setSelectedUnitKerja(selectedItem.unitKerja);
       setFilteredUnitKerja([selectedItem]);
       const filteredRekap = originalRekapData.filter(
@@ -245,6 +256,12 @@ function StatusAnggota() {
     }
     setShowDropdownUnitKerja(false);
     setSearchUnitKerja('');
+    setCurrentPage(1);
+  };
+
+  const handleTingkatChange = (e) => {
+    setSelectedTingkat(e.target.value);
+    setCurrentPage(1); // Reset to first page when changing tingkat
   };
 
   useEffect(() => {
@@ -383,65 +400,6 @@ function StatusAnggota() {
   }, []);
 
 
-  const countMembersByLevel = (level) => {
-    return anggota.filter((member) => member.tingkatSekolah === level).length;
-  };
-
-  const aggregateData = () => {
-    const aggregated = {
-      JumlahPNS: 0,
-      JumlahPPPK: 0,
-      JumlahNON_PNS: 0,
-      JumlahSemua: anggota.length,
-    };
-
-    const aggregatedByUnitKerja = {};
-    anggota.forEach((item) => {
-      if (!aggregatedByUnitKerja[item.unitKerja]) {
-        aggregatedByUnitKerja[item.unitKerja] = {
-          PNS: 0,
-          PPPK: 0,
-          NON_PNS: 0,
-          anggota: 0,
-          Iuran: 0,
-        };
-      }
-      switch (item.statusPegawai) {
-        case "PNS":
-          aggregated.JumlahPNS++;
-          aggregatedByUnitKerja[item.unitKerja].PNS++;
-          break;
-        case "PPPK":
-          aggregated.JumlahPPPK++;
-          aggregatedByUnitKerja[item.unitKerja].PPPK++;
-          break;
-        case "NON_PNS":
-          aggregated.JumlahNON_PNS++;
-          aggregatedByUnitKerja[item.unitKerja].NON_PNS++;
-          break;
-        default:
-          break;
-      }
-      aggregatedByUnitKerja[item.unitKerja].anggota++;
-      aggregatedByUnitKerja[item.unitKerja].Iuran += item.iuran;
-    });
-
-    return {
-      aggregated,
-      aggregatedByUnitKerja: Object.entries(aggregatedByUnitKerja).map(
-        ([kerja, data], index) => ({
-          kerja,
-          ...data,
-          index,
-        })
-      ),
-    };
-  };
-
-  const { aggregated } = aggregateData();
-
-  const { JumlahPNS, JumlahPPPK, JumlahNON_PNS } = aggregated;
-
   const tingkatSekolahMap = {
     TK_RA: "TK/RA",
     SD_MI: "SD/MI",
@@ -458,11 +416,105 @@ function StatusAnggota() {
     return tingkatSekolahMap[tingkat] || tingkat;
   };
 
-  const categories = [
-    { title: "PNS", count: JumlahPNS, items: ["PAUD", "SMP_MTS", "PERGURUAN_TINGGI"] },
-    { title: "NON PNS", count: JumlahNON_PNS, items: ["TK_RA", "SMA_MA", "SEKOLAH_LUAR_BIASA"] },
-    { title: "PPPK", count: JumlahPPPK, items: ["SD_MI", "SMK", "LAINNYA"] },
-  ];
+
+  const FilteredCategories = ({ anggota, selectedCabang, selectedUnitKerja, selectedTingkat }) => {
+    const filteredCounts = useMemo(() => {
+      // Filter anggota based on all selected filters
+      const filteredAnggota = anggota.filter(member => {
+        const cabangMatch = !selectedCabang || member.cabang === selectedCabang;
+        const unitKerjaMatch = !selectedUnitKerja || member.unitKerja === selectedUnitKerja;
+        const tingkatMatch = !selectedTingkat || member.tingkatSekolah === selectedTingkat;
+        return cabangMatch && unitKerjaMatch && tingkatMatch;
+      });
+
+      // Count by status
+      const statusCounts = {
+        PNS: filteredAnggota.filter(member => member.statusPegawai === "PNS").length,
+        NON_PNS: filteredAnggota.filter(member => member.statusPegawai === "NON_PNS").length,
+        PPPK: filteredAnggota.filter(member => member.statusPegawai === "PPPK").length
+      };
+
+      // Count by tingkat sekolah
+      const tingkatCounts = {
+        PAUD: filteredAnggota.filter(member => member.tingkatSekolah === "PAUD").length,
+        TK_RA: filteredAnggota.filter(member => member.tingkatSekolah === "TK_RA").length,
+        SD_MI: filteredAnggota.filter(member => member.tingkatSekolah === "SD_MI").length,
+        SMP_MTS: filteredAnggota.filter(member => member.tingkatSekolah === "SMP_MTS").length,
+        SMA_MA: filteredAnggota.filter(member => member.tingkatSekolah === "SMA_MA").length,
+        SMK: filteredAnggota.filter(member => member.tingkatSekolah === "SMK").length,
+        PERGURUAN_TINGGI: filteredAnggota.filter(member => member.tingkatSekolah === "PERGURUAN_TINGGI").length,
+        SEKOLAH_LUAR_BIASA: filteredAnggota.filter(member => member.tingkatSekolah === "SEKOLAH_LUAR_BIASA").length,
+        LAINNYA: filteredAnggota.filter(member => member.tingkatSekolah === "LAINNYA").length
+      };
+
+      const categories = [
+        {
+          title: "Status Kepegawaian",
+          items: [
+            { title: "PNS", count: statusCounts.PNS },
+            { title: "NON PNS", count: statusCounts.NON_PNS },
+            { title: "PPPK", count: statusCounts.PPPK }
+          ]
+        },
+        {
+          title: "Jenjang Pendidikan",
+          items: [
+            { type: "PAUD", count: tingkatCounts.PAUD },
+            { type: "TK_RA", count: tingkatCounts.TK_RA },
+            { type: "SD_MI", count: tingkatCounts.SD_MI },
+            { type: "SMP_MTS", count: tingkatCounts.SMP_MTS },
+            { type: "SMA_MA", count: tingkatCounts.SMA_MA },
+            { type: "SMK", count: tingkatCounts.SMK },
+            { type: "PERGURUAN_TINGGI", count: tingkatCounts.PERGURUAN_TINGGI },
+            { type: "SEKOLAH_LUAR_BIASA", count: tingkatCounts.SEKOLAH_LUAR_BIASA },
+            { type: "LAINNYA", count: tingkatCounts.LAINNYA }
+          ]
+        }
+      ];
+
+      return categories;
+    }, [anggota, selectedCabang, selectedUnitKerja, selectedTingkat]);
+
+    return (
+      <div className="flex flex-col mt-14 mb-4 mx-4 space-y-8">
+        {/* Status Kepegawaian Section */}
+        <div className="flex flex-wrap justify-center gap-4">
+          {filteredCounts[0].items.map((item, idx) => (
+            <div key={idx} className="bg-white border rounded-lg shadow-md p-6 w-64 text-center">
+              <div className="bg-teal-500 text-white p-2 rounded-lg mb-4">
+                {item.title}
+              </div>
+              <div className="text-3xl font-bold text-gray-700">
+                {item.count}
+              </div>
+              <div className="text-sm text-gray-500 mt-2">Total Anggota</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Jenjang Pendidikan Section - Modified to show 3x3 grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-6 justify-items-center items-center">
+          {filteredCounts[1].items.map((item, idx) => (
+            <div key={idx} className="bg-white border rounded-lg shadow-md p-3 w-80 text-center flex flex-col items-center">
+              <img
+                src={`/${imageMap[item.type] || "default.png"}`}
+                alt={item.type}
+                className="mb-2 h-16 w-auto object-contain"
+              />
+              <p className="text-sm font-bold text-gray-800 mb-2">
+                {item.type === "PERGURUAN_TINGGI" || item.type === "SEKOLAH_LUAR_BIASA"
+                  ? item.type.replace(/_/g, ' ')
+                  : item.type.replace(/_/g, '/')}
+              </p>
+              <Button className="bg-blue-500 hover:bg-blue-700 w-full text-sm">
+                {item.count} Anggota
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   const handlePrint = () => {
     const filteredDataForPrint = filteredMembersData.slice(0, maxItems);
@@ -839,55 +891,12 @@ function StatusAnggota() {
           className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
             }`}
         >
-          <div className="flex flex-wrap justify-between mt-14 mb-4 mx-4">
-            {categories.map((category, index) => (
-              <div
-                key={index}
-                className="flex flex-col items-center w-full md:w-1/3 mb-4 md:mb-0"
-              >
-                <div className="bg-teal-500 text-white p-2 rounded-lg mb-2 w-40 text-center">
-                  {category.title}
-                </div>
-                <div className="text-2xl font-bold mb-2">{category.count}</div>
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-wrap justify-between mt-4 mb-4 mx-4">
-            {categories.map((category, index) => (
-              <div
-                key={index}
-                className="flex flex-col items-center w-full md:w-1/3 mb-4"
-              >
-                <div className="flex flex-wrap justify-center mx-2">
-                  {category.items.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-white border rounded-lg shadow-md p-4 mb-2 w-full sm:w-60 mx-2 text-center"
-                    >
-                      {/* Gambar */}
-                      <img
-                        src={`/${imageMap[item] || "default.png"}`}
-                        alt={item}
-                        className="mb-2 h-16 w-auto mx-auto object-contain"
-                      />
-
-                      {/* Nama Kategori */}
-                      <p className="text-md font-semibold text-gray-800 mb-2">
-                        {item === "PERGURUAN_TINGGI" || item === "SEKOLAH_LUAR_BIASA"
-                          ? item.replace(/_/g, ' ')
-                          : item.replace(/_/g, '/')}
-                      </p>
-
-                      {/* Tombol */}
-                      <Button className="bg-blue-500 hover:bg-blue-700 w-full">
-                        {countMembersByLevel(item)} Anggota
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          <FilteredCategories
+            anggota={anggota}
+            selectedCabang={selectedCabang}
+            selectedUnitKerja={selectedUnitKerja}
+            selectedTingkat={selectedTingkat} // Add this prop
+          />
           <div className="mb-4">
             <div className="flex flex-wrap items-start mt-2 justify-between">
               <div className="flex flex-wrap items-center space-x-2">

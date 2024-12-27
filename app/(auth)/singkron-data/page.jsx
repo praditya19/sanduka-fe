@@ -52,6 +52,27 @@ const SyncData = () => {
   const [displayedPages, setDisplayedPages] = useState([1, 2, 3]);
   const [visiblePages, setVisiblePages] = useState([1, 2, 3]);
   const totalData = data.length; // Hitung total data
+  const [role, setRole] = useState("");
+  const [filteredTotalFiles, setFilteredTotalFiles] = useState(0);
+
+
+  useEffect(() => {
+    const storedRole = sessionStorage.getItem("role");
+    const storedCabang = sessionStorage.getItem("cabang");
+    setRole(storedRole || "");
+
+    if (storedRole === "ADMIN" && storedCabang) {
+      setSelectedCabang(storedCabang);
+      filterUnitKerjaForCabang(storedCabang);
+    }
+  }, []);
+
+  const filterUnitKerjaForCabang = (cabang) => {
+    const filtered = unitKerjaList.filter(
+      (unitKerja) => unitKerja.cabang.toLowerCase() === cabang.toLowerCase()
+    );
+    setFilteredUnitKerja(filtered);
+  };
 
   const paginateData = (data) => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -104,13 +125,32 @@ const SyncData = () => {
 
   const handleUnitKerjaFocus = () => {
     if (selectedCabang) {
+      filterUnitKerjaForCabang(selectedCabang);
       setShowUnitKerjaDropdown(true);
     }
   };
 
   const handleCabangClick = () => {
-    setFilteredCabangList(originalCabangList);
-    setShowCabangDropdown(true);
+    // Only allow cabang selection if not ADMIN
+    if (role !== "ADMIN") {
+      setFilteredCabangList(originalCabangList);
+      setShowCabangDropdown(true);
+    }
+  };
+
+  const renderCabangInput = () => {
+    return (
+      <Input
+        type="text"
+        value={selectedCabang}
+        readOnly
+        onClick={handleCabangClick}
+        className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
+          }`}
+        placeholder="Pilih Cabang"
+        disabled={role === "ADMIN"}
+      />
+    );
   };
 
   const handleUnitKerjaChange = (e) => {
@@ -118,17 +158,25 @@ const SyncData = () => {
     setUnitKerjaInput(input);
     setSelectedUnitKerja(input);
 
-    const filteredUnitKerja = unitKerjaList.filter(
-      (unitKerja) =>
-        unitKerja.cabang &&
-        unitKerja.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
-        unitKerja.unitKerja.toLowerCase().includes(input.toLowerCase())
-    );
-
-    setShowUnitKerjaDropdown(true);
-    setFilteredUnitKerja(filteredUnitKerja);
-    setCurrentPage(1); // Reset pagination when typing in unit kerja
+    if (selectedCabang) {
+      const filtered = unitKerjaList.filter(
+        (unitKerja) =>
+          unitKerja.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
+          unitKerja.unitKerja.toLowerCase().includes(input.toLowerCase())
+      );
+      setFilteredUnitKerja(filtered);
+      setShowUnitKerjaDropdown(true);
+    }
   };
+
+  useEffect(() => {
+    if (selectedCabang) {
+      setSelectedUnitKerja("");
+      setUnitKerjaInput("");
+      filterUnitKerjaForCabang(selectedCabang);
+      setCurrentPage(1);
+    }
+  }, [selectedCabang]);
 
   const handleCabangSearch = (query) => {
     const filtered = originalCabangList.filter((cabang) =>
@@ -173,7 +221,7 @@ const SyncData = () => {
     setSelectedUnitKerja(unitKerja.unitKerja);
     setUnitKerjaInput(unitKerja.unitKerja);
     setShowUnitKerjaDropdown(false);
-    setCurrentPage(1); // Reset to first page when unit kerja is selected
+    setCurrentPage(1);
   };
 
   useEffect(() => {
@@ -222,19 +270,23 @@ const SyncData = () => {
     );
   };
 
-  const filteredData = data
-    .filter((item) => {
-      const cabangMatch = selectedCabang ? item.cabang === selectedCabang : true;
+  const filteredData = data.filter((item) => {
+    // For ADMIN users
+    if (role === "ADMIN") {
+      const cabangMatch = item.cabang === selectedCabang;
       const unitKerjaMatch = selectedUnitKerja
         ? item.unitKerja.toLowerCase() === selectedUnitKerja.toLowerCase()
         : true;
       return cabangMatch && unitKerjaMatch;
-    });
+    }
 
-  // Update useEffect for pagination reset
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedCabang, selectedUnitKerja]);
+    // For other roles
+    const cabangMatch = selectedCabang ? item.cabang === selectedCabang : true;
+    const unitKerjaMatch = selectedUnitKerja
+      ? item.unitKerja.toLowerCase() === selectedUnitKerja.toLowerCase()
+      : true;
+    return cabangMatch && unitKerjaMatch;
+  });
 
   const paginatedData = paginateData(filteredData);
 
@@ -264,15 +316,42 @@ const SyncData = () => {
     fetchData();
   }, [itemsPerPage]);
 
+  const calculateFilteredTotal = (allData) => {
+    if (!allData) return 0;
+
+    let filtered = allData;
+
+    // Apply cabang filter
+    if (selectedCabang) {
+      filtered = filtered.filter(item => item.cabang === selectedCabang);
+    }
+
+    // Apply unit kerja filter if selected
+    if (selectedUnitKerja) {
+      filtered = filtered.filter(item => item.unitKerja.toLowerCase() === selectedUnitKerja.toLowerCase());
+    }
+
+    return filtered.length;
+  };
+
   const fetchTotalFiles = async () => {
     try {
-      const total = await GlobalApi.getJumlahDataUpload();
-      setTotalFiles(total);
+      const result = await GlobalApi.getAllFiles();
+      setData(result);
+      setTotalFiles(result.length); // Set total unfiltered count
+      setFilteredTotalFiles(calculateFilteredTotal(result)); // Set filtered count
+      setTotalPages(Math.ceil(result.length / itemsPerPage));
       setLoading(false);
     } catch (error) {
+      console.error("Error fetching files:", error);
       setLoading(false);
     }
   };
+
+  // Add effect to update filtered total when filters change
+  useEffect(() => {
+    setFilteredTotalFiles(calculateFilteredTotal(data));
+  }, [selectedCabang, selectedUnitKerja, data]);
 
   useEffect(() => {
     fetchTotalFiles();
@@ -296,12 +375,16 @@ const SyncData = () => {
     document.body.innerHTML = originalContents;
     window.location.reload();
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoader(true);
     let fileToSend = formData.file;
-  
+
+    // Add cabang from session for ADMIN
+    const submissionCabang = role === "ADMIN"
+      ? sessionStorage.getItem("cabang")
+      : formData.cabang;
+
     if (
       fileToSend &&
       (fileToSend.type ===
@@ -321,7 +404,7 @@ const SyncData = () => {
         dataToSend.append("dataKtaDigital", formData.dataKtaDigital);
         dataToSend.append("dataDaspen", formData.dataDaspen);
         dataToSend.append("verifikasi", formData.verifikasi);
-  
+
         try {
           const response = await GlobalApi.uploadFile(dataToSend);
           console.log("Data successfully submitted:", response);
@@ -349,7 +432,7 @@ const SyncData = () => {
       dataToSend.append("dataKtaDigital", formData.dataKtaDigital);
       dataToSend.append("dataDaspen", formData.dataDaspen);
       dataToSend.append("verifikasi", formData.verifikasi);
-  
+
       try {
         const response = await GlobalApi.uploadFile(dataToSend);
         console.log("Data successfully submitted:", response);
@@ -362,7 +445,7 @@ const SyncData = () => {
       }
     }
   };
-  
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
@@ -852,15 +935,18 @@ const SyncData = () => {
             <div className="flex flex-wrap items-center space-x-2 mb-4 justify-between">
               <div className="flex space-x-2">
                 <div className="flex flex-col relative w-64" ref={cabangRef}>
+                  {/* {renderCabangInput()} */}
                   <Input
                     type="text"
                     value={selectedCabang}
                     readOnly
                     onClick={handleCabangClick}
-                    className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                    className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
+                      }`}
                     placeholder="Pilih Cabang"
+                    disabled={role === "ADMIN"}
                   />
-                  {showCabangDropdown && (
+                  {showCabangDropdown && role !== "ADMIN" && (
                     <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
                       <ul className="max-h-44 overflow-y-auto">
                         <li className="py-2 px-2">
@@ -897,8 +983,8 @@ const SyncData = () => {
                   <Input
                     type="text"
                     value={unitKerjaInput}
-                    onFocus={handleUnitKerjaFocus}
                     onChange={handleUnitKerjaChange}
+                    onFocus={handleUnitKerjaFocus}
                     placeholder="Pilih Unit Kerja"
                     className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
                     disabled={!selectedCabang}
@@ -951,7 +1037,7 @@ const SyncData = () => {
                   <h1>
                     {loading
                       ? "Loading..."
-                      : `Total Data Terupload: ${totalFiles}`}
+                      : `Total Data Terupload: ${filteredTotalFiles}`}
                   </h1>
                 </div>
               </div>
