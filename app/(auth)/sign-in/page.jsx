@@ -270,12 +270,11 @@ function SignIn() {
 
       const response = await GlobalApi.loginAdmin(npaPgriValue, passwordValue);
       setToken(response.token);
-
-      sessionStorage.setItem("userId", response.id);
       sessionStorage.setItem("nama", response.namaLengkap);
       sessionStorage.setItem("role", response.role);
       sessionStorage.setItem("npaPgri", npaPgriValue);
       sessionStorage.setItem("cabang", response.cabang);
+
       toast.success(
         <div
           style={{

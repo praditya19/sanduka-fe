@@ -152,90 +152,63 @@ export default function IconGrid() {
   //   });
   // }
 
-  const getPensiunDataAndCountSegera = async () => {
-    setLoader(true);
-
-    try {
-      // Ambil data pensiun dari API
-      const pensiunResponse = await GlobalApi.getAllPensiun();
-
-      if (pensiunResponse && pensiunResponse.data.content) {
-        const allPensiunList = pensiunResponse.data.content;
-
-        // Filter data: Hitung jumlah "Segera" jika keterangan null
-        const segeraItems = allPensiunList.filter(
-          (item) => item.keterangan === null && item.status === "Segera"
-        );
-
-        const countSegera = segeraItems.length;
-
-        // Simpan jumlah "Segera" ke sessionStorage
-        sessionStorage.setItem("statusSegera", countSegera.toString());
-
-        // Set jumlah "Segera" ke state
-        setStatusSegeraCount(countSegera);
-
-        // Simpan data utama ke state (tetap utuh)
-        setPensiunList(allPensiunList);
-
-        // Filter final (keterangan dan status)
-        const finalFilteredPensiunList = allPensiunList.filter((item) => {
-          // Jika keterangan null, tampilkan data dengan status "Segera"
-          if (item.keterangan === null) {
-            return item.status === "Segera";
-          }
-
-          // Jika keterangan bukan null, tampilkan semua kecuali "Pensiun"
-          return item.keterangan !== "Pensiun";
-        });
-
-        // Set hasil filter ke state
-        setFilteredPensiunList(finalFilteredPensiunList);
-      }
-    } catch (error) {
-      console.error("Terjadi kesalahan saat mengambil data pensiun:", error);
-    } finally {
-      setLoader(false);
-    }
-  };
-
   useEffect(() => {
-    // Cek status login saat komponen pertama kali dimuat
-    checkLoginStatus();
-  }, []);
-
-  useEffect(() => {
-    // Jika sudah login, jalankan fungsi untuk mengambil data pensiun
-    if (isLoggedIn) {
-      // Mengecek jika statusSegera sudah ada di sessionStorage
-      const statusSegera = sessionStorage.getItem("statusSegera");
-      if (statusSegera) {
-        // Jika sudah ada, tidak perlu refresh
-        setStatusSegeraCount(parseInt(statusSegera)); // Set statusSegeraCount langsung dari sessionStorage
-      } else {
-        // Jika tidak ada, jalankan fungsi untuk mendapatkan data pensiun tanpa refresh
-        getPensiunDataAndCountSegera();
-      }
+    if (!token) {
+      router.push("/sign-in");
+      return; // Pastikan kode di bawahnya tidak dieksekusi jika tidak ada token
     }
-  }, [isLoggedIn]);
-
-  const checkLoginStatus = () => {
-    const userToken = sessionStorage.getItem("authToken");
-
-    if (userToken) {
-      setIsLoggedIn(true); // Set isLoggedIn true jika token ada
-
-      // Jika statusSegera ada, ambil data pensiun langsung tanpa perlu refresh halaman
-      const statusSegera = sessionStorage.getItem("statusSegera");
-      if (!statusSegera) {
-        // Jika statusSegera belum ada, jalankan fungsi untuk mendapatkan data pensiun tanpa refresh
-        getPensiunDataAndCountSegera();
+  
+    const fetchAndStoreAdminId = async () => {
+      try {
+        // Ambil NPA dari sessionStorage
+        const npaPgri = sessionStorage.getItem("npaPgri");
+  
+        // Periksa apakah NPA ada di sessionStorage
+        if (!npaPgri) {
+          throw new Error("NPA tidak ditemukan di sessionStorage.");
+        }
+  
+        console.log("NPA diambil dari sessionStorage:", npaPgri);
+  
+        // Panggil GlobalApi.cekNpa untuk mendapatkan id
+        const cekNpaResponse = await GlobalApi.cekNpa(npaPgri);
+  
+        // Pastikan respon mengandung id
+        if (!cekNpaResponse || !cekNpaResponse.id) {
+          throw new Error("Respon cekNpa tidak valid atau ID tidak ditemukan.");
+        }
+  
+        console.log("ID yang didapatkan dari cekNpa:", cekNpaResponse.id);
+  
+        // Simpan id ke sessionStorage dengan nama adminId
+        sessionStorage.setItem("adminId", cekNpaResponse.id);
+  
+        console.log("Admin ID berhasil disimpan ke sessionStorage.");
+      } catch (error) {
+        console.error("Terjadi kesalahan:", error.message);
       }
-    } else {
-      router.push("/login"); // Jika belum login, arahkan ke halaman login
-    }
-  };
-
+    };
+  
+    setLoading(false);
+  
+    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+    setIsSidebarOpen(sidebarState);
+  
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+  
+    handleResize();
+    window.addEventListener("resize", handleResize);
+  
+    // Panggil fungsi fetchAndStoreAdminId setelah token divalidasi
+    fetchAndStoreAdminId();
+  
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [token, router]);
+  
   const handleMainMenuClick = (e, index, href) => {
     e.preventDefault();
     if (index !== dropdownOpen) {
@@ -275,25 +248,6 @@ export default function IconGrid() {
     }
   };
 
-  useEffect(() => {
-    if (!token) {
-      router.push("/sign-in");
-    } else {
-      setLoading(false);
-      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-      setIsSidebarOpen(sidebarState);
-      const handleResize = () => {
-        setIsMobile(window.innerWidth <= 768);
-      };
-
-      handleResize();
-      window.addEventListener("resize", handleResize);
-
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
-    }
-  }, [token, router]);
 
   useEffect(() => {
     const fetchAnggotaMeninggal = async () => {
@@ -330,7 +284,7 @@ export default function IconGrid() {
     fetchUserData();
   }, []);
   const renderCheckmark = (value) => {
-    if (value === "Ya") {
+    if (value === "YA") {
       return <span className="text-green-500">✔</span>;
     } else if (
       value === "" ||

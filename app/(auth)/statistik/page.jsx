@@ -42,6 +42,7 @@ const Page = () => {
   const [totalAnggota, setTotalAnggota] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState('');
   // const [currentPage, setCurrentPage] = useState(1);
   // const [itemsPerPage, setItemsPerPage] = useState(10);
   // const indexOfLastItem = currentPage * itemsPerPage;
@@ -155,9 +156,11 @@ const Page = () => {
   useEffect(() => { }, [tableData]);
 
   const handleCabangClick = () => {
+    if (role !== 'ADMIN') {
+      setShowDropdown(!showDropdown);
+    }
     setSearchTerm("");
     setFilteredOptions(cabangOptions);
-    setShowDropdown(true);
   };
 
   useEffect(() => {
@@ -252,8 +255,19 @@ const Page = () => {
   };
 
   useEffect(() => {
+    // Redirect jika token tidak ada
     if (!token) {
       router.push("/sign-in");
+      return; // Hentikan eksekusi di sini jika token tidak ada
+    }
+
+    // Ambil role dan cabang dari sessionStorage
+    const storedRole = sessionStorage.getItem('role');
+    const storedCabang = sessionStorage.getItem('cabang');
+
+    setRole(storedRole || '');
+    if (storedRole === 'ADMIN') {
+      setSelectedCabang(storedCabang || ''); // Set default cabang jika role ADMIN
     }
   }, [token, router]);
 
@@ -347,14 +361,16 @@ const Page = () => {
                       className="relative w-full md:w-auto"
                       ref={dropdownRef}
                     >
-                      <Input
-                        type="text"
-                        placeholder="Cabang terpilih"
-                        value={selectedCabang}
-                        readOnly
-                        className="p-2 border border-gray-300 rounded-md w-full"
-                        onClick={handleCabangClick}
-                      />
+                       <Input
+        type="text"
+        placeholder="Cabang terpilih"
+        value={selectedCabang}
+        readOnly={role === 'ADMIN'} 
+        className={`p-2 border border-gray-300 rounded-md w-full ${
+          role === 'ADMIN' ? 'bg-gray-100 cursor-not-allowed' : ''
+        }`}
+        onClick={handleCabangClick}
+      />
                       {showDropdown && (
                         <div className="absolute z-10 border rounded-lg bg-white shadow-sm w-full mt-1">
                           <ul className="max-h-44 overflow-y-auto">

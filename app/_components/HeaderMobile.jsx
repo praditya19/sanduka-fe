@@ -203,7 +203,7 @@ const HeaderMobile = () => {
           </button>
 
           {/* Conditionally render search icon based on role */}
-          {(role === "ADMIN" || role === "SUPERADMIN") && (
+          {(role === "ADMIN" || role === "SUPER ADMIN") && (
             <Link href="/anggota/pencarian-anggota">
               <FontAwesomeIcon
                 icon={faSearch}

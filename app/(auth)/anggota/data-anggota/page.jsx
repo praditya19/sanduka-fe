@@ -78,6 +78,7 @@ function DataAnggota() {
   const [previousKategoriDaspen, setPreviousKategoriDaspen] =
     useState(kategoriDaspen);
   const [isKategoriChanged, setIsKategoriChanged] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState("");
 
   useEffect(() => {
     if (!token) {
@@ -175,13 +176,13 @@ function DataAnggota() {
               <div style={{ textAlign: "center" }}>
                 {/* Ikon silang di atas */}
                 <div
-                 style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  textAlign: "center",
-                }}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textAlign: "center",
+                  }}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -203,25 +204,25 @@ function DataAnggota() {
                   NIP tidak ditemukan, silahkan melakukan sinkronisasi dahulu.
                 </h3>
               </div>,
-{
-  icon: null,
-  duration: 4000,
-  style: {
-    marginTop: "12%",
-    fontSize: "1.75rem",
-    padding: "10px",
-    width: "80%",
-    maxWidth: "450px",
-    height: "50%",
-    maxHeight: "400px",
-    transform: "translate(-50%, -50%)",
-    textAlign: "center",
-    zIndex: 9999,
-    backgroundColor: "#fff",
-    borderRadius: "8px",
-    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-  },
-}
+              {
+                icon: null,
+                duration: 4000,
+                style: {
+                  marginTop: "12%",
+                  fontSize: "1.75rem",
+                  padding: "10px",
+                  width: "80%",
+                  maxWidth: "450px",
+                  height: "50%",
+                  maxHeight: "400px",
+                  transform: "translate(-50%, -50%)",
+                  textAlign: "center",
+                  zIndex: 9999,
+                  backgroundColor: "#fff",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                },
+              }
             );
           }
         } else {
@@ -733,12 +734,17 @@ function DataAnggota() {
         .toLowerCase()
         .includes(filterUnitKerja.toLowerCase());
 
+      const globalSearchFilter = Object.values(item).some((value) =>
+        String(value).toLowerCase().includes(searchKeyword.toLowerCase())
+      );
+
       return (
         statusFilter &&
         cabangFilter &&
         unitKerjaFilter &&
         (filterCabang ? searchCabangFilter : true) &&
-        (filterUnitKerja ? searchUnitKerjaFilter : true)
+        (filterUnitKerja ? searchUnitKerjaFilter : true) &&
+        (searchKeyword ? globalSearchFilter : true)
       );
     });
   }, [
@@ -748,6 +754,7 @@ function DataAnggota() {
     selectedUnitKerja,
     filterCabang,
     filterUnitKerja,
+    searchKeyword, // Tambahkan searchKeyword ke dalam dependensi
   ]);
 
   const jumlahAnggota = filteredData.length;
@@ -760,6 +767,7 @@ function DataAnggota() {
   const closeModal = () => {
     setIsModalOpen(false);
     setCurrentItem(null);
+    sessionStorage.removeItem("anggotaId");
   };
 
   const handleCabangChange = (e) => {
@@ -935,25 +943,25 @@ function DataAnggota() {
             Gagal mengeluarkan anggota.
           </h3>
         </div>,
-       {
-        icon: null,
-        duration: 4000,
-        style: {
-          marginTop: "12%",
-          fontSize: "1.75rem",
-          padding: "10px",
-          width: "80%",
-          maxWidth: "450px",
-          height: "50%",
-          maxHeight: "400px",
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          zIndex: 9999,
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      }
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
       );
     }
   };
@@ -997,25 +1005,25 @@ function DataAnggota() {
               ID Anggota tidak ditemukan.
             </h3>
           </div>,
-         {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
+          {
+            icon: null,
+            duration: 4000,
+            style: {
+              marginTop: "12%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "450px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
         );
         return;
       }
@@ -1117,25 +1125,25 @@ function DataAnggota() {
             Gagal pensiun anggota.
           </h3>
         </div>,
-      {
-        icon: null,
-        duration: 4000,
-        style: {
-          marginTop: "12%",
-          fontSize: "1.75rem",
-          padding: "10px",
-          width: "80%",
-          maxWidth: "450px",
-          height: "50%",
-          maxHeight: "400px",
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          zIndex: 9999,
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      }
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
       );
     }
   };
@@ -1244,25 +1252,25 @@ function DataAnggota() {
             Gagal pensiun anggota.
           </h3>
         </div>,
-       {
-        icon: null,
-        duration: 4000,
-        style: {
-          marginTop: "12%",
-          fontSize: "1.75rem",
-          padding: "10px",
-          width: "80%",
-          maxWidth: "450px",
-          height: "50%",
-          maxHeight: "400px",
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          zIndex: 9999,
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      }
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
       );
     }
   };
@@ -1339,7 +1347,7 @@ function DataAnggota() {
                 <>
                   <div
                     ref={dropdownRef}
-                    className="relative flex flex-col md:flex ml-2"
+                    className="relative flex flex-col md:flex ml-2 w-full md:w-40"
                   >
                     <Input
                       type="text"
@@ -1460,12 +1468,19 @@ function DataAnggota() {
                   <option>Meninggal</option>
                   <option>Keluar</option>
                 </select>
-
-                <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
+                <div className="flex flex-wrap items-center space-x-2 w-full md:w-40">
+                  <Input
+                    type="text"
+                    placeholder="Cari..."
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    className="border rounded-lg p-2 w-full md:w-60 bg-white shadow-sm"
+                  />
+                </div>
+              </div>
+              <p className="py-2 rounded focus:outline-none focus:shadow-outline w-full md:w-40 ">
                   Jumlah Anggota : {jumlahAnggota}
                 </p>
-              </div>
-
               <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
                 <div className="space-x-2 w-full flex md:block">
                   <label htmlFor="maxItems" className="mr-2">
@@ -1620,7 +1635,7 @@ function DataAnggota() {
                                   : "bg-red-500 text-white rounded-full px-3"
                               }`}
                             >
-                              {item.nip ? item.nip : "NIP tidak ada"}
+                              {item.nip ? item.nip : "Tidak Terdaftar Daspen"}
                             </div>
                           </td>
                           <td className="p-2 md:p-3 border md:table-cell hidden">

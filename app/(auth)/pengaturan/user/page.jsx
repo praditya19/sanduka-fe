@@ -237,7 +237,7 @@ const Page = () => {
     e.preventDefault();
 
     const updatedAdminData = {
-      daerah: "KAB. JEPARA",
+      daerah: "",
       cabang: adminData.cabang,
       nama: adminData.namaLengkap,
       npapgri: adminData.npaPgri,
@@ -248,6 +248,8 @@ const Page = () => {
       role: role,
       foto: adminData.foto,
     };
+
+    console.log("Data yang akan terkirim:", updatedAdminData);
 
     try {
       const result = await GlobalApi.createAdmin(updatedAdminData);
@@ -778,7 +780,7 @@ const Page = () => {
                                 <Input
                                   type="text"
                                   id="role"
-                                  value={adminData.status}
+                                  value={adminData.role}
                                   readOnly
                                   className="border rounded w-full p-2 text-black bg-gray-200"
                                 />

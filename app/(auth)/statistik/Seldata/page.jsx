@@ -41,6 +41,7 @@ const DataTable = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = tableData.slice(indexOfFirstItem, indexOfLastItem);
   const startingNumber = (currentPage - 1) * itemsPerPage + 1;
+  const [role, setRole] = useState("");
 
   const getVisiblePages = () => {
     const range = 2; // Number of pages to show on each side of current page
@@ -55,10 +56,7 @@ const DataTable = () => {
       start = Math.max(totalPages - range * 2, 1);
     }
 
-    return Array.from(
-      { length: end - start + 1 },
-      (_, index) => start + index
-    );
+    return Array.from({ length: end - start + 1 }, (_, index) => start + index);
   };
 
   useEffect(() => {
@@ -218,9 +216,19 @@ const DataTable = () => {
   };
 
   useEffect(() => {
+    // Redirect jika token tidak ada
     if (!token) {
       router.push("/sign-in");
-    } else {
+      return; // Hentikan eksekusi jika token tidak ada
+    }
+
+    // Ambil role dan cabang dari sessionStorage
+    const storedRole = sessionStorage.getItem("role");
+    const storedCabang = sessionStorage.getItem("cabang");
+
+    setRole(storedRole || "");
+    if (storedRole === "ADMIN") {
+      setSelectedCabang(storedCabang || ""); // Set default cabang jika role ADMIN
     }
   }, [token, router]);
 
@@ -256,9 +264,13 @@ const DataTable = () => {
                   type="text"
                   placeholder="Cabang terpilih"
                   value={selectedCabang}
-                  readOnly
-                  className="p-2 border border-gray-300 rounded-md w-full"
-                  onClick={() => setShowDropdown(!showDropdown)}
+                  readOnly={role === "ADMIN"}
+                  className={`p-2 border border-gray-300 rounded-md w-full ${
+                    role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
+                  }`}
+                  onClick={() => {
+                    if (role !== "ADMIN") setShowDropdown(!showDropdown);
+                  }}
                 />
                 {showDropdown && (
                   <div className="absolute w-full bg-white border border-gray-300 rounded-md max-h-48 shadow-lg z-10">
@@ -404,7 +416,9 @@ const DataTable = () => {
                                 {startingNumber + index}
                               </TableCell>
                               <TableCell className="border flex justify-between items-center px-2">
-                                <span>Jumlah Data: {item.jumlahData || "-"}</span>
+                                <span>
+                                  Jumlah Data: {item.jumlahData || "-"}
+                                </span>
                                 <button
                                   className="bg-blue-500 text-white px-2 py-1 rounded"
                                   onClick={() => handleToggleDetail(index)}
@@ -434,7 +448,8 @@ const DataTable = () => {
                               item.detail
                                 .slice(1)
                                 .map((detailItem, detailIndex) => {
-                                  const extraDetailParts = detailItem.split("\n");
+                                  const extraDetailParts =
+                                    detailItem.split("\n");
                                   const extraNama = extraDetailParts[0] || "-";
                                   const extraNpa = extraDetailParts[1] || "-";
                                   const extraUsia = extraDetailParts[2] || "-";
@@ -494,7 +509,9 @@ const DataTable = () => {
                       First
                     </button>
                     <button
-                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      }
                       disabled={currentPage === 1}
                       className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                     >
@@ -504,16 +521,19 @@ const DataTable = () => {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1 border rounded text-sm ${page === currentPage
-                          ? "bg-blue-500 text-white"
-                          : "bg-white hover:bg-gray-50"
-                          }`}
+                        className={`px-3 py-1 border rounded text-sm ${
+                          page === currentPage
+                            ? "bg-blue-500 text-white"
+                            : "bg-white hover:bg-gray-50"
+                        }`}
                       >
                         {page}
                       </button>
                     ))}
                     <button
-                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                      }
                       disabled={currentPage === totalPages}
                       className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                     >

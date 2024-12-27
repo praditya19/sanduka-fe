@@ -38,20 +38,27 @@ export default function Home() {
               &times;
             </button>
 
-            <Image
-              className="w-full h-auto max-h-80 rounded-lg"
-              src={"/gif_hal_depan.gif"}
-              alt="Popup"
-              width={110}
-              height={110}
-            />
-
-            <button
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg -mt-4"
-              onClick={handleLogin}
-            >
-              Update Data
-            </button>
+            <div className="relative">
+              <Image
+                className="w-full h-auto max-h-80 rounded-lg"
+                src={"/gif_hal_depan.gif"}
+                alt="Popup"
+                width={110}
+                height={110}
+              />
+              <button
+                className="absolute bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+                style={{
+                  top: "85%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 10,
+                }}
+                onClick={handleLogin}
+              >
+                Update Data
+              </button>
+            </div>
           </div>
         </div>
       )}
