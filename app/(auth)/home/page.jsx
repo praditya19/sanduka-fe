@@ -416,8 +416,14 @@ export default function IconGrid() {
                         <p className="text-xs font-semibold text-gray-500 uppercase">
                           1 Orang
                         </p>
-                        <p className="text-xs text-green-500 font-medium mt-1">
-                          <span className="mr-1">↑</span>3.48% Since last month
+                        <p className="text-sm text-red-500 font-medium mt-1">
+                          <span className="mr-1">
+                            {new Date().toLocaleDateString("id-ID", {
+                              day: "2-digit",
+                              month: "long",
+                              year: "numeric",
+                            })}
+                          </span>
                         </p>
                       </div>
                     </div>
@@ -430,8 +436,14 @@ export default function IconGrid() {
                         <p className="text-xs font-semibold text-gray-500 uppercase">
                           173 Orang
                         </p>
-                        <p className="text-xs text-red-500 font-medium mt-1">
-                          <span className="mr-1">↓</span>1.10% Since yesterday
+                        <p className="text-sm text-green-500 font-medium mt-1">
+                          <span className="mr-1">
+                            2020 -{" "}
+                            {new Date().toLocaleDateString("id-ID", {
+                              month: "long",
+                              year: "numeric",
+                            })}
+                          </span>
                         </p>
                       </div>
                     </div>
@@ -444,8 +456,14 @@ export default function IconGrid() {
                         <p className="text-xs font-semibold text-gray-500 uppercase">
                           Rp.432.500.000,-
                         </p>
-                        <p className="text-xs text-red-500 font-medium mt-1">
-                          <span className="mr-1">↓</span>3.48% Since last week
+                        <p className="text-sm text-green-500 font-medium mt-1">
+                          <span className="mr-1">
+                            2020 -{" "}
+                            {new Date().toLocaleDateString("id-ID", {
+                              month: "long",
+                              year: "numeric",
+                            })}
+                          </span>
                         </p>
                       </div>
                     </div>
