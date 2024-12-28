@@ -2,7 +2,7 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "https://sanduka.my.id",
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -193,11 +193,15 @@ const getFileByNip = async (nip) => {
 // Update DATA
 const updateUserById = async (userId, formData) => {
   try {
-    const response = await axiosClient.put(`/api/auth/user/${userId}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await axiosClient.put(
+      `/api/auth/user/${userId}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error updating user:", error);
     throw error;
@@ -1344,8 +1348,9 @@ const getRantingSummary = async (
             namaRanting: data.namaRanting,
             lokasi: data.unitKerja,
             namaAnggota: processNamaAnggota(data.namaAnggota),
-            totalAnggota: data.jumlahAnggotaRanting,
-            totalKegiatan: data.totalAnggotaCabang,
+            jumlahAnggotaRanting: data.jumlahAnggotaRanting,
+            totalUnitKerja: data.totalUnitKerja,
+            totalAnggota: data.totalAnggota,
           }))
         : [],
       totalElements: response.data.totalElements,
