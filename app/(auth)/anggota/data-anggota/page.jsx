@@ -62,7 +62,7 @@ function DataAnggota() {
   const [filteredUnitKerjaOptions, setFilteredUnitKerjaOptions] = useState([]);
   const [formData, setFormData] = useState({ unit: "" });
   const [isUnitKerjaDisabled, setIsUnitKerjaDisabled] = useState(true);
-
+  const [selectedCabang, setSelectedCabang] = useState("");
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [allUnitKerja, setAllUnitKerja] = useState([]);
   const [cabangOptions, setCabangOptions] = useState([]);
@@ -85,17 +85,34 @@ function DataAnggota() {
     if (!token) {
       router.push("/sign-in");
     } else {
-      setLoading(false);
-
       const fetchAnggota = async () => {
+        setLoading(true); // Set loading true hanya untuk getAllAnggota
         try {
           const anggotaResponse = await GlobalApi.getAllAnggota();
           setAnggota(anggotaResponse);
         } catch (error) {
           console.error("Error fetching anggota data:", error);
+        } finally {
+          setLoading(false); // Set loading false setelah getAllAnggota selesai
         }
       };
-      fetchAnggota();
+
+      const fetchCabangAndUnitKerja = async () => {
+        try {
+          const cabangResponse = await GlobalApi.getCabang();
+          setListCabang(cabangResponse.data);
+          setCabangOptions(cabangResponse.data);
+          setFilteredCabangOptions(cabangResponse.data);
+
+          const unitKerjaResponse = await GlobalApi.getUnitKerja();
+          setAllUnitKerja(unitKerjaResponse.data);
+          setUnitKerjaOptions(unitKerjaResponse.data);
+        } catch (error) {
+          console.error("Error fetching additional data:", error);
+        }
+      };
+
+      fetchAnggota().then(() => fetchCabangAndUnitKerja());
 
       const storedRole = sessionStorage.getItem("role");
       const storedCabang = sessionStorage.getItem("cabang");
@@ -103,30 +120,10 @@ function DataAnggota() {
       setRole(storedRole || "");
       if (storedRole === "ADMIN" && storedCabang) {
         setSelectedCabang(storedCabang);
+      } else if (storedRole === "USER") {
+        const userName = sessionStorage.getItem("nama") || "";
+        setSearchKeyword(userName);
       }
-
-      const fetchCabangData = async () => {
-        try {
-          const cabangResponse = await GlobalApi.getCabang();
-          setListCabang(cabangResponse.data);
-          setCabangOptions(cabangResponse.data);
-          setFilteredCabangOptions(cabangResponse.data);
-        } catch (error) {
-          console.error("Error fetching cabang data:", error);
-        }
-      };
-      fetchCabangData();
-
-      const fetchUnitKerjaData = async () => {
-        try {
-          const unitKerjaResponse = await GlobalApi.getUnitKerja();
-          setAllUnitKerja(unitKerjaResponse.data);
-          setUnitKerjaOptions(unitKerjaResponse.data);
-        } catch (error) {
-          console.error("Error fetching unit kerja data:", error);
-        }
-      };
-      fetchUnitKerjaData();
 
       const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
       setIsSidebarOpen(sidebarState);
@@ -1273,6 +1270,7 @@ function DataAnggota() {
           <div className="mb-4">
             <div className="flex flex-wrap items-start mt-14 justify-between">
               <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
+              {role !== "USER" && (
                 <>
                   <div
                     ref={dropdownRef}
@@ -1351,7 +1349,8 @@ function DataAnggota() {
                         );
                       }}
                       className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                      disabled={selectedCabang === "Pilih Cabang"}
+                      // disabled={selectedCabang === "Pilih Cabang"}
+                      disabled={role === "USER"}
                     />
 
                     {showDropdownUnitKerja && (
@@ -1385,18 +1384,22 @@ function DataAnggota() {
                       </div>
                     )}
                   </div>
-                </>
-                <select
-                  className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                >
-                  <option>Semua</option>
-                  <option>Aktif</option>
-                  <option>Tidak Aktif</option>
-                  <option>Meninggal</option>
-                  <option>Keluar</option>
-                </select>
+                  </>
+                  )}
+                {role !== "USER" && (
+  <select
+    className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+    value={selectedStatus}
+    onChange={(e) => setSelectedStatus(e.target.value)}
+  >
+    <option>Semua</option>
+    <option>Aktif</option>
+    <option>Tidak Aktif</option>
+    <option>Meninggal</option>
+    <option>Keluar</option>
+  </select>
+)}
+{role !== "USER" && (
                 <div className="flex flex-wrap items-center space-x-2 w-full md:w-40">
                   <Input
                     type="text"
@@ -1404,12 +1407,16 @@ function DataAnggota() {
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
                     className="border rounded-lg p-2 w-full md:w-60 bg-white shadow-sm"
+                    disabled={role === "USER"}
                   />
-                </div>
+                  </div>
+                  )}
               </div>
-              <p className="py-2 rounded focus:outline-none focus:shadow-outline w-full md:w-40 ">
-                Jumlah Anggota : {jumlahAnggota}
-              </p>
+              {role !== "USER" && (
+                <p className="py-2 rounded focus:outline-none focus:shadow-outline w-full md:w-40 ">
+                  Jumlah Anggota : {jumlahAnggota}
+                </p>
+              )}
               <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
                 <div className="space-x-2 w-full flex md:block">
                   {/* <label htmlFor="maxItems" className="mr-2">
@@ -1426,13 +1433,16 @@ function DataAnggota() {
                     <option value={15}>15</option>
                     <option value={20}>20</option>
                   </select> */}
+                  {role !== "USER" && (
                   <Button
                     className="px-8 mt-2 md:mt-0"
                     variant="outline"
                     onClick={handlePrint}
+                    disabled={role === "USER"}
                   >
                     Cetak
                   </Button>
+                )}
                 </div>
               </div>
             </div>

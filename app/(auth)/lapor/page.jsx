@@ -1101,14 +1101,13 @@ const Page = () => {
             textAlign: "center",
           }}
         >
-          <svg
+           <svg
             xmlns="http://www.w3.org/2000/svg"
             style={{
               width: "150px",
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
-               marginTop: "14px"
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
