@@ -161,6 +161,7 @@ const getAdminById = async (adminId) => {
     throw error;
   }
 };
+
 const getUserById = async (userId) => {
   try {
     const response = await axiosClient.get(`/api/auth/user/${userId}`);
