@@ -122,7 +122,7 @@ const getAllAnggota = async (page = 0, cabang = null, unitKerja = null) => {
     while (hasMoreData) {
       const params = new URLSearchParams({
         page: currentPage,
-        size: 500, // Gunakan ukuran batch yang masuk akal
+        size: 1000, // Gunakan ukuran batch yang masuk akal
       });
 
       if (cabang) params.append("cabang", cabang);

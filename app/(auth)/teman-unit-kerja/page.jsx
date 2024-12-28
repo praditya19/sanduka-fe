@@ -197,7 +197,7 @@ const TemanUnitKerja = () => {
                     </div>
 
                     <div className="mt-4 justify-items-center">
-                      <div className="flex items-center text-gray-800 text-sm space-x-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-gray-800 text-sm">
                         <div className="flex items-center">
                           <span className="font-semibold">Daspen:</span>
                           <span className="ml-2">

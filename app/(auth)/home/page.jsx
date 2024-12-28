@@ -263,7 +263,7 @@ export default function IconGrid() {
   };
 
   const renderCheckmark = (value) => {
-    if (value === "YA") {
+    if (value === "Ya") {
       return <span className="text-green-500">✔</span>;
     } else if (
       value === "" ||

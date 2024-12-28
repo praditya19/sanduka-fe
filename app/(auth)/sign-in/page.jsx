@@ -122,6 +122,7 @@ function SignIn() {
       setToken(response.token);
       sessionStorage.setItem("userId", response.id);
       sessionStorage.setItem("unitKerja", response.unitKerja);
+      sessionStorage.setItem("cabang", response.cabang);
       sessionStorage.setItem("nama", response.namaLengkap);
       sessionStorage.setItem("role", response.role);
       sessionStorage.setItem("npaPgri", npaPgri);
@@ -273,22 +274,33 @@ function SignIn() {
       const fetchAndStoreAdminId = async () => {
         try {
           const npaPgri = sessionStorage.getItem("npaPgri");
-  
+      
           if (!npaPgri) {
             throw new Error("NPA tidak ditemukan di sessionStorage.");
           }
-  
+      
           const cekNpaResponse = await GlobalApi.cekNpa(npaPgri);
-  
+          console.log(cekNpaResponse);
+      
           if (!cekNpaResponse || !cekNpaResponse.id) {
             throw new Error("Respon cekNpa tidak valid atau ID tidak ditemukan.");
           }
-  
+      
           sessionStorage.setItem("adminId", cekNpaResponse.id);
+      
+          // Mendapatkan detail user menggunakan getUserById
+          const userDetails = await GlobalApi.getUserById(cekNpaResponse.id);
+          console.log(userDetails);
+      
+          if (!userDetails || !userDetails.unitKerja) {
+            throw new Error("Respon getUserById tidak valid atau unitKerja tidak ditemukan.");
+          }
+      
+          sessionStorage.setItem("unitKerja", userDetails.unitKerja);
         } catch (error) {
           console.error("Terjadi kesalahan:", error.message);
         }
-      };
+      };      
 
       await fetchAndStoreAdminId();
 
