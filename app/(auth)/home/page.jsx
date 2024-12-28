@@ -162,60 +162,70 @@ export default function IconGrid() {
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
-      return; // Pastikan kode di bawahnya tidak dieksekusi jika tidak ada token
+      return;
     }
-  
-    const fetchAndStoreAdminId = async () => {
+
+    const fetchAnggotaMeninggal = async () => {
       try {
-        // Ambil NPA dari sessionStorage
-        const npaPgri = sessionStorage.getItem("npaPgri");
-  
-        // Periksa apakah NPA ada di sessionStorage
-        if (!npaPgri) {
-          throw new Error("NPA tidak ditemukan di sessionStorage.");
-        }
-  
-        console.log("NPA diambil dari sessionStorage:", npaPgri);
-  
-        // Panggil GlobalApi.cekNpa untuk mendapatkan id
-        const cekNpaResponse = await GlobalApi.cekNpa(npaPgri);
-  
-        // Pastikan respon mengandung id
-        if (!cekNpaResponse || !cekNpaResponse.id) {
-          throw new Error("Respon cekNpa tidak valid atau ID tidak ditemukan.");
-        }
-  
-        console.log("ID yang didapatkan dari cekNpa:", cekNpaResponse.id);
-  
-        // Simpan id ke sessionStorage dengan nama adminId
-        sessionStorage.setItem("adminId", cekNpaResponse.id);
-  
-        console.log("Admin ID berhasil disimpan ke sessionStorage.");
+        const data = await GlobalApi.getAnggotaMeninggal();
+        setAnggotaMeninggal(data);
       } catch (error) {
-        console.error("Terjadi kesalahan:", error.message);
+        console.error("Error fetching anggota meninggal:", error);
       }
     };
-  
-    setLoading(false);
-  
-    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-    setIsSidebarOpen(sidebarState);
-  
+
+    const fetchUserData = async () => {
+      const userId = sessionStorage.getItem("userId");
+      const adminId = sessionStorage.getItem("adminId");
+
+      if (!userId && !adminId) {
+        console.error("ID tidak ditemukan di sessionStorage");
+        return;
+      }
+
+      try {
+        const idToFetch = userId || adminId;
+        const response = await GlobalApi.getUserById(idToFetch);
+        setUserData(response);
+      } catch (error) {
+        console.error("Error saat mendapatkan data user:", error);
+      }
+    };
+
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };
-  
-    handleResize();
-    window.addEventListener("resize", handleResize);
-  
-    // Panggil fungsi fetchAndStoreAdminId setelah token divalidasi
-    fetchAndStoreAdminId();
-  
+
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(null);
+      }
+    };
+
+    const init = () => {
+      const storedRole = sessionStorage.getItem("role");
+      setRole(storedRole);
+
+      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+      setIsSidebarOpen(sidebarState);
+
+      setLoading(false);
+      handleResize();
+      fetchAnggotaMeninggal();
+      fetchUserData();
+
+      document.addEventListener("mousedown", handleClickOutside);
+      window.addEventListener("resize", handleResize);
+    };
+
+    init();
+
     return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("resize", handleResize);
     };
   }, [token, router]);
-  
+
   const handleMainMenuClick = (e, index, href) => {
     e.preventDefault();
     if (index !== dropdownOpen) {
@@ -230,11 +240,6 @@ export default function IconGrid() {
     router.push(href);
     setDropdownOpen(null);
   };
-
-  useEffect(() => {
-    const storedRole = sessionStorage.getItem("role");
-    setRole(storedRole);
-  }, []);
 
   const formatDate = (dateArray) => {
     if (Array.isArray(dateArray) && dateArray.length === 3) {
@@ -257,41 +262,6 @@ export default function IconGrid() {
     }
   };
 
-
-  useEffect(() => {
-    const fetchAnggotaMeninggal = async () => {
-      try {
-        const data = await GlobalApi.getAnggotaMeninggal();
-        setAnggotaMeninggal(data);
-      } catch (error) {
-        console.error("Error fetching anggota meninggal:", error);
-      }
-    };
-
-    const userRole = sessionStorage.getItem("role");
-    setRole(userRole);
-
-    fetchAnggotaMeninggal();
-  }, []);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const userId = sessionStorage.getItem("userId");
-      if (!userId) {
-        console.error("User ID tidak ditemukan di sessionStorage");
-        return;
-      }
-
-      try {
-        const response = await GlobalApi.getUserById(userId);
-        setUserData(response);
-      } catch (error) {
-        console.error("Error saat mendapatkan data user:", error);
-      }
-    };
-
-    fetchUserData();
-  }, []);
   const renderCheckmark = (value) => {
     if (value === "YA") {
       return <span className="text-green-500">✔</span>;
@@ -305,24 +275,6 @@ export default function IconGrid() {
     }
     return null;
   };
-
-  useEffect(() => {
-    const userRole = sessionStorage.getItem("role");
-    setRole(userRole);
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDropdownOpen(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -382,7 +334,7 @@ export default function IconGrid() {
           <div className="flex-1 ">
             {isMobile ? (
               <>
-                {role === "USER" && (
+                {(role === "USER" || role === "ADMIN") && (
                   <div className="flex justify-center mb-[18%] ml-3 -mt-32 items-center text-center overflow-x-hidden max-w-full">
                     <div className="flex items-center justify-center">
                       <span className=" text-lg ">Daspen:</span>
@@ -472,7 +424,7 @@ export default function IconGrid() {
               </>
             ) : (
               <div className="w-full -mt-12">
-                {role === "USER" && (
+                {(role === "USER" || role === "ADMIN") && (
                   <div className="flex justify-center space-x-8 mb-10 -mt-36 items-center text-center">
                     <div className="flex items-center justify-center">
                       <span className=" text-lg ">Daspen:</span>

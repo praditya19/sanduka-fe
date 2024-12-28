@@ -270,6 +270,28 @@ function SignIn() {
       sessionStorage.setItem("npaPgri", npaPgriValue);
       sessionStorage.setItem("cabang", response.cabang);
 
+      const fetchAndStoreAdminId = async () => {
+        try {
+          const npaPgri = sessionStorage.getItem("npaPgri");
+  
+          if (!npaPgri) {
+            throw new Error("NPA tidak ditemukan di sessionStorage.");
+          }
+  
+          const cekNpaResponse = await GlobalApi.cekNpa(npaPgri);
+  
+          if (!cekNpaResponse || !cekNpaResponse.id) {
+            throw new Error("Respon cekNpa tidak valid atau ID tidak ditemukan.");
+          }
+  
+          sessionStorage.setItem("adminId", cekNpaResponse.id);
+        } catch (error) {
+          console.error("Terjadi kesalahan:", error.message);
+        }
+      };
+
+      await fetchAndStoreAdminId();
+
       toast.success(
         <div
           style={{

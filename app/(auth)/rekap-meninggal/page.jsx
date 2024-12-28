@@ -10,6 +10,7 @@ import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import Image from "next/image";
 import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
+import { ClipLoader } from "react-spinners";
 
 const Page = () => {
   const [filter, setFilter] = useState("");
@@ -144,6 +145,21 @@ const Page = () => {
   const handleExpand = (index) => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <ClipLoader color="#3498db" size={50} />
+      </div>
+    );
+}
 
   return (
     <div>
