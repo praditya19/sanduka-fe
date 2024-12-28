@@ -22,6 +22,7 @@ import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Input } from "@/components/ui/input";
+import { ClipLoader } from "react-spinners";
 
 const Page = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -43,6 +44,8 @@ const Page = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState('');
+  const [anggotaMasuk, setAnggotaMasuk] = useState(0);
+  const [anggotaKeluar, setAnggotaKeluar] = useState(0);
   // const [currentPage, setCurrentPage] = useState(1);
   // const [itemsPerPage, setItemsPerPage] = useState(10);
   // const indexOfLastItem = currentPage * itemsPerPage;
@@ -61,6 +64,7 @@ const Page = () => {
   //   }
   //   return pages;
   // };
+  
 
   useEffect(() => {
     const today = new Date();
@@ -137,23 +141,45 @@ const Page = () => {
         selectedTahun,
         selectedCabang || null
       );
+
       if (Array.isArray(data)) {
         setTableData(data);
+
+        const totalMasuk = data.reduce((sum, item) => sum + (item.baru || 0), 0);
+        const totalKeluar = data.reduce((sum, item) =>
+          sum +
+          (item.pensiun || 0) +
+          (item.meninggal || 0) +
+          (item.keluarAnggota || 0),
+          0);
+        const totalSekarang = data.reduce((sum, item) => sum + (item.dataSekarang || 0), 0);
+
+        setAnggotaMasuk(totalMasuk);
+        setAnggotaKeluar(totalKeluar);
+        setTotalAnggota(totalSekarang);
       } else {
         console.error("API response is not an array:", data);
         setTableData([]);
+        setAnggotaMasuk(0);
+        setAnggotaKeluar(0);
+        setTotalAnggota(0);
       }
     } catch (error) {
       console.error("Error fetching calculate-sanduka data:", error);
       setTableData([]);
+      setAnggotaMasuk(0);
+      setAnggotaKeluar(0);
+      setTotalAnggota(0);
     }
   };
+
 
   useEffect(() => {
     fetchCalculateSanduka();
   }, [selectedBulan, selectedTahun, selectedCabang]);
 
   useEffect(() => { }, [tableData]);
+  
 
   const handleCabangClick = () => {
     if (role !== 'ADMIN') {
@@ -211,6 +237,7 @@ const Page = () => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
     setIsSidebarOpen(sidebarState);
   }, []);
+  
 
   const handlePrint = () => {
     const printWindow = window.open("", "", "width=800,height=600");
@@ -270,6 +297,7 @@ const Page = () => {
       setSelectedCabang(storedCabang || ''); // Set default cabang jika role ADMIN
     }
   }, [token, router]);
+  
 
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
@@ -289,6 +317,21 @@ const Page = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  if (loading) {
+      return (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100vh",
+          }}
+        >
+          <ClipLoader color="#3498db" size={50} />
+        </div>
+      );
+    }
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
@@ -315,7 +358,7 @@ const Page = () => {
                     </div>
                     <div className="ml-2 sm:ml-4">
                       <div className="text-base sm:text-base font-semibold text-gray-800">
-                        153
+                        {anggotaMasuk}
                       </div>
                       <div className="text-xs sm:text-sm text-gray-500">
                         Anggota Masuk
@@ -331,7 +374,7 @@ const Page = () => {
                     </div>
                     <div className="ml-2 sm:ml-4">
                       <div className="text-base sm:text-base font-semibold text-gray-800">
-                        2
+                        {anggotaKeluar}
                       </div>
                       <div className="text-xs sm:text-sm text-gray-500">
                         Anggota Keluar
@@ -347,7 +390,7 @@ const Page = () => {
                     </div>
                     <div className="ml-2 sm:ml-4">
                       <div className="text-base sm:text-base font-semibold text-gray-800">
-                        <p>{totalAnggota !== null ? totalAnggota : 'No data available'}</p>
+                        {totalAnggota}
                       </div>
                       <div className="text-xs sm:text-sm text-gray-500">
                         Total Anggota
@@ -361,16 +404,15 @@ const Page = () => {
                       className="relative w-full md:w-auto"
                       ref={dropdownRef}
                     >
-                       <Input
-        type="text"
-        placeholder="Cabang terpilih"
-        value={selectedCabang}
-        readOnly={role === 'ADMIN'} 
-        className={`p-2 border border-gray-300 rounded-md w-full ${
-          role === 'ADMIN' ? 'bg-gray-100 cursor-not-allowed' : ''
-        }`}
-        onClick={handleCabangClick}
-      />
+                      <Input
+                        type="text"
+                        placeholder="Cabang terpilih"
+                        value={selectedCabang}
+                        readOnly={role === 'ADMIN'}
+                        className={`p-2 border border-gray-300 rounded-md w-full ${role === 'ADMIN' ? 'bg-gray-100 cursor-not-allowed' : ''
+                          }`}
+                        onClick={handleCabangClick}
+                      />
                       {showDropdown && (
                         <div className="absolute z-10 border rounded-lg bg-white shadow-sm w-full mt-1">
                           <ul className="max-h-44 overflow-y-auto">

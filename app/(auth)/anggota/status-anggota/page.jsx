@@ -21,6 +21,7 @@ import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext.js";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import { ClipLoader } from "react-spinners";
 
 function StatusAnggota() {
   const [maxItems, setMaxItems] = useState(10);
@@ -90,11 +91,7 @@ function StatusAnggota() {
     if (anggotaId) {
       try {
         const response = await GlobalApi.getUserById(anggotaId);
-        // console.log("data", response)
         if (response) {
-          // console.log("Data anggota yang diterima dari getUserById:", response);
-
-          // Set kategoriDaspen dengan nilai dari response
           setKategoriDaspen(response.kategoriDaspen || "Tidak tersedia");
 
           const nip = response.nip;
@@ -103,7 +100,6 @@ function StatusAnggota() {
             const fileResponse = await GlobalApi.getFileByNip(nip);
 
             if (fileResponse) {
-              // console.log("Data file untuk NIP:", nip, fileResponse);
               setDaspenData(fileResponse);
               setIsPopupDaspen(true);
             } else {
@@ -187,9 +183,8 @@ function StatusAnggota() {
 
   const handleCabangSelect = (cabang) => {
     if (!cabang.kecamatan) {
-      // Handle "Semua Cabang" selection
       setSelectedCabang("");
-      setSelectedUnitKerja(""); // Reset selected unit kerja
+      setSelectedUnitKerja("");
       setFormData((prev) => ({
         ...prev,
         unit: "",
@@ -198,7 +193,7 @@ function StatusAnggota() {
       setIsUnitKerjaDisabled(true);
     } else {
       setSelectedCabang(cabang.kecamatan);
-      setSelectedUnitKerja(""); // Reset selected unit kerja
+      setSelectedUnitKerja("");
       setFormData((prev) => ({
         ...prev,
         unit: "",
@@ -211,7 +206,7 @@ function StatusAnggota() {
       setIsUnitKerjaDisabled(false);
     }
     setShowDropdownCabang(false);
-    setCurrentPage(1); // Reset to first page when changing cabang
+    setCurrentPage(1);
   };
 
   const handleUnitKerjaChange = (e) => {
@@ -261,7 +256,7 @@ function StatusAnggota() {
 
   const handleTingkatChange = (e) => {
     setSelectedTingkat(e.target.value);
-    setCurrentPage(1); // Reset to first page when changing tingkat
+    setCurrentPage(1);
   };
 
   useEffect(() => {
@@ -487,10 +482,20 @@ function StatusAnggota() {
               <div className="text-3xl font-bold text-gray-700">
                 {item.count}
               </div>
-              <div className="text-sm text-gray-500 mt-2">Total Anggota</div>
+              <div className="text-sm text-gray-500 mt-2">Anggota</div>
             </div>
           ))}
+          <div className="bg-white border rounded-lg shadow-md p-6 w-64 text-center">
+            <div className="bg-teal-500 text-white p-2 rounded-lg mb-4">
+              Total Anggota
+            </div>
+            <div className="text-3xl font-bold text-gray-700">
+              {jumlahAnggota}
+            </div>
+            <div className="text-sm text-gray-500 mt-2">Anggota</div>
+          </div>
         </div>
+
 
         {/* Jenjang Pendidikan Section - Modified to show 3x3 grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-6 justify-items-center items-center">
@@ -878,7 +883,18 @@ function StatusAnggota() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <ClipLoader color="#3498db" size={50} />
+      </div>
+    );
   }
 
   return (

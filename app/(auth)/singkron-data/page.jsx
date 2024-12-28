@@ -568,6 +568,7 @@ const SyncData = () => {
     pages = pages.filter(page => page > 0 && page <= totalPages);
     setDisplayedPages(pages);
   };
+  
 
   const renderPagination = () => {
     return (

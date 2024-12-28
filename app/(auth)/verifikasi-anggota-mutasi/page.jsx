@@ -19,6 +19,7 @@ import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Badge } from "@/components/ui/badge";
 import toast, { Toaster } from "react-hot-toast";
+import { ClipLoader } from "react-spinners";
 
 const VerifikasiAnggotaMutasi = () => {
   const [selectedRow, setSelectedRow] = useState(null);
@@ -339,7 +340,7 @@ const VerifikasiAnggotaMutasi = () => {
     const namaAnggota = e.target.value;
     setNama(namaAnggota);
     fetchDataAnggota(0, pageSize, "", "", namaAnggota);
-  };
+  };
 
   const handleCabangChange = (value) => {
     const selectedKecamatan = value;
@@ -406,7 +407,18 @@ const VerifikasiAnggotaMutasi = () => {
 
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <ClipLoader color="#3498db" size={50} />
+      </div>
+    );
   }
 
   const handleUserClick = (rowId, index) => {
