@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
@@ -24,12 +24,19 @@ const Page = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [namaRanting, setNamaRanting] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
+  const [searchUnitKerja, setSearchUnitKerja] = useState("");
   const [filteredCabangList, setFilteredCabangList] = useState([]);
+  const [filteredUnitKerjaOptions, setFilteredUnitKerjaOptions] = useState([]);
+  const [, setUnitKerjaOptions] = useState([]);
+  const [allUnitKerja, setAllUnitKerja] = useState([]);
   const [originalCabangList, setOriginalCabangList] = useState([]);
   const [showCabangDropdown, setShowCabangDropdown] = useState(false);
+  const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
   const [totalEntries, setTotalEntries] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const router = useRouter();
+  const unitKerjaRef = useRef(null);
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +50,7 @@ const Page = () => {
       const rantingData = {
         cabang: selectedCabang,
         namaRanting: newCabang,
+        unitKerja: selectedUnitKerja,
       };
       const response = await GlobalApi.createRanting(rantingData);
 
@@ -174,6 +182,16 @@ const Page = () => {
     }
   };
 
+  const fetchUnitKerjaData = async () => {
+    try {
+      const unitKerjaResponse = await GlobalApi.getUnitKerja();
+      setAllUnitKerja(unitKerjaResponse.data);
+      setUnitKerjaOptions(unitKerjaResponse.data);
+    } catch (error) {
+      console.error("Error fetching unit kerja data:", error);
+    }
+  };
+
   const fetchCabangData = async () => {
     try {
       const response = await GlobalApi.getCabang();
@@ -250,6 +268,7 @@ const Page = () => {
     else {
       setLoading(false);
       fetchCabangData();
+      fetchUnitKerjaData();
       fetchData(currentPage, entries);
 
       const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -312,6 +331,23 @@ const Page = () => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
     fetchData(0, entries, query);
+  };
+
+  const handleUnitKerjaSelect = (selectedItem) => {
+    setSelectedUnitKerja(selectedItem.unitKerja || "");
+    setShowDropdownUnitKerja(false);
+    setSearchUnitKerja("");
+  };
+
+  const handleUnitKerjaChange = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchUnitKerja(value);
+
+    const filteredOptions = allUnitKerja.filter((uk) =>
+      uk.unitKerja.toLowerCase().includes(value)
+    );
+
+    setFilteredUnitKerjaOptions(filteredOptions);
   };
 
   const filteredData = namaRanting?.filter((item) => {
@@ -451,10 +487,80 @@ const Page = () => {
                     </div>
                   </div>
 
-                  <div className="flex justify-end mt-5">
+                  <div className="mb-4">
+                    <label className="block text-gray-700 text-sm font-bold mb-1">
+                      Nama Unit Kerja
+                    </label>
+                    <div
+                      ref={unitKerjaRef}
+                      className="relative w-full mt-4 sm:mt-0"
+                    >
+                      <Input
+                        type="text"
+                        placeholder="Pilih Unit Kerja"
+                        value={selectedUnitKerja}
+                        readOnly
+                        onFocus={() => {
+                          if (
+                            selectedCabang !== "Pilih Cabang" &&
+                            selectedCabang
+                          ) {
+                            setShowDropdownUnitKerja(true);
+                            setFilteredUnitKerjaOptions(
+                              selectedCabang === "Pilih Cabang"
+                                ? allUnitKerja
+                                : allUnitKerja.filter(
+                                    (uk) => uk.cabang === selectedCabang
+                                  )
+                            );
+                          }
+                        }}
+                        className={`shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-300 ${
+                          selectedCabang === "Pilih Cabang"
+                            ? "cursor-not-allowed"
+                            : ""
+                        }`}
+                        disabled={selectedCabang === "Pilih Cabang"} // Disable when no Cabang selected
+                      />
+
+                      {showDropdownUnitKerja &&
+                        selectedCabang !== "Pilih Cabang" && (
+                          <div className="absolute z-10 border rounded bg-white shadow-lg mt-1 w-full max-w-full">
+                            <div className="p-2 w-full">
+                              <Input
+                                type="text"
+                                value={searchUnitKerja}
+                                onChange={handleUnitKerjaChange}
+                                placeholder="Cari Unit Kerja..."
+                                className="w-full border rounded py-2 px-3 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                              />
+                            </div>
+                            <ul className="max-h-56 overflow-y-auto mt-1 rounded-md">
+                              <li
+                                className="p-3 cursor-pointer hover:bg-gray-100 transition duration-150 ease-in-out"
+                                onClick={() => handleUnitKerjaSelect({})}
+                              >
+                                Semua Unit Kerja
+                              </li>
+                              {filteredUnitKerjaOptions.map((item) => (
+                                <li
+                                  key={item.id}
+                                  className="p-3 cursor-pointer hover:bg-gray-100 transition duration-150 ease-in-out"
+                                  onClick={() => handleUnitKerjaSelect(item)}
+                                >
+                                  {item.unitKerja}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end mt-6">
                     <Button
                       type="button"
-                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+                      className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ease-in-out duration-150"
                       onClick={addRanting}
                     >
                       Tambah
@@ -498,9 +604,12 @@ const Page = () => {
                     <thead>
                       <tr className="bg-gray-50">
                         <th className="p-2 md:p-3 border">No</th>
-                        <th className="p-2 md:p-3 border">Nama Ranting</th>
+                        <th className="p-2 md:p-3 border ">Cabang</th>
                         <th className="p-2 md:p-3 border hidden md:table-cell">
-                          Cabang
+                          Nama Ranting
+                        </th>
+                        <th className="p-2 md:p-3 border hidden md:table-cell">
+                          Unit Kerja
                         </th>
                         <th className="p-2 border text-center">Action</th>
                       </tr>
@@ -518,13 +627,15 @@ const Page = () => {
                                 <td className="p-2 md:p-3 border">
                                   {index + 1 + currentPage * entries}
                                 </td>
-                                <td className="p-2 md:p-3 border">
-                                  {item.namaRanting}
-                                </td>
                                 <td className="p-2 md:p-3 border hidden md:table-cell">
                                   {item.cabangList}
                                 </td>
-
+                                <td className="p-2 md:p-3 border">
+                                  {item.namaRanting}
+                                </td>
+                                <td className="p-2 md:p-3 border">
+                                  {item.unitKerja}
+                                </td>
                                 <td className="p-2 border text-center">
                                   <div className="flex space-x-2 justify-center">
                                     <>
