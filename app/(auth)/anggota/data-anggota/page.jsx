@@ -25,6 +25,7 @@ import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import { ClipLoader } from "react-spinners";
 
 function DataAnggota() {
   const [maxItems, setMaxItems] = useState(10);
@@ -61,7 +62,7 @@ function DataAnggota() {
   const [filteredUnitKerjaOptions, setFilteredUnitKerjaOptions] = useState([]);
   const [formData, setFormData] = useState({ unit: "" });
   const [isUnitKerjaDisabled, setIsUnitKerjaDisabled] = useState(true);
-  const [selectedCabang, setSelectedCabang] = useState("");
+
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [allUnitKerja, setAllUnitKerja] = useState([]);
   const [cabangOptions, setCabangOptions] = useState([]);
@@ -86,12 +87,10 @@ function DataAnggota() {
     } else {
       setLoading(false);
 
-      // Fetch anggota data
       const fetchAnggota = async () => {
         try {
           const anggotaResponse = await GlobalApi.getAllAnggota();
           setAnggota(anggotaResponse);
-          console.log("Anggota Data:", anggotaResponse);
         } catch (error) {
           console.error("Error fetching anggota data:", error);
         }
@@ -106,7 +105,6 @@ function DataAnggota() {
         setSelectedCabang(storedCabang);
       }
 
-      // Fetch cabang data
       const fetchCabangData = async () => {
         try {
           const cabangResponse = await GlobalApi.getCabang();
@@ -119,7 +117,6 @@ function DataAnggota() {
       };
       fetchCabangData();
 
-      // Fetch unit kerja data
       const fetchUnitKerjaData = async () => {
         try {
           const unitKerjaResponse = await GlobalApi.getUnitKerja();
@@ -131,7 +128,6 @@ function DataAnggota() {
       };
       fetchUnitKerjaData();
 
-      // Sidebar state and screen size listener
       const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
       setIsSidebarOpen(sidebarState);
 
@@ -152,11 +148,8 @@ function DataAnggota() {
     if (anggotaId) {
       try {
         const response = await GlobalApi.getUserById(anggotaId);
-        // console.log("data", response)
-        if (response) {
-          // console.log("Data anggota yang diterima dari getUserById:", response);
 
-          // Set kategoriDaspen dengan nilai dari response
+        if (response) {
           setKategoriDaspen(response.kategoriDaspen || "Tidak tersedia");
 
           const nip = response.nip;
@@ -165,7 +158,6 @@ function DataAnggota() {
             const fileResponse = await GlobalApi.getFileByNip(nip);
 
             if (fileResponse) {
-              // console.log("Data file untuk NIP:", nip, fileResponse);
               setDaspenData(fileResponse);
               setIsPopupDaspen(true);
             } else {
@@ -174,7 +166,6 @@ function DataAnggota() {
           } else {
             toast.error(
               <div style={{ textAlign: "center" }}>
-                {/* Ikon silang di atas */}
                 <div
                   style={{
                     display: "flex",
@@ -199,7 +190,7 @@ function DataAnggota() {
                     <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
                   </svg>
                 </div>
-                {/* Teks di bawah ikon */}
+
                 <h3 style={{ fontSize: "1.75rem", display: "block" }}>
                   NIP tidak ditemukan, silahkan melakukan sinkronisasi dahulu.
                 </h3>
@@ -232,7 +223,6 @@ function DataAnggota() {
         console.error("Error fetching data:", error);
         toast.error(
           <div style={{ textAlign: "center" }}>
-            {/* Ikon silang di atas */}
             <div
               style={{
                 display: "flex",
@@ -250,7 +240,7 @@ function DataAnggota() {
                 <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
               </svg>
             </div>
-            {/* Teks di bawah ikon */}
+
             <h3 style={{ fontSize: "1.75rem", display: "block" }}>
               NIP tidak ditemukan, silahkan melakukan sinkronisasi dahulu.
             </h3>
@@ -329,68 +319,11 @@ function DataAnggota() {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  const fetchAnggota = async (page = 0, cabang = "", unitKerja = "") => {
-    setLoading(true);
-    try {
-      const role = sessionStorage.getItem("role");
-      const userId = sessionStorage.getItem("userId");
-
-      const fotoBase64Array = [];
-      let fetchedData = [];
-
-      if (role === "USER" && userId) {
-        const userData = await GlobalApi.getUserById(userId);
-
-        if (userData.foto) {
-          try {
-            const decodedString = atob(userData.foto);
-            fotoBase64Array.push(decodedString);
-          } catch (error) {
-            console.error("Error decoding Base64:", error);
-            fotoBase64Array.push(null);
-          }
-        } else {
-          fotoBase64Array.push(null);
-        }
-        fetchedData = [userData];
-      } else {
-        fetchedData = await GlobalApi.getAllAnggota(page, cabang, unitKerja);
-      }
-      if (fetchedData.length > 0) {
-        fetchedData.forEach((item) => {
-          if (item.foto) {
-            try {
-              const decodedString = atob(item.foto);
-              fotoBase64Array.push(decodedString);
-            } catch (error) {
-              console.error("Error decoding Base64:", error);
-              fotoBase64Array.push(null);
-            }
-          } else {
-            fotoBase64Array.push(null);
-          }
-        });
-      } else {
-        console.warn("No data found.");
-      }
-
-      setFotoBase64(fotoBase64Array);
-      setLoading(false);
-      setAnggota(fetchedData);
-      setCurrentPage(page + 1);
-    } catch (error) {
-      console.error("Error fetching anggota:", error);
-      setAnggota([]);
-      setLoading(false);
-    }
-  };
-
   const handleKategoriChange = (e) => {
-    // Simpan kategori Daspen sebelumnya
     setPreviousKategoriDaspen(kategoriDaspen);
-    // Set kategoriDaspen dengan nilai baru yang dipilih
+
     setKategoriDaspen(e.target.value);
-    setIsKategoriChanged(true); // Menampilkan popup konfirmasi
+    setIsKategoriChanged(true);
   };
 
   const handleConfirmChange = async () => {
@@ -417,7 +350,6 @@ function DataAnggota() {
             userData.mulaiJadiAnggotaPgri
           );
 
-          // Langkah 2: Membuat objek FormData dan menambahkan semua parameter
           const formData = new FormData();
 
           formData.append(
@@ -721,9 +653,9 @@ function DataAnggota() {
   const filteredData = useMemo(() => {
     return sortedData.filter((item) => {
       const statusFilter =
-        selectedStatus === "Semua" || item.anggota === selectedStatus;
+        selectedStatus === "Semua" || item.statusKeanggotaan === selectedStatus;
       const cabangFilter =
-        selectedCabang === "" || item.cabang === selectedCabang;
+        selectedCabang === "" || item.cabang === selectedCabang; 
       const unitKerjaFilter =
         selectedUnitKerja === "" || item.unitKerja === selectedUnitKerja;
 
@@ -734,8 +666,9 @@ function DataAnggota() {
         .toLowerCase()
         .includes(filterUnitKerja.toLowerCase());
 
-      const globalSearchFilter = Object.values(item).some((value) =>
-        String(value).toLowerCase().includes(searchKeyword.toLowerCase())
+      const globalSearchFilter = Object.values(item).some(
+        (value) =>
+          String(value).toLowerCase().includes(searchKeyword.toLowerCase())
       );
 
       return (
@@ -754,7 +687,7 @@ function DataAnggota() {
     selectedUnitKerja,
     filterCabang,
     filterUnitKerja,
-    searchKeyword, // Tambahkan searchKeyword ke dalam dependensi
+    searchKeyword,
   ]);
 
   const jumlahAnggota = filteredData.length;
@@ -836,16 +769,6 @@ function DataAnggota() {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     }
-  };
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handlePageClick = (pageNumber) => {
-    setCurrentPage(pageNumber);
   };
 
   const handlePopupKeluar = () => {
@@ -1081,7 +1004,6 @@ function DataAnggota() {
         }
       );
 
-      // Reload the page after success
       setTimeout(() => {
         window.location.reload();
       }, 4000);
@@ -1155,10 +1077,6 @@ function DataAnggota() {
 
   const handlePopup = () => {
     setPopupVisible(true);
-  };
-
-  const cancelChange = () => {
-    setShowConfirmationPopup(false);
   };
 
   const handlePensiunAnggota = async () => {
@@ -1296,7 +1214,18 @@ function DataAnggota() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <ClipLoader color="#3498db" size={50} />
+      </div>
+    );
   }
 
   return (
@@ -1479,11 +1408,11 @@ function DataAnggota() {
                 </div>
               </div>
               <p className="py-2 rounded focus:outline-none focus:shadow-outline w-full md:w-40 ">
-                  Jumlah Anggota : {jumlahAnggota}
-                </p>
+                Jumlah Anggota : {jumlahAnggota}
+              </p>
               <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
                 <div className="space-x-2 w-full flex md:block">
-                  <label htmlFor="maxItems" className="mr-2">
+                  {/* <label htmlFor="maxItems" className="mr-2">
                     Tampilkan:
                   </label>
                   <select
@@ -1496,7 +1425,7 @@ function DataAnggota() {
                     <option value={10}>10</option>
                     <option value={15}>15</option>
                     <option value={20}>20</option>
-                  </select>
+                  </select> */}
                   <Button
                     className="px-8 mt-2 md:mt-0"
                     variant="outline"
@@ -1687,9 +1616,7 @@ function DataAnggota() {
                                   : "bg-green-200 text-green-900"
                               }`}
                             >
-                              {item.role === "USER"
-                                ? "Aktif"
-                                : item.status_keanggotaan}
+                              {item.statusKeanggotaan}
                             </div>
                           </td>
                           <td className="p-2 md:p-3 border md:table-cell hidden">

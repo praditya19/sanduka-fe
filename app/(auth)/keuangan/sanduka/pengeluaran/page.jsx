@@ -10,6 +10,9 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
+import { toPng } from "html-to-image";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 function Pengeluaran() {
   const tableRef = useRef();
@@ -61,113 +64,7 @@ function Pengeluaran() {
   const [tahun, setTahun] = useState("");
   const [allNames, setAllNames] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-
-  const handleChange = async (e) => {
-    const { name, value } = e.target;
-
-    setFormValues((prevValues) => {
-      const updatedValues = { ...prevValues, [name]: value };
-
-      if (name === "nominal") {
-        if (value === "") {
-          updatedValues.terbilang = "";
-        } else if (!isNaN(value)) {
-          updatedValues.terbilang = convertToTerbilangWithRupiah(Number(value));
-        }
-      }
-
-      return updatedValues;
-    });
-
-    if (name === "tahun" || name === "bulan") {
-      const year = name === "tahun" ? value : formValues.tahun;
-      const month = name === "bulan" ? value : formValues.bulan;
-
-      if (year && month) {
-        try {
-          const data = await GlobalApi.getNamaKwitansi(year, month);
-          setAllNames(data);
-          setFilteredNames(data);
-          setIsDropdownVisible(true);
-        } catch (error) {
-          console.error("Error fetching deceased users:", error);
-        }
-      }
-    }
-  };
-  const capitalizeFirstLetter = (text) => {
-    return text
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-  };
-  const convertToTerbilang = (number) => {
-    const satuan = [
-      "",
-      "satu",
-      "dua",
-      "tiga",
-      "empat",
-      "lima",
-      "enam",
-      "tujuh",
-      "delapan",
-      "sembilan",
-    ];
-    const belasan = [
-      "sepuluh",
-      "sebelas",
-      "dua belas",
-      "tiga belas",
-      "empat belas",
-      "lima belas",
-      "enam belas",
-      "tujuh belas",
-      "delapan belas",
-      "sembilan belas",
-    ];
-
-    const ribuan = "ribu";
-    const jutaan = "juta";
-    const miliaran = "miliar";
-    const rupiah = "rupiah";
-
-    if (number < 10) return satuan[number];
-    if (number < 20) return belasan[number - 10];
-    if (number < 100)
-      return `${satuan[Math.floor(number / 10)]} puluh ${
-        satuan[number % 10]
-      }`.trim();
-
-    if (number < 1000)
-      return `${satuan[Math.floor(number / 100)]} ratus ${convertToTerbilang(
-        number % 100
-      )}`.trim();
-
-    if (number < 1000000)
-      return `${convertToTerbilang(
-        Math.floor(number / 1000)
-      )} ${ribuan} ${convertToTerbilang(number % 1000)}`.trim();
-
-    if (number < 1000000000)
-      return `${convertToTerbilang(
-        Math.floor(number / 1000000)
-      )} ${jutaan} ${convertToTerbilang(number % 1000000)}`.trim();
-
-    if (number < 1000000000000)
-      return `${convertToTerbilang(
-        Math.floor(number / 1000000000)
-      )} ${miliaran} ${convertToTerbilang(number % 1000000000)}`.trim();
-
-    return "Jumlah terlalu besar";
-  };
-
-  const convertToTerbilangWithRupiah = (number) => {
-    const terbilang = convertToTerbilang(number);
-    return `${capitalizeFirstLetter(terbilang)} ${
-      number > 0 ? "Rupiah" : ""
-    }`.trim();
-  };
+  const [isIframeVisible, setIsIframeVisible] = useState(true);
 
   const getBulanAngka = (bulanNama) => {
     const bulanObj = bulanList.find((bulan) => bulan.namaBulan === bulanNama);
@@ -175,15 +72,21 @@ function Pengeluaran() {
   };
 
   useEffect(() => {
-    const tanggalStr = formValues.tanggalTransaksi;
+    const tanggalStr = formValues.tanggalTransaksi || ""; // Pastikan ada nilai default
 
-    const [tanggalPart, bulanPart, tahunPart] = tanggalStr.split(" ");
+    if (tanggalStr) {
+      const [tanggalPart, bulanPart, tahunPart] = tanggalStr.split("");
 
-    const bulanAngka = getBulanAngka(bulanPart);
+      const bulanAngka = getBulanAngka(bulanPart);
 
-    setTanggal(parseInt(tanggalPart));
-    setBulan(bulanAngka);
-    setTahun(parseInt(tahunPart));
+      setTanggal(parseInt(tanggalPart, 10));
+      setBulan(bulanAngka);
+      setTahun(parseInt(tahunPart, 10));
+    } else {
+      setTanggal(null);
+      setBulan(null);
+      setTahun(null);
+    }
   }, [formValues.tanggalTransaksi]);
 
   const handleSubmit = async (e) => {
@@ -383,15 +286,31 @@ function Pengeluaran() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-  
+
+  const handleResetForm = () => {
+    setFormValues({
+      tanggalTransaksi: "",
+      posPenerimaan: "",
+      tahun: "",
+      bulan: "",
+      yangMeninggal: "",
+      namaPenerima: "",
+      nominal: "",
+      terbilang: "",
+      keterangan: "",
+    });
+  };
+
   const handleReset = () => {
     setFormValues({
-      noBukti: "",
+      tanggalTransaksi: "",
       posPenerimaan: "",
-      jenisPenerimaan: "",
-      cabang: "",
-      setoranBulan: "",
+      tahun: "",
+      bulan: "",
+      yangMeninggal: "",
+      namaPenerima: "",
       nominal: "",
+      terbilang: "",
       keterangan: "",
     });
   };
@@ -436,59 +355,167 @@ function Pengeluaran() {
 
   const handleSelectName = async (name) => {
     try {
-      // Perbarui formValues dengan nama yang dipilih
       setFormValues((prevValues) => ({
         ...prevValues,
-        yangMeninggal: name.namaLengkap, // Update input dengan nama yang dipilih
+        yangMeninggal: name.namaLengkap,
       }));
-  
-      // Panggil API dengan nama untuk mendapatkan data detail
-      const userDataByName = await GlobalApi.searchUsersByName(name.namaLengkap);
-  
-      // Tampilkan data detail berdasarkan nama ke console
-      console.log("Data User berdasarkan Nama yang Dipilih:", userDataByName.data.users);
-  
-      // Sembunyikan dropdown setelah memilih nama
+
+      const userDataByName = await GlobalApi.searchUsersByName(
+        name.namaLengkap
+      );
+
       setIsDropdownVisible(false);
     } catch (error) {
       console.error("Error fetching user data by name:", error.message);
     }
   };
 
+  const handleChange = async (e) => {
+    const { name, value } = e.target;
+
+    setFormValues((prevValues) => {
+      const updatedValues = { ...prevValues };
+
+      if (name === "nominal") {
+        const numericValue = Number(value.replace(/\./g, "")); // Hilangkan titik untuk memproses angka murni
+
+        if (!isNaN(numericValue)) {
+          updatedValues.nominal = formatNumberWithDots(numericValue); // Format dengan titik
+          updatedValues.terbilang = convertToTerbilangWithRupiah(numericValue); // Konversi ke terbilang
+        } else {
+          updatedValues.nominal = value; // Jika bukan angka, simpan nilai asli
+          updatedValues.terbilang = "";
+        }
+      } else {
+        updatedValues[name] = value; // Untuk input lain, gunakan nilai asli
+      }
+
+      return updatedValues;
+    });
+
+    if (name === "tahun" || name === "bulan") {
+      const year = name === "tahun" ? value : formValues.tahun;
+      const month = name === "bulan" ? value : formValues.bulan;
+
+      if (year && month) {
+        try {
+          const data = await GlobalApi.getNamaKwitansi(year, month);
+          setAllNames(data);
+          setFilteredNames(data);
+          setIsDropdownVisible(true);
+        } catch (error) {
+          console.error("Error fetching deceased users:", error);
+        }
+      }
+    }
+  };
+  const formatNumberWithDots = (number) => {
+    if (isNaN(number)) return number; // Jika bukan angka, kembalikan nilai asli
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); // Tambahkan titik sebagai pemisah ribuan
+  };
+  const capitalizeFirstLetter = (text) => {
+    if (typeof text !== "string" || !text) return ""; // Jika bukan string atau kosong, kembalikan string kosong
+    return text
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+  const convertToTerbilang = (number) => {
+    const satuan = [
+      "",
+      "satu",
+      "dua",
+      "tiga",
+      "empat",
+      "lima",
+      "enam",
+      "tujuh",
+      "delapan",
+      "sembilan",
+    ];
+    const belasan = [
+      "sepuluh",
+      "sebelas",
+      "dua belas",
+      "tiga belas",
+      "empat belas",
+      "lima belas",
+      "enam belas",
+      "tujuh belas",
+      "delapan belas",
+      "sembilan belas",
+    ];
+
+    const ribuan = "ribu";
+    const jutaan = "juta";
+    const miliaran = "miliar";
+    const rupiah = "rupiah";
+
+    if (number < 10) return satuan[number];
+    if (number < 20) return belasan[number - 10];
+    if (number < 100)
+      return `${satuan[Math.floor(number / 10)]} puluh ${
+        satuan[number % 10]
+      }`.trim();
+
+    if (number < 1000)
+      return `${satuan[Math.floor(number / 100)]} ratus ${convertToTerbilang(
+        number % 100
+      )}`.trim();
+
+    if (number < 1000000)
+      return `${convertToTerbilang(
+        Math.floor(number / 1000)
+      )} ${ribuan} ${convertToTerbilang(number % 1000)}`.trim();
+
+    if (number < 1000000000)
+      return `${convertToTerbilang(
+        Math.floor(number / 1000000)
+      )} ${jutaan} ${convertToTerbilang(number % 1000000)}`.trim();
+
+    if (number < 1000000000000)
+      return `${convertToTerbilang(
+        Math.floor(number / 1000000000)
+      )} ${miliaran} ${convertToTerbilang(number % 1000000000)}`.trim();
+
+    return "Jumlah terlalu besar";
+  };
+  const convertToTerbilangWithRupiah = (number) => {
+    if (isNaN(number) || number <= 0) return ""; // Validasi angka, kembalikan string kosong jika tidak valid
+    const terbilang = convertToTerbilang(number);
+    return `${capitalizeFirstLetter(terbilang)} Rupiah`.trim();
+  };
+
   const handleKwitansiClick = async () => {
     const generateKwitansi = async () => {
       try {
         const selectedName = formValues.yangMeninggal;
-  
+
         if (!selectedName) {
           console.error("Nama yang meninggal belum diisi.");
           return;
         }
-  
+
         const userDataList = await GlobalApi.searchUsersByName(selectedName);
-  
-        if (!userDataList.data || !userDataList.data.users || userDataList.data.users.length === 0) {
+
+        if (!userDataList.data || !userDataList.data.users.length) {
           console.error("Tidak ditemukan pengguna dengan nama:", selectedName);
           return;
         }
-  
+
         const userData = userDataList.data.users[0];
-  
-        console.log("ID:", userData.id);
-        console.log("NPA PGRI:", userData.npaPgri);
-  
-        // Format tanggal menjadi "YYYY-MM-DD"
+
         const formatDate = (dateArray, separator = "-") => {
-          if (!dateArray || dateArray.length !== 3) return "Tanggal tidak valid";
+          if (!Array.isArray(dateArray) || dateArray.length !== 3) {
+            return "Tanggal tidak valid";
+          }
           const [year, month, day] = dateArray;
-          return `${year}${separator}${String(month).padStart(2, "0")}${separator}${String(day).padStart(2, "0")}`;
+          return `${year}${separator}${String(month).padStart(
+            2,
+            "0"
+          )}${separator}${String(day).padStart(2, "0")}`;
         };
-  
-        // Ambil data pelaporan dan tanggal meninggal
-        const dataPelaporan = formatDate(userData.tanggalPelaporan); // Ambil dari tanggalPelaporan
-        const tanggalMeninggal = formatDate(userData.waktuMeninggalTerlapor); // Ambil dari waktuMeninggalTerlapor
-  
-        // Hitung umur berdasarkan tanggal lahir dan tanggal hari ini
+
         const calculateAge = (tanggalLahir) => {
           const today = new Date();
           const birthDate = new Date(
@@ -496,25 +523,25 @@ function Pengeluaran() {
             tanggalLahir[1] - 1,
             tanggalLahir[2]
           );
-  
+
           let age = today.getFullYear() - birthDate.getFullYear();
           const monthDiff = today.getMonth() - birthDate.getMonth();
           const dayDiff = today.getDate() - birthDate.getDate();
-  
+
           if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
             age--;
           }
-  
+
           return age;
         };
-  
+
+        const dataPelaporan = formatDate(userData.tanggalPelaporan);
+        const tanggalMeninggal = formatDate(userData.waktuMeninggalTerlapor);
         const umur = calculateAge(userData.tanggalLahir);
-  
-        const mulaiJadiAnggotaPgri = userData.mulaiJadiAnggotaPgri
-          ? formatDate(userData.mulaiJadiAnggotaPgri)
-          : "Tanggal tidak valid";
-  
+        const mulaiJadiAnggotaPgri = formatDate(userData.mulaiJadiAnggotaPgri);
+
         const generateData = {
+          nomorTransaksi: "BKT-Sdk-20241228",
           dataPelaporan,
           nama: userData.namaLengkap,
           tanggalMeninggal,
@@ -522,33 +549,134 @@ function Pengeluaran() {
           dataDukung: userData.unitKerja,
           alamat: userData.alamat,
           nomorHp: userData.nomorHp,
-          mulaiJadiAnggotaPgri,
+          sejakMenjadiAnggota: mulaiJadiAnggotaPgri,
           jabatan: userData.jabatan,
           terbilang: formValues.terbilang,
           nominal: formValues.nominal,
           menyerahkan: sessionStorage.getItem("nama"),
           penerima: formValues.namaPenerima,
         };
-  
-        console.log("Data yang akan dikirim:", generateData);
-  
-        await GlobalApi.generateKwitansi(generateData);
-        console.log("Kwitansi berhasil di-generate.");
-  
-        const response = await GlobalApi.getKwitansiByIdAndNpa(userData.id, userData.npaPgri);
-        const blobUrl = URL.createObjectURL(response.data);
-        console.log("URL Kwitansi Blob:", blobUrl);
-  
+
+        const htmlContent = generateKwitansiHTML(generateData);
+
+        // Buat URL Blob untuk iframe
+        const blob = new Blob([htmlContent], { type: "text/html" });
+        const blobUrl = URL.createObjectURL(blob);
+
+        // Set URL ke state
         setKwitansiData(blobUrl);
       } catch (error) {
         console.error("Error:", error.message);
       }
     };
-  
+
     await generateKwitansi();
   };
-  
-      
+
+  const handleKwitansiDownload = async (type) => {
+    try {
+      const iframe = document.querySelector("iframe");
+      if (!iframe) {
+        console.error("Iframe tidak ditemukan");
+        return;
+      }
+
+      // Ambil konten dari iframe
+      const iframeDocument =
+        iframe.contentDocument || iframe.contentWindow.document;
+      const kwitansiElement = iframeDocument.body;
+
+      if (type === "pdf") {
+        const pdf = new jsPDF("p", "mm", "a4");
+        const width = pdf.internal.pageSize.getWidth();
+        const height = pdf.internal.pageSize.getHeight();
+
+        // Ambil elemen HTML dan konversi ke PNG
+        const imageData = await toPng(kwitansiElement);
+
+        // Tambahkan gambar ke PDF
+        pdf.addImage(imageData, "PNG", 0, 0, width, height);
+        pdf.save("kwitansi.pdf");
+      } else if (type === "image") {
+        // Konversi elemen HTML ke gambar PNG
+        const imageData = await toPng(kwitansiElement);
+
+        // Buat link unduh untuk gambar
+        const link = document.createElement("a");
+        link.href = imageData;
+        link.download = "kwitansi.png";
+        link.click();
+      }
+    } catch (error) {
+      console.error("Error saat mengunduh kwitansi:", error);
+    }
+  };
+  const handleKwitansiDownloadPDF = async () => {
+    const iframe = document.querySelector("iframe");
+    if (!iframe) {
+      console.error("Iframe tidak ditemukan");
+      return;
+    }
+
+    const iframeDocument =
+      iframe.contentDocument || iframe.contentWindow.document;
+    const kwitansiElement = iframeDocument.body;
+
+    try {
+      const canvas = await html2canvas(kwitansiElement, {
+        scale: 2, // Tingkatkan kualitas
+        useCORS: true, // Izinkan pengambilan gambar eksternal
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+
+      const pdf = new jsPDF("l", "mm", "a4"); // Landscape
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save("kwitansi_landscape.pdf");
+    } catch (error) {
+      console.error("Error saat mengonversi ke PDF:", error);
+    }
+  };
+  const handleKwitansiDownloadPNG = async () => {
+    const iframe = document.querySelector("iframe");
+    if (!iframe) {
+      console.error("Iframe tidak ditemukan");
+      return;
+    }
+
+    const iframeDocument =
+      iframe.contentDocument || iframe.contentWindow.document;
+    const kwitansiElement = iframeDocument.body;
+
+    try {
+      // Pastikan elemen memiliki ukuran penuh
+      const canvas = await html2canvas(kwitansiElement, {
+        scale: 2, // Tingkatkan skala untuk kualitas lebih tinggi
+        useCORS: true, // Izinkan pengambilan gambar dengan resource eksternal
+        scrollX: 0,
+        scrollY: 0,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+
+      // Buat link untuk unduh
+      const link = document.createElement("a");
+      link.href = imgData;
+      link.download = "kwitansi.png";
+      link.click();
+    } catch (error) {
+      console.error("Error saat mengunduh gambar:", error);
+    }
+  };
+
+  const handleCloseIframe = () => {
+    setIsIframeVisible(false);
+    handleResetForm();
+  };
+
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
     setIsSidebarOpen(sidebarState);
@@ -580,6 +708,158 @@ function Pengeluaran() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  const generateKwitansiHTML = (data) => {
+    const template = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kwitansi</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #fff;
+    }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+    }
+    .left-header p, .right-header img {
+        margin: 0;
+    }
+    .title {
+        font-size: 20px;
+        font-weight: bold;
+        text-align: center;
+    }
+    .info, .footer {
+        width: 100%;
+        margin-top: 20px;
+    }
+    .info td{
+        padding: 10px;
+        vertical-align: top;
+        border: 1px solid #ccc;
+    }
+    .nominal {
+        font-weight: bold;
+        background-color: #000;
+        color: white;
+        text-align: center;
+    }
+    .terbilang {
+        font-weight: bold;
+        color: black;
+        text-align: center;
+    }
+    .signature {
+        margin-top: 40px;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+    .signature div {
+        text-align: center;
+        width: 30%;
+    }
+    .footer {
+        font-size: 12px;
+        text-align: center;
+    }
+
+    .data-meninggal {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .data-item {
+        width: 22%;
+    }
+
+    @media (max-width: 600px) {
+      .data-meninggal {
+        flex-direction: column;
+      }
+      .data-item {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="left-header">
+    <p>Nomor Transaksi: ${data.nomorTransaksi}</p>
+    <p>Tanggal Transaksi: ${data.dataPelaporan}</p>
+  </div>
+  <div class="title">TANDA TERIMA</div>
+  <div class="right-header">
+    <img src="https://sanduka-fe.vercel.app/_next/image?url=%2Fsanduka.png&amp;w=256&amp;q=75" alt="SANDUKA Logo" style="height: 50px;" />
+  </div>
+</div>
+
+<div class="data-meninggal">
+  <div class="data-item">
+    <p>Data Meninggal</p>
+    <p><strong>${data.nama}</strong></p>
+            <p>${data.umur} Tahun</p>
+            <p>${data.alamat}</p>
+            <p>${data.nomorHp}</p>
+  </div>
+  <div class="data-item">
+    <p>Data Dukung</p>
+     <p><strong>${data.dataDukung}</strong></p>
+            <p>${data.jabatan}</p>
+            <p>Sejak Menjadi Anggota</p>
+            <p>${data.sejakMenjadiAnggota}</p>
+  </div>
+  <div class="data-item">
+    <p>Data Pelaporan</p>
+    <p><strong>${data.dataPelaporan}</strong></p>
+            <p><strong>Tanggal Meninggal:</strong> ${data.tanggalMeninggal}</p>
+  </div>
+</div>
+
+<table class="info">
+  <tr>
+    <td class="nominal">Terbilang</td>
+    <td class="nominal">Nominal</td>
+  </tr>
+  <tr>
+    <td class="terbilang"><strong>${data.terbilang}</strong></td>
+            <td class="terbilang"><strong>Rp ${data.nominal}</strong></td>
+  </tr>
+</table>
+
+<div class="signature">
+  <div>
+    <p>Yang Menyerahkan</p>
+    <p>${data.menyerahkan}</p>
+  </div>
+  <div>
+    <p>Penerima</p>
+    <p>${data.penerima}</p>
+  </div>
+</div>
+
+<footer>
+  <table class="footer">
+    <tr>
+      <td>Sekretariat PGRI: <br /> Jalan Bata Putih VI, Kelurahan Demaan, Kecamatan Jepara, Kabupaten Jepara, Jawa Tengah, Telp/Fax : 0291 592479, email : pgrijepara@gmail.com</td>
+    </tr>
+  </table>
+</footer>
+</body>
+</html>
+
+    `;
+    return template;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
@@ -672,7 +952,7 @@ function Pengeluaran() {
                   <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="tanggalTransaksi"
-                    type="text"
+                    type="date"
                     name="tanggalTransaksi"
                     value={formValues.tanggalTransaksi}
                     onChange={(e) =>
@@ -681,7 +961,6 @@ function Pengeluaran() {
                         tanggalTransaksi: e.target.value,
                       })
                     }
-                    readOnly
                   />
                 </div>
                 <div className="flex flex-col">
@@ -836,7 +1115,7 @@ function Pengeluaran() {
                   <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="nominal"
-                    type="number"
+                    type="text"
                     name="nominal"
                     value={formValues.nominal}
                     onChange={handleChange}
@@ -873,6 +1152,31 @@ function Pengeluaran() {
                     />
                   </div>
                 </div>
+              </div>
+              <div>
+                {isIframeVisible && kwitansiData && (
+                  <div className="relative mb-4 text-right">
+                    <iframe src={kwitansiData} className="w-full h-[600px]" />
+                    <button
+                      onClick={() => handleKwitansiDownloadPDF("pdf")}
+                      className="ml-4 text-blue-500 underline"
+                    >
+                      Unduh Kwitansi (PDF)
+                    </button>
+                    <button
+                      onClick={() => handleKwitansiDownloadPNG("image")}
+                      className="ml-4 text-blue-500 underline"
+                    >
+                      Unduh Kwitansi (PNG)
+                    </button>
+                    <button
+                      onClick={handleCloseIframe}
+                      className="ml-4 bg-red-500 text-white rounded-md py-2 px-3"
+                    >
+                      Tutup
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="flex items-center mt-6 justify-center">
                 <Button

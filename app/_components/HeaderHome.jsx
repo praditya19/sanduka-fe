@@ -31,7 +31,21 @@ const HeaderHome = () => {
   const getAnggotaById = async () => {
     try {
       const userId = sessionStorage.getItem("userId");
-      const response = await GlobalApi.getUserById(userId);
+      const adminId = sessionStorage.getItem("adminId");
+  
+      // Validasi: pastikan setidaknya salah satu ID ada
+      if (!userId && !adminId) {
+        console.error("ID tidak ditemukan di sessionStorage");
+        setProfileImageUrl("/profile.png");
+        return;
+      }
+  
+      // Pilih ID yang tersedia
+      const idToFetch = userId || adminId;
+  
+      const response = await GlobalApi.getUserById(idToFetch);
+  
+      // Cek apakah foto tersedia
       if (response.foto) {
         const decodedString = atob(response.foto);
         setProfileImageUrl(decodedString);
@@ -42,7 +56,7 @@ const HeaderHome = () => {
       console.error("Error Saat Mendapatkan Foto:", error);
       setProfileImageUrl("/profile.png");
     }
-  };
+  };  
 
   const handleNotificationClick = () => {
     router.push("/keuangan/sanduka/lapor/lapor-cabang");

@@ -26,7 +26,7 @@ const HeaderHome = () => {
   const profileMenuRef = useRef(null);
   const [profileImageUrl, setProfileImageUrl] = useState("/profile.png");
   const [statusSegeraCount, setStatusSegeraCount] = useState(0);
-  const { isMuted } = useMute();
+  const { isMuted, handleMuteToggle } = useMute();
   const [isIconBlinking, setIsIconBlinking] = useState(false);
 
   const role = sessionStorage.getItem("role");
@@ -86,7 +86,8 @@ const HeaderHome = () => {
   const getAnggotaById = async () => {
     try {
       const userId = sessionStorage.getItem("userId");
-      const response = await GlobalApi.getUserById(userId);
+      const adminId = sessionStorage.getItem("adminId");
+      const response = await GlobalApi.getUserById(userId || adminId);
       if (response.foto) {
         const decodedString = atob(response.foto);
         setProfileImageUrl(decodedString);
@@ -315,12 +316,12 @@ const HeaderHome = () => {
                     >
                       Logout
                     </button>
-                    {/* <button
+                    <button
                       onClick={handleMuteToggle}
                       className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
                     >
                       {isMuted ? "Unmute" : "Mute"} Notifications
-                    </button> */}
+                    </button>
                   </div>
                 )}
               </li>

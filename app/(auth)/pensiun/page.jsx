@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import toast, { Toaster } from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { ClipLoader } from "react-spinners";
 
 const Page = () => {
   const [pensiunList, setPensiunList] = useState([]);
@@ -527,7 +528,21 @@ const Page = () => {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+      return (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100vh",
+          }}
+        >
+          <ClipLoader color="#3498db" size={50} />
+        </div>
+      );
+  }
+  
   if (error) return <div>Error: {error}</div>;
 
   const toggleSidebar = () => {

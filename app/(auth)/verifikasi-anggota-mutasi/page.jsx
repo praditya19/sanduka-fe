@@ -336,9 +336,10 @@ const VerifikasiAnggotaMutasi = () => {
   };
 
   const handleNamaChange = (e) => {
-    setNama(e.target.value);
-    setCurrentPage(0);
-  };
+    const namaAnggota = e.target.value;
+    setNama(namaAnggota);
+    fetchDataAnggota(0, pageSize, "", "", namaAnggota);
+  };
 
   const handleCabangChange = (value) => {
     const selectedKecamatan = value;

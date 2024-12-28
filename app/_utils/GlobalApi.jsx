@@ -1044,9 +1044,10 @@ const generateKwitansi = async (data) => {
       headers: {
         "Content-Type": "application/json",
       },
+      responseType: "blob", // Tambahkan ini untuk menerima data sebagai blob
     });
 
-    return response.data;
+    return response;
   } catch (error) {
     console.error("Error generating kwitansi:", error);
     throw error;
