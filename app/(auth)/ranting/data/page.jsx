@@ -48,6 +48,7 @@ const Page = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [totalEntries, setTotalEntries] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [isPrintingOrDownloading, setIsPrintingOrDownloading] = useState(false);
   const dropdownRef = useRef(null);
   const unitKerjaRef = useRef(null);
   const { token } = useAuth();
@@ -141,10 +142,17 @@ const Page = () => {
       if (storedRole) {
         setRole(storedRole);
       }
+
       fetchCabangData();
       fetchUnitKerjaData();
-      fetchRantingData(currentPage, entries);
-      fetchRantingDataCetak();
+      const role = sessionStorage.getItem("role");
+      const cabangFromSession = sessionStorage.getItem("cabang") || "";
+      if (role === "ADMIN" && cabangFromSession) {
+        console.log("Setting cabang from session:", cabangFromSession);
+        setSelectedCabang(cabangFromSession);
+      } else {
+        fetchRantingData(currentPage, entries);
+      }
 
       const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
       setIsSidebarOpen(sidebarState);
@@ -300,15 +308,14 @@ const Page = () => {
   const handleSearchChange = (e) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
-    console.log(query);
 
     fetchRantingData(0, entries, "", "", query);
-    fetchRantingDataCetak(query);
+    fetchRantingData(0, 500, "", "", query);
   };
 
   const filteredData = [
     ...(adminDataAll || []),
-    ...(adminDataAllCetak || []),
+    ...(isPrintingOrDownloading ? adminDataAllCetak || [] : []),
   ].filter((item) => {
     const cabang = item.cabang || "";
     const namaRanting = item.namaRanting || "";
@@ -336,9 +343,13 @@ const Page = () => {
     setExpandedRow((prevExpandedRow) => (prevExpandedRow === id ? null : id));
   };
 
+  const handleProcessingStatus = (status) => {
+    setIsPrintingOrDownloading(status);
+  };
+
   const handlePrint = () => {
+    handleProcessingStatus(true);
     const filteredDataForPrint = filteredData;
-    console.log(filteredDataForPrint.length);
     const printWindow = window.open();
 
     printWindow.document.write(`
@@ -443,9 +454,11 @@ const Page = () => {
     printWindow.focus();
     printWindow.print();
     printWindow.close();
+    handleProcessingStatus(false);
   };
 
   const handleDownloadExcel = () => {
+    handleProcessingStatus(true);
     const data = filteredData.map((item, index) => ({
       No: index + 1,
       Cabang: item.cabang,
@@ -460,6 +473,7 @@ const Page = () => {
     XLSX.utils.book_append_sheet(wb, ws, "Data Ranting");
 
     XLSX.writeFile(wb, "Data_Ranting.xlsx");
+    handleProcessingStatus(false);
   };
 
   return (
@@ -678,10 +692,13 @@ const Page = () => {
                         Nama Anggota
                       </th>
                       <th className="p-2 md:p-3 border hidden md:table-cell">
-                        Jumlah Anggota Ranting
+                        Jumlah anggota ranting
                       </th>
                       <th className="p-2 md:p-3 border hidden md:table-cell">
-                        Total Anggota Cabang
+                        Total unit Kerja
+                      </th>
+                      <th className="p-2 md:p-3 border hidden md:table-cell">
+                        Total Anggota
                       </th>
                       {isMobile && (
                         <th className="p-2 md:p-3 border md:table-cell">
@@ -715,10 +732,13 @@ const Page = () => {
                                 {item.namaAnggota}
                               </td>
                               <td className="p-2 md:p-3 border hidden md:table-cell">
-                                {item.totalAnggota}
+                                {item.jumlahAnggotaRanting}
                               </td>
                               <td className="p-2 md:p-3 border hidden md:table-cell">
-                                {item.totalKegiatan}
+                                {item.totalUnitKerja}
+                              </td>
+                              <td className="p-2 md:p-3 border hidden md:table-cell">
+                                {item.totalAnggota}
                               </td>
                               {isMobile && (
                                 <td className="p-2 border text-center">
