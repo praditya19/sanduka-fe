@@ -206,14 +206,26 @@ const AddUnitForm = () => {
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
             <nav className="mt-6">
               <ul className="flex flex-wrap space-x-4 md:space-x-6">
-                <li>
-                  <Link
-                    href="/pengaturan/user"
-                    className="text-gray-700 hover:text-teal-600"
-                  >
-                    User
-                  </Link>
-                </li>
+               
+                  <li>
+                    <Link
+                      href="/pengaturan/user"
+                      className="text-gray-700 hover:text-teal-600"
+                    >
+                      User
+                    </Link>
+                  </li>
+             
+                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                  <li>
+                    <Link
+                      href="/pengaturan/tambah"
+                      className="text-gray-700 hover:text-teal-600"
+                    >
+                      Tambah Cabang
+                    </Link>
+                  </li>
+                )}
                 <li>
                   <Link
                     href="/pengaturan/unit-kerja"

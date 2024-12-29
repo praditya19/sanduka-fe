@@ -94,7 +94,21 @@ const Page = () => {
   const [pesertaSanduka, setPesertaSanduka] = useState(false);
   const [pesertaDaspen, setPesertaDaspen] = useState(false);
   const [pesertaKtaDigital, setPesertaKtaDigital] = useState(false);
-
+  const jabatanList = [
+    { id: 1, jabatan: "Guru" },
+    { id: 2, jabatan: "Kepala Sekolah" },
+    { id: 3, jabatan: "Wakil Kepala Sekolah" },
+    { id: 4, jabatan: "Kepala TU" },
+    { id: 5, jabatan: "Tata Usaha" },
+    { id: 6, jabatan: "Pustakawan" },
+    { id: 7, jabatan: "Pengawas" },
+    { id: 8, jabatan: "Penjaga" },
+    { id: 9, jabatan: "Pamong" },
+    { id: 10, jabatan: "Penilik" },
+    { id: 11, jabatan: "Dosen" },
+    { id: 12, jabatan: "Sarkodik" },
+    { id: 13, jabatan: "Lain-Lain" },
+  ];
   const [isPasswordInfoOpen, setIsPasswordInfoOpen] = useState(false);
   const [isLocationInfoOpen, setIsLocationInfoOpen] = useState(false);
   const [formattedMulaiJadiAnggota, setFormattedMulaiJadiAnggota] =
@@ -154,9 +168,8 @@ const Page = () => {
   const getAnggotaById = async () => {
     const anggotaId = sessionStorage.getItem("anggotaId");
     const userId = sessionStorage.getItem("userId");
-    const adminId = sessionStorage.getItem("adminId");
 
-    const id = anggotaId || userId || adminId;
+    const id = anggotaId || userId;
 
     if (!id) {
       console.error(
@@ -247,14 +260,19 @@ const Page = () => {
   useEffect(() => {
     getAnggotaById();
   }, []);
+  useEffect(() => {
+    return () => {
+      setValueJabatan("");
+      setJabatan([]);
+    };
+  }, []);
 
   const onSubmit = async (e) => {
     e.preventDefault();
     const anggotaId = sessionStorage.getItem("anggotaId");
     const userId = sessionStorage.getItem("userId");
-    const adminId = sessionStorage.getItem("adminId");
 
-    const id = anggotaId || userId || adminId;
+    const id = anggotaId || userId;
 
     if (!id) {
       console.error(
@@ -275,47 +293,84 @@ const Page = () => {
 
     // Validasi field yang wajib diisi
     const requiredFieldsStep2 = [
-    { field: selectedCabang, name: "Cabang", id: "cabang" },
-    { field: selectedUnitKerja, name: "Unit Kerja", id: "unitKerja" },
-    { field: valueJabatan, name: "Jabatan", id: "jabatan" },
-    { field: tingkatSekolah, name: "Tingkat Sekolah", id: "tingkatSekolah" },
-    { field: statusSekolah, name: "Status Sekolah", id: "statusSekolah" },
-    { field: statusPegawai, name: "Status Pegawai", id: "statusPegawai" },
-    { field: formattedTahunDiangkat, name: "Tahun Diangkat", id: "tahunDiangkat" },
-    { field: pangkatGolongan, name: "Pangkat Golongan", id: "pangkatGolongan" },
-    { field: pendidikanTerakhir, name: "Pendidikan Terakhir", id: "pendidikanTerakhir" },
-    { field: sertifikatPendidik, name: "Sertifikat Pendidik", id: "sertifikatPendidik" },
-    { field: mulaiJadiAnggotaPgri, name: "Mulai Jadi Anggota PGRI", id: "mulaiJadiAnggotaPgri" },
-    { field: valueKategoriDaspen, name: "Kategori Daspen", id: "kategoriDaspen" },
-    { field: valueGolonganJabatan, name: "Golongan Jabatan", id: "golonganJabatan" },
-    { field: mengajar, name: "Mengajar", id: "mengajar" },
-  ];
+      { field: selectedCabang ?? "", name: "Cabang", id: "cabang" },
+      { field: selectedUnitKerja ?? "", name: "Unit Kerja", id: "unitKerja" },
+      { field: valueJabatan ?? "", name: "Jabatan", id: "jabatan" },
+      {
+        field: tingkatSekolah ?? "",
+        name: "Tingkat Sekolah",
+        id: "tingkatSekolah",
+      },
+      {
+        field: statusSekolah ?? "",
+        name: "Status Sekolah",
+        id: "statusSekolah",
+      },
+      {
+        field: statusPegawai ?? "",
+        name: "Status Pegawai",
+        id: "statusPegawai",
+      },
+      {
+        field: formattedTahunDiangkat ?? "",
+        name: "Tahun Diangkat",
+        id: "tahunDiangkat",
+      },
+      {
+        field: pangkatGolongan ?? "",
+        name: "Pangkat Golongan",
+        id: "pangkatGolongan",
+      },
+      {
+        field: pendidikanTerakhir ?? "",
+        name: "Pendidikan Terakhir",
+        id: "pendidikanTerakhir",
+      },
+      {
+        field: sertifikatPendidik ?? "",
+        name: "Sertifikat Pendidik",
+        id: "sertifikatPendidik",
+      },
+      {
+        field: mulaiJadiAnggotaPgri ?? "",
+        name: "Mulai Jadi Anggota PGRI",
+        id: "mulaiJadiAnggotaPgri",
+      },
+      {
+        field: valueKategoriDaspen ?? "",
+        name: "Kategori Daspen",
+        id: "kategoriDaspen",
+      },
+      {
+        field: valueGolonganJabatan ?? "",
+        name: "Golongan Jabatan",
+        id: "golonganJabatan",
+      },
+      { field: mengajar ?? "", name: "Mengajar", id: "mengajar" },
+    ];
 
-  const emptyFields = requiredFieldsStep2.filter(({ field }) => !field);
+    const emptyFields = requiredFieldsStep2.filter(({ field }) => !field);
 
-  if (emptyFields.length > 0) {
-    // Ambil field pertama yang kosong
-    const firstEmptyField = emptyFields[0];
+    if (emptyFields.length > 0) {
+      const firstEmptyField = emptyFields[0];
 
-    // Tampilkan pesan error dengan toast
-    toast.error(`Field ${firstEmptyField.name} wajib diisi!`, {
-      position: "top-right",
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-    });
+      toast.error(`Field ${firstEmptyField.name} wajib diisi!`, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
 
-    // Scroll ke elemen pertama yang kosong
-    const element = document.getElementById(firstEmptyField.id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
-      element.focus();
-    }
+      const element = document.getElementById(firstEmptyField.id);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.focus();
+      }
 
-    return;
+      return;
     }
 
     const formattedTanggalLahir = formatTanggal(tanggalLahir);
@@ -364,8 +419,8 @@ const Page = () => {
     formData.append("pesertaKtaDigital", pesertaKtaDigital ? "Ya" : "");
 
     for (let [key, value] of formData.entries()) {
-  console.log(`${key}: ${value}`);
-}
+      console.log(`${key}: ${value}`);
+    }
 
     console.log("Nilai email sebelum submit:", email);
 
@@ -394,7 +449,7 @@ const Page = () => {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
-               marginTop: "14px"
+              marginTop: "14px",
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
@@ -411,25 +466,25 @@ const Page = () => {
             Data berhasil diperbarui!
           </h3>
         </div>,
-       {
-        icon: null,
-        duration: 4000,
-        style: {
-          marginTop: "12%",
-          fontSize: "1.75rem",
-          padding: "10px",
-          width: "80%",
-          maxWidth: "450px",
-          height: "50%",
-          maxHeight: "400px",
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          zIndex: 9999,
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      }
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
       );
       sessionStorage.removeItem("anggotaId");
       setTimeout(() => {
@@ -491,7 +546,7 @@ const Page = () => {
           },
         }
       );
-      }
+    }
   };
 
   const handleConfirmAndSendData = async () => {
@@ -1249,9 +1304,8 @@ const Page = () => {
             className="bg-white p-4 sm:p-8 rounded-lg shadow-lg"
           >
             {step === 1 && (
-            
               <div>
-                  <div className="w-full flex flex-col items-center">
+                <div className="w-full flex flex-col items-center">
                   <Image
                     width={150}
                     height={150}
@@ -1763,7 +1817,7 @@ const Page = () => {
                               type="text"
                               name={`namaAnak-${index}`}
                               placeholder={`Tuliskan Nama Anak ${index + 1}`}
-                              value={name || ""} 
+                              value={name || ""}
                               onChange={(e) => handleChange(index, e)}
                             />
                           </div>
@@ -1805,7 +1859,9 @@ const Page = () => {
                   >
                     Kembali
                   </Button>
-                  <Button type="button" onClick={nextStep}>Next</Button>
+                  <Button type="button" onClick={nextStep}>
+                    Next
+                  </Button>
                 </div>
 
                 {isLocationInfoOpen && (
@@ -1826,10 +1882,9 @@ const Page = () => {
                     </div>
                   </div>
                 )}
-                </div>
+              </div>
             )}
             {step === 2 && (
-            
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white rounded-lg shadow-lg">
                 <div className="w-full" ref={cabangRef}>
                   <Label className="block text-sm font-medium mb-3">
@@ -1848,7 +1903,7 @@ const Page = () => {
                           type="text"
                           className={`border-teal-500 ${
                             errorFields.cabang ? "border-red-500" : ""
-                          } rounded-lg p-2 w-56 bg-white shadow-sm w-full`}
+                          } rounded-lg p-2 bg-white shadow-sm w-full`}
                           placeholder="Pilih Cabang"
                           value={selectedCabang || ""}
                           readOnly
@@ -1987,28 +2042,26 @@ const Page = () => {
                     defaultValue={valueJabatan}
                     render={({ field: { onChange, value } }) => (
                       <Select
-                        value={value}
+                        value={value || ""}
                         onValueChange={(e) => {
-                          onChange(e);
-                          setValue(e); 
-                          setValueJabatan(e); 
+                          onChange(e); // Mengirim nilai ke React Hook Form
+                          setValueJabatan(e); // Update state lokal
                         }}
                       >
                         <SelectTrigger
                           className={`border-teal-500 ${
-                            errorFields.jabatan ? "border-red-500" : ""
+                            errorFields?.jabatan ? "border-red-500" : ""
                           }`}
                         >
                           <SelectValue placeholder="Pilih Jabatan" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
-                            {Array.isArray(jabatan) &&
-                              jabatan.map((item) => (
-                                <SelectItem key={item.id} value={item.jabatan}>
-                                  {item.jabatan}
-                                </SelectItem>
-                              ))}
+                            {jabatanList.map((item) => (
+                              <SelectItem key={item.id} value={item.jabatan}>
+                                {item.jabatan}
+                              </SelectItem>
+                            ))}
                           </SelectGroup>
                         </SelectContent>
                       </Select>
@@ -2163,7 +2216,7 @@ const Page = () => {
                   <Controller
                     name="pangkatGolongan"
                     control={control}
-                    defaultValue={pangkatGolongan}
+                    defaultValue={pangkatGolongan ?? ""}
                     render={({ field: { onChange, value } }) => (
                       <Select
                         value={value || pangkatGolongan}
@@ -2465,6 +2518,174 @@ const Page = () => {
                     Kembali
                   </Button>
                   <Button
+                    type="button"
+                    onClick={() => {
+                      const formatTanggal = (tanggal) => {
+                        const date = new Date(tanggal);
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(
+                          2,
+                          "0"
+                        );
+                        const day = String(date.getDate()).padStart(2, "0");
+                        return `${year}-${month}-${day}`;
+                      };
+                      const formattedTahunDiangkat =
+                        formatTanggal(tahunDiangkat);
+
+                      const requiredFieldsStep2 = [
+                        {
+                          field: selectedCabang ?? "",
+                          name: "Cabang",
+                          id: "cabang",
+                        },
+                        {
+                          field: selectedUnitKerja ?? "",
+                          name: "Unit Kerja",
+                          id: "unitKerja",
+                        },
+                        {
+                          field: valueJabatan ?? "",
+                          name: "Jabatan",
+                          id: "jabatan",
+                        },
+                        {
+                          field: tingkatSekolah ?? "",
+                          name: "Tingkat Sekolah",
+                          id: "tingkatSekolah",
+                        },
+                        {
+                          field: statusSekolah ?? "",
+                          name: "Status Sekolah",
+                          id: "statusSekolah",
+                        },
+                        {
+                          field: statusPegawai ?? "",
+                          name: "Status Pegawai",
+                          id: "statusPegawai",
+                        },
+                        {
+                          field: tahunDiangkat
+                            ? formatTanggal(tahunDiangkat)
+                            : "",
+                          name: "Tahun Diangkat",
+                          id: "tahunDiangkat",
+                        },
+                        {
+                          field: pangkatGolongan ?? "",
+                          name: "Pangkat Golongan",
+                          id: "pangkatGolongan",
+                        },
+                        {
+                          field: pendidikanTerakhir ?? "",
+                          name: "Pendidikan Terakhir",
+                          id: "pendidikanTerakhir",
+                        },
+                        {
+                          field: sertifikatPendidik ?? "",
+                          name: "Sertifikat Pendidik",
+                          id: "sertifikatPendidik",
+                        },
+                        {
+                          field: mulaiJadiAnggotaPgri ?? "",
+                          name: "Mulai Jadi Anggota PGRI",
+                          id: "mulaiJadiAnggotaPgri",
+                        },
+                        {
+                          field: valueKategoriDaspen ?? "",
+                          name: "Kategori Daspen",
+                          id: "kategoriDaspen",
+                        },
+                        {
+                          field: valueGolonganJabatan ?? "",
+                          name: "Golongan Jabatan",
+                          id: "golonganJabatan",
+                        },
+                        {
+                          field: mengajar ?? "",
+                          name: "Mengajar",
+                          id: "mengajar",
+                        },
+                      ];
+
+                      const emptyFields = requiredFieldsStep2.filter(
+                        ({ field }) => !field
+                      );
+                      if (emptyFields.length > 0) {
+                        const firstEmptyField = emptyFields[0];
+                        toast.error(
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              textAlign: "center",
+                            }}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              style={{
+                                width: "150px",
+                                height: "150px",
+                                color: "red",
+                                marginBottom: "16px",
+                              }}
+                              fill="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+                              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
+                            </svg>
+                            <h3
+                              style={{
+                                fontSize: "1.75rem",
+                                display: "block",
+                                marginBottom: "8px",
+                              }}
+                            >
+                              Harap isi form {firstEmptyField.name}!
+                            </h3>
+                          </div>,
+                          {
+                            icon: null,
+                            duration: 2000,
+                            style: {
+                              marginTop: "12%",
+                              fontSize: "1.75rem",
+                              padding: "10px",
+                              width: "80%",
+                              maxWidth: "450px",
+                              height: "50%",
+                              maxHeight: "400px",
+                              transform: "translate(-50%, -50%)",
+                              textAlign: "center",
+                              zIndex: 9999,
+                              backgroundColor: "#fff",
+                              borderRadius: "8px",
+                              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                            },
+                          }
+                        );
+                        const element = document.getElementById(
+                          firstEmptyField.id
+                        );
+                        if (element) {
+                          element.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                          });
+                          element.focus();
+                        }
+                      } else {
+                        toast.success("Semua field sudah terisi!");
+                      }
+                    }}
+                    className="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
+                  >
+                    Cek Form
+                  </Button>
+                  <Button
                     type="submit"
                     className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
                   >
@@ -2473,7 +2694,7 @@ const Page = () => {
                 </div>
               </div>
             )}
-            </form>
+          </form>
         </div>
       </div>
     </div>

@@ -31,17 +31,16 @@ const HeaderHome = () => {
   const getAnggotaById = async () => {
     try {
       const userId = sessionStorage.getItem("userId");
-      const adminId = sessionStorage.getItem("adminId");
   
       // Validasi: pastikan setidaknya salah satu ID ada
-      if (!userId && !adminId) {
+      if (!userId) {
         console.error("ID tidak ditemukan di sessionStorage");
         setProfileImageUrl("/profile.png");
         return;
       }
   
       // Pilih ID yang tersedia
-      const idToFetch = userId || adminId;
+      const idToFetch = userId;
   
       const response = await GlobalApi.getUserById(idToFetch);
   

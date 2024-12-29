@@ -176,15 +176,14 @@ export default function IconGrid() {
 
     const fetchUserData = async () => {
       const userId = sessionStorage.getItem("userId");
-      const adminId = sessionStorage.getItem("adminId");
 
-      if (!userId && !adminId) {
+      if (!userId) {
         console.error("ID tidak ditemukan di sessionStorage");
         return;
       }
 
       try {
-        const idToFetch = userId || adminId;
+        const idToFetch = userId;
         const response = await GlobalApi.getUserById(idToFetch);
         setUserData(response);
       } catch (error) {

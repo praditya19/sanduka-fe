@@ -86,8 +86,7 @@ const HeaderHome = () => {
   const getAnggotaById = async () => {
     try {
       const userId = sessionStorage.getItem("userId");
-      const adminId = sessionStorage.getItem("adminId");
-      const response = await GlobalApi.getUserById(userId || adminId);
+      const response = await GlobalApi.getUserById(userId);
       if (response.foto) {
         const decodedString = atob(response.foto);
         setProfileImageUrl(decodedString);
