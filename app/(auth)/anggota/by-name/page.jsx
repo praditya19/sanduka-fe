@@ -23,6 +23,7 @@ import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import SinkronData from "@/app/(auth)/singkron-data/page";
+import { ClipLoader } from "react-spinners";
 
 function DataAnggota() {
   const [maxItems, setMaxItems] = useState(10);
@@ -516,7 +517,18 @@ function DataAnggota() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <ClipLoader color="#3498db" size={50} />
+      </div>
+    );
   }
 
   return (
