@@ -84,11 +84,15 @@ function SignIn() {
           >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          <h3
+             style={{
+              fontSize: "2rem",
+              display: "block",
+              marginBottom: "28px",
+            }}
           >
             Selamat Datang Di Sanduka
-          </strong>
+          </h3>
           <span style={{ fontSize: "1.75rem" }}>{response.namaLengkap}</span>
           <span style={{ fontSize: "1.5rem", color: "#333", marginTop: "8px" }}>
             Cabang: {cabang}
@@ -98,11 +102,11 @@ function SignIn() {
           icon: null,
           duration: 4000,
           style: {
-            marginTop: "16%",
+            marginTop: "12%",
             fontSize: "1.75rem",
             padding: "10px",
             width: "80%",
-            maxWidth: "700px",
+            maxWidth: "450px",
             height: "50%",
             maxHeight: "400px",
             transform: "translate(-50%, -50%)",
@@ -144,25 +148,25 @@ function SignIn() {
             <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
             <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 1 1-1.414 0.414z" />
           </svg>
-          <strong
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
+          <h3
+           style={{
+            fontSize: "1.75rem",
+            display: "block",
+            marginBottom: "8px",
+          }}
           >
             Terjadi kesalahan saat login
-          </strong>
+          </h3>
         </div>,
         {
           icon: null,
-          duration: 5000,
+          duration: 4000,
           style: {
-            marginTop: "16%",
+            marginTop: "12%",
             fontSize: "1.75rem",
             padding: "10px",
             width: "80%",
-            maxWidth: "700px",
+            maxWidth: "450px",
             height: "50%",
             maxHeight: "400px",
             transform: "translate(-50%, -50%)",
