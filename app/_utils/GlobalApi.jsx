@@ -2,7 +2,7 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "https://sanduka.my.id",
+  baseURL: "http://localhost:8080",
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -53,47 +53,15 @@ const registerUser = async (userData) => {
 
 const login = async (loginData) => {
   try {
-    const response = await axiosClient.post(
-      "/api/auth/login-tanggal-lahir",
-      loginData,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    
+    console.log("Login Data:", loginData);
+    const response = await axiosClient.post('/api/auth/login-email-password', loginData, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
-    if (error.response) {
-      throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
-      );
-    } else {
-      throw new Error("Terjadi kesalahan pada server");
-    }
-  }
-};
-
-const loginAdmin = async (npaPgri, password) => {
-  try {
-    const response = await axiosClient.post(
-      "/api/auth/login-password",
-      {
-        npaPgri,
-        password,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    return response.data;
-  } catch (error) {
-    console.error("Error saat login:", error);
-    throw error.response?.data || error.message;
+    console.error("API Error:", error.response?.data || error.message);
+    throw new Error("Terjadi kesalahan pada server");
   }
 };
 
@@ -1523,7 +1491,6 @@ export default {
   updateRegisUser,
   getNoBukti,
   sendSesuaiJumlahTarget,
-  loginAdmin,
   editPemasukanUangMasuk,
   batalLaporanById,
   verifikasiLaporanById,

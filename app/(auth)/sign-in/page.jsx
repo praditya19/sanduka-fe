@@ -14,14 +14,12 @@ import { useAuth } from "@/app/AuthContext";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
 function SignIn() {
-  const [npaPgri, setNpaPgri] = useState("");
-  const [tanggalLahir, setTanggalLahir] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loader, setLoader] = useState(false);
   const [error, setError] = useState("");
   const [isVerified, setIsVerified] = useState(false);
-  const [activeTab, setActiveTab] = useState("login");
   const router = useRouter();
   const { setToken, setUserId } = useAuth();
 
@@ -29,107 +27,40 @@ function SignIn() {
     setLoader(true);
     setError("");
     try {
-      if (npaPgri.length < 6 || tanggalLahir.length !== 8) {
+      if (!email.includes("@") || password.length < 6) {
         throw new Error(
-          "NPA PGRI harus 6 digit dan Tanggal Lahir harus 8 digit."
+          "Email tidak valid atau Password harus minimal 6 karakter."
         );
       }
-
+  
       if (!isVerified) {
         throw new Error("Harap verifikasi reCAPTCHA.");
       }
-
-      // Cek NPA menggunakan GlobalApi.cekNpa
-      const npaResponse = await GlobalApi.cekNpa(npaPgri);
-      console.log("Data NPA:", npaResponse);
-
-      if (!npaResponse || !npaResponse.id) {
-        throw new Error("Data NPA tidak valid atau ID tidak ditemukan.");
-      }
-
-      // Ambil ID dari data NPA dan gunakan untuk mendapatkan data pengguna
-      const userId = npaResponse.id;
-      const userResponse = await GlobalApi.getUserById(userId);
-      console.log("Data User by ID:", userResponse);
-
-      // Cek apakah pengguna sudah terverifikasi
-      if (!userResponse.isVerified) {
-        toast.error(
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                width: "150px",
-                height: "150px",
-                color: "red",
-                marginBottom: "16px",
-              }}
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 1 1-1.414 0.414z" />
-            </svg>
-            <strong
-              style={{
-                fontSize: "1.75rem",
-                display: "block",
-                marginBottom: "8px",
-              }}
-            >
-              Menunggu Verifikasi Admin {userResponse.cabang}
-            </strong>
-          </div>,
-          {
-            icon: null,
-            duration: 5000,
-            style: {
-              marginTop: "16%",
-              fontSize: "1.75rem",
-              padding: "10px",
-              width: "80%",
-              maxWidth: "700px",
-              height: "50%",
-              maxHeight: "400px",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 9999,
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            },
-          }
-        );
-        setLoader(false);
-        return;
-      }
-
+  
       // Melanjutkan proses login
       const loginData = {
-        npaPgri: npaPgri,
-        tanggalLahir: tanggalLahir,
+        email: email,
+        password: password,
       };
-
+  
       const response = await GlobalApi.login(loginData);
       setToken(response.token);
-      sessionStorage.setItem("userId", response.id);
-      sessionStorage.setItem("unitKerja", response.unitKerja);
       sessionStorage.setItem("cabang", response.cabang);
       sessionStorage.setItem("nama", response.namaLengkap);
       sessionStorage.setItem("role", response.role);
-      sessionStorage.setItem("npaPgri", npaPgri);
-
-      const nama = sessionStorage.getItem("nama");
-      const cabang = userResponse.cabang; // Tambahkan properti cabang
-
+      sessionStorage.setItem("npa", response.npaPgri);
+  
+      // Cek NPA untuk mendapatkan ID
+      const npaResponse = await GlobalApi.cekNpa(response.npaPgri);
+      if (npaResponse && npaResponse.id) {
+        sessionStorage.setItem("userId", npaResponse.id);
+        sessionStorage.setItem("unitKerja", npaResponse.unitKerja);
+      } else {
+        throw new Error("Data NPA tidak valid atau ID tidak ditemukan.");
+      }
+  
+      const cabang = response.cabang;
+  
       toast.success(
         <div
           style={{
@@ -183,7 +114,7 @@ function SignIn() {
           },
         }
       );
-
+  
       setTimeout(() => {
         router.push("/home");
       }, 4000);
@@ -212,178 +143,6 @@ function SignIn() {
           >
             <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
             <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 1 1-1.414 0.414z" />
-          </svg>
-          <strong
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Terjadi kesalahan saat login
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 5000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
-    } finally {
-      setLoader(false);
-    }
-  };
-
-  const onSignInAdmin = async () => {
-    setLoader(true);
-    setError("");
-
-    try {
-      if (!isVerified) {
-        throw new Error("Harap verifikasi reCAPTCHA.");
-      }
-
-      const npaPgriValue = npaPgri?.trim();
-      const passwordValue = password?.trim();
-
-      if (!npaPgriValue || !passwordValue) {
-        throw new Error("NPA PGRI dan Password tidak boleh kosong.");
-      }
-
-      const response = await GlobalApi.loginAdmin(npaPgriValue, passwordValue);
-      setToken(response.token);
-      sessionStorage.setItem("nama", response.namaLengkap);
-      sessionStorage.setItem("role", response.role);
-      sessionStorage.setItem("npaPgri", npaPgriValue);
-      sessionStorage.setItem("cabang", response.cabang);
-
-      const fetchAndStoreAdminId = async () => {
-        try {
-          const npaPgri = sessionStorage.getItem("npaPgri");
-      
-          if (!npaPgri) {
-            throw new Error("NPA tidak ditemukan di sessionStorage.");
-          }
-      
-          const cekNpaResponse = await GlobalApi.cekNpa(npaPgri);
-          console.log(cekNpaResponse);
-      
-          if (!cekNpaResponse || !cekNpaResponse.id) {
-            throw new Error("Respon cekNpa tidak valid atau ID tidak ditemukan.");
-          }
-      
-          sessionStorage.setItem("adminId", cekNpaResponse.id);
-      
-          // Mendapatkan detail user menggunakan getUserById
-          const userDetails = await GlobalApi.getUserById(cekNpaResponse.id);
-          console.log(userDetails);
-      
-          if (!userDetails || !userDetails.unitKerja) {
-            throw new Error("Respon getUserById tidak valid atau unitKerja tidak ditemukan.");
-          }
-      
-          sessionStorage.setItem("unitKerja", userDetails.unitKerja);
-        } catch (error) {
-          console.error("Terjadi kesalahan:", error.message);
-        }
-      };      
-
-      await fetchAndStoreAdminId();
-
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Selamat Datang Di Sanduka
-          </strong>
-          <span style={{ fontSize: "1.75rem", marginBottom: "28px" }}>
-            {response.namaLengkap}
-          </span>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
-      setTimeout(() => {
-        router.push("/home");
-      }, 4000);
-    } catch (error) {
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
           </svg>
           <strong
             style={{
@@ -457,147 +216,85 @@ function SignIn() {
           },
         }}
       />
-      <div className="flex flex-col items-center justify-center p-6 sm:p-10 bg-gray-100 border border-gray-200 rounded-lg shadow-md w-full max-w-md sm:max-w-lg lg:w-[32%]">
-        <Image src="/sanduka.png" width={100} height={100} alt="logo" />
-        <h2 className="font-bold text-xl sm:text-2xl">Masuk ke Akun</h2>
-        <h4 className="text-gray-500 mt-2 text-center text-sm sm:text-base">
-          Masukkan NPA PGRI dan{" "}
-          {activeTab === "login" ? "Tanggal Lahir" : "Password"} Anda untuk
-          Masuk
-        </h4>
+    <div className="flex flex-col items-center justify-center p-6 sm:p-10 bg-gray-100 border border-gray-200 rounded-lg shadow-md w-full max-w-md sm:max-w-lg lg:w-[32%]">
+  <Image src="/sanduka.png" width={100} height={100} alt="logo" />
+  <h2 className="font-bold text-xl sm:text-2xl">Masuk ke Akun</h2>
+  <h4 className="text-gray-500 mt-2 text-center text-sm sm:text-base">
+    Masukkan Email dan Password Anda untuk Masuk
+  </h4>
 
-        {/* Tab Navigation */}
-        <div className="flex flex-wrap justify-center space-x-2 sm:space-x-4 mt-4">
-          <button
-            className={`rounded-md p-2 ${
-              activeTab === "login"
-                ? "bg-teal-500 text-white"
-                : "bg-white text-teal-500"
-            }`}
-            onClick={() => setActiveTab("login")}
-          >
-            Anggota
-          </button>
-          <button
-            className={`rounded-md p-2 ${
-              activeTab === "password"
-                ? "bg-teal-500 text-white"
-                : "bg-white text-teal-500"
-            }`}
-            onClick={() => setActiveTab("password")}
-          >
-            Admin & Super Admin
-          </button>
-        </div>
+  <div className="w-full mt-6">
+    {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
-        <div className="w-full mt-6">
-          {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
-
-          {/* Form sesuai tab yang aktif */}
-          {activeTab === "login" && (
-            <div>
-              <div className="mb-6">
-                <Label htmlFor="npaPgri" className="block text-sm">
-                  NPA PGRI
-                </Label>
-                <Input
-                  id="npaPgri"
-                  placeholder="123456"
-                  value={npaPgri}
-                  onChange={(e) => setNpaPgri(e.target.value)}
-                  className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                />
-              </div>
-
-              <div className="mb-6">
-                <Label htmlFor="tanggalLahir" className="block text-sm">
-                  Tanggal Lahir
-                </Label>
-                <Input
-                  id="tanggalLahir"
-                  placeholder="21082024"
-                  value={tanggalLahir}
-                  onChange={(e) => setTanggalLahir(e.target.value)}
-                  className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                />
-              </div>
-            </div>
-          )}
-
-          {activeTab === "password" && (
-            <div>
-              <div className="mb-6">
-                <Label htmlFor="npaPgri" className="block text-sm">
-                  NPA PGRI
-                </Label>
-                <Input
-                  id="npaPgri"
-                  placeholder="123456"
-                  value={npaPgri}
-                  onChange={(e) => setNpaPgri(e.target.value)}
-                  className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                />
-              </div>
-
-              <div className="mb-6 relative">
-                <Label htmlFor="password" className="block text-sm">
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  placeholder="********"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  type={showPassword ? "text" : "password"}
-                  className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 focus:outline-none"
-                  style={{ top: "70%", transform: "translateY(-50%)" }}
-                >
-                  {showPassword ? (
-                    <AiOutlineEyeInvisible className="h-5 w-5 text-gray-500" />
-                  ) : (
-                    <AiOutlineEye className="h-5 w-5 text-gray-500" />
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-
-          <ReCAPTCHA
-            sitekey="6Lfcxy4qAAAAACy6hmLpVgTejZFZG3xGjn0xOVmd"
-            onChange={onChange}
-            className="flex justify-center"
-          />
-
-          <Button
-            onClick={activeTab === "login" ? onSignIn : onSignInAdmin}
-            disabled={
-              !npaPgri ||
-              (activeTab === "login" && !tanggalLahir) ||
-              (activeTab === "password" && !password) ||
-              loader ||
-              !isVerified
-            }
-            className="w-full mt-4 flex justify-center items-center"
-          >
-            {loader ? <LoaderIcon className="animate-spin mr-2" /> : "Masuk"}
-          </Button>
-
-          <p className="mt-4 text-sm text-center text-gray-600">
-            Belum punya akun?
-            <Link
-              href={"/create-account/syarat-ketentuan"}
-              className="text-blue-500 ml-1 hover:underline"
-            >
-              Klik di sini untuk membuat akun baru
-            </Link>
-          </p>
-        </div>
+    <div>
+      <div className="mb-6">
+        <Label htmlFor="email" className="block text-sm">
+          Email
+        </Label>
+        <Input
+          id="email"
+          placeholder="user@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+        />
       </div>
+
+      <div className="mb-6 relative">
+        <Label htmlFor="password" className="block text-sm">
+          Password
+        </Label>
+        <Input
+          id="password"
+          placeholder="********"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          type={showPassword ? "text" : "password"}
+          className="mt-2 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute inset-y-0 right-0 flex items-center pr-3 focus:outline-none"
+          style={{ top: "70%", transform: "translateY(-50%)" }}
+        >
+          {showPassword ? (
+            <AiOutlineEyeInvisible className="h-5 w-5 text-gray-500" />
+          ) : (
+            <AiOutlineEye className="h-5 w-5 text-gray-500" />
+          )}
+        </button>
+      </div>
+    </div>
+
+    <ReCAPTCHA
+      sitekey="6Lfcxy4qAAAAACy6hmLpVgTejZFZG3xGjn0xOVmd"
+      onChange={onChange}
+      className="flex justify-center"
+    />
+
+    <Button
+      onClick={onSignIn}
+      disabled={
+        !email || !password || loader || !isVerified
+      }
+      className="w-full mt-4 flex justify-center items-center"
+    >
+      {loader ? <LoaderIcon className="animate-spin mr-2" /> : "Masuk"}
+    </Button>
+
+    <p className="mt-4 text-sm text-center text-gray-600">
+      Belum punya akun?
+      <Link
+        href={"/create-account/syarat-ketentuan"}
+        className="text-blue-500 ml-1 hover:underline"
+      >
+        Klik di sini untuk membuat akun baru
+      </Link>
+    </p>
+  </div>
+</div>
+
     </div>
   );
 }

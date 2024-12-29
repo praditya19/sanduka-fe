@@ -145,6 +145,7 @@ const Page = () => {
     const fetchUnitKerja = async () => {
       try {
         const response = await GlobalApi.getUnitKerja();
+        console.log("Data Unit Kerja:", response.data);
         setAllUnitKerja(response.data);
       } catch (error) {
         console.error("Gagal memuat data Unit Kerja", error);

@@ -344,7 +344,7 @@ const Page = () => {
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
             <nav className="ml-6 mt-12">
               <ul className="flex flex-wrap space-x-4 md:space-x-6">
-                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+              
                   <li>
                     <Link
                       href="/pengaturan/user"
@@ -353,7 +353,17 @@ const Page = () => {
                       User
                     </Link>
                   </li>
-                )}
+              
+                 {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                 <li>
+                  <Link
+                    href="/pengaturan/tambah"
+                    className="text-gray-700 hover:text-teal-600"
+                  >
+                    Tambah Cabang
+                  </Link>
+                </li>
+                    )}
                 <li>
                   <Link
                     href="/pengaturan/unit-kerja"
@@ -361,7 +371,8 @@ const Page = () => {
                   >
                     Unit Kerja
                   </Link>
-                </li>
+                  </li>
+                 
               </ul>
             </nav>
             <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-4">
@@ -385,12 +396,14 @@ const Page = () => {
                     </select>
                     <span className="ml-2">entries</span>
                   </div>
-                  <Button
-                    className="bg-blue-500 text-white text-xs px-4 py-2 rounded"
-                    onClick={handleAddUserClick}
-                  >
-                    Tambah User
-                  </Button>
+                  {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                    <Button
+                      className="bg-blue-500 text-white text-xs px-4 py-2 rounded"
+                      onClick={handleAddUserClick}
+                    >
+                      Tambah User
+                    </Button>
+                  )}
                 </div>
                 <div className="relative mb-4">
                   <input
@@ -454,14 +467,16 @@ const Page = () => {
                                 <div className="flex space-x-2 justify-center">
                                   {!isMobile ? (
                                     <>
-                                      <Button
-                                        className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
-                                        onClick={() =>
-                                          handleDeleteAdminClick(item.id)
-                                        }
-                                      >
-                                        <FontAwesomeIcon icon={faTrash} />
-                                      </Button>
+                                      {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                                        <Button
+                                          className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
+                                          onClick={() =>
+                                            handleDeleteAdminClick(item.id)
+                                          }
+                                        >
+                                          <FontAwesomeIcon icon={faTrash} />
+                                        </Button>
+                                      )}
                                       <Link
                                         href={`https://wa.me/${phoneNumberForLink(
                                           item.noHp
