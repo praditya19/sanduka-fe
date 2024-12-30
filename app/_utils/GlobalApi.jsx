@@ -309,6 +309,7 @@ const addCabang = async (payload) => {
     throw error;
   }
 };
+
 const deleteCabang = async (idCabang) => {
   try {
     const response = await axiosClient.delete(`/api/daftarCabang/${idCabang}`);
