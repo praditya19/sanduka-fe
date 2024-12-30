@@ -11,26 +11,26 @@ const data = [
   {
     month: "Maret 2021",
     items: [
-      { jenis: "Sanduka", kabupaten: 1035000, cabang: 1035000 },
+      { jenis: "Sanduka", kabupaten: 0, cabang: 0 },
       { jenis: "Daspen", kabupaten: 0, cabang: 0 },
       { jenis: "PGRI", kabupaten: 0, cabang: 0 },
       { jenis: "Derap", kabupaten: 0, cabang: 0 },
       { jenis: "Kalender", kabupaten: 0, cabang: 0 },
       { jenis: "Lain - Lain", kabupaten: 0, cabang: 0 },
     ],
-    totalKekurangan: 11350000,
+    totalKekurangan: 0,
   },
   {
     month: "April 2021",
     items: [
-      { jenis: "Sanduka", kabupaten: 1014000, cabang: 1014000 },
+      { jenis: "Sanduka", kabupaten: 0, cabang: 0 },
       { jenis: "Daspen", kabupaten: 0, cabang: 0 },
       { jenis: "PGRI", kabupaten: 0, cabang: 0 },
       { jenis: "Derap", kabupaten: 0, cabang: 0 },
       { jenis: "Kalender", kabupaten: 0, cabang: 0 },
       { jenis: "Lain - Lain", kabupaten: 0, cabang: 0 },
     ],
-    totalKekurangan: 11350000,
+    totalKekurangan: 0,
   },
   // Tambahkan bulan-bulan lainnya di sini
 ];
@@ -127,7 +127,7 @@ export default function Home() {
               Kekurangan Setoran Cabang BANGSRI
             </h2>
             <h1 className="text-center text-2xl font-bold text-green-600 mb-6">
-              Rp. 27.000.000,-
+              Rp. 0,-
             </h1>
 
             {data.map((monthData, index) => (

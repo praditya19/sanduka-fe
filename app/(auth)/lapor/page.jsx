@@ -98,17 +98,7 @@ const FormStep1 = ({
       if (!userId || !role) return;
 
       try {
-        let response;
-
-        if (role === "SUPER ADMIN" || role === "ADMIN") {
-          response = await GlobalApi.getAdminById(userId);
-        } else if (role === "USER") {
-          response = await GlobalApi.getUserById(userId);
-        } else {
-          console.warn("Role not recognized:", role);
-          return;
-        }
-
+        const response = await GlobalApi.getUserById(userId); // Selalu gunakan getUserById
         setSilaporData(response);
       } catch (error) {
         console.error("Error fetching pelapor data:", error);
@@ -445,17 +435,7 @@ const FormStep1 = ({
                       id="name"
                       placeholder="Nama"
                       className="text-sm cursor-not-allowed"
-                      value={(() => {
-                        const role = sessionStorage.getItem("role");
-                        let name = "";
-                        if (role === "ADMIN" || role === "SUPER ADMIN") {
-                          name = silaporData?.nama || "";
-                        } else if (role === "USER") {
-                          name = silaporData?.namaLengkap || "";
-                        }
-
-                        return name;
-                      })()}
+                      value={silaporData?.namaLengkap || ""}
                       readOnly
                     />
                   </div>
@@ -465,13 +445,7 @@ const FormStep1 = ({
                       id="branch"
                       placeholder="Cabang / Khusus"
                       className="text-sm cursor-not-allowed"
-                      value={(() => {
-                        const role = sessionStorage.getItem("role");
-                        if (role === "SUPER ADMIN") {
-                          return "-";
-                        }
-                        return silaporData?.cabang || "";
-                      })()}
+                      value={silaporData?.cabang || ""}
                       readOnly
                     />
                   </div>
@@ -487,19 +461,11 @@ const FormStep1 = ({
                   <div className="w-full flex flex-col items-start mt-2">
                     <Input
                       type="text"
-                      id="phone"
-                      placeholder="Nomor Whatsapp"
+                      id="name"
+                      placeholder="Nama"
                       className="text-sm cursor-not-allowed"
-                      value={(() => {
-                        const role = sessionStorage.getItem("role");
-                        let phoneNumber = "";
-                        if (role === "ADMIN" || role === "SUPER ADMIN") {
-                          phoneNumber = silaporData?.nohp || "";
-                        } else if (role === "USER") {
-                          phoneNumber = silaporData?.nomorHp || "";
-                        }
-                        return formatPhoneNumber(phoneNumber);
-                      })()}
+                      value={silaporData?.nomorHp || ""}
+                      readOnly
                     />
                   </div>
                 </div>
@@ -1064,7 +1030,7 @@ const Page = () => {
   const handleSubmit = async () => {
     try {
       const currentDate = new Date().toISOString().split("T")[0];
-  
+
       const reportData = {
         idTerlapor: formData.id,
         tanggalPelaporan: currentDate,
@@ -1078,19 +1044,19 @@ const Page = () => {
         waktuMeninggalTerlapor: formData.deathDate,
         keteranganTerlapor: formData.description,
       };
-  
+
       await GlobalApi.submitReport(reportData);
-  
+
       const idList = JSON.parse(sessionStorage.getItem("idTerlaporList")) || [];
       const npaList =
         JSON.parse(sessionStorage.getItem("npaTerlaporList")) || [];
-  
+
       idList.push(formData.id);
       npaList.push(formData.npaPgri);
-  
+
       sessionStorage.setItem("idTerlaporList", JSON.stringify(idList));
       sessionStorage.setItem("npaTerlaporList", JSON.stringify(npaList));
-  
+
       toast.success(
         <div
           style={{
@@ -1101,7 +1067,7 @@ const Page = () => {
             textAlign: "center",
           }}
         >
-           <svg
+          <svg
             xmlns="http://www.w3.org/2000/svg"
             style={{
               width: "150px",
@@ -1124,34 +1090,34 @@ const Page = () => {
             Laporan Berhasil!
           </h3>
         </div>,
-       {
-        icon: null,
-        duration: 4000,
-        style: {
-          marginTop: "12%",
-          fontSize: "1.75rem",
-          padding: "10px",
-          width: "80%",
-          maxWidth: "450px",
-          height: "50%",
-          maxHeight: "400px",
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          zIndex: 9999,
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      }
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
       );
-  
+
       setTimeout(() => {
         window.location.href = "/home";
       }, 4000);
     } catch (error) {
       // Tambahkan ini untuk mencetak error ke konsol
       console.error("Error saat menambahkan laporan:", error);
-  
+
       toast.error(
         <div
           style={{
@@ -1208,7 +1174,6 @@ const Page = () => {
       );
     }
   };
-  
 
   const handleFormDataUpdate = (data) => {
     setFormData((prevData) => ({
