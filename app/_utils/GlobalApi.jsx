@@ -375,6 +375,7 @@ const createAdmin = async (adminData) => {
     throw error;
   }
 };
+
 const deleteAdmin = async (idAdmin) => {
   try {
     const response = await axiosClient.delete(`/api/register-admin/${idAdmin}`);
