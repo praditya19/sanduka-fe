@@ -251,8 +251,6 @@ export default function IconGrid() {
             }
           })
         );
-
-        console.log('Combined User Data:', detailedData);
         setAnggotaMeninggal(detailedData);
       } catch (error) {
         console.error("Error fetching combined user data:", error);
