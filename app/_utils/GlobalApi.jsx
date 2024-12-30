@@ -212,6 +212,7 @@ const getByNIP = async (nip) => {
     throw error;
   }
 };
+
 const updateRegisUser = async (userId, data) => {
   try {
     const response = await axiosClient.post(
@@ -1184,13 +1185,15 @@ const getNotifikasi = async (count) => {
   }
 };
 
-const getAnggotaMeninggal = async () => {
+const getAnggotaMeninggal = async (year, month) => {
   try {
-    const response = await axiosClient.get("/api/notifikasi/data-terlapor");
-    return response.data;
+    const response = await axiosClient.get("/api/auth/users-deceased", {
+      params: { year, month },
+    });
+    return response.data; // Mengembalikan data dari respons
   } catch (error) {
-    console.error("Error fetching anggota meninggal data:", error);
-    throw error;
+    console.error("Error fetching users deceased:", error);
+    throw error; // Melempar error agar dapat ditangani di luar
   }
 };
 

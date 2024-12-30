@@ -473,50 +473,52 @@ function StatusAnggota() {
     return (
       <div className="flex flex-col mt-14 mb-4 mx-4 space-y-8">
         {/* Status Kepegawaian Section */}
-        <div className="flex flex-wrap justify-center gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-center items-center mx-auto">
           {filteredCounts[0].items.map((item, idx) => (
-            <div key={idx} className="bg-white border rounded-lg shadow-md p-6 w-64 text-center">
+            <div
+              key={idx}
+              className="bg-white border rounded-lg shadow-md p-6 w-full sm:w-64 text-center"
+            >
               <div className="bg-teal-500 text-white p-2 rounded-lg mb-4">
                 {item.title}
               </div>
-              <div className="text-3xl font-bold text-gray-700">
-                {item.count}
-              </div>
+              <div className="text-3xl font-bold text-gray-700">{item.count}</div>
               <div className="text-sm text-gray-500 mt-2">Anggota</div>
             </div>
           ))}
-          <div className="bg-white border rounded-lg shadow-md p-6 w-64 text-center">
+          <div className="bg-white border rounded-lg shadow-md p-6 w-full sm:w-64 text-center">
             <div className="bg-teal-500 text-white p-2 rounded-lg mb-4">
               Total Anggota
             </div>
-            <div className="text-3xl font-bold text-gray-700">
-              {jumlahAnggota}
-            </div>
+            <div className="text-3xl font-bold text-gray-700">{jumlahAnggota}</div>
             <div className="text-sm text-gray-500 mt-2">Anggota</div>
           </div>
         </div>
 
-
         {/* Jenjang Pendidikan Section - Modified to show 3x3 grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-6 justify-items-center items-center">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-4 sm:gap-x-6 sm:gap-y-6 justify-items-center items-center">
           {filteredCounts[1].items.map((item, idx) => (
-            <div key={idx} className="bg-white border rounded-lg shadow-md p-3 w-80 text-center flex flex-col items-center">
+            <div
+              key={idx}
+              className="bg-white border rounded-lg shadow-md p-2 sm:p-3 w-full sm:w-80 text-center flex flex-col items-center"
+            >
               <img
                 src={`/${imageMap[item.type] || "default.png"}`}
                 alt={item.type}
-                className="mb-2 h-16 w-auto object-contain"
+                className="mb-2 h-14 sm:h-16 w-auto object-contain"
               />
-              <p className="text-sm font-bold text-gray-800 mb-2">
+              <p className="text-xs sm:text-sm font-bold text-gray-800 mb-2">
                 {item.type === "PERGURUAN_TINGGI" || item.type === "SEKOLAH_LUAR_BIASA"
-                  ? item.type.replace(/_/g, ' ')
-                  : item.type.replace(/_/g, '/')}
+                  ? item.type.replace(/_/g, " ")
+                  : item.type.replace(/_/g, "/")}
               </p>
-              <Button className="bg-blue-500 hover:bg-blue-700 w-full text-sm">
+              <Button className="bg-blue-500 hover:bg-blue-700 w-full text-xs sm:text-sm">
                 {item.count} Anggota
               </Button>
             </div>
           ))}
         </div>
+
       </div>
     );
   };
@@ -907,13 +909,7 @@ function StatusAnggota() {
           className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
             }`}
         >
-          <FilteredCategories
-            anggota={anggota}
-            selectedCabang={selectedCabang}
-            selectedUnitKerja={selectedUnitKerja}
-            selectedTingkat={selectedTingkat} // Add this prop
-          />
-          <div className="mb-4">
+          <div className="mt-14">
             <div className="flex flex-wrap items-start mt-2 justify-between">
               <div className="flex flex-wrap items-center space-x-2">
                 <>
@@ -1062,6 +1058,13 @@ function StatusAnggota() {
               </div>
             </div>
           </div>
+          <FilteredCategories
+            anggota={anggota}
+            selectedCabang={selectedCabang}
+            selectedUnitKerja={selectedUnitKerja}
+            selectedTingkat={selectedTingkat} // Add this prop
+          />
+
 
           <div className="overflow-x-auto">
             <table className="container w-full table-auto mb-8">
