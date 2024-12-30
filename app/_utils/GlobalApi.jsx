@@ -51,7 +51,7 @@ const registerUser = async (userData) => {
   }
 };
 
-const login = async (loginData) => {
+const loginAdmin = async (loginData) => {
   try {
     console.log("Login Data:", loginData);
     const response = await axiosClient.post('/api/auth/login-email-password', loginData, {
@@ -62,6 +62,30 @@ const login = async (loginData) => {
   } catch (error) {
     console.error("API Error:", error.response?.data || error.message);
     throw new Error("Terjadi kesalahan pada server");
+  }
+};
+
+const login = async (loginData) => {
+  try {
+    const response = await axiosClient.post(
+      "/api/auth/login-tanggal-lahir",
+      loginData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada server");
+    }
   }
 };
 
@@ -1421,6 +1445,7 @@ const deleteRanting = async (namaRanting) => {
 // Export all functions
 export default {
   registerUser,
+  loginAdmin,
   login,
   getAllAnggota,
   getUnverifiedUsers,
