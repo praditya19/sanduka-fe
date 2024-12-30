@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBullhorn,
@@ -52,6 +52,7 @@ export default function IconGrid() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const itemsPerPage = 5;
   const [anggotaMeninggal, setAnggotaMeninggal] = useState([]);
+  const [detailedUserData, setDetailedUserData] = useState([]);
   const [userData, setUserData] = useState(null);
   const [role, setRole] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(null);
@@ -150,6 +151,50 @@ export default function IconGrid() {
       color: "text-green-600",
     },
   ];
+  const sortByDate = (data) => {
+    return [...data].sort((a, b) => {
+      try {
+        // Check if waktuMeninggalTerlapor exists and is an array
+        if (!Array.isArray(a.waktuMeninggalTerlapor) || !Array.isArray(b.waktuMeninggalTerlapor)) {
+          return 0; // Keep original order if data is invalid
+        }
+
+        // Convert array date format to Date object for comparison
+        const dateA = new Date(
+          a.waktuMeninggalTerlapor[0],
+          a.waktuMeninggalTerlapor[1] - 1,
+          a.waktuMeninggalTerlapor[2]
+        );
+
+        const dateB = new Date(
+          b.waktuMeninggalTerlapor[0],
+          b.waktuMeninggalTerlapor[1] - 1,
+          b.waktuMeninggalTerlapor[2]
+        );
+
+        // Check if dates are valid
+        if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+          return 0; // Keep original order if dates are invalid
+        }
+
+        return dateB - dateA; // Sort descending (newest first)
+      } catch (error) {
+        console.error("Error sorting dates:", error);
+        return 0; // Keep original order if there's an error
+      }
+    });
+  };
+
+  // Dalam komponen, sebelum melakukan mapping:
+  const sortedData = useMemo(() => {
+    try {
+      return sortByDate(anggotaMeninggal);
+    } catch (error) {
+      console.error("Error in sorting:", error);
+      return anggotaMeninggal; // Return unsorted data if sorting fails
+    }
+  }, [anggotaMeninggal]);
+
   // if (role === "SUPER ADMIN") {
   //   icons.push({
   //     icon: faUserGraduate,
@@ -165,14 +210,66 @@ export default function IconGrid() {
       return;
     }
 
-    const fetchAnggotaMeninggal = async () => {
+    const fetchCombinedUserData = async () => {
       try {
-        const data = await GlobalApi.getAnggotaMeninggal();
-        setAnggotaMeninggal(data);
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth() + 1;
+
+        // Dapatkan data meninggal
+        const deceasedData = await GlobalApi.getAnggotaMeninggal(year, month);
+
+        // Fetch detail untuk setiap anggota meninggal
+        const detailedData = await Promise.all(
+          deceasedData.map(async (deceased) => {
+            try {
+              const userResponse = await GlobalApi.searchUsersByName(deceased.namaLengkap);
+
+              if (userResponse?.data?.users && userResponse.data.users.length > 0) {
+                const userData = userResponse.data.users[0];
+                return {
+                  ...deceased,
+                  waktuMeninggalTerlapor: userData.waktuMeninggalTerlapor || deceased.waktuMeninggalTerlapor,
+                  npaPgri: userData.npaPgri || deceased.npaPgri,
+                  tempatLahir: userData.tempatLahir || deceased.tempatLahir,
+                  tanggalLahir: userData.tanggalLahir || deceased.tanggalLahir,
+                  jabatan: userData.jabatan || deceased.jabatan,
+                  unitKerja: userData.unitKerja || deceased.unitKerja,
+                  cabang: userData.cabang || deceased.cabang,
+                  alamat: userData.alamat || deceased.alamat,
+                  tanggalPelaporan: userData.tanggalPelaporan || deceased.tanggalPelaporan,
+                  keteranganTerlapor: userData.keteranganTerlapor || deceased.keteranganTerlapor,
+                  jamLapor: userData.jamLapor || deceased.jamLapor,
+                  namaPelapor: userData.namaPelapor || deceased.namaPelapor,
+                  nomorHpPelapor: userData.nomorHpPelapor || deceased.nomorHpPelapor,
+                };
+              }
+              return deceased;
+            } catch (error) {
+              console.error(`Error fetching details for ${deceased.namaLengkap}:`, error);
+              return deceased;
+            }
+          })
+        );
+        setAnggotaMeninggal(detailedData);
       } catch (error) {
-        console.error("Error fetching anggota meninggal:", error);
+        console.error("Error fetching combined user data:", error);
       }
     };
+
+    // const fetchAnggotaMeninggal = async () => {
+    //   try {
+    //     const today = new Date();
+    //     const year = today.getFullYear();
+    //     const month = today.getMonth() + 1;
+
+    //     const data = await GlobalApi.getAnggotaMeninggal(year, month);
+    //     console.log('Anggota Meninggal Data:', data);
+    //     setAnggotaMeninggal(data);
+    //   } catch (error) {
+    //     console.error("Error fetching anggota meninggal:", error);
+    //   }
+    // };
 
     const fetchUserData = async () => {
       const userId = sessionStorage.getItem("userId");
@@ -210,7 +307,7 @@ export default function IconGrid() {
 
       setLoading(false);
       handleResize();
-      fetchAnggotaMeninggal();
+      fetchCombinedUserData();
       fetchUserData();
 
       document.addEventListener("mousedown", handleClickOutside);
@@ -288,28 +385,28 @@ export default function IconGrid() {
   const filteredIcons =
     role === "USER"
       ? icons
-          .filter((item) =>
-            [
-              "Lapor",
-              "Teman Unit",
-              "Ketentuan",
-              "Bantuan",
-              "Data Anggota",
-              "History data",
-            ].includes(item.label)
-          )
-          .concat({
-            icon: faRightLeft,
-            label: "Mutasi",
-            href: "/anggota/data-anggota/mutasiCabangUnit",
-            color: "text-cyan-500",
-          })
-          .concat({
-            icon: faFileAlt,
-            label: "Daspen",
-            href: "/daspen",
-            color: "text-teal-700",
-          })
+        .filter((item) =>
+          [
+            "Lapor",
+            "Teman Unit",
+            "Ketentuan",
+            "Bantuan",
+            "Data Anggota",
+            "History data",
+          ].includes(item.label)
+        )
+        .concat({
+          icon: faRightLeft,
+          label: "Mutasi",
+          href: "/anggota/data-anggota/mutasiCabangUnit",
+          color: "text-cyan-500",
+        })
+        .concat({
+          icon: faFileAlt,
+          label: "Daspen",
+          href: "/daspen",
+          color: "text-teal-700",
+        })
       : icons;
 
   return (
@@ -319,9 +416,8 @@ export default function IconGrid() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="flex-1 mt-[3.1%]">
             <img
@@ -558,9 +654,8 @@ export default function IconGrid() {
         </div>
 
         <div
-          className={` flex flex-col items-center my-4 ${
-            isSidebarOpen ? "ml-32" : "ml-0"
-          }`}
+          className={` flex flex-col items-center my-4 ${isSidebarOpen ? "ml-32" : "ml-0"
+            }`}
         >
           <hr className="mt-2 border-gray-300 w-full" />
           <h5 className="text-lg sm:text-xl font-semibold text-gray-800 mt-4 text-center">
@@ -569,9 +664,8 @@ export default function IconGrid() {
         </div>
 
         <div
-          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${
-            isSidebarOpen ? "ml-32" : "ml-0"
-          }`}
+          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${isSidebarOpen ? "ml-32" : "ml-0"
+            }`}
         >
           <button
             onClick={handlePrev}
@@ -581,7 +675,7 @@ export default function IconGrid() {
           </button>
 
           <div className="flex mx-auto sm:mx-44 space-x-4 overflow-x-auto w-full px-4 lg:px-0 lg:grid lg:grid-cols-5 lg:gap-4 lg:overflow-hidden">
-            {anggotaMeninggal
+            {sortedData
               .slice(currentIndex, currentIndex + itemsPerPage)
               .map((currentData, index) => (
                 <div key={index} className="mb-3 max-w-xs mx-auto">

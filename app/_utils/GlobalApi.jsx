@@ -8,7 +8,6 @@ const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
 });
-
 // Konversi Gambar Dalam Format Base64
 const base64ToBlob = (base64, mime) => {
   const byteChars = atob(base64);
@@ -309,6 +308,7 @@ const addCabang = async (payload) => {
     throw error;
   }
 };
+
 const deleteCabang = async (idCabang) => {
   try {
     const response = await axiosClient.delete(`/api/daftarCabang/${idCabang}`);
@@ -375,6 +375,7 @@ const createAdmin = async (adminData) => {
     throw error;
   }
 };
+
 const deleteAdmin = async (idAdmin) => {
   try {
     const response = await axiosClient.delete(`/api/register-admin/${idAdmin}`);
@@ -1183,13 +1184,15 @@ const getNotifikasi = async (count) => {
   }
 };
 
-const getAnggotaMeninggal = async () => {
+const getAnggotaMeninggal = async (year, month) => {
   try {
-    const response = await axiosClient.get("/api/notifikasi/data-terlapor");
-    return response.data;
+    const response = await axiosClient.get("/api/auth/users-deceased", {
+      params: { year, month },
+    });
+    return response.data; // Mengembalikan data dari respons
   } catch (error) {
-    console.error("Error fetching anggota meninggal data:", error);
-    throw error;
+    console.error("Error fetching users deceased:", error);
+    throw error; // Melempar error agar dapat ditangani di luar
   }
 };
 
