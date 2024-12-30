@@ -212,7 +212,6 @@ const getByNIP = async (nip) => {
     throw error;
   }
 };
-
 const updateRegisUser = async (userId, data) => {
   try {
     const response = await axiosClient.post(
