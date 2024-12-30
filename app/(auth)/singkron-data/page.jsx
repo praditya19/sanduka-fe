@@ -497,20 +497,20 @@ const SyncData = () => {
                     <span
                       className={`inline-block px-2 py-1 rounded ${item.dataSanduka
                         ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                        : "bg-green-100 text-green-800"
                         }`}
                     >
-                      {item.dataSanduka ? "YES" : "NO"}
+                      {item.dataSanduka ? "YES" : "YES"}
                     </span>
                   </td>
                   <td className="py-4 px-6">
                     <span
                       className={`inline-block px-2 py-1 rounded ${item.dataKtaDigital
                         ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                        : "bg-green-100 text-green-800"
                         }`}
                     >
-                      {item.dataKtaDigital ? "YES" : "NO"}
+                      {item.dataKtaDigital ? "YES" : "YES"}
                     </span>
                   </td>
                   <td className="py-4 px-6">

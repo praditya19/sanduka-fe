@@ -1361,6 +1361,15 @@ const getRantingSummary = async (
   }
 };
 
+const getNamaranting = async () => {
+  try {
+    const response = await axiosClient.get("/api/ranting/all-nama-ranting");
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const processNamaAnggota = (namaAnggotaArray) => {
   if (!namaAnggotaArray || !Array.isArray(namaAnggotaArray)) return "";
 
@@ -1532,6 +1541,7 @@ export default {
   getTotalAnggotaStatistik,
   getTotalAnggotaByCabang,
   getFileByNip,
+  getNamaranting,
   updateIuranById,
   createHistoryData,
   getAllHistoryData,
