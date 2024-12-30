@@ -2,7 +2,7 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "https://sanduka.my.id",
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -299,6 +299,7 @@ const addUnitKerja = async (payload) => {
     throw error;
   }
 };
+
 const addCabang = async (payload) => {
   try {
     const response = await axiosClient.post("/api/daftarCabang", payload);
