@@ -17,22 +17,22 @@ import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 
 const data = [
-  { cabang: "BANGSRI", kurangSetor: 1000.0 },
-  { cabang: "BATEALIT", kurangSetor: 1000.0 },
-  { cabang: "CABSUS DINAS PENDIDIKAN", kurangSetor: 1000.0 },
-  { cabang: "CABSUS IGTKI", kurangSetor: 1000.0 },
-  { cabang: "DONOROJO", kurangSetor: 1000.0 },
-  { cabang: "JEPARA", kurangSetor: 1000.0 },
-  { cabang: "KALINYAMATAN", kurangSetor: 1000.0 },
-  { cabang: "KARIMUNJAWA", kurangSetor: 1000.0 },
-  { cabang: "KEDUNG", kurangSetor: 1000.0 },
-  { cabang: "KELING", kurangSetor: 1000.0 },
-  { cabang: "KEMBANG", kurangSetor: 1000.0 },
-  { cabang: "MAYONG", kurangSetor: 1000.0 },
-  { cabang: "MLONGGO", kurangSetor: 1000.0 },
-  { cabang: "NALUMSARI", kurangSetor: 1000.0 },
-  { cabang: "PAKIS AJI", kurangSetor: 1000.0 },
-  { cabang: "PECANGAAN", kurangSetor: 1000.0 },
+  { cabang: "BANGSRI", kurangSetor: 0 },
+  { cabang: "BATEALIT", kurangSetor: 0 },
+  { cabang: "CABSUS DINAS PENDIDIKAN", kurangSetor: 0 },
+  { cabang: "CABSUS IGTKI", kurangSetor: 0 },
+  { cabang: "DONOROJO", kurangSetor: 0 },
+  { cabang: "JEPARA", kurangSetor:  0 },
+  { cabang: "KALINYAMATAN", kurangSetor: 0 },
+  { cabang: "KARIMUNJAWA", kurangSetor: 0 },
+  { cabang: "KEDUNG", kurangSetor: 0 },
+  { cabang: "KELING", kurangSetor: 0 },
+  { cabang: "KEMBANG", kurangSetor: 0 },
+  { cabang: "MAYONG", kurangSetor: 0 },
+  { cabang: "MLONGGO", kurangSetor: 0 },
+  { cabang: "NALUMSARI", kurangSetor: 0 },
+  { cabang: "PAKIS AJI", kurangSetor: 0 },
+  { cabang: "PECANGAAN", kurangSetor: 0 },
 ];
 
 export default function Home() {
