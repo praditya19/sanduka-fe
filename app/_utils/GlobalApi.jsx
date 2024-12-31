@@ -1449,6 +1449,42 @@ const deleteRanting = async (namaRanting) => {
   }
 };
 
+const getDetailKeuangan = async ({
+  bulan1,
+  bulan2,
+  bulan3,
+  namaBulan1,
+  namaBulan2,
+  namaBulan3,
+  tahun,
+  cabang,
+}) => {
+  try {
+    // Parameter dinamis dari komponen
+    const params = {
+      bulan1,
+      bulan2,
+      bulan3,
+      namaBulan1,
+      namaBulan2,
+      namaBulan3,
+      tahun,
+      cabang,
+    };
+
+    // Endpoint URL dengan parameter dinamis
+    const response = await axiosClient.get("/api/setor/data", { params });
+
+    // Return data dari response
+    console.log("Data fetched:", response.data);
+    return response.data;
+  } catch (error) {
+    // Tangani error
+    console.error("Error fetching data:", error);
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1539,7 +1575,6 @@ export default {
   getTotalAnggotaStatistik,
   getTotalAnggotaByCabang,
   getFileByNip,
-  getNamaranting,
   updateIuranById,
   createHistoryData,
   getAllHistoryData,
@@ -1554,4 +1589,6 @@ export default {
   createRanting,
   getGroupedNamaRantingWithCabang,
   deleteRanting,
+  getNamaranting,
+  getDetailKeuangan,
 };
