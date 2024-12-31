@@ -53,9 +53,13 @@ const registerUser = async (userData) => {
 const loginAdmin = async (loginData) => {
   try {
     console.log("Login Data:", loginData);
-    const response = await axiosClient.post('/api/auth/login-email-password', loginData, {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const response = await axiosClient.post(
+      "/api/auth/login-email-password",
+      loginData,
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
     console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
@@ -75,7 +79,7 @@ const login = async (loginData) => {
         },
       }
     );
-    
+
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -1338,17 +1342,17 @@ const getRantingSummary = async (
     };
 
     const response = await axiosClient.get("/api/ranting", { params });
-
     return {
       content: Array.isArray(response.data.content)
         ? response.data.content.map((data) => ({
             cabang: data.cabang,
             namaRanting: data.namaRanting,
-            lokasi: data.unitKerja,
+            unitKerja: data.unitKerja,
             namaAnggota: processNamaAnggota(data.namaAnggota),
+            anggotaUnitKerja: data.anggotaUnitKerja,
             jumlahAnggotaRanting: data.jumlahAnggotaRanting,
             totalUnitKerja: data.totalUnitKerja,
-            totalAnggota: data.totalAnggota,
+            totalAnggota: data.totalAnggotaSemuaRanting,
           }))
         : [],
       totalElements: response.data.totalElements,
@@ -1450,6 +1454,15 @@ const deleteRanting = async (namaRanting) => {
     return response.data;
   } catch (error) {
     console.error("Error fetching files data: ", error);
+    throw error;
+  }
+};
+
+const getNamaranting = async () => {
+  try {
+    const response = await axiosClient.get("/api/ranting/all-nama-ranting");
+    return response.data;
+  } catch (error) {
     throw error;
   }
 };
@@ -1559,4 +1572,5 @@ export default {
   createRanting,
   getGroupedNamaRantingWithCabang,
   deleteRanting,
+  getNamaranting,
 };
