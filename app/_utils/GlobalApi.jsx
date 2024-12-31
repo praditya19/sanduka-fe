@@ -8,6 +8,7 @@ const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
 });
+
 // Konversi Gambar Dalam Format Base64
 const base64ToBlob = (base64, mime) => {
   const byteChars = atob(base64);
@@ -53,13 +54,9 @@ const registerUser = async (userData) => {
 const loginAdmin = async (loginData) => {
   try {
     console.log("Login Data:", loginData);
-    const response = await axiosClient.post(
-      "/api/auth/login-email-password",
-      loginData,
-      {
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    const response = await axiosClient.post('/api/auth/login-email-password', loginData, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
@@ -79,7 +76,7 @@ const login = async (loginData) => {
         },
       }
     );
-
+    
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -109,42 +106,40 @@ const searchUsersByName = (namaLengkap) => {
 //   return axiosClient.get(`/api/auth/users?page=${page}&size=${size}`);
 // };
 
-const getAllAnggota = async (page = 0, cabang = null, unitKerja = null) => {
-  const fetchAllPages = async () => {
-    let currentPage = page;
-    let allData = [];
-    let hasMoreData = true;
+const getAllAnggota = async (
+  page = 0,
+  size = 8000,
+  cabang = null,
+  unitKerja = null,
+  npaPgri = null,
+  namaLengkap = null
+) => {
+  try {
+    // Menyusun parameter query menggunakan URLSearchParams
+    const params = new URLSearchParams({
+      page,
+      size,
+    });
 
-    while (hasMoreData) {
-      const params = new URLSearchParams({
-        page: currentPage,
-        size: 1000, // Gunakan ukuran batch yang masuk akal
-      });
+    // Menambahkan filter hanya jika ada nilainya
+    if (cabang) params.append("cabang", encodeURIComponent(cabang));
+    if (unitKerja) params.append("unitKerja", encodeURIComponent(unitKerja));
+    if (npaPgri) params.append("npaPgri", encodeURIComponent(npaPgri));
+    if (namaLengkap) params.append("namaLengkap", encodeURIComponent(namaLengkap));
 
-      if (cabang) params.append("cabang", cabang);
-      if (unitKerja) params.append("unitKerja", unitKerja);
+    // Melakukan request API
+    const response = await axiosClient.get(`/api/auth/users?${params.toString()}`);
 
-      try {
-        const response = await axiosClient.get(
-          `/api/auth/users?${params.toString()}`
-        );
-        const pageData = response.data.content;
-        const totalPages = response.data.totalPages;
-
-        allData = [...allData, ...pageData];
-
-        hasMoreData = currentPage + 1 < totalPages;
-        currentPage++;
-      } catch (error) {
-        console.error("Error fetching pages:", error);
-        break;
-      }
-    }
-
-    return allData;
-  };
-
-  return fetchAllPages();
+    // Memproses dan mengembalikan hasil respons API
+    return {
+      content: response.data.content, // Data untuk halaman saat ini
+      totalElements: response.data.totalElements, // Total semua elemen (untuk pagination)
+      totalPages: response.data.totalPages, // Total halaman
+    };
+  } catch (error) {
+    console.error("Error fetching anggota data:", error);
+    throw error; // Lempar error agar bisa ditangani di komponen
+  }
 };
 
 const getAdminById = async (adminId) => {
@@ -312,7 +307,6 @@ const addCabang = async (payload) => {
     throw error;
   }
 };
-
 const deleteCabang = async (idCabang) => {
   try {
     const response = await axiosClient.delete(`/api/daftarCabang/${idCabang}`);
@@ -379,7 +373,6 @@ const createAdmin = async (adminData) => {
     throw error;
   }
 };
-
 const deleteAdmin = async (idAdmin) => {
   try {
     const response = await axiosClient.delete(`/api/register-admin/${idAdmin}`);
@@ -1188,15 +1181,13 @@ const getNotifikasi = async (count) => {
   }
 };
 
-const getAnggotaMeninggal = async (year, month) => {
+const getAnggotaMeninggal = async () => {
   try {
-    const response = await axiosClient.get("/api/auth/users-deceased", {
-      params: { year, month },
-    });
-    return response.data; // Mengembalikan data dari respons
+    const response = await axiosClient.get("/api/notifikasi/data-terlapor");
+    return response.data;
   } catch (error) {
-    console.error("Error fetching users deceased:", error);
-    throw error; // Melempar error agar dapat ditangani di luar
+    console.error("Error fetching anggota meninggal data:", error);
+    throw error;
   }
 };
 
@@ -1342,17 +1333,17 @@ const getRantingSummary = async (
     };
 
     const response = await axiosClient.get("/api/ranting", { params });
+
     return {
       content: Array.isArray(response.data.content)
         ? response.data.content.map((data) => ({
             cabang: data.cabang,
             namaRanting: data.namaRanting,
-            unitKerja: data.unitKerja,
+            lokasi: data.unitKerja,
             namaAnggota: processNamaAnggota(data.namaAnggota),
-            anggotaUnitKerja: data.anggotaUnitKerja,
             jumlahAnggotaRanting: data.jumlahAnggotaRanting,
             totalUnitKerja: data.totalUnitKerja,
-            totalAnggota: data.totalAnggotaSemuaRanting,
+            totalAnggota: data.totalAnggota,
           }))
         : [],
       totalElements: response.data.totalElements,
@@ -1454,15 +1445,6 @@ const deleteRanting = async (namaRanting) => {
     return response.data;
   } catch (error) {
     console.error("Error fetching files data: ", error);
-    throw error;
-  }
-};
-
-const getNamaranting = async () => {
-  try {
-    const response = await axiosClient.get("/api/ranting/all-nama-ranting");
-    return response.data;
-  } catch (error) {
     throw error;
   }
 };
@@ -1572,5 +1554,4 @@ export default {
   createRanting,
   getGroupedNamaRantingWithCabang,
   deleteRanting,
-  getNamaranting,
 };

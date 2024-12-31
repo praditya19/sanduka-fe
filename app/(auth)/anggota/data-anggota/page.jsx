@@ -89,7 +89,7 @@ function DataAnggota() {
         setLoading(true); // Set loading true hanya untuk getAllAnggota
         try {
           const anggotaResponse = await GlobalApi.getAllAnggota();
-          setAnggota(anggotaResponse);
+          setAnggota(anggotaResponse.content);
         } catch (error) {
           console.error("Error fetching anggota data:", error);
         } finally {
@@ -1449,13 +1449,6 @@ function DataAnggota() {
           </div>
 
           <div className="overflow-x-auto">
-            {loading ? (
-              <div className="flex justify-center items-center py-10">
-                <div className="text-teal-500 text-lg font-semibold">
-                  Loading data...
-                </div>
-              </div>
-            ) : (
               <table className="container w-full table-auto mb-8">
                 <thead>
                   <tr>
@@ -2320,7 +2313,6 @@ function DataAnggota() {
                   })}
                 </tbody>
               </table>
-            )}
             <div className="flex justify-center mt-4 gap-1">
               <button
                 onClick={() => setCurrentPage(1)}
