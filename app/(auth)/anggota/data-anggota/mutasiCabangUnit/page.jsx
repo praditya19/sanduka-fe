@@ -239,48 +239,41 @@ const page = () => {
 
   const handleCreateHistory = async () => {
     const now = new Date();
-
-    const options = { weekday: "long" };
-    const hari = now.toLocaleDateString("id-ID", options);
+    
+    // Format date components
+    const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
     const tanggal = now.toISOString().split("T")[0];
     const jam = now.toTimeString().split(" ")[0];
-
     const bulan = now.toLocaleString("id-ID", { month: "long" });
     const tahun = now.getFullYear();
-
+  
+    // Get user details
     const userRole = sessionStorage.getItem("role");
-
-    let namaLengkapUser;
-    let npaPgri;
-
-    if (userRole !== "USER") {
-      namaLengkapUser = sessionStorage.getItem("nama");
-      npaPgri = userData.npaPgri;
-    } else {
-      namaLengkapUser = userData.namaLengkap;
-      npaPgri = userData.npaPgri;
-    }
-
+    const namaLengkapUser = userRole === "USER" 
+      ? userData.namaLengkap 
+      : sessionStorage.getItem("nama");
+  
     const historyData = {
-      hari: hari,
-      tanggal: tanggal,
-      jam: jam,
-      npa: npaPgri,
+      hari,
+      tanggal,
+      jam,
+      npa: userData.npaPgri,
       nama: userData.namaLengkap,
-      cabang: userData.cabangSebelumnya,
+      cabang: userData.cabang, // Use current cabang before mutation
       uraian: "Pindah Cabang",
-      masuk: "Baru",
-      keluar: "",
-      bulan: bulan,
-      tahun: tahun,
+      masuk: cabang, // New cabang as masuk
+      keluar: userData.cabang, // Current cabang as keluar
+      bulan,
+      tahun,
       cabang_ke_2: cabang,
       user: namaLengkapUser,
     };
-
+  
     try {
-      const response = await GlobalApi.createHistoryData(historyData);
+      await GlobalApi.createHistoryData(historyData);
     } catch (error) {
       console.error("Failed to create history data:", error);
+      toast.error("Gagal menyimpan riwayat mutasi");
     }
   };
 

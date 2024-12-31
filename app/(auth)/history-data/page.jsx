@@ -60,36 +60,52 @@ const Page = () => {
   const fetchData = async () => {
     try {
       const userRole = sessionStorage.getItem("role");
-      const npa = sessionStorage.getItem("npaPgri");
+      const npa = sessionStorage.getItem("npa");
 
-      const pageIndex = currentPage - 1;
+      let historyData = [];
+      let totalItems = 0;
+      let pageIndex = 0;
+      const itemsPerPage = 10000; // Default size per page
 
-      let historyResponse;
-      if (userRole === "USER") {
-        historyResponse = await GlobalApi.getHistoryByNpa(
+      if (userRole === "USER" || userRole === "ADMIN") {
+        const currentPage = 1; // Replace with actual current page if available
+        pageIndex = currentPage - 1;
+
+        let historyResponse = await GlobalApi.getHistoryByNpa(
           npa,
           pageIndex,
           itemsPerPage
         );
 
+        console.log("Response from getHistoryByNpa:", historyResponse);
+
         historyResponse = historyResponse.reduce((acc, item) => {
           acc[item.npa] = item;
           return acc;
         }, {});
+
+        historyData = Object.values(historyResponse);
+        totalItems = historyData.length;
       } else {
-        historyResponse = await GlobalApi.getHistoryData(
-          pageIndex,
-          itemsPerPage
-        );
+        let hasMore = true;
+
+        do {
+          const historyResponse = await GlobalApi.getHistoryData(
+            pageIndex,
+            itemsPerPage
+          );
+
+          if (historyResponse.content.length > 0) {
+            historyData = [...historyData, ...historyResponse.content];
+            totalItems = historyResponse.totalElements;
+            pageIndex += 1;
+          } else {
+            hasMore = false;
+          }
+        } while (historyData.length < totalItems && hasMore);
       }
 
-      const historyData =
-        userRole === "USER"
-          ? Object.values(historyResponse)
-          : historyResponse.content;
-      setTotalItems(
-        userRole === "USER" ? historyData.length : historyResponse.totalElements
-      );
+      setTotalItems(totalItems);
 
       const npaList = historyData.map((item) => item.npa).filter((npa) => npa);
 
@@ -118,6 +134,7 @@ const Page = () => {
       console.error("Error fetching history data:", error);
     }
   };
+
 
   useEffect(() => {
     if (!token) {
@@ -153,7 +170,7 @@ const Page = () => {
 
     const matchesCabang = selectedCabang
       ? (item.npaDetail.cabang?.toLowerCase() || item.cabang?.toLowerCase()) ===
-        selectedCabang.toLowerCase()
+      selectedCabang.toLowerCase()
       : true;
 
     const matchesMonth = selectedMonth
@@ -221,9 +238,8 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="w-full p-4 container shadow-lg rounded-lg mt-12">
             <div className="rounded-md flex flex-col py-4">
@@ -292,9 +308,8 @@ const Page = () => {
                         <th
                           key={header}
                           rowSpan="2"
-                          className={`border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white ${
-                            idx > 2 ? "hidden lg:table-cell" : ""
-                          }`}
+                          className={`border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white ${idx > 2 ? "hidden lg:table-cell" : ""
+                            }`}
                         >
                           {header}
                         </th>
@@ -417,11 +432,10 @@ const Page = () => {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 border rounded text-sm ${
-                        page === currentPage
+                      className={`px-3 py-1 border rounded text-sm ${page === currentPage
                           ? "bg-blue-500 text-white"
                           : "bg-white hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       {page}
                     </button>

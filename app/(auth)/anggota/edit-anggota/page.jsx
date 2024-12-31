@@ -267,6 +267,46 @@ const Page = () => {
     };
   }, []);
 
+  const handleCreateHistory = async () => {
+    const now = new Date();
+      
+    // Format date components
+    const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
+    const tanggal = now.toISOString().split("T")[0];
+    const jam = now.toTimeString().split(" ")[0];
+    const bulan = now.toLocaleString("id-ID", { month: "long" });
+    const tahun = now.getFullYear();
+  
+    // Get user details
+    const userRole = sessionStorage.getItem("role");
+    const namaLengkapUser = userRole === "USER" 
+      ? namaLengkap  // Using namaLengkap state from the form
+      : sessionStorage.getItem("nama");
+  
+    const historyData = {
+      hari,
+      tanggal,
+      jam,
+      npa: npaPgri,
+      nama: namaLengkap,
+      cabang: selectedCabang,
+      uraian: "Edit Data",
+      masuk: "-", // Not applicable for edit
+      keluar: "-", // Not applicable for edit
+      bulan,
+      tahun,
+      cabang_ke_2: "-", // Not applicable for edit
+      user: namaLengkapUser,
+    };
+  
+    try {
+      await GlobalApi.createHistoryData(historyData);
+    } catch (error) {
+      console.error("Failed to create history data:", error);
+      throw new Error("Gagal menyimpan riwayat edit data");
+    }
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     const anggotaId = sessionStorage.getItem("anggotaId");
@@ -432,6 +472,7 @@ const Page = () => {
     try {
       const response = await GlobalApi.updateUserById(id, formData);
       console.log("Response dari API:", response);
+      await handleCreateHistory();
       toast.success(
         <div
           style={{
