@@ -1576,7 +1576,7 @@ function DataAnggota() {
                               {formatDate(item.tanggalLahir)}
                             </div>
                             <div className="text-sm">
-                              {calculateAge(item.tanggalLahir)} Tahun
+                              {calculateAge(item.tanggalLahir)}
                             </div>
                             <div className="text-sm">
                               Pensiun :{" "}

@@ -269,20 +269,21 @@ const Page = () => {
 
   const handleCreateHistory = async () => {
     const now = new Date();
-      
+
     // Format date components
     const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
     const tanggal = now.toISOString().split("T")[0];
     const jam = now.toTimeString().split(" ")[0];
     const bulan = now.toLocaleString("id-ID", { month: "long" });
     const tahun = now.getFullYear();
-  
+
     // Get user details
     const userRole = sessionStorage.getItem("role");
-    const namaLengkapUser = userRole === "USER" 
-      ? namaLengkap  // Using namaLengkap state from the form
-      : sessionStorage.getItem("nama");
-  
+    const namaLengkapUser =
+      userRole === "USER"
+        ? namaLengkap // Using namaLengkap state from the form
+        : sessionStorage.getItem("nama");
+
     const historyData = {
       hari,
       tanggal,
@@ -298,7 +299,7 @@ const Page = () => {
       cabang_ke_2: "-", // Not applicable for edit
       user: namaLengkapUser,
     };
-  
+
     try {
       await GlobalApi.createHistoryData(historyData);
     } catch (error) {
@@ -1499,6 +1500,9 @@ const Page = () => {
                     >
                       Cek NIP
                     </Button>
+                    <span className="ml-4 text-sm text-teal-500">
+                      Cek Kepesertaan Daspen Jateng
+                    </span>
 
                     {isPopupVisible && (
                       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
@@ -2394,6 +2398,9 @@ const Page = () => {
                   <div className="w-full">
                     <Label className="block text-sm font-medium mb-3">
                       Kategori Daspen
+                      <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                        Berdasarkan data-data Daspen Jateng
+                      </span>
                     </Label>
                     <Controller
                       name="kategoriDaspen"
@@ -2463,6 +2470,16 @@ const Page = () => {
                       </Select>
                     )}
                   />
+                  <div>
+                    <span className="text-sm text-teal-500">
+                      *Pendidik Usia 60 Tahun
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-sm text-teal-500">
+                      *Tenaga Pendidik usia Pensiun 58 Tahun
+                    </span>
+                  </div>
                 </div>
 
                 <div className="w-full">
