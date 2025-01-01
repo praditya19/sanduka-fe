@@ -339,21 +339,22 @@ const VerifikasiAnggotaMutasi = () => {
   const handleNamaChange = (e) => {
     const namaAnggota = e.target.value;
     setNama(namaAnggota);
-    fetchDataAnggota(0, pageSize, "", "", namaAnggota);
+    // Include all active filters
+    fetchDataAnggota(0, pageSize, selectedCabang, selectedUnitKerja, namaAnggota);
   };
 
   const handleCabangChange = (value) => {
     const selectedKecamatan = value;
     setSelectedCabang(selectedKecamatan);
     updateUnitKerja(selectedKecamatan);
-    // Hapus setCurrentPage(0) jika ingin mempertahankan halaman saat ini
-    fetchDataAnggota(currentPage, pageSize, selectedKecamatan, "", "");
+    // Now include all active filters when fetching data
+    fetchDataAnggota(currentPage, pageSize, selectedKecamatan, selectedUnitKerja, nama);
   };
 
   const handleUnitKerjaChange = (value) => {
     setSelectedUnitKerja(value);
-    // Hapus setCurrentPage(0) jika ingin mempertahankan halaman saat ini
-    fetchDataAnggota(currentPage, pageSize, selectedCabang, value, "");
+    // Include all active filters
+    fetchDataAnggota(currentPage, pageSize, selectedCabang, value, nama);
   };
 
   const updateUnitKerja = (kecamatan) => {
@@ -440,26 +441,20 @@ const VerifikasiAnggotaMutasi = () => {
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
-    fetchDataAnggota(newPage, pageSize);
+    fetchDataAnggota(newPage, pageSize, selectedCabang, selectedUnitKerja, nama);
   };
 
-
+  // Update the handleSizeChange to maintain filters
   const handleSizeChange = (newSize) => {
     setPageSize(newSize);
     setCurrentPage(0);
-    fetchDataAnggota(0, newSize);
+    fetchDataAnggota(0, newSize, selectedCabang, selectedUnitKerja, nama);
   };
 
   const handleSearchClick = () => {
     setCurrentPage(0);
-
-    fetchDataAnggota(
-      0,
-      pageSize,
-      selectedCabang,
-      selectedUnitKerja,
-      nama
-    );
+    // Include all active filters
+    fetchDataAnggota(0, pageSize, selectedCabang, selectedUnitKerja, nama);
   };
 
   const handleVerifyUserClick = (rowId) => {
@@ -472,8 +467,11 @@ const VerifikasiAnggotaMutasi = () => {
 
   const handleResetClick = () => {
     setSelectedCabang("");
+    setSelectedUnitKerja("");
     setFilteredUnitKerja([]);
-    fetchDataAnggota(currentPage, pageSize);
+    setNama("");
+    // Reset all filters
+    fetchDataAnggota(currentPage, pageSize, "", "", "");
   };
 
   return (

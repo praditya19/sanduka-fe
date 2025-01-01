@@ -678,14 +678,14 @@ export default function IconGrid() {
             {sortedData
               .slice(currentIndex, currentIndex + itemsPerPage)
               .map((currentData, index) => (
-                <div key={index} className="mb-3 max-w-xs mx-auto">
+                <div key={index} className="mb-3 max-w-xs">
                   {/* Gradient Header */}
-                  <div className="bg-gradient-to-r from-purple-400 to-pink-500 p-2 text-center rounded-lg mb-2 relative">
+                  <div className="bg-gradient-to-r from-blue-400 to-blue-800 p-2 text-center rounded-lg mb-2 relative">
                     <div className="flex justify-center mb-1">
                       <Image
                         src="/profile.png"
-                        width={50}
-                        height={50}
+                        width={80}
+                        height={80}
                         alt="Profile"
                         className="rounded-full border-2 border-white shadow-md"
                       />
@@ -699,7 +699,7 @@ export default function IconGrid() {
                   </div>
 
                   {/* Detailed Information */}
-                  <div className="text-center text-gray-700 mb-2 space-y-0.5">
+                  <div className="text-center text-gray-700 mb-2 -mt-2">
                     <p className="text-xs">{currentData.npaPgri || "N/A"}</p>
                     <p className="text-xs">
                       {currentData.tempatLahir},{" "}
@@ -712,7 +712,7 @@ export default function IconGrid() {
                   </div>
 
                   {/* Notes */}
-                  <p className="text-center text-gray-600 mb-2 text-xs font-medium">
+                  <p className="text-center text-gray-600 mb-1 text-xs font-medium">
                     Catatan: {currentData.keteranganTerlapor}
                   </p>
 
