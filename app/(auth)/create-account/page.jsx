@@ -1876,6 +1876,16 @@ const Page = () => {
                     </Select>
                   )}
                 />
+                 <div>
+    <span className="text-sm text-teal-500">
+      *Pendidik Usia 60 Tahun
+    </span>
+  </div>
+  <div>
+    <span className="text-sm text-teal-500">
+      *Tenaga Pendidik usia Pensiun 58 Tahun
+    </span>
+  </div>
                 {errors.golonganJabatan && (
                   <span className="text-red-500 text-sm">
                     Pangkat/Golongan is required

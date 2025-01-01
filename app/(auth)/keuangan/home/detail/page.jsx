@@ -31,16 +31,17 @@ export default function Home() {
     { id: "12", namaBulan: "Desember" },
   ];
   const getNamaBulan = (bulanId) => {
-    const bulan = bulanList.find((b) => b.id === bulanId.padStart(2, "0")); // Pastikan angka bulan berbentuk dua digit
-    return bulan ? bulan.namaBulan : bulanId; // Jika tidak ditemukan, kembalikan angka bulan
+    const bulan = bulanList.find((b) => b.id === bulanId.padStart(2, "0"));
+    return bulan ? bulan.namaBulan : bulanId;
   };
   const [queryCabang, setQueryCabang] = useState("");
   const [selectedCabang, setSelectedCabang] = useState("");
   const [cabangOptions, setCabangOptions] = useState([]);
   const [showDropdownCabang, setShowDropdownCabang] = useState(false);
   const [data, setData] = useState([]);
-  const [selectedBulan, setSelectedBulan] = useState(currentMonth); // Bulan otomatis
-  const [selectedTahun, setSelectedTahun] = useState(currentYear.toString()); // Tahun otomatis
+  const [selectedBulan, setSelectedBulan] = useState(currentMonth);
+  const [selectedTahun, setSelectedTahun] = useState(currentYear.toString());
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const cabang = sessionStorage.getItem("cabang");
 
   const groupDataByMonth = (data) => {
@@ -60,10 +61,9 @@ export default function Home() {
     };
 
     const grouped = data.reduce((acc, curr) => {
-      // Normalisasi nilai bulan
-      const bulan = bulanMap[curr.bulan] || curr.bulan; // Ubah nama bulan menjadi angka jika perlu
+      const bulan = bulanMap[curr.bulan] || curr.bulan;
 
-      if (!bulan) return acc; // Abaikan jika bulan undefined
+      if (!bulan) return acc;
 
       if (!acc[bulan]) {
         acc[bulan] = [];
@@ -72,7 +72,6 @@ export default function Home() {
       return acc;
     }, {});
 
-    // Ubah objek menjadi array
     return Object.keys(grouped).map((key) => ({
       month: key,
       items: grouped[key],
@@ -81,6 +80,9 @@ export default function Home() {
 
   const fetchData = async () => {
     if (!selectedBulan || !selectedTahun) return;
+
+    const role = sessionStorage.getItem("role");
+    const cabangParameter = role === "SUPER ADMIN" ? selectedCabang : cabang;
 
     const bulan1 = selectedBulan;
     const bulan2 =
@@ -104,14 +106,14 @@ export default function Home() {
       namaBulan2,
       namaBulan3,
       tahun: selectedTahun,
-      cabang,
+      cabang: cabangParameter,
     };
 
     try {
       const response = await GlobalApi.getDetailKeuangan(params);
-      console.log("Data fetched:", response); // Debugging
+      console.log("Data fetched:", response);
       const groupedData = groupDataByMonth(response || []);
-      console.log("Grouped Data:", groupedData); // Debugging
+      console.log("Grouped Data:", groupedData);
       setData(groupedData);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -127,6 +129,8 @@ export default function Home() {
     if (!token) {
       router.push("/sign-in");
     }
+    const role = sessionStorage.getItem("role");
+    setIsSuperAdmin(role === "SUPER ADMIN");
   }, [token, router]);
 
   const fetchCabang = async () => {
@@ -145,7 +149,7 @@ export default function Home() {
   const handleCabangSelect = (cabang) => {
     setSelectedCabang(cabang.kecamatan || "Pilih Cabang");
     setShowDropdownCabang(false);
-    setQueryCabang(""); // Reset pencarian setelah memilih cabang
+    setQueryCabang("");
   };
 
   const handleBackClick = () => {
@@ -248,66 +252,72 @@ export default function Home() {
             </div>
 
             {/* Filter Cabang */}
-            <div className="flex-1 min-w-[250px] flex flex-col items-start relative">
-              <label className="block text-sm font-medium mb-1">
-                Cabang / Khusus
-              </label>
-              <input
-                id="cabangInput"
-                type="text"
-                className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
-                placeholder="Pilih Cabang"
-                value={selectedCabang || queryCabang}
-                readOnly
-                onClick={() => setShowDropdownCabang(true)}
-              />
-              {showDropdownCabang && (
-                <div
-                  id="dropdownCabang"
-                  className="absolute z-10 border rounded-lg bg-white shadow-sm mt-2 w-full"
-                >
-                  <ul className="max-h-44 overflow-y-auto">
-                    <li className="py-2 px-2">
-                      <input
-                        type="text"
-                        className="border-b p-2 w-full bg-white"
-                        placeholder="Cari Cabang..."
-                        value={queryCabang}
-                        onChange={(e) => setQueryCabang(e.target.value)}
-                        autoFocus
-                      />
-                    </li>
-                    <li
-                      className="p-2 cursor-pointer hover:bg-gray-100"
-                      onClick={() =>
-                        handleCabangSelect({ kecamatan: "", idKecamatan: null })
-                      }
-                    >
-                      Pilih Cabang
-                    </li>
-                    {cabangOptions
-                      .filter((cabang) =>
-                        cabang.kecamatan
-                          .toLowerCase()
-                          .includes(queryCabang.toLowerCase())
-                      )
-                      .map((cabang) => (
-                        <li
-                          key={cabang.idKecamatan}
-                          className="p-2 cursor-pointer hover:bg-gray-100"
-                          onClick={() => handleCabangSelect(cabang)}
-                        >
-                          {cabang.kecamatan}
-                        </li>
-                      ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+            {isSuperAdmin && (
+              <div className="flex-1 min-w-[250px] flex flex-col items-start relative">
+                <label className="block text-sm font-medium mb-1">
+                  Cabang / Khusus
+                </label>
+                <input
+                  id="cabangInput"
+                  type="text"
+                  className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
+                  placeholder="Pilih Cabang"
+                  value={selectedCabang || queryCabang}
+                  readOnly
+                  onClick={() => setShowDropdownCabang(true)}
+                />
+                {showDropdownCabang && (
+                  <div
+                    id="dropdownCabang"
+                    className="absolute z-10 border rounded-lg bg-white shadow-sm mt-16 w-full"
+                  >
+                    <ul className="max-h-44 overflow-y-auto">
+                      <li className="py-2 px-2">
+                        <input
+                          type="text"
+                          className="border-b p-2 w-full bg-white"
+                          placeholder="Cari Cabang..."
+                          value={queryCabang}
+                          onChange={(e) => setQueryCabang(e.target.value)}
+                          autoFocus
+                        />
+                      </li>
+                      <li
+                        className="p-2 cursor-pointer hover:bg-gray-100"
+                        onClick={() =>
+                          handleCabangSelect({
+                            kecamatan: "",
+                            idKecamatan: null,
+                          })
+                        }
+                      >
+                        Pilih Cabang
+                      </li>
+                      {cabangOptions
+                        .filter((cabang) =>
+                          cabang.kecamatan
+                            .toLowerCase()
+                            .includes(queryCabang.toLowerCase())
+                        )
+                        .map((cabang) => (
+                          <li
+                            key={cabang.idKecamatan}
+                            className="p-2 cursor-pointer hover:bg-gray-100"
+                            onClick={() => handleCabangSelect(cabang)}
+                          >
+                            {cabang.kecamatan}
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <h2 className="text-green-600 text-center mb-2">
-            Kekurangan Setoran Cabang {cabang}
+            Kekurangan Setoran Cabang{" "}
+            {isSuperAdmin ? selectedCabang || "Pilih Cabang" : cabang}
           </h2>
 
           <div className="max-w-4xl mx-auto p-6">

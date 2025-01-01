@@ -401,7 +401,7 @@ const Page = () => {
                       className="bg-blue-500 text-white text-xs px-4 py-2 rounded"
                       onClick={handleAddUserClick}
                     >
-                      Tambah User
+                      Tambah Admin
                     </Button>
                   )}
                 </div>
@@ -423,7 +423,6 @@ const Page = () => {
                   <thead>
                     <tr className="bg-gray-50">
                       <th className="p-2 md:p-3 border text-left">No</th>
-                      <th className="p-2 md:p-3 border text-left">Email</th>
                       <th className="p-2 md:p-3 border hidden md:table-cell">
                         Cabang
                       </th>
@@ -436,6 +435,7 @@ const Page = () => {
                       <th className="p-2 md:p-3 border hidden md:table-cell">
                         No HP
                       </th>
+                      <th className="p-2 md:p-3 border ">Email</th>
                       <th className="p-2 border text-center">Action</th>
                     </tr>
                   </thead>
@@ -448,20 +448,20 @@ const Page = () => {
                               <td className="p-2 md:p-3 border text-center">
                                 {index + 1 + currentPage * entries}
                               </td>
-                              <td className="p-2 md:p-3 border text-center">
-                                {item.email}
-                              </td>
                               <td className="p-2 md:p-3 border hidden md:table-cell">
                                 {item.cabang}
                               </td>
                               <td className="p-2 md:p-3 border hidden md:table-cell">
                                 {item.nama}
                               </td>
-                              <td className="p-2 md:p-3 border hidden md:table-cell">
+                              <td className="p-2 md:p-3 border hidden md:table-cell text-center">
                                 {item.npaPgri}
                               </td>
-                              <td className="p-2 md:p-3 border hidden md:table-cell">
+                              <td className="p-2 md:p-3 border hidden md:table-cell text-center">
                                 {item.noHp}
+                              </td>
+                              <td className="p-2 md:p-3 border text-center">
+                                {item.email}
                               </td>
                               <td className="p-2 border text-center">
                                 <div className="flex space-x-2 justify-center">
