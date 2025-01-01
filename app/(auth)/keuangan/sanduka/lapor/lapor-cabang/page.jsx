@@ -52,7 +52,7 @@ export default function LaporCabang() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Pemasukan Sanduka</h1>
+              <h1 className="text-base">Laporan Meninggal</h1>
             </div>
           </div>
         </header>
@@ -67,7 +67,7 @@ export default function LaporCabang() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Pemasukan Sanduka</h1>
+              <h1 className="text-base">Laporan Meninggal</h1>
             </div>
           </div>
         </header>
