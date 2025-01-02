@@ -16,14 +16,14 @@ const Page = () => {
   const [selectedBulan, setSelectedBulan] = useState("");
   const [selectedCabang, setSelectedCabang] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 2020 + 1 }, (_, index) => 2020 + index);
   const [dataRealisasi, setDataRealisasi] = useState([]);
-  const [years, setYears] = useState([]);
   const [originalData, setOriginalData] = useState([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [formValues, setFormValues] = useState({
     searchCabang: "",
   });
-
   const router = useRouter();
 
   const fetchData = async (bulan, tahun) => {
@@ -102,18 +102,6 @@ const Page = () => {
     setSelectedBulan(currentMonth);
     setSelectedYear(currentYear);
 
-    // Mengisi daftar tahun untuk dropdown
-    const yearRange = Array.from(
-      { length: 5 },
-      (_, index) => currentYear - index
-    );
-
-    // const yearRange = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
-
-    setYears(yearRange);
-
-  
-    // Fetch daftar bulan dari API
     const fetchBulan = async () => {
       try {
         const response = await GlobalApi.getBulan();
