@@ -70,6 +70,13 @@ const HeaderMobile = () => {
     window.location.href = "/";
   };
 
+  const getEditProfilePath = () => {
+    const userRole = sessionStorage.getItem("role");
+    return userRole === "SUPER ADMIN" || userRole === "ADMIN" 
+      ? "/anggota/edit-admin" 
+      : "/anggota/edit-anggota";
+  };
+
   useEffect(() => {
     const fetchNotificationCount = async () => {
       try {
@@ -229,7 +236,7 @@ const HeaderMobile = () => {
             {isProfileMenuOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded-md z-10">
                 <Link
-                  href={`/anggota/edit-anggota`}
+                  href={getEditProfilePath()}
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
                 >
                   Edit Profile
