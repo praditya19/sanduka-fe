@@ -803,7 +803,7 @@ const Page = () => {
                                   value={role}
                                   onChange={handleRoleChange}
                                 >
-                                  <option value="SUPER_ADMIN">
+                                  <option value="SUPER ADMIN">
                                     SUPER ADMIN
                                   </option>
                                   <option value="ADMIN">ADMIN</option>

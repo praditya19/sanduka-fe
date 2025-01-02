@@ -123,7 +123,7 @@ const VerifikasiAnggotaMutasi = () => {
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 2000,
           style: {
             marginTop: "12%",
             fontSize: "1.75rem",
@@ -238,7 +238,7 @@ const VerifikasiAnggotaMutasi = () => {
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 2000,
           style: {
             marginTop: "12%",
             fontSize: "1.75rem",
@@ -258,7 +258,7 @@ const VerifikasiAnggotaMutasi = () => {
       );
       setTimeout(() => {
         window.location.reload();
-      }, 4000);
+      }, 3000);
     } catch (error) {
       console.error("Error fetching cabang:", error);
       toast.error(
@@ -297,7 +297,7 @@ const VerifikasiAnggotaMutasi = () => {
         </div>,
         {
           icon: null,
-          duration: 5000,
+          duration: 2000,
           style: {
             marginTop: "16%",
             fontSize: "1.75rem",

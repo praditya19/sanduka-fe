@@ -2427,6 +2427,7 @@ const Page = () => {
                               <SelectItem value="I">I</SelectItem>
                               <SelectItem value="II">II</SelectItem>
                               <SelectItem value="III">III</SelectItem>
+                              <SelectItem value="non_kategori">Non Kategori</SelectItem>
                             </SelectGroup>
                           </SelectContent>
                         </Select>
