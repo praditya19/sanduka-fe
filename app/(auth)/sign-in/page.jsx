@@ -50,6 +50,7 @@ function SignIn() {
       
           // Simpan data ke sessionStorage
           setToken(response.token);
+          sessionStorage.setItem("userId", response.id);
           sessionStorage.setItem("cabang", response.cabang);
           sessionStorage.setItem("nama", response.namaLengkap);
           sessionStorage.setItem("role", response.role);
@@ -58,7 +59,6 @@ function SignIn() {
           // Cek NPA untuk mendapatkan ID dan Unit Kerja
           const npaResponse = await GlobalApi.cekNpa(response.npaPgri);
           if (npaResponse && npaResponse.id) {
-              sessionStorage.setItem("userId", npaResponse.id);
               sessionStorage.setItem("unitKerja", npaResponse.unitKerja || "Tidak diketahui");
           } else {
               throw new Error("Data NPA tidak valid atau ID tidak ditemukan.");
@@ -75,6 +75,7 @@ function SignIn() {
       
           // Simpan data ke sessionStorage
           setToken(response.token);
+          sessionStorage.setItem("userId", response.id);
           sessionStorage.setItem("cabang", response.cabang);
           sessionStorage.setItem("nama", response.namaLengkap);
           sessionStorage.setItem("role", response.role);
@@ -83,7 +84,6 @@ function SignIn() {
           // Cek NPA untuk mendapatkan ID dan Unit Kerja
           const npaResponse = await GlobalApi.cekNpa(response.npaPgri);
           if (npaResponse && npaResponse.id) {
-              sessionStorage.setItem("userId", npaResponse.id);
               sessionStorage.setItem("unitKerja", npaResponse.unitKerja || "Tidak diketahui");
           } else {
               throw new Error("Data NPA tidak valid atau ID tidak ditemukan.");
@@ -140,7 +140,7 @@ function SignIn() {
           </div>,
           {
             icon: null,
-            duration: 4000,
+            duration: 2000,
             style: {
               marginTop: "12%",
               fontSize: "1.75rem",
@@ -161,7 +161,7 @@ function SignIn() {
 
         setTimeout(() => {
             router.push("/home");
-        }, 4000);
+        }, 3000);
     } catch (error) {
         console.error("Error:", error);
         toast.error(
@@ -200,7 +200,7 @@ function SignIn() {
           </div>,
           {
             icon: null,
-            duration: 4000,
+            duration: 2000,
             style: {
               marginTop: "12%",
               fontSize: "1.75rem",

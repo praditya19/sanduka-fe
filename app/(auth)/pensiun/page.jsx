@@ -12,6 +12,7 @@ import toast, { Toaster } from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { ClipLoader } from "react-spinners";
+import { Input } from "@/components/ui/input";
 
 const Page = () => {
   const [pensiunList, setPensiunList] = useState([]);
@@ -35,6 +36,14 @@ const Page = () => {
   const [statusSegeraCount, setStatusSegeraCount] = useState(0);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [searchText, setSearchText] = useState("");
+  const [queryCabang, setQueryCabang] = useState("");
+  const [showDropdownCabang, setShowDropdownCabang] = useState(false);
+  const [cabangOptions, setCabangOptions] = useState([]);
+  const [selectedCabang, setSelectedCabang] = useState(
+    sessionStorage.getItem("role") === "ADMIN"
+      ? sessionStorage.getItem("cabang") || "Tampil Semua"
+      : ""
+  );
 
   const handleStatusChange = (event) => {
     const status = event.target.value;
@@ -81,6 +90,39 @@ const Page = () => {
   };
 
   useEffect(() => {
+    const fetchCabang = async () => {
+      try {
+        const response = await GlobalApi.getCabang();
+        setCabangOptions(response.data || []);
+      } catch (error) {
+        console.error("Error fetching cabang data:", error);
+      }
+    };
+
+    fetchCabang();
+  }, []);
+
+  const handleCabangSelect = (cabang) => {
+    setSelectedCabang(cabang.kecamatan);
+    setQueryCabang("");
+    setShowDropdownCabang(false);
+
+    if (cabang.kecamatan === "") {
+      setFilteredPensiunList(pensiunList);
+    } else {
+      const filteredItems = pensiunList.filter(
+        (pensiun) =>
+          pensiun.keterangan !== "Pensiun" &&
+          pensiun.cabang === cabang.kecamatan
+      );
+
+      setFilteredPensiunList(filteredItems);
+    }
+
+    setCurrentPage(1);
+  };
+
+  useEffect(() => {
     const fetchBulan = async () => {
       try {
         const response = await GlobalApi.getBulan();
@@ -106,13 +148,6 @@ const Page = () => {
     } else {
       setFilteredPensiunList(pensiunList);
     }
-  };
-
-  const handleYearChange = (e) => {
-    const year = e.target.value;
-    setSelectedYear(year);
-    applyFilters(selectedMonth, year);
-    setCurrentPage(1);
   };
 
   const handleWhatsApp = async (npa) => {
@@ -447,7 +482,7 @@ const Page = () => {
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 2000,
           style: {
             marginTop: "12%",
             fontSize: "1.75rem",
@@ -468,7 +503,7 @@ const Page = () => {
 
       setTimeout(() => {
         window.location.reload();
-      }, 4000);
+      }, 2000);
     } catch (error) {
       console.error("Gagal pensiun anggota:", error);
       toast.error(
@@ -529,20 +564,20 @@ const Page = () => {
   };
 
   if (loading) {
-      return (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100vh",
-          }}
-        >
-          <ClipLoader color="#3498db" size={50} />
-        </div>
-      );
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <ClipLoader color="#3498db" size={50} />
+      </div>
+    );
   }
-  
+
   if (error) return <div>Error: {error}</div>;
 
   const toggleSidebar = () => {
@@ -554,13 +589,6 @@ const Page = () => {
   const handleExpand = (index) => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
-
-  const filteredData = pensiunList.filter((pensiun) => {
-    return (
-      (selectedMonth === "" || pensiun.bulan === selectedMonth) &&
-      pensiun.keterangan !== "Pensiun"
-    );
-  });
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
@@ -606,7 +634,75 @@ const Page = () => {
         >
           <div className="min-h-screen bg-gray-100 p-4">
             <div className="w-full flex flex-wrap items-center justify-between mb-4 mt-16 gap-4">
-              <div className="flex flex-wrap w-full gap-4 md:w-auto">
+              <div className="flex flex-wrap w-full gap-4 md:w-auto border">
+                <div className="w-full sm:w-1/4 flex flex-col items-start relative">
+                  <Input
+                    id="cabangInput"
+                    type="text"
+                    className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
+                    placeholder={selectedCabang ? "" : "Pilih Cabang"}
+                    value={
+                      sessionStorage.getItem("role") === "SUPER ADMIN"
+                        ? selectedCabang
+                        : sessionStorage.getItem("cabang") || "Tampil Semua"
+                    }
+                    disabled={sessionStorage.getItem("role") !== "SUPER ADMIN"}
+                    readOnly={sessionStorage.getItem("role") !== "SUPER ADMIN"}
+                    onClick={() => {
+                      if (sessionStorage.getItem("role") === "SUPER ADMIN") {
+                        setShowDropdownCabang(true);
+                      }
+                    }}
+                  />
+
+                  {showDropdownCabang &&
+                    sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                      <div
+                        id="dropdownCabang"
+                        className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[27%] w-full"
+                      >
+                        <ul className="max-h-44 overflow-y-auto">
+                          <li className="py-2 px-2">
+                            <Input
+                              type="text"
+                              className="border-b p-2 w-full bg-white"
+                              placeholder="Cari Cabang..."
+                              value={queryCabang}
+                              onChange={(e) => setQueryCabang(e.target.value)}
+                              autoFocus
+                            />
+                          </li>
+                          <li
+                            className="p-2 cursor-pointer hover:bg-gray-100"
+                            onClick={() =>
+                              handleCabangSelect({
+                                kecamatan: "",
+                                idKecamatan: null,
+                              })
+                            }
+                          >
+                            Tampil Semua
+                          </li>
+                          {cabangOptions
+                            .filter((cabang) =>
+                              cabang.kecamatan
+                                .toLowerCase()
+                                .includes(queryCabang.toLowerCase())
+                            )
+                            .map((cabang) => (
+                              <li
+                                key={cabang.idKecamatan}
+                                className="p-2 cursor-pointer hover:bg-gray-100"
+                                onClick={() => handleCabangSelect(cabang)}
+                              >
+                                {cabang.kecamatan}
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                    )}
+                </div>
+
                 <select
                   value={selectedMonth}
                   onChange={handleMonthChange}
@@ -668,7 +764,6 @@ const Page = () => {
 
             <div className="bg-white p-4 rounded-lg shadow-md">
               <div className="flex justify-between mb-4">
-                <span>Cabang: Tampil Semua</span>
                 <span>Jumlah Anggota: {filteredPensiunList.length} Orang</span>
               </div>
               <div className="overflow-x-auto">
@@ -695,7 +790,12 @@ const Page = () => {
                   </thead>
                   <tbody>
                     {currentItems
-                      .filter((pensiun) => pensiun.keterangan !== "Pensiun")
+                      .filter(
+                        (pensiun) =>
+                          pensiun.keterangan !== "Pensiun" &&
+                          (selectedCabang === "" ||
+                            pensiun.cabang === selectedCabang)
+                      )
                       .map((pensiun, index) => (
                         <>
                           <tr key={pensiun.id} className="border-t">
