@@ -462,7 +462,7 @@ function SignIn() {
         <div>
           <div className="mb-6">
             <Label htmlFor="email" className="block text-sm">
-              Email/NPA PGRI
+              User
             </Label>
             <Input
               id="email"
@@ -517,12 +517,12 @@ function SignIn() {
         </Button>
 
         <p className="mt-4 text-sm text-center text-gray-600">
-          Belum punya akun?
+        Belum teregestrasi?
           <Link
             href={"/create-account/syarat-ketentuan"}
             className="text-blue-500 ml-1 hover:underline"
           >
-            Klik di sini untuk membuat akun baru
+            Klik di sini untuk mendaftar Anggota
           </Link>
         </p>
       </div>
