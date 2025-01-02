@@ -1133,7 +1133,7 @@ const getRekapAnggotaByCabang = async (cabang) => {
 // end
 
 //Start Pensiun
-const getAllPensiun = (page = 0, size = 570) => {
+const getAllPensiun = (page = 0, size = 1810) => {
   return axiosClient.get(`/api/pensiun?page=${page}&size=${size}`);
 };
 // const getAllPensiun = async (page = 0) => {
