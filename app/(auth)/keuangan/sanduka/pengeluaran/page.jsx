@@ -31,8 +31,8 @@ function Pengeluaran() {
     { id: "11", angkaBulan: 10, namaBulan: "November" },
     { id: "12", angkaBulan: 11, namaBulan: "Desember" },
   ];
-  const currentYear = new Date().getFullYear();
   const startYear = 2020;
+  const currentYear = new Date().getFullYear();
   const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
   const [selectedBulan, setSelectedBulan] = useState("");
   const [selectedBulanName, setSelectedBulanName] = useState("");

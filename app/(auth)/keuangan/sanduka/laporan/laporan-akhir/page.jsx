@@ -195,8 +195,7 @@ const Page = () => {
                   </div>
                   <div className="flex-1 flex justify-center">
                     <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-                      Transaksi {selectedMonth} {selectedYear}
-                    </h1>
+                    Transaksi {bulanList.find((b) => b.id === selectedMonth)?.namaBulan} {selectedYear}                    </h1>
                   </div>
                   <div className="flex justify-center space-x-4 mt-0 sm:mt-3 mr-0 sm:mr-10">
                     <Button

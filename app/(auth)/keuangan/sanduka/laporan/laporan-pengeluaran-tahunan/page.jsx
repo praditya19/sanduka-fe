@@ -39,15 +39,22 @@ const Page = () => {
   );
 
   const formatRupiah = (value) => {
-    const numberValue = parseInt(value.toString().replace(/,/g, ""));
-
+    // Validasi apakah value tidak null atau undefined
+    if (value === null || value === undefined) {
+      return "Rp 0"; // Atau nilai default lainnya
+    }
+  
+    // Pastikan value adalah angka atau string sebelum mengonversi
+    const numberValue = parseInt(value.toString().replace(/,/g, ""), 10);
+  
+    // Gunakan Intl.NumberFormat untuk format mata uang
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(numberValue);
-  };
+  };  
 
   const printTable = () => {
     const printContent = tableRef.current;

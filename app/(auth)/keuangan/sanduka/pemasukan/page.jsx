@@ -18,34 +18,30 @@ function Pemasukan() {
   const dropdownRef = useRef(null);
   const [transactions, setTransactions] = useState([]);
   const bulanList = [
-    { id: '01', angkaBulan: 0, namaBulan: 'Januari' },
-    { id: '02', angkaBulan: 1, namaBulan: 'Februari' },
-    { id: '03', angkaBulan: 2, namaBulan: 'Maret' },
-    { id: '04', angkaBulan: 3, namaBulan: 'April' },
-    { id: '05', angkaBulan: 4, namaBulan: 'Mei' },
-    { id: '06', angkaBulan: 5, namaBulan: 'Juni' },
-    { id: '07', angkaBulan: 6, namaBulan: 'Juli' },
-    { id: '08', angkaBulan: 7, namaBulan: 'Agustus' },
-    { id: '09', angkaBulan: 8, namaBulan: 'September' },
-    { id: '10', angkaBulan: 9, namaBulan: 'Oktober' },
-    { id: '11', angkaBulan: 10, namaBulan: 'November' },
-    { id: '12', angkaBulan: 11, namaBulan: 'Desember' },
+    { id: "01", angkaBulan: 0, namaBulan: "Januari" },
+    { id: "02", angkaBulan: 1, namaBulan: "Februari" },
+    { id: "03", angkaBulan: 2, namaBulan: "Maret" },
+    { id: "04", angkaBulan: 3, namaBulan: "April" },
+    { id: "05", angkaBulan: 4, namaBulan: "Mei" },
+    { id: "06", angkaBulan: 5, namaBulan: "Juni" },
+    { id: "07", angkaBulan: 6, namaBulan: "Juli" },
+    { id: "08", angkaBulan: 7, namaBulan: "Agustus" },
+    { id: "09", angkaBulan: 8, namaBulan: "September" },
+    { id: "10", angkaBulan: 9, namaBulan: "Oktober" },
+    { id: "11", angkaBulan: 10, namaBulan: "November" },
+    { id: "12", angkaBulan: 11, namaBulan: "Desember" },
   ];
   const [cabangList, setCabangList] = useState([]);
   const [selectedBulan, setSelectedBulan] = useState("");
   const [selectedBulanName, setSelectedBulanName] = useState("");
-  const currentYear = new Date().getFullYear();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [paginatedTransactions, setPaginatedTransactions] = useState([]);
   const startYear = 2020;
-  const endYear = 2030;
-  const [newSelectedYear, setNewSelectedYear] = useState(
-    currentYear.toString()
-  );
-  const [yearsToShow, setYearsToShow] = useState([]);
+ const currentYear = new Date().getFullYear();
+  const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
   const [formValues, setFormValues] = useState({
     tanggalTransaksi: "",
     posTransaksi: "",
@@ -76,7 +72,10 @@ function Pemasukan() {
       startPage = Math.max(1, endPage - totalPagesToShow + 1);
     }
 
-    return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
+    return Array.from(
+      { length: endPage - startPage + 1 },
+      (_, i) => startPage + i
+    );
   };
 
   const handleChange = (e) => {
@@ -88,26 +87,28 @@ function Pemasukan() {
   };
 
   const handleBulanChange = (e) => {
-    const selectedId = e.target.value; 
+    const selectedId = e.target.value;
     setSelectedBulan(selectedId);
 
     const bulan = bulanList.find((b) => b.id === parseInt(selectedId));
-    setSelectedBulanName(bulan ? bulan.namaBulan : ""); 
+    setSelectedBulanName(bulan ? bulan.namaBulan : "");
   };
 
   useEffect(() => {
-    const currentMonth = new Date().getMonth(); 
-    
-    const currentBulan = bulanList.find(bulan => bulan.angkaBulan === currentMonth);
-    
+    const currentMonth = new Date().getMonth();
+
+    const currentBulan = bulanList.find(
+      (bulan) => bulan.angkaBulan === currentMonth
+    );
+
     if (currentBulan) {
       setSelectedBulan(currentBulan.id);
     }
   }, []);
 
   const printTable = () => {
-    const tableHTML = tableRef.current.outerHTML; 
-    const printWindow = window.open("", "_blank"); 
+    const tableHTML = tableRef.current.outerHTML;
+    const printWindow = window.open("", "_blank");
     printWindow.document.open();
     printWindow.document.write(`
       <html>
@@ -143,10 +144,9 @@ function Pemasukan() {
       </html>
     `);
     printWindow.document.close();
-    printWindow.print(); 
+    printWindow.print();
     printWindow.close();
   };
-
 
   const handleClickOutside = (event) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -203,36 +203,11 @@ function Pemasukan() {
   );
 
   useEffect(() => {
-    const initialEndYear = Math.min(currentYear + 4, endYear);
-    setYearsToShow(
-      Array.from(
-        { length: initialEndYear - currentYear + 1 },
-        (_, index) => currentYear + index
-      )
-    );
-  }, []);
-
-  const updateYearsToShow = (selectedYear) => {
-    const selected = parseInt(selectedYear, 10);
-    if (isNaN(selected)) return;
-
-    const nextStartYear = selected;
-    const nextEndYear = Math.min(nextStartYear + 4, endYear);
-
-    const updatedYears = Array.from(
-      { length: nextEndYear - nextStartYear + 1 },
-      (_, index) => nextStartYear + index
-    );
-
-    setYearsToShow(updatedYears);
-  };
-
-  useEffect(() => {
     const fetchCabangData = async () => {
       try {
         const response = await GlobalApi.getCabang();
         setCabangList(response.data);
-      } catch (error) { }
+      } catch (error) {}
     };
 
     fetchCabangData();
@@ -240,14 +215,14 @@ function Pemasukan() {
 
   const handleSubmitAll = async (e) => {
     e.preventDefault();
-  
+
     const requestData = {
       uangMasukKeluar: {
         ...formValues,
       },
       targetCabang: formValues.cabang,
     };
-  
+
     try {
       const response = await GlobalApi.sendSesuaiJumlahTarget(requestData);
       if (response && response.data) {
@@ -275,7 +250,7 @@ function Pemasukan() {
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
             </svg>
             <h3
-               style={{
+              style={{
                 fontSize: "2rem",
                 display: "block",
                 marginBottom: "28px",
@@ -284,25 +259,25 @@ function Pemasukan() {
               Data berhasil dikirim!
             </h3>
           </div>,
-         {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
+          {
+            icon: null,
+            duration: 4000,
+            style: {
+              marginTop: "12%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "450px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
         );
       }
     } catch (error) {
@@ -409,11 +384,11 @@ function Pemasukan() {
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
           <h3
-           style={{
-            fontSize: "2rem",
-            display: "block",
-            marginBottom: "28px",
-          }}
+            style={{
+              fontSize: "2rem",
+              display: "block",
+              marginBottom: "28px",
+            }}
           >
             Data berhasil disimpan!
           </h3>
@@ -632,8 +607,9 @@ function Pemasukan() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <Toaster
             toastOptions={{
@@ -937,8 +913,9 @@ function Pemasukan() {
               </div>
               <div className="flex items-center mt-6 justify-center gap-6">
                 <Button
-                  className={`bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${formValues.nominal ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
+                  className={`bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
+                    formValues.nominal ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                   onClick={handleSubmitAll}
                   disabled={Boolean(formValues.nominal)}
                 >
@@ -963,56 +940,32 @@ function Pemasukan() {
             <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
               <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
                 <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-                <select
-      className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
-      value={selectedBulan}
-      onChange={handleBulanChange}
-    >
-      <option value="">Pilih Bulan</option>
-      {bulanList.map((bulan) => (
-        <option key={bulan.angkaBulan} value={bulan.id}>
-          {bulan.namaBulan}
-        </option>
-      ))}
-    </select>
-                  <div className="relative w-28">
-                    <button
-                      onClick={() => setDropdownOpen(!dropdownOpen)}
-                      className="shadow-lg border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white w-full"
-                    >
-                      {newSelectedYear || "Pilih Tahun"}
-                    </button>
+                  <select
+                    className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                    value={selectedBulan}
+                    onChange={handleBulanChange}
+                  >
+                    <option value="">Pilih Bulan</option>
+                    {bulanList.map((bulan) => (
+                      <option key={bulan.angkaBulan} value={bulan.id}>
+                        {bulan.namaBulan}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
+                    id="tahunTable"
+                    value={newSelectedYear}
+                    onChange={(e) => setNewSelectedYear(e.target.value)}
+                  >
+                    <option value="">Pilih Tahun</option>
 
-                    {dropdownOpen && (
-                      <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-40 overflow-y-auto">
-                        <ul className="py-1">
-                          <li
-                            onClick={() => {
-                              setNewSelectedYear(currentYear.toString());
-                              updateYearsToShow(currentYear.toString());
-                              setDropdownOpen(false);
-                            }}
-                            className="px-4 py-2 text-gray-700 cursor-pointer hover:bg-blue-500 hover:text-white"
-                          >
-                            Pilih Tahun
-                          </li>
-                          {yearsToShow.map((year) => (
-                            <li
-                              key={year}
-                              onClick={() => {
-                                setNewSelectedYear(year.toString());
-                                updateYearsToShow(year.toString());
-                                setDropdownOpen(false);
-                              }}
-                              className="px-4 py-2 text-gray-700 cursor-pointer hover:bg-blue-500 hover:text-white"
-                            >
-                              {year}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
                   Transaksi {selectedBulanName} {newSelectedYear}
@@ -1056,13 +1009,19 @@ function Pemasukan() {
                     transaction.tglTransaksi ? (
                       <tr
                         key={index}
-                        className={`border-b text-black text-center ${transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
-                          }`}
+                        className={`border-b text-black text-center ${
+                          transaction.checked
+                            ? "bg-gray-100"
+                            : "hover:bg-gray-50"
+                        }`}
                       >
                         <td className="px-6 py-4 text-sm">
                           {indexOfFirstItem + index + 1}
                         </td>
-                        <td className="px-6 py-4 text-sm"> {transaction.tglTransaksi}</td>
+                        <td className="px-6 py-4 text-sm">
+                          {" "}
+                          {transaction.tglTransaksi}
+                        </td>
                         <td className="px-6 py-4 text-sm">
                           {transaction.noBukti}
                         </td>
@@ -1144,20 +1103,19 @@ function Pemasukan() {
                 </tbody>
               </table>
               <style jsx>{`
-    @media print {
-      th:nth-child(8),
-      td:nth-child(8) {
-        display: none;
-      }
+                @media print {
+                  th:nth-child(8),
+                  td:nth-child(8) {
+                    display: none;
+                  }
 
-      body {
-        margin: 0;
-        padding: 0;
-        background: white;
-      }
-    }
-  `}</style>
-
+                  body {
+                    margin: 0;
+                    padding: 0;
+                    background: white;
+                  }
+                }
+              `}</style>
             </div>
             <div className="flex justify-center mt-4 gap-1">
               {totalItems >= itemsPerPage && (
@@ -1170,7 +1128,9 @@ function Pemasukan() {
                     First
                   </button>
                   <button
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
                     disabled={currentPage === 1}
                     className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                   >
@@ -1181,17 +1141,20 @@ function Pemasukan() {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 border rounded text-sm ${page === currentPage
-                        ? "bg-blue-500 text-white"
-                        : "bg-white hover:bg-gray-50"
-                        }`}
+                      className={`px-3 py-1 border rounded text-sm ${
+                        page === currentPage
+                          ? "bg-blue-500 text-white"
+                          : "bg-white hover:bg-gray-50"
+                      }`}
                     >
                       {page}
                     </button>
                   ))}
 
                   <button
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
                     disabled={currentPage === totalPages}
                     className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                   >

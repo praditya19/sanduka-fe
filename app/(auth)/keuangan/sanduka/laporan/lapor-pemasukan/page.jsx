@@ -15,10 +15,24 @@ const Page = () => {
   const startYear = 2020;
   const [selectedYear, setSelectedYear] = useState("");
   const [laporanData, setLaporanData] = useState([]);
+  const bulanNama = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember"
+  ];
 
   const fetchData = async () => {
-    if (selectedBulan && selectedYear) {
-      const bulanFormatted = `${selectedYear}-${selectedBulan}`;
+   if (selectedBulan && selectedYear) {
+    const bulanFormatted = `${selectedYear}-${selectedBulan.padStart(2, "0")}`; 
       try {
         const laporanData = await GlobalApi.getLaporanPemasukan(bulanFormatted);
         setLaporanData(laporanData);
@@ -198,7 +212,7 @@ const Page = () => {
                   </div>
                   <div className="flex-1 flex justify-center">
                     <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-                      Transaksi Bulan {selectedBulan} {selectedYear}
+                    Transaksi Bulan {bulanNama[selectedBulan - 1]} {selectedYear}
                     </h1>
                   </div>
                   <div className="flex justify-center space-x-4 mt-0 sm:mt-3 mr-0 sm:mr-10">
