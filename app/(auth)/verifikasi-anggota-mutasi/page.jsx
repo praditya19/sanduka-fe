@@ -34,6 +34,7 @@ const VerifikasiAnggotaMutasi = () => {
   const [selectedCabang, setSelectedCabang] = useState("");
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [anggotaData, setAnggotaData] = useState([]);
+  const [anggotaUnverifiedCount, setAnggotaUnverifiedCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
@@ -46,7 +47,7 @@ const VerifikasiAnggotaMutasi = () => {
     size = 10,
     cabang = "",
     unitKerja = "",
-    nama = ""
+    keyword = ""
   ) => {
     try {
       const response = await GlobalApi.getUnverifiedUsers(
@@ -54,7 +55,7 @@ const VerifikasiAnggotaMutasi = () => {
         size,
         cabang,
         unitKerja,
-        nama
+        keyword
       );
 
       const fetchedData = response.data.content;
@@ -336,24 +337,44 @@ const VerifikasiAnggotaMutasi = () => {
     }
   };
 
+  const fetchUnverifiedUsersCountByCabang = async (cabang = "") => {
+    try {
+      const response = await GlobalApi.getUnverifiedUsersCountByCabang(cabang);
+      setAnggotaUnverifiedCount(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching anggota data:", error);
+    }
+  };
+
   const handleNamaChange = (e) => {
     const namaAnggota = e.target.value;
     setNama(namaAnggota);
-    // Include all active filters
-    fetchDataAnggota(0, pageSize, selectedCabang, selectedUnitKerja, namaAnggota);
+    fetchDataAnggota(
+      0,
+      pageSize,
+      selectedCabang,
+      selectedUnitKerja,
+      namaAnggota
+    );
   };
 
   const handleCabangChange = (value) => {
     const selectedKecamatan = value;
     setSelectedCabang(selectedKecamatan);
     updateUnitKerja(selectedKecamatan);
-    // Now include all active filters when fetching data
-    fetchDataAnggota(currentPage, pageSize, selectedKecamatan, selectedUnitKerja, nama);
+    fetchDataAnggota(
+      currentPage,
+      pageSize,
+      selectedKecamatan,
+      selectedUnitKerja,
+      nama
+    );
+    fetchUnverifiedUsersCountByCabang(selectedKecamatan);
   };
 
   const handleUnitKerjaChange = (value) => {
     setSelectedUnitKerja(value);
-    // Include all active filters
     fetchDataAnggota(currentPage, pageSize, selectedCabang, value, nama);
   };
 
@@ -370,23 +391,19 @@ const VerifikasiAnggotaMutasi = () => {
         router.push("/sign-in");
       } else {
         setLoading(false);
-
-        // Fetch initial data
         fetchData();
         fetchUnitKerja();
 
-        // Ambil data cabang dari sessionStorage jika role adalah ADMIN
         const role = sessionStorage.getItem("role");
         const cabangFromSession = sessionStorage.getItem("cabang") || "";
         if (role === "ADMIN" && cabangFromSession) {
-          console.log("Setting cabang from session:", cabangFromSession);
           setSelectedCabang(cabangFromSession);
-          handleCabangChange(cabangFromSession); // Memanggil fungsi untuk fetch data anggota
+          handleCabangChange(cabangFromSession);
+          fetchUnverifiedUsersCountByCabang(cabangFromSession);
         } else {
           fetchDataAnggota(currentPage, pageSize);
         }
 
-        // Set state sidebar dan monitor resize
         const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
         setIsSidebarOpen(sidebarState);
 
@@ -406,7 +423,6 @@ const VerifikasiAnggotaMutasi = () => {
     initializeData();
   }, [token, router, currentPage, pageSize]);
 
-
   if (loading) {
     return (
       <div
@@ -425,7 +441,7 @@ const VerifikasiAnggotaMutasi = () => {
   const handleUserClick = (rowId, index) => {
     const row = anggotaData.find((item) => item.id === rowId);
     setSelectedRow(row);
-    setSelectedRowIndex(index); // Add this line to store the index
+    setSelectedRowIndex(index);
   };
 
   const handleClosePopup = () => {
@@ -438,13 +454,17 @@ const VerifikasiAnggotaMutasi = () => {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
-    fetchDataAnggota(newPage, pageSize, selectedCabang, selectedUnitKerja, nama);
+    fetchDataAnggota(
+      newPage,
+      pageSize,
+      selectedCabang,
+      selectedUnitKerja,
+      nama
+    );
   };
 
-  // Update the handleSizeChange to maintain filters
   const handleSizeChange = (newSize) => {
     setPageSize(newSize);
     setCurrentPage(0);
@@ -453,7 +473,6 @@ const VerifikasiAnggotaMutasi = () => {
 
   const handleSearchClick = () => {
     setCurrentPage(0);
-    // Include all active filters
     fetchDataAnggota(0, pageSize, selectedCabang, selectedUnitKerja, nama);
   };
 
@@ -470,7 +489,6 @@ const VerifikasiAnggotaMutasi = () => {
     setSelectedUnitKerja("");
     setFilteredUnitKerja([]);
     setNama("");
-    // Reset all filters
     fetchDataAnggota(currentPage, pageSize, "", "", "");
   };
 
@@ -511,8 +529,9 @@ const VerifikasiAnggotaMutasi = () => {
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="container mx-auto p-4 md:p-6">
             <FilterSection
@@ -525,6 +544,7 @@ const VerifikasiAnggotaMutasi = () => {
               handleResetClick={handleResetClick}
               handleNamaChange={handleNamaChange}
               nama={nama}
+              anggotaUnverifiedCount={anggotaUnverifiedCount}
             />
 
             <div className="overflow-x-auto">
@@ -562,13 +582,13 @@ const VerifikasiAnggotaMutasi = () => {
 
 const FilterSection = ({
   cabang,
-  unitKerja,
   selectedCabang,
   selectedUnitKerja,
   handleCabangChange,
   handleUnitKerjaChange,
   handleNamaChange,
   nama,
+  anggotaUnverifiedCount,
 }) => (
   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-16 text-sm">
     <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
@@ -577,13 +597,13 @@ const FilterSection = ({
           label="Cabang"
           options={cabang}
           selectedCabang={selectedCabang}
-          handleChange={handleCabangChange} // Trigger perubahan cabang
+          handleChange={handleCabangChange}
         />
       </div>
       <div className="w-full md:w-auto">
         <DropdownUnitKerja
           label="Unit Kerja"
-          selectedCabang={selectedCabang} // Kirim nilai cabang terpilih
+          selectedCabang={selectedCabang}
           selectedUnitKerja={selectedUnitKerja}
           handleChange={handleUnitKerjaChange}
         />
@@ -601,6 +621,23 @@ const FilterSection = ({
             onChange={handleNamaChange}
           />
         </div>
+      </div>
+      <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
+        {Object.entries(anggotaUnverifiedCount).length > 0 ? (
+          Object.entries(anggotaUnverifiedCount).map(([cabang, count]) => (
+            <div key={cabang} className="w-full md:w-auto self-start">
+              <p className="w-72 text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-lg p-3 rounded-lg hover:scale-105 transition-all duration-300 ease-in-out transform">
+                Anggota Belum Terverifikasi: {count}
+              </p>
+            </div>
+          ))
+        ) : (
+          <div className="w-full md:w-auto self-start">
+            <p className="w-72 text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-lg p-3 rounded-lg hover:scale-105 transition-all duration-300 ease-in-out transform">
+              Anggota Belum Terverifikasi:
+            </p>
+          </div>
+        )}
       </div>
     </div>
   </div>
@@ -648,7 +685,6 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
   //     handleChange(cabangFromSession); // Trigger perubahan ke handler
   //   }
   // }, [handleChange]);
-
 
   const filteredOptions = options.filter((option) =>
     option.kecamatan.toLowerCase().includes(filterQuery.toLowerCase())
@@ -761,7 +797,7 @@ const DropdownUnitKerja = ({
     .filter((option) =>
       selectedCabang
         ? option.cabang.trim().toLowerCase() ===
-        selectedCabang.trim().toLowerCase()
+          selectedCabang.trim().toLowerCase()
         : true
     )
     .filter((option) =>
@@ -850,7 +886,13 @@ const DropdownUnitKerja = ({
   );
 };
 
-const DataTable = ({ anggotaData, handleUserClick, fotoBase64, currentPage, pageSize }) => {
+const DataTable = ({
+  anggotaData,
+  handleUserClick,
+  fotoBase64,
+  currentPage,
+  pageSize,
+}) => {
   const currentPageNumber = Number(currentPage) || 0;
   const pageSizeNumber = Number(pageSize) || 10;
   const [expandedRow, setExpandedRow] = useState(null);
@@ -951,7 +993,9 @@ const DataTable = ({ anggotaData, handleUserClick, fotoBase64, currentPage, page
                       </td>
                       {isMobile && (
                         <FontAwesomeIcon
-                          icon={expandedRow === index ? faMinusCircle : faPlusCircle}
+                          icon={
+                            expandedRow === index ? faMinusCircle : faPlusCircle
+                          }
                           className="text-blue-500 cursor-pointer"
                           size="lg"
                           onClick={() => toggleExpandRow(index)}
@@ -1322,10 +1366,11 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         <button
           key={page}
           onClick={() => onPageChange(page - 1)}
-          className={`px-3 py-1 border rounded text-sm ${page - 1 === currentPage
-            ? "bg-blue-500 text-white"
-            : "bg-white hover:bg-gray-50"
-            }`}
+          className={`px-3 py-1 border rounded text-sm ${
+            page - 1 === currentPage
+              ? "bg-blue-500 text-white"
+              : "bg-white hover:bg-gray-50"
+          }`}
         >
           {page}
         </button>
