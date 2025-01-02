@@ -1180,12 +1180,14 @@ const getNotifikasi = async (count) => {
   }
 };
 
-const getAnggotaMeninggal = async () => {
+const getAnggotaMeninggal = async (year, month) => {
   try {
-    const response = await axiosClient.get("/api/notifikasi/data-terlapor");
+    const response = await axiosClient.get("/api/auth/users-deceased", {
+      params: { year, month },
+    });
     return response.data;
   } catch (error) {
-    console.error("Error fetching anggota meninggal data:", error);
+    console.error("Error fetching users deceased:", error);
     throw error;
   }
 };

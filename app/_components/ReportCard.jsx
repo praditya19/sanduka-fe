@@ -621,7 +621,7 @@ export default function ReportCard() {
       </div>
 
       <div className="p-4 bg-gray-50">
-        <div className="bg-gradient-to-r from-purple-400 to-pink-500 p-4 text-center rounded-xl mb-4 relative">
+        <div className="bg-gradient-to-r from-blue-400 to-blue-800 p-4 text-center rounded-xl mb-4 relative">
           <div className="flex justify-center mb-2">
             <img
               src="https://via.placeholder.com/80"

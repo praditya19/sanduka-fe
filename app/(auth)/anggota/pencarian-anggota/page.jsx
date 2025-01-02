@@ -1,11 +1,10 @@
 "use client";
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Modal from "react-modal";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
+import Image from "next/image";
 import {
   FaPlusCircle,
   FaMinusCircle,
@@ -18,19 +17,20 @@ import {
   FaSort,
   FaTimes,
 } from "react-icons/fa";
-import toast, { Toaster } from "react-hot-toast";
+import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import HeaderHome from "@/app/_components/HeaderHome";
+import toast, { Toaster } from "react-hot-toast";
+import HeaderMenu from "@/app/_components/HeaderMenu";
+import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
-import Image from "next/image";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import { ClipLoader } from "react-spinners";
 
 function PencarianAnggota() {
   const [maxItems, setMaxItems] = useState(10);
-  const [selectedCabang, setSelectedCabang] = useState("");
-  const [selectedUnitKerja, setSelectedUnitKerja] =
-    useState("Pilih Unit Kerja");
+  const [filterCabang, setFilterCabang] = useState("");
+  const [filterUnitKerja, setFilterUnitKerja] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("Semua");
   const [sortConfig, setSortConfig] = useState({
     key: null,
@@ -39,73 +39,98 @@ function PencarianAnggota() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
   const [anggota, setAnggota] = useState([]);
-  const [cabang, setCabang] = useState([]);
-  const [unitKerja, setUnitKerja] = useState([]);
-  const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
+  const [expandedIndex, setExpandedIndex] = useState(null);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const profileImageUrl = "/profile.png";
-  const dropdownRef = useRef(null);
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [expandedIndex, setExpandedIndex] = useState(null);
-  const [fotoBase64, setFotoBase64] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [showDropdownCabang, setShowDropdownCabang] = useState(false);
-  const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
-  const [searchCabang, setSearchCabang] = useState('');
-  const [searchUnitKerja, setSearchUnitKerja] = useState('');
-  const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
-  const [filteredUnitKerjaOptions, setFilteredUnitKerjaOptions] = useState([]);
-  const [role, setRole] = useState("");
-  const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [popupVisibleKeluar, setPopupVisibleKeluar] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
+  const dropdownRef = useRef(null);
+  const [fotoBase64, setFotoBase64] = useState("");
+  const [rekapData, setRekapData] = useState([]);
+  const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
+  const [searchCabang, setSearchCabang] = useState("");
+  const [listCabang, setListCabang] = useState([]);
+  const [showDropdownCabang, setShowDropdownCabang] = useState(false);
+  const [showDropdownUnit, setShowDropdownUnit] = useState(false);
+  const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
+  const [searchUnitKerja, setSearchUnitKerja] = useState("");
+  const [filteredUnitKerjaOptions, setFilteredUnitKerjaOptions] = useState([]);
+  const [formData, setFormData] = useState({ unit: "" });
+  const [isUnitKerjaDisabled, setIsUnitKerjaDisabled] = useState(true);
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
+  const [allUnitKerja, setAllUnitKerja] = useState([]);
+  const [cabangOptions, setCabangOptions] = useState([]);
+  const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const unitKerjaRef = useRef(null);
+  const profileImageUrl = "/profile.png";
+  const [originalRekapData, setOriginalRekapData] = useState([]);
+  const [role, setRole] = useState("");
   const [isPopupDaspen, setIsPopupDaspen] = useState(false);
   const [daspenData, setDaspenData] = useState(null);
   const [kategoriDaspen, setKategoriDaspen] = useState("");
   const [previousKategoriDaspen, setPreviousKategoriDaspen] =
     useState(kategoriDaspen);
   const [isKategoriChanged, setIsKategoriChanged] = useState(false);
-
-  const cabangRef = useRef(null);
-  const unitKerjaRef = useRef(null);
+  const [searchKeyword, setSearchKeyword] = useState("");
 
   useEffect(() => {
-    fetchAnggota();
-    fetchData();
-    fetchUnitKerja();
-
-    const role = sessionStorage.getItem("role");
-    const cabang = sessionStorage.getItem("cabang");
-    if (role === "ADMIN" && cabang) {
-      setSelectedCabang(cabang);
-    }
-
-    const storedRole = sessionStorage.getItem("role");
-    setRole(storedRole || "");
-
-    if (selectedCabang) {
-      const filtered = unitKerja.filter((uk) => uk.cabang === selectedCabang);
-      setFilteredUnitKerja(filtered);
-    } else {
-      setFilteredUnitKerja([]);
-    }
-
     if (!token) {
       router.push("/sign-in");
     } else {
-      setLoading(false);
+      const fetchAnggota = async () => {
+        setLoading(true); // Set loading true hanya untuk getAllAnggota
+        try {
+          const anggotaResponse = await GlobalApi.getAllAnggota();
+          setAnggota(anggotaResponse.content);
+        } catch (error) {
+          console.error("Error fetching anggota data:", error);
+        } finally {
+          setLoading(false); // Set loading false setelah getAllAnggota selesai
+        }
+      };
+
+      const fetchCabangAndUnitKerja = async () => {
+        try {
+          const cabangResponse = await GlobalApi.getCabang();
+          setListCabang(cabangResponse.data);
+          setCabangOptions(cabangResponse.data);
+          setFilteredCabangOptions(cabangResponse.data);
+
+          const unitKerjaResponse = await GlobalApi.getUnitKerja();
+          setAllUnitKerja(unitKerjaResponse.data);
+          setUnitKerjaOptions(unitKerjaResponse.data);
+        } catch (error) {
+          console.error("Error fetching additional data:", error);
+        }
+      };
+
+      fetchAnggota().then(() => fetchCabangAndUnitKerja());
+
+      const storedRole = sessionStorage.getItem("role");
+      const storedCabang = sessionStorage.getItem("cabang");
+
+      setRole(storedRole || "");
+      if (storedRole === "ADMIN" && storedCabang) {
+        setSelectedCabang(storedCabang);
+      } else if (storedRole === "USER") {
+        const userName = sessionStorage.getItem("nama") || "";
+        setSearchKeyword(userName);
+      }
+
       const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
       setIsSidebarOpen(sidebarState);
 
       const handleResize = () => {
         setIsMobile(window.innerWidth <= 768);
       };
-
       handleResize();
       window.addEventListener("resize", handleResize);
 
@@ -113,21 +138,15 @@ function PencarianAnggota() {
         window.removeEventListener("resize", handleResize);
       };
     }
-
-    setCurrentPage(1);
-
-  }, [token, router, selectedCabang, selectedStatus, selectedUnitKerja, searchQuery]);
+  }, [token, router]);
 
   const handleDataDaspen = async () => {
     const anggotaId = sessionStorage.getItem("anggotaId");
     if (anggotaId) {
       try {
         const response = await GlobalApi.getUserById(anggotaId);
-        // console.log("data", response)
-        if (response) {
-          // console.log("Data anggota yang diterima dari getUserById:", response);
 
-          // Set kategoriDaspen dengan nilai dari response
+        if (response) {
           setKategoriDaspen(response.kategoriDaspen || "Tidak tersedia");
 
           const nip = response.nip;
@@ -136,14 +155,63 @@ function PencarianAnggota() {
             const fileResponse = await GlobalApi.getFileByNip(nip);
 
             if (fileResponse) {
-              // console.log("Data file untuk NIP:", nip, fileResponse);
               setDaspenData(fileResponse);
               setIsPopupDaspen(true);
             } else {
               console.log("File tidak ditemukan untuk NIP:", nip);
             }
           } else {
-            console.log("NIP tidak ditemukan dalam data anggota");
+            toast.error(
+              <div style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textAlign: "center",
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{
+                      width: "150px",
+                      height: "150px",
+                      color: "red",
+                      marginBottom: "16px",
+                    }}
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+                    <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+                  </svg>
+                </div>
+
+                <h3 style={{ fontSize: "1.75rem", display: "block" }}>
+                  NIP tidak ditemukan, silahkan melakukan sinkronisasi dahulu.
+                </h3>
+              </div>,
+              {
+                icon: null,
+                duration: 4000,
+                style: {
+                  marginTop: "12%",
+                  fontSize: "1.75rem",
+                  padding: "10px",
+                  width: "80%",
+                  maxWidth: "450px",
+                  height: "50%",
+                  maxHeight: "400px",
+                  transform: "translate(-50%, -50%)",
+                  textAlign: "center",
+                  zIndex: 9999,
+                  backgroundColor: "#fff",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                },
+              }
+            );
           }
         } else {
           console.log("Data anggota tidak ditemukan");
@@ -152,7 +220,6 @@ function PencarianAnggota() {
         console.error("Error fetching data:", error);
         toast.error(
           <div style={{ textAlign: "center" }}>
-            {/* Ikon silang di atas */}
             <div
               style={{
                 display: "flex",
@@ -170,10 +237,10 @@ function PencarianAnggota() {
                 <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
               </svg>
             </div>
-            {/* Teks di bawah ikon */}
-            <strong style={{ fontSize: "1.75rem", display: "block" }}>
+
+            <h3 style={{ fontSize: "1.75rem", display: "block" }}>
               NIP tidak ditemukan, silahkan melakukan sinkronisasi dahulu.
-            </strong>
+            </h3>
           </div>,
           {
             icon: false,
@@ -195,169 +262,270 @@ function PencarianAnggota() {
     setIsPopupDaspen(false);
   };
 
-  useEffect(() => {
-    const storedRole = sessionStorage.getItem("role");
-    setRole(storedRole || "");
-  }, []);
+  const handleClickOutside = (event) => {
+    if (unitKerjaRef.current && !unitKerjaRef.current.contains(event.target)) {
+      setShowDropdownUnit(false);
+    }
+  };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        cabangRef.current &&
-        !cabangRef.current.contains(event.target)
-      ) {
-        setShowDropdownCabang(false);
-      }
-
-      if (
-        unitKerjaRef.current &&
-        !unitKerjaRef.current.contains(event.target)
-      ) {
-        setShowDropdownUnitKerja(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const handleCabangChange = (e) => {
-    const searchValue = e.target.value.toLowerCase();
-    setSearchCabang(searchValue);
-
-    const filtered = cabang.filter(item =>
-      item.kecamatan.toLowerCase().includes(searchValue)
-    );
-
-    setFilteredCabangOptions(filtered);
+  const fetchRekapData = async (cabang) => {
+    try {
+      const data = await GlobalApi.getRekapAnggotaByCabang(cabang);
+      setRekapData(data);
+      setOriginalRekapData(data);
+    } catch (error) {
+      console.error("Error fetching rekap data:", error);
+    }
   };
 
   const handleUnitKerjaChange = (e) => {
-    const searchValue = e.target.value.toLowerCase();
-    setSearchUnitKerja(searchValue);
+    const value = e.target.value.toLowerCase();
+    setSearchUnitKerja(value);
 
-    const filtered = unitKerja.filter(item =>
-      item.unitKerja.toLowerCase().includes(searchValue) &&
-      (selectedCabang === "Pilih Cabang" || item.cabang === selectedCabang)
+    const filteredOptions = allUnitKerja.filter((uk) =>
+      uk.unitKerja.toLowerCase().includes(value)
     );
 
-    setFilteredUnitKerjaOptions(filtered);
+    setFilteredUnitKerjaOptions(filteredOptions);
   };
 
-  // useEffect(() => {
-  //   const role = sessionStorage.getItem("role");
-  //   const cabang = sessionStorage.getItem("cabang");
-  //   if (role === "ADMIN" && cabang) {
-  //     setSelectedCabang(cabang);
-  //   }
-  // }, []);
-
-  // Select Cabang
-  const handleCabangSelect = (selectedItem) => {
-    setSelectedCabang(selectedItem.kecamatan || "Pilih Cabang");
-    setShowDropdownCabang(false);
-    setSearchCabang('');
-    setFilteredCabangOptions(cabang);
-
-    // Reset Unit Kerja when Cabang changes
-    setSelectedUnitKerja("Pilih Unit Kerja");
+  const handleCabangSelect = (cabang) => {
+    setSelectedCabang(cabang.kecamatan);
+    setFormData((prev) => ({
+      ...prev,
+      unit: "",
+    }));
     setFilteredUnitKerja(
-      unitKerja.filter(uk => uk.cabang === selectedItem.kecamatan)
+      allUnitKerja.filter(
+        (unit) => unit.cabang.toLowerCase() === cabang.kecamatan.toLowerCase()
+      )
     );
+    setIsUnitKerjaDisabled(false);
+    setShowDropdownCabang(false);
   };
 
-  // Select Unit Kerja
   const handleUnitKerjaSelect = (selectedItem) => {
-    setSelectedUnitKerja(selectedItem.unitKerja || "Pilih Unit Kerja");
+    setSelectedUnitKerja(selectedItem.unitKerja || "");
     setShowDropdownUnitKerja(false);
-    setSearchUnitKerja('');
+    setSearchUnitKerja("");
   };
 
-  const getVisiblePages = () => {
-    const range = []; // Number of pages to show on each side of current page
-    let start = Math.max(1, currentPage - 1);
-    let end = Math.min(totalPages, currentPage + 1);
-
-    // Ensure we always show a consistent number of pages
-    for (let i = start; i <= end; i++) {
-      range.push(i);
-    }
-
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  };
-
-
-
-  const fetchAnggota = async (
-    page = 0,
-    cabang = "",
-    unitKerja = ""
-  ) => {
-    setLoading(true);
-    try {
-      const fotoBase64Array = [];
-      const fetchedData = await GlobalApi.getAllAnggota(page, cabang, unitKerja);
-
-      if (fetchedData.length > 0) {
-        fetchedData.forEach((item) => {
-          if (item.foto) {
-            try {
-              const decodedString = atob(item.foto);
-              fotoBase64Array.push(decodedString);
-            } catch (error) {
-              console.error("Error decoding Base64:", error);
-              fotoBase64Array.push(null);
-            }
-          } else {
-            fotoBase64Array.push(null);
-          }
-        });
-      } else {
-        console.warn("No data found.");
-      }
-
-      setFotoBase64(fotoBase64Array);
-      setLoading(false);
-      setAnggota(fetchedData);
-      setCurrentPage(page + 1);
-    } catch (error) {
-      console.error("Error fetching anggota:", error);
-      setAnggota([]);
-      setLoading(false);
-    }
+  const toggleSidebar = () => {
+    const newSidebarState = !isSidebarOpen;
+    setIsSidebarOpen(newSidebarState);
+    localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
   const handleKategoriChange = (e) => {
-    // Simpan kategori Daspen sebelumnya
     setPreviousKategoriDaspen(kategoriDaspen);
-    // Set kategoriDaspen dengan nilai baru yang dipilih
+
     setKategoriDaspen(e.target.value);
-    setIsKategoriChanged(true); // Menampilkan popup konfirmasi
+    setIsKategoriChanged(true);
   };
 
-  const fetchData = async () => {
-    try {
-      const response = await GlobalApi.getCabang();
-      setCabang(response.data);
-    } catch (error) {
-      console.error("Error fetching cabang data:", error);
+  const handleConfirmChange = async () => {
+    const anggotaId = sessionStorage.getItem("anggotaId");
+
+    if (anggotaId) {
+      try {
+        const userData = await GlobalApi.getUserById(anggotaId);
+
+        if (userData) {
+          console.log("Data yang diterima:", userData);
+
+          const formatTanggal = (tanggal) => {
+            const date = new Date(tanggal);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
+          };
+
+          const formattedTanggalLahir = formatTanggal(userData.tanggalLahir);
+          const formattedTahunDiangkat = formatTanggal(userData.tahunDiangkat);
+          const formattedMulaiJadiAnggota = formatTanggal(
+            userData.mulaiJadiAnggotaPgri
+          );
+
+          const formData = new FormData();
+
+          formData.append(
+            "pesertaKtaDigital",
+            userData.pesertaKtaDigital || ""
+          );
+          formData.append("pesertaDaspen", userData.pesertaDaspen || "");
+          formData.append("mengajar", userData.mengajar || "");
+          formData.append("golonganJabatan", userData.golonganJabatan || "");
+          formData.append(
+            "mulaiJadiAnggotaPgri",
+            formattedMulaiJadiAnggota || ""
+          );
+          formData.append(
+            "pendidikanTerakhir",
+            userData.pendidikanTerakhir || ""
+          );
+          formData.append("pangkatGolongan", userData.pangkatGolongan || "");
+          formData.append("tahunDiangkat", formattedTahunDiangkat || "");
+          formData.append("statusPegawai", userData.statusPegawai || "");
+          formData.append("sertifikatPendidik", userData.sertifikatPendidik);
+          formData.append("statusSekolah", userData.statusSekolah || "");
+          formData.append("tingkatSekolah", userData.tingkatSekolah || "");
+          formData.append("jabatan", userData.jabatan || "");
+          formData.append("unitKerja", userData.unitKerja || "");
+          formData.append("cabang", userData.cabang || "");
+          formData.append("foto", userData.foto || "");
+          formData.append("namaAnak", JSON.stringify(userData.namaAnak || []));
+          formData.append("namaSuamiIstri", userData.namaSuamiIstri || "");
+          formData.append("nomorHp", userData.nomorHp || "");
+          formData.append("kodePos", userData.kodePos || "");
+          formData.append("longitude", userData.longitude || 0);
+          formData.append("latitude", userData.latitude || 0);
+          formData.append("alamat", userData.alamat || "");
+          formData.append("golonganDarah", userData.golonganDarah || "");
+          formData.append("agama", userData.agama || "");
+          formData.append("jenisKelamin", userData.jenisKelamin || "");
+          formData.append("kategoriDaspen", kategoriDaspen);
+          formData.append("tanggalLahir", formattedTanggalLahir || "");
+          formData.append("tempatLahir", userData.tempatLahir || "");
+          formData.append("namaLengkap", userData.namaLengkap || "");
+          formData.append("nik", userData.nik || "");
+          formData.append("nip", userData.nip || "");
+          formData.append("npaPgri", userData.npaPgri || "");
+          formData.append("password", userData.password || "");
+          formData.append("email", userData.email || "");
+
+          console.log("FormData yang akan dikirim:");
+          for (let pair of formData.entries()) {
+            console.log(pair[0] + ": " + pair[1]);
+          }
+
+          const response = await GlobalApi.updateUserById(anggotaId, formData);
+
+          setDaspenData(response);
+          setIsKategoriChanged(false);
+          setIsPopupDaspen(false);
+
+          toast.success(
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                style={{
+                  width: "150px",
+                  height: "150px",
+                  color: "#06D001",
+                  marginBottom: "16px",
+                  marginTop: "14px",
+                }}
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+              </svg>
+              <h3
+                style={{
+                  fontSize: "2rem",
+                  display: "block",
+                  marginBottom: "28px",
+                }}
+              >
+                Kategori Daspen Berhasil Diupdate!
+              </h3>
+            </div>,
+            {
+              icon: null,
+              duration: 4000,
+              style: {
+                marginTop: "12%",
+                fontSize: "1.75rem",
+                padding: "10px",
+                width: "80%",
+                maxWidth: "450px",
+                height: "50%",
+                maxHeight: "400px",
+                transform: "translate(-50%, -50%)",
+                textAlign: "center",
+                zIndex: 9999,
+                backgroundColor: "#fff",
+                borderRadius: "8px",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              },
+            }
+          );
+        } else {
+          console.log("Data pengguna tidak ditemukan.");
+        }
+      } catch (error) {
+        console.error("Terjadi kesalahan:", error);
+        toast.error(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                width: "150px",
+                height: "150px",
+                color: "red",
+                marginBottom: "16px",
+              }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
+            </svg>
+            <h3
+              style={{
+                fontSize: "1.75rem",
+                display: "block",
+                marginBottom: "8px",
+              }}
+            >
+              Gagal memperbarui data. Periksa kembali input.
+            </h3>
+          </div>,
+          {
+            icon: null,
+            duration: 4000,
+            style: {
+              marginTop: "12%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "450px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
+        );
+      }
+    } else {
+      console.log("Anggota ID tidak ditemukan di sessionStorage");
     }
   };
 
-  const fetchUnitKerja = async () => {
-    try {
-      const response = await GlobalApi.getUnitKerja();
-      setUnitKerja(response.data);
-    } catch (error) {
-      console.error("Error fetching unit kerja data:", error);
-    }
-  };
-
-  const formatCurrency = (amount) => {
-    return `Rp ${parseInt(amount).toLocaleString("id-ID")}`;
-  };
+  const formatCurrency = (amount) =>
+    `Rp ${parseInt(amount).toLocaleString("id-ID")}`;
 
   const handlePrint = () => {
     const filteredDataForPrint = filteredData;
@@ -367,40 +535,14 @@ function PencarianAnggota() {
         <head>
           <title>Data Anggota</title>
           <style>
-            body {
-              font-family: Arial, sans-serif;
-              margin: 20px;
-            }
-            .title, .subtitle {
-              text-align: center;
-              margin-bottom: 10px;
-            }
-            .title {
-              font-size: 28px;
-              font-weight: bold;
-              color: #00796b;
-            }
-            .subtitle {
-              font-size: 20px;
-              font-weight: normal;
-              color: #555;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              border: 1px solid #ccc;
-            }
-            th, td {
-              padding: 8px;
-              border: 1px solid #ccc;
-            }
-            .header-row th[colspan="2"] {
-              text-align: center;
-            }
-            .total-row {
-              font-weight: bold;
-              background-color: #e0f2f1;
-            }
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .title, .subtitle { text-align: center; margin-bottom: 10px; }
+            .title { font-size: 28px; font-weight: bold; color: #00796b; }
+            .subtitle { font-size: 20px; font-weight: normal; color: #555; }
+            table { width: 100%; border-collapse: collapse; border: 1px solid #ccc; }
+            th, td { padding: 8px; border: 1px solid #ccc; }
+            .header-row th[colspan="2"] { text-align: center; }
+            .total-row { font-weight: bold; background-color: #e0f2f1; }
           </style>
         </head>
         <body>
@@ -418,35 +560,44 @@ function PencarianAnggota() {
             </thead>
             <tbody>
               ${filteredDataForPrint
-        .map(
-          (item, index) => `
+                .map(
+                  (item, index) => `
                     <tr>
                       <td>${index + 1}</td>
                       <td></td>
                       <td>
-                        <div class="font-bold">${item.nama}</div>
-                        <div>${item.npa}</div>
-                        <div>${item.tugas}</div>
+                        <div class="font-bold">${item.namaLengkap}</div>
+                        <div>${item.npaPgri}</div>
+                        <div>${item.jabatan}</div>
                       </td>
                       <td>
-                        <div>${item.lahir}, ${item.tanggal}</div>
-                        <div>${item.usia} Tahun</div>
-                        <div>Prediksi Pensiun: ${calculateRetirementDate(
-            item.tanggal
-          )}</div>
+                        <div>${item.tempatLahir},</div>
+                        <div>${formatDate(item.tanggalLahir)}</div>
+                        <div>${calculateAge(item.tanggalLahir)} Tahun</div>
+                        <div>${calculateRetirementDate(
+                          item.tanggalLahir,
+                          item.statusPegawai
+                        )}</div>
                       </td>
                       <td>
-                      <div>${item.cabang},</div>
-                      <div>${item.kerja},</div>
-                        <div>anggota: ${item.gabung}</div>
-                        <div>${item.golongan}
-                  )}</div>
+                        <div>${item.cabang},</div>
+                        <div>${item.unitKerja}</div>
+                        <div>Anggota: ${
+                          item.tahunDiangkat ? item.tahunDiangkat : "-"
+                        }</div>
+                        <div>
+                          ${item.pangkatGolongan} || ${formatCurrency(
+                    item.iuran
+                  )}
+                        </div>
                       </td>
-                      <td>${item.anggota}</td>
+                      <td>
+                        <div>${item.status}</div>
+                      </td>
                     </tr>
                   `
-        )
-        .join("")}
+                )
+                .join("")}
             </tbody>
           </table>
         </body>
@@ -499,33 +650,41 @@ function PencarianAnggota() {
   const filteredData = useMemo(() => {
     return sortedData.filter((item) => {
       const statusFilter =
-        selectedStatus === "Semua" || item.anggota === selectedStatus;
+        selectedStatus === "Semua" || item.statusKeanggotaan === selectedStatus;
       const cabangFilter =
-        selectedCabang === "" || item.cabang === selectedCabang;
+        selectedCabang === "" || item.cabang === selectedCabang; 
       const unitKerjaFilter =
-        selectedUnitKerja === "Pilih Unit Kerja" ||
-        item.unitKerja === selectedUnitKerja;
+        selectedUnitKerja === "" || item.unitKerja === selectedUnitKerja;
 
-      const searchLower = searchQuery.toLowerCase();
+      const searchCabangFilter = item.cabang
+        .toLowerCase()
+        .includes(filterCabang.toLowerCase());
+      const searchUnitKerjaFilter = item.unitKerja
+        .toLowerCase()
+        .includes(filterUnitKerja.toLowerCase());
 
-      const searchFilter =
-        item.namaLengkap?.toLowerCase().includes(searchLower) ||
-        item.npaPgri?.toLowerCase().includes(searchLower) ||
-        item.jabatan?.toLowerCase().includes(searchLower) ||
-        item.nip?.toLowerCase().includes(searchLower) ||
-        item.tempatLahir?.toLowerCase().includes(searchLower) ||
-        item.cabang?.toLowerCase().includes(searchLower) ||
-        item.unitKerja?.toLowerCase().includes(searchLower) ||
-        item.status?.toLowerCase().includes(searchLower);
+      const globalSearchFilter = Object.values(item).some(
+        (value) =>
+          String(value).toLowerCase().includes(searchKeyword.toLowerCase())
+      );
 
-      return statusFilter && cabangFilter && unitKerjaFilter && searchFilter;
+      return (
+        statusFilter &&
+        cabangFilter &&
+        unitKerjaFilter &&
+        (filterCabang ? searchCabangFilter : true) &&
+        (filterUnitKerja ? searchUnitKerjaFilter : true) &&
+        (searchKeyword ? globalSearchFilter : true)
+      );
     });
   }, [
     sortedData,
     selectedStatus,
     selectedCabang,
     selectedUnitKerja,
-    searchQuery,
+    filterCabang,
+    filterUnitKerja,
+    searchKeyword,
   ]);
 
   const jumlahAnggota = filteredData.length;
@@ -538,16 +697,16 @@ function PencarianAnggota() {
   const closeModal = () => {
     setIsModalOpen(false);
     setCurrentItem(null);
+    sessionStorage.removeItem("anggotaId");
   };
 
-  const handleBackClick = () => {
-    router.back();
-  };
-
-  const toggleSidebar = () => {
-    const newSidebarState = !isSidebarOpen;
-    setIsSidebarOpen(newSidebarState);
-    localStorage.setItem("isSidebarOpen", newSidebarState);
+  const handleCabangChange = (e) => {
+    const value = e.target.value;
+    setSearchCabang(value);
+    const filtered = cabangOptions.filter((cabang) =>
+      cabang.kecamatan.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredCabangOptions(filtered);
   };
 
   const formatDate = (dateString) => {
@@ -569,7 +728,7 @@ function PencarianAnggota() {
     ) {
       age--;
     }
-    return age;
+    return `${age} tahun`;
   };
 
   const calculateRetirementDate = (birthDateString, employmentType) => {
@@ -597,12 +756,16 @@ function PencarianAnggota() {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-  const handlePindahCabangUnit = () => {
-    router.push("/anggota/data-anggota/mutasiCabangUnit");
-  };
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalItems = filteredData.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  const handleEditClick = () => {
-    router.push("/anggota/edit-anggota");
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   const handlePopupKeluar = () => {
@@ -631,28 +794,28 @@ function PencarianAnggota() {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
+              marginTop: "14px",
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
-          <strong
+          <h3
             style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
           >
             Anggota berhasil dikeluar!
-          </strong>
+          </h3>
         </div>,
         {
           icon: null,
           duration: 4000,
-          autoClose: 3000,
           style: {
-            marginTop: "16%",
+            marginTop: "12%",
             fontSize: "1.75rem",
             padding: "10px",
             width: "80%",
-            maxWidth: "700px",
+            maxWidth: "450px",
             height: "50%",
             maxHeight: "400px",
             transform: "translate(-50%, -50%)",
@@ -679,8 +842,8 @@ function PencarianAnggota() {
           <svg
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              width: "48px",
-              height: "48px",
+              width: "150px",
+              height: "150px",
               color: "red",
               marginBottom: "16px",
             }}
@@ -690,7 +853,7 @@ function PencarianAnggota() {
             <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
             <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
           </svg>
-          <strong
+          <h3
             style={{
               fontSize: "1.75rem",
               display: "block",
@@ -698,18 +861,17 @@ function PencarianAnggota() {
             }}
           >
             Gagal mengeluarkan anggota.
-          </strong>
+          </h3>
         </div>,
         {
           icon: null,
-          autoClose: 3000,
-          duration: 2000,
+          duration: 4000,
           style: {
-            marginTop: "16%",
+            marginTop: "12%",
             fontSize: "1.75rem",
             padding: "10px",
             width: "80%",
-            maxWidth: "700px",
+            maxWidth: "450px",
             height: "50%",
             maxHeight: "400px",
             transform: "translate(-50%, -50%)",
@@ -742,8 +904,8 @@ function PencarianAnggota() {
             <svg
               xmlns="http://www.w3.org/2000/svg"
               style={{
-                width: "48px",
-                height: "48px",
+                width: "150px",
+                height: "150px",
                 color: "red",
                 marginBottom: "16px",
               }}
@@ -753,7 +915,7 @@ function PencarianAnggota() {
               <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
               <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
             </svg>
-            <strong
+            <h3
               style={{
                 fontSize: "1.75rem",
                 display: "block",
@@ -761,17 +923,17 @@ function PencarianAnggota() {
               }}
             >
               ID Anggota tidak ditemukan.
-            </strong>
+            </h3>
           </div>,
           {
             icon: null,
-            duration: 2000,
+            duration: 4000,
             style: {
-              marginTop: "16%",
+              marginTop: "12%",
               fontSize: "1.75rem",
               padding: "10px",
               width: "80%",
-              maxWidth: "700px",
+              maxWidth: "450px",
               height: "50%",
               maxHeight: "400px",
               transform: "translate(-50%, -50%)",
@@ -805,28 +967,28 @@ function PencarianAnggota() {
               height: "150px",
               color: "#06D001",
               marginBottom: "16px",
+              marginTop: "14px",
             }}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
-          <strong
+          <h3
             style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
           >
             Data Anggota Berhasil Dihapus!
-          </strong>
+          </h3>
         </div>,
         {
           icon: null,
-          autoClose: 4000,
           duration: 4000,
           style: {
-            marginTop: "16%",
+            marginTop: "12%",
             fontSize: "1.75rem",
             padding: "10px",
             width: "80%",
-            maxWidth: "700px",
+            maxWidth: "450px",
             height: "50%",
             maxHeight: "400px",
             transform: "translate(-50%, -50%)",
@@ -839,7 +1001,6 @@ function PencarianAnggota() {
         }
       );
 
-      // Reload the page after success
       setTimeout(() => {
         window.location.reload();
       }, 4000);
@@ -862,8 +1023,8 @@ function PencarianAnggota() {
           <svg
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              width: "48px",
-              height: "48px",
+              width: "150px",
+              height: "150px",
               color: "red",
               marginBottom: "16px",
             }}
@@ -873,7 +1034,7 @@ function PencarianAnggota() {
             <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
             <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
           </svg>
-          <strong
+          <h3
             style={{
               fontSize: "1.75rem",
               display: "block",
@@ -881,18 +1042,17 @@ function PencarianAnggota() {
             }}
           >
             Gagal pensiun anggota.
-          </strong>
+          </h3>
         </div>,
         {
           icon: null,
-          autoClose: 3000,
-          duration: 3000,
+          duration: 4000,
           style: {
-            marginTop: "16%",
+            marginTop: "12%",
             fontSize: "1.75rem",
             padding: "10px",
             width: "80%",
-            maxWidth: "700px",
+            maxWidth: "450px",
             height: "50%",
             maxHeight: "400px",
             transform: "translate(-50%, -50%)",
@@ -916,277 +1076,379 @@ function PencarianAnggota() {
     setPopupVisible(true);
   };
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentData = useMemo(() => {
-    // Gunakan filteredData secara langsung untuk pencarian dan filtering
-    const slicedData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-    return slicedData;
-  }, [filteredData, currentPage, itemsPerPage]);
-  const totalItems = filteredData.length;
-  const totalPages = useMemo(() => {
-    return Math.ceil(filteredData.length / itemsPerPage);
-  }, [filteredData, itemsPerPage]);
-
-  // useEffect(() => {
-  //   // Reset halaman ke 1 ketika filter atau pencarian berubah
-  //   setCurrentPage(1);
-  // }, [selectedStatus, selectedCabang, selectedUnitKerja, searchQuery]);
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+  const handlePensiunAnggota = async () => {
+    try {
+      const anggotaId = sessionStorage.getItem("anggotaId");
+      await GlobalApi.pensiunAnggota(anggotaId);
+      setPopupVisible(false);
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+              marginTop: "14px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <h3
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Anggota berhasil Pensiun!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Gagal mengeluarkan anggota:", error);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal pensiun anggota.
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     }
   };
 
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+  const handlePindahCabangUnit = () => {
+    router.push("/anggota/data-anggota/mutasiCabangUnit");
+  };
+
+  const handleEditClick = () => {
+    router.push("/anggota/edit-anggota");
+  };
+
+  const getVisiblePages = () => {
+    const visiblePages = [];
+    const leftLimit = Math.max(1, currentPage - 1);
+    const rightLimit = Math.min(totalPages, currentPage + 1);
+
+    for (let i = leftLimit; i <= rightLimit; i++) {
+      visiblePages.push(i);
     }
-  };
 
-  const handlePageClick = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const PaginationComponent = () => {
-    return (
-      <div className="flex justify-center mt-4 gap-1">
-        {totalItems >= itemsPerPage && (
-          <div className="flex justify-center mt-4 gap-1">
-            <button
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-              className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-            >
-              First
-            </button>
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-            >
-              Prev
-            </button>
-            {getVisiblePages().map((page) => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`px-3 py-1 border rounded text-sm ${page === currentPage ? "bg-blue-500 text-white" : "bg-white hover:bg-gray-50"
-                  }`}
-              >
-                {page}
-              </button>
-            ))}
-            <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-            >
-              Next
-            </button>
-            <button
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-            >
-              Last
-            </button>
-          </div>
-        )}
-      </div>
-    );
+    return visiblePages;
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <ClipLoader color="#3498db" size={50} />
+      </div>
+    );
   }
 
   return (
-    <div>
-      {isMobile ? (
-        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-          <div className="container mx-auto flex items-center justify-between">
-            <div className="flex items-center">
-              <FontAwesomeIcon
-                icon={faArrowLeft}
-                size="sm"
-                onClick={handleBackClick}
-                className="cursor-pointer mr-2"
-              />
-              <h1 className="text-base">Pencarian Anggota</h1>
-            </div>
-          </div>
-        </header>
-      ) : (
-        <HeaderHome />
-      )}
+    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
-          <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-            <div className="mb-4">
-              <div className="flex flex-wrap items-start mt-16 justify-between">
-                <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
-                  <>
-                    <div
-                      ref={dropdownRef}
-                      className="relative flex flex-col md:flex ml-2"
-                    >
-                      <Input
-                        type="text"
-                        placeholder="Pilih Cabang"
-                        value={selectedCabang}
-                        readOnly
-                        disabled={role !== "SUPER ADMIN"}
-                        onFocus={() => {
-                          if (role === "SUPER ADMIN") {
-                            setShowDropdownCabang(true);
-                            setFilteredCabangOptions(cabang);
-                          }
-                        }}
-                        className="border rounded-lg p-2 w-full bg-white shadow-sm"
-                      />
+          <Toaster
+            toastOptions={{
+              style: {
+                marginTop: "16%",
+                fontSize: "1.75rem",
+                padding: "10px",
+                width: "80%",
+                maxWidth: "700px",
+                height: "50%",
+                maxHeight: "400px",
+                transform: "translate(-50%, -50%)",
+                textAlign: "center",
+                zIndex: 9999,
+                backgroundColor: "#fff",
+                borderRadius: "8px",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              },
+              success: {
+                style: {
+                  background: "white",
+                  color: "black",
+                },
+              },
+              error: {
+                style: {
+                  background: "white",
+                  color: "black",
+                },
+              },
+            }}
+          />
+          <div className="mb-4">
+            <div className="flex flex-wrap items-start mt-14 justify-between">
+              <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
+              {role !== "USER" && (
+                <>
+                  <div
+                    ref={dropdownRef}
+                    className="relative flex flex-col md:flex ml-2 w-full md:w-40"
+                  >
+                    <Input
+                      type="text"
+                      placeholder="Pilih Cabang"
+                      value={selectedCabang}
+                      readOnly
+                      disabled={role === "ADMIN"}
+                      onFocus={() => {
+                        if (role === "SUPER ADMIN") {
+                          setShowDropdownCabang(true);
+                          setFilteredCabangOptions(cabangOptions);
+                        }
+                      }}
+                      className="border rounded-lg p-2 w-full bg-white shadow-sm"
+                    />
 
-                      {showDropdownCabang && role === "SUPER ADMIN" && (
-                        <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full ">
-                          <ul className="max-h-44 overflow-y-auto">
-                            <li className="py-2 px-2">
-                              <Input
-                                type="text"
-                                value={searchCabang}
-                                onChange={handleCabangChange}
-                                className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Cari Cabang..."
-                                autoFocus
-                              />
-                            </li>
-                            <li
-                              className="p-2 cursor-pointer hover:bg-gray-100"
-                              onClick={() => {
-                                handleCabangSelect({ kecamatan: "" });
-                              }}
-                            >
-                              Pilih Cabang
-                            </li>
-                            {filteredCabangOptions.length > 0 ? (
-                              filteredCabangOptions.map((cabang) => (
-                                <li
-                                  key={cabang.idKecamatan}
-                                  className="p-2 cursor-pointer hover:bg-gray-100"
-                                  onClick={() => handleCabangSelect(cabang)}
-                                >
-                                  {cabang.kecamatan}
-                                </li>
-                              ))
-                            ) : (
-                              <li className="px-4 py-2 text-gray-500 cursor-default">
-                                Tidak ada hasil
-                              </li>
-                            )}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-
-                    <div ref={unitKerjaRef} className="relative w-full md:w-40">
-                      <Input
-                        type="text"
-                        placeholder="Pilih Unit Kerja"
-                        value={selectedUnitKerja}
-                        readOnly
-                        onFocus={() => {
-                          setShowDropdownUnitKerja(true);
-                          setFilteredUnitKerjaOptions(
-                            selectedCabang === "Pilih Cabang"
-                              ? unitKerja
-                              : unitKerja.filter(uk => uk.cabang === selectedCabang)
-                          );
-                        }}
-                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        disabled={selectedCabang === "Pilih Cabang"}
-                      />
-
-                      {showDropdownUnitKerja && (
-                        <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
-                          <div className="p-2">
+                    {showDropdownCabang && role === "SUPER ADMIN" && (
+                      <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full ">
+                        <ul className="max-h-44 overflow-y-auto">
+                          <li className="py-2 px-2">
                             <Input
                               type="text"
-                              value={searchUnitKerja}
-                              onChange={handleUnitKerjaChange}
-                              placeholder="Cari Unit Kerja..."
-                              className="w-full border rounded py-2 px-3 mb-2"
+                              value={searchCabang}
+                              onChange={handleCabangChange}
+                              className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Cari Cabang..."
+                              autoFocus
                             />
-                          </div>
-                          <ul className="max-h-44 overflow-y-auto">
-                            <li
-                              className="p-2 cursor-pointer hover:bg-gray-100"
-                              onClick={() => handleUnitKerjaSelect({})}
-                            >
-                              Semua Unit Kerja
-                            </li>
-                            {filteredUnitKerjaOptions.map((item) => (
+                          </li>
+                          <li
+                            className="p-2 cursor-pointer hover:bg-gray-100"
+                            onClick={() => {
+                              handleCabangSelect({ kecamatan: "" });
+                            }}
+                          >
+                            Pilih Cabang
+                          </li>
+                          {filteredCabangOptions.length > 0 ? (
+                            filteredCabangOptions.map((cabang) => (
                               <li
-                                key={item.id}
+                                key={cabang.idKecamatan}
                                 className="p-2 cursor-pointer hover:bg-gray-100"
-                                onClick={() => handleUnitKerjaSelect(item)}
+                                onClick={() => handleCabangSelect(cabang)}
                               >
-                                {item.unitKerja}
+                                {cabang.kecamatan}
                               </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  </>
-
-                  <input
-                    className="shadow appearance-none border rounded w-full md:w-80 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0"
-                    type="text"
-                    placeholder="Cari Anggota"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <p className="py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
-                    Jumlah Anggota : {jumlahAnggota}
-                  </p>
-                </div>
-                <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
-                  <div className="space-x-2 w-full flex md:block">
-                    <label htmlFor="maxItems" className="mr-2">
-                      Tampilkan:
-                    </label>
-                    <select
-                      id="maxItems"
-                      value={maxItems}
-                      onChange={(e) => setMaxItems(parseInt(e.target.value))}
-                      className="shadow appearance-none border rounded w-full md:w-20 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={15}>15</option>
-                      <option value={20}>20</option>
-                    </select>
-                    <Button
-                      className="px-8 mt-2 md:mt-0"
-                      variant="outline"
-                      onClick={handlePrint}
-                    >
-                      Cetak
-                    </Button>
+                            ))
+                          ) : (
+                            <li className="px-4 py-2 text-gray-500 cursor-default">
+                              Tidak ada hasil
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
                   </div>
+
+                  <div ref={unitKerjaRef} className="relative w-full md:w-40">
+                    <Input
+                      type="text"
+                      placeholder="Pilih Unit Kerja"
+                      value={selectedUnitKerja}
+                      readOnly
+                      onFocus={() => {
+                        setShowDropdownUnitKerja(true);
+                        setFilteredUnitKerjaOptions(
+                          selectedCabang === "Pilih Cabang"
+                            ? allUnitKerja
+                            : allUnitKerja.filter(
+                                (uk) => uk.cabang === selectedCabang
+                              )
+                        );
+                      }}
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      // disabled={selectedCabang === "Pilih Cabang"}
+                      disabled={role === "USER"}
+                    />
+
+                    {showDropdownUnitKerja && (
+                      <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
+                        <div className="p-2">
+                          <Input
+                            type="text"
+                            value={searchUnitKerja}
+                            onChange={handleUnitKerjaChange}
+                            placeholder="Cari Unit Kerja..."
+                            className="w-full border rounded py-2 px-3 mb-2"
+                          />
+                        </div>
+                        <ul className="max-h-44 overflow-y-auto -mt-3">
+                          <li
+                            className="p-2 cursor-pointer hover:bg-gray-100"
+                            onClick={() => handleUnitKerjaSelect({})}
+                          >
+                            Semua Unit Kerja
+                          </li>
+                          {filteredUnitKerjaOptions.map((item) => (
+                            <li
+                              key={item.id}
+                              className="p-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleUnitKerjaSelect(item)}
+                            >
+                              {item.unitKerja}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                  </>
+                  )}
+                {role !== "USER" && (
+  <select
+    className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+    value={selectedStatus}
+    onChange={(e) => setSelectedStatus(e.target.value)}
+  >
+    <option>Semua</option>
+    <option>Aktif</option>
+    <option>Tidak Aktif</option>
+    <option>Meninggal</option>
+    <option>Keluar</option>
+  </select>
+)}
+{role !== "USER" && (
+                <div className="flex flex-wrap items-center space-x-2 w-full md:w-40">
+                  <Input
+                    type="text"
+                    placeholder="Cari..."
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    className="border rounded-lg p-2 w-full md:w-60 bg-white shadow-sm"
+                    disabled={role === "USER"}
+                  />
+                  </div>
+                  )}
+              </div>
+              {role !== "USER" && (
+                <p className="py-2 rounded focus:outline-none focus:shadow-outline w-full md:w-40 ">
+                  Jumlah Anggota : {jumlahAnggota}
+                </p>
+              )}
+              <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
+                <div className="space-x-2 w-full flex md:block">
+                  {/* <label htmlFor="maxItems" className="mr-2">
+                    Tampilkan:
+                  </label>
+                  <select
+                    id="maxItems"
+                    value={maxItems}
+                    onChange={(e) => setMaxItems(parseInt(e.target.value))}
+                    className="shadow appearance-none border rounded w-full md:w-20 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={15}>15</option>
+                    <option value={20}>20</option>
+                  </select> */}
+                  {role !== "USER" && (
+                  <Button
+                    className="px-8 mt-2 md:mt-0"
+                    variant="outline"
+                    onClick={handlePrint}
+                    disabled={role === "USER"}
+                  >
+                    Cetak
+                  </Button>
+                )}
                 </div>
               </div>
-              {/* <p className="text-center font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
-                Pencarian Anggota
-              </p> */}
             </div>
+          </div>
 
-            <div className="overflow-x-auto">
+          <div className="overflow-x-auto">
               <table className="container w-full table-auto mb-8">
                 <thead>
                   <tr>
@@ -1255,10 +1517,14 @@ function PencarianAnggota() {
                 </thead>
                 <tbody>
                   {currentData.map((item, index) => {
-                    const globalIndex = (currentPage - 1) * itemsPerPage + index + 1;
+                    const globalIndex = index + 1;
                     return (
                       <React.Fragment key={index}>
-                        <tr className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                        <tr
+                          className={
+                            index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                          }
+                        >
                           <td className="p-2 md:p-3 border text-center">
                             <div className="flex justify-center items-center">
                               {globalIndex}
@@ -1266,7 +1532,11 @@ function PencarianAnggota() {
                                 className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
                                 onClick={() => handleExpand(index)}
                               >
-                                {expandedIndex === index ? <FaMinusCircle /> : <FaPlusCircle />}
+                                {expandedIndex === index ? (
+                                  <FaMinusCircle />
+                                ) : (
+                                  <FaPlusCircle />
+                                )}
                               </Button>
                             </div>
                           </td>
@@ -1291,12 +1561,13 @@ function PencarianAnggota() {
                             <div className="text-sm">{item.npaPgri}</div>
                             <div className="text-sm">{item.jabatan}</div>
                             <div
-                              className={`text-sm p-1 inline-block ${item.nip
-                                ? "bg-green-500 text-white rounded-full px-3"
-                                : "bg-red-500 text-white rounded-full px-3"
-                                }`}
+                              className={`text-sm p-1 inline-block ${
+                                item.nip
+                                  ? "bg-green-500 text-white rounded-full px-3"
+                                  : "bg-red-500 text-white rounded-full px-3"
+                              }`}
                             >
-                              {item.nip ? item.nip : "NIP tidak ada"}
+                              {item.nip ? item.nip : "Tidak Terdaftar Daspen"}
                             </div>
                           </td>
                           <td className="p-2 md:p-3 border md:table-cell hidden">
@@ -1305,7 +1576,7 @@ function PencarianAnggota() {
                               {formatDate(item.tanggalLahir)}
                             </div>
                             <div className="text-sm">
-                              {calculateAge(item.tanggalLahir)} Tahun
+                              {calculateAge(item.tanggalLahir)}
                             </div>
                             <div className="text-sm">
                               Pensiun :{" "}
@@ -1322,32 +1593,33 @@ function PencarianAnggota() {
                               Anggota:{" "}
                               {item.tahunDiangkat
                                 ? (() => {
-                                  const date = new Date(item.tahunDiangkat);
-                                  const day = String(date.getDate()).padStart(
-                                    2,
-                                    "0"
-                                  );
-                                  const month = String(
-                                    date.getMonth() + 1
-                                  ).padStart(2, "0");
-                                  const year = date.getFullYear();
-                                  return `${day}-${month}-${year}`;
-                                })()
+                                    const date = new Date(item.tahunDiangkat);
+                                    const day = String(date.getDate()).padStart(
+                                      2,
+                                      "0"
+                                    );
+                                    const month = String(
+                                      date.getMonth() + 1
+                                    ).padStart(2, "0");
+                                    const year = date.getFullYear();
+                                    return `${day}-${month}-${year}`;
+                                  })()
                                 : "-"}
                             </div>
 
-                            <div className="text-sm">{item.pangkatGolongan}</div>
+                            <div className="text-sm">
+                              {item.pangkatGolongan}
+                            </div>
                           </td>
                           <td className="p-2 text-center md:p-3 border md:table-cell hidden">
                             <div
-                              className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
-                                ? "bg-red-200 text-red-900"
-                                : "bg-green-200 text-green-900"
-                                }`}
+                              className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${
+                                item.status === "BUKAN ANGGOTA"
+                                  ? "bg-red-200 text-red-900"
+                                  : "bg-green-200 text-green-900"
+                              }`}
                             >
-                              {item.role === "USER"
-                                ? "Aktif"
-                                : item.status_keanggotaan}
+                              {item.statusKeanggotaan}
                             </div>
                           </td>
                           <td className="p-2 md:p-3 border md:table-cell hidden">
@@ -1412,7 +1684,7 @@ function PencarianAnggota() {
                                   </Button>
 
                                   {sessionStorage.getItem("role") ===
-                                    "SUPER ADMIN" ? (
+                                  "SUPER ADMIN" ? (
                                     <Button
                                       className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
                                       onClick={() => {
@@ -1480,7 +1752,10 @@ function PencarianAnggota() {
                                   className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
                                   title="Data Daspen"
                                   onClick={() => {
-                                    sessionStorage.setItem("anggotaId", item.id);
+                                    sessionStorage.setItem(
+                                      "anggotaId",
+                                      item.id
+                                    );
                                     handleDataDaspen();
                                   }}
                                 >
@@ -1527,8 +1802,8 @@ function PencarianAnggota() {
                                           {isKategoriChanged && (
                                             <div className="popup">
                                               <p>
-                                                Apakah Anda yakin ingin mengganti
-                                                kategori Daspen?
+                                                Apakah Anda yakin ingin
+                                                mengganti kategori Daspen?
                                               </p>
 
                                               <button
@@ -1558,15 +1833,18 @@ function PencarianAnggota() {
                                           </p>
                                           <p>
                                             {daspenData.tanggalLahir
-                                              ? new Intl.DateTimeFormat("id-ID", {
-                                                day: "2-digit",
-                                                month: "long",
-                                                year: "numeric",
-                                              }).format(
-                                                new Date(
-                                                  daspenData.tanggalLahir
+                                              ? new Intl.DateTimeFormat(
+                                                  "id-ID",
+                                                  {
+                                                    day: "2-digit",
+                                                    month: "long",
+                                                    year: "numeric",
+                                                  }
+                                                ).format(
+                                                  new Date(
+                                                    daspenData.tanggalLahir
+                                                  )
                                                 )
-                                              )
                                               : "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -1590,15 +1868,18 @@ function PencarianAnggota() {
                                           </p>
                                           <p>
                                             {daspenData.mulaiJadiAnggotaDaspen
-                                              ? new Intl.DateTimeFormat("id-ID", {
-                                                day: "2-digit",
-                                                month: "long",
-                                                year: "numeric",
-                                              }).format(
-                                                new Date(
-                                                  daspenData.mulaiJadiAnggotaDaspen
+                                              ? new Intl.DateTimeFormat(
+                                                  "id-ID",
+                                                  {
+                                                    day: "2-digit",
+                                                    month: "long",
+                                                    year: "numeric",
+                                                  }
+                                                ).format(
+                                                  new Date(
+                                                    daspenData.mulaiJadiAnggotaDaspen
+                                                  )
                                                 )
-                                              )
                                               : "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -1617,23 +1898,23 @@ function PencarianAnggota() {
                                           <p>
                                             {daspenData.prediksiPensiun
                                               ? (() => {
-                                                const prediksiPensiunDate =
-                                                  new Date(
-                                                    daspenData.prediksiPensiun
+                                                  const prediksiPensiunDate =
+                                                    new Date(
+                                                      daspenData.prediksiPensiun
+                                                    );
+                                                  prediksiPensiunDate.setMonth(
+                                                    prediksiPensiunDate.getMonth() +
+                                                      1
                                                   );
-                                                prediksiPensiunDate.setMonth(
-                                                  prediksiPensiunDate.getMonth() +
-                                                  1
-                                                );
-                                                return new Intl.DateTimeFormat(
-                                                  "id-ID",
-                                                  {
-                                                    day: "2-digit",
-                                                    month: "long",
-                                                    year: "numeric",
-                                                  }
-                                                ).format(prediksiPensiunDate);
-                                              })()
+                                                  return new Intl.DateTimeFormat(
+                                                    "id-ID",
+                                                    {
+                                                      day: "2-digit",
+                                                      month: "long",
+                                                      year: "numeric",
+                                                    }
+                                                  ).format(prediksiPensiunDate);
+                                                })()
                                               : "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -1644,9 +1925,9 @@ function PencarianAnggota() {
                                           <p>
                                             {daspenData.sumbangan
                                               ? new Intl.NumberFormat("id-ID", {
-                                                style: "currency",
-                                                currency: "IDR",
-                                              }).format(daspenData.sumbangan)
+                                                  style: "currency",
+                                                  currency: "IDR",
+                                                }).format(daspenData.sumbangan)
                                               : "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -1698,7 +1979,9 @@ function PencarianAnggota() {
                                   {item.tempatLahir},{" "}
                                   {formatDate(item.tanggalLahir)}
                                 </div>
-                                <div>{calculateAge(item.tanggalLahir)} Tahun</div>
+                                <div>
+                                  {calculateAge(item.tanggalLahir)} Tahun
+                                </div>
                                 <div>
                                   Prediksi Pensiun:{" "}
                                   {calculateRetirementDate(
@@ -1711,10 +1994,11 @@ function PencarianAnggota() {
                                 <div>Anggota: {item.gabung}</div>
                                 <div>{item.golongan}</div>
                                 <div
-                                  className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${item.status === "BUKAN ANGGOTA"
-                                    ? "bg-red-200 text-red-900"
-                                    : "bg-green-200 text-green-900"
-                                    }`}
+                                  className={` text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${
+                                    item.status === "BUKAN ANGGOTA"
+                                      ? "bg-red-200 text-red-900"
+                                      : "bg-green-200 text-green-900"
+                                  }`}
                                 >
                                   {item.role === "USER"
                                     ? "Aktif"
@@ -1733,7 +2017,7 @@ function PencarianAnggota() {
                                     <FaEdit className="w-4 h-4" />
                                   </Button>
                                   {sessionStorage.getItem("role") ===
-                                    "SUPER ADMIN" ? (
+                                  "SUPER ADMIN" ? (
                                     <Button
                                       className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
                                       title="Mutasi"
@@ -1750,7 +2034,7 @@ function PencarianAnggota() {
                                     </Button>
                                   )}
                                   {sessionStorage.getItem("role") ===
-                                    "SUPER ADMIN" ? (
+                                  "SUPER ADMIN" ? (
                                     <Button
                                       className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
                                       onClick={() => {
@@ -1780,7 +2064,10 @@ function PencarianAnggota() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                   >
-                                    <FaWhatsapp className="w-4 h-4" title="WA" />
+                                    <FaWhatsapp
+                                      className="w-4 h-4"
+                                      title="WA"
+                                    />
                                   </Link>
                                   <div>
                                     <Button
@@ -1844,7 +2131,9 @@ function PencarianAnggota() {
                                                   </p>
 
                                                   <button
-                                                    onClick={handleConfirmChange}
+                                                    onClick={
+                                                      handleConfirmChange
+                                                    }
                                                     className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition duration-200 px-6"
                                                   >
                                                     Ya
@@ -1855,7 +2144,9 @@ function PencarianAnggota() {
                                                       setKategoriDaspen(
                                                         previousKategoriDaspen
                                                       );
-                                                      setIsKategoriChanged(false);
+                                                      setIsKategoriChanged(
+                                                        false
+                                                      );
                                                     }}
                                                     className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-200 ml-2 px-4"
                                                   >
@@ -1871,17 +2162,17 @@ function PencarianAnggota() {
                                               <p>
                                                 {daspenData.tanggalLahir
                                                   ? new Intl.DateTimeFormat(
-                                                    "id-ID",
-                                                    {
-                                                      day: "2-digit",
-                                                      month: "long",
-                                                      year: "numeric",
-                                                    }
-                                                  ).format(
-                                                    new Date(
-                                                      daspenData.tanggalLahir
+                                                      "id-ID",
+                                                      {
+                                                        day: "2-digit",
+                                                        month: "long",
+                                                        year: "numeric",
+                                                      }
+                                                    ).format(
+                                                      new Date(
+                                                        daspenData.tanggalLahir
+                                                      )
                                                     )
-                                                  )
                                                   : "Tidak tersedia"}
                                               </p>
                                             </div>
@@ -1911,17 +2202,17 @@ function PencarianAnggota() {
                                               <p>
                                                 {daspenData.mulaiJadiAnggotaDaspen
                                                   ? new Intl.DateTimeFormat(
-                                                    "id-ID",
-                                                    {
-                                                      day: "2-digit",
-                                                      month: "long",
-                                                      year: "numeric",
-                                                    }
-                                                  ).format(
-                                                    new Date(
-                                                      daspenData.mulaiJadiAnggotaDaspen
+                                                      "id-ID",
+                                                      {
+                                                        day: "2-digit",
+                                                        month: "long",
+                                                        year: "numeric",
+                                                      }
+                                                    ).format(
+                                                      new Date(
+                                                        daspenData.mulaiJadiAnggotaDaspen
+                                                      )
                                                     )
-                                                  )
                                                   : "Tidak tersedia"}
                                               </p>
                                             </div>
@@ -1941,25 +2232,25 @@ function PencarianAnggota() {
                                               <p>
                                                 {daspenData.prediksiPensiun
                                                   ? (() => {
-                                                    const prediksiPensiunDate =
-                                                      new Date(
-                                                        daspenData.prediksiPensiun
+                                                      const prediksiPensiunDate =
+                                                        new Date(
+                                                          daspenData.prediksiPensiun
+                                                        );
+                                                      prediksiPensiunDate.setMonth(
+                                                        prediksiPensiunDate.getMonth() +
+                                                          1
                                                       );
-                                                    prediksiPensiunDate.setMonth(
-                                                      prediksiPensiunDate.getMonth() +
-                                                      1
-                                                    );
-                                                    return new Intl.DateTimeFormat(
-                                                      "id-ID",
-                                                      {
-                                                        day: "2-digit",
-                                                        month: "long",
-                                                        year: "numeric",
-                                                      }
-                                                    ).format(
-                                                      prediksiPensiunDate
-                                                    );
-                                                  })()
+                                                      return new Intl.DateTimeFormat(
+                                                        "id-ID",
+                                                        {
+                                                          day: "2-digit",
+                                                          month: "long",
+                                                          year: "numeric",
+                                                        }
+                                                      ).format(
+                                                        prediksiPensiunDate
+                                                      );
+                                                    })()
                                                   : "Tidak tersedia"}
                                               </p>
                                             </div>
@@ -1970,12 +2261,14 @@ function PencarianAnggota() {
                                               <p>
                                                 {daspenData.sumbangan
                                                   ? new Intl.NumberFormat(
-                                                    "id-ID",
-                                                    {
-                                                      style: "currency",
-                                                      currency: "IDR",
-                                                    }
-                                                  ).format(daspenData.sumbangan)
+                                                      "id-ID",
+                                                      {
+                                                        style: "currency",
+                                                        currency: "IDR",
+                                                      }
+                                                    ).format(
+                                                      daspenData.sumbangan
+                                                    )
                                                   : "Tidak tersedia"}
                                               </p>
                                             </div>
@@ -2020,147 +2313,199 @@ function PencarianAnggota() {
                   })}
                 </tbody>
               </table>
-              <div className="flex justify-center items-center mb-4">
-                <PaginationComponent />
+            <div className="flex justify-center mt-4 gap-1">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                First
+              </button>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Prev
+              </button>
+
+              {getVisiblePages().map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1 border rounded text-sm ${
+                    page === currentPage
+                      ? "bg-blue-500 text-white"
+                      : "bg-white hover:bg-gray-50"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Next
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Last
+              </button>
+            </div>
+          </div>
+
+          <Modal
+            isOpen={isModalOpen}
+            onRequestClose={closeModal}
+            contentLabel="Mutation Actions"
+            className="fixed inset-0 flex items-center justify-center p-4"
+            overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+          >
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Mutasi Anggota</h2>
+                <button
+                  className="text-2xl font-bold text-gray-700 hover:text-red-500 focus:outline-none"
+                  onClick={closeModal}
+                >
+                  x
+                </button>
+              </div>
+              <div className="flex flex-col items-center gap-4 p-4 rounded-md shadow-md bg-white">
+                <div className="w-full flex justify-center mb-4">
+                  <Image
+                    src={
+                      fotoBase64
+                        ? "/profile.png"
+                        : `data:image/jpeg;base64,${fotoBase64}`
+                    }
+                    width={100}
+                    height={100}
+                    alt="Anggota Foto"
+                    className="rounded-full border-2 border-gray-300"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-6 w-full">
+                  <div className="flex flex-col">
+                    <p className="font-semibold text-gray-700 text-sm">
+                      Nama Lengkap:
+                    </p>
+                    <p className="text-base text-gray-900">
+                      {currentItem?.namaLengkap || "-"}
+                    </p>
+                    <p className="font-semibold text-gray-700 text-sm mt-4">
+                      Cabang:
+                    </p>
+                    <p className="text-base text-gray-900">
+                      {currentItem?.cabang || "-"}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col">
+                    <p className="font-semibold text-gray-700 text-sm">NPA:</p>
+                    <p className="text-base text-gray-900">
+                      {currentItem?.npaPgri || "-"}
+                    </p>
+                    <p className="font-semibold text-gray-700 text-sm mt-4">
+                      Unit Kerja:
+                    </p>
+                    <p className="text-base text-gray-900">
+                      {currentItem?.unitKerja || "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 mt-4">
+                <div>
+                  <Button
+                    className="w-full bg-teal-700 hover:bg-teal-500"
+                    onClick={handlePindahCabangUnit}
+                  >
+                    Pindah Cabang dan Unit Kerja
+                  </Button>
+                </div>
+                <div>
+                  <Button
+                    className="w-full bg-teal-700 hover:bg-teal-500"
+                    onClick={handlePopupKeluar}
+                  >
+                    Keluar Anggota
+                  </Button>
+
+                  {popupVisibleKeluar && (
+                    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+                      <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
+                        <h2 className="text-lg font-semibold text-gray-800">
+                          Apakah Anda yakin?
+                        </h2>
+                        <p className="text-gray-600 mt-2 mb-4">
+                          Apakah Anda yakin akan menghapus anggota ini?
+                        </p>
+                        <div className="flex justify-center gap-4">
+                          <button
+                            onClick={handleCancelKeluar}
+                            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                          >
+                            Batal
+                          </button>
+                          <button
+                            onClick={handleKeluarAnggota}
+                            className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                          >
+                            Ya, Saya Yakin
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <Button
+                    className="w-full bg-teal-700 hover:bg-teal-500"
+                    onClick={handlePopup}
+                  >
+                    Pensiun
+                  </Button>
+                  {popupVisible && (
+                    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+                      <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
+                        <h2 className="text-lg font-semibold text-gray-800">
+                          Apakah Anda yakin ?
+                        </h2>
+                        <p className="text-gray-600 mt-2 mb-4">
+                          Apakah Anda yakin untuk mengubah anggota menjadi
+                          pensiun?
+                        </p>
+                        <div className="flex justify-center gap-4">
+                          <button
+                            onClick={handleCancelKeluar}
+                            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                          >
+                            Batal
+                          </button>
+                          <button
+                            onClick={handlePensiunAnggota}
+                            className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                          >
+                            Ya, Saya Yakin
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-
-            <Modal
-              isOpen={isModalOpen}
-              onRequestClose={closeModal}
-              contentLabel="Mutation Actions"
-              className="fixed inset-0 flex items-center justify-center p-4"
-              overlayClassName="fixed inset-0 bg-black bg-opacity-50"
-            >
-              <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold">Mutasi Anggota</h2>
-                  <button
-                    className="text-2xl font-bold text-gray-700 hover:text-red-500 focus:outline-none"
-                    onClick={closeModal}
-                  >
-                    x
-                  </button>
-                </div>
-                <div className="flex flex-col items-center gap-2">
-                  <div className="w-full flex justify-center mb-2">
-                    <Image
-                      src={
-                        fotoBase64
-                          ? "/profile.png"
-                          : `data:image/jpeg;base64,${fotoBase64}`
-                      }
-                      width={80}
-                      height={80}
-                      alt="Anggota Foto"
-                      className="rounded-full"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 justify-around">
-                    <div className="flex flex-col text-left">
-                      <p className="font-medium text-gray-600 justify-start ">
-                        Nama Lengkap:
-                      </p>
-                      <p className="text-sm">{currentItem?.namaLengkap || ""}</p>
-                      <p className="font-medium text-gray-600 mt-3">Cabang:</p>
-                      <p className="text-sm">{currentItem?.cabang || ""}</p>
-                    </div>
-
-                    <div className="flex flex-col text-left ">
-                      <p className="font-medium text-gray-600">NPA:</p>
-                      <p className=" text-sm">{currentItem?.npaPgri || ""}</p>
-                      <p className="font-medium text-gray-600 text-left mt-3">
-                        Unit Kerja:
-                      </p>
-                      <p className="ml-0 text-sm">
-                        {currentItem?.unitKerja || ""}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-2 mt-4">
-                  <div>
-                    <Button
-                      className="w-full bg-teal-700 hover:bg-teal-500"
-                      onClick={handlePindahCabangUnit}
-                    >
-                      Pindah Cabang dan Unit Kerja
-                    </Button>
-                  </div>
-                  <div>
-                    <Button
-                      className="w-full bg-teal-700 hover:bg-teal-500"
-                      onClick={handlePopupKeluar}
-                    >
-                      Keluar Anggota
-                    </Button>
-
-                    {popupVisibleKeluar && (
-                      <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-                        <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
-                          <h2 className="text-lg font-semibold text-gray-800">
-                            Apakah Anda yakin?
-                          </h2>
-                          <p className="text-gray-600 mt-2 mb-4">
-                            Apakah Anda yakin akan menghapus anggota ini?
-                          </p>
-                          <div className="flex justify-center gap-4">
-                            <button
-                              onClick={handleCancelKeluar}
-                              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
-                            >
-                              Batal
-                            </button>
-                            <button
-                              onClick={handleKeluarAnggota}
-                              className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
-                            >
-                              Ya, Saya Yakin
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <Button
-                      className="w-full bg-teal-700 hover:bg-teal-500"
-                      onClick={handlePopup}
-                    >
-                      Pensiun
-                    </Button>
-                    {popupVisible && (
-                      <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-                        <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
-                          <h2 className="text-lg font-semibold text-gray-800">
-                            Apakah Anda yakin ?
-                          </h2>
-                          <p className="text-gray-600 mt-2 mb-4">
-                            Apakah Anda yakin untuk mengubah anggota menjadi
-                            pensiun?
-                          </p>
-                          <div className="flex justify-center gap-4">
-                            <button
-                              onClick={handleCancelKeluar}
-                              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
-                            >
-                              Batal
-                            </button>
-                            <button
-                              onClick={handlePensiunAnggota}
-                              className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
-                            >
-                              Ya, Saya Yakin
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Modal>
-          </div>
+          </Modal>
         </div>
       </div>
     </div>
