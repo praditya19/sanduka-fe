@@ -489,9 +489,11 @@ const Page = () => {
                         No HP
                       </th>
                       <th className="p-2 md:p-3 border ">Email</th>
-                      <th className="p-2 md:p-3 border hidden md:table-cell">
-                        Password
-                      </th>
+                      {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                        <th className="p-2 md:p-3 border hidden md:table-cell">
+                          Password
+                        </th>
+                      )}
                       <th className="p-2 border text-center">Action</th>
                     </tr>
                   </thead>
@@ -519,18 +521,23 @@ const Page = () => {
                               <td className="p-2 md:p-3 border text-center">
                                 {item.email}
                               </td>
-                              <td className="p-2 md:p-3 border hidden md:table-cell text-center">
-                                <span
-                                  className="text-gray-800 font-medium cursor-pointer hover:text-blue-500 transition duration-300"
-                                  onClick={() => setShowPassword(!showPassword)}
-                                >
-                                  {showPassword
-                                    ? item.passwordNew
+                              {sessionStorage.getItem("role") ===
+                                "SUPER ADMIN" && (
+                                <td className="p-2 md:p-3 border hidden md:table-cell text-center">
+                                  <span
+                                    className="text-gray-800 font-medium cursor-pointer hover:text-blue-500 transition duration-300"
+                                    onClick={() =>
+                                      setShowPassword(!showPassword)
+                                    }
+                                  >
+                                    {showPassword
                                       ? item.passwordNew
-                                      : "-"
-                                    : "*****"}
-                                </span>
-                              </td>
+                                        ? item.passwordNew
+                                        : "-"
+                                      : "*****"}
+                                  </span>
+                                </td>
+                              )}
                               <td className="p-2 border text-center">
                                 <div className="flex space-x-2 justify-center">
                                   {!isMobile ? (
@@ -592,19 +599,22 @@ const Page = () => {
                                       <p>
                                         <strong>Nomor HP:</strong> {item.noHp}
                                       </p>
-                                      <p>
-                                        <strong>Password:</strong>{" "}
-                                        <span
-                                          className="cursor-pointer text-blue-500 hover:text-blue-700 transition duration-300"
-                                          onClick={() =>
-                                            setShowPassword(!showPassword)
-                                          }
-                                        >
-                                          {showPassword
-                                            ? item.passwordNew || "-"
-                                            : "*****"}
-                                        </span>
-                                      </p>
+                                      {sessionStorage.getItem("role") ===
+                                        "SUPER ADMIN" && (
+                                        <p>
+                                          <strong>Password:</strong>{" "}
+                                          <span
+                                            className="cursor-pointer text-blue-500 hover:text-blue-700 transition duration-300"
+                                            onClick={() =>
+                                              setShowPassword(!showPassword)
+                                            }
+                                          >
+                                            {showPassword
+                                              ? item.passwordNew || "-"
+                                              : "*****"}
+                                          </span>
+                                        </p>
+                                      )}
 
                                       <div className="flex flex-col space-y-2 mt-4">
                                         <strong className="text-lg font-semibold">
