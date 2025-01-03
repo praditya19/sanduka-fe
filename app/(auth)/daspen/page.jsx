@@ -90,7 +90,7 @@ const Page = () => {
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-      <div className="bg-white p-5 rounded-md w-5/12 mt-4 sm:mt-0 max-h-[88vh] overflow-y-auto">
+      <div className="bg-white p-5 rounded-md w-11/12 sm:w-8/12 md:w-7/12 lg:w-5/12 mt-16 sm:mt-0 max-h-[89vh] overflow-y-auto">
         <h2 className="text-xl font-bold">Data Daspen</h2>
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
