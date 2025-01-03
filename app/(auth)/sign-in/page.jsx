@@ -36,127 +36,113 @@ function SignIn() {
 
         // Login USER menggunakan NPA dan tanggal lahir
         if (/^\d{11}$/.test(email)) {
-          // Login USER menggunakan NPA dan tanggal lahir
-          const dateRegex = /^\d{2}\d{2}\d{4}$/; // Format DDMMYYYY
-          if (!dateRegex.test(password)) {
-              throw new Error("Tanggal lahir harus dalam format DDMMYYYY.");
-          }
-      
-          const loginData = {
-              npaPgri: email,
-              tanggalLahir: password,
-          };
-          response = await GlobalApi.login(loginData);
-      
-          // Simpan data ke sessionStorage
-          setToken(response.token);
-          sessionStorage.setItem("userId", response.id);
-          sessionStorage.setItem("cabang", response.cabang);
-          sessionStorage.setItem("nama", response.namaLengkap);
-          sessionStorage.setItem("role", response.role);
-          sessionStorage.setItem("npa", response.npaPgri);
-      
-          // Cek NPA untuk mendapatkan ID dan Unit Kerja
-          const npaResponse = await GlobalApi.cekNpa(response.npaPgri);
-          if (npaResponse && npaResponse.id) {
-              sessionStorage.setItem("unitKerja", npaResponse.unitKerja || "Tidak diketahui");
-          } else {
-              throw new Error("Data NPA tidak valid atau ID tidak ditemukan.");
-          }
-      
-      } else if (email.includes("@gmail.com")) {
-          // Login ADMIN menggunakan email dan password
-          if (password.length < 6) {
-              throw new Error("Password harus minimal 6 karakter.");
-          }
-      
-          const loginData = { email, password };
-          response = await GlobalApi.loginAdmin(loginData);
-      
-          // Simpan data ke sessionStorage
-          setToken(response.token);
-          sessionStorage.setItem("userId", response.id);
-          sessionStorage.setItem("cabang", response.cabang);
-          sessionStorage.setItem("nama", response.namaLengkap);
-          sessionStorage.setItem("role", response.role);
-          sessionStorage.setItem("npa", response.npaPgri);
-      
-          // Cek NPA untuk mendapatkan ID dan Unit Kerja
-          const npaResponse = await GlobalApi.cekNpa(response.npaPgri);
-          if (npaResponse && npaResponse.id) {
-              sessionStorage.setItem("unitKerja", npaResponse.unitKerja || "Tidak diketahui");
-          } else {
-              throw new Error("Data NPA tidak valid atau ID tidak ditemukan.");
-          }
-      } else {
-          throw new Error(
-              "Masukkan Email yang valid (contoh: user@gmail.com) atau NPA (11 digit angka)."
-          );
-      }
+            // Login USER menggunakan NPA dan tanggal lahir
+            const dateRegex = /^\d{2}\d{2}\d{4}$/; // Format DDMMYYYY
+            if (!dateRegex.test(password)) {
+                throw new Error("Tanggal lahir harus dalam format DDMMYYYY.");
+            }
 
-        // Menampilkan notifikasi sesuai role
+            const loginData = {
+                npaPgri: email,
+                tanggalLahir: password,
+            };
+            response = await GlobalApi.login(loginData);
+
+            // Simpan data ke sessionStorage
+            setToken(response.token);
+            sessionStorage.setItem("userId", response.id);
+            sessionStorage.setItem("cabang", response.cabang);
+            sessionStorage.setItem("nama", response.namaLengkap);
+            sessionStorage.setItem("role", response.role);
+          sessionStorage.setItem("npa", response.npaPgri);
+          sessionStorage.setItem("unitKerja", response.unitKerja || "Tidak diketahui");
+
+        } else if (email.includes("@gmail.com")) {
+            // Login ADMIN menggunakan email dan password
+            if (password.length < 6) {
+                throw new Error("Password harus minimal 6 karakter.");
+            }
+
+            const loginData = { email, password };
+            response = await GlobalApi.loginAdmin(loginData);
+
+            // Simpan data ke sessionStorage
+            setToken(response.token);
+            sessionStorage.setItem("userId", response.id);
+            sessionStorage.setItem("cabang", response.cabang);
+            sessionStorage.setItem("nama", response.namaLengkap);
+            sessionStorage.setItem("role", response.role);
+            sessionStorage.setItem("npa", response.npaPgri);
+            sessionStorage.setItem("unitKerja", response.unitKerja);
+
+        } else {
+            throw new Error(
+                "Masukkan Email yang valid (contoh: user@gmail.com) atau NPA (11 digit angka)."
+            );
+        }
+
         toast.success(
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                width: "150px",
-                height: "150px",
-                color: "#06D001",
-                marginBottom: "16px",
-              }}
-              fill="currentColor"
-              viewBox="0 0 24 24"
+            <div
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textAlign: "center",
+                }}
             >
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-            </svg>
-            <h3
-              style={{
-                fontSize: "2rem",
-                display: "block",
-                marginBottom: "28px",
-              }}
-            >
-              Selamat Datang Di Sanduka
-            </h3>
-            <span style={{ fontSize: "1.75rem" }}>{response.namaLengkap}</span>
-            <span
-              style={{
-                fontSize: "1.5rem",
-                color: "#333",
-                marginTop: "8px",
-              }}
-            >
-              Cabang: {response.cabang}
-            </span>
-          </div>,
-          {
-            icon: null,
-            duration: 2000,
-            style: {
-              marginTop: "12%",
-              fontSize: "1.75rem",
-              padding: "10px",
-              width: "80%",
-              maxWidth: "450px",
-              height: "50%",
-              maxHeight: "400px",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 9999,
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            },
-          }
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{
+                        width: "150px",
+                        height: "150px",
+                        color: "#06D001",
+                        marginBottom: "16px",
+                    }}
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+                </svg>
+                <h3
+                    style={{
+                        fontSize: "2rem",
+                        display: "block",
+                        marginBottom: "28px",
+                    }}
+                >
+                    Selamat Datang Di Sanduka
+                </h3>
+                <span style={{ fontSize: "1.75rem" }}>{response.namaLengkap}</span>
+                <span
+                    style={{
+                        fontSize: "1.5rem",
+                        color: "#333",
+                        marginTop: "8px",
+                    }}
+                >
+                    Cabang: {response.cabang}
+                </span>
+            </div>,
+            {
+                icon: null,
+                duration: 2000,
+                style: {
+                    marginTop: "12%",
+                    fontSize: "1.75rem",
+                    padding: "10px",
+                    width: "80%",
+                    maxWidth: "450px",
+                    height: "50%",
+                    maxHeight: "400px",
+                    transform: "translate(-50%, -50%)",
+                    textAlign: "center",
+                    zIndex: 9999,
+                    backgroundColor: "#fff",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                },
+            }
         );
 
         setTimeout(() => {
@@ -165,64 +151,64 @@ function SignIn() {
     } catch (error) {
         console.error("Error:", error);
         toast.error(
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                width: "150px",
-                height: "150px",
-                color: "red",
-                marginBottom: "16px",
-              }}
-              fill="currentColor"
-              viewBox="0 0 24 24"
+            <div
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textAlign: "center",
+                }}
             >
-              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 1 1-1.414 0.414z" />
-            </svg>
-            <h3
-              style={{
-                fontSize: "1.75rem",
-                display: "block",
-                marginBottom: "8px",
-              }}
-            >
-              Terjadi kesalahan saat login
-            </h3>
-          </div>,
-          {
-            icon: null,
-            duration: 2000,
-            style: {
-              marginTop: "12%",
-              fontSize: "1.75rem",
-              padding: "10px",
-              width: "80%",
-              maxWidth: "450px",
-              height: "50%",
-              maxHeight: "400px",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 9999,
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            },
-          }
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{
+                        width: "150px",
+                        height: "150px",
+                        color: "red",
+                        marginBottom: "16px",
+                    }}
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+                    <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 1 1-1.414 0.414z" />
+                </svg>
+                <h3
+                    style={{
+                        fontSize: "1.75rem",
+                        display: "block",
+                        marginBottom: "8px",
+                    }}
+                >
+                    Terjadi kesalahan saat login
+                </h3>
+            </div>,
+            {
+                icon: null,
+                duration: 2000,
+                style: {
+                    marginTop: "12%",
+                    fontSize: "1.75rem",
+                    padding: "10px",
+                    width: "80%",
+                    maxWidth: "450px",
+                    height: "50%",
+                    maxHeight: "400px",
+                    transform: "translate(-50%, -50%)",
+                    textAlign: "center",
+                    zIndex: 9999,
+                    backgroundColor: "#fff",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                },
+            }
         );
     } finally {
         setLoader(false);
     }
-};
-
+  };
+  
   // const onSignIn = async () => {
   //   setLoader(true);
   //   setError("");

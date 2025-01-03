@@ -294,51 +294,6 @@ const HeaderHome = () => {
           </div>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      <div className={`${isOpen ? "block" : "hidden"} md:hidden`}>
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          <ul className="flex flex-col space-y-1">
-            <li className="relative">
-              <button
-                onClick={handleNotificationClick}
-                className="relative w-full text-left"
-              >
-                <FontAwesomeIcon
-                  icon={faBell}
-                  className="w-5 h-5 text-gray-700"
-                />
-                {notificationCount > 0 && (
-                  <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
-                    {notificationCount}
-                  </span>
-                )}
-              </button>
-            </li>
-            {role === "ADMIN" || role === "SUPER ADMIN" ? (
-              <li>
-                <Link href="/anggota/pencarian-anggota">
-                  <FontAwesomeIcon
-                    icon={faSearch}
-                    className="w-5 h-5 text-gray-700"
-                  />
-                </Link>
-              </li>
-            ) : null}
-            <li className="relative flex justify-end">
-              <Link href="/update-profile" className="text-blue-500">
-                <Image
-                  src={`data:image/jpeg;base64,${profileImageUrl}`}
-                  alt="Profile"
-                  width={30}
-                  height={30}
-                  className="w-10 h-10 inline-block rounded-full cursor-pointer"
-                />
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
     </nav>
   );
 };
