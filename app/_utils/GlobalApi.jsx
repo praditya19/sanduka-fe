@@ -8,6 +8,7 @@ const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
 });
+
 // Konversi Gambar Dalam Format Base64
 const base64ToBlob = (base64, mime) => {
   const byteChars = atob(base64);
@@ -53,9 +54,13 @@ const registerUser = async (userData) => {
 const loginAdmin = async (loginData) => {
   try {
     console.log("Login Data:", loginData);
-    const response = await axiosClient.post('/api/auth/login-email-password', loginData, {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const response = await axiosClient.post(
+      "/api/auth/login-email-password",
+      loginData,
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
     console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
@@ -75,7 +80,7 @@ const login = async (loginData) => {
         },
       }
     );
-    
+
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -124,10 +129,13 @@ const getAllAnggota = async (
     if (cabang) params.append("cabang", encodeURIComponent(cabang));
     if (unitKerja) params.append("unitKerja", encodeURIComponent(unitKerja));
     if (npaPgri) params.append("npaPgri", encodeURIComponent(npaPgri));
-    if (namaLengkap) params.append("namaLengkap", encodeURIComponent(namaLengkap));
+    if (namaLengkap)
+      params.append("namaLengkap", encodeURIComponent(namaLengkap));
 
     // Melakukan request API
-    const response = await axiosClient.get(`/api/auth/users?${params.toString()}`);
+    const response = await axiosClient.get(
+      `/api/auth/users?${params.toString()}`
+    );
 
     // Memproses dan mengembalikan hasil respons API
     return {
@@ -245,13 +253,13 @@ const getUnverifiedUsers = (
   size = 10,
   cabang = null,
   unitKerja = null,
-  nama = null
+  keyword = null
 ) => {
   const params = new URLSearchParams({ page, size });
 
   if (cabang) params.append("cabang", cabang);
   if (unitKerja) params.append("unitKerja", unitKerja);
-  if (nama) params.append("nama", nama);
+  if (keyword) params.append("keyword", keyword);
 
   return axiosClient.get(`/api/auth/unverified-users?${params.toString()}`);
 };
@@ -1486,6 +1494,20 @@ const getDetailKeuangan = async ({
   }
 };
 
+const getUnverifiedUsersCountByCabang = async (cabang = "") => {
+  try {
+    const params = {
+      ...(cabang && { cabang: encodeURIComponent(cabang) }),
+    };
+    const response = await axiosClient.get("/api/auth/unverified-users-count", {
+      params,
+    });
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1592,4 +1614,5 @@ export default {
   deleteRanting,
   getNamaranting,
   getDetailKeuangan,
+  getUnverifiedUsersCountByCabang,
 };
