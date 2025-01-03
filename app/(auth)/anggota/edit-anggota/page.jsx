@@ -397,7 +397,7 @@ const Page = () => {
 
       toast.error(`Field ${firstEmptyField.name} wajib diisi!`, {
         position: "top-right",
-        autoClose: 3000,
+        autoClose: 2000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
@@ -510,7 +510,7 @@ const Page = () => {
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 2000,
           style: {
             marginTop: "12%",
             fontSize: "1.75rem",
@@ -531,7 +531,7 @@ const Page = () => {
       sessionStorage.removeItem("anggotaId");
       setTimeout(() => {
         router.push("/anggota/data-anggota");
-      }, 4000);
+      }, 3000);
     } catch (error) {
       console.error("Gagal mengupdate data:", error);
       toast.error(
@@ -570,7 +570,7 @@ const Page = () => {
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 2000,
           style: {
             marginTop: "12%",
             fontSize: "1.75rem",
@@ -631,7 +631,7 @@ const Page = () => {
           </div>,
           {
             icon: null,
-            duration: 4000,
+            duration: 2000,
             style: {
               marginTop: "12%",
               fontSize: "1.75rem",
@@ -684,7 +684,7 @@ const Page = () => {
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 2000,
           style: {
             marginTop: "16%",
             fontSize: "1.75rem",
@@ -741,7 +741,7 @@ const Page = () => {
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 2000,
           style: {
             marginTop: "12%",
             fontSize: "1.75rem",
@@ -1003,7 +1003,7 @@ const Page = () => {
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 2000,
           style: {
             marginTop: "12%",
             fontSize: "1.75rem",
@@ -2651,11 +2651,6 @@ const Page = () => {
                           id: "mulaiJadiAnggotaPgri",
                         },
                         {
-                          field: valueKategoriDaspen ?? "",
-                          name: "Kategori Daspen",
-                          id: "kategoriDaspen",
-                        },
-                        {
                           field: valueGolonganJabatan ?? "",
                           name: "Golongan Jabatan",
                           id: "golonganJabatan",
@@ -2737,7 +2732,59 @@ const Page = () => {
                           element.focus();
                         }
                       } else {
-                        toast.success("Semua field sudah terisi!");
+                        toast.success(
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              textAlign: "center",
+                            }}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              style={{
+                                width: "150px",
+                                height: "150px",
+                                color: "#06D001",
+                                marginBottom: "16px",
+                              }}
+                              fill="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+                            </svg>
+                            <h3
+                              style={{
+                                fontSize: "2rem",
+                                display: "block",
+                                marginBottom: "28px",
+                              }}
+                            >
+                              Semua field sudah terisi!
+                            </h3>
+                          </div>,
+                          {
+                            icon: null,
+                            duration: 2000,
+                            style: {
+                              marginTop: "12%",
+                              fontSize: "1.75rem",
+                              padding: "10px",
+                              width: "80%",
+                              maxWidth: "450px",
+                              height: "50%",
+                              maxHeight: "400px",
+                              transform: "translate(-50%, -50%)",
+                              textAlign: "center",
+                              zIndex: 9999,
+                              backgroundColor: "#fff",
+                              borderRadius: "8px",
+                              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                            },
+                          }
+                        );
                       }
                     }}
                     className="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
