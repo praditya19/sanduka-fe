@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -46,6 +46,30 @@ const Page = () => {
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [cabang, setCabang] = useState([]);
+  const [editableCabang, setEditableCabang] = useState("");
+  const [editablePassword, setEditablePassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [query, setQuery] = useState("");
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDropdown]);
 
   const fetchAdminData = async (
     page = currentPage,
@@ -61,6 +85,34 @@ const Page = () => {
     } catch (error) {
       console.error("Error fetching admin data:", error);
     }
+  };
+
+  useEffect(() => {
+    const fetchCabang = async () => {
+      try {
+        const response = await GlobalApi.getCabang();
+
+        if (Array.isArray(response.data)) {
+          setCabang(response.data);
+        } else {
+          console.error("Data fetched is not an array:", response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching cabang:", error);
+      }
+    };
+    fetchCabang();
+  }, []);
+
+  const filteredOptions = query
+    ? cabang.filter((item) =>
+      item.kecamatan.toLowerCase().includes(query.toLowerCase())
+    )
+    : cabang;
+
+  const handleCabangChange = (item) => {
+    setSelectedCabang(item.kecamatan);
+    setEditableCabang(item.kecamatan);
   };
 
   useEffect(() => {
@@ -210,12 +262,24 @@ const Page = () => {
       const data = await getAnggotaByNPA(npa);
       if (data) {
         setAdminData(data);
+        setEditableCabang(data.cabang);
+        setSelectedCabang(data.cabang);
+        setEditablePassword("");
+        setPasswordError("");
       } else {
         setAdminData(null);
+        setEditableCabang("");
+        setSelectedCabang("");
+        setEditablePassword("");
+        setPasswordError("");
       }
     } catch (error) {
       console.error("Error fetching npa:", error);
       setAdminData(null);
+      setEditableCabang("");
+      setSelectedCabang("");
+      setEditablePassword("");
+      setPasswordError("");
     }
   };
 
@@ -237,15 +301,21 @@ const Page = () => {
   const handleAddUser = async (e) => {
     e.preventDefault();
 
+    if (!editablePassword.trim()) {
+      setPasswordError("Password harus diisi");
+      return;
+    }
+
     const updatedAdminData = {
       daerah: "",
-      cabang: adminData.cabang,
+      cabang: editableCabang,
       nama: adminData.namaLengkap,
       npapgri: adminData.npaPgri,
       jabatan: adminData.jabatan,
       nohp: adminData.noHp,
       email: adminData.email,
-      password: adminData.password,
+      password: editablePassword,
+      passwordNew: editablePassword,
       role: role,
       foto: adminData.foto,
     };
@@ -392,9 +462,8 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
             <nav className="ml-6 mt-12">
@@ -523,36 +592,36 @@ const Page = () => {
                               </td>
                               {sessionStorage.getItem("role") ===
                                 "SUPER ADMIN" && (
-                                <td className="p-2 md:p-3 border hidden md:table-cell text-center">
-                                  <span
-                                    className="text-gray-800 font-medium cursor-pointer hover:text-blue-500 transition duration-300"
-                                    onClick={() =>
-                                      setShowPassword(!showPassword)
-                                    }
-                                  >
-                                    {showPassword
-                                      ? item.passwordNew
+                                  <td className="p-2 md:p-3 border hidden md:table-cell text-center">
+                                    <span
+                                      className="text-gray-800 font-medium cursor-pointer hover:text-blue-500 transition duration-300"
+                                      onClick={() =>
+                                        setShowPassword(!showPassword)
+                                      }
+                                    >
+                                      {showPassword
                                         ? item.passwordNew
-                                        : "-"
-                                      : "*****"}
-                                  </span>
-                                </td>
-                              )}
+                                          ? item.passwordNew
+                                          : "-"
+                                        : "*****"}
+                                    </span>
+                                  </td>
+                                )}
                               <td className="p-2 border text-center">
                                 <div className="flex space-x-2 justify-center">
                                   {!isMobile ? (
                                     <>
                                       {sessionStorage.getItem("role") ===
                                         "SUPER ADMIN" && (
-                                        <Button
-                                          className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
-                                          onClick={() =>
-                                            handleDeleteAdminClick(item.id)
-                                          }
-                                        >
-                                          <FontAwesomeIcon icon={faTrash} />
-                                        </Button>
-                                      )}
+                                          <Button
+                                            className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
+                                            onClick={() =>
+                                              handleDeleteAdminClick(item.id)
+                                            }
+                                          >
+                                            <FontAwesomeIcon icon={faTrash} />
+                                          </Button>
+                                        )}
                                       <Link
                                         href={`https://wa.me/${phoneNumberForLink(
                                           item.noHp
@@ -601,20 +670,20 @@ const Page = () => {
                                       </p>
                                       {sessionStorage.getItem("role") ===
                                         "SUPER ADMIN" && (
-                                        <p>
-                                          <strong>Password:</strong>{" "}
-                                          <span
-                                            className="cursor-pointer text-blue-500 hover:text-blue-700 transition duration-300"
-                                            onClick={() =>
-                                              setShowPassword(!showPassword)
-                                            }
-                                          >
-                                            {showPassword
-                                              ? item.passwordNew || "-"
-                                              : "*****"}
-                                          </span>
-                                        </p>
-                                      )}
+                                          <p>
+                                            <strong>Password:</strong>{" "}
+                                            <span
+                                              className="cursor-pointer text-blue-500 hover:text-blue-700 transition duration-300"
+                                              onClick={() =>
+                                                setShowPassword(!showPassword)
+                                              }
+                                            >
+                                              {showPassword
+                                                ? item.passwordNew || "-"
+                                                : "*****"}
+                                            </span>
+                                          </p>
+                                        )}
 
                                       <div className="flex flex-col space-y-2 mt-4">
                                         <strong className="text-lg font-semibold">
@@ -672,9 +741,8 @@ const Page = () => {
                 <div className="flex flex-wrap justify-center md:justify-end space-x-2">
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
-                    className={`px-3 py-1 border text-sm rounded ${
-                      currentPage === 0 ? "bg-gray-300" : "bg-white"
-                    }`}
+                    className={`px-3 py-1 border text-sm rounded ${currentPage === 0 ? "bg-gray-300" : "bg-white"
+                      }`}
                     disabled={currentPage === 0}
                   >
                     Previous
@@ -690,11 +758,10 @@ const Page = () => {
                         <button
                           key={index}
                           onClick={() => handlePageChange(index)}
-                          className={`px-3 py-1 border text-sm rounded ${
-                            currentPage === index
-                              ? "bg-blue-500 text-white"
-                              : "bg-white"
-                          }`}
+                          className={`px-3 py-1 border text-sm rounded ${currentPage === index
+                            ? "bg-blue-500 text-white"
+                            : "bg-white"
+                            }`}
                         >
                           {index + 1}
                         </button>
@@ -715,11 +782,10 @@ const Page = () => {
 
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
-                    className={`px-3 py-1 border text-sm rounded ${
-                      currentPage === totalPages - 1
-                        ? "bg-gray-300"
-                        : "bg-white"
-                    }`}
+                    className={`px-3 py-1 border text-sm rounded ${currentPage === totalPages - 1
+                      ? "bg-gray-300"
+                      : "bg-white"
+                      }`}
                     disabled={currentPage === totalPages - 1}
                   >
                     Next
@@ -864,6 +930,87 @@ const Page = () => {
                                   readOnly
                                   className="border rounded w-full p-2 text-black bg-gray-200"
                                 />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
+                                <Label
+                                  htmlFor="cabang"
+                                  className="block font-semibold md:w-1/3"
+                                >
+                                  Cabang:
+                                </Label>
+                                <div className="w-full">
+                                  <div className="relative" ref={dropdownRef}>
+                                    <Input
+                                      type="text"
+                                      className="border-teal-500 rounded-lg p-2 bg-white shadow-sm w-full"
+                                      placeholder="Pilih Cabang"
+                                      value={selectedCabang}
+                                      readOnly
+                                      onFocus={() => {
+                                        setQuery("");
+                                        setShowDropdown(true);
+                                      }}
+                                    />
+                                    {showDropdown && (
+                                      <div className="absolute z-10 w-full mt-1">
+                                        <Input
+                                          type="text"
+                                          className="border rounded-lg p-2 w-full"
+                                          placeholder="Cari Cabang..."
+                                          value={query}
+                                          onChange={(e) => setQuery(e.target.value)}
+                                          autoFocus
+                                        />
+                                        <ul className="mt-1 max-h-48 overflow-y-auto bg-white border rounded-lg shadow-sm">
+                                          {filteredOptions.map((item) => (
+                                            <li
+                                              key={item.idKecamatan}
+                                              className="p-2 cursor-pointer hover:bg-gray-100"
+                                              onClick={() => {
+                                                handleCabangChange(item);
+                                                setShowDropdown(false);
+                                              }}
+                                            >
+                                              {item.kecamatan}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
+                                <Label
+                                  htmlFor="password"
+                                  className="block font-semibold md:w-1/3"
+                                >
+                                  Password:
+                                </Label>
+                                <div className="w-full">
+                                  <Input
+                                    type="text"
+                                    id="password"
+                                    value={editablePassword}
+                                    onChange={(e) => {
+                                      setEditablePassword(e.target.value);
+                                      setPasswordError("");
+                                    }}
+                                    className={`border rounded w-full p-2 text-black bg-white ${passwordError ? 'border-red-500' : ''
+                                      }`}
+                                    placeholder="Masukkan password"
+                                    required
+                                  />
+                                  {passwordError && (
+                                    <span className="text-red-500 text-sm mt-1">
+                                      {passwordError}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
 
