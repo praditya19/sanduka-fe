@@ -151,19 +151,19 @@ const getAllAnggota = async (
 
 const getAdminById = async (adminId) => {
   try {
-      const response = await axiosClient.get(`/api/register-admin/${adminId}`);
-      const data = response.data;
-      
-      // If the foto field exists and contains base64 data, clean it up
-      if (data.foto) {
-          // Remove any URL encoding and ensure it's a clean base64 string
-          data.foto = data.foto.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
-      }
-      
-      return data;
+    const response = await axiosClient.get(`/api/register-admin/${adminId}`);
+    const data = response.data;
+
+    // If the foto field exists and contains base64 data, clean it up
+    if (data.foto) {
+      // Remove any URL encoding and ensure it's a clean base64 string
+      data.foto = data.foto.replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
+    }
+
+    return data;
   } catch (error) {
-      console.error("Error get admin:", error);
-      throw error;
+    console.error("Error get admin:", error);
+    throw error;
   }
 };
 
@@ -402,7 +402,6 @@ const createAdmin = async (adminData) => {
 
     return response.data;
   } catch (error) {
-    console.error("Error creating admin:", error);
     throw error;
   }
 };
