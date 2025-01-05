@@ -63,11 +63,11 @@ const Page = () => {
     };
 
     if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showDropdown]);
 
@@ -106,8 +106,8 @@ const Page = () => {
 
   const filteredOptions = query
     ? cabang.filter((item) =>
-      item.kecamatan.toLowerCase().includes(query.toLowerCase())
-    )
+        item.kecamatan.toLowerCase().includes(query.toLowerCase())
+      )
     : cabang;
 
   const handleCabangChange = (item) => {
@@ -320,8 +320,6 @@ const Page = () => {
       foto: adminData.foto,
     };
 
-    console.log("Data yang akan terkirim:", updatedAdminData);
-
     try {
       const result = await GlobalApi.createAdmin(updatedAdminData);
       toast.success(
@@ -378,7 +376,6 @@ const Page = () => {
         window.location.reload();
       }, 3000);
     } catch (error) {
-      console.error("Error creating admin:", error);
       toast.error(
         <div
           style={{
@@ -410,7 +407,7 @@ const Page = () => {
               marginBottom: "8px",
             }}
           >
-            Gagal menjadikan admin.
+            {error.response.data}
           </h3>
         </div>,
         {
@@ -462,8 +459,9 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
             <nav className="ml-6 mt-12">
@@ -592,36 +590,36 @@ const Page = () => {
                               </td>
                               {sessionStorage.getItem("role") ===
                                 "SUPER ADMIN" && (
-                                  <td className="p-2 md:p-3 border hidden md:table-cell text-center">
-                                    <span
-                                      className="text-gray-800 font-medium cursor-pointer hover:text-blue-500 transition duration-300"
-                                      onClick={() =>
-                                        setShowPassword(!showPassword)
-                                      }
-                                    >
-                                      {showPassword
+                                <td className="p-2 md:p-3 border hidden md:table-cell text-center">
+                                  <span
+                                    className="text-gray-800 font-medium cursor-pointer hover:text-blue-500 transition duration-300"
+                                    onClick={() =>
+                                      setShowPassword(!showPassword)
+                                    }
+                                  >
+                                    {showPassword
+                                      ? item.passwordNew
                                         ? item.passwordNew
-                                          ? item.passwordNew
-                                          : "-"
-                                        : "*****"}
-                                    </span>
-                                  </td>
-                                )}
+                                        : "-"
+                                      : "*****"}
+                                  </span>
+                                </td>
+                              )}
                               <td className="p-2 border text-center">
                                 <div className="flex space-x-2 justify-center">
                                   {!isMobile ? (
                                     <>
                                       {sessionStorage.getItem("role") ===
                                         "SUPER ADMIN" && (
-                                          <Button
-                                            className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
-                                            onClick={() =>
-                                              handleDeleteAdminClick(item.id)
-                                            }
-                                          >
-                                            <FontAwesomeIcon icon={faTrash} />
-                                          </Button>
-                                        )}
+                                        <Button
+                                          className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
+                                          onClick={() =>
+                                            handleDeleteAdminClick(item.id)
+                                          }
+                                        >
+                                          <FontAwesomeIcon icon={faTrash} />
+                                        </Button>
+                                      )}
                                       <Link
                                         href={`https://wa.me/${phoneNumberForLink(
                                           item.noHp
@@ -670,20 +668,20 @@ const Page = () => {
                                       </p>
                                       {sessionStorage.getItem("role") ===
                                         "SUPER ADMIN" && (
-                                          <p>
-                                            <strong>Password:</strong>{" "}
-                                            <span
-                                              className="cursor-pointer text-blue-500 hover:text-blue-700 transition duration-300"
-                                              onClick={() =>
-                                                setShowPassword(!showPassword)
-                                              }
-                                            >
-                                              {showPassword
-                                                ? item.passwordNew || "-"
-                                                : "*****"}
-                                            </span>
-                                          </p>
-                                        )}
+                                        <p>
+                                          <strong>Password:</strong>{" "}
+                                          <span
+                                            className="cursor-pointer text-blue-500 hover:text-blue-700 transition duration-300"
+                                            onClick={() =>
+                                              setShowPassword(!showPassword)
+                                            }
+                                          >
+                                            {showPassword
+                                              ? item.passwordNew || "-"
+                                              : "*****"}
+                                          </span>
+                                        </p>
+                                      )}
 
                                       <div className="flex flex-col space-y-2 mt-4">
                                         <strong className="text-lg font-semibold">
@@ -741,8 +739,9 @@ const Page = () => {
                 <div className="flex flex-wrap justify-center md:justify-end space-x-2">
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
-                    className={`px-3 py-1 border text-sm rounded ${currentPage === 0 ? "bg-gray-300" : "bg-white"
-                      }`}
+                    className={`px-3 py-1 border text-sm rounded ${
+                      currentPage === 0 ? "bg-gray-300" : "bg-white"
+                    }`}
                     disabled={currentPage === 0}
                   >
                     Previous
@@ -758,10 +757,11 @@ const Page = () => {
                         <button
                           key={index}
                           onClick={() => handlePageChange(index)}
-                          className={`px-3 py-1 border text-sm rounded ${currentPage === index
-                            ? "bg-blue-500 text-white"
-                            : "bg-white"
-                            }`}
+                          className={`px-3 py-1 border text-sm rounded ${
+                            currentPage === index
+                              ? "bg-blue-500 text-white"
+                              : "bg-white"
+                          }`}
                         >
                           {index + 1}
                         </button>
@@ -782,10 +782,11 @@ const Page = () => {
 
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
-                    className={`px-3 py-1 border text-sm rounded ${currentPage === totalPages - 1
-                      ? "bg-gray-300"
-                      : "bg-white"
-                      }`}
+                    className={`px-3 py-1 border text-sm rounded ${
+                      currentPage === totalPages - 1
+                        ? "bg-gray-300"
+                        : "bg-white"
+                    }`}
                     disabled={currentPage === totalPages - 1}
                   >
                     Next
@@ -961,7 +962,9 @@ const Page = () => {
                                           className="border rounded-lg p-2 w-full"
                                           placeholder="Cari Cabang..."
                                           value={query}
-                                          onChange={(e) => setQuery(e.target.value)}
+                                          onChange={(e) =>
+                                            setQuery(e.target.value)
+                                          }
                                           autoFocus
                                         />
                                         <ul className="mt-1 max-h-48 overflow-y-auto bg-white border rounded-lg shadow-sm">
@@ -1000,8 +1003,9 @@ const Page = () => {
                                       setEditablePassword(e.target.value);
                                       setPasswordError("");
                                     }}
-                                    className={`border rounded w-full p-2 text-black bg-white ${passwordError ? 'border-red-500' : ''
-                                      }`}
+                                    className={`border rounded w-full p-2 text-black bg-white ${
+                                      passwordError ? "border-red-500" : ""
+                                    }`}
                                     placeholder="Masukkan password"
                                     required
                                   />
