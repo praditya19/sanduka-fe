@@ -39,10 +39,15 @@ import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import { useRouter } from "next/navigation";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import dynamic from "next/dynamic";
+const MapComponent = dynamic(
+  () => import("../../_components/MapComponent.jsx"),
+  {
+    ssr: false,
+  }
+);
 
 export default function IconGrid() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [statusSegeraCount, setStatusSegeraCount] = useState(0);
   const [loader, setLoader] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -57,6 +62,8 @@ export default function IconGrid() {
   const [role, setRole] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const dropdownRef = useRef(null);
+  const [latitude, setLatitude] = useState("");
+    const [longitude, setLongitude] = useState("");
   const icons = [
     { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
     {
@@ -282,7 +289,10 @@ export default function IconGrid() {
       try {
         const idToFetch = userId;
         const response = await GlobalApi.getUserById(idToFetch);
+        console.log("data:",response)
         setUserData(response);
+        setLatitude(response.latitude); // Set latitude
+        setLongitude(response.longitude); // Set longitude
       } catch (error) {
         console.error("Error saat mendapatkan data user:", error);
       }
@@ -772,6 +782,17 @@ export default function IconGrid() {
             <FontAwesomeIcon icon={faChevronRight} />
           </button>
         </div>
+
+        <div className="w-full col-span-2">
+                  <h2 className="text-2xl font-semibold text-gray-800">
+                    Maps Lokasi Rumah
+                  </h2>
+                  {latitude && longitude && (
+                    <div className="mt-8">
+                      <MapComponent latitude={latitude} longitude={longitude} />
+                    </div>
+                  )}
+                </div>
       </div>
 
       {isMobile && <FooterMobile />}

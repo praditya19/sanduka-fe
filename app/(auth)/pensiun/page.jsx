@@ -563,21 +563,6 @@ const Page = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <ClipLoader color="#3498db" size={50} />
-      </div>
-    );
-  }
-
   if (error) return <div>Error: {error}</div>;
 
   const toggleSidebar = () => {
@@ -789,184 +774,192 @@ const Page = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {currentItems
+                    {loading ? (
+                      <tr>
+                        <td colSpan="8" className="text-center py-4">
+                          <ClipLoader color="#3498db" size={50} />
+                        </td>
+                      </tr>
+                    ) : (
+                        currentItems
                       .filter(
-                        (pensiun) =>
-                          pensiun.keterangan !== "Pensiun" &&
-                          (selectedCabang === "" ||
-                            pensiun.cabang === selectedCabang)
-                      )
-                      .map((pensiun, index) => (
-                        <>
-                          <tr key={pensiun.id} className="border-t">
-                            <td className="py-2 px-3 text-center">
-                              {startNumber + index + 1}
-                              <Button
-                                className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
-                                onClick={() => handleExpand(index)}
-                              >
-                                {expandedIndex === index ? (
-                                  <FaMinusCircle />
-                                ) : (
-                                  <FaPlusCircle />
-                                )}
-                              </Button>
-                            </td>
-                            <td className="py-2 px-3 text-center">
-                              <img
-                                src="/profile.png"
-                                alt="Foto"
-                                className="w-10 h-10 rounded-full"
-                              />
-                            </td>
-                            <td className="py-2 px-3 text-center hidden lg:table-cell">
-                              {formatDate(pensiun.prediksiPensiun)}
-                            </td>
-                            <td className="py-2 px-3 text-center">
-                              <div>{pensiun.namaLengkap}</div>
-                              <div>{pensiun.npa}</div>
-                              <div>
-                                {pensiun.tempatLahir},{" "}
-                                {formatDate(pensiun.tanggalLahir)}
-                              </div>
-                            </td>
-                            <td className="py-2 px-3 text-center hidden lg:table-cell">
-                              <div>{pensiun.jabatan}</div>
-                              <div>{pensiun.unitKerja}</div>
-                              <div>Usia: {pensiun.usia}</div>
-                            </td>
-                            <td className="py-2 px-3 text-center hidden lg:table-cell">
-                              {pensiun.cabang}
-                            </td>
-                            <td className="py-2 px-3 text-center">
-                              {pensiun.keterangan === null
-                                ? pensiun.status === "Segera"
-                                  ? "Segera"
-                                  : "Aktif"
-                                : "Aktif"}
-                            </td>
-                            <td className="py-2 px-3 text-center hidden lg:table-cell">
-                              <div className="flex items-center justify-center space-x-2">
-                                {/* Tombol Pensiun */}
-                                <button
-                                  type="button"
-                                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                  onClick={() => handlePopup(pensiun.npa)}
-                                >
-                                  Pensiun
-                                </button>
-
-                                {/* Ikon WhatsApp */}
-                                <button
-                                  type="button"
-                                  className="flex items-center text-green-500 hover:text-green-600"
-                                  onClick={() => handleWhatsApp(pensiun.npa)}
-                                >
-                                  <FaWhatsapp className="h-6 w-6 mr-2" />
-                                </button>
-                              </div>
-
-                              {popupVisible && (
-                                <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex justify-center items-center z-50">
-                                  <div className="bg-white rounded-lg p-6 w-2/5 text-center shadow-lg">
-                                    <h2 className="text-lg font-semibold text-gray-800">
-                                      Apakah Anda yakin ?
-                                    </h2>
-                                    <p className="text-gray-600 mt-2 mb-4">
-                                      Apakah Anda yakin untuk mengubah anggota
-                                      menjadi pensiun?
-                                    </p>
-                                    <div className="flex justify-center gap-4">
-                                      <button
-                                        onClick={handleCancelKeluar}
-                                        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
-                                      >
-                                        Batal
-                                      </button>
-                                      <button
-                                        onClick={handlePensiunAnggota}
-                                        className="bg-teal-500 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition duration-200"
-                                      >
-                                        Ya, Saya Yakin
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                          {expandedIndex === index && (
-                            <tr className="bg-gray-100 lg:hidden">
-                              <td
-                                colSpan="3"
-                                className="py-2 px-3 text-sm border-t"
-                              >
-                                <div>
-                                  <strong>Prediksi Pensiun:</strong>{" "}
+                          (pensiun) =>
+                            pensiun.keterangan !== "Pensiun" &&
+                            (selectedCabang === "" ||
+                              pensiun.cabang === selectedCabang)
+                        )
+                          .map((pensiun, index) => (
+                            <>
+                              <tr key={pensiun.id} className="border-t">
+                                <td className="py-2 px-3 text-center">
+                                  {startNumber + index + 1}
+                                  <Button
+                                    className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
+                                    onClick={() => handleExpand(index)}
+                                  >
+                                    {expandedIndex === index ? (
+                                      <FaMinusCircle />
+                                    ) : (
+                                      <FaPlusCircle />
+                                    )}
+                                  </Button>
+                                </td>
+                                <td className="py-2 px-3 text-center">
+                                  <img
+                                    src="/profile.png"
+                                    alt="Foto"
+                                    className="w-10 h-10 rounded-full"
+                                  />
+                                </td>
+                                <td className="py-2 px-3 text-center hidden lg:table-cell">
                                   {formatDate(pensiun.prediksiPensiun)}
-                                </div>
-                                <div>
-                                  <strong>Keanggotaan:</strong>{" "}
-                                  {pensiun.jabatan}, {pensiun.unitKerja}
-                                </div>
-                                <div>
-                                  <strong>Usia:</strong> {pensiun.usia}
-                                </div>
-                                <div>
-                                  <strong>Cabang ke-2:</strong> {pensiun.cabang}
-                                </div>
-                                <div>
-                                  <strong>Status:</strong> {pensiun.status}
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <button
-                                    type="button"
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                    onClick={() => handlePopup(pensiun.npa)}
-                                  >
-                                    Pensiun
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="flex items-center text-green-500 hover:text-green-600"
-                                    onClick={() => handleWhatsApp(pensiun.npa)}
-                                  >
-                                    <FaWhatsapp className="h-6 w-6 mr-2" />
-                                  </button>
-                                </div>
+                                </td>
+                                <td className="py-2 px-3 text-center">
+                                  <div>{pensiun.namaLengkap}</div>
+                                  <div>{pensiun.npa}</div>
+                                  <div>
+                                    {pensiun.tempatLahir},{" "}
+                                    {formatDate(pensiun.tanggalLahir)}
+                                  </div>
+                                </td>
+                                <td className="py-2 px-3 text-center hidden lg:table-cell">
+                                  <div>{pensiun.jabatan}</div>
+                                  <div>{pensiun.unitKerja}</div>
+                                  <div>Usia: {pensiun.usia}</div>
+                                </td>
+                                <td className="py-2 px-3 text-center hidden lg:table-cell">
+                                  {pensiun.cabang}
+                                </td>
+                                <td className="py-2 px-3 text-center">
+                                  {pensiun.keterangan === null
+                                    ? pensiun.status === "Segera"
+                                      ? "Segera"
+                                      : "Aktif"
+                                    : "Aktif"}
+                                </td>
+                                <td className="py-2 px-3 text-center hidden lg:table-cell">
+                                  <div className="flex items-center justify-center space-x-2">
+                                    {/* Tombol Pensiun */}
+                                    <button
+                                      type="button"
+                                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                      onClick={() => handlePopup(pensiun.npa)}
+                                    >
+                                      Pensiun
+                                    </button>
 
-                                {popupVisible && (
-                                  <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex justify-center items-center z-50">
-                                    <div className="bg-white rounded-lg p-6 w-4/5 sm:w-2/5 md:w-1/3 text-center shadow-lg">
-                                      <h2 className="text-lg font-semibold text-gray-800">
-                                        Apakah Anda yakin ?
-                                      </h2>
-                                      <p className="text-gray-600 mt-2 mb-4">
-                                        Apakah Anda yakin untuk mengubah anggota
-                                        menjadi pensiun?
-                                      </p>
-                                      <div className="flex justify-center gap-4">
-                                        <button
-                                          onClick={handleCancelKeluar}
-                                          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
-                                        >
-                                          Batal
-                                        </button>
-                                        <button
-                                          onClick={handlePensiunAnggota}
-                                          className="bg-teal-500 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition duration-200"
-                                        >
-                                          Ya, Saya Yakin
-                                        </button>
+                                    {/* Ikon WhatsApp */}
+                                    <button
+                                      type="button"
+                                      className="flex items-center text-green-500 hover:text-green-600"
+                                      onClick={() => handleWhatsApp(pensiun.npa)}
+                                    >
+                                      <FaWhatsapp className="h-6 w-6 mr-2" />
+                                    </button>
+                                  </div>
+
+                                  {popupVisible && (
+                                    <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex justify-center items-center z-50">
+                                      <div className="bg-white rounded-lg p-6 w-2/5 text-center shadow-lg">
+                                        <h2 className="text-lg font-semibold text-gray-800">
+                                          Apakah Anda yakin ?
+                                        </h2>
+                                        <p className="text-gray-600 mt-2 mb-4">
+                                          Apakah Anda yakin untuk mengubah anggota
+                                          menjadi pensiun?
+                                        </p>
+                                        <div className="flex justify-center gap-4">
+                                          <button
+                                            onClick={handleCancelKeluar}
+                                            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                                          >
+                                            Batal
+                                          </button>
+                                          <button
+                                            onClick={handlePensiunAnggota}
+                                            className="bg-teal-500 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition duration-200"
+                                          >
+                                            Ya, Saya Yakin
+                                          </button>
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                )}
-                              </td>
-                            </tr>
-                          )}
-                        </>
-                      ))}
+                                  )}
+                                </td>
+                              </tr>
+                              {expandedIndex === index && (
+                                <tr className="bg-gray-100 lg:hidden">
+                                  <td
+                                    colSpan="3"
+                                    className="py-2 px-3 text-sm border-t"
+                                  >
+                                    <div>
+                                      <strong>Prediksi Pensiun:</strong>{" "}
+                                      {formatDate(pensiun.prediksiPensiun)}
+                                    </div>
+                                    <div>
+                                      <strong>Keanggotaan:</strong>{" "}
+                                      {pensiun.jabatan}, {pensiun.unitKerja}
+                                    </div>
+                                    <div>
+                                      <strong>Usia:</strong> {pensiun.usia}
+                                    </div>
+                                    <div>
+                                      <strong>Cabang ke-2:</strong> {pensiun.cabang}
+                                    </div>
+                                    <div>
+                                      <strong>Status:</strong> {pensiun.status}
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <button
+                                        type="button"
+                                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                        onClick={() => handlePopup(pensiun.npa)}
+                                      >
+                                        Pensiun
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="flex items-center text-green-500 hover:text-green-600"
+                                        onClick={() => handleWhatsApp(pensiun.npa)}
+                                      >
+                                        <FaWhatsapp className="h-6 w-6 mr-2" />
+                                      </button>
+                                    </div>
+
+                                    {popupVisible && (
+                                      <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex justify-center items-center z-50">
+                                        <div className="bg-white rounded-lg p-6 w-4/5 sm:w-2/5 md:w-1/3 text-center shadow-lg">
+                                          <h2 className="text-lg font-semibold text-gray-800">
+                                            Apakah Anda yakin ?
+                                          </h2>
+                                          <p className="text-gray-600 mt-2 mb-4">
+                                            Apakah Anda yakin untuk mengubah anggota
+                                            menjadi pensiun?
+                                          </p>
+                                          <div className="flex justify-center gap-4">
+                                            <button
+                                              onClick={handleCancelKeluar}
+                                              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                                            >
+                                              Batal
+                                            </button>
+                                            <button
+                                              onClick={handlePensiunAnggota}
+                                              className="bg-teal-500 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition duration-200"
+                                            >
+                                              Ya, Saya Yakin
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </td>
+                                </tr>
+                              )}
+                            </>
+                          ))
+                         ) }
                   </tbody>
                 </table>
               </div>
