@@ -98,8 +98,16 @@ const FormStep1 = ({
       if (!userId || !role) return;
 
       try {
-        const response = await GlobalApi.getUserById(userId); // Selalu gunakan getUserById
-        setSilaporData(response);
+        let response;
+        if (role === "ADMIN" || role === "SUPER ADMIN") {
+          response = await GlobalApi.getAdminById(userId);
+        } else if (role === "USER") {
+          response = await GlobalApi.getUserById(userId);
+        }
+
+        if (response) {
+          setSilaporData(response);
+        }
       } catch (error) {
         console.error("Error fetching pelapor data:", error);
       }
@@ -111,9 +119,18 @@ const FormStep1 = ({
   useEffect(() => {
     const fetchLaporanData = async () => {
       const userId = sessionStorage.getItem("userId");
+      const role = sessionStorage.getItem("role");
+
       if (userId) {
         try {
-          const laporanData = await GlobalApi.getUserById(userId);
+          let laporanData;
+
+          if (role === "ADMIN" || role === "SUPER ADMIN") {
+            laporanData = await GlobalApi.getAdminById(userId);
+          } else if (role === "USER") {
+            laporanData = await GlobalApi.getUserById(userId);
+          }
+
           setPelaporData(laporanData);
 
           if (laporanData && laporanData !== formData) {
@@ -121,10 +138,10 @@ const FormStep1 = ({
               ...formData,
             });
             setPelaporData({
-              memberName: laporanData?.namaLengkap,
-              branch: laporanData?.cabang,
-              position: laporanData?.jabatan,
-              phone: laporanData?.nomorHp,
+              memberName: laporanData?.namaLengkap || laporanData?.nama || "",
+              branch: laporanData?.cabang || "",
+              position: laporanData?.jabatan || "",
+              phone: laporanData?.nomorHp || laporanData?.nohp,
             });
           }
         } catch (error) {
@@ -426,7 +443,6 @@ const FormStep1 = ({
                       placeholder="tanggal"
                       className="text-sm cursor-not-allowed"
                       value={formattedDate}
-                      disabled
                     />
                   </div>
                   <div className="w-full flex flex-col items-start mt-2">
@@ -435,7 +451,9 @@ const FormStep1 = ({
                       id="name"
                       placeholder="Nama"
                       className="text-sm cursor-not-allowed"
-                      value={silaporData?.namaLengkap || ""}
+                      value={
+                        silaporData?.namaLengkap || silaporData?.nama || ""
+                      }
                       readOnly
                     />
                   </div>
@@ -464,7 +482,7 @@ const FormStep1 = ({
                       id="name"
                       placeholder="Nama"
                       className="text-sm cursor-not-allowed"
-                      value={silaporData?.nomorHp || ""}
+                      value={silaporData?.nomorHp || silaporData?.nohp}
                       readOnly
                     />
                   </div>
@@ -490,7 +508,7 @@ const FormStep1 = ({
                           sessionStorage.getItem("role") === "SUPER ADMIN"
                             ? queryCabang
                             : selectedCabang
-                        } // SUPER ADMIN hanya bisa mengatur cabang manual
+                        }
                         disabled={
                           sessionStorage.getItem("role") !== "SUPER ADMIN"
                         }
@@ -744,9 +762,21 @@ const Resume = ({
 
   const fetchPelaporData = async () => {
     const userId = sessionStorage.getItem("userId");
+    const role = sessionStorage.getItem("role");
+
     if (userId) {
       try {
-        const laporanData = await GlobalApi.getUserById(userId);
+        let laporanData;
+
+        if (role === "ADMIN" || role === "SUPER ADMIN") {
+          laporanData = await GlobalApi.getAdminById(userId);
+        } else if (role === "USER") {
+          laporanData = await GlobalApi.getUserById(userId);
+        } else {
+          console.warn("Unknown role:", role);
+          return;
+        }
+
         setPelaporData(laporanData);
       } catch (error) {
         console.error("Error fetching pelapor data:", error);
@@ -947,13 +977,15 @@ const Resume = ({
                 <div className="rounded-lg w-full flex justify-center">
                   <div className="flex flex-col items-center gap-1">
                     <Label className="block text-sm font-medium text-center">
-                      {pelaporData?.namaLengkap}
+                      {pelaporData?.namaLengkap || pelaporData?.nama}
                     </Label>
                     <Label className="block text-sm font-medium text-center">
                       {pelaporData?.cabang}
                     </Label>
                     <Label className="block text-sm font-medium text-center">
-                      {pelaporData?.unitKerja}
+                      {pelaporData?.unitKerja ||
+                        sessionStorage.getItem("unitKerja") ||
+                        ""}{" "}
                     </Label>
                     <Label className="block text-sm font-medium text-center">
                       {pelaporData?.jabatan}
@@ -962,13 +994,31 @@ const Resume = ({
                       No HP:{" "}
                       <Link
                         href={`https://wa.me/${
-                          formData?.nomorHp?.startsWith("+62")
-                            ? formData.nomorHp.replace("+62", "62")
-                            : formData?.nomorHp || ""
+                          pelaporData?.nomorHp || pelaporData?.nohp
+                            ? (
+                                pelaporData.nomorHp || pelaporData.nohp
+                              ).startsWith("0")
+                              ? "62" +
+                                (
+                                  pelaporData.nomorHp || pelaporData.nohp
+                                ).substring(1)
+                              : (
+                                  pelaporData.nomorHp || pelaporData.nohp
+                                ).startsWith("+62")
+                              ? (
+                                  pelaporData.nomorHp || pelaporData.nohp
+                                ).replace("+62", "62")
+                              : pelaporData.nomorHp || pelaporData.nohp
+                            : ""
                         }`}
                         className="text-blue-500"
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
-                        {formatPhoneNumber(formData.nomorHp)} (WhatsApp)
+                        {formatPhoneNumber(
+                          pelaporData?.nomorHp || pelaporData?.nohp || ""
+                        )}{" "}
+                        (WhatsApp)
                       </Link>
                     </Label>
                   </div>
@@ -1092,7 +1142,7 @@ const Page = () => {
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 2000,
           style: {
             marginTop: "12%",
             fontSize: "1.75rem",
@@ -1113,9 +1163,8 @@ const Page = () => {
 
       setTimeout(() => {
         window.location.href = "/home";
-      }, 4000);
+      }, 3000);
     } catch (error) {
-      // Tambahkan ini untuk mencetak error ke konsol
       console.error("Error saat menambahkan laporan:", error);
 
       toast.error(
@@ -1154,7 +1203,7 @@ const Page = () => {
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 2000,
           style: {
             marginTop: "12%",
             fontSize: "1.75rem",

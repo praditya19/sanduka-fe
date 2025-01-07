@@ -62,28 +62,21 @@ const Page = () => {
     const [today, setToday] = useState("");
     const [data, setData] = useState(null);
     const [isPopupVisible, setIsPopupVisible] = useState(false);
+    const [daerah, setDaerah] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [passwordNew, setPasswordNew] = useState("");
     const [npaPgri, setNpaPgri] = useState("");
     const [nip, setNip] = useState("");
     const [nik, setNik] = useState("");
-    const [namaLengkap, setNamaLengkap] = useState("");
+    const [nama, setNama] = useState("");
     const [tempatLahir, setTempatLahir] = useState("");
     const [jenisKelamin, setJenisKelamin] = useState("");
     const [kodePos, setKodePos] = useState("");
     const [nomorHp, setNomorHp] = useState("");
     const [namaSuamiIstri, setNamaSuamiIstri] = useState("");
     const [namaAnak, setNamaAnak] = useState([]);
-    const [agama, setAgama] = useState("");
-    const [golonganDarah, setGolonganDarah] = useState("");
-    const [alamat, setAlamat] = useState("");
-    const [tingkatSekolah, setTingkatSekolah] = useState("");
-    const [statusSekolah, setStatusSekolah] = useState("");
-    const [statusPegawai, setStatusPegawai] = useState("");
-    const [pangkatGolongan, setPangkatGolongan] = useState("");
     const [mulaiJadiAnggotaPgri, setMulaiJadiAnggotaPgri] = useState([]);
-    const [pendidikanTerakhir, setPendidikanTerakhir] = useState("");
-    const [sertifikatPendidik, setSertifikatPendidik] = useState("");
     const [mengajar, setMengajar] = useState("");
     const [isMobile, setIsMobile] = useState(false);
     const [valueJabatan, setValueJabatan] = useState("");
@@ -118,38 +111,16 @@ const Page = () => {
     const [tanggalLahir, setTanggalLahir] = useState("");
     const [formattedTanggalLahir, setFormattedTanggalLahir] = useState("");
     const [formData, setFormData] = useState({
+        daerah: "",
         email: "",
         password: "",
-        npaPgri: "",
-        nip: "",
-        nik: "",
-        namaLengkap: "",
-        tempatLahir: "",
-        tanggalLahir: "",
-        jenisKelamin: "",
-        agama: "",
-        golonganDarah: "",
-        alamat: "",
-        latitude: "",
-        longitude: "",
-        kodePos: "",
-        nomorHp: "",
-        namaSuamiIstri: "",
-        namaAnak: [],
+        passwordNew: "",
+        npapgri: "",
+        nama: "",
+        nohp: "",
         foto: null,
         cabang: "",
-        unitKerja: "",
         jabatan: "",
-        tingkatSekolah: "",
-        statusSekolah: "",
-        statusPegawai: "",
-        tahunDiangkat: "",
-        pangkatGolongan: "",
-        pendidikanTerakhir: "",
-        sertifikatPendidik: "",
-        mulaiJadiAnggotaPgri: "",
-        golonganJabatan: "",
-        mengajar: "",
     });
     const [allUnitKerja, setAllUnitKerja] = useState([]);
     const cabangRef = useRef(null);
@@ -165,100 +136,52 @@ const Page = () => {
         });
     };
 
-    const getAnggotaById = async () => {
-        const anggotaId = sessionStorage.getItem("anggotaId");
+    const getAdminById = async () => {
         const userId = sessionStorage.getItem("userId");
 
-        const id = anggotaId || userId;
-
-        if (!id) {
-            console.error(
-                "User ID atau Anggota ID tidak ditemukan atau tidak valid."
-            );
+        if (!userId) {
+            console.error("User ID tidak ditemukan atau tidak valid.");
             return;
         }
 
         try {
-            const response = await GlobalApi.getUserById(id);
-            // 35
+            const response = await GlobalApi.getAdminById(userId);
+
             if (response) {
-                setNamaLengkap(response.namaLengkap || "");
-                setPassword(response.password || "");
+                setDaerah(response.daerah || "");
+                setNama(response.nama || "");
+                setPassword(response.passwordNew || "");
                 setEmail(response.email || "");
-                setValue("email", response.email || "");
-                setNpaPgri(response.npaPgri || "");
-                setTempatLahir(response.tempatLahir || "");
-                setTanggalLahir(response.tanggalLahir || "");
-                setFormattedTanggalLahir(response.tanggalLahir || "");
-                setNip(response.nip || "");
-                setNik(response.nik || "");
-                setJenisKelamin(response.jenisKelamin || "");
-                setValue("jenisKelamin", response.jenisKelamin);
-                setAgama(response.agama);
-                setValue("agama", response.agama || "");
-                setGolonganDarah(response.golonganDarah || "");
-                setValue("golonganDarah", response.golonganDarah);
-                setAlamat(response.alamat || "");
-                setKodePos(response.kodePos || "");
-                setNomorHp(response.nomorHp || "");
-                setNamaSuamiIstri(response.namaSuamiIstri || "");
-                setNamaAnak(response.namaAnak || "");
-                setLatitude(response.latitude || null);
-                setLongitude(response.longitude || "");
-                setSelectedUnitKerja(response.unitKerja || "");
-                setQueryUnitKerja(response.unitKerja || "");
-                setSelectedCabang(response.cabang);
-                setValue("cabang", response.cabang || "");
-                setValue("unitKerja", response.unitKerja || "");
+                setNpaPgri(response.npapgri || "");
+                setNomorHp(response.nohp || "");
+                setSelectedCabang(response.cabang || "");
+                setValueJabatan(response.jabatan || "");
 
-                setTingkatSekolah(response.tingkatSekolah || "");
-                setValue("tingkatSekolah", response.tingkatSekolah);
-                setStatusSekolah(response.statusSekolah || "");
-                setValue("statusSekolah", response.statusSekolah);
-                setStatusPegawai(response.statusPegawai || "");
-                setValue("statusPegawai", response.statusPegawai);
-                setPangkatGolongan(response.pangkatGolongan || "");
-                setTahunDiangkat(response.tahunDiangkat || "");
-                setMulaiJadiAnggotaPgri(response.mulaiJadiAnggotaPgri || "");
-                setPendidikanTerakhir(response.pendidikanTerakhir || "");
-                setValue("pendidikanTerakhir", response.pendidikanTerakhir);
-                setSertifikatPendidik(response.sertifikatPendidik || "");
-                setValueGolonganJabatan(response.golonganJabatan);
-                setValueKategoriDaspen(response.kategoriDaspen || "");
-                setValue("golonganJabatan", response.golonganJabatan);
-                setJabatan(response.jabatan);
-
-                setValue("jabatan", response.jabatan || "");
-
-                setValueJabatan(response.jabatan);
-                setMengajar(response.mengajar);
-                setValue("mengajar", response.mengajar || "");
-
-                setPesertaSanduka(response.pesertaSanduka === "Ya");
-                setPesertaDaspen(response.pesertaDaspen === "Ya");
-                setPesertaKtaDigital(response.pesertaKtaDigital === "Ya");
-            }
-
-            const fotoBase64Array = [];
-            if (response.foto) {
-                try {
-                    const decodedString = atob(response.foto);
-                    fotoBase64Array.push(decodedString);
-                } catch (error) {
-                    console.error("Error decoding Base64:", error);
-                    fotoBase64Array.push(null);
+                if (response.foto) {
+                    try {
+                        const decodedString = atob(response.foto);
+                        setFotoBase64(decodedString);
+                        if (!selectedFile) {
+                            setPreview(`data:image/jpeg;base64,${response.foto}`);
+                        }
+                    } catch (error) {
+                        console.error("Error decoding Base64:", error);
+                    }
                 }
-            } else {
-                fotoBase64Array.push(null);
+
+                setValue("email", response.email || "");
+                setValue("cabang", response.cabang || "");
+                setValue("jabatan", response.jabatan || "");
             }
-            setFotoBase64(fotoBase64Array);
         } catch (error) {
             console.error("Error Saat Mendapatkan Data:", error);
+            toast.error("Gagal mengambil data pengguna");
         }
     };
 
+
     useEffect(() => {
-        getAnggotaById();
+        getAdminById();
     }, []);
     useEffect(() => {
         return () => {
@@ -270,34 +193,35 @@ const Page = () => {
     const handleCreateHistory = async () => {
         const now = new Date();
 
-        // Format date components
         const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
         const tanggal = now.toISOString().split("T")[0];
         const jam = now.toTimeString().split(" ")[0];
         const bulan = now.toLocaleString("id-ID", { month: "long" });
         const tahun = now.getFullYear();
 
-        // Get user details
         const userRole = sessionStorage.getItem("role");
-        const namaLengkapUser =
-            userRole === "USER"
-                ? namaLengkap // Using namaLengkap state from the form
-                : sessionStorage.getItem("nama");
+        const namaFromSession = userRole === "ADMIN" ? nama : sessionStorage.getItem("nama");
+
+        if (!npaPgri || !selectedCabang || !namaFromSession) {
+            console.error("Data tidak lengkap untuk membuat history");
+            toast.error("Data tidak lengkap untuk membuat history");
+            return;
+        }
 
         const historyData = {
             hari,
             tanggal,
             jam,
             npa: npaPgri,
-            nama: namaLengkap,
+            nama: namaFromSession,
             cabang: selectedCabang,
             uraian: "Edit Data",
-            masuk: "-", // Not applicable for edit
-            keluar: "-", // Not applicable for edit
+            masuk: "-", 
+            keluar: "-", 
             bulan,
             tahun,
-            cabang_ke_2: "-", // Not applicable for edit
-            user: namaLengkapUser,
+            cabang_ke_2: "-", 
+            user: namaFromSession,
         };
 
         try {
@@ -310,182 +234,59 @@ const Page = () => {
 
     const onSubmit = async (e) => {
         e.preventDefault();
-        const anggotaId = sessionStorage.getItem("anggotaId");
         const userId = sessionStorage.getItem("userId");
 
-        const id = anggotaId || userId;
-
-        if (!id) {
-            console.error(
-                "User ID atau Anggota ID tidak ditemukan atau tidak valid."
-            );
-            return;
-        }
-        console.log("User ID:", id);
-
-        const formatTanggal = (tanggal) => {
-            const date = new Date(tanggal);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, "0");
-            const day = String(date.getDate()).padStart(2, "0");
-            return `${year}-${month}-${day}`;
-        };
-        const formattedTahunDiangkat = formatTanggal(tahunDiangkat);
-
-        // Validasi field yang wajib diisi
-        const requiredFieldsStep2 = [
-            { field: selectedCabang ?? "", name: "Cabang", id: "cabang" },
-            { field: selectedUnitKerja ?? "", name: "Unit Kerja", id: "unitKerja" },
-            { field: valueJabatan ?? "", name: "Jabatan", id: "jabatan" },
-            {
-                field: tingkatSekolah ?? "",
-                name: "Tingkat Sekolah",
-                id: "tingkatSekolah",
-            },
-            {
-                field: statusSekolah ?? "",
-                name: "Status Sekolah",
-                id: "statusSekolah",
-            },
-            {
-                field: statusPegawai ?? "",
-                name: "Status Pegawai",
-                id: "statusPegawai",
-            },
-            {
-                field: formattedTahunDiangkat ?? "",
-                name: "Tahun Diangkat",
-                id: "tahunDiangkat",
-            },
-            {
-                field: pangkatGolongan ?? "",
-                name: "Pangkat Golongan",
-                id: "pangkatGolongan",
-            },
-            {
-                field: pendidikanTerakhir ?? "",
-                name: "Pendidikan Terakhir",
-                id: "pendidikanTerakhir",
-            },
-            {
-                field: sertifikatPendidik ?? "",
-                name: "Sertifikat Pendidik",
-                id: "sertifikatPendidik",
-            },
-            {
-                field: mulaiJadiAnggotaPgri ?? "",
-                name: "Mulai Jadi Anggota PGRI",
-                id: "mulaiJadiAnggotaPgri",
-            },
-            {
-                field: valueKategoriDaspen ?? "",
-                name: "Kategori Daspen",
-                id: "kategoriDaspen",
-            },
-            {
-                field: valueGolonganJabatan ?? "",
-                name: "Golongan Jabatan",
-                id: "golonganJabatan",
-            },
-            { field: mengajar ?? "", name: "Mengajar", id: "mengajar" },
-        ];
-
-        const emptyFields = requiredFieldsStep2.filter(({ field }) => !field);
-
-        if (emptyFields.length > 0) {
-            const firstEmptyField = emptyFields[0];
-
-            toast.error(`Field ${firstEmptyField.name} wajib diisi!`, {
-                position: "top-right",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
-
-            const element = document.getElementById(firstEmptyField.id);
-            if (element) {
-                element.scrollIntoView({ behavior: "smooth", block: "center" });
-                element.focus();
-            }
-
+        if (!userId) {
+            console.error("User ID tidak ditemukan atau tidak valid.");
             return;
         }
 
-        const formattedTanggalLahir = formatTanggal(tanggalLahir);
-        const formattedMulaiJadiAnggota = formatTanggal(mulaiJadiAnggotaPgri);
+        const originalData = await GlobalApi.getAdminById(userId);
 
         const formData = new FormData();
+
+        const passwordToUse = password && password !== originalData.password
+            ? password
+            : originalData.password;
+
+        formData.append("password", passwordToUse);
+        formData.append("passwordNew", password);
+
+        formData.append("daerah", daerah);
         formData.append("email", email);
-        formData.append("password", password);
-        formData.append("npaPgri", npaPgri);
-        formData.append("nip", nip);
-        formData.append("nik", nik);
-        formData.append("namaLengkap", namaLengkap);
-        formData.append("tempatLahir", tempatLahir);
-        formData.append("tanggalLahir", formattedTanggalLahir);
-        formData.append("jenisKelamin", jenisKelamin);
-        formData.append("agama", agama);
-        formData.append("golonganDarah", golonganDarah);
-        formData.append("alamat", alamat);
-        formData.append("latitude", latitude);
-        formData.append("longitude", longitude);
-        formData.append("kodePos", kodePos);
-        formData.append("nomorHp", nomorHp);
-        formData.append("namaSuamiIstri", namaSuamiIstri);
+        formData.append("npapgri", npaPgri);
+        formData.append("nama", nama);
+        formData.append("nohp", nomorHp);
+        formData.append("cabang", selectedCabang);
+        formData.append("jabatan", valueJabatan);
+        formData.append("role", "ADMIN");
 
         if (selectedFile) {
-            formData.append("foto", selectedFile);
+            formData.append('foto', selectedFile);
+        } else if (originalData.foto) {
+            const base64Response = await fetch(`data:image/jpeg;base64,${originalData.foto}`);
+            const blob = await base64Response.blob();
+            const file = new File([blob], 'existing-photo.jpg', { type: 'image/jpeg' });
+            formData.append('foto', file);
         }
-
-        formData.append("cabang", selectedCabang);
-        formData.append("unitKerja", selectedUnitKerja);
-        formData.append("jabatan", valueJabatan);
-        formData.append("tingkatSekolah", tingkatSekolah);
-        formData.append("statusSekolah", statusSekolah);
-        formData.append("statusPegawai", statusPegawai);
-        formData.append("tahunDiangkat", formattedTahunDiangkat);
-        formData.append("pangkatGolongan", pangkatGolongan);
-        formData.append("pendidikanTerakhir", pendidikanTerakhir);
-        formData.append("sertifikatPendidik", sertifikatPendidik);
-        formData.append("mulaiJadiAnggotaPgri", formattedMulaiJadiAnggota);
-        formData.append("golonganJabatan", valueGolonganJabatan);
-        formData.append("kategoriDaspen", valueKategoriDaspen);
-        formData.append("mengajar", mengajar);
-
-        formData.append("pesertaSanduka", pesertaSanduka ? "Ya" : "");
-        formData.append("pesertaDaspen", pesertaDaspen ? "Ya" : "");
-        formData.append("pesertaKtaDigital", pesertaKtaDigital ? "Ya" : "");
 
         for (let [key, value] of formData.entries()) {
             console.log(`${key}: ${value}`);
         }
 
-        console.log("Nilai email sebelum submit:", email);
-
-        if (!email) {
-            console.error("Email tidak boleh kosong!");
-            toast.error("Email wajib diisi sebelum melanjutkan.");
-            return;
-        }
         try {
-            const response = await GlobalApi.updateUserById(id, formData);
-            console.log("Response dari API:", response);
+            const response = await GlobalApi.updateAdminById(userId, formData);
             await handleCreateHistory();
+
             toast.success(
-                <div
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        textAlign: "center",
-                    }}
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
+                <div style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textAlign: "center",
+                }}>
+                    <svg xmlns="http://www.w3.org/2000/svg"
                         style={{
                             width: "150px",
                             height: "150px",
@@ -494,17 +295,14 @@ const Page = () => {
                             marginTop: "14px",
                         }}
                         fill="currentColor"
-                        viewBox="0 0 24 24"
-                    >
+                        viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
                     </svg>
-                    <h3
-                        style={{
-                            fontSize: "2rem",
-                            display: "block",
-                            marginBottom: "28px",
-                        }}
-                    >
+                    <h3 style={{
+                        fontSize: "2rem",
+                        display: "block",
+                        marginBottom: "28px",
+                    }}>
                         Data berhasil diperbarui!
                     </h3>
                 </div>,
@@ -528,24 +326,27 @@ const Page = () => {
                     },
                 }
             );
-            sessionStorage.removeItem("anggotaId");
+
+            sessionStorage.setItem('nama', nama || originalData.nama);
+            sessionStorage.setItem('email', email || originalData.email);
+            sessionStorage.setItem('cabang', selectedCabang || originalData.cabang);
+
             setTimeout(() => {
                 router.push("/home");
-            }, 4000);
+            }, 2000);
+
         } catch (error) {
             console.error("Gagal mengupdate data:", error);
+
             toast.error(
-                <div
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        textAlign: "center",
-                    }}
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
+                <div style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textAlign: "center",
+                }}>
+                    <svg xmlns="http://www.w3.org/2000/svg"
                         style={{
                             width: "150px",
                             height: "150px",
@@ -553,19 +354,16 @@ const Page = () => {
                             marginBottom: "16px",
                         }}
                         fill="currentColor"
-                        viewBox="0 0 24 24"
-                    >
+                        viewBox="0 0 24 24">
                         <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-                        <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
+                        <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
                     </svg>
-                    <h3
-                        style={{
-                            fontSize: "1.75rem",
-                            display: "block",
-                            marginBottom: "8px",
-                        }}
-                    >
-                        Terjadi kesalahan saat mengupdate data.
+                    <h3 style={{
+                        fontSize: "1.75rem",
+                        display: "block",
+                        marginBottom: "8px",
+                    }}>
+                        Gagal memperbarui data
                     </h3>
                 </div>,
                 {
@@ -780,8 +578,9 @@ const Page = () => {
     }, []);
 
     const handleBackClick = () => {
-        router.push("/home");
-        sessionStorage.removeItem("anggotaId");
+        setTimeout(() => {
+            router.push("/home");
+        }, 1000);
     };
 
     const handleCloseLocationInfo = () => {
@@ -792,20 +591,9 @@ const Page = () => {
         const requiredFieldsStep1 = [
             { field: email, fieldName: "Email", id: "email" },
             { field: password, fieldName: "Password Login", id: "password" },
-            { field: npaPgri, fieldName: "NPA PGRI", id: "npaPgri" },
-            { field: nip, fieldName: "NIP", id: "nip" },
-            { field: nik, fieldName: "NIK", id: "nik" },
-            { field: namaLengkap, fieldName: "Nama Lengkap", id: "namaLengkap" },
-            { field: tanggalLahir, fieldName: "Tanggal Lahir", id: "tanggalLahir" },
-            { field: jenisKelamin, fieldName: "Jenis Kelamin", id: "jenisKelamin" },
-            { field: agama, fieldName: "Agama", id: "agama" },
-            {
-                field: golonganDarah,
-                fieldName: "Golongan Darah",
-                id: "golonganDarah",
-            },
-            { field: kodePos, fieldName: "Kode Pos", id: "kodePos" },
-            { field: nomorHp, fieldName: "Nomor Handphone", id: "nomorHp" },
+            { field: npaPgri, fieldName: "NPA PGRI", id: "npapgri" },
+            { field: nama, fieldName: "Nama Lengkap", id: "nama" },
+            { field: nohp, fieldName: "Nomor Handphone", id: "nohp" },
         ];
 
         const emptyFields = requiredFieldsStep1.filter(({ field }) => !field);
@@ -1051,7 +839,7 @@ const Page = () => {
 
     useEffect(() => {
         if (id) {
-            getAnggotaById(id);
+            getAdminById(id);
         }
     }, [id]);
 
@@ -1069,7 +857,7 @@ const Page = () => {
         const currentDate = new Date().toISOString().split("T")[0];
         setToday(currentDate);
 
-        getAnggotaById();
+        getAdminById();
         updateUnitKerja();
         setIsClient(true);
     }, []);
@@ -1114,20 +902,15 @@ const Page = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            const anggotaId = sessionStorage.getItem("anggotaId");
             const userId = sessionStorage.getItem("userId");
 
-            const id = anggotaId || userId;
-
-            if (!id) {
-                console.error(
-                    "User ID atau Anggota ID tidak ditemukan atau tidak valid."
-                );
+            if (!userId) {
+                console.error("User  ID tidak ditemukan atau tidak valid.");
                 return;
             }
 
             try {
-                const response = await GlobalApi.getUserById(id);
+                const response = await GlobalApi.getAdminById(userId);
                 const data = response;
 
                 if (data.tahunDiangkat) {
@@ -1376,8 +1159,8 @@ const Page = () => {
                             <Input
                                 type="text"
                                 placeholder="Sesuai Dengan KTP"
-                                value={namaLengkap}
-                                onChange={(e) => setNamaLengkap(e.target.value)}
+                                value={nama}
+                                onChange={(e) => setNama(e.target.value)}
                                 className="border-teal-500"
                             />
                         </div>
@@ -1482,7 +1265,7 @@ const Page = () => {
                             </Label>
                             <Input
                                 type="text"
-                                value={sessionStorage.getItem("role")} // Gets role from sessionStorage
+                                value={sessionStorage.getItem("role")}
                                 disabled
                                 className="border-gray-300 bg-gray-100"
                             />
