@@ -201,46 +201,50 @@ const HeaderMobile = () => {
             <Image src="/sanduka.png" width={70} height={60} alt="logo" />
           </Link>
         </div>
-        <div className="flex space-x-6 items-center relative">
-          {/* Only show email icon for ADMIN and SUPER ADMIN */}
-          {(role === "ADMIN" || role === "SUPER ADMIN") && (
-            <Link href="/pensiun">
-              <button className="relative">
-                <FontAwesomeIcon
-                  icon={faEnvelope}
-                  className="w-5 h-5 text-gray-700"
-                />
-                {emailCount > 0 && (
-                  <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
-                    {emailCount}
-                  </span>
-                )}
-              </button>
-            </Link>
-          )}
-          <button onClick={handleNotificationClick} className="relative">
-            <FontAwesomeIcon icon={faBell} className="w-5 h-5 text-gray-700" />
-            {notificationCount > 0 && (
-              <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
-                {notificationCount}
-              </span>
+        <div className="flex space-x-4 items-center ">
+          <div className="flex space-x-4 items-center ml-3">
+            {/* Only show email icon for ADMIN and SUPER ADMIN */}
+            {(role === "ADMIN" || role === "SUPER ADMIN") && (
+              <Link href="/pensiun">
+                <button className="relative">
+                  <FontAwesomeIcon
+                    icon={faEnvelope}
+                    className="w-5 h-5 text-gray-700"
+                  />
+                  {emailCount > 0 && (
+                    <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+                      {emailCount}
+                    </span>
+                  )}
+                </button>
+              </Link>
             )}
-          </button>
-
-          {/* Conditionally render search icon based on role */}
-          {(role === "ADMIN" || role === "SUPER ADMIN") && (
-            <Link href="/anggota/pencarian-anggota">
+            <button onClick={handleNotificationClick} className="relative">
               <FontAwesomeIcon
-                icon={faSearch}
+                icon={faBell}
                 className="w-5 h-5 text-gray-700"
               />
-            </Link>
-          )}
+              {notificationCount > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+                  {notificationCount}
+                </span>
+              )}
+            </button>
 
+            {/* Conditionally render search icon based on role */}
+            {(role === "ADMIN" || role === "SUPER ADMIN") && (
+              <Link href="/anggota/pencarian-anggota">
+                <FontAwesomeIcon
+                  icon={faSearch}
+                  className="w-5 h-5 text-gray-700"
+                />
+              </Link>
+            )}
+          </div>
           {/* Profile Image and Menu */}
           <div
             ref={profileMenuRef}
-            className="relative flex items-center space-x-4"
+            className="relative flex items-center space-x-2"
           >
             <div className="text-right flex flex-col">
               <p className="text-sm font-semibold text-gray-800">
@@ -267,7 +271,7 @@ const HeaderMobile = () => {
               />
             </button>
             {isProfileMenuOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded-md z-10">
+              <div className="absolute right-0 mt-44 w-48 bg-white shadow-md rounded-md z-10">
                 <Link
                   href={getEditProfilePath()}
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"

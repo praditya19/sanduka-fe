@@ -764,6 +764,15 @@ const editPemasukanUangMasuk = async (noBukti) => {
     throw error;
   }
 };
+const hapusPemasukanUangMasuk = async (id) => {
+  try {
+    const response = await axios.delete(`/api/uang-masuk-keluar/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error delete data by id", error);
+    throw error;
+  }
+};
 const getDefaultIuranById = async (id) => {
   try {
     const response = await axiosClient.get(`/api/defaultIuran/${id}`);
@@ -1164,7 +1173,7 @@ const getRekapAnggotaByCabang = async (cabang) => {
 // end
 
 //Start Pensiun
-const getAllPensiun = (page = 0, size = 1810) => {
+const getAllPensiun = (page = 0, size = 1800) => {
   return axiosClient.get(`/api/pensiun?page=${page}&size=${size}`);
 };
 // const getAllPensiun = async (page = 0) => {
@@ -1638,6 +1647,7 @@ export default {
   getGroupedNamaRantingWithCabang,
   deleteRanting,
   getNamaranting,
+  hapusPemasukanUangMasuk,
   getDetailKeuangan,
   getUnverifiedUsersCountByCabang,
 };

@@ -55,7 +55,6 @@ const SyncData = () => {
   const [role, setRole] = useState("");
   const [filteredTotalFiles, setFilteredTotalFiles] = useState(0);
 
-
   useEffect(() => {
     const storedRole = sessionStorage.getItem("role");
     const storedCabang = sessionStorage.getItem("cabang");
@@ -90,11 +89,17 @@ const SyncData = () => {
 
   const updateVisiblePages = (current) => {
     if (current === 1) {
-      setVisiblePages([1, 2, 3].filter(page => page <= totalPages));
+      setVisiblePages([1, 2, 3].filter((page) => page <= totalPages));
     } else if (current === totalPages) {
-      setVisiblePages([current - 2, current - 1, current].filter(page => page > 0));
+      setVisiblePages(
+        [current - 2, current - 1, current].filter((page) => page > 0)
+      );
     } else {
-      setVisiblePages([current - 1, current, current + 1].filter(page => page > 0 && page <= totalPages));
+      setVisiblePages(
+        [current - 1, current, current + 1].filter(
+          (page) => page > 0 && page <= totalPages
+        )
+      );
     }
   };
 
@@ -145,8 +150,9 @@ const SyncData = () => {
         value={selectedCabang}
         readOnly
         onClick={handleCabangClick}
-        className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
-          }`}
+        className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+          role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
+        }`}
         placeholder="Pilih Cabang"
         disabled={role === "ADMIN"}
       />
@@ -304,11 +310,14 @@ const SyncData = () => {
     const fetchData = async () => {
       try {
         const result = await GlobalApi.getAllFiles();
+        console.log("data:", result);
         setData(result);
         setTotalPages(Math.ceil(result.length / itemsPerPage));
 
         const uniqueCabang = [...new Set(result.map((item) => item.cabang))];
-        setCabangList(uniqueCabang.map((cabang, id) => ({ id, kecamatan: cabang })));
+        setCabangList(
+          uniqueCabang.map((cabang, id) => ({ id, kecamatan: cabang }))
+        );
       } catch (error) {
         console.error("Error fetching files:", error);
       }
@@ -323,12 +332,15 @@ const SyncData = () => {
 
     // Apply cabang filter
     if (selectedCabang) {
-      filtered = filtered.filter(item => item.cabang === selectedCabang);
+      filtered = filtered.filter((item) => item.cabang === selectedCabang);
     }
 
     // Apply unit kerja filter if selected
     if (selectedUnitKerja) {
-      filtered = filtered.filter(item => item.unitKerja.toLowerCase() === selectedUnitKerja.toLowerCase());
+      filtered = filtered.filter(
+        (item) =>
+          item.unitKerja.toLowerCase() === selectedUnitKerja.toLowerCase()
+      );
     }
 
     return filtered.length;
@@ -381,9 +393,8 @@ const SyncData = () => {
     let fileToSend = formData.file;
 
     // Add cabang from session for ADMIN
-    const submissionCabang = role === "ADMIN"
-      ? sessionStorage.getItem("cabang")
-      : formData.cabang;
+    const submissionCabang =
+      role === "ADMIN" ? sessionStorage.getItem("cabang") : formData.cabang;
 
     if (
       fileToSend &&
@@ -482,8 +493,9 @@ const SyncData = () => {
           return (
             <tr
               key={item.id || index}
-              className={`bg-white border-b ${index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                } hover:bg-gray-200 transition duration-150`}
+              className={`bg-white border-b ${
+                index % 2 === 0 ? "bg-gray-50" : "bg-white"
+              } hover:bg-gray-200 transition duration-150`}
             >
               <td className="py-4 px-6">{actualIndex}</td>
               <td className="py-4 px-6">{item.cabang}</td>
@@ -495,33 +507,38 @@ const SyncData = () => {
                   <td className="py-4 px-6">{item.nip}</td>
                   <td className="py-4 px-6">
                     <span
-                      className={`inline-block px-2 py-1 rounded ${item.dataSanduka
-                        ? "bg-green-100 text-green-800"
-                        : "bg-green-100 text-green-800"
-                        }`}
+                      className={`inline-block px-2 py-1 rounded ${
+                        item.dataKtaDigital
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
                     >
-                      {item.dataSanduka ? "YES" : "YES"}
+                      {item.dataKtaDigital ? "YES" : "NO"}
                     </span>
                   </td>
                   <td className="py-4 px-6">
                     <span
-                      className={`inline-block px-2 py-1 rounded ${item.dataKtaDigital
-                        ? "bg-green-100 text-green-800"
-                        : "bg-green-100 text-green-800"
-                        }`}
-                    >
-                      {item.dataKtaDigital ? "YES" : "YES"}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6">
-                    <span
-                      className={`inline-block px-2 py-1 rounded ${item.dataDaspen
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                        }`}
+                      className={`inline-block px-2 py-1 rounded ${
+                        item.dataDaspen
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
                     >
                       {item.dataDaspen ? "YES" : "NO"}
                     </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    {item.verifikasi === null ? (
+                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
+                        Belum Sinkronisasi
+                      </span>
+                    ) : item.verifikasi === 1 ? (
+                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
+                        Sudah Sinkronisasi
+                      </span>
+                    ) : (
+                      ""
+                    )}
                   </td>
                   <td className="py-4 px-6">
                     <button
@@ -565,10 +582,9 @@ const SyncData = () => {
     } else {
       pages = [current - 1, current, current + 1];
     }
-    pages = pages.filter(page => page > 0 && page <= totalPages);
+    pages = pages.filter((page) => page > 0 && page <= totalPages);
     setDisplayedPages(pages);
   };
-  
 
   const renderPagination = () => {
     return (
@@ -581,28 +597,31 @@ const SyncData = () => {
           First
         </button>
         <button
-          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
           className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
         >
           Prev
         </button>
 
-        {visiblePages.map(page => (
+        {visiblePages.map((page) => (
           <button
             key={page}
             onClick={() => setCurrentPage(page)}
-            className={`px-3 py-1 border rounded-md ${page === currentPage
-              ? "bg-blue-500 text-white"
-              : "bg-white hover:bg-gray-50"
-              }`}
+            className={`px-3 py-1 border rounded-md ${
+              page === currentPage
+                ? "bg-blue-500 text-white"
+                : "bg-white hover:bg-gray-50"
+            }`}
           >
             {page}
           </button>
         ))}
 
         <button
-          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+          onClick={() =>
+            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+          }
           disabled={currentPage === totalPages}
           className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
         >
@@ -942,8 +961,9 @@ const SyncData = () => {
                     value={selectedCabang}
                     readOnly
                     onClick={handleCabangClick}
-                    className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
-                      }`}
+                    className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                      role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
+                    }`}
                     placeholder="Pilih Cabang"
                     disabled={role === "ADMIN"}
                   />
@@ -1086,14 +1106,15 @@ const SyncData = () => {
                         <th scope="col" className="py-3 px-6">
                           NIP
                         </th>
+
                         <th scope="col" className="py-3 px-6">
-                          Data Sanduka
-                        </th>
-                        <th scope="col" className="py-3 px-6">
-                          Data KTA Digital
+                        Data KTA Digital
                         </th>
                         <th scope="col" className="py-3 px-6">
                           Data Daspen
+                        </th>
+                        <th scope="col" className="py-3 px-6">
+                          Keterangan
                         </th>
                         <th scope="col" className="py-3 px-6">
                           Wa

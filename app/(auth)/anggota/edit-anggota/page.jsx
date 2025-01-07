@@ -2394,47 +2394,48 @@ const Page = () => {
                   />
                 </div>
 
-                {isValidRole && (
-                  <div className="w-full">
-                    <Label className="block text-sm font-medium mb-3">
-                      Kategori Daspen
-                      <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                        Berdasarkan data-data Daspen Jateng
-                      </span>
-                    </Label>
-                    <Controller
-                      name="kategoriDaspen"
-                      control={control}
-                      value={valueKategoriDaspen}
-                      onChange={(e) => setValueKategoriDaspen(e.target.value)}
-                      render={({ field: { onChange, value } }) => (
-                        <Select
-                          value={value || valueKategoriDaspen}
-                          onValueChange={(e) => {
-                            onChange(e);
-                            setValueKategoriDaspen(e);
-                          }}
+                <div className="w-full">
+                  <Label className="block text-sm font-medium mb-3">
+                    Kategori Daspen
+                    <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
+                      Berdasarkan data-data Daspen Jateng
+                    </span>
+                  </Label>
+                  <Controller
+                    name="kategoriDaspen"
+                    control={control}
+                    value={valueKategoriDaspen}
+                    onChange={(e) => setValueKategoriDaspen(e.target.value)}
+                    render={({ field: { onChange, value } }) => (
+                      <Select
+                        value={value || valueKategoriDaspen}
+                        onValueChange={(e) => {
+                          onChange(e);
+                          setValueKategoriDaspen(e);
+                        }}
+                      >
+                        <SelectTrigger
+                          className={`border-teal-500 ${
+                            errorFields.kategoriDaspen ? "border-red-500" : ""
+                          }`}
                         >
-                          <SelectTrigger
-                            className={`border-teal-500 ${
-                              errorFields.kategoriDaspen ? "border-red-500" : ""
-                            }`}
-                          >
-                            <SelectValue placeholder="Pilih Kategori Daspen" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectItem value="I">I</SelectItem>
-                              <SelectItem value="II">II</SelectItem>
-                              <SelectItem value="III">III</SelectItem>
-                              <SelectItem value="non_kategori">Non Kategori</SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                  </div>
-                )}
+                          <SelectValue placeholder="Pilih Kategori Daspen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem value="I">I</SelectItem>
+                            <SelectItem value="II">II</SelectItem>
+                            <SelectItem value="III">III</SelectItem>
+                            <SelectItem value="non_kategori">
+                              Non Kategori
+                            </SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+
                 <div className="w-full">
                   <Label className="block text-sm font-medium mb-3">
                     Golongan Jabatan
