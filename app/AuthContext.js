@@ -1,6 +1,7 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { ClipLoader } from "react-spinners";
 
 const AuthContext = createContext();
 
@@ -28,9 +29,20 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, [router]);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+    if (loading) {
+      return (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100vh",
+          }}
+        >
+          <ClipLoader color="#3498db" size={50} />
+        </div>
+      );
+    }
 
   return (
     <AuthContext.Provider value={{ token, setToken }}>
