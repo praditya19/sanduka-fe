@@ -96,7 +96,7 @@ const login = async (loginData) => {
 const getCabang = () => axiosClient.get("/api/daftarCabang");
 const getJabatan = () => axiosClient.get("/api/daftarJabatan");
 const getGolonganJabatan = () => axiosClient.get("/api/daftarGolongan");
-const getUnitKerja = () => axiosClient.get("/api/unit-kerja/all");
+const getUnitKerja = () => axiosClient.get("/api/unit-kerja");
 const getBulan = () => axiosClient.get("/api/bulan");
 const searchUsersByName = (namaLengkap) => {
   return axiosClient.get(
@@ -1541,6 +1541,38 @@ const getUnverifiedUsersCountByCabang = async (cabang = "") => {
   }
 };
 
+const getAllUnitKerja = async (
+  page = 0,
+  size = 10,
+  cabang = "",
+  unitKerja = ""
+) => {
+  try {
+    const params = {
+      page,
+      size,
+      ...(cabang && { cabang: encodeURIComponent(cabang) }),
+      ...(unitKerja && { unitKerja: unitKerja }),
+    };
+    const response = await axiosClient.get(`/api/unit-kerja/all`, { params });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all unit kerja data:", error);
+    throw error;
+  }
+};
+
+const deleteUnitKerja = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/unit-kerja/delete/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching files data: ", error);
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1650,4 +1682,6 @@ export default {
   hapusPemasukanUangMasuk,
   getDetailKeuangan,
   getUnverifiedUsersCountByCabang,
+  getAllUnitKerja,
+  deleteUnitKerja,
 };

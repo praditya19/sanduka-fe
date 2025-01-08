@@ -9,17 +9,38 @@ import { useAuth } from "@/app/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { Label } from "@/components/ui/label";
 
 const AddUnitForm = () => {
+  const [entries, setEntries] = useState(10);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalEntries, setTotalEntries] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCabang, setSelectedCabang] = useState("");
+  const [selectedCabangFiltered, setSelectedCabangFiltered] = useState("");
   const [unitKerja, setUnitKerja] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [cabang, setCabang] = useState([]);
   const [filteredCabang, setFilteredCabang] = useState([]);
-  const [showDropdown, setShowDropdown] = useState(false); // State for controlling dropdown visibility
-  const dropdownRef = useRef(null); // Reference for dropdown
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [role, setRole] = useState("");
+  const [showDropdownCabang, setShowDropdownCabang] = useState(false);
+  const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
+  const [searchCabang, setSearchCabang] = useState("");
+  const [searchUnitKerja, setSearchUnitKerja] = useState("");
+  const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
+  const [filteredUnitKerjaOptions, setFilteredUnitKerjaOptions] = useState([]);
+  const [cabangOptions, setCabangOptions] = useState([]);
+  const [, setFormData] = useState({ unit: "" });
+  const dropdownRef = useRef(null);
+  const unitKerjaRef = useRef(null);
+  const [allUnitKerja, setAllUnitKerja] = useState([]);
+  const [allUnitKerjaFiltered, setAllUnitKerjaFiltered] = useState([]);
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -28,49 +49,156 @@ const AddUnitForm = () => {
     try {
       const response = await GlobalApi.getCabang();
       setCabang(response.data);
+      setCabangOptions(response.data);
     } catch (error) {
       console.error("Error fetching cabang data:", error);
+    }
+  };
+
+  const fetchUnitKerja = async (
+    page = currentPage,
+    size = entries,
+    cabang = "",
+    unitKerja = ""
+  ) => {
+    try {
+      const response = await GlobalApi.getAllUnitKerja(
+        page,
+        size,
+        cabang,
+        unitKerja
+      );
+      setAllUnitKerja(response.content || []);
+      setTotalEntries(response.totalElements || 0);
+      setTotalPages(response.totalPages || 0);
+    } catch (error) {
+      console.error("Error fetching unit kerja data:", error);
+    }
+  };
+
+  const deleteUnitKerja = async (id) => {
+    try {
+      const response = await GlobalApi.deleteUnitKerja(id);
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+              marginTop: "14px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Unit Kerja Berhasil Dihapus!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      setTimeout(() => {
+        window.location.reload();
+      }, 4000);
+    } catch (error) {
+      console.error("Error fetching cabang:", error);
+    }
+  };
+
+  const fetchUnitKerjaData = async () => {
+    try {
+      const unitKerjaResponse = await GlobalApi.getUnitKerja();
+      setAllUnitKerjaFiltered(unitKerjaResponse.data);
+      setUnitKerjaOptions(unitKerjaResponse.data);
+    } catch (error) {
+      console.error("Error fetching unit kerja data:", error);
     }
   };
 
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
-    } else {
-      setLoading(false);
-      fetchCabang();
-
-      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-      setIsSidebarOpen(sidebarState);
-
-      const handleResize = () => {
-        setIsMobile(window.innerWidth <= 768);
-      };
-
-      handleResize();
-      window.addEventListener("resize", handleResize);
-
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
+      return;
     }
-  }, [token, router]);
+    setLoading(false);
+    fetchCabang();
+    fetchUnitKerjaData();
 
-  useEffect(() => {
+    const storedRole = sessionStorage.getItem("role");
+    if (storedRole) {
+      setRole(storedRole);
+    }
+    const role = sessionStorage.getItem("role");
+    const cabangFromSession = sessionStorage.getItem("cabang") || "";
+    if (role === "ADMIN" && cabangFromSession) {
+      setSelectedCabangFiltered(cabangFromSession);
+      fetchUnitKerja(currentPage, entries, cabangFromSession);
+    } else {
+      fetchUnitKerja(currentPage, entries);
+    }
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
+        setShowDropdownCabang(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
+
+    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+    setIsSidebarOpen(sidebarState);
+
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [token, router, currentPage, entries]);
 
   if (loading) {
     return <div>Loading...</div>;
   }
+
+  const handleDelete = (id) => {
+    deleteUnitKerja(id);
+  };
 
   const handleSearchChange = (e) => {
     const value = e.target.value.toLowerCase();
@@ -79,6 +207,15 @@ const AddUnitForm = () => {
       item.kecamatan.toLowerCase().includes(value)
     );
     setFilteredCabang(filtered);
+  };
+
+  const handleSearchChangeFiltered = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchCabang(value);
+    const filtered = cabang.filter((item) =>
+      item.kecamatan.toLowerCase().includes(value)
+    );
+    setFilteredCabangOptions(filtered);
   };
 
   const toggleSidebar = () => {
@@ -158,8 +295,7 @@ const AddUnitForm = () => {
   const handleCabangChange = (e) => {
     const value = e.target.value;
     setSelectedCabang(value);
-    setShowDropdown(true); // Keep dropdown open
-    console.log("Cabang yang diketik:", e.target.value); // Memastikan value berasal dari e.target.value
+    setShowDropdown(true);
   };
 
   const handleCabangSelect = (kecamatan) => {
@@ -167,22 +303,64 @@ const AddUnitForm = () => {
     setShowDropdown(false);
   };
 
+  const handleCabangSelectFiltered = (cabang) => {
+    setSelectedCabangFiltered(cabang.kecamatan);
+    setShowDropdownCabang(false);
+
+    fetchUnitKerja(currentPage, entries, cabang.kecamatan);
+  };
+
+  const handleUnitKerjaSelect = (selectedItem) => {
+    setSelectedUnitKerja(selectedItem.unitKerja || "");
+    setShowDropdownUnitKerja(false);
+    setSearchUnitKerja("");
+
+    fetchUnitKerja(0, entries, selectedCabangFiltered, selectedItem.unitKerja);
+  };
+
+  const handleUnitKerjaChange = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchUnitKerja(value);
+
+    const filteredOptions = allUnitKerjaFiltered.filter(
+      (uk) =>
+        uk.unitKerja.toLowerCase().includes(value) &&
+        uk.cabang.toLowerCase() === selectedCabangFiltered.toLowerCase()
+    );
+
+    setFilteredUnitKerjaOptions(filteredOptions);
+  };
+
   const handleFocus = () => {
-    setFilteredCabang(cabang); // Menampilkan semua data cabang ketika input difokuskan
+    setFilteredCabang(cabang);
     setShowDropdown(true);
   };
+
+  const handleEntriesChange = (e) => {
+    setEntries(parseInt(e.target.value));
+    setCurrentPage(0);
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 0 && newPage < totalPages) {
+      setCurrentPage(newPage);
+      fetchUnitKerja(newPage, entries);
+    }
+  };
+
+  const startIndex = currentPage * entries;
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6 mt-4 sm:mt-0 ml-4 sm:ml-0">
       <Toaster
         toastOptions={{
           style: {
-            fontSize: "1.25rem", // Ukuran font yang lebih besar
-            padding: "16px", // Menambah padding jika diperlukan
+            fontSize: "1.25rem",
+            padding: "16px",
           },
           success: {
             style: {
-              background: "white", // Warna background hijau untuk pesan sukses
+              background: "white",
               color: "black",
             },
           },
@@ -206,16 +384,15 @@ const AddUnitForm = () => {
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
             <nav className="mt-6">
               <ul className="flex flex-wrap space-x-4 md:space-x-6">
-               
-                  <li>
-                    <Link
-                      href="/pengaturan/user"
-                      className="text-gray-700 hover:text-teal-600"
-                    >
-                      User
-                    </Link>
-                  </li>
-             
+                <li>
+                  <Link
+                    href="/pengaturan/user"
+                    className="text-gray-700 hover:text-teal-600"
+                  >
+                    User
+                  </Link>
+                </li>
+
                 {sessionStorage.getItem("role") === "SUPER ADMIN" && (
                   <li>
                     <Link
@@ -253,7 +430,7 @@ const AddUnitForm = () => {
                   value={selectedCabang}
                   onChange={handleCabangChange}
                   placeholder="Tentukan Cabang"
-                  onFocus={handleFocus} // Show dropdown when input is focused
+                  onFocus={handleFocus}
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2"
                 />
                 {showDropdown && (
@@ -261,7 +438,7 @@ const AddUnitForm = () => {
                     <Input
                       type="text"
                       value={searchTerm}
-                      onChange={handleSearchChange} // Function to filter cabang
+                      onChange={handleSearchChange}
                       placeholder="Cari cabang..."
                       className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2"
                     />
@@ -311,10 +488,258 @@ const AddUnitForm = () => {
                 </button>
               </div>
             </div>
+            <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-4">
+              <div className="mb-2">
+                <h3 className="text-base md:text-base font-bold mb-2">
+                  Data Unit Kerja
+                </h3>
+                <div className="flex flex-col md:flex-row justify-between mb-4 space-y-4 md:space-y-0">
+                  <div className="flex items-center  space-x-2">
+                    <div className="flex flex-wrap items-center space-x-2 w-full md:w-auto">
+                      <div
+                        ref={dropdownRef}
+                        className="relative flex flex-col w-full md:w-48"
+                      >
+                        <Input
+                          type="text"
+                          placeholder="Pilih Cabang"
+                          value={selectedCabangFiltered}
+                          readOnly
+                          disabled={role === "ADMIN"}
+                          onFocus={() => {
+                            if (role === "SUPER ADMIN") {
+                              setShowDropdownCabang(true);
+                              setFilteredCabangOptions(cabangOptions);
+                            }
+                          }}
+                          className="border rounded-lg p-2 w-full bg-white shadow-sm"
+                        />
+                        {showDropdownCabang && role === "SUPER ADMIN" && (
+                          <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full">
+                            <ul className="max-h-44 overflow-y-auto">
+                              <li className="py-2 px-2">
+                                <Input
+                                  type="text"
+                                  value={searchCabang}
+                                  onChange={handleSearchChangeFiltered}
+                                  className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  placeholder="Cari Cabang..."
+                                  autoFocus
+                                />
+                              </li>
+                              <li
+                                className="p-2 cursor-pointer hover:bg-gray-100"
+                                onClick={() => {
+                                  handleCabangSelectFiltered({ kecamatan: "" });
+                                }}
+                              >
+                                Pilih Cabang
+                              </li>
+                              {filteredCabangOptions.length > 0 ? (
+                                filteredCabangOptions.map((cabang) => (
+                                  <li
+                                    key={cabang.idKecamatan}
+                                    className="p-2 cursor-pointer hover:bg-gray-100"
+                                    onClick={() =>
+                                      handleCabangSelectFiltered(cabang)
+                                    }
+                                  >
+                                    {cabang.kecamatan}
+                                  </li>
+                                ))
+                              ) : (
+                                <li className="px-4 py-2 text-gray-500 cursor-default">
+                                  Tidak ada hasil
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+
+                      <div
+                        ref={unitKerjaRef}
+                        className="relative w-full md:w-48 mt-4 sm:mt-0"
+                      >
+                        <Input
+                          type="text"
+                          placeholder="Pilih Unit Kerja"
+                          value={selectedUnitKerja}
+                          readOnly
+                          onFocus={() => {
+                            setShowDropdownUnitKerja(true);
+                            setFilteredUnitKerjaOptions(
+                              selectedCabangFiltered === "Pilih Cabang"
+                                ? allUnitKerjaFiltered
+                                : allUnitKerjaFiltered.filter(
+                                    (uk) => uk.cabang === selectedCabangFiltered
+                                  )
+                            );
+                          }}
+                          className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                          disabled={selectedCabangFiltered === "Pilih Cabang"}
+                        />
+
+                        {showDropdownUnitKerja && (
+                          <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
+                            <div className="p-1">
+                              <Input
+                                type="text"
+                                value={searchUnitKerja}
+                                onChange={handleUnitKerjaChange}
+                                placeholder="Cari Unit Kerja..."
+                                className="w-full border rounded py-2 px-3 mb-2"
+                              />
+                            </div>
+                            <ul className="max-h-44 overflow-y-auto -mt-3">
+                              <li
+                                className="p-2 cursor-pointer hover:bg-gray-100"
+                                onClick={() => handleUnitKerjaSelect({})}
+                              >
+                                Semua Unit Kerja
+                              </li>
+                              {filteredUnitKerjaOptions.map((item) => (
+                                <li
+                                  key={item.id}
+                                  className="p-2 cursor-pointer hover:bg-gray-100"
+                                  onClick={() => handleUnitKerjaSelect(item)}
+                                >
+                                  {item.unitKerja}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center  space-x-2">
+                    <Label htmlFor="entries" className="mr-2">
+                      Show
+                    </Label>
+                    <select
+                      id="entries"
+                      className="border rounded p-1"
+                      onChange={handleEntriesChange}
+                    >
+                      <option value="10">10</option>
+                      <option value="25">25</option>
+                      <option value="50">50</option>
+                    </select>
+                    <span className="ml-2">entries</span>
+                  </div>
+                </div>
+              </div>
+              <DataTable
+                data={allUnitKerja}
+                startIndex={startIndex}
+                handleDelete={handleDelete}
+              />
+
+              <div className="flex flex-col md:flex-row justify-between text-sm mt-4 items-center space-y-2 md:space-y-0 md:space-x-2">
+                <span className="text-center md:text-left">
+                  Showing {currentPage * entries + 1} to{" "}
+                  {Math.min((currentPage + 1) * entries, totalEntries)} of{" "}
+                  {totalEntries} entries
+                </span>
+
+                <div className="flex flex-wrap justify-center md:justify-end space-x-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={`px-3 py-1 border text-sm rounded ${
+                      currentPage === 0 ? "bg-gray-300" : "bg-white"
+                    }`}
+                    disabled={currentPage === 0}
+                  >
+                    Previous
+                  </button>
+
+                  {Array.from({ length: totalPages }).map((_, index) => {
+                    if (
+                      index < 3 ||
+                      index > totalPages - 4 ||
+                      (index >= currentPage - 1 && index <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => handlePageChange(index)}
+                          className={`px-3 py-1 border text-sm rounded ${
+                            currentPage === index
+                              ? "bg-blue-500 text-white"
+                              : "bg-white"
+                          }`}
+                        >
+                          {index + 1}
+                        </button>
+                      );
+                    }
+                    if (index === 3 || index === totalPages - 4) {
+                      return (
+                        <span
+                          key={index}
+                          className="px-3 py-1 border text-sm rounded text-gray-500"
+                        >
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  })}
+
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={`px-3 py-1 border text-sm rounded ${
+                      currentPage === totalPages - 1
+                        ? "bg-gray-300"
+                        : "bg-white"
+                    }`}
+                    disabled={currentPage === totalPages - 1}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </main>
           </div>
         </div>
       </div>
     </div>
+  );
+};
+
+const DataTable = ({ data, startIndex, handleDelete }) => {
+  return (
+    <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md mt-6">
+      <thead className="bg-teal-700 text-white text-center">
+        <tr>
+          <th className="p-2 md:p-3 border">No.</th>
+          <th className="p-2 md:p-3 border">Cabang</th>
+          <th className="p-2 md:p-3 border">Unit Kerja</th>
+          <th className="p-2 md:p-3 border">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((item, index) => (
+          <tr
+            key={item.id}
+            className="hover:bg-gray-50 text-sm cursor-pointer text-center"
+          >
+            <td className="p-2 md:p-3 border">{startIndex + index + 1}</td>
+            <td className="p-2 md:p-3 border">{item.cabang}</td>
+            <td className="p-2 md:p-3 border">{item.unitKerja}</td>
+            <td className="p-2 md:p-3 border text-center">
+              <FontAwesomeIcon
+                icon={faTrash}
+                size="lg"
+                className="text-red-500 mr-4 cursor-pointer"
+                onClick={() => handleDelete(item.id)}
+              />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 };
 
