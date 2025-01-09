@@ -2319,6 +2319,8 @@ const Page = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
+                            <SelectItem value="SMA">SMA</SelectItem>
+                            <SelectItem value="SMK">SMK</SelectItem>
                             <SelectItem value="DIPLOMA">DIPLOMA</SelectItem>
                             <SelectItem value="SARJANA">SARJANA</SelectItem>
                             <SelectItem value="MAGISTER">MAGISTER</SelectItem>
