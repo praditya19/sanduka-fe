@@ -1934,7 +1934,7 @@ function StatusAnggota() {
                                   </div>
                                 )}
                                 <Link
-                                  href={`https://wa.me/${item.nomorHp}`}
+                                  href={`https://wa.me/62${item.nomorHp}`}
                                   className="text-white bg-green-500 hover:bg-green-600 p-2 border rounded-md"
                                   target="_blank"
                                   rel="noopener noreferrer"
@@ -2269,7 +2269,7 @@ function StatusAnggota() {
                                 )}
 
                                 <Link
-                                  href={`https://wa.me/${item.nomorHp}`}
+                                  href={`https://wa.me/62${item.nomorHp}`}
                                   className="text-white bg-green-500 p-2 border rounded-md"
                                   target="_blank"
                                   rel="noopener noreferrer"

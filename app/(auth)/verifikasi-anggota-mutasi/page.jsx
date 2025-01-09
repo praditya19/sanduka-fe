@@ -1261,7 +1261,7 @@ const PopupDetail = ({
             <div>
               <p className="font-medium text-gray-600">Nomor Hp:</p>
               <a
-                href={`https://wa.me/${selectedRow.nomorHp}`}
+                href={`https://wa.me/62${selectedRow.nomorHp}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center text-green-500"
