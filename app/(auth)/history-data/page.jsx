@@ -25,6 +25,40 @@ const Page = () => {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [bulanOptions, setBulanOptions] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
+  const [currentItems, setCurrentItems] = useState([]);
+
+  useEffect(() => {
+    const filtered = data.filter((item) => {
+      const matchesCabang = selectedCabang
+        ? (item.npaDetail.cabang?.toLowerCase() || item.cabang?.toLowerCase()) ===
+        selectedCabang.toLowerCase()
+        : true;
+
+      const matchesMonth = selectedMonth
+        ? new Date(item.tanggal).getMonth() + 1 === parseInt(selectedMonth, 10)
+        : true;
+
+      const matchesYear = selectedYear
+        ? new Date(item.tanggal).getFullYear() === parseInt(selectedYear, 10)
+        : true;
+
+      return matchesCabang && matchesMonth && matchesYear;
+    });
+
+    // Update total items based on filtered data
+    setTotalItems(filtered.length);
+
+    // Calculate pagination
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    setCurrentItems(filtered.slice(indexOfFirstItem, indexOfLastItem));
+
+    // Adjust current page if it exceeds the new total pages
+    const newTotalPages = Math.ceil(filtered.length / itemsPerPage);
+    if (currentPage > newTotalPages) {
+      setCurrentPage(Math.max(1, newTotalPages));
+    }
+  }, [data, selectedCabang, selectedMonth, selectedYear, currentPage, itemsPerPage]);
 
   useEffect(() => {
     GlobalApi.getCabang()
@@ -154,12 +188,32 @@ const Page = () => {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   const getVisiblePages = () => {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
     const visiblePages = [];
-    const leftLimit = Math.max(1, currentPage - 1);
-    const rightLimit = Math.min(totalPages, currentPage + 1);
 
-    for (let i = leftLimit; i <= rightLimit; i++) {
-      visiblePages.push(i);
+    if (totalPages <= 5) {
+      // Show all pages if total pages are 5 or less
+      for (let i = 1; i <= totalPages; i++) {
+        visiblePages.push(i);
+      }
+    } else {
+      // Show pages around current page
+      if (currentPage <= 3) {
+        // Near the start
+        for (let i = 1; i <= 5; i++) {
+          visiblePages.push(i);
+        }
+      } else if (currentPage >= totalPages - 2) {
+        // Near the end
+        for (let i = totalPages - 4; i <= totalPages; i++) {
+          visiblePages.push(i);
+        }
+      } else {
+        // In the middle
+        for (let i = currentPage - 2; i <= currentPage + 2; i++) {
+          visiblePages.push(i);
+        }
+      }
     }
 
     return visiblePages;
@@ -317,7 +371,7 @@ const Page = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredData.map((item, index) => (
+                    {currentItems.map((item, index) => (
                       <React.Fragment key={index}>
                         <tr
                           className={
@@ -405,59 +459,59 @@ const Page = () => {
                   </tbody>
                 </table>
 
-                {/* <div className="flex flex-col md:flex-row justify-between text-sm mt-4 items-center space-y-2 md:space-y-0 md:space-x-2"> */}
-                {/* <span className="text-center md:text-left">
-                    Showing {startIndex + 1} to {endIndex} of {totalItems} entries
-                  </span> */}
-
-                <div className="flex justify-center mt-4 gap-1">
-                  <button
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    First
-                  </button>
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Prev
-                  </button>
-
-                  {getVisiblePages().map((page) => (
+                <div className="flex justify-center items-center mt-4">
+                  <div className="flex justify-center gap-1">
                     <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 border rounded text-sm ${page === currentPage
-                          ? "bg-blue-500 text-white"
-                          : "bg-white hover:bg-gray-50"
-                        }`}
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                     >
-                      {page}
+                      First
                     </button>
-                  ))}
 
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Next
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Last
-                  </button>
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                    >
+                      Prev
+                    </button>
+
+                    {getVisiblePages().map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                            ? "bg-blue-500 text-white"
+                            : "bg-white hover:bg-gray-50"
+                          }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) =>
+                          Math.min(prev + 1, Math.ceil(totalItems / itemsPerPage))
+                        )
+                      }
+                      disabled={currentPage === Math.ceil(totalItems / itemsPerPage)}
+                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                    >
+                      Next
+                    </button>
+
+                    <button
+                      onClick={() => setCurrentPage(Math.ceil(totalItems / itemsPerPage))}
+                      disabled={currentPage === Math.ceil(totalItems / itemsPerPage)}
+                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                    >
+                      Last
+                    </button>
+                  </div>
                 </div>
+
                 {/* </div> */}
               </div>
             </div>
