@@ -974,7 +974,16 @@ const DataTable = ({
         {(anggotaData || []).length === 0 ? (
           <tr>
             <td colSpan="9" className="py-4 px-4 text-center text-gray-600">
-              Data tidak ditemukan
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: "10vh",
+                }}
+              >
+                <ClipLoader color="#3498db" size={50} />
+              </div>
             </td>
           </tr>
         ) : (
@@ -1001,18 +1010,20 @@ const DataTable = ({
                   {isMobile ? (
                     <td className="py-2 px-4 border-b">
                       <div className="flex flex-col items-center justify-center">
-                        <Image
-                          src={
-                            fotoBase64[index]
-                              ? `data:image/jpeg;base64,${fotoBase64[index]}`
-                              : profileImageUrl
-                          }
-                          width={50}
-                          height={50}
-                          alt="Anggota Foto"
-                          className="rounded"
-                          unoptimized={true}
-                        />
+                        <div className="w-12 h-12 rounded-full overflow-hidden">
+                          <Image
+                            src={
+                              fotoBase64[index]
+                                ? `data:image/jpeg;base64,${fotoBase64[index]}`
+                                : profileImageUrl
+                            }
+                            width={50}
+                            height={50}
+                            alt="Anggota Foto"
+                            className="object-cover"
+                            unoptimized={true}
+                          />
+                        </div>
                         <div>{item.namaLengkap}</div>
                       </div>
                     </td>
