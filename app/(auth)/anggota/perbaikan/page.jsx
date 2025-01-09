@@ -39,7 +39,7 @@ const VerifikasiAnggotaMutasi = () => {
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [fotoBase64, setFotoBase64] = useState("");
-  const [SelectedRowIndex, setSelectedRowIndex] = useState(null);
+  const [setSelectedRowIndex] = useState(null);
   const [nama, setNama] = useState("");
 
   const fetchDataAnggota = async (
@@ -1139,27 +1139,17 @@ const DataTable = ({
 const PopupDetail = ({
   selectedRow,
   handleClosePopup,
+  fotoBase64,
   handleVerifyUserClick,
   handleRejectUserClick,
+  selectedRowIndex,
 }) => {
   const [showConfirmReject, setShowConfirmReject] = useState(false);
-  const [decodedImage, setDecodedImage] = useState(null);
   const profileImageUrl = "/profile.png";
 
-  useEffect(() => {
-    if (selectedRow.foto) {
-      try {
-        const decodedString = atob(selectedRow.foto);
-        setDecodedImage(`data:image/jpeg;base64,${decodedString}`);
-      } catch (error) {
-        console.error("Error decoding Base64:", error);
-      }
-    }
-  }, [selectedRow.foto]);
-
   const handleRejectConfirmation = () => {
-    setShowConfirmReject(false);
-    handleRejectUserClick(selectedRow.id);
+    setShowConfirmReject(false); // Close the confirmation pop-up
+    handleRejectUserClick(selectedRow.id); // Trigger reject action
   };
 
   return (
@@ -1178,16 +1168,19 @@ const PopupDetail = ({
         </div>
 
         <div className="flex flex-col space-y-4 sm:space-y-6">
+          {/* Profile Image */}
           <div className="flex justify-center">
-            <div className="w-20 h-20 rounded-full overflow-hidden">
-              <Image
-                src={decodedImage || profileImageUrl}
-                width={80}
-                height={80}
-                alt="Anggota Foto"
-                className="object-cover"
-              />
-            </div>
+            <Image
+              src={
+                fotoBase64[selectedRowIndex]
+                  ? `data:image/jpeg;base64,${fotoBase64[selectedRowIndex]}`
+                  : profileImageUrl
+              }
+              width={80}
+              height={80}
+              alt="Anggota Foto"
+              className="rounded-full"
+            />
           </div>
 
           {/* Verification Badge */}
