@@ -39,7 +39,7 @@ const VerifikasiAnggotaMutasi = () => {
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [fotoBase64, setFotoBase64] = useState("");
-  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
+  const [SelectedRowIndex, setSelectedRowIndex] = useState(null);
   const [nama, setNama] = useState("");
 
   const fetchDataAnggota = async (
@@ -657,12 +657,11 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
     if (roleFromSession === "ADMIN") {
       setIsDisabled(true);
       setQuery(cabangFromSession);
-      handleChange(cabangFromSession); // Tetap panggil hanya sekali saat komponen pertama kali render
+      handleChange(cabangFromSession);
     }
   }, []);
 
   useEffect(() => {
-    // Set event listener untuk klik di luar dropdown
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
@@ -674,8 +673,6 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  // useEffect(() => {
   //   const roleFromSession = sessionStorage.getItem("role");
   //   const cabangFromSession = sessionStorage.getItem("cabang") || "";
 
@@ -691,7 +688,6 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
   );
 
   useEffect(() => {
-    // Sinkronisasi query dengan selectedCabang jika bukan ADMIN
     if (!isDisabled) {
       setQuery(selectedCabang);
     }
@@ -713,7 +709,7 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
             setFilterQuery("");
           }
         }}
-        disabled={isDisabled} // Input akan ter-disable jika role adalah ADMIN
+        disabled={isDisabled}
       />
 
       {showDropdown && !isDisabled && (
@@ -805,10 +801,8 @@ const DropdownUnitKerja = ({
     );
 
   const handleOptionSelect = (item) => {
-    setQuery(item.unitKerja || ""); // Jika kosong, set kembali ke default
+    setQuery(item.unitKerja || "");
     setShowDropdown(false);
-
-    // Kirim "" ke handler hanya jika memilih "Pilih Unit Kerja"
     handleChange(item.unitKerja || "");
   };
 
@@ -825,7 +819,6 @@ const DropdownUnitKerja = ({
     };
   }, []);
 
-  // Reset query when selectedCabang changes
   React.useEffect(() => {
     setQuery("");
   }, [selectedCabang]);
@@ -835,14 +828,21 @@ const DropdownUnitKerja = ({
       <label className="block mb-2 font-semibold text-gray-800">{label}</label>
       <input
         type="text"
-        className="border rounded-lg p-2 w-full bg-white shadow-sm"
-        placeholder={`Pilih ${label}`}
+        className={`border rounded-lg p-2 w-full bg-white shadow-sm ${
+          !selectedCabang ? "bg-gray-200 cursor-not-allowed" : ""
+        }`}
+        placeholder={
+          !selectedCabang ? "Pilih cabang terlebih dahulu" : `Pilih ${label}`
+        }
         value={query}
         readOnly
         onFocus={() => {
-          setFilterQuery("");
-          setShowDropdown(true);
+          if (selectedCabang) {
+            setFilterQuery("");
+            setShowDropdown(true);
+          }
         }}
+        disabled={!selectedCabang}
       />
 
       {showDropdown && (
@@ -918,12 +918,12 @@ const DataTable = ({
 
   const formatCreatedAt = (createdAt) => {
     const date = new Date(
-      createdAt[0], // Tahun
-      createdAt[1] - 1, // Bulan (0-based)
-      createdAt[2], // Hari
-      createdAt[3], // Jam
-      createdAt[4], // Menit
-      createdAt[5] // Detik
+      createdAt[0],
+      createdAt[1] - 1,
+      createdAt[2],
+      createdAt[3],
+      createdAt[4],
+      createdAt[5]
     );
 
     const dayNames = [
@@ -936,7 +936,7 @@ const DataTable = ({
       "Sabtu",
     ];
 
-    const dayName = dayNames[date.getDay()]; // Ambil nama hari
+    const dayName = dayNames[date.getDay()];
 
     return `${dayName}, ${date.toLocaleString("id-ID", {
       year: "numeric",
@@ -945,7 +945,7 @@ const DataTable = ({
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
-      hour12: false, // Format 24-jam
+      hour12: false,
     })}`;
   };
 
@@ -968,14 +968,22 @@ const DataTable = ({
               <th className="py-2 px-4 border-b">Aksi</th>
             </>
           )}
-          {/* {isMobile && <th className="py-2 px-4 border-b">Lihat Data</th>} */}
         </tr>
       </thead>
       <tbody>
         {(anggotaData || []).length === 0 ? (
           <tr>
             <td colSpan="9" className="py-4 px-4 text-center text-gray-600">
-              Data tidak ditemukan
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: "10vh",
+                }}
+              >
+                <ClipLoader color="#3498db" size={50} />
+              </div>
             </td>
           </tr>
         ) : (
@@ -986,11 +994,7 @@ const DataTable = ({
                 <tr className="hover:bg-gray-50 text-sm cursor-pointer text-center">
                   <td className="py-2 px-4 border-b">
                     <div className="flex justify-between items-center">
-                      {/* Calculate the row number based on current page and page size */}
-                      <td className="py-2 px-4 border-b">
-                        {/* Hitung nomor urut berdasarkan halaman dan index */}
-                        {nomorUrut}
-                      </td>
+                      <td className="py-2 px-4 border-b">{nomorUrut}</td>
                       {isMobile && (
                         <FontAwesomeIcon
                           icon={
@@ -1006,6 +1010,26 @@ const DataTable = ({
                   {isMobile ? (
                     <td className="py-2 px-4 border-b">
                       <div className="flex flex-col items-center justify-center">
+                        <div className="w-12 h-12 rounded-full overflow-hidden">
+                          <Image
+                            src={
+                              fotoBase64[index]
+                                ? `data:image/jpeg;base64,${fotoBase64[index]}`
+                                : profileImageUrl
+                            }
+                            width={50}
+                            height={50}
+                            alt="Anggota Foto"
+                            className="object-cover"
+                            unoptimized={true}
+                          />
+                        </div>
+                        <div>{item.namaLengkap}</div>
+                      </div>
+                    </td>
+                  ) : (
+                    <td className="py-2 px-4 border-b">
+                      <div className="w-12 h-12 rounded-full overflow-hidden">
                         <Image
                           src={
                             fotoBase64[index]
@@ -1015,25 +1039,9 @@ const DataTable = ({
                           width={50}
                           height={50}
                           alt="Anggota Foto"
-                          className="rounded"
-                          unoptimized={true}
+                          className="object-cover"
                         />
-                        <div>{item.namaLengkap}</div>
                       </div>
-                    </td>
-                  ) : (
-                    <td className="py-2 px-4 border-b">
-                      <Image
-                        src={
-                          fotoBase64[index]
-                            ? `data:image/jpeg;base64,${fotoBase64[index]}`
-                            : profileImageUrl
-                        }
-                        width={50}
-                        height={50}
-                        alt="Anggota Foto"
-                        className="rounded-full"
-                      />
                     </td>
                   )}
                   <td className="px-4 py-2 border-b">
@@ -1060,29 +1068,6 @@ const DataTable = ({
                       </td>
 
                       <td className="px-4 py-2 border-b">
-                        {/* <a
-                        href={`https://wa.me/${item.nomorHp}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <FontAwesomeIcon
-                          icon={faWhatsapp}
-                          className="text-green-500 mr-4"
-                          size="lg"
-                        />
-                      </a>
-                      <FontAwesomeIcon
-                        icon={faCheckCircle}
-                        size="lg"
-                        className="text-green-500 mr-4 cursor-pointer"
-                        onClick={() => handleVerifyUserClick(item.id)}
-                      />
-                      <FontAwesomeIcon
-                        icon={faTimesCircle}
-                        size="lg"
-                        className="text-red-500 mr-4 cursor-pointer"
-                        onClick={() => handleRejectUserClick(item.id)}
-                      /> */}
                         <FontAwesomeIcon
                           icon={faUser}
                           size="lg"
@@ -1097,39 +1082,35 @@ const DataTable = ({
                   <tr>
                     <td colSpan="9" className="px-4 py-4 bg-gray-50">
                       <div className="flex flex-col items-center space-y-4">
-                        {/* Foto di tengah atas */}
                         <div className="flex flex-col items-center justify-center">
-                          <Image
-                            src={
-                              fotoBase64[index]
-                                ? `data:image/jpeg;base64,${fotoBase64[index]}`
-                                : profileImageUrl
-                            }
-                            width={50}
-                            height={50}
-                            alt="Anggota Foto"
-                            className="rounded-full"
-                          />
+                          <div className="w-12 h-12 rounded-full overflow-hidden">
+                            <Image
+                              src={
+                                fotoBase64[index]
+                                  ? `data:image/jpeg;base64,${fotoBase64[index]}`
+                                  : profileImageUrl
+                              }
+                              width={50}
+                              height={50}
+                              alt="Anggota Foto"
+                              className="object-cover"
+                            />
+                          </div>
                           <div>{item.namaLengkap}</div>
                         </div>
-                        {/* Data dalam layout grid */}
                         <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
-                          {/* Cabang di kiri */}
                           <div className="text-left">
                             <h3 className="font-semibold">Cabang:</h3>
                             <p>{item.cabang}</p>
                           </div>
-                          {/* Unit kerja di kanan */}
                           <div className="text-left">
                             <h3 className="font-semibold">Unit Kerja:</h3>
                             <p>{item.unitKerja}</p>
                           </div>
-                          {/* NPA PGRI di bawah cabang */}
                           <div className="text-left">
                             <h3 className="font-semibold">NPA PGRI:</h3>
                             <p>{item.npaPgri}</p>
                           </div>
-                          {/* Aksi di bawah unit kerja */}
                           <div className="text-left">
                             <h3 className="font-semibold">Status:</h3>
                             {!item.isVerified && (
@@ -1144,7 +1125,6 @@ const DataTable = ({
                             )}
                           </div>
                         </div>
-                        {/* Status di tengah bawah */}
                         <div className="text-center mt-4">
                           <h3 className="font-semibold">Aksi:</h3>
                           <FontAwesomeIcon
@@ -1170,17 +1150,27 @@ const DataTable = ({
 const PopupDetail = ({
   selectedRow,
   handleClosePopup,
-  fotoBase64,
   handleVerifyUserClick,
   handleRejectUserClick,
-  selectedRowIndex,
 }) => {
   const [showConfirmReject, setShowConfirmReject] = useState(false);
+  const [decodedImage, setDecodedImage] = useState(null);
   const profileImageUrl = "/profile.png";
 
+  useEffect(() => {
+    if (selectedRow.foto) {
+      try {
+        const decodedString = atob(selectedRow.foto);
+        setDecodedImage(`data:image/jpeg;base64,${decodedString}`);
+      } catch (error) {
+        console.error("Error decoding Base64:", error);
+      }
+    }
+  }, [selectedRow.foto]);
+
   const handleRejectConfirmation = () => {
-    setShowConfirmReject(false); // Close the confirmation pop-up
-    handleRejectUserClick(selectedRow.id); // Trigger reject action
+    setShowConfirmReject(false);
+    handleRejectUserClick(selectedRow.id);
   };
 
   return (
@@ -1199,19 +1189,16 @@ const PopupDetail = ({
         </div>
 
         <div className="flex flex-col space-y-4 sm:space-y-6">
-          {/* Profile Image */}
           <div className="flex justify-center">
-            <Image
-              src={
-                fotoBase64[selectedRowIndex]
-                  ? `data:image/jpeg;base64,${fotoBase64[selectedRowIndex]}`
-                  : profileImageUrl
-              }
-              width={80}
-              height={80}
-              alt="Anggota Foto"
-              className="rounded-full"
-            />
+            <div className="w-20 h-20 rounded-full overflow-hidden">
+              <Image
+                src={decodedImage || profileImageUrl}
+                width={80}
+                height={80}
+                alt="Anggota Foto"
+                className="object-cover"
+              />
+            </div>
           </div>
 
           {/* Verification Badge */}
@@ -1261,7 +1248,10 @@ const PopupDetail = ({
             <div>
               <p className="font-medium text-gray-600">Nomor Hp:</p>
               <a
-                href={`https://wa.me/${selectedRow.nomorHp}`}
+                href={`https://wa.me/${selectedRow.nomorHp.replace(
+                  /^0/,
+                  "62"
+                )}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center text-green-500"
@@ -1270,6 +1260,7 @@ const PopupDetail = ({
                 <span>{selectedRow.nomorHp}</span>
               </a>
             </div>
+
             <div>
               <p className="font-medium text-gray-600 mr-4">Status:</p>
               <div className="flex text-center justify-between px-1">

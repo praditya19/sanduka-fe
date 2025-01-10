@@ -8,6 +8,7 @@ const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
 });
+
 // Konversi Gambar Dalam Format Base64
 const base64ToBlob = (base64, mime) => {
   const byteChars = atob(base64);
@@ -96,7 +97,7 @@ const login = async (loginData) => {
 const getCabang = () => axiosClient.get("/api/daftarCabang");
 const getJabatan = () => axiosClient.get("/api/daftarJabatan");
 const getGolonganJabatan = () => axiosClient.get("/api/daftarGolongan");
-const getUnitKerja = () => axiosClient.get("/api/unit-kerja/all");
+const getUnitKerja = () => axiosClient.get("/api/unit-kerja");
 const getBulan = () => axiosClient.get("/api/bulan");
 const searchUsersByName = (namaLengkap) => {
   return axiosClient.get(
@@ -104,47 +105,38 @@ const searchUsersByName = (namaLengkap) => {
   );
 };
 
-// Anggota
-// const getAllAnggota = (page = 0, size = 10) => {
-//   return axiosClient.get(`/api/auth/users?page=${page}&size=${size}`);
-// };
-
 const getAllAnggota = async (
   page = 0,
-  size = 8000,
+  size = 10,
   cabang = null,
   unitKerja = null,
-  npaPgri = null,
-  namaLengkap = null
+  keyword = null,
+  statusKeanggotaan = null
 ) => {
   try {
-    // Menyusun parameter query menggunakan URLSearchParams
     const params = new URLSearchParams({
       page,
       size,
     });
 
-    // Menambahkan filter hanya jika ada nilainya
-    if (cabang) params.append("cabang", encodeURIComponent(cabang));
-    if (unitKerja) params.append("unitKerja", encodeURIComponent(unitKerja));
-    if (npaPgri) params.append("npaPgri", encodeURIComponent(npaPgri));
-    if (namaLengkap)
-      params.append("namaLengkap", encodeURIComponent(namaLengkap));
+    if (cabang) params.append("cabang", cabang);
+    if (unitKerja) params.append("unitKerja", unitKerja);
+    if (keyword) params.append("keyword", keyword);
+    if (statusKeanggotaan)
+      params.append("statusKeanggotaan", statusKeanggotaan);
 
-    // Melakukan request API
     const response = await axiosClient.get(
       `/api/auth/users?${params.toString()}`
     );
 
-    // Memproses dan mengembalikan hasil respons API
     return {
-      content: response.data.content, // Data untuk halaman saat ini
-      totalElements: response.data.totalElements, // Total semua elemen (untuk pagination)
-      totalPages: response.data.totalPages, // Total halaman
+      content: response.data.content,
+      totalElements: response.data.totalElements,
+      totalPages: response.data.totalPages,
     };
   } catch (error) {
     console.error("Error fetching anggota data:", error);
-    throw error; // Lempar error agar bisa ditangani di komponen
+    throw error;
   }
 };
 
@@ -153,9 +145,7 @@ const getAdminById = async (adminId) => {
     const response = await axiosClient.get(`/api/register-admin/${adminId}`);
     const data = response.data;
 
-    // If the foto field exists and contains base64 data, clean it up
     if (data.foto) {
-      // Remove any URL encoding and ensure it's a clean base64 string
       data.foto = data.foto.replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
     }
 
@@ -1564,6 +1554,38 @@ const getUnverifiedUsersCountByCabang = async (cabang = "") => {
   }
 };
 
+const getAllUnitKerja = async (
+  page = 0,
+  size = 10,
+  cabang = "",
+  unitKerja = ""
+) => {
+  try {
+    const params = {
+      page,
+      size,
+      ...(cabang && { cabang: encodeURIComponent(cabang) }),
+      ...(unitKerja && { unitKerja: unitKerja }),
+    };
+    const response = await axiosClient.get(`/api/unit-kerja/all`, { params });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all unit kerja data:", error);
+    throw error;
+  }
+};
+
+const deleteUnitKerja = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/unit-kerja/delete/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching files data: ", error);
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1673,4 +1695,6 @@ export default {
   hapusPemasukanUangMasuk,
   getDetailKeuangan,
   getUnverifiedUsersCountByCabang,
+  getAllUnitKerja,
+  deleteUnitKerja,
 };
