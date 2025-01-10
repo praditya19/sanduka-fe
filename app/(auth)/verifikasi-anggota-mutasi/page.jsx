@@ -657,12 +657,11 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
     if (roleFromSession === "ADMIN") {
       setIsDisabled(true);
       setQuery(cabangFromSession);
-      handleChange(cabangFromSession); // Tetap panggil hanya sekali saat komponen pertama kali render
+      handleChange(cabangFromSession);
     }
   }, []);
 
   useEffect(() => {
-    // Set event listener untuk klik di luar dropdown
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
@@ -674,8 +673,6 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  // useEffect(() => {
   //   const roleFromSession = sessionStorage.getItem("role");
   //   const cabangFromSession = sessionStorage.getItem("cabang") || "";
 
@@ -691,7 +688,6 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
   );
 
   useEffect(() => {
-    // Sinkronisasi query dengan selectedCabang jika bukan ADMIN
     if (!isDisabled) {
       setQuery(selectedCabang);
     }
@@ -713,7 +709,7 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
             setFilterQuery("");
           }
         }}
-        disabled={isDisabled} // Input akan ter-disable jika role adalah ADMIN
+        disabled={isDisabled}
       />
 
       {showDropdown && !isDisabled && (
@@ -805,10 +801,8 @@ const DropdownUnitKerja = ({
     );
 
   const handleOptionSelect = (item) => {
-    setQuery(item.unitKerja || ""); // Jika kosong, set kembali ke default
+    setQuery(item.unitKerja || "");
     setShowDropdown(false);
-
-    // Kirim "" ke handler hanya jika memilih "Pilih Unit Kerja"
     handleChange(item.unitKerja || "");
   };
 
@@ -825,7 +819,6 @@ const DropdownUnitKerja = ({
     };
   }, []);
 
-  // Reset query when selectedCabang changes
   React.useEffect(() => {
     setQuery("");
   }, [selectedCabang]);
@@ -835,14 +828,21 @@ const DropdownUnitKerja = ({
       <label className="block mb-2 font-semibold text-gray-800">{label}</label>
       <input
         type="text"
-        className="border rounded-lg p-2 w-full bg-white shadow-sm"
-        placeholder={`Pilih ${label}`}
+        className={`border rounded-lg p-2 w-full bg-white shadow-sm ${
+          !selectedCabang ? "bg-gray-200 cursor-not-allowed" : ""
+        }`}
+        placeholder={
+          !selectedCabang ? "Pilih cabang terlebih dahulu" : `Pilih ${label}`
+        }
         value={query}
         readOnly
         onFocus={() => {
-          setFilterQuery("");
-          setShowDropdown(true);
+          if (selectedCabang) {
+            setFilterQuery("");
+            setShowDropdown(true);
+          }
         }}
+        disabled={!selectedCabang}
       />
 
       {showDropdown && (
