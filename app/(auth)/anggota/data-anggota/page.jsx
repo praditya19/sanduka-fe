@@ -27,7 +27,14 @@ import {
   FaWhatsapp,
 } from "react-icons/fa";
 import Link from "next/link";
-import MapComponent from "@/app/_components/MapComponent";
+import dynamic from "next/dynamic";
+
+const MapComponent = dynamic(
+  () => import("../../../_components/MapComponent"),
+  {
+    ssr: false,
+  }
+);
 
 const DataAnggota = () => {
   const [selectedRow, setSelectedRow] = useState(null);
@@ -103,7 +110,7 @@ const DataAnggota = () => {
     }
   };
 
-  const fetchDataAnggotacetak = async (
+  const fetchDataAnggotaCetak = async (
     page = 0,
     size = totalElements,
     cabang = null,
@@ -167,7 +174,7 @@ const DataAnggota = () => {
       selectedUnitKerja,
       namaAnggota
     );
-    fetchDataAnggotacetak(
+    fetchDataAnggotaCetak(
       0,
       totalElements,
       selectedCabang,
@@ -187,7 +194,7 @@ const DataAnggota = () => {
       selectedUnitKerja,
       nama
     );
-    fetchDataAnggotacetak(
+    fetchDataAnggotaCetak(
       0,
       totalElements,
       selectedKecamatan,
@@ -199,7 +206,7 @@ const DataAnggota = () => {
   const handleUnitKerjaChange = (value) => {
     setSelectedUnitKerja(value);
     fetchDataAnggota(currentPage, pageSize, selectedCabang, value, nama);
-    fetchDataAnggotacetak(0, totalElements, selectedCabang, value, nama);
+    fetchDataAnggotaCetak(0, totalElements, selectedCabang, value, nama);
   };
 
   const updateUnitKerja = (kecamatan) => {
@@ -365,7 +372,7 @@ const DataAnggota = () => {
       nama,
       e.target.value
     );
-    fetchDataAnggotacetak(
+    fetchDataAnggotaCetak(
       0,
       totalElements,
       selectedCabang,
