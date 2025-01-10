@@ -81,7 +81,7 @@ const HeaderMobile = () => {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem("userId");
+    sessionStorage.clear();
     window.location.href = "/";
   };
 

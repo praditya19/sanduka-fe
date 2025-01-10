@@ -13,10 +13,9 @@ import toast, { Toaster } from "react-hot-toast";
 
 function Pemasukan() {
   const tableRef = useRef();
-  const [selectAll, setSelectAll] = useState(false);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const dropdownRef = useRef(null);
-  const [transactions, setTransactions] = useState([]);
+
   const bulanList = [
     { id: "01", angkaBulan: 0, namaBulan: "Januari" },
     { id: "02", angkaBulan: 1, namaBulan: "Februari" },
@@ -31,6 +30,8 @@ function Pemasukan() {
     { id: "11", angkaBulan: 10, namaBulan: "November" },
     { id: "12", angkaBulan: 11, namaBulan: "Desember" },
   ];
+  const [transactions, setTransactions] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
   const [cabangList, setCabangList] = useState([]);
   const [selectedBulan, setSelectedBulan] = useState("");
   const [selectedBulanName, setSelectedBulanName] = useState("");
@@ -38,9 +39,16 @@ function Pemasukan() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
-  const [paginatedTransactions, setPaginatedTransactions] = useState([]);
+  const [paginatedTransactions, setPaginatedTransactions] = useState(
+    transactions.map((transaction) => ({
+      ...transaction,
+      checked: false,
+    }))
+  );
+  const [checkedIds, setCheckedIds] = useState([]);
+  const [selectedTransactions, setSelectedTransactions] = useState([]);
   const startYear = 2020;
- const currentYear = new Date().getFullYear();
+  const currentYear = new Date().getFullYear();
   const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
   const [formValues, setFormValues] = useState({
     tanggalTransaksi: "",
@@ -182,7 +190,7 @@ function Pemasukan() {
           selectedBulan,
           newSelectedYear
         );
-
+        console.log("data:", data);
         setTotalItems(data.length);
         const paginatedData = data.slice(indexOfFirstItem, indexOfLastItem);
         setTransactions(paginatedData);
@@ -261,7 +269,7 @@ function Pemasukan() {
           </div>,
           {
             icon: null,
-            duration: 4000,
+            duration: 2000,
             style: {
               marginTop: "12%",
               fontSize: "1.75rem",
@@ -317,7 +325,7 @@ function Pemasukan() {
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 2000,
           style: {
             marginTop: "12%",
             fontSize: "1.75rem",
@@ -395,7 +403,7 @@ function Pemasukan() {
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 2000,
           style: {
             marginTop: "12%",
             fontSize: "1.75rem",
@@ -413,6 +421,9 @@ function Pemasukan() {
           },
         }
       );
+      setTimeout(() => {
+        window.location.reload(); // Menyegarkan halaman setelah 2 detik
+      }, 2000);
     } catch (error) {
       toast.error(
         <div
@@ -450,7 +461,7 @@ function Pemasukan() {
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 2000,
           style: {
             marginTop: "12%",
             fontSize: "1.75rem",
@@ -483,31 +494,80 @@ function Pemasukan() {
     });
   };
 
-  const handleCheck = (noBukti) => {
-    const updatedTransactions = transactions.map((transaction) =>
-      transaction.noBukti === noBukti
-        ? { ...transaction, checked: !transaction.checked }
-        : transaction
-    );
-
-    setTransactions(updatedTransactions);
-
-    const allChecked = updatedTransactions.every(
-      (transaction) => transaction.checked
-    );
-    setSelectAll(allChecked);
+  const handleCheck = (id) => {
+    setCheckedIds((prevCheckedIds) => {
+      if (prevCheckedIds.includes(id)) {
+        // Jika ID sudah ada, hapus ID tersebut
+        return prevCheckedIds.filter((checkedId) => checkedId !== id);
+      } else {
+        // Jika ID belum ada, tambahkan ID tersebut
+        return [...prevCheckedIds, id];
+      }
+    });
   };
 
   const handleSelectAll = () => {
     const newSelectAll = !selectAll;
     setSelectAll(newSelectAll);
-    setTransactions((prevTransactions) =>
+
+    const updatedCheckedIds = newSelectAll
+      ? paginatedTransactions.map((transaction) => transaction.id)
+      : [];
+
+    setCheckedIds(updatedCheckedIds);
+
+    // Pembaruan pada transactions (untuk checkboxes)
+    setPaginatedTransactions((prevTransactions) =>
       prevTransactions.map((transaction) => ({
         ...transaction,
         checked: newSelectAll,
       }))
     );
   };
+
+  const handleDeleteClick = async () => {
+    try {
+      // Kirim semua ID yang dicentang untuk dihapus
+      for (const id of checkedIds) {
+        const response = await GlobalApi.hapusPemasukanUangMasuk(id);
+  
+        if (response) {
+          // Perbarui data setelah penghapusan
+          setTransactions((prevTransactions) =>
+            prevTransactions.filter((transaction) => !checkedIds.includes(transaction.id))
+          );
+          setPaginatedTransactions((prevPaginatedTransactions) =>
+            prevPaginatedTransactions.filter(
+              (transaction) => !checkedIds.includes(transaction.id)
+            )
+          );
+  
+          // Tampilkan Toast
+          toast.success("Data berhasil dihapus!");
+  
+          // Refresh halaman setelah menampilkan toast
+          setTimeout(() => {
+            window.location.reload(); // Menyegarkan halaman setelah 2 detik
+          }, 2000); // Tunggu 2 detik sebelum refresh
+        }
+      }
+    } catch (error) {
+      console.error("Gagal menghapus data dengan ID:", checkedIds, error);
+    }
+  };  
+
+  useEffect(() => {
+    // Memfilter transaksi yang valid dan melakukan paginasi
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+
+    const filteredTransactions = transactions.filter(
+      (transaction) => transaction.tglTransaksi
+    );
+
+    const paginatedData = filteredTransactions.slice(startIndex, endIndex);
+    setPaginatedTransactions(paginatedData);
+  }, [transactions, currentPage, itemsPerPage]);
 
   const parseNumber = (value) => {
     if (value === "" || isNaN(parseFloat(value))) {
@@ -977,9 +1037,12 @@ function Pemasukan() {
                     checked={selectAll}
                     onChange={handleSelectAll}
                   />
-                  <Button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300">
-                    Hapus
-                  </Button>
+                  <Button
+      className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+      onClick={handleDeleteClick} // Menghapus berdasarkan ID yang dicentang
+    >
+      Hapus
+    </Button>
                   <Button
                     className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300"
                     onClick={printTable}
@@ -1005,10 +1068,11 @@ function Pemasukan() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedTransactions.map((transaction, index) =>
-                    transaction.tglTransaksi ? (
+                  {paginatedTransactions
+                    .filter((transaction) => transaction.tglTransaksi) // Menyaring transaksi yang valid
+                    .map((transaction, index) => (
                       <tr
-                        key={index}
+                        key={transaction.id}
                         className={`border-b text-black text-center ${
                           transaction.checked
                             ? "bg-gray-100"
@@ -1019,7 +1083,6 @@ function Pemasukan() {
                           {indexOfFirstItem + index + 1}
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          {" "}
                           {transaction.tglTransaksi}
                         </td>
                         <td className="px-6 py-4 text-sm">
@@ -1030,12 +1093,12 @@ function Pemasukan() {
                         </td>
                         <td className="px-6 py-4 text-sm">
                           {formatCurrency(
-                            parseFloat(transaction.debet.replace(",")) || 0
+                            parseFloat(transaction.debet.replace(",", "")) || 0
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm">
                           {formatCurrency(
-                            parseFloat(transaction.kredit.replace(",")) || 0
+                            parseFloat(transaction.kredit.replace(",", "")) || 0
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm">
@@ -1047,57 +1110,59 @@ function Pemasukan() {
                               type="checkbox"
                               className="form-checkbox h-4 w-4"
                               checked={transaction.checked}
-                              onChange={() => handleCheck(transaction.noBukti)}
+                              onChange={() => handleCheck(transaction.id)} // Menggunakan id untuk checkbox
                             />
                             <Button
                               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
-                              onClick={() =>
-                                handleEditClick(transaction.noBukti)
-                              }
+                              onClick={() => handleEditClick(transaction.id)}
                             >
                               Edit
                             </Button>
+                            <Button
+      className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+      onClick={handleDeleteClick} // Menghapus berdasarkan ID yang dicentang
+    >
+      Hapus
+    </Button>
                           </div>
                         </td>
                       </tr>
-                    ) : null
-                  )}
-
+                    ))}
+                  {/* Baris Total */}
                   <tr className="bg-gray-200 text-base text-black text-center font-bold">
                     <td className="px-6 py-4 text-left" colSpan="4">
                       TOTAL
                     </td>
                     <td className="px-6 py-4 text-sm">
                       {formatCurrency(
-                        transactions.reduce((total, transaction) => {
+                        paginatedTransactions.reduce((total, transaction) => {
                           const debet = Math.floor(
-                            parseFloat(transaction.debet.replace(",")) || 0
+                            parseFloat(transaction.debet.replace(",", "")) || 0
                           );
-                          return debet;
+                          return total + debet;
                         }, 0)
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       {formatCurrency(
-                        transactions.reduce((total, transaction) => {
+                        paginatedTransactions.reduce((total, transaction) => {
                           const kredit = Math.floor(
-                            parseFloat(transaction.kredit.replace(",")) || 0
+                            parseFloat(transaction.kredit.replace(",", "")) || 0
                           );
-                          return kredit;
+                          return total + kredit;
                         }, 0)
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       {formatCurrency(
-                        transactions.reduce((total, transaction) => {
+                        paginatedTransactions.reduce((total, transaction) => {
                           const saldo = Math.floor(
-                            parseFloat(transaction.saldo.replace(",")) || 0
+                            parseFloat(transaction.saldo.replace(",", "")) || 0
                           );
-                          return saldo;
+                          return total + saldo;
                         }, 0)
                       )}
                     </td>
-
                     <td className="px-6 py-4 text-sm"></td>
                   </tr>
                 </tbody>
