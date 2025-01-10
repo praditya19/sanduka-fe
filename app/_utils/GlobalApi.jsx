@@ -111,7 +111,7 @@ const getAllAnggota = async (
   cabang = null,
   unitKerja = null,
   keyword = null,
-  statusKeanggotaan
+  statusKeanggotaan = null
 ) => {
   try {
     const params = new URLSearchParams({
