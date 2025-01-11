@@ -24,6 +24,7 @@ import {
   FaEdit,
   FaExchangeAlt,
   FaExclamationTriangle,
+  FaTimes,
   FaWhatsapp,
 } from "react-icons/fa";
 import Link from "next/link";
@@ -56,7 +57,7 @@ const DataAnggota = () => {
   const [fotoBase64, setFotoBase64] = useState("");
   const [setSelectedRowIndex] = useState(null);
   const [nama, setNama] = useState("");
-  const [status, setStatus] = React.useState("Semua");
+  const [status, setStatus] = React.useState("Aktif");
   const [role, setRole] = useState("");
   const [totalElements, setTotalElements] = useState(0);
 
@@ -921,7 +922,213 @@ const DataTable = ({
   const [currentItem, setCurrentItem] = useState(null);
   const [popupVisibleKeluar, setPopupVisibleKeluar] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
+  const [kategoriDaspen, setKategoriDaspen] = useState("");
+  const [daspenData, setDaspenData] = useState(null);
+  const [isKategoriChanged, setIsKategoriChanged] = useState(false);
+  const [previousKategoriDaspen, setPreviousKategoriDaspen] =
+    useState(kategoriDaspen);
   const profileImageUrl = "/profile.png";
+
+  const handleConfirmChange = async () => {
+    const anggotaId = sessionStorage.getItem("anggotaId");
+
+    if (anggotaId) {
+      try {
+        const userData = await GlobalApi.getUserById(anggotaId);
+
+        if (userData) {
+          console.log("Data yang diterima:", userData);
+
+          const formatTanggal = (tanggal) => {
+            const date = new Date(tanggal);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
+          };
+
+          const formattedTanggalLahir = formatTanggal(userData.tanggalLahir);
+          const formattedTahunDiangkat = formatTanggal(userData.tahunDiangkat);
+          const formattedMulaiJadiAnggota = formatTanggal(
+            userData.mulaiJadiAnggotaPgri
+          );
+
+          const formData = new FormData();
+
+          formData.append(
+            "pesertaKtaDigital",
+            userData.pesertaKtaDigital || ""
+          );
+          formData.append("pesertaDaspen", userData.pesertaDaspen || "");
+          formData.append("mengajar", userData.mengajar || "");
+          formData.append("golonganJabatan", userData.golonganJabatan || "");
+          formData.append(
+            "mulaiJadiAnggotaPgri",
+            formattedMulaiJadiAnggota || ""
+          );
+          formData.append(
+            "pendidikanTerakhir",
+            userData.pendidikanTerakhir || ""
+          );
+          formData.append("pangkatGolongan", userData.pangkatGolongan || "");
+          formData.append("tahunDiangkat", formattedTahunDiangkat || "");
+          formData.append("statusPegawai", userData.statusPegawai || "");
+          formData.append("sertifikatPendidik", userData.sertifikatPendidik);
+          formData.append("statusSekolah", userData.statusSekolah || "");
+          formData.append("tingkatSekolah", userData.tingkatSekolah || "");
+          formData.append("jabatan", userData.jabatan || "");
+          formData.append("unitKerja", userData.unitKerja || "");
+          formData.append("cabang", userData.cabang || "");
+          formData.append("foto", userData.foto || "");
+          formData.append("namaAnak", JSON.stringify(userData.namaAnak || []));
+          formData.append("namaSuamiIstri", userData.namaSuamiIstri || "");
+          formData.append("nomorHp", userData.nomorHp || "");
+          formData.append("kodePos", userData.kodePos || "");
+          formData.append("longitude", userData.longitude || 0);
+          formData.append("latitude", userData.latitude || 0);
+          formData.append("alamat", userData.alamat || "");
+          formData.append("golonganDarah", userData.golonganDarah || "");
+          formData.append("agama", userData.agama || "");
+          formData.append("jenisKelamin", userData.jenisKelamin || "");
+          formData.append("kategoriDaspen", kategoriDaspen);
+          formData.append("tanggalLahir", formattedTanggalLahir || "");
+          formData.append("tempatLahir", userData.tempatLahir || "");
+          formData.append("namaLengkap", userData.namaLengkap || "");
+          formData.append("nik", userData.nik || "");
+          formData.append("nip", userData.nip || "");
+          formData.append("npaPgri", userData.npaPgri || "");
+          formData.append("password", userData.password || "");
+          formData.append("email", userData.email || "");
+
+          console.log("FormData yang akan dikirim:");
+          for (let pair of formData.entries()) {
+            console.log(pair[0] + ": " + pair[1]);
+          }
+
+          const response = await GlobalApi.updateUserById(anggotaId, formData);
+
+          setDaspenData(response);
+          setIsKategoriChanged(false);
+          setIsPopupDaspen(false);
+
+          toast.success(
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                style={{
+                  width: "150px",
+                  height: "150px",
+                  color: "#06D001",
+                  marginBottom: "16px",
+                  marginTop: "14px",
+                }}
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+              </svg>
+              <h3
+                style={{
+                  fontSize: "2rem",
+                  display: "block",
+                  marginBottom: "28px",
+                }}
+              >
+                Kategori Daspen Berhasil Diupdate!
+              </h3>
+            </div>,
+            {
+              icon: null,
+              duration: 4000,
+              style: {
+                marginTop: "12%",
+                fontSize: "1.75rem",
+                padding: "10px",
+                width: "80%",
+                maxWidth: "450px",
+                height: "50%",
+                maxHeight: "400px",
+                transform: "translate(-50%, -50%)",
+                textAlign: "center",
+                zIndex: 9999,
+                backgroundColor: "#fff",
+                borderRadius: "8px",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              },
+            }
+          );
+        } else {
+          console.log("Data pengguna tidak ditemukan.");
+        }
+      } catch (error) {
+        console.error("Terjadi kesalahan:", error);
+        toast.error(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                width: "150px",
+                height: "150px",
+                color: "red",
+                marginBottom: "16px",
+              }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
+            </svg>
+            <h3
+              style={{
+                fontSize: "1.75rem",
+                display: "block",
+                marginBottom: "8px",
+              }}
+            >
+              Gagal memperbarui data. Periksa kembali input.
+            </h3>
+          </div>,
+          {
+            icon: null,
+            duration: 4000,
+            style: {
+              marginTop: "12%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "450px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
+        );
+      }
+    } else {
+      console.log("Anggota ID tidak ditemukan di sessionStorage");
+    }
+  };
 
   const handleDataDaspen = async () => {
     const anggotaId = sessionStorage.getItem("anggotaId");
@@ -1039,6 +1246,13 @@ const DataTable = ({
     } else {
       console.log("Anggota ID tidak ditemukan di sessionStorage");
     }
+  };
+
+  const handleKategoriChange = (e) => {
+    setPreviousKategoriDaspen(kategoriDaspen);
+
+    setKategoriDaspen(e.target.value);
+    setIsKategoriChanged(true);
   };
 
   const handleDeleteClick = async () => {
@@ -1256,6 +1470,10 @@ const DataTable = ({
 
   const handlePopup = () => {
     setPopupVisible(true);
+  };
+
+  const closePopup = () => {
+    setIsPopupDaspen(false);
   };
 
   return (
@@ -1802,40 +2020,7 @@ const DataTable = ({
                     <tr>
                       <td colSpan="9" className="px-4 py-4 bg-gray-50">
                         <div className="flex flex-col items-center space-y-4">
-                          <div className="flex flex-col items-center justify-center">
-                            <div className="w-12 h-12 rounded-full overflow-hidden">
-                              <Image
-                                src={
-                                  fotoBase64[index]
-                                    ? `data:image/jpeg;base64,${fotoBase64[index]}`
-                                    : profileImageUrl
-                                }
-                                width={50}
-                                height={50}
-                                alt="Anggota Foto"
-                                className="object-cover"
-                              />
-                            </div>
-                            <div>{item.namaLengkap}</div>
-                          </div>
                           <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
-                            <div className="text-left">
-                              <h3 className="font-semibold">Nama:</h3>
-                              <div className="font-bold text-sm">
-                                {item.namaLengkap}
-                              </div>
-                              <div className="text-sm">{item.npaPgri}</div>
-                              <div className="text-sm">{item.jabatan}</div>
-                              <div
-                                className={`text-sm p-1 inline-block ${
-                                  item.nip
-                                    ? "bg-green-500 text-white rounded-full px-3"
-                                    : "bg-red-500 text-white rounded-full px-3"
-                                }`}
-                              >
-                                {item.nip ? item.nip : "Tidak Terdaftar Daspen"}
-                              </div>
-                            </div>
                             <div className="text-left">
                               <h3 className="font-semibold">Tanggal Lahir:</h3>
                               <div className="text-sm">{item.tempatLahir},</div>
