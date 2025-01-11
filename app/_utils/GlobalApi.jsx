@@ -1563,6 +1563,18 @@ const deleteUnitKerja = async (id) => {
   }
 };
 
+const getUnverifiedUsersCountSuperAdmin = async () => {
+  try {
+    const response = await axiosClient.get(
+      "/api/auth/unverified-users-count-super-admin"
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error creating jumlah data terupload:", error);
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1674,4 +1686,5 @@ export default {
   getUnverifiedUsersCountByCabang,
   getAllUnitKerja,
   deleteUnitKerja,
+  getUnverifiedUsersCountSuperAdmin,
 };

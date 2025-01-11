@@ -35,6 +35,10 @@ const VerifikasiAnggotaMutasi = () => {
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [anggotaData, setAnggotaData] = useState([]);
   const [anggotaUnverifiedCount, setAnggotaUnverifiedCount] = useState(0);
+  const [
+    anggotaUnverifiedCountSuperAdmin,
+    setAnggotaUnverifiedCountSuperAdmin,
+  ] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
@@ -347,6 +351,16 @@ const VerifikasiAnggotaMutasi = () => {
     }
   };
 
+  const fetchUnverifiedUsersCountBySuperAdmin = async () => {
+    try {
+      const response = await GlobalApi.getUnverifiedUsersCountSuperAdmin();
+      setAnggotaUnverifiedCountSuperAdmin(response.unverifiedCount);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching anggota data:", error);
+    }
+  };
+
   const handleNamaChange = (e) => {
     const namaAnggota = e.target.value;
     setNama(namaAnggota);
@@ -402,6 +416,7 @@ const VerifikasiAnggotaMutasi = () => {
           fetchUnverifiedUsersCountByCabang(cabangFromSession);
         } else {
           fetchDataAnggota(currentPage, pageSize);
+          fetchUnverifiedUsersCountBySuperAdmin();
         }
 
         const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -545,6 +560,9 @@ const VerifikasiAnggotaMutasi = () => {
               handleNamaChange={handleNamaChange}
               nama={nama}
               anggotaUnverifiedCount={anggotaUnverifiedCount}
+              anggotaUnverifiedCountSuperAdmin={
+                anggotaUnverifiedCountSuperAdmin
+              }
             />
 
             <div className="overflow-x-auto">
@@ -589,6 +607,7 @@ const FilterSection = ({
   handleNamaChange,
   nama,
   anggotaUnverifiedCount,
+  anggotaUnverifiedCountSuperAdmin,
 }) => (
   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-16 text-sm">
     <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
@@ -623,7 +642,7 @@ const FilterSection = ({
         </div>
       </div>
       <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
-        {Object.entries(anggotaUnverifiedCount).length > 0 ? (
+        {selectedCabang && Object.entries(anggotaUnverifiedCount).length > 0 ? (
           Object.entries(anggotaUnverifiedCount).map(([cabang, count]) => (
             <div key={cabang} className="w-full md:w-auto self-start">
               <p className="w-72 text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-lg p-3 rounded-lg hover:scale-105 transition-all duration-300 ease-in-out transform">
@@ -633,8 +652,9 @@ const FilterSection = ({
           ))
         ) : (
           <div className="w-full md:w-auto self-start">
-            <p className="w-72 text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-lg p-3 rounded-lg hover:scale-105 transition-all duration-300 ease-in-out transform">
-              Anggota Belum Terverifikasi:
+            <p className="w-80  text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-lg p-3 rounded-lg hover:scale-105 transition-all duration-300 ease-in-out transform">
+              Anggota Belum Terverifikasi:{" "}
+              {anggotaUnverifiedCountSuperAdmin || 0}
             </p>
           </div>
         )}
