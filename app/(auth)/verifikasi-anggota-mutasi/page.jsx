@@ -344,7 +344,7 @@ const VerifikasiAnggotaMutasi = () => {
   const fetchUnverifiedUsersCountByCabang = async (cabang = "") => {
     try {
       const response = await GlobalApi.getUnverifiedUsersCountByCabang(cabang);
-      setAnggotaUnverifiedCount(response.data);
+      setAnggotaUnverifiedCount(response.data || 0);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching anggota data:", error);
@@ -570,6 +570,7 @@ const VerifikasiAnggotaMutasi = () => {
                 anggotaData={anggotaData}
                 handleUserClick={handleUserClick}
                 fotoBase64={fotoBase64}
+                loading={loading}
                 currentPage={currentPage}
                 pageSize={pageSize}
               />
@@ -643,16 +644,18 @@ const FilterSection = ({
       </div>
       <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
         {selectedCabang && Object.entries(anggotaUnverifiedCount).length > 0 ? (
-          Object.entries(anggotaUnverifiedCount).map(([cabang, count]) => (
-            <div key={cabang} className="w-full md:w-auto self-start">
-              <p className="w-72 text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-lg p-3 rounded-lg hover:scale-105 transition-all duration-300 ease-in-out transform">
-                Anggota Belum Terverifikasi: {count}
-              </p>
-            </div>
-          ))
+          Object.entries(anggotaUnverifiedCount).map(([cabang, count]) => {
+            return (
+              <div key={cabang} className="w-full md:w-auto self-start">
+                <p className="w-72 text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-lg p-3 rounded-lg hover:scale-105 transition-all duration-300 ease-in-out transform">
+                  Anggota Belum Terverifikasi: {count || 0}{" "}
+                </p>
+              </div>
+            );
+          })
         ) : (
           <div className="w-full md:w-auto self-start">
-            <p className="w-80  text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-lg p-3 rounded-lg hover:scale-105 transition-all duration-300 ease-in-out transform">
+            <p className="w-80 text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-lg p-3 rounded-lg hover:scale-105 transition-all duration-300 ease-in-out transform">
               Anggota Belum Terverifikasi:{" "}
               {anggotaUnverifiedCountSuperAdmin || 0}
             </p>
@@ -912,6 +915,7 @@ const DataTable = ({
   fotoBase64,
   currentPage,
   pageSize,
+  loading,
 }) => {
   const currentPageNumber = Number(currentPage) || 0;
   const pageSizeNumber = Number(pageSize) || 10;
@@ -991,7 +995,7 @@ const DataTable = ({
         </tr>
       </thead>
       <tbody>
-        {(anggotaData || []).length === 0 ? (
+        {loading ? (
           <tr>
             <td colSpan="9" className="py-4 px-4 text-center text-gray-600">
               <div
@@ -1006,15 +1010,21 @@ const DataTable = ({
               </div>
             </td>
           </tr>
+        ) : anggotaData.length === 0 ? (
+          <tr>
+            <td colSpan="9" className="py-4 px-4 text-center text-gray-600">
+              <span>Tidak Ada Anggota</span>
+            </td>
+          </tr>
         ) : (
-          (anggotaData || []).map((item, index) => {
+          anggotaData.map((item, index) => {
             const nomorUrut = currentPageNumber * pageSizeNumber + index + 1;
             return (
               <React.Fragment key={item.id}>
                 <tr className="hover:bg-gray-50 text-sm cursor-pointer text-center">
                   <td className="py-2 px-4 border-b">
                     <div className="flex justify-between items-center">
-                      <td className="py-2 px-4 border-b">{nomorUrut}</td>
+                      <span>{nomorUrut}</span>
                       {isMobile && (
                         <FontAwesomeIcon
                           icon={
@@ -1073,7 +1083,6 @@ const DataTable = ({
                       <td className="py-2 px-4 border-b">{item.unitKerja}</td>
                       <td className="py-2 px-4 border-b">{item.namaLengkap}</td>
                       <td className="py-2 px-4 border-b">{item.npaPgri}</td>
-
                       <td className="py-2 px-4 border-b">
                         {!item.isVerified && (
                           <Badge variant="destructive">
@@ -1086,7 +1095,6 @@ const DataTable = ({
                           </Badge>
                         )}
                       </td>
-
                       <td className="px-4 py-2 border-b">
                         <FontAwesomeIcon
                           icon={faUser}

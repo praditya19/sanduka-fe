@@ -1519,12 +1519,11 @@ const getDetailKeuangan = async ({
 
 const getUnverifiedUsersCountByCabang = async (cabang = "") => {
   try {
-    const params = {
-      ...(cabang && { cabang: encodeURIComponent(cabang) }),
-    };
-    const response = await axiosClient.get("/api/auth/unverified-users-count", {
-      params,
-    });
+    const params = cabang ? { cabang } : {};
+    const url = `/api/auth/unverified-users-count?${new URLSearchParams(
+      params
+    ).toString()}`;
+    const response = await axiosClient.get(encodeURI(url));
     return response;
   } catch (error) {
     throw error;
@@ -1572,6 +1571,21 @@ const getUnverifiedUsersCountSuperAdmin = async () => {
   } catch (error) {
     console.error("Error creating jumlah data terupload:", error);
     throw error;
+  }
+};
+
+const activasiUser = async (userId) => {
+  try {
+    const response = await axiosClient.put(`/api/auth/activate/${userId}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
   }
 };
 
@@ -1687,4 +1701,5 @@ export default {
   getAllUnitKerja,
   deleteUnitKerja,
   getUnverifiedUsersCountSuperAdmin,
+  activasiUser,
 };
