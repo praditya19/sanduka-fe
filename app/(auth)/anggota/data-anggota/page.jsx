@@ -2130,15 +2130,28 @@ const DataTable = ({
                                 </div>
                               )}
                             </div>
-                            <Button
-                              className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
-                              title="Aktivasi Anggota"
-                              type="button"
-                              onClick={() => updateAktivasiUser(item.id)}
-                            >
-                              <FaUserCheck className="w-4 h-4" />
-                              <span>Aktivasi</span>
-                            </Button>
+
+                            {sessionStorage.getItem("role") === "USER" ? (
+                              <Button
+                                className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2 cursor-not-allowed opacity-50"
+                                title="Aktivasi Anggota"
+                                type="button"
+                                disabled
+                              >
+                                <FaUserCheck className="w-4 h-4" />
+                                <span>Aktivasi</span>
+                              </Button>
+                            ) : (
+                              <Button
+                                className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
+                                title="Aktivasi Anggota"
+                                type="button"
+                                onClick={() => updateAktivasiUser(item.id)}
+                              >
+                                <FaUserCheck className="w-4 h-4" />
+                                <span>Aktivasi</span>
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </>
@@ -2214,7 +2227,8 @@ const DataTable = ({
                               </Button>
 
                               {sessionStorage.getItem("role") ===
-                              "SUPER ADMIN" ? (
+                                "SUPER ADMIN" ||
+                              sessionStorage.getItem("role") === "ADMIN" ? (
                                 <Button
                                   className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
                                   title="Mutasi"
@@ -2226,6 +2240,7 @@ const DataTable = ({
                                 <Button
                                   className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
                                   title="Mutasi"
+                                  disabled
                                 >
                                   <FaExchangeAlt className="w-4 h-4" />
                                 </Button>
@@ -2480,15 +2495,27 @@ const DataTable = ({
                                   </div>
                                 )}
                               </div>
-                              <Button
-                                className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
-                                title="Aktivasi User"
-                                type="button"
-                                onClick={() => updateAktivasiUser(item.id)}
-                              >
-                                <FaUserCheck className="w-4 h-4" />
-                                <span>Aktivasi</span>
-                              </Button>
+                              {sessionStorage.getItem("role") === "USER" ? (
+                                <Button
+                                  className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2 cursor-not-allowed opacity-50"
+                                  title="Aktivasi Anggota"
+                                  type="button"
+                                  disabled
+                                >
+                                  <FaUserCheck className="w-4 h-4" />
+                                  <span>Aktivasi</span>
+                                </Button>
+                              ) : (
+                                <Button
+                                  className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
+                                  title="Aktivasi Anggota"
+                                  type="button"
+                                  onClick={() => updateAktivasiUser(item.id)}
+                                >
+                                  <FaUserCheck className="w-4 h-4" />
+                                  <span>Aktivasi</span>
+                                </Button>
+                              )}
                             </div>
                           </div>
                           <div className="text-center mt-4 w-full">
