@@ -53,7 +53,6 @@ const registerUser = async (userData) => {
 
 const loginAdmin = async (loginData) => {
   try {
-    console.log("Login Data:", loginData);
     const response = await axiosClient.post(
       "/api/auth/login-email-password",
       loginData,
@@ -61,7 +60,6 @@ const loginAdmin = async (loginData) => {
         headers: { "Content-Type": "application/json" },
       }
     );
-    console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
     console.error("API Error:", error.response?.data || error.message);
