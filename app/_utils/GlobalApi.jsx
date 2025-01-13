@@ -53,7 +53,6 @@ const registerUser = async (userData) => {
 
 const loginAdmin = async (loginData) => {
   try {
-    console.log("Login Data:", loginData);
     const response = await axiosClient.post(
       "/api/auth/login-email-password",
       loginData,
@@ -61,7 +60,6 @@ const loginAdmin = async (loginData) => {
         headers: { "Content-Type": "application/json" },
       }
     );
-    console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
     console.error("API Error:", error.response?.data || error.message);
@@ -1385,17 +1383,17 @@ const getRantingSummary = async (
     };
 
     const response = await axiosClient.get("/api/ranting", { params });
-
     return {
       content: Array.isArray(response.data.content)
         ? response.data.content.map((data) => ({
             cabang: data.cabang,
             namaRanting: data.namaRanting,
-            lokasi: data.unitKerja,
+            unitKerja: data.unitKerja,
             namaAnggota: processNamaAnggota(data.namaAnggota),
+            anggotaUnitKerja: data.anggotaUnitKerja,
             jumlahAnggotaRanting: data.jumlahAnggotaRanting,
             totalUnitKerja: data.totalUnitKerja,
-            totalAnggota: data.totalAnggota,
+            totalAnggota: data.totalAnggotaSemuaRanting,
           }))
         : [],
       totalElements: response.data.totalElements,
@@ -1539,12 +1537,11 @@ const getDetailKeuangan = async ({
 
 const getUnverifiedUsersCountByCabang = async (cabang = "") => {
   try {
-    const params = {
-      ...(cabang && { cabang: encodeURIComponent(cabang) }),
-    };
-    const response = await axiosClient.get("/api/auth/unverified-users-count", {
-      params,
-    });
+    const params = cabang ? { cabang } : {};
+    const url = `/api/auth/unverified-users-count?${new URLSearchParams(
+      params
+    ).toString()}`;
+    const response = await axiosClient.get(encodeURI(url));
     return response;
   } catch (error) {
     throw error;
@@ -1580,6 +1577,33 @@ const deleteUnitKerja = async (id) => {
   } catch (error) {
     console.error("Error fetching files data: ", error);
     throw error;
+  }
+};
+
+const getUnverifiedUsersCountSuperAdmin = async () => {
+  try {
+    const response = await axiosClient.get(
+      "/api/auth/unverified-users-count-super-admin"
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error creating jumlah data terupload:", error);
+    throw error;
+  }
+};
+
+const activasiUser = async (userId) => {
+  try {
+    const response = await axiosClient.put(`/api/auth/activate/${userId}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
   }
 };
 
@@ -1694,4 +1718,6 @@ export default {
   getUnverifiedUsersCountByCabang,
   getAllUnitKerja,
   deleteUnitKerja,
+  getUnverifiedUsersCountSuperAdmin,
+  activasiUser,
 };

@@ -111,9 +111,7 @@ export default function Home() {
 
     try {
       const response = await GlobalApi.getDetailKeuangan(params);
-      console.log("Data fetched:", response);
       const groupedData = groupDataByMonth(response || []);
-      console.log("Grouped Data:", groupedData);
       setData(groupedData);
     } catch (error) {
       console.error("Error fetching data:", error);

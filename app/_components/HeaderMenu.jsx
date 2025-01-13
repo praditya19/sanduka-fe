@@ -136,8 +136,8 @@ const HeaderHome = () => {
 
   const getEditProfilePath = () => {
     const userRole = sessionStorage.getItem("role");
-    return userRole === "SUPER ADMIN" || userRole === "ADMIN" 
-      ? "/anggota/edit-admin" 
+    return userRole === "SUPER ADMIN" || userRole === "ADMIN"
+      ? "/anggota/edit-admin"
       : "/anggota/edit-anggota";
   };
 
@@ -221,7 +221,10 @@ const HeaderHome = () => {
               className="cursor-pointer"
             />
             {/* Logo */}
-            <Link href="/home"  onClick={() => sessionStorage.removeItem("anggotaId")}>
+            <Link
+              href="/home"
+              onClick={() => sessionStorage.removeItem("anggotaId")}
+            >
               <Image src="/sanduka.png" width={70} height={60} alt="logo" />
             </Link>
           </div>

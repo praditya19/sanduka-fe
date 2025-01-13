@@ -25,23 +25,18 @@ const Page = () => {
               if (fileResponse) {
                 setDaspenData(fileResponse);
               } else {
-                console.log("File tidak ditemukan untuk NIP:", nip);
                 setError("File tidak ditemukan untuk NIP tersebut.");
               }
             } else {
-              console.log("NIP tidak ditemukan dalam data anggota");
               setError("NIP tidak ditemukan dalam data anggota.");
             }
           } else {
-            console.log("Data anggota tidak ditemukan");
             setError("Data anggota tidak ditemukan.");
           }
         } catch (error) {
-          console.error("Error fetching data:", error);
           setError("Terjadi kesalahan saat mengambil data.");
         }
       } else {
-        console.log("Anggota ID tidak ditemukan di sessionStorage");
         setError("Anggota ID tidak ditemukan di sessionStorage.");
       }
     };
@@ -188,19 +183,23 @@ const Page = () => {
         </div>
       </div>
     </div>
-  )  : (
+  ) : (
     <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-40 z-50">
-    <div className="bg-white p-5 rounded-md w-5/12 mt-4 sm:mt-0 text-center">
-      <h2 className="text-xl font-bold text-red-500">Data belum tersinkronkan</h2>
-      <p className="mt-4">Silakan coba lagi atau hubungi administrator jika masalah berlanjut.</p>
-      <button 
-        onClick={() => window.location.href = '/home'}
-        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-      >
-        Kembali ke Halaman Home
-      </button>
+      <div className="bg-white p-5 rounded-md w-5/12 mt-4 sm:mt-0 text-center">
+        <h2 className="text-xl font-bold text-red-500">
+          Data belum tersinkronkan
+        </h2>
+        <p className="mt-4">
+          Silakan coba lagi atau hubungi administrator jika masalah berlanjut.
+        </p>
+        <button
+          onClick={() => (window.location.href = "/home")}
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Kembali ke Halaman Home
+        </button>
+      </div>
     </div>
-  </div>
   );
 };
 

@@ -145,7 +145,6 @@ const Page = () => {
     const fetchUnitKerja = async () => {
       try {
         const response = await GlobalApi.getUnitKerja();
-        console.log("Data Unit Kerja:", response.data);
         setAllUnitKerja(response.data);
       } catch (error) {
         console.error("Gagal memuat data Unit Kerja", error);
@@ -297,19 +296,19 @@ const Page = () => {
     setNamaAnak(newNamesAnak);
     setValue("namaAnak", newNamesAnak); // Sinkronkan dengan React Hook Form
   };
-  
+
   const handleAddInput = () => {
     const newNamesAnak = [...namaAnak, ""];
     setNamaAnak(newNamesAnak);
     setValue("namaAnak", newNamesAnak); // Sinkronkan dengan React Hook Form
   };
-  
+
   const handleRemoveInput = (index) => {
     const newNamesAnak = namaAnak.filter((_, i) => i !== index);
     setNamaAnak(newNamesAnak);
     setValue("namaAnak", newNamesAnak); // Sinkronkan dengan React Hook Form
   };
-  
+
   const {
     register,
     handleSubmit,
@@ -471,10 +470,6 @@ const Page = () => {
       ? new Date(response.mulaiJadiAnggotaPgri).toISOString().split("T")[0]
       : null;
 
-    console.log("Tanggal Lahir:", formattedTanggalLahir);
-    console.log("Tahun Diangkat:", formattedTahunDiangkat);
-    console.log("Mulai Jadi Anggota PGRI:", formattedMulaiJadiAnggotaPgri);
-
     const finalData = {
       id: response.id || null,
       email: response.email || "",
@@ -513,13 +508,10 @@ const Page = () => {
       tahunDiangkat: formattedTahunDiangkat,
       mulaiJadiAnggotaPgri: formattedMulaiJadiAnggotaPgri,
     };
-    console.log("Data yang dikirim:", finalData);
     handleCreateHistory();
 
     try {
       const apiResponse = await GlobalApi.registerUser(finalData);
-      console.log("Response dari API:", apiResponse);
-
       toast.success(
         <div
           style={{
@@ -580,7 +572,6 @@ const Page = () => {
       }, 4000);
     } catch (error) {
       if (error.response?.status === 500) {
-        console.log("Server mengembalikan respon 500. Abaikan error ini.");
         return;
       }
 
@@ -805,7 +796,6 @@ const Page = () => {
 
     try {
       const response = await GlobalApi.createHistoryData(historyData);
-      console.log("History data created successfully:", response);
     } catch (error) {
       console.error("Failed to create history data:", error);
     }
@@ -1297,11 +1287,7 @@ const Page = () => {
                       {loading ? "Mendapatkan Lokasi..." : "Get Location"}
                     </button>
 
-                    <p className="text-red-500">
-                      {!latitude &&
-                        !longitude 
-                       }
-                    </p>
+                    <p className="text-red-500">{!latitude && !longitude}</p>
 
                     {latitude && longitude && (
                       <p className="text-teal-500 mt-1">
@@ -1371,38 +1357,37 @@ const Page = () => {
                   )}
                 </div>
                 <div className="w-full">
-  {namaAnak.map((name, index) => (
-    <div key={index} className="mb-3 flex items-center">
-      <div className="flex-1">
-        <Label className="block text-sm font-medium mb-1">
-          Nama Anak {index + 1}
-        </Label>
-        <Input
-          className="block w-full text-sm p-2 mt-2 mb-2 border-teal-500 rounded"
-          type="text"
-          placeholder={`Tuliskan Nama Anak ${index + 1}`}
-          value={name}
-          onChange={(e) => handleChange(index, e)}
-        />
-      </div>
-      <Button
-        type="button"
-        onClick={() => handleRemoveInput(index)}
-        className="ml-2 p-2 bg-red-500 text-white rounded mt-4 hover:bg-red-500"
-      >
-        Hapus
-      </Button>
-    </div>
-  ))}
-  <Button
-    type="button"
-    onClick={handleAddInput}
-    className="mt-3 p-2 bg-teal-500 text-white rounded hover:bg-teal-500"
-  >
-    + Tambah Anak
-  </Button>
-</div>
-
+                  {namaAnak.map((name, index) => (
+                    <div key={index} className="mb-3 flex items-center">
+                      <div className="flex-1">
+                        <Label className="block text-sm font-medium mb-1">
+                          Nama Anak {index + 1}
+                        </Label>
+                        <Input
+                          className="block w-full text-sm p-2 mt-2 mb-2 border-teal-500 rounded"
+                          type="text"
+                          placeholder={`Tuliskan Nama Anak ${index + 1}`}
+                          value={name}
+                          onChange={(e) => handleChange(index, e)}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={() => handleRemoveInput(index)}
+                        className="ml-2 p-2 bg-red-500 text-white rounded mt-4 hover:bg-red-500"
+                      >
+                        Hapus
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    onClick={handleAddInput}
+                    className="mt-3 p-2 bg-teal-500 text-white rounded hover:bg-teal-500"
+                  >
+                    + Tambah Anak
+                  </Button>
+                </div>
               </div>
 
               <div className="w-full col-span-2">
@@ -1876,16 +1861,16 @@ const Page = () => {
                     </Select>
                   )}
                 />
-                 <div>
-    <span className="text-sm text-teal-500">
-      *Pendidik Usia 60 Tahun
-    </span>
-  </div>
-  <div>
-    <span className="text-sm text-teal-500">
-      *Tenaga Pendidik usia Pensiun 58 Tahun
-    </span>
-  </div>
+                <div>
+                  <span className="text-sm text-teal-500">
+                    *Pendidik Usia 60 Tahun
+                  </span>
+                </div>
+                <div>
+                  <span className="text-sm text-teal-500">
+                    *Tenaga Pendidik usia Pensiun 58 Tahun
+                  </span>
+                </div>
                 {errors.golonganJabatan && (
                   <span className="text-red-500 text-sm">
                     Pangkat/Golongan is required
