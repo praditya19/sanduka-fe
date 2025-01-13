@@ -472,6 +472,9 @@ const SyncData = () => {
             },
           }
         );
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
         setIsModalOpen(false);
       } catch (error) {
         toast.error(
