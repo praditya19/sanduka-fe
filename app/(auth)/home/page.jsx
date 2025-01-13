@@ -63,7 +63,7 @@ export default function IconGrid() {
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const dropdownRef = useRef(null);
   const [latitude, setLatitude] = useState("");
-    const [longitude, setLongitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const icons = [
     { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
     {
@@ -162,7 +162,10 @@ export default function IconGrid() {
     return [...data].sort((a, b) => {
       try {
         // Check if waktuMeninggalTerlapor exists and is an array
-        if (!Array.isArray(a.waktuMeninggalTerlapor) || !Array.isArray(b.waktuMeninggalTerlapor)) {
+        if (
+          !Array.isArray(a.waktuMeninggalTerlapor) ||
+          !Array.isArray(b.waktuMeninggalTerlapor)
+        ) {
           return 0; // Keep original order if data is invalid
         }
 
@@ -230,13 +233,20 @@ export default function IconGrid() {
         const detailedData = await Promise.all(
           deceasedData.map(async (deceased) => {
             try {
-              const userResponse = await GlobalApi.searchUsersByName(deceased.namaLengkap);
+              const userResponse = await GlobalApi.searchUsersByName(
+                deceased.namaLengkap
+              );
 
-              if (userResponse?.data?.users && userResponse.data.users.length > 0) {
+              if (
+                userResponse?.data?.users &&
+                userResponse.data.users.length > 0
+              ) {
                 const userData = userResponse.data.users[0];
                 return {
                   ...deceased,
-                  waktuMeninggalTerlapor: userData.waktuMeninggalTerlapor || deceased.waktuMeninggalTerlapor,
+                  waktuMeninggalTerlapor:
+                    userData.waktuMeninggalTerlapor ||
+                    deceased.waktuMeninggalTerlapor,
                   npaPgri: userData.npaPgri || deceased.npaPgri,
                   tempatLahir: userData.tempatLahir || deceased.tempatLahir,
                   tanggalLahir: userData.tanggalLahir || deceased.tanggalLahir,
@@ -244,16 +254,22 @@ export default function IconGrid() {
                   unitKerja: userData.unitKerja || deceased.unitKerja,
                   cabang: userData.cabang || deceased.cabang,
                   alamat: userData.alamat || deceased.alamat,
-                  tanggalPelaporan: userData.tanggalPelaporan || deceased.tanggalPelaporan,
-                  keteranganTerlapor: userData.keteranganTerlapor || deceased.keteranganTerlapor,
+                  tanggalPelaporan:
+                    userData.tanggalPelaporan || deceased.tanggalPelaporan,
+                  keteranganTerlapor:
+                    userData.keteranganTerlapor || deceased.keteranganTerlapor,
                   jamLapor: userData.jamLapor || deceased.jamLapor,
                   namaPelapor: userData.namaPelapor || deceased.namaPelapor,
-                  nomorHpPelapor: userData.nomorHpPelapor || deceased.nomorHpPelapor,
+                  nomorHpPelapor:
+                    userData.nomorHpPelapor || deceased.nomorHpPelapor,
                 };
               }
               return deceased;
             } catch (error) {
-              console.error(`Error fetching details for ${deceased.namaLengkap}:`, error);
+              console.error(
+                `Error fetching details for ${deceased.namaLengkap}:`,
+                error
+              );
               return deceased;
             }
           })
@@ -263,20 +279,6 @@ export default function IconGrid() {
         console.error("Error fetching combined user data:", error);
       }
     };
-
-    // const fetchAnggotaMeninggal = async () => {
-    //   try {
-    //     const today = new Date();
-    //     const year = today.getFullYear();
-    //     const month = today.getMonth() + 1;
-
-    //     const data = await GlobalApi.getAnggotaMeninggal(year, month);
-    //     console.log('Anggota Meninggal Data:', data);
-    //     setAnggotaMeninggal(data);
-    //   } catch (error) {
-    //     console.error("Error fetching anggota meninggal:", error);
-    //   }
-    // };
 
     const fetchUserData = async () => {
       const userId = sessionStorage.getItem("userId");
@@ -289,7 +291,6 @@ export default function IconGrid() {
       try {
         const idToFetch = userId;
         const response = await GlobalApi.getUserById(idToFetch);
-        console.log("data:",response)
         setUserData(response);
         setLatitude(response.latitude); // Set latitude
         setLongitude(response.longitude); // Set longitude
@@ -395,28 +396,28 @@ export default function IconGrid() {
   const filteredIcons =
     role === "USER"
       ? icons
-        .filter((item) =>
-          [
-            "Lapor",
-            "Teman Unit",
-            "Ketentuan",
-            "Bantuan",
-            "Data Anggota",
-            "History data",
-          ].includes(item.label)
-        )
-        .concat({
-          icon: faRightLeft,
-          label: "Mutasi",
-          href: "/anggota/data-anggota/mutasiCabangUnit",
-          color: "text-cyan-500",
-        })
-        .concat({
-          icon: faFileAlt,
-          label: "Daspen",
-          href: "/daspen",
-          color: "text-teal-700",
-        })
+          .filter((item) =>
+            [
+              "Lapor",
+              "Teman Unit",
+              "Ketentuan",
+              "Bantuan",
+              "Data Anggota",
+              "History data",
+            ].includes(item.label)
+          )
+          .concat({
+            icon: faRightLeft,
+            label: "Mutasi",
+            href: "/anggota/data-anggota/mutasiCabangUnit",
+            color: "text-cyan-500",
+          })
+          .concat({
+            icon: faFileAlt,
+            label: "Daspen",
+            href: "/daspen",
+            color: "text-teal-700",
+          })
       : icons;
 
   return (
@@ -426,8 +427,9 @@ export default function IconGrid() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="flex-1 mt-[3.1%]">
             <img
@@ -664,8 +666,9 @@ export default function IconGrid() {
         </div>
 
         <div
-          className={` flex flex-col items-center my-4 ${isSidebarOpen ? "ml-32" : "ml-0"
-            }`}
+          className={` flex flex-col items-center my-4 ${
+            isSidebarOpen ? "ml-32" : "ml-0"
+          }`}
         >
           <hr className="mt-2 border-gray-300 w-full" />
           <h5 className="text-lg sm:text-xl font-semibold text-gray-800 mt-4 text-center">
@@ -674,8 +677,9 @@ export default function IconGrid() {
         </div>
 
         <div
-          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${isSidebarOpen ? "ml-32" : "ml-0"
-            }`}
+          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${
+            isSidebarOpen ? "ml-32" : "ml-0"
+          }`}
         >
           <button
             onClick={handlePrev}
@@ -784,15 +788,15 @@ export default function IconGrid() {
         </div>
 
         <div className="w-full col-span-2">
-                  <h2 className="text-2xl font-semibold text-gray-800">
-                    Maps Lokasi Rumah
-                  </h2>
-                  {latitude && longitude && (
-                    <div className="mt-8">
-                      <MapComponent latitude={latitude} longitude={longitude} />
-                    </div>
-                  )}
-                </div>
+          <h2 className="text-2xl font-semibold text-gray-800">
+            Maps Lokasi Rumah
+          </h2>
+          {latitude && longitude && (
+            <div className="mt-8">
+              <MapComponent latitude={latitude} longitude={longitude} />
+            </div>
+          )}
+        </div>
       </div>
 
       {isMobile && <FooterMobile />}

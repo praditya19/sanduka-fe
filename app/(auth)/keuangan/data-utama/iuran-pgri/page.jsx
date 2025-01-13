@@ -185,7 +185,6 @@ export default function Iuran() {
     try {
       const id = 2; // Default ID untuk pembaruan
       const updateResult = await GlobalApi.updateIuranData(id, payload); // Kirim payload ke API dengan ID default
-      console.log("Iuran updated:", updateResult);
 
       toast.success(
         <div
