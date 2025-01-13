@@ -30,8 +30,8 @@ const Page = () => {
   useEffect(() => {
     const filtered = data.filter((item) => {
       const matchesCabang = selectedCabang
-        ? (item.npaDetail.cabang?.toLowerCase() || item.cabang?.toLowerCase()) ===
-        selectedCabang.toLowerCase()
+        ? (item.npaDetail.cabang?.toLowerCase() ||
+            item.cabang?.toLowerCase()) === selectedCabang.toLowerCase()
         : true;
 
       const matchesMonth = selectedMonth
@@ -58,7 +58,14 @@ const Page = () => {
     if (currentPage > newTotalPages) {
       setCurrentPage(Math.max(1, newTotalPages));
     }
-  }, [data, selectedCabang, selectedMonth, selectedYear, currentPage, itemsPerPage]);
+  }, [
+    data,
+    selectedCabang,
+    selectedMonth,
+    selectedYear,
+    currentPage,
+    itemsPerPage,
+  ]);
 
   useEffect(() => {
     GlobalApi.getCabang()
@@ -110,9 +117,6 @@ const Page = () => {
           pageIndex,
           itemsPerPage
         );
-
-        console.log("Response from getHistoryByNpa:", historyResponse);
-
         historyResponse = historyResponse.reduce((acc, item) => {
           acc[item.npa] = item;
           return acc;
@@ -169,7 +173,6 @@ const Page = () => {
     }
   };
 
-
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
@@ -220,11 +223,9 @@ const Page = () => {
   };
 
   const filteredData = data.filter((item) => {
-    console.log(item);
-
     const matchesCabang = selectedCabang
       ? (item.npaDetail.cabang?.toLowerCase() || item.cabang?.toLowerCase()) ===
-      selectedCabang.toLowerCase()
+        selectedCabang.toLowerCase()
       : true;
 
     const matchesMonth = selectedMonth
@@ -292,8 +293,9 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="w-full p-4 container shadow-lg rounded-lg mt-12">
             <div className="rounded-md flex flex-col py-4">
@@ -362,8 +364,9 @@ const Page = () => {
                         <th
                           key={header}
                           rowSpan="2"
-                          className={`border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white ${idx > 2 ? "hidden lg:table-cell" : ""
-                            }`}
+                          className={`border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white ${
+                            idx > 2 ? "hidden lg:table-cell" : ""
+                          }`}
                         >
                           {header}
                         </th>
@@ -470,7 +473,9 @@ const Page = () => {
                     </button>
 
                     <button
-                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      }
                       disabled={currentPage === 1}
                       className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                     >
@@ -481,10 +486,11 @@ const Page = () => {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                        className={`px-3 py-1 border rounded text-sm ${
+                          page === currentPage
                             ? "bg-blue-500 text-white"
                             : "bg-white hover:bg-gray-50"
-                          }`}
+                        }`}
                       >
                         {page}
                       </button>
@@ -493,18 +499,27 @@ const Page = () => {
                     <button
                       onClick={() =>
                         setCurrentPage((prev) =>
-                          Math.min(prev + 1, Math.ceil(totalItems / itemsPerPage))
+                          Math.min(
+                            prev + 1,
+                            Math.ceil(totalItems / itemsPerPage)
+                          )
                         )
                       }
-                      disabled={currentPage === Math.ceil(totalItems / itemsPerPage)}
+                      disabled={
+                        currentPage === Math.ceil(totalItems / itemsPerPage)
+                      }
                       className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                     >
                       Next
                     </button>
 
                     <button
-                      onClick={() => setCurrentPage(Math.ceil(totalItems / itemsPerPage))}
-                      disabled={currentPage === Math.ceil(totalItems / itemsPerPage)}
+                      onClick={() =>
+                        setCurrentPage(Math.ceil(totalItems / itemsPerPage))
+                      }
+                      disabled={
+                        currentPage === Math.ceil(totalItems / itemsPerPage)
+                      }
                       className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                     >
                       Last

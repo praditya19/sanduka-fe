@@ -65,13 +65,16 @@ export default function Daspen() {
         newSelectedYear,
         newCabangList
       );
-  console.log("data",data)
-      
+
       const jumlahRow = data.find((row) => row["Cabang/Khusus"] === "Jumlah");
-      const filteredData = data.filter((row) => row["Cabang/Khusus"] !== "Jumlah");
-  
-      const sortedData = jumlahRow ? [...filteredData, jumlahRow] : filteredData;
-  
+      const filteredData = data.filter(
+        (row) => row["Cabang/Khusus"] !== "Jumlah"
+      );
+
+      const sortedData = jumlahRow
+        ? [...filteredData, jumlahRow]
+        : filteredData;
+
       setTableData(sortedData);
       setFilteredTableData(sortedData);
     } catch (error) {
@@ -83,7 +86,6 @@ export default function Daspen() {
       fetchData();
     }
   }, [selectedBulanBaru, newSelectedYear, newCabangList]);
-    
 
   useEffect(() => {
     if (!selectedBulanBaru || !newSelectedYear) {
@@ -254,7 +256,7 @@ export default function Daspen() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-  
+
     const payload = {
       propinsi: katagori1,
       kabupaten: katagori2,
@@ -263,7 +265,7 @@ export default function Daspen() {
       sanduka: "",
       iuran: "DASPEN",
     };
-  
+
     try {
       const id = 4;
       const result = await GlobalApi.updateIuranData(id, payload);
@@ -374,15 +376,14 @@ export default function Daspen() {
       );
     }
   };
-  
 
   const handleSubmitTarget = async (event) => {
     event.preventDefault();
-  
+
     const valueKat1 = kat1 * katagori1Lainnya;
     const valueKat2 = kat2 * katagori2Lainnya;
     const valueKat3 = kat3 * katagori3Lainnya;
-  
+
     const payload = {
       bulan: selectedBulan,
       tahun: selectedYear,
@@ -396,8 +397,7 @@ export default function Daspen() {
       valueKat2: valueKat2,
       valueKat3: valueKat3,
     };
-  
-    console.log("Data yang akan dikirim ke database:", payload);
+
     try {
       await GlobalApi.createTargetDaspen(payload);
       toast.success(
@@ -449,7 +449,7 @@ export default function Daspen() {
             boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
           },
         }
-      );  
+      );
       await fetchData();
       handleReset();
     } catch (error) {

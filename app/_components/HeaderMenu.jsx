@@ -136,8 +136,8 @@ const HeaderHome = () => {
 
   const getEditProfilePath = () => {
     const userRole = sessionStorage.getItem("role");
-    return userRole === "SUPER ADMIN" || userRole === "ADMIN" 
-      ? "/anggota/edit-admin" 
+    return userRole === "SUPER ADMIN" || userRole === "ADMIN"
+      ? "/anggota/edit-admin"
       : "/anggota/edit-anggota";
   };
 
@@ -209,6 +209,8 @@ const HeaderHome = () => {
     };
   }, [isProfileMenuOpen]);
 
+  console.log(profileImageUrl);
+
   return (
     <nav className="bg-teal-500 shadow-md fixed top-0 inset-x-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -221,7 +223,10 @@ const HeaderHome = () => {
               className="cursor-pointer"
             />
             {/* Logo */}
-            <Link href="/home"  onClick={() => sessionStorage.removeItem("anggotaId")}>
+            <Link
+              href="/home"
+              onClick={() => sessionStorage.removeItem("anggotaId")}
+            >
               <Image src="/sanduka.png" width={70} height={60} alt="logo" />
             </Link>
           </div>

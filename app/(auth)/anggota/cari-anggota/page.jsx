@@ -2,11 +2,7 @@
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { LoaderIcon, Search, AlertCircle } from "lucide-react";
 import GlobalApi from "@/app/_utils/GlobalApi";
 
@@ -19,8 +15,6 @@ function CariAnggota() {
   const onSearch = async () => {
     setLoader(true);
     try {
-      console.log("Searching for NPA:", npaPgri);
-
       const member = await GlobalApi.cekNpa(npaPgri);
 
       if (member) {
@@ -52,7 +46,9 @@ function CariAnggota() {
   return (
     <div className="flex items-baseline justify-center my-20">
       <div className="flex flex-col items-center justify-center p-12 border border-gray-200 rounded-lg shadow-md">
-        <h2 className="font-bold text-center text-2xl mt-2">CARI KEANGGOTAAN SANDUKA</h2>
+        <h2 className="font-bold text-center text-2xl mt-2">
+          CARI KEANGGOTAAN SANDUKA
+        </h2>
         <h2 className="text-gray-500 mt-2">Masukkan NPA PGRI</h2>
         <div className="w-full max-w-xl mt-6">
           <Input
@@ -65,7 +61,8 @@ function CariAnggota() {
             disabled={!npaPgri || loader}
             className="w-full mt-4 bg-teal-700"
           >
-            {loader ? <LoaderIcon className="animate-spin mr-2" /> : "Cari "} <Search />
+            {loader ? <LoaderIcon className="animate-spin mr-2" /> : "Cari "}{" "}
+            <Search />
           </Button>
         </div>
         <div className="mt-4 w-full max-w-xl">
@@ -74,18 +71,24 @@ function CariAnggota() {
               <AlertCircle className="h-4 w-4" />
               <div>
                 <AlertTitle>{error}</AlertTitle>
-                <AlertDescription>
-                  {error}
-                </AlertDescription>
+                <AlertDescription>{error}</AlertDescription>
               </div>
             </Alert>
           )}
           {filteredMember && (
             <div className="p-4 border border-green-200 rounded-lg shadow-md">
-              <h3 className="font-bold text-center text-lg mb-2">HASIL PENCARIAN DATA</h3>
-              <p><strong>Nama :</strong> {filteredMember.namaLengkap}</p>
-              <p><strong>Unit Kerja :</strong> {filteredMember.unitKerja}</p>
-              <p><strong>Jabatan :</strong> {filteredMember.jabatan}</p>
+              <h3 className="font-bold text-center text-lg mb-2">
+                HASIL PENCARIAN DATA
+              </h3>
+              <p>
+                <strong>Nama :</strong> {filteredMember.namaLengkap}
+              </p>
+              <p>
+                <strong>Unit Kerja :</strong> {filteredMember.unitKerja}
+              </p>
+              <p>
+                <strong>Jabatan :</strong> {filteredMember.jabatan}
+              </p>
               <p className="flex items-center">
                 <strong>Terdaftar Sanduka:</strong>
                 {filteredMember.pesertaSanduka === "Ya" ? (

@@ -321,8 +321,6 @@ const Page = () => {
       );
       return;
     }
-    console.log("User ID:", id);
-
     const formatTanggal = (tanggal) => {
       const date = new Date(tanggal);
       const year = date.getFullYear();
@@ -463,8 +461,6 @@ const Page = () => {
       console.log(`${key}: ${value}`);
     }
 
-    console.log("Nilai email sebelum submit:", email);
-
     if (!email) {
       console.error("Email tidak boleh kosong!");
       toast.error("Email wajib diisi sebelum melanjutkan.");
@@ -472,7 +468,6 @@ const Page = () => {
     }
     try {
       const response = await GlobalApi.updateUserById(id, formData);
-      console.log("Response dari API:", response);
       await handleCreateHistory();
       toast.success(
         <div

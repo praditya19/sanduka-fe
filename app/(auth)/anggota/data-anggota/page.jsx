@@ -51,7 +51,6 @@ const DataAnggota = () => {
   const [selectedCabang, setSelectedCabang] = useState("");
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [anggotaData, setAnggotaData] = useState([]);
-  const [anggotaDataCetak, setAnggotaDataCetak] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
@@ -61,6 +60,7 @@ const DataAnggota = () => {
   const [status, setStatus] = React.useState("Aktif");
   const [role, setRole] = useState("");
   const [totalElements, setTotalElements] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchDataAnggota = async (
     page = 0,
@@ -107,37 +107,11 @@ const DataAnggota = () => {
       setTotalPages(response.totalPages || 0);
       setTotalElements(response.totalElements || 0);
       setLoading(false);
+      return fetchedData || [];
     } catch (error) {
       console.error("Error fetching anggota data:", error);
     }
   };
-
-  // const fetchDataAnggotaCetak = async (
-  //   page = 0,
-  //   size = 10,
-  //   cabang = null,
-  //   unitKerja = null,
-  //   keyword = null,
-  //   statusKeanggotaan
-  // ) => {
-  //   try {
-  //     const response = await GlobalApi.getAllAnggota(
-  //       page,
-  //       size,
-  //       cabang,
-  //       unitKerja,
-  //       keyword,
-  //       statusKeanggotaan
-  //     );
-
-  //     const fetchedData = response.content;
-
-  //     setAnggotaDataCetak(fetchedData || []);
-  //     setLoading(false);
-  //   } catch (error) {
-  //     console.error("Error fetching anggota data:", error);
-  //   }
-  // };
 
   const getUserById = async (userId) => {
     try {
@@ -176,13 +150,6 @@ const DataAnggota = () => {
       selectedUnitKerja,
       namaAnggota
     );
-    // fetchDataAnggotaCetak(
-    //   0,
-    //   totalElements,
-    //   selectedCabang,
-    //   selectedUnitKerja,
-    //   namaAnggota
-    // );
   };
 
   const handleCabangChange = (value) => {
@@ -196,19 +163,11 @@ const DataAnggota = () => {
       selectedUnitKerja,
       nama
     );
-    // fetchDataAnggotaCetak(
-    //   0,
-    //   totalElements,
-    //   selectedKecamatan,
-    //   selectedUnitKerja,
-    //   nama
-    // );
   };
 
   const handleUnitKerjaChange = (value) => {
     setSelectedUnitKerja(value);
     fetchDataAnggota(currentPage, pageSize, selectedCabang, value, nama);
-    // fetchDataAnggotaCetak(0, totalElements, selectedCabang, value, nama);
   };
 
   const updateUnitKerja = (kecamatan) => {
@@ -238,7 +197,6 @@ const DataAnggota = () => {
           setRole(role);
         } else {
           fetchDataAnggota(currentPage, pageSize);
-          // fetchDataAnggotaCetak(currentPage, pageSize);
         }
 
         const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -375,24 +333,23 @@ const DataAnggota = () => {
       nama,
       e.target.value
     );
-    // fetchDataAnggotaCetak(
-    //   0,
-    //   totalElements,
-    //   selectedCabang,
-    //   selectedUnitKerja,
-    //   nama,
-    //   e.target.value
-    // );
   };
 
   const formatCurrency = (amount) =>
     `Rp ${parseInt(amount).toLocaleString("id-ID")}`;
 
-  const handlePrint = () => {
-    const filteredDataForPrint = anggotaDataCetak;
-    const printWindow = window.open("", "_blank", "width=800,height=600");
+  const handlePrint = async () => {
+    setIsLoading(true);
+    try {
+      const filteredDataForPrint = await fetchDataAnggota(0, totalElements);
+      if (!filteredDataForPrint || filteredDataForPrint.length === 0) {
+        console.warn("No data available for printing.");
+        return;
+      }
 
-    printWindow.document.write(`
+      const printWindow = window.open("", "_blank", "width=800,height=600");
+
+      const htmlContent = `
       <html>
         <head>
           <title>Data Anggota</title>
@@ -476,11 +433,19 @@ const DataAnggota = () => {
           </table>
         </body>
       </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+    `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+        printWindow.close();
+      };
+    } catch (error) {
+      console.error("Error during print process:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -539,6 +504,7 @@ const DataAnggota = () => {
               role={role}
               handlePrint={handlePrint}
               totalElements={totalElements}
+              isLoading={isLoading}
             />
 
             <div className="overflow-x-auto mt-8">
@@ -551,6 +517,7 @@ const DataAnggota = () => {
                 calculateRetirementDate={calculateRetirementDate}
                 handleUserClick={handleUserClick}
                 fotoBase64={fotoBase64}
+                loading={loading}
                 currentPage={currentPage}
                 pageSize={pageSize}
               />
@@ -592,6 +559,7 @@ const FilterSection = ({
   role,
   handlePrint,
   totalElements,
+  isLoading,
 }) => {
   if (role === "USER") return null;
 
@@ -644,6 +612,8 @@ const FilterSection = ({
               <option value="Semua">Semua</option>
               <option value="Aktif">Aktif</option>
               <option value="Tidak Aktif">Tidak Aktif</option>
+              <option value="Pensiun">Pensiun</option>
+              <option value="Meninggal">Meninggal</option>
             </select>
           </div>
         </div>
@@ -656,12 +626,35 @@ const FilterSection = ({
 
         <div className="flex w-full justify-end md:ml-44 ml-0">
           <Button
-            className="px-8 mt-2 md:mt-0"
+            className="px-8 mt-2 md:mt-0 flex items-center justify-center"
             variant="outline"
             onClick={handlePrint}
-            disabled={role === "USER"}
+            disabled={role === "USER" || isLoading}
           >
-            Cetak
+            {isLoading ? (
+              <svg
+                className="animate-spin h-5 w-5 text-gray-800"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8H4z"
+                ></path>
+              </svg>
+            ) : (
+              "Cetak"
+            )}
           </Button>
         </div>
       </div>
@@ -913,6 +906,7 @@ const DataTable = ({
   pageSize,
   handleEditClick,
   handlePindahCabangUnit,
+  loading,
 }) => {
   const currentPageNumber = Number(currentPage) || 0;
   const pageSizeNumber = Number(pageSize) || 10;
@@ -940,8 +934,6 @@ const DataTable = ({
         const userData = await GlobalApi.getUserById(anggotaId);
 
         if (userData) {
-          console.log("Data yang diterima:", userData);
-
           const formatTanggal = (tanggal) => {
             const date = new Date(tanggal);
             const year = date.getFullYear();
@@ -1003,7 +995,6 @@ const DataTable = ({
           formData.append("password", userData.password || "");
           formData.append("email", userData.email || "");
 
-          console.log("FormData yang akan dikirim:");
           for (let pair of formData.entries()) {
             console.log(pair[0] + ": " + pair[1]);
           }
@@ -1459,7 +1450,6 @@ const DataTable = ({
   const openModal = (item) => {
     setCurrentItem(item);
     setIsModalOpen(true);
-    console.log(item);
   };
 
   const closeModal = () => {
@@ -1644,7 +1634,7 @@ const DataTable = ({
         </thead>
 
         <tbody>
-          {(anggotaData || []).length === 0 ? (
+          {loading ? (
             <tr>
               <td colSpan="9" className="py-4 px-4">
                 <div
@@ -1657,6 +1647,12 @@ const DataTable = ({
                 >
                   <ClipLoader color="#3498db" size={50} />
                 </div>
+              </td>
+            </tr>
+          ) : anggotaData.length === 0 ? (
+            <tr>
+              <td colSpan="9" className="py-4 px-4 text-center text-gray-600">
+                <span>Tidak Ada Anggota</span>
               </td>
             </tr>
           ) : (

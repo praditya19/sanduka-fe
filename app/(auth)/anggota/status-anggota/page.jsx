@@ -93,10 +93,16 @@ function StatusAnggota() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownCabangRef.current && !dropdownCabangRef.current.contains(event.target)) {
+      if (
+        dropdownCabangRef.current &&
+        !dropdownCabangRef.current.contains(event.target)
+      ) {
         setShowDropdownCabang(false);
       }
-      if (dropdownUnitKerjaRef.current && !dropdownUnitKerjaRef.current.contains(event.target)) {
+      if (
+        dropdownUnitKerjaRef.current &&
+        !dropdownUnitKerjaRef.current.contains(event.target)
+      ) {
         setShowDropdownUnitKerja(false);
       }
     };
@@ -201,13 +207,10 @@ function StatusAnggota() {
     setIsLoadingMore(true);
     try {
       const currentSize = loadedData.length;
-      const nextBatch = anggota.slice(
-        currentSize,
-        currentSize + BATCH_SIZE
-      );
+      const nextBatch = anggota.slice(currentSize, currentSize + BATCH_SIZE);
 
       if (nextBatch.length > 0) {
-        setLoadedData(prev => [...prev, ...nextBatch]);
+        setLoadedData((prev) => [...prev, ...nextBatch]);
         setHasMoreData(currentSize + nextBatch.length < anggota.length);
       } else {
         setHasMoreData(false);
@@ -394,8 +397,6 @@ function StatusAnggota() {
         const userData = await GlobalApi.getUserById(anggotaId);
 
         if (userData) {
-          console.log("Data yang diterima:", userData);
-
           const formatTanggal = (tanggal) => {
             const date = new Date(tanggal);
             const year = date.getFullYear();
@@ -457,7 +458,6 @@ function StatusAnggota() {
           formData.append("password", userData.password || "");
           formData.append("email", userData.email || "");
 
-          console.log("FormData yang akan dikirim:");
           for (let pair of formData.entries()) {
             console.log(pair[0] + ": " + pair[1]);
           }
@@ -592,9 +592,10 @@ function StatusAnggota() {
 
   const handlePrint = () => {
     // Cek apakah ada filter yang dipilih
-    const filteredDataForPrint = (filterCabang || filterUnitKerja || selectedStatus || selectedTingkat)
-      ? filteredData // Jika ada filter, ambil data yang sudah difilter
-      : anggota; // Jika tidak ada filter, ambil semua data
+    const filteredDataForPrint =
+      filterCabang || filterUnitKerja || selectedStatus || selectedTingkat
+        ? filteredData // Jika ada filter, ambil data yang sudah difilter
+        : anggota; // Jika tidak ada filter, ambil semua data
 
     const printWindow = window.open("", "_blank", "width=800,height=600");
     printWindow.document.write(`
@@ -654,15 +655,17 @@ function StatusAnggota() {
                 </thead>
                 <tbody>
                   ${filteredDataForPrint
-        .map(
-          (item, index) => `
+                    .map(
+                      (item, index) => `
                     <tr>
                       <td>${index + 1}</td>
                       <td></td>
                       <td>
                         <div class="font-bold">${item.namaLengkap}</div>
                         <div>${item.npaPgri}</div>
-                        <div>${formatDate(item.tanggalLahir)}, ${calculateAge(item.tanggalLahir)}</div>
+                        <div>${formatDate(item.tanggalLahir)}, ${calculateAge(
+                        item.tanggalLahir
+                      )}</div>
                         <div>Usia ${calculateAge(item.tanggalLahir)} Tahun</div>
                         <div>${item.unitKerja}</div>
                         <div>${item.jabatan}</div>
@@ -673,8 +676,8 @@ function StatusAnggota() {
                       <td>${item.statusKeanggotaan}</td>
                     </tr>
                   `
-        )
-        .join("")}
+                    )
+                    .join("")}
                 </tbody>
               </table>
             </body>
@@ -735,9 +738,8 @@ function StatusAnggota() {
         .toLowerCase()
         .includes(filterUnitKerja.toLowerCase());
 
-      const globalSearchFilter = Object.values(item).some(
-        (value) =>
-          String(value).toLowerCase().includes(searchKeyword.toLowerCase())
+      const globalSearchFilter = Object.values(item).some((value) =>
+        String(value).toLowerCase().includes(searchKeyword.toLowerCase())
       );
 
       return (
@@ -1296,54 +1298,86 @@ function StatusAnggota() {
     PERGURUAN_TINGGI: "Perguruan Tinggi",
     PAUD: "PAUD",
     SEKOLAH_LUAR_BIASA: "SEKOLAH LUAR BIASA",
-    LAINNYA: "LAINNYA"
+    LAINNYA: "LAINNYA",
   };
 
   const formatTingkat = (tingkat) => {
     return tingkatSekolahMap[tingkat] || tingkat;
   };
 
-  const FilteredCategories = ({ anggota, selectedCabang, selectedUnitKerja, selectedTingkat }) => {
+  const FilteredCategories = ({
+    anggota,
+    selectedCabang,
+    selectedUnitKerja,
+    selectedTingkat,
+  }) => {
     const filteredCounts = useMemo(() => {
       // Filter anggota berdasarkan semua filter yang dipilih
-      const filteredAnggota = anggota.filter(member => {
+      const filteredAnggota = anggota.filter((member) => {
         const cabangMatch = !selectedCabang || member.cabang === selectedCabang;
-        const unitKerjaMatch = !selectedUnitKerja || member.unitKerja === selectedUnitKerja;
-        const tingkatMatch = !selectedTingkat || member.tingkatSekolah === selectedTingkat;
+        const unitKerjaMatch =
+          !selectedUnitKerja || member.unitKerja === selectedUnitKerja;
+        const tingkatMatch =
+          !selectedTingkat || member.tingkatSekolah === selectedTingkat;
         return cabangMatch && unitKerjaMatch && tingkatMatch;
       });
-  
+
       // Hitung berdasarkan status
       const statusCounts = {
-        PNS: filteredAnggota.filter(member => member.statusPegawai === "PNS").length,
-        NON_PNS: filteredAnggota.filter(member => member.statusPegawai === "NON_PNS").length,
-        PPPK: filteredAnggota.filter(member => member.statusPegawai === "PPPK").length
+        PNS: filteredAnggota.filter((member) => member.statusPegawai === "PNS")
+          .length,
+        NON_PNS: filteredAnggota.filter(
+          (member) => member.statusPegawai === "NON_PNS"
+        ).length,
+        PPPK: filteredAnggota.filter(
+          (member) => member.statusPegawai === "PPPK"
+        ).length,
       };
-  
+
       // Hitung berdasarkan tingkat sekolah
       const tingkatCounts = {
-        PAUD: filteredAnggota.filter(member => member.tingkatSekolah === "PAUD").length,
-        TK_RA: filteredAnggota.filter(member => member.tingkatSekolah === "TK_RA").length,
-        SD_MI: filteredAnggota.filter(member => member.tingkatSekolah === "SD_MI").length,
-        SMP_MTS: filteredAnggota.filter(member => member.tingkatSekolah === "SMP_MTS").length,
-        SMA_MA: filteredAnggota.filter(member => member.tingkatSekolah === "SMA_MA").length,
-        SMK: filteredAnggota.filter(member => member.tingkatSekolah === "SMK").length,
-        PERGURUAN_TINGGI: filteredAnggota.filter(member => member.tingkatSekolah === "PERGURUAN_TINGGI").length,
-        SEKOLAH_LUAR_BIASA: filteredAnggota.filter(member => member.tingkatSekolah === "SEKOLAH_LUAR_BIASA").length,
-        LAINNYA: filteredAnggota.filter(member => member.tingkatSekolah === "LAINNYA").length
+        PAUD: filteredAnggota.filter(
+          (member) => member.tingkatSekolah === "PAUD"
+        ).length,
+        TK_RA: filteredAnggota.filter(
+          (member) => member.tingkatSekolah === "TK_RA"
+        ).length,
+        SD_MI: filteredAnggota.filter(
+          (member) => member.tingkatSekolah === "SD_MI"
+        ).length,
+        SMP_MTS: filteredAnggota.filter(
+          (member) => member.tingkatSekolah === "SMP_MTS"
+        ).length,
+        SMA_MA: filteredAnggota.filter(
+          (member) => member.tingkatSekolah === "SMA_MA"
+        ).length,
+        SMK: filteredAnggota.filter((member) => member.tingkatSekolah === "SMK")
+          .length,
+        PERGURUAN_TINGGI: filteredAnggota.filter(
+          (member) => member.tingkatSekolah === "PERGURUAN_TINGGI"
+        ).length,
+        SEKOLAH_LUAR_BIASA: filteredAnggota.filter(
+          (member) => member.tingkatSekolah === "SEKOLAH_LUAR_BIASA"
+        ).length,
+        LAINNYA: filteredAnggota.filter(
+          (member) => member.tingkatSekolah === "LAINNYA"
+        ).length,
       };
-  
+
       // Calculate total from status counts
-      const totalAnggota = Object.values(statusCounts).reduce((acc, curr) => acc + curr, 0);
-  
+      const totalAnggota = Object.values(statusCounts).reduce(
+        (acc, curr) => acc + curr,
+        0
+      );
+
       const categories = [
         {
           title: "Status Kepegawaian",
           items: [
             { title: "PNS", count: statusCounts.PNS },
             { title: "NON PNS", count: statusCounts.NON_PNS },
-            { title: "PPPK", count: statusCounts.PPPK }
-          ]
+            { title: "PPPK", count: statusCounts.PPPK },
+          ],
         },
         {
           title: "Jenjang Pendidikan",
@@ -1355,15 +1389,18 @@ function StatusAnggota() {
             { type: "SMA_MA", count: tingkatCounts.SMA_MA },
             { type: "SMK", count: tingkatCounts.SMK },
             { type: "PERGURUAN_TINGGI", count: tingkatCounts.PERGURUAN_TINGGI },
-            { type: "SEKOLAH_LUAR_BIASA", count: tingkatCounts.SEKOLAH_LUAR_BIASA },
-            { type: "LAINNYA", count: tingkatCounts.LAINNYA }
-          ]
-        }
+            {
+              type: "SEKOLAH_LUAR_BIASA",
+              count: tingkatCounts.SEKOLAH_LUAR_BIASA,
+            },
+            { type: "LAINNYA", count: tingkatCounts.LAINNYA },
+          ],
+        },
       ];
-  
+
       return { categories, totalAnggota };
     }, [anggota, selectedCabang, selectedUnitKerja, selectedTingkat]);
-  
+
     return (
       <div className="flex flex-col mt-8 mb-4 mx-4 space-y-8">
         {/* Status Kepegawaian Section */}
@@ -1376,7 +1413,9 @@ function StatusAnggota() {
               <div className="bg-teal-500 text-white p-2 rounded-lg mb-4">
                 {item.title}
               </div>
-              <div className="text-3xl font-bold text-gray-700">{item.count}</div>
+              <div className="text-3xl font-bold text-gray-700">
+                {item.count}
+              </div>
               <div className="text-sm text-gray-500 mt-2">Anggota</div>
             </div>
           ))}
@@ -1390,7 +1429,7 @@ function StatusAnggota() {
             <div className="text-sm text-gray-500 mt-2">Anggota</div>
           </div>
         </div>
-  
+
         {/* Jenjang Pendidikan Section */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-4 sm:gap-x-6 sm:gap-y-6 justify-items-center items-center">
           {filteredCounts.categories[1].items.map((item, idx) => (
@@ -1404,7 +1443,8 @@ function StatusAnggota() {
                 className="mb-2 h-14 sm:h-16 w-auto object-contain"
               />
               <p className="text-xs sm:text-sm font-bold text-gray-800 mb-2">
-                {item.type === "PERGURUAN_TINGGI" || item.type === "SEKOLAH_LUAR_BIASA"
+                {item.type === "PERGURUAN_TINGGI" ||
+                item.type === "SEKOLAH_LUAR_BIASA"
                   ? item.type.replace(/_/g, " ")
                   : item.type.replace(/_/g, "/")}
               </p>
@@ -1429,7 +1469,6 @@ function StatusAnggota() {
     SEKOLAH_LUAR_BIASA: "slb.png",
     LAINNYA: "lainnya.png",
   };
-
 
   // if (loading) {
   //   return (
@@ -1460,8 +1499,9 @@ function StatusAnggota() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <Toaster
             toastOptions={{
@@ -1572,8 +1612,8 @@ function StatusAnggota() {
                             selectedCabang === "Pilih Cabang"
                               ? allUnitKerja
                               : allUnitKerja.filter(
-                                (uk) => uk.cabang === selectedCabang
-                              )
+                                  (uk) => uk.cabang === selectedCabang
+                                )
                           );
                         }}
                         className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -1732,8 +1772,7 @@ function StatusAnggota() {
                       <span
                         className="ml-1 cursor-pointer"
                         onClick={() => requestSort("keterangan")}
-                      >
-                      </span>
+                      ></span>
                     </div>
                   </th>
                   <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
@@ -1743,7 +1782,8 @@ function StatusAnggota() {
               </thead>
               <tbody>
                 {currentData.map((item, index) => {
-                  const globalIndex = ((currentPage - 1) * itemsPerPage) + index + 1;
+                  const globalIndex =
+                    (currentPage - 1) * itemsPerPage + index + 1;
                   return (
                     <React.Fragment key={index}>
                       <tr
@@ -1786,7 +1826,9 @@ function StatusAnggota() {
                           <div className="text-sm">
                             {formatDate(item.tanggalLahir)}
                           </div>
-                          <div className="text-sm"> Usia
+                          <div className="text-sm">
+                            {" "}
+                            Usia
                             {calculateAge(item.tanggalLahir)} Tahun
                           </div>
                           <div className="text-sm">{item.unitKerja}</div>
@@ -1803,17 +1845,20 @@ function StatusAnggota() {
                           </div> */}
                         </td>
                         <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
-                          <div className="text-sm">{formatTingkat(item.tingkatSekolah)}</div>
+                          <div className="text-sm">
+                            {formatTingkat(item.tingkatSekolah)}
+                          </div>
                         </td>
                         <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
                           <div className="text-sm">{item.cabang}</div>
                         </td>
                         <td className="p-2 text-center md:p-3 border md:table-cell hidden">
                           <div
-                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
-                              ? "bg-red-200 text-red-900"
-                              : "bg-green-200 text-green-900"
-                              }`}
+                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${
+                              item.status === "BUKAN ANGGOTA"
+                                ? "bg-red-200 text-red-900"
+                                : "bg-green-200 text-green-900"
+                            }`}
                           >
                             {item.role === "USER"
                               ? "Aktif"
@@ -1882,7 +1927,7 @@ function StatusAnggota() {
                                 </Button>
 
                                 {sessionStorage.getItem("role") ===
-                                  "SUPER ADMIN" ? (
+                                "SUPER ADMIN" ? (
                                   <Button
                                     className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
                                     onClick={() => {
@@ -2029,14 +2074,14 @@ function StatusAnggota() {
                                         <p>
                                           {daspenData.tanggalLahir
                                             ? new Intl.DateTimeFormat("id-ID", {
-                                              day: "2-digit",
-                                              month: "long",
-                                              year: "numeric",
-                                            }).format(
-                                              new Date(
-                                                daspenData.tanggalLahir
+                                                day: "2-digit",
+                                                month: "long",
+                                                year: "numeric",
+                                              }).format(
+                                                new Date(
+                                                  daspenData.tanggalLahir
+                                                )
                                               )
-                                            )
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2061,14 +2106,14 @@ function StatusAnggota() {
                                         <p>
                                           {daspenData.mulaiJadiAnggotaDaspen
                                             ? new Intl.DateTimeFormat("id-ID", {
-                                              day: "2-digit",
-                                              month: "long",
-                                              year: "numeric",
-                                            }).format(
-                                              new Date(
-                                                daspenData.mulaiJadiAnggotaDaspen
+                                                day: "2-digit",
+                                                month: "long",
+                                                year: "numeric",
+                                              }).format(
+                                                new Date(
+                                                  daspenData.mulaiJadiAnggotaDaspen
+                                                )
                                               )
-                                            )
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2087,23 +2132,23 @@ function StatusAnggota() {
                                         <p>
                                           {daspenData.prediksiPensiun
                                             ? (() => {
-                                              const prediksiPensiunDate =
-                                                new Date(
-                                                  daspenData.prediksiPensiun
+                                                const prediksiPensiunDate =
+                                                  new Date(
+                                                    daspenData.prediksiPensiun
+                                                  );
+                                                prediksiPensiunDate.setMonth(
+                                                  prediksiPensiunDate.getMonth() +
+                                                    1
                                                 );
-                                              prediksiPensiunDate.setMonth(
-                                                prediksiPensiunDate.getMonth() +
-                                                1
-                                              );
-                                              return new Intl.DateTimeFormat(
-                                                "id-ID",
-                                                {
-                                                  day: "2-digit",
-                                                  month: "long",
-                                                  year: "numeric",
-                                                }
-                                              ).format(prediksiPensiunDate);
-                                            })()
+                                                return new Intl.DateTimeFormat(
+                                                  "id-ID",
+                                                  {
+                                                    day: "2-digit",
+                                                    month: "long",
+                                                    year: "numeric",
+                                                  }
+                                                ).format(prediksiPensiunDate);
+                                              })()
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2114,9 +2159,9 @@ function StatusAnggota() {
                                         <p>
                                           {daspenData.sumbangan
                                             ? new Intl.NumberFormat("id-ID", {
-                                              style: "currency",
-                                              currency: "IDR",
-                                            }).format(daspenData.sumbangan)
+                                                style: "currency",
+                                                currency: "IDR",
+                                              }).format(daspenData.sumbangan)
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2182,7 +2227,9 @@ function StatusAnggota() {
                                     unoptimized={true}
                                   />
                                 </div>
-                                <div className="font-bold">{item.namaLengkap}</div>
+                                <div className="font-bold">
+                                  {item.namaLengkap}
+                                </div>
                                 <div>{item.npaPgri}</div>
 
                                 {/* Bagian Grid 2x2 */}
@@ -2198,19 +2245,26 @@ function StatusAnggota() {
                                   {/* <div>
                                     {item.tempatLahir}, {formatDate(item.tanggalLahir)}
                                   </div> */}
-                                  <div>{calculateAge(item.tanggalLahir)} Tahun</div>
+                                  <div>
+                                    {calculateAge(item.tanggalLahir)} Tahun
+                                  </div>
                                   <div>{item.cabang}</div>
                                   <div>{item.unitKerja}</div>
-                                  <div>{formatTingkat(item.tingkatSekolah)}</div>
+                                  <div>
+                                    {formatTingkat(item.tingkatSekolah)}
+                                  </div>
                                   {/* <div>{item.gabung}</div> */}
                                   <div>{item.jabatan}</div>
                                   <div
-                                    className={`text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${item.status === "BUKAN ANGGOTA"
-                                      ? "bg-red-200 text-red-900"
-                                      : "bg-green-200 text-green-900"
-                                      }`}
+                                    className={`text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${
+                                      item.status === "BUKAN ANGGOTA"
+                                        ? "bg-red-200 text-red-900"
+                                        : "bg-green-200 text-green-900"
+                                    }`}
                                   >
-                                    {item.role === "USER" ? "Aktif" : item.status_keanggotaan}
+                                    {item.role === "USER"
+                                      ? "Aktif"
+                                      : item.status_keanggotaan}
                                   </div>
                                 </div>
                               </div>
@@ -2227,7 +2281,7 @@ function StatusAnggota() {
                                   <FaEdit className="w-4 h-4" />
                                 </Button>
                                 {sessionStorage.getItem("role") ===
-                                  "SUPER ADMIN" ? (
+                                "SUPER ADMIN" ? (
                                   <Button
                                     className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
                                     title="Mutasi"
@@ -2244,7 +2298,7 @@ function StatusAnggota() {
                                   </Button>
                                 )}
                                 {sessionStorage.getItem("role") ===
-                                  "SUPER ADMIN" ? (
+                                "SUPER ADMIN" ? (
                                   <Button
                                     className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
                                     onClick={() => {
@@ -2365,17 +2419,17 @@ function StatusAnggota() {
                                             <p>
                                               {daspenData.tanggalLahir
                                                 ? new Intl.DateTimeFormat(
-                                                  "id-ID",
-                                                  {
-                                                    day: "2-digit",
-                                                    month: "long",
-                                                    year: "numeric",
-                                                  }
-                                                ).format(
-                                                  new Date(
-                                                    daspenData.tanggalLahir
+                                                    "id-ID",
+                                                    {
+                                                      day: "2-digit",
+                                                      month: "long",
+                                                      year: "numeric",
+                                                    }
+                                                  ).format(
+                                                    new Date(
+                                                      daspenData.tanggalLahir
+                                                    )
                                                   )
-                                                )
                                                 : "Tidak tersedia"}
                                             </p>
                                           </div>
@@ -2405,17 +2459,17 @@ function StatusAnggota() {
                                             <p>
                                               {daspenData.mulaiJadiAnggotaDaspen
                                                 ? new Intl.DateTimeFormat(
-                                                  "id-ID",
-                                                  {
-                                                    day: "2-digit",
-                                                    month: "long",
-                                                    year: "numeric",
-                                                  }
-                                                ).format(
-                                                  new Date(
-                                                    daspenData.mulaiJadiAnggotaDaspen
+                                                    "id-ID",
+                                                    {
+                                                      day: "2-digit",
+                                                      month: "long",
+                                                      year: "numeric",
+                                                    }
+                                                  ).format(
+                                                    new Date(
+                                                      daspenData.mulaiJadiAnggotaDaspen
+                                                    )
                                                   )
-                                                )
                                                 : "Tidak tersedia"}
                                             </p>
                                           </div>
@@ -2435,25 +2489,25 @@ function StatusAnggota() {
                                             <p>
                                               {daspenData.prediksiPensiun
                                                 ? (() => {
-                                                  const prediksiPensiunDate =
-                                                    new Date(
-                                                      daspenData.prediksiPensiun
+                                                    const prediksiPensiunDate =
+                                                      new Date(
+                                                        daspenData.prediksiPensiun
+                                                      );
+                                                    prediksiPensiunDate.setMonth(
+                                                      prediksiPensiunDate.getMonth() +
+                                                        1
                                                     );
-                                                  prediksiPensiunDate.setMonth(
-                                                    prediksiPensiunDate.getMonth() +
-                                                    1
-                                                  );
-                                                  return new Intl.DateTimeFormat(
-                                                    "id-ID",
-                                                    {
-                                                      day: "2-digit",
-                                                      month: "long",
-                                                      year: "numeric",
-                                                    }
-                                                  ).format(
-                                                    prediksiPensiunDate
-                                                  );
-                                                })()
+                                                    return new Intl.DateTimeFormat(
+                                                      "id-ID",
+                                                      {
+                                                        day: "2-digit",
+                                                        month: "long",
+                                                        year: "numeric",
+                                                      }
+                                                    ).format(
+                                                      prediksiPensiunDate
+                                                    );
+                                                  })()
                                                 : "Tidak tersedia"}
                                             </p>
                                           </div>
@@ -2464,12 +2518,12 @@ function StatusAnggota() {
                                             <p>
                                               {daspenData.sumbangan
                                                 ? new Intl.NumberFormat(
-                                                  "id-ID",
-                                                  {
-                                                    style: "currency",
-                                                    currency: "IDR",
-                                                  }
-                                                ).format(daspenData.sumbangan)
+                                                    "id-ID",
+                                                    {
+                                                      style: "currency",
+                                                      currency: "IDR",
+                                                    }
+                                                  ).format(daspenData.sumbangan)
                                                 : "Tidak tersedia"}
                                             </p>
                                           </div>
@@ -2539,10 +2593,11 @@ function StatusAnggota() {
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`px-3 py-1 border rounded text-sm ${page === currentPage
-                    ? "bg-blue-500 text-white"
-                    : "bg-white hover:bg-gray-50"
-                    }`}
+                  className={`px-3 py-1 border rounded text-sm ${
+                    page === currentPage
+                      ? "bg-blue-500 text-white"
+                      : "bg-white hover:bg-gray-50"
+                  }`}
                 >
                   {page}
                 </button>
