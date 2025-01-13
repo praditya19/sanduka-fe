@@ -23,7 +23,7 @@ const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [selectedCabang, setSelectedCabang] = useState(""); // Tambahkan state untuk filter cabang
+  const [selectedCabang, setSelectedCabang] = useState("");
   const [queryCabang, setQueryCabang] = useState("");
   const [cabangOptions, setCabangOptions] = useState([]);
   const [showDropdownCabang, setShowDropdownCabang] = useState(false);
@@ -68,9 +68,9 @@ const Page = () => {
           page === 0
             ? fetchedData.data.content
             : [...prevList, ...fetchedData.data.content]
-        ); // Reset data jika memulai dari halaman pertama
+        );
         setTotalPages(fetchedData.data.totalPages || 0);
-        setHasMore(fetchedData.data.content.length > 0); // Jika masih ada data berikutnya
+        setHasMore(fetchedData.data.content.length > 0);
       }
     } catch (err) {
       setError(err.message);
@@ -82,7 +82,7 @@ const Page = () => {
   useEffect(() => {
     const filterData = () => {
       if (!searchText) {
-        setFilteredPensiunList(pensiunList); // Jika searchText kosong, gunakan seluruh data
+        setFilteredPensiunList(pensiunList);
         return;
       }
       const filtered = pensiunList.filter((item) =>
@@ -98,12 +98,10 @@ const Page = () => {
     filterData();
   }, [searchText, pensiunList]);
 
-  // Panggil data pertama kali
   useEffect(() => {
     fetchPensiunData(0, 50, selectedCabang);
   }, [selectedCabang]);
 
-  // Pagination logic untuk menampilkan 10 data per halaman
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems =
@@ -115,7 +113,7 @@ const Page = () => {
     if (indexOfLastItem < pensiunList.length) {
       setCurrentPage((prevPage) => prevPage + 1);
     } else if (hasMore) {
-      fetchPensiunData(currentPage, 50, selectedCabang); // Pastikan currentPage dikirim sebagai offset
+      fetchPensiunData(currentPage, 50, selectedCabang);
     }
   };
 
@@ -126,11 +124,11 @@ const Page = () => {
   };
 
   const handleCabangSelect = (cabang) => {
-    setSelectedCabang(cabang.kecamatan || ""); // Jika "Tampil Semua", kosongkan selectedCabang
+    setSelectedCabang(cabang.kecamatan || "");
     setQueryCabang("");
     setShowDropdownCabang(false);
-    setCurrentPage(1); // Reset ke halaman pertama
-    fetchPensiunData(0, 50, cabang.kecamatan || ""); // Refresh data dengan filter baru
+    setCurrentPage(1);
+    fetchPensiunData(0, 50, cabang.kecamatan || "");
   };
 
   useEffect(() => {
@@ -146,13 +144,12 @@ const Page = () => {
       }
     };
 
-    // Tambahkan logika untuk role ADMIN dan SUPER ADMIN
-    const role = sessionStorage.getItem("role"); // Ambil role dari sessionStorage
+    const role = sessionStorage.getItem("role");
     if (role === "ADMIN") {
-      const cabang = sessionStorage.getItem("cabang"); // Ambil cabang dari sessionStorage
-      setSelectedCabang(cabang || ""); // Set selectedCabang dengan nilai dari sessionStorage
+      const cabang = sessionStorage.getItem("cabang");
+      setSelectedCabang(cabang || "");
     } else if (role === "SUPER ADMIN") {
-      fetchCabang(); // Ambil semua cabang jika SUPER ADMIN
+      fetchCabang();
     }
   }, []);
 
@@ -187,7 +184,7 @@ const Page = () => {
       if (fetchedData && fetchedData.data.content) {
         setPensiunList(fetchedData.data.content);
         setTotalPages(fetchedData.data.totalPages || 0);
-        setHasMore(fetchedData.data.content.length > 0); // Jika masih ada data berikutnya
+        setHasMore(fetchedData.data.content.length > 0);
       }
     } catch (err) {
       setError(err.message);
@@ -199,35 +196,41 @@ const Page = () => {
   const handleMonthChange = (event) => {
     const month = event.target.value;
     setSelectedMonth(month);
-    applyFilters(month, selectedYear); // Terapkan filter dengan bulan yang dipilih
+    applyFilters(month, selectedYear);
   };
 
   const handleYearChange = (event) => {
     const year = event.target.value;
     setSelectedYear(year);
-    applyFilters(selectedMonth, year); // Terapkan filter dengan tahun yang dipilih
+    applyFilters(selectedMonth, year);
   };
 
   useEffect(() => {
-    applyFilters("", ""); // Load data awal tanpa filter
+    applyFilters("", "");
   }, []);
 
   const handleDownloadExcel = async (cabang, bulan, tahun) => {
     setIsLoading(true);
     try {
-      const response = await GlobalApi.getAllPensiun(0, 500, cabang, bulan, tahun);
-  
+      const response = await GlobalApi.getAllPensiun(
+        0,
+        500,
+        cabang,
+        bulan,
+        tahun
+      );
+
       console.log("Response Data:", response.data);
-  
-      // Data asli dari response
-      const jsonData = Array.isArray(response.data.content) ? response.data.content : [];
-  
+
+      const jsonData = Array.isArray(response.data.content)
+        ? response.data.content
+        : [];
+
       if (jsonData.length === 0) {
         alert("Tidak ada data untuk diunduh.");
         return;
       }
-  
-      // Transformasikan data sesuai kebutuhan
+
       const filteredData = jsonData.map((row, index) => ({
         "No.": index + 1,
         "Prediksi Pensiun": formatDate(row.prediksiPensiun),
@@ -245,17 +248,14 @@ const Page = () => {
               ? "Segera"
               : "Aktif"
             : "Aktif",
-        "Nomor HP": row.nomorHp || "-", // Default "-" jika nomor HP kosong
+        "Nomor HP": row.nomorHp || "-",
       }));
-  
-      // Konversi JSON ke Worksheet
+
       const worksheet = XLSX.utils.json_to_sheet(filteredData);
-  
-      // Buat Workbook dan tambahkan Worksheet
+
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Data Pensiun");
-  
-      // Simpan file Excel
+
       XLSX.writeFile(workbook, `data_pensiun_${tahun}_${bulan || "all"}.xlsx`);
     } catch (error) {
       console.error("Gagal mendownload data:", error);
@@ -265,128 +265,19 @@ const Page = () => {
     }
   };
 
-  const downloadTableAsExcel = async (dataToExport) => {
+  const handleWhatsApp = (nomorHp) => {
     try {
-      const fetchPhoneNumbers = async (npa) => {
-        try {
-          const cekNpaResponse = await GlobalApi.cekNpa(npa);
+      if (nomorHp) {
+        // Jika nomor HP diawali dengan "0", ubah ke format "+62"
+        let phoneNumber = nomorHp.startsWith("0")
+          ? `+62${nomorHp.slice(1)}`
+          : nomorHp;
 
-          if (cekNpaResponse && cekNpaResponse.id) {
-            const userData = await GlobalApi.getUserById(cekNpaResponse.id);
-
-            if (userData && userData.nomorHp) {
-              let phoneNumber = userData.nomorHp;
-
-              if (phoneNumber.startsWith("0")) {
-                phoneNumber = `+62${phoneNumber.slice(1)}`;
-              }
-              return phoneNumber;
-            }
-          }
-          return "Tidak tersedia";
-        } catch (error) {
-          console.error(
-            `Error fetching phone number for NPA ${npa}:`,
-            error.message
-          );
-          return "Error";
-        }
-      };
-
-      const exportData = await Promise.all(
-        dataToExport.map(async (row, index) => {
-          const nomorHp = await fetchPhoneNumbers(row.npa);
-
-          return {
-            "No.": index + 1,
-            "Prediksi Pensiun": formatDate(row.prediksiPensiun),
-            Nama: row.namaLengkap,
-            NPA: row.npa,
-            "Tempat Lahir": row.tempatLahir,
-            "Tanggal Lahir": formatDate(row.tanggalLahir),
-            Jabatan: row.jabatan,
-            "Unit Kerja": row.unitKerja,
-            Usia: row.usia,
-            Cabang: row.cabang,
-            Status:
-              row.keterangan === null
-                ? row.status === "Segera"
-                  ? "Segera"
-                  : "Aktif"
-                : "Aktif",
-            "Nomor HP": nomorHp,
-          };
-        })
-      );
-
-      const worksheet = XLSX.utils.json_to_sheet(exportData);
-
-      worksheet["!cols"] = [
-        { wpx: 50 },
-        { wpx: 120 },
-        { wpx: 200 },
-        { wpx: 100 },
-        { wpx: 120 },
-        { wpx: 120 },
-        { wpx: 150 },
-        { wpx: 150 },
-        { wpx: 50 },
-        { wpx: 150 },
-        { wpx: 100 },
-        { wpx: 150 },
-      ];
-
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Data Anggota");
-
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
-      });
-      const blob = new Blob([excelBuffer], {
-        type: "application/octet-stream",
-      });
-      saveAs(blob, "Data_Anggota_Pensiun.xlsx");
-    } catch (error) {
-      console.error("Gagal mengunduh file Excel:", error.message);
-    }
-  };
-
-  const handleExportExcel = () => {
-    const dataToExport = selectedMonth
-      ? pensiunList.filter(
-          (item) =>
-            new Date(item.tanggalLahir).getMonth() + 2 ===
-            parseInt(selectedMonth)
-        )
-      : pensiunList;
-
-    downloadTableAsExcel(dataToExport);
-  };
-
-  const handleWhatsApp = async (npa) => {
-    try {
-      const cekNpaResponse = await GlobalApi.cekNpa(npa);
-
-      if (cekNpaResponse && cekNpaResponse.id) {
-        const userId = cekNpaResponse.id;
-
-        const userData = await GlobalApi.getUserById(userId);
-
-        if (userData && userData.nomorHp) {
-          let phoneNumber = userData.nomorHp;
-
-          if (phoneNumber.startsWith("0")) {
-            phoneNumber = `+62${phoneNumber.slice(1)}`;
-          }
-
-          const whatsappUrl = `https://wa.me/${phoneNumber}`;
-          window.open(whatsappUrl, "_blank");
-        } else {
-          console.error("Nomor HP tidak ditemukan untuk pengguna ini.");
-        }
+        // Buat URL WhatsApp
+        const whatsappUrl = `https://wa.me/${phoneNumber}`;
+        window.open(whatsappUrl, "_blank");
       } else {
-        console.error("NPA tidak valid atau ID tidak ditemukan.");
+        console.error("Nomor HP tidak ditemukan atau tidak valid.");
       }
     } catch (error) {
       console.error(
@@ -397,7 +288,7 @@ const Page = () => {
   };
 
   const getVisiblePages = () => {
-    const visibleRange = 2; // Jumlah halaman sebelum dan sesudah halaman saat ini
+    const visibleRange = 2;
     const pages = [];
 
     for (
@@ -660,8 +551,15 @@ const Page = () => {
         >
           <div className="min-h-screen bg-gray-100 p-4">
             <div className="w-full flex flex-wrap items-center justify-between mb-4 mt-16 gap-4">
-              <div className="flex flex-wrap w-full gap-4 md:w-auto border">
+              <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
+                {/* Filter Cabang */}
                 <div className="w-full sm:w-1/4 flex flex-col items-start relative">
+                  <label
+                    htmlFor="cabangInput"
+                    className="text-sm font-medium mb-1"
+                  >
+                    Pilih Cabang
+                  </label>
                   <Input
                     id="cabangInput"
                     type="text"
@@ -733,77 +631,113 @@ const Page = () => {
                     )}
                 </div>
 
-                <select
-                  value={selectedMonth}
-                  onChange={handleMonthChange}
-                  className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
-                >
-                  <option value="">Pilih Bulan</option>
-                  {bulanOptions.map((bulan) => (
-                    <option key={bulan.id} value={bulan.angkaBulan}>
-                      {bulan.namaBulan}
-                    </option>
-                  ))}
-                </select>
+                {/* Filter Bulan */}
+                <div className="w-full sm:w-1/4 flex flex-col">
+                  <label
+                    htmlFor="bulanInput"
+                    className="text-sm font-medium mb-1"
+                  >
+                    Pilih Bulan
+                  </label>
+                  <select
+                    id="bulanInput"
+                    value={selectedMonth}
+                    onChange={handleMonthChange}
+                    className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
+                  >
+                    <option value="">Pilih Bulan</option>
+                    {bulanOptions.map((bulan) => (
+                      <option key={bulan.id} value={bulan.angkaBulan}>
+                        {bulan.namaBulan}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                <select
-                  value={selectedYear}
-                  onChange={handleYearChange}
-                  className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
-                >
-                  <option value="">Pilih Tahun</option>
-                  {yearOptions.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
+                {/* Filter Tahun */}
+                <div className="w-full sm:w-1/4 flex flex-col">
+                  <label
+                    htmlFor="tahunInput"
+                    className="text-sm font-medium mb-1"
+                  >
+                    Pilih Tahun
+                  </label>
+                  <select
+                    id="tahunInput"
+                    value={selectedYear}
+                    onChange={handleYearChange}
+                    className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
+                  >
+                    <option value="">Pilih Tahun</option>
+                    {yearOptions.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                <input
-                  type="text"
-                  placeholder="Cari ..."
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)} // Update searchText
-                  className="p-2 border rounded w-full md:w-1/3"
-                />
+                {/* Filter Cari */}
+                <div className="w-full sm:w-1/4 flex flex-col">
+                  <label
+                    htmlFor="searchInput"
+                    className="text-sm font-medium mb-1"
+                  >
+                    Cari Anggota
+                  </label>
+                  <input
+                    id="searchInput"
+                    type="text"
+                    placeholder="Cari ..."
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
+                  />
+                </div>
               </div>
 
               <div className="w-full flex justify-center gap-2 md:w-auto">
-              <button
-  className={`bg-blue-500 text-white px-4 py-2 rounded flex items-center justify-center ${
-    isLoading ? "opacity-70 cursor-not-allowed" : "hover:bg-blue-700"
-  }`}
-  onClick={() =>
-    !isLoading && handleDownloadExcel(selectedCabang, selectedMonth, selectedYear)
-  }
-  disabled={isLoading} // Nonaktifkan tombol saat loading
->
-  {isLoading ? (
-    <svg
-      className="animate-spin h-5 w-5 text-white"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      ></circle>
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8v4a4 4 0 100 8H4z"
-      ></path>
-    </svg>
-  ) : (
-    "Download Excel"
-  )}
-</button>
-
+                <button
+                  className={`bg-blue-500 text-white px-4 py-2 rounded flex items-center justify-center ${
+                    isLoading
+                      ? "opacity-70 cursor-not-allowed"
+                      : "hover:bg-blue-700"
+                  }`}
+                  onClick={() =>
+                    !isLoading &&
+                    handleDownloadExcel(
+                      selectedCabang,
+                      selectedMonth,
+                      selectedYear
+                    )
+                  }
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 100 8H4z"
+                      ></path>
+                    </svg>
+                  ) : (
+                    "Download Excel"
+                  )}
+                </button>
               </div>
             </div>
 
@@ -902,7 +836,9 @@ const Page = () => {
                                 <button
                                   type="button"
                                   className="flex items-center text-green-500 hover:text-green-600"
-                                  onClick={() => handleWhatsApp(pensiun.npa)}
+                                  onClick={() =>
+                                    handleWhatsApp(pensiun.nomorHp)
+                                  }
                                 >
                                   <FaWhatsapp className="h-6 w-6 mr-2" />
                                 </button>
@@ -970,7 +906,9 @@ const Page = () => {
                                   <button
                                     type="button"
                                     className="flex items-center text-green-500 hover:text-green-600"
-                                    onClick={() => handleWhatsApp(pensiun.npa)}
+                                    onClick={() =>
+                                      handleWhatsApp(pensiun.nomorHp)
+                                    }
                                   >
                                     <FaWhatsapp className="h-6 w-6 mr-2" />
                                   </button>

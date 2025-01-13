@@ -740,20 +740,17 @@ const getSaldoOrganisasi = async () => {
   }
 };
 
-const editPemasukanUangMasuk = async (noBukti) => {
+const editPemasukanUangMasuk = async (id) => {
   try {
-    const response = await axiosClient.get(
-      `/api/uang-masuk-keluar/by-no-bukti`,
-      {
-        params: { noBukti },
-      }
-    );
-    return response.data;
+    const response = await axiosClient.get(`/api/uang-masuk-keluar/${id}`); // id sebagai bagian dari path
+    return response.data; // Kembalikan data API
   } catch (error) {
-    console.error("Error fatching data by noBukti", error);
+    console.error("Error fetching data by id:", error);
     throw error;
   }
 };
+
+
 const hapusPemasukanUangMasuk = async (id) => {
   try {
     const response = await axiosClient.delete(`/api/uang-masuk-keluar/${id}`);

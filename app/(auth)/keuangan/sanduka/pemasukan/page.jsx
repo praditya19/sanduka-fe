@@ -15,7 +15,7 @@ function Pemasukan() {
   const tableRef = useRef();
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const dropdownRef = useRef(null);
-
+  const [isLoading, setIsLoading] = useState(false);
   const bulanList = [
     { id: "01", angkaBulan: 0, namaBulan: "Januari" },
     { id: "02", angkaBulan: 1, namaBulan: "Februari" },
@@ -54,6 +54,7 @@ function Pemasukan() {
     tanggalTransaksi: "",
     posTransaksi: "",
     masukKe: "",
+    cabang: "",
     bulan: "",
     debet: "",
     kredit: "",
@@ -63,8 +64,9 @@ function Pemasukan() {
     keterangan: "",
     jenisPembayaran: "Sanduka",
     totalAnggota: "",
-    cabang: "",
     checked: false,
+    totalAnggotaByAdmin: "",
+    totalSumbangan: "",
   });
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -94,11 +96,23 @@ function Pemasukan() {
     }));
   };
 
+  useEffect(() => {
+    const currentMonthIndex = new Date().getMonth();
+    const currentBulan = bulanList.find(
+      (b) => b.angkaBulan === currentMonthIndex
+    );
+
+    if (currentBulan) {
+      setSelectedBulan(currentBulan.id);
+      setSelectedBulanName(currentBulan.namaBulan);
+    }
+  }, []);
+
   const handleBulanChange = (e) => {
     const selectedId = e.target.value;
     setSelectedBulan(selectedId);
 
-    const bulan = bulanList.find((b) => b.id === parseInt(selectedId));
+    const bulan = bulanList.find((b) => b.id === selectedId);
     setSelectedBulanName(bulan ? bulan.namaBulan : "");
   };
 
@@ -190,7 +204,6 @@ function Pemasukan() {
           selectedBulan,
           newSelectedYear
         );
-        console.log("data:", data);
         setTotalItems(data.length);
         const paginatedData = data.slice(indexOfFirstItem, indexOfLastItem);
         setTransactions(paginatedData);
@@ -349,7 +362,25 @@ function Pemasukan() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const dataToSend = {
+      // const dataToSend = {
+      //   // noBukti: formValues.noBukti,
+      //   tanggalTransaksi: formValues.tanggalTransaksi,
+      //   posTransaksi: formValues.posTransaksi,
+      //   masukKe: formValues.jenisPenerimaan,
+      //   cabang: formValues.cabang,
+      //   bulan: formValues.setoranBulan,
+      //   debet: formValues.nominal,
+      //   kredit: "",
+      //   bulanSantunan: formValues.bulanSantunan || "",
+      //   keterangan: formValues.keterangan,
+      //   jenisPembayaran: "Sanduka",
+      //   namaPenerima: formValues.namaPenerima,
+      //   yangMeninggal: "",
+      //   totalAnggota: formValues.totalAnggota,
+      //   totalSumbangan: formValues.totalSumbangan,
+      //   totalAnggotaByAdmin: formValues.totalAnggotaByAdmin,
+      // };
+ const dataToSend = {
         // noBukti: formValues.noBukti,
         tanggalTransaksi: formValues.tanggalTransaksi,
         posTransaksi: formValues.posTransaksi,
@@ -358,13 +389,14 @@ function Pemasukan() {
         bulan: formValues.setoranBulan,
         debet: formValues.nominal,
         kredit: "",
-        bulanSantunan: formValues.bulanSantunan,
+        bulanSantunan: "",
         keterangan: formValues.keterangan,
         jenisPembayaran: "Sanduka",
         namaPenerima: "",
         yangMeninggal: "",
-        totalAnggota: "522",
-        totalSumbangan: "4718000",
+        totalAnggota: formValues.totalAnggota,
+   totalSumbangan: formValues.totalSumbangan,
+        totalAnggotaByAdmin: formValues.totalAnggotaByAdmin,
       };
 
       const response = await GlobalApi.createPembayaranSanduka(dataToSend);
@@ -422,8 +454,8 @@ function Pemasukan() {
         }
       );
       setTimeout(() => {
-        window.location.reload(); // Menyegarkan halaman setelah 2 detik
-      }, 2000);
+        window.location.reload();
+      }, 2500);
     } catch (error) {
       toast.error(
         <div
@@ -454,6 +486,7 @@ function Pemasukan() {
               fontSize: "1.75rem",
               display: "block",
               marginBottom: "8px",
+              color: "black",
             }}
           >
             Gagal Menyimpan Data.
@@ -497,10 +530,8 @@ function Pemasukan() {
   const handleCheck = (id) => {
     setCheckedIds((prevCheckedIds) => {
       if (prevCheckedIds.includes(id)) {
-        // Jika ID sudah ada, hapus ID tersebut
         return prevCheckedIds.filter((checkedId) => checkedId !== id);
       } else {
-        // Jika ID belum ada, tambahkan ID tersebut
         return [...prevCheckedIds, id];
       }
     });
@@ -516,7 +547,6 @@ function Pemasukan() {
 
     setCheckedIds(updatedCheckedIds);
 
-    // Pembaruan pada transactions (untuk checkboxes)
     setPaginatedTransactions((prevTransactions) =>
       prevTransactions.map((transaction) => ({
         ...transaction,
@@ -526,38 +556,39 @@ function Pemasukan() {
   };
 
   const handleDeleteClick = async () => {
+    setIsLoading(true);
+
     try {
-      // Kirim semua ID yang dicentang untuk dihapus
       for (const id of checkedIds) {
         const response = await GlobalApi.hapusPemasukanUangMasuk(id);
-  
+
         if (response) {
-          // Perbarui data setelah penghapusan
           setTransactions((prevTransactions) =>
-            prevTransactions.filter((transaction) => !checkedIds.includes(transaction.id))
+            prevTransactions.filter(
+              (transaction) => !checkedIds.includes(transaction.id)
+            )
           );
           setPaginatedTransactions((prevPaginatedTransactions) =>
             prevPaginatedTransactions.filter(
               (transaction) => !checkedIds.includes(transaction.id)
             )
           );
-  
-          // Tampilkan Toast
+
           toast.success("Data berhasil dihapus!");
-  
-          // Refresh halaman setelah menampilkan toast
-          setTimeout(() => {
-            window.location.reload(); // Menyegarkan halaman setelah 2 detik
-          }, 2000); // Tunggu 2 detik sebelum refresh
         }
       }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      window.location.reload();
     } catch (error) {
       console.error("Gagal menghapus data dengan ID:", checkedIds, error);
+      toast.error("Terjadi kesalahan saat menghapus data.");
+    } finally {
+      setIsLoading(false);
     }
-  };  
+  };
 
   useEffect(() => {
-    // Memfilter transaksi yang valid dan melakukan paginasi
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
 
@@ -586,19 +617,32 @@ function Pemasukan() {
     }).format(value);
   };
 
-  const handleEditClick = async (noBukti) => {
+  const handleEditClick = async (id) => {
     try {
-      const data = await GlobalApi.editPemasukanUangMasuk(noBukti);
-
+      
+      // Panggil API dengan parameter id
+      const data = await GlobalApi.editPemasukanUangMasuk(id);
+  
+      // Ekstrak tanggal, bulan, dan tahun dari tglTransaksi
+      const tanggalTransaksi = data.tglTransaksi
+        ? data.tglTransaksi.split(", ")[1] // Mengambil bagian setelah koma (e.g., "10/01/2025")
+        : "";
+  
+      // Atur nilai form berdasarkan respon data
       setFormValues({
-        tanggalTransaksi: data.tglTransaksi || "",
+        tanggalTransaksi: tanggalTransaksi, // Format tanggal yang sudah diolah
         posTransaksi: data.uraian || "",
-        nominal: data.debet.trim() !== "" ? parseInt(data.debet) : 0,
+        nominal: data.debet?.trim() !== "" ? parseFloat(data.debet) : 0,
+        kredit: data.kredit?.trim() !== "" ? parseFloat(data.kredit) : 0,
+        saldo: data.saldo?.trim() !== "" ? parseFloat(data.saldo) : 0,
+        noBukti: data.noBukti || "",
+        totalAnggota: data.totalAnggota || null,
+        totalAnggotaByAdmin: data.totalAnggotaByAdmin || null,
       });
     } catch (error) {
-      console.error("Gagal mengambil data berdasarkan noBukti:", error);
+      console.error("Gagal mengambil data berdasarkan id:", error);
     }
-  };
+  };  
 
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -957,16 +1001,16 @@ function Pemasukan() {
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
-                    htmlFor="totalAnggota"
+                    htmlFor="totalAnggotaByAdmin"
                   >
                     Total Anggota By Admin
                   </Label>
                   <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="totalAnggota"
-                    type="totalAnggota"
-                    name="totalAnggota"
-                    value={formValues.totalAnggota || ""}
+                    id="totalAnggotaByAdmin"
+                    type="totalAnggotaByAdmin"
+                    name="totalAnggotaByAdmin"
+                    value={formValues.totalAnggotaByAdmin || ""}
                     onChange={handleChange}
                   />
                 </div>
@@ -1037,12 +1081,38 @@ function Pemasukan() {
                     checked={selectAll}
                     onChange={handleSelectAll}
                   />
-                  <Button
-      className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300"
-      onClick={handleDeleteClick} // Menghapus berdasarkan ID yang dicentang
-    >
-      Hapus
-    </Button>
+                  <button
+                    className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center`}
+                    onClick={handleDeleteClick}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <svg
+                          className="animate-spin h-5 w-5 text-white mr-2"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v8H4z"
+                          ></path>
+                        </svg>
+                      </div>
+                    ) : (
+                      "Hapus"
+                    )}
+                  </button>
                   <Button
                     className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300"
                     onClick={printTable}
@@ -1069,7 +1139,7 @@ function Pemasukan() {
                 </thead>
                 <tbody>
                   {paginatedTransactions
-                    .filter((transaction) => transaction.tglTransaksi) // Menyaring transaksi yang valid
+                    .filter((transaction) => transaction.tglTransaksi)
                     .map((transaction, index) => (
                       <tr
                         key={transaction.id}
@@ -1110,7 +1180,7 @@ function Pemasukan() {
                               type="checkbox"
                               className="form-checkbox h-4 w-4"
                               checked={transaction.checked}
-                              onChange={() => handleCheck(transaction.id)} // Menggunakan id untuk checkbox
+                              onChange={() => handleCheck(transaction.id)}
                             />
                             <Button
                               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
@@ -1118,12 +1188,6 @@ function Pemasukan() {
                             >
                               Edit
                             </Button>
-                            <Button
-      className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300"
-      onClick={handleDeleteClick} // Menghapus berdasarkan ID yang dicentang
-    >
-      Hapus
-    </Button>
                           </div>
                         </td>
                       </tr>
@@ -1159,7 +1223,7 @@ function Pemasukan() {
                           const saldo = Math.floor(
                             parseFloat(transaction.saldo.replace(",", "")) || 0
                           );
-                          return total + saldo;
+                          return saldo;
                         }, 0)
                       )}
                     </td>
