@@ -234,9 +234,9 @@ const Page = () => {
         setMengajar(response.mengajar);
         setValue("mengajar", response.mengajar || "");
 
-        setPesertaSanduka(response.pesertaSanduka === "Ya");
-        setPesertaDaspen(response.pesertaDaspen === "Ya");
-        setPesertaKtaDigital(response.pesertaKtaDigital === "Ya");
+        // setPesertaSanduka(response.pesertaSanduka === "Ya");
+        // setPesertaDaspen(response.pesertaDaspen === "Ya");
+        // setPesertaKtaDigital(response.pesertaKtaDigital === "Ya");
       }
 
       const fotoBase64Array = [];
@@ -2510,7 +2510,7 @@ const Page = () => {
                   />
                 </div>
 
-                <div className="w-full">
+                {/* <div className="w-full">
                   <Label className="block text-sm font-medium mb-3">
                     Kepesertaan Anggota
                     <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
@@ -2564,7 +2564,7 @@ const Page = () => {
                       </div>
                     )}
                   />
-                </div>
+                </div> */}
 
                 <div className="col-span-1 sm:col-span-2 flex justify-between mt-4">
                   <Button

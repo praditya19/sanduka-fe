@@ -39,6 +39,7 @@ function Pengeluaran() {
   const [formValues, setFormValues] = useState({
     noBukti: "",
     tanggalTransaksi: "",
+    posTransaksi: "",
     posPenerimaan: "",
     jenisPenerimaan: "",
     cabang: "",
@@ -47,9 +48,11 @@ function Pengeluaran() {
     bulanSantunan: "",
     yangMeninggal: "",
     namaPenerima: "",
+    jenisPembayaran: "Sanduka",
     keterangan: "",
     terbilang: "",
     tahun: "",
+    checked: false,
     bulan: "",
   });
   const [currentPage, setCurrentPage] = useState(1);
@@ -65,6 +68,8 @@ function Pengeluaran() {
   const [allNames, setAllNames] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [isIframeVisible, setIsIframeVisible] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+   const [checkedIds, setCheckedIds] = useState([]);
 
   const getBulanAngka = (bulanNama) => {
     const bulanObj = bulanList.find((bulan) => bulan.namaBulan === bulanNama);
@@ -92,15 +97,15 @@ function Pengeluaran() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const formattedTanggal = `${tahun}-${String(bulan + 1).padStart(
-      2,
-      "0"
-    )}-${String(tanggal).padStart(2, "0")}`;
+    // const formattedTanggal = `${tahun}-${String(bulan + 1).padStart(
+    //   2,
+    //   "0"
+    // )}-${String(tanggal).padStart(2, "0")}`;
 
     const dataToSend = {
       noBukti: formValues.noBukti,
-      tanggalTransaksi: formattedTanggal,
-      posTransaksi: formValues.posPenerimaan,
+      tanggalTransaksi: formValues.tanggalTransaksi,
+      posTransaksi: formValues.posTransaksi,
       masukKe: formValues.jenisPenerimaan,
       cabang: formValues.cabang,
       bulan: formValues.setoranBulan,
@@ -112,7 +117,6 @@ function Pengeluaran() {
       keterangan: formValues.keterangan,
       jenisPembayaran: "Sanduka",
     };
-
     try {
       const response = await GlobalApi.createPembayaranSanduka(dataToSend);
       toast.success(
@@ -139,7 +143,7 @@ function Pengeluaran() {
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
           <h3
-             style={{
+            style={{
               fontSize: "2rem",
               display: "block",
               marginBottom: "28px",
@@ -148,25 +152,25 @@ function Pengeluaran() {
             Data berhasil dikirim!{" "}
           </h3>
         </div>,
-       {
-        icon: null,
-        duration: 4000,
-        style: {
-          marginTop: "12%",
-          fontSize: "1.75rem",
-          padding: "10px",
-          width: "80%",
-          maxWidth: "450px",
-          height: "50%",
-          maxHeight: "400px",
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          zIndex: 9999,
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      }
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
       );
     } catch (error) {
       toast.error(
@@ -205,7 +209,7 @@ function Pengeluaran() {
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 2000,
           style: {
             marginTop: "12%",
             fontSize: "1.75rem",
@@ -372,32 +376,64 @@ function Pengeluaran() {
   };
 
   const handleCheck = (id) => {
-    setTransactions((prevTransactions) =>
-      prevTransactions.map((transaction) =>
-        transaction.id === id
-          ? { ...transaction, checked: !transaction.checked }
-          : transaction
-      )
-    );
+    setCheckedIds((prevCheckedIds) => {
+      if (prevCheckedIds.includes(id)) {
+        return prevCheckedIds.filter((checkedId) => checkedId !== id);
+      } else {
+        return [...prevCheckedIds, id];
+      }
+    });
   };
 
-  const handleSelectAll = (e) => {
-    const isChecked = e.target.checked;
-    setSelectAll(isChecked);
-    setTransactions((prevTransactions) =>
+  const handleSelectAll = () => {
+    const newSelectAll = !selectAll;
+    setSelectAll(newSelectAll);
+
+    const updatedCheckedIds = newSelectAll
+      ? paginatedTransactions.map((transaction) => transaction.id)
+      : [];
+
+    setCheckedIds(updatedCheckedIds);
+
+    setPaginatedTransactions((prevTransactions) =>
       prevTransactions.map((transaction) => ({
         ...transaction,
-        checked: isChecked,
+        checked: newSelectAll,
       }))
     );
   };
 
-  const parseNumber = (value) => {
-    if (value === "" || isNaN(parseFloat(value))) {
-      return "-";
+  const handleDeleteClick = async () => {
+    setIsLoading(true);
+
+    try {
+      for (const id of checkedIds) {
+        const response = await GlobalApi.hapusPemasukanUangMasuk(id);
+
+        if (response) {
+          setTransactions((prevTransactions) =>
+            prevTransactions.filter(
+              (transaction) => !checkedIds.includes(transaction.id)
+            )
+          );
+          setPaginatedTransactions((prevPaginatedTransactions) =>
+            prevPaginatedTransactions.filter(
+              (transaction) => !checkedIds.includes(transaction.id)
+            )
+          );
+
+          toast.success("Data berhasil dihapus!");
+        }
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      window.location.reload();
+    } catch (error) {
+      console.error("Gagal menghapus data dengan ID:", checkedIds, error);
+      toast.error("Terjadi kesalahan saat menghapus data.");
+    } finally {
+      setIsLoading(false);
     }
-    const number = parseFloat(value.replace(/[^0-9.-]/g, ""));
-    return isNaN(number) ? "-" : number;
   };
 
   const formatCurrency = (value) => {
@@ -431,23 +467,24 @@ function Pengeluaran() {
 
     setFormValues((prevValues) => {
       const updatedValues = { ...prevValues };
-
+    
       if (name === "nominal") {
-        const numericValue = Number(value.replace(/\./g, "")); // Hilangkan titik untuk memproses angka murni
-
+        // Hanya ambil angka tanpa format pemisah
+        const numericValue = Number(value.replace(/\D/g, "")); // Hapus semua karakter non-digit
+    
         if (!isNaN(numericValue)) {
-          updatedValues.nominal = formatNumberWithDots(numericValue); // Format dengan titik
+          updatedValues.nominal = numericValue; // Simpan angka mentah tanpa pemisah ribuan
           updatedValues.terbilang = convertToTerbilangWithRupiah(numericValue); // Konversi ke terbilang
         } else {
-          updatedValues.nominal = value; // Jika bukan angka, simpan nilai asli
+          updatedValues.nominal = ""; // Jika bukan angka, kosongkan nominal
           updatedValues.terbilang = "";
         }
       } else {
         updatedValues[name] = value; // Untuk input lain, gunakan nilai asli
       }
-
+    
       return updatedValues;
-    });
+    });        
 
     if (name === "tahun" || name === "bulan") {
       const year = name === "tahun" ? value : formValues.tahun;
@@ -464,10 +501,6 @@ function Pengeluaran() {
         }
       }
     }
-  };
-  const formatNumberWithDots = (number) => {
-    if (isNaN(number)) return number; // Jika bukan angka, kembalikan nilai asli
-    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); // Tambahkan titik sebagai pemisah ribuan
   };
   const capitalizeFirstLetter = (text) => {
     if (typeof text !== "string" || !text) return ""; // Jika bukan string atau kosong, kembalikan string kosong
@@ -591,14 +624,15 @@ function Pengeluaran() {
           return age;
         };
 
-        const dataPelaporan = formatDate(userData.tanggalPelaporan);
+        // const dataPelaporan = formatDate(userData.tanggalPelaporan);
         const tanggalMeninggal = formatDate(userData.waktuMeninggalTerlapor);
         const umur = calculateAge(userData.tanggalLahir);
         const mulaiJadiAnggotaPgri = formatDate(userData.mulaiJadiAnggotaPgri);
 
         const generateData = {
-          nomorTransaksi: "BKT-Sdk-20241228",
-          dataPelaporan,
+          noBukti: formValues.noBukti,
+          dataPelaporan: formValues.tanggalTransaksi,
+          // dataPelaporan,
           nama: userData.namaLengkap,
           tanggalMeninggal,
           umur,
@@ -608,7 +642,8 @@ function Pengeluaran() {
           sejakMenjadiAnggota: mulaiJadiAnggotaPgri,
           jabatan: userData.jabatan,
           terbilang: formValues.terbilang,
-          nominal: formValues.nominal,
+          // nominal: formValues.nominal,
+          nominal: "2.500.000",
           menyerahkan: sessionStorage.getItem("nama"),
           penerima: formValues.namaPenerima,
         };
@@ -850,7 +885,7 @@ function Pengeluaran() {
 <body>
 <div class="header">
   <div class="left-header">
-    <p>Nomor Transaksi: ${data.nomorTransaksi}</p>
+    <p>Nomor Transaksi: ${data.noBukti}</p>
     <p>Tanggal Transaksi: ${data.dataPelaporan}</p>
   </div>
   <div class="title">TANDA TERIMA</div>
@@ -1010,35 +1045,30 @@ function Pengeluaran() {
                     id="tanggalTransaksi"
                     type="date"
                     name="tanggalTransaksi"
-                    value={formValues.tanggalTransaksi}
-                    onChange={(e) =>
-                      setFormValues({
-                        ...formValues,
-                        tanggalTransaksi: e.target.value,
-                      })
-                    }
+                    value={formValues.tanggalTransaksi || ""}
+                    onChange={handleChange}
                   />
                 </div>
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
-                    htmlFor="posPenerimaan"
+                    htmlFor="posTransaksi"
                   >
                     Pos Pengeluaran
                   </Label>
                   <select
                     className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="posPenerimaan"
-                    name="posPenerimaan"
-                    value={formValues.posPenerimaan}
+                    id="posTransaksi"
+                    name="posTransaksi"
+                    value={formValues.posTransaksi}
                     onChange={handleChange}
                   >
                     <option value="">Pilih</option>
-                    <option value="sumbangan sanduka">
+                    <option value="Pengeluaran Sanduka">
                       Pengeluaran Sanduka
                     </option>
-                    <option value="hibah">Operasional 15%</option>
-                    <option value="lain-lain">Lain - Lain</option>
+                    <option value="Operasional 15%">Operasional 15%</option>
+                    <option value="Lain - Lain">Lain - Lain</option>
                   </select>
                 </div>
 
@@ -1171,9 +1201,9 @@ function Pengeluaran() {
                   <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="nominal"
-                    type="text"
+                    type="number"
                     name="nominal"
-                    value={formValues.nominal}
+                    value={formValues.nominal || ""}
                     onChange={handleChange}
                   />
 
@@ -1290,9 +1320,38 @@ function Pengeluaran() {
                     className="form-checkbox h-4 w-4 mt-3"
                     onChange={handleSelectAll}
                   />
-                  <Button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300">
-                    Hapus
-                  </Button>
+                  <button
+                    className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center`}
+                    onClick={handleDeleteClick}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <svg
+                          className="animate-spin h-5 w-5 text-white mr-2"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v8H4z"
+                          ></path>
+                        </svg>
+                      </div>
+                    ) : (
+                      "Hapus"
+                    )}
+                  </button>
                   <Button
                     className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300"
                     onClick={printTable}

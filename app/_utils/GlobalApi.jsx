@@ -738,23 +738,20 @@ const getSaldoOrganisasi = async () => {
   }
 };
 
-const editPemasukanUangMasuk = async (noBukti) => {
+const editPemasukanUangMasuk = async (id) => {
   try {
-    const response = await axiosClient.get(
-      `/api/uang-masuk-keluar/by-no-bukti`,
-      {
-        params: { noBukti },
-      }
-    );
-    return response.data;
+    const response = await axiosClient.get(`/api/uang-masuk-keluar/${id}`); // id sebagai bagian dari path
+    return response.data; // Kembalikan data API
   } catch (error) {
-    console.error("Error fatching data by noBukti", error);
+    console.error("Error fetching data by id:", error);
     throw error;
   }
 };
+
+
 const hapusPemasukanUangMasuk = async (id) => {
   try {
-    const response = await axios.delete(`/api/uang-masuk-keluar/${id}`);
+    const response = await axiosClient.delete(`/api/uang-masuk-keluar/${id}`);
     return response.data;
   } catch (error) {
     console.error("Error delete data by id", error);
@@ -1161,9 +1158,32 @@ const getRekapAnggotaByCabang = async (cabang) => {
 // end
 
 //Start Pensiun
-const getAllPensiun = (page = 0, size = 570) => {
-  return axiosClient.get(`/api/pensiun?page=${page}&size=${size}`);
+// const getAllPensiun = async (page = 0, size = 10) => {
+//   try {
+//     const response = await axiosClient.get(`/api/pensiun?page=${page}&size=${size}`);
+//     return response.data;
+//   } catch (error) {
+//     console.error("Error fetching pensiun data:", error);
+//     throw error;
+//   }
+// };
+const getAllPensiun = (page = 0, size = 10, cabang = null, bulan = null, tahun = null, keyword = null) => {
+  const params = new URLSearchParams({ page, size });
+
+  if (cabang) params.append("cabang", cabang);
+  if (bulan) params.append("bulan", bulan);
+  if (tahun) params.append("tahun", tahun);
+  if (keyword) params.append("keyword", keyword);
+
+  return axiosClient.get(`/api/pensiun?${params.toString()}`);
 };
+// const getAllPensiun = (page = 0, size = 10, cabang = null) => {
+//   return axiosClient.get(`/api/pensiun?page=${page}&size=${size}&cabang=${cabang}`);
+// };
+// getAllPensiun(0, 10, 'BANGSRI')
+//   .then(response => console.log(response.data))
+//   .catch(error => console.error(error));
+
 // const getAllPensiun = async (page = 0) => {
 //   const fetchAllPages = async () => {
 //     let currentPage = page;

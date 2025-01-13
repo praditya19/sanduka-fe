@@ -132,9 +132,20 @@ export default function Iuran() {
         console.error("Error fetching cabang data:", error);
       }
     };
-
+  
     fetchCabangData();
   }, []);
+
+  useEffect(() => {
+    if (chosenCabang) {
+      // Memfilter data berdasarkan cabang yang dipilih
+      const filteredData = allCabangData.filter(cabang =>
+        cabang.kecamatan.toLowerCase().includes(chosenCabang.toLowerCase())
+      );
+      setFilteredCabangList(filteredData);  // Menyaring daftar cabang untuk dropdown
+    }
+  }, [chosenCabang, allCabangData]);
+
   const handleSearchInputChange = (e) => {
     const input = e.target.value.toLowerCase();
     setSearchTerm(input);
@@ -478,13 +489,14 @@ export default function Iuran() {
   };
 
   useEffect(() => {
-    const paginated = filteredDataSumbangan.slice(
-      indexOfFirstItem,
-      indexOfLastItem
+    // Menyaring data tabel berdasarkan pilihan cabang
+    const filteredTableData = filteredDataSumbangan.filter(item => 
+      item[0].toLowerCase().includes(chosenCabang.toLowerCase())  // Pastikan item[0] adalah nama cabang
     );
+    const paginated = filteredTableData.slice(indexOfFirstItem, indexOfLastItem);
     setPaginatedData(paginated);
-    setTotalItems(filteredDataSumbangan.length);
-  }, [filteredDataSumbangan, currentPage, itemsPerPage]);
+    setTotalItems(filteredTableData.length);
+  }, [filteredDataSumbangan, chosenCabang, currentPage, itemsPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -495,6 +507,7 @@ export default function Iuran() {
       fetchData();
     }
   }, [selectedCabang]);
+
   const fetchData = async () => {
     try {
       const data = await GlobalApi.getTotalAnggotaByCabang(selectedCabang);
@@ -521,7 +534,8 @@ export default function Iuran() {
     setSelectedCabang(cabang);
     setIsDropdownOpen(false);
     setSearchQuery("");
-  };
+  };  
+
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
