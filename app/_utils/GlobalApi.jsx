@@ -1363,17 +1363,17 @@ const getRantingSummary = async (
     };
 
     const response = await axiosClient.get("/api/ranting", { params });
-
     return {
       content: Array.isArray(response.data.content)
         ? response.data.content.map((data) => ({
             cabang: data.cabang,
             namaRanting: data.namaRanting,
-            lokasi: data.unitKerja,
+            unitKerja: data.unitKerja,
             namaAnggota: processNamaAnggota(data.namaAnggota),
+            anggotaUnitKerja: data.anggotaUnitKerja,
             jumlahAnggotaRanting: data.jumlahAnggotaRanting,
             totalUnitKerja: data.totalUnitKerja,
-            totalAnggota: data.totalAnggota,
+            totalAnggota: data.totalAnggotaSemuaRanting,
           }))
         : [],
       totalElements: response.data.totalElements,
