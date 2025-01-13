@@ -31,19 +31,21 @@ const HeaderHome = () => {
   const getAnggotaById = async () => {
     try {
       const userId = sessionStorage.getItem("userId");
-  
+
       // Validasi: pastikan setidaknya salah satu ID ada
       if (!userId) {
         console.error("ID tidak ditemukan di sessionStorage");
         setProfileImageUrl("/profile.png");
         return;
       }
-  
+
       // Pilih ID yang tersedia
       const idToFetch = userId;
-  
+
       const response = await GlobalApi.getUserById(idToFetch);
-  
+
+      console.log(response);
+
       // Cek apakah foto tersedia
       if (response.foto) {
         const decodedString = atob(response.foto);
@@ -55,7 +57,7 @@ const HeaderHome = () => {
       console.error("Error Saat Mendapatkan Foto:", error);
       setProfileImageUrl("/profile.png");
     }
-  };  
+  };
 
   const handleNotificationClick = () => {
     router.push("/keuangan/sanduka/lapor/lapor-cabang");
@@ -88,8 +90,8 @@ const HeaderHome = () => {
 
   const getEditProfilePath = () => {
     const userRole = sessionStorage.getItem("role");
-    return userRole === "SUPER ADMIN" || userRole === "ADMIN" 
-      ? "/anggota/edit-admin" 
+    return userRole === "SUPER ADMIN" || userRole === "ADMIN"
+      ? "/anggota/edit-admin"
       : "/anggota/edit-anggota";
   };
 

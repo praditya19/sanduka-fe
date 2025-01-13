@@ -310,7 +310,6 @@ const SyncData = () => {
     const fetchData = async () => {
       try {
         const result = await GlobalApi.getAllFiles();
-        console.log("data:", result);
         setData(result);
         setTotalPages(Math.ceil(result.length / itemsPerPage));
 
@@ -350,8 +349,8 @@ const SyncData = () => {
     try {
       const result = await GlobalApi.getAllFiles();
       setData(result);
-      setTotalFiles(result.length); // Set total unfiltered count
-      setFilteredTotalFiles(calculateFilteredTotal(result)); // Set filtered count
+      setTotalFiles(result.length);
+      setFilteredTotalFiles(calculateFilteredTotal(result));
       setTotalPages(Math.ceil(result.length / itemsPerPage));
       setLoading(false);
     } catch (error) {
@@ -387,12 +386,13 @@ const SyncData = () => {
     document.body.innerHTML = originalContents;
     window.location.reload();
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoader(true);
+
     let fileToSend = formData.file;
 
-    // Add cabang from session for ADMIN
     const submissionCabang =
       role === "ADMIN" ? sessionStorage.getItem("cabang") : formData.cabang;
 
@@ -402,39 +402,10 @@ const SyncData = () => {
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
         fileToSend.type === "application/vnd.ms-excel")
     ) {
-      try {
-        const dataToSend = new FormData();
-        dataToSend.append("file", fileToSend);
-        dataToSend.append("category", formData.category);
-        dataToSend.append("cabang", formData.cabang);
-        dataToSend.append("unitKerja", formData.unitKerja);
-        dataToSend.append("namaAnggota", formData.namaLengkap);
-        dataToSend.append("npaNip", formData.npaNip);
-        dataToSend.append("nomorHp", formData.nomorHp);
-        dataToSend.append("dataSanduka", formData.dataSanduka);
-        dataToSend.append("dataKtaDigital", formData.dataKtaDigital);
-        dataToSend.append("dataDaspen", formData.dataDaspen);
-        dataToSend.append("verifikasi", formData.verifikasi);
-
-        try {
-          const response = await GlobalApi.uploadFile(dataToSend);
-          console.log("Data successfully submitted:", response);
-          setIsModalOpen(false);
-        } catch (error) {
-          console.error(
-            "Error submitting data:",
-            error.response?.data || error.message
-          );
-        }
-      } catch (error) {
-        console.error("Error processing file:", error);
-      }
-    } else {
-      // Jika file bukan tipe Excel, tetap kirim data seperti biasa
       const dataToSend = new FormData();
       dataToSend.append("file", fileToSend);
       dataToSend.append("category", formData.category);
-      dataToSend.append("cabang", formData.cabang);
+      dataToSend.append("cabang", submissionCabang);
       dataToSend.append("unitKerja", formData.unitKerja);
       dataToSend.append("namaAnggota", formData.namaLengkap);
       dataToSend.append("npaNip", formData.npaNip);
@@ -446,15 +417,134 @@ const SyncData = () => {
 
       try {
         const response = await GlobalApi.uploadFile(dataToSend);
-        console.log("Data successfully submitted:", response);
+
+        toast.success(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                width: "150px",
+                height: "150px",
+                color: "#06D001",
+                marginBottom: "16px",
+                marginTop: "14px",
+              }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+            </svg>
+            <h3
+              style={{
+                fontSize: "2rem",
+                display: "block",
+                marginBottom: "28px",
+              }}
+            >
+              File Berhasil Dikirim!
+            </h3>
+          </div>,
+          {
+            icon: null,
+            duration: 4000,
+            style: {
+              marginTop: "12%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "450px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
+        );
         setIsModalOpen(false);
       } catch (error) {
+        toast.error(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                width: "150px",
+                height: "150px",
+                color: "#D0011B",
+                marginBottom: "16px",
+                marginTop: "14px",
+              }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+            </svg>
+            <h3
+              style={{
+                fontSize: "2rem",
+                display: "block",
+                marginBottom: "28px",
+              }}
+            >
+              File Gagal Dikirim!
+            </h3>
+          </div>,
+          {
+            icon: null,
+            duration: 4000,
+            style: {
+              marginTop: "12%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "450px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
+        );
         console.error(
           "Error submitting data:",
           error.response?.data || error.message
         );
       }
+    } else {
+      toast.error("Format file tidak sesuai. Harap unggah file Excel!", {
+        duration: 3000,
+        style: {
+          fontSize: "1rem",
+          backgroundColor: "#D0011B",
+          color: "#fff",
+        },
+      });
     }
+
+    setLoader(false);
   };
 
   const handleCloseModal = () => {
@@ -731,8 +821,8 @@ const SyncData = () => {
         </div>,
         {
           icon: null,
-          autoClose: 4000,
-          duration: 4000,
+          autoClose: 3000,
+          duration: 3000,
           style: {
             marginTop: "16%",
             fontSize: "1.75rem",
@@ -753,13 +843,12 @@ const SyncData = () => {
 
       setTimeout(() => {
         window.location.reload();
-      }, 4000);
+      }, 3000);
 
       setTimeout(() => {
         setIsPopupVisible(false);
-      }, 4000);
+      }, 3000);
     } catch (error) {
-      console.error("Gagal Menghapus Data:", error);
       toast.error(
         <div
           style={{
@@ -921,7 +1010,6 @@ const SyncData = () => {
                           onChange={handleInputChange}
                         >
                           <option value="">-- Pilih Kategori --</option>
-                          <option value="SANDUKA">Sanduka</option>
                           <option value="DASPEN">Daspen </option>
                           <option value="KTA_DIGITAL"> KTA Digital</option>
                         </select>
@@ -1108,7 +1196,7 @@ const SyncData = () => {
                         </th>
 
                         <th scope="col" className="py-3 px-6">
-                        Data KTA Digital
+                          Data KTA Digital
                         </th>
                         <th scope="col" className="py-3 px-6">
                           Data Daspen
