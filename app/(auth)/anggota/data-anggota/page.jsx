@@ -107,6 +107,8 @@ const DataAnggota = () => {
       setTotalPages(response.totalPages || 0);
       setTotalElements(response.totalElements || 0);
       setLoading(false);
+      console.log(fotoBase64Array);
+
       return fetchedData || [];
     } catch (error) {
       console.error("Error fetching anggota data:", error);

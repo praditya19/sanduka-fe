@@ -415,7 +415,7 @@ const VerifikasiAnggotaMutasi = () => {
           handleCabangChange(cabangFromSession);
           fetchUnverifiedUsersCountByCabang(cabangFromSession);
         } else {
-          fetchDataAnggota(currentPage, pageSize);
+          fetchDataAnggota(currentPage, pageSize, selectedCabang);
           fetchUnverifiedUsersCountBySuperAdmin();
         }
 
@@ -499,14 +499,6 @@ const VerifikasiAnggotaMutasi = () => {
     rejectUser(rowId);
   };
 
-  const handleResetClick = () => {
-    setSelectedCabang("");
-    setSelectedUnitKerja("");
-    setFilteredUnitKerja([]);
-    setNama("");
-    fetchDataAnggota(currentPage, pageSize, "", "", "");
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
       <Toaster
@@ -556,7 +548,6 @@ const VerifikasiAnggotaMutasi = () => {
               handleCabangChange={handleCabangChange}
               handleUnitKerjaChange={handleUnitKerjaChange}
               handleSearchClick={handleSearchClick}
-              handleResetClick={handleResetClick}
               handleNamaChange={handleNamaChange}
               nama={nama}
               anggotaUnverifiedCount={anggotaUnverifiedCount}
