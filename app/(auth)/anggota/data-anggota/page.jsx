@@ -107,8 +107,6 @@ const DataAnggota = () => {
       setTotalPages(response.totalPages || 0);
       setTotalElements(response.totalElements || 0);
       setLoading(false);
-      console.log(fotoBase64Array);
-
       return fetchedData || [];
     } catch (error) {
       console.error("Error fetching anggota data:", error);
@@ -1247,6 +1245,7 @@ const DataTable = ({
   const handlePensiunAnggota = async () => {
     try {
       const anggotaId = sessionStorage.getItem("anggotaId");
+
       await GlobalApi.pensiunAnggota(anggotaId);
       setPopupVisible(false);
       toast.success(
@@ -2031,6 +2030,7 @@ const DataTable = ({
                                     </div>
                                   </div>
                                 )}
+
                                 <Link
                                   href={`https://wa.me/${item.nomorHp.replace(
                                     /^0/,
@@ -2057,6 +2057,7 @@ const DataTable = ({
                               >
                                 Daspen
                               </Button>
+
                               {isPopupDaspen && daspenData && (
                                 <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-10 z-50">
                                   <div className="bg-white p-6 rounded-md w-5/12 relative">
@@ -2354,7 +2355,13 @@ const DataTable = ({
                                 <Button
                                   className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
                                   title="Mutasi"
-                                  onClick={() => openModal(item)}
+                                  onClick={() => {
+                                    sessionStorage.setItem(
+                                      "anggotaId",
+                                      item.id
+                                    );
+                                    openModal(item);
+                                  }}
                                 >
                                   <FaExchangeAlt className="w-4 h-4" />
                                 </Button>
@@ -2392,7 +2399,30 @@ const DataTable = ({
                                   <FaExclamationTriangle className="w-4 h-4" />
                                 </Button>
                               )}
-
+                              {isPopupVisible && (
+                                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-10 z-40 w-screen h-screen">
+                                  <div className="bg-white p-6 rounded-lg shadow-md w-96">
+                                    <h2 className="text-xl text-center mb-4">
+                                      Apakah Anda Yakin ingin Menghapus Data
+                                      Anggota ini?
+                                    </h2>
+                                    <div className="flex justify-end gap-4">
+                                      <button
+                                        onClick={() => setIsPopupVisible(false)}
+                                        className="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-md"
+                                      >
+                                        Batal
+                                      </button>
+                                      <button
+                                        onClick={handleDeleteClick}
+                                        className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                                      >
+                                        Ya, Saya Sakin
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                               <Link
                                 href={`https://wa.me/62${item.nomorHp}`}
                                 className="text-white bg-green-500 p-2 border rounded-md"
@@ -2617,6 +2647,7 @@ const DataTable = ({
                                   </div>
                                 )}
                               </div>
+
                               {sessionStorage.getItem("role") === "USER" ? (
                                 <Button
                                   className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2 cursor-not-allowed opacity-50"
