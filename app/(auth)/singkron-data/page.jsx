@@ -349,6 +349,7 @@ const SyncData = () => {
     try {
       const result = await GlobalApi.getAllFiles();
       setData(result);
+      console.log(result);
       setTotalFiles(result.length);
       setFilteredTotalFiles(calculateFilteredTotal(result));
       setTotalPages(Math.ceil(result.length / itemsPerPage));
@@ -625,7 +626,7 @@ const SyncData = () => {
                       <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
                         Belum Sinkronisasi
                       </span>
-                    ) : item.verifikasi === 1 ? (
+                    ) : item.verifikasi === true ? (
                       <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
                         Sudah Sinkronisasi
                       </span>
