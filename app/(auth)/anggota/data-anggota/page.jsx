@@ -1590,9 +1590,12 @@ const DataTable = ({
     setIsPopupDaspen(false);
   };
 
-  const updateAktivasiUser = async (userId) => {
+  const updateAktivasiUser = async () => {
     try {
-      const response = await GlobalApi.activasiUser(userId);
+      const anggotaId = sessionStorage.getItem("anggotaId");
+      console.log(anggotaId);
+
+      const response = await GlobalApi.activasiUser(anggotaId);
       toast.success(
         <div
           style={{
@@ -1805,7 +1808,7 @@ const DataTable = ({
                     </td>
                     {isMobile ? (
                       <td className="py-2 px-4 border-b">
-                        <div className="flex flex-col items-center justify-center">
+                        <div className="w-16 h-16 flex flex-col items-center justify-center">
                           <Image
                             src={
                               fotoBase64[index]
@@ -1815,15 +1818,14 @@ const DataTable = ({
                             width={50}
                             height={50}
                             alt="Anggota Foto"
-                            className="rounded"
+                            className="object-cover"
                             unoptimized={true}
                           />
-                          <div>{item.namaLengkap}</div>
                         </div>
                       </td>
                     ) : (
                       <td className="py-2 px-4 border-b">
-                        <div className="w-12 h-12 rounded-full overflow-hidden">
+                        <div className="w-16 h-16 overflow-hidden">
                           <Image
                             src={
                               fotoBase64[index]
@@ -2253,28 +2255,6 @@ const DataTable = ({
                                 </div>
                               )}
                             </div>
-
-                            {sessionStorage.getItem("role") === "USER" ? (
-                              <Button
-                                className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2 cursor-not-allowed opacity-50"
-                                title="Aktivasi Anggota"
-                                type="button"
-                                disabled
-                              >
-                                <FaUserCheck className="w-4 h-4" />
-                                <span>Aktivasi</span>
-                              </Button>
-                            ) : (
-                              <Button
-                                className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
-                                title="Aktivasi Anggota"
-                                type="button"
-                                onClick={() => updateAktivasiUser(item.id)}
-                              >
-                                <FaUserCheck className="w-4 h-4" />
-                                <span>Aktivasi</span>
-                              </Button>
-                            )}
                           </div>
                         </td>
                       </>
@@ -2647,28 +2627,6 @@ const DataTable = ({
                                   </div>
                                 )}
                               </div>
-
-                              {sessionStorage.getItem("role") === "USER" ? (
-                                <Button
-                                  className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2 cursor-not-allowed opacity-50"
-                                  title="Aktivasi Anggota"
-                                  type="button"
-                                  disabled
-                                >
-                                  <FaUserCheck className="w-4 h-4" />
-                                  <span>Aktivasi</span>
-                                </Button>
-                              ) : (
-                                <Button
-                                  className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
-                                  title="Aktivasi Anggota"
-                                  type="button"
-                                  onClick={() => updateAktivasiUser(item.id)}
-                                >
-                                  <FaUserCheck className="w-4 h-4" />
-                                  <span>Aktivasi</span>
-                                </Button>
-                              )}
                             </div>
                           </div>
                           <div className="text-center mt-4 w-full">
@@ -2842,6 +2800,41 @@ const DataTable = ({
                       </button>
                       <button
                         onClick={handlePensiunAnggota}
+                        className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                      >
+                        Ya, Saya Yakin
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div>
+              <Button
+                className="w-full bg-teal-700 hover:bg-teal-500"
+                onClick={handlePopup}
+              >
+                Aktivasi Anggota
+              </Button>
+              {popupVisible && (
+                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+                  <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
+                    <h2 className="text-lg font-semibold text-gray-800">
+                      Apakah Anda yakin ?
+                    </h2>
+                    <p className="text-gray-600 mt-2 mb-4">
+                      Apakah Anda yakin untuk mengaktifkan anggota menjadi
+                      Aktif?
+                    </p>
+                    <div className="flex justify-center gap-4">
+                      <button
+                        onClick={handleCancelKeluar}
+                        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        onClick={updateAktivasiUser}
                         className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
                       >
                         Ya, Saya Yakin
