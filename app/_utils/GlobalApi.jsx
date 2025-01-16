@@ -108,7 +108,8 @@ const getAllAnggota = async (
   cabang = null,
   unitKerja = null,
   keyword = null,
-  statusKeanggotaan = null
+  statusKeanggotaan = null,
+  tingkatSekolah = null
 ) => {
   try {
     const params = new URLSearchParams({
@@ -121,6 +122,7 @@ const getAllAnggota = async (
     if (keyword) params.append("keyword", keyword);
     if (statusKeanggotaan)
       params.append("statusKeanggotaan", statusKeanggotaan);
+    if (tingkatSekolah) params.append("tingkatSekolah", tingkatSekolah);
 
     const response = await axiosClient.get(
       `/api/auth/users?${params.toString()}`
