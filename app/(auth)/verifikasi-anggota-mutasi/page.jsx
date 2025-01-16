@@ -953,34 +953,35 @@ const DataTable = ({
 
     const dayName = dayNames[date.getDay()];
 
-    return `${dayName}, ${date.toLocaleString("id-ID", {
+    const formattedDate = date.toLocaleDateString("id-ID", {
       year: "numeric",
       month: "long",
       day: "numeric",
+    });
+
+    const formattedTime = date.toLocaleTimeString("id-ID", {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
       hour12: false,
-    })}`;
+    });
+
+    return `${dayName}, ${formattedDate}\npukul ${formattedTime}`;
   };
 
   return (
     <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
       <thead className="bg-teal-700 text-white text-center">
         <tr>
-          <th className="py-2 px-4 border-b">No</th>
-          {isMobile && <th className="py-2 px-4 border-b">Foto & Nama</th>}
-          {!isMobile && <th className="py-2 px-4 border-b">Foto</th>}
-          <th className="py-2 px-4 border-b">Registrasi</th>
+          <th className="p-2 md:p-3 border">No</th>
+          {isMobile && <th className="p-2 md:p-3 border">Foto & Nama</th>}
+          {!isMobile && <th className="p-2 md:p-3 border">Foto</th>}
+          <th className="p-2 md:p-3 border">Registrasi</th>
           {!isMobile && (
             <>
-              <th className="py-2 px-4 border-b">Cabang</th>
-              <th className="py-2 px-4 border-b">Unit Kerja</th>
-              <th className="py-2 px-4 border-b">Nama</th>
-              <th className="py-2 px-4 border-b">NPA PGRI</th>
-              <th className="py-2 px-4 border-b">Status</th>
-
-              <th className="py-2 px-4 border-b">Aksi</th>
+              <th className="p-2 md:p-3 border">Data Anggota</th>
+              <th className="p-2 md:p-3 border">Status</th>
+              <th className="p-2 md:p-3 border">Aksi</th>
             </>
           )}
         </tr>
@@ -1013,7 +1014,7 @@ const DataTable = ({
             return (
               <React.Fragment key={item.id}>
                 <tr className="hover:bg-gray-50 text-sm cursor-pointer text-center">
-                  <td className="py-2 px-4 border-b">
+                  <td className="py-2 px-4 border">
                     <div className="flex justify-between items-center">
                       <span>{nomorUrut}</span>
                       {isMobile && (
@@ -1029,52 +1030,52 @@ const DataTable = ({
                     </div>
                   </td>
                   {isMobile ? (
-                    <td className="py-2 px-4 border-b">
+                    <td className="py-2 px-4 border">
                       <div className="flex flex-col items-center justify-center">
-                        <div className="w-12 h-12 rounded-full overflow-hidden">
+                        <div className="w-20 h-20 overflow-hidden">
                           <Image
                             src={
                               fotoBase64[index]
                                 ? `data:image/jpeg;base64,${fotoBase64[index]}`
                                 : profileImageUrl
                             }
-                            width={50}
-                            height={50}
+                            width={60}
+                            height={60}
                             alt="Anggota Foto"
                             className="object-cover"
                             unoptimized={true}
                           />
                         </div>
-                        <div>{item.namaLengkap}</div>
                       </div>
                     </td>
                   ) : (
-                    <td className="py-2 px-4 border-b">
-                      <div className="w-12 h-12 rounded-full overflow-hidden">
-                        <Image
-                          src={
-                            fotoBase64[index]
-                              ? `data:image/jpeg;base64,${fotoBase64[index]}`
-                              : profileImageUrl
-                          }
-                          width={50}
-                          height={50}
-                          alt="Anggota Foto"
-                          className="object-cover"
-                        />
+                    <td className="py-2 px-2 border">
+                      <div className="flex items-center justify-center">
+                        <div className="w-20 h-20 overflow-hidden flex items-center justify-center">
+                          <Image
+                            src={
+                              fotoBase64[index]
+                                ? `data:image/jpeg;base64,${fotoBase64[index]}`
+                                : profileImageUrl
+                            }
+                            width={60}
+                            height={60}
+                            alt="Anggota Foto"
+                            className="object-cover"
+                          />
+                        </div>
                       </div>
                     </td>
                   )}
-                  <td className="px-4 py-2 border-b">
+                  <td className="px-4 py-2 border whitespace-pre-line">
                     {formatCreatedAt(item.createdAt)}
                   </td>
                   {!isMobile && (
                     <>
-                      <td className="py-2 px-4 border-b">{item.cabang}</td>
-                      <td className="py-2 px-4 border-b">{item.unitKerja}</td>
-                      <td className="py-2 px-4 border-b">{item.namaLengkap}</td>
-                      <td className="py-2 px-4 border-b">{item.npaPgri}</td>
-                      <td className="py-2 px-4 border-b">
+                      <td className="py-2 px-4 border whitespace-pre-line">
+                        {`${item.namaLengkap}\n${item.npaPgri}\n${item.cabang}\n${item.unitKerja}`}
+                      </td>
+                      <td className="py-2 px-4 border">
                         {!item.isVerified && (
                           <Badge variant="destructive">
                             <FontAwesomeIcon
@@ -1086,7 +1087,7 @@ const DataTable = ({
                           </Badge>
                         )}
                       </td>
-                      <td className="px-4 py-2 border-b">
+                      <td className="px-4 py-2 border">
                         <FontAwesomeIcon
                           icon={faUser}
                           size="lg"
@@ -1101,23 +1102,15 @@ const DataTable = ({
                   <tr>
                     <td colSpan="9" className="px-4 py-4 bg-gray-50">
                       <div className="flex flex-col items-center space-y-4">
-                        <div className="flex flex-col items-center justify-center">
-                          <div className="w-12 h-12 rounded-full overflow-hidden">
-                            <Image
-                              src={
-                                fotoBase64[index]
-                                  ? `data:image/jpeg;base64,${fotoBase64[index]}`
-                                  : profileImageUrl
-                              }
-                              width={50}
-                              height={50}
-                              alt="Anggota Foto"
-                              className="object-cover"
-                            />
-                          </div>
-                          <div>{item.namaLengkap}</div>
-                        </div>
                         <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
+                          <div className="text-left">
+                            <h3 className="font-semibold">Nama Lengkap:</h3>
+                            <p>{item.namaLengkap}</p>
+                          </div>
+                          <div className="text-left">
+                            <h3 className="font-semibold">NPA PGRI:</h3>
+                            <p>{item.npaPgri}</p>
+                          </div>
                           <div className="text-left">
                             <h3 className="font-semibold">Cabang:</h3>
                             <p>{item.cabang}</p>
@@ -1125,10 +1118,6 @@ const DataTable = ({
                           <div className="text-left">
                             <h3 className="font-semibold">Unit Kerja:</h3>
                             <p>{item.unitKerja}</p>
-                          </div>
-                          <div className="text-left">
-                            <h3 className="font-semibold">NPA PGRI:</h3>
-                            <p>{item.npaPgri}</p>
                           </div>
                           <div className="text-left">
                             <h3 className="font-semibold">Status:</h3>
@@ -1143,15 +1132,15 @@ const DataTable = ({
                               </Badge>
                             )}
                           </div>
-                        </div>
-                        <div className="text-center mt-4">
-                          <h3 className="font-semibold">Aksi:</h3>
-                          <FontAwesomeIcon
-                            icon={faUser}
-                            size="lg"
-                            className="text-yellow-500 cursor-pointer"
-                            onClick={() => handleUserClick(item.id)}
-                          />
+                          <div className="text-left">
+                            <h3 className="font-semibold">Aksi:</h3>
+                            <FontAwesomeIcon
+                              icon={faUser}
+                              size="lg"
+                              className="text-yellow-500 cursor-pointer"
+                              onClick={() => handleUserClick(item.id)}
+                            />
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -1209,11 +1198,11 @@ const PopupDetail = ({
 
         <div className="flex flex-col space-y-4 sm:space-y-6">
           <div className="flex justify-center">
-            <div className="w-20 h-20 rounded-full overflow-hidden">
+            <div className="w-20 h-20 overflow-hidden">
               <Image
                 src={decodedImage || profileImageUrl}
-                width={80}
-                height={80}
+                width={60}
+                height={60}
                 alt="Anggota Foto"
                 className="object-cover"
               />
