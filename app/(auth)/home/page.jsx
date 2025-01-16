@@ -11,13 +11,12 @@ import {
   faClipboardCheck,
   faUserGraduate,
   faWallet,
-  faSyncAlt,
   faUser,
-  faUsersGear,
+  faSyncAlt ,
   faMoneyBill,
   faCheckCircle,
   faCog,
-  faCalendarAlt,
+  faChair,
   faUserTie,
   faHome,
   faChevronLeft,
@@ -85,8 +84,8 @@ export default function IconGrid() {
       color: "text-gray-500",
     },
     {
-      icon: faUsersGear,
-      label: "by Name",
+      icon: faSyncAlt,
+      label: "Sinkornisasi",
       href: "/anggota/by-name",
       color: "text-yellow-500",
     },
@@ -115,7 +114,7 @@ export default function IconGrid() {
       color: "text-green-500",
     },
     {
-      icon: faSyncAlt,
+      icon: faChair,
       label: "Pensiun",
       href: "/pensiun",
       color: "text-rose-500",
@@ -151,12 +150,12 @@ export default function IconGrid() {
       color: "text-gray-700",
     },
 
-    {
-      icon: faUsers,
-      label: "Teman Unit",
-      href: "/teman-unit-kerja",
-      color: "text-green-600",
-    },
+    // {
+    //   icon: faUsers,
+    //   label: "Teman Unit",
+    //   href: "/teman-unit-kerja",
+    //   color: "text-green-600",
+    // },
   ];
   const sortByDate = (data) => {
     return [...data].sort((a, b) => {
@@ -292,8 +291,8 @@ export default function IconGrid() {
         const idToFetch = userId;
         const response = await GlobalApi.getUserById(idToFetch);
         setUserData(response);
-        setLatitude(response.latitude); // Set latitude
-        setLongitude(response.longitude); // Set longitude
+        setLatitude(response.latitude);
+        setLongitude(response.longitude);
       } catch (error) {
         console.error("Error saat mendapatkan data user:", error);
       }
@@ -341,11 +340,6 @@ export default function IconGrid() {
     if (href) {
       router.push(href);
     }
-  };
-
-  const handleDropdownClick = (href) => {
-    router.push(href);
-    setDropdownOpen(null);
   };
 
   const formatDate = (dateArray) => {

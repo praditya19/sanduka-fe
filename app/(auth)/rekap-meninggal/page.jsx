@@ -39,6 +39,7 @@ const Page = () => {
         try {
           const fetchedData = await GlobalApi.getAllDataLapor();
           setData(fetchedData);
+          console.log(fetchedData);
 
           const fotoBase64Array = [];
 
@@ -121,6 +122,25 @@ const Page = () => {
     setFilteredData(filtered);
   }, [filter, selectedMonth, selectedYear, data]);
 
+  const calculateAge = (birthDateArray) => {
+    if (!birthDateArray || birthDateArray.length < 3) return null;
+
+    const [year, month, day] = birthDateArray;
+    const today = new Date();
+    const birthDate = new Date(year, month - 1, day);
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+
+    return age;
+  };
 
   const currentData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
@@ -159,7 +179,7 @@ const Page = () => {
         <ClipLoader color="#3498db" size={50} />
       </div>
     );
-}
+  }
 
   return (
     <div>
@@ -168,8 +188,9 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="flex justify-center bg-red-600 py-2 rounded-b-lg shadow-md sm:mt-14 mt-12 sm:-mb-5 -mb-10">
             <h1 className="text-xl font-semibold text-white">
@@ -262,9 +283,6 @@ const Page = () => {
                           Data Pelapor
                         </th>
                         <th className="border border-gray-300 p-2 text-center font-bold uppercase hidden lg:table-cell">
-                          Cabang
-                        </th>
-                        <th className="border border-gray-300 p-2 text-center font-bold uppercase hidden lg:table-cell">
                           Keterangan
                         </th>
                         <th className="border border-gray-300 p-2 text-center font-bold uppercase hidden lg:table-cell">
@@ -301,15 +319,28 @@ const Page = () => {
                                   {item.namaAnggotaTerlapor}
                                 </div>
                                 <div className="text-xs">
+                                  {item.tanggalLahir
+                                    ? calculateAge(item.tanggalLahir)
+                                    : "Tanggal lahir tidak tersedia"}{" "}
+                                  Tahun
+                                </div>
+                                <div className="text-xs">
                                   {item.cabangKhususTerlapor}
                                 </div>
                                 <div className="text-xs">
-                                  {item.waktuMeninggalTerlapor
-                                    ? item.waktuMeninggalTerlapor.join("-")
-                                    : "Waktu tidak tersedia"}
+                                  {item.alamatTerlapor}
                                 </div>
                                 <div className="text-xs">
                                   {item.unitKerjaTerlapor}
+                                </div>
+                                <div className="text-xs">
+                                  {item.jabatanTerlapor}
+                                </div>
+                                <div className="text-xs">
+                                  Tanggal Meninggal:{" "}
+                                  {item.waktuMeninggalTerlapor
+                                    ? item.waktuMeninggalTerlapor.join("-")
+                                    : "Waktu tidak tersedia"}
                                 </div>
                               </td>
 
@@ -322,7 +353,8 @@ const Page = () => {
                                     "Jabatan tidak tersedia"}
                                 </div>
                                 <div className="text-xs">
-                                  {item.jamLapor}{", "}
+                                  {item.jamLapor}
+                                  {", "}
                                   {item.tanggalPelaporan
                                     ? item.tanggalPelaporan.join("-")
                                     : "Tanggal tidak tersedia"}
@@ -335,12 +367,6 @@ const Page = () => {
                                 </div>
                               </td>
 
-                              <td className="border px-4 py-2 text-center hidden lg:table-cell">
-                                <div className="text-xs">
-                                  {item.cabangKhususTerlapor ||
-                                    "Cabang tidak tersedia"}
-                                </div>
-                              </td>
                               <td className="border px-4 py-2 hidden lg:table-cell">
                                 {item.keteranganTerlapor ||
                                   "Keterangan tidak tersedia"}
@@ -405,8 +431,11 @@ const Page = () => {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 border rounded text-sm ${page === currentPage ? "bg-blue-500 text-white" : "bg-white hover:bg-gray-50"
-                        }`}
+                      className={`px-3 py-1 border rounded text-sm ${
+                        page === currentPage
+                          ? "bg-blue-500 text-white"
+                          : "bg-white hover:bg-gray-50"
+                      }`}
                     >
                       {page}
                     </button>
