@@ -8,7 +8,6 @@ const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
 });
-
 // Konversi Gambar Dalam Format Base64
 const base64ToBlob = (base64, mime) => {
   const byteChars = atob(base64);
@@ -109,7 +108,8 @@ const getAllAnggota = async (
   cabang = null,
   unitKerja = null,
   keyword = null,
-  statusKeanggotaan = null
+  statusKeanggotaan = null,
+  tingkatSekolah = null
 ) => {
   try {
     const params = new URLSearchParams({
@@ -122,6 +122,7 @@ const getAllAnggota = async (
     if (keyword) params.append("keyword", keyword);
     if (statusKeanggotaan)
       params.append("statusKeanggotaan", statusKeanggotaan);
+    if (tingkatSekolah) params.append("tingkatSekolah", tingkatSekolah);
 
     const response = await axiosClient.get(
       `/api/auth/users?${params.toString()}`
@@ -748,7 +749,6 @@ const editPemasukanUangMasuk = async (id) => {
   }
 };
 
-
 const hapusPemasukanUangMasuk = async (id) => {
   try {
     const response = await axiosClient.delete(`/api/uang-masuk-keluar/${id}`);
@@ -1155,19 +1155,15 @@ const getRekapAnggotaByCabang = async (cabang) => {
     throw error;
   }
 };
-// end
 
-//Start Pensiun
-// const getAllPensiun = async (page = 0, size = 10) => {
-//   try {
-//     const response = await axiosClient.get(`/api/pensiun?page=${page}&size=${size}`);
-//     return response.data;
-//   } catch (error) {
-//     console.error("Error fetching pensiun data:", error);
-//     throw error;
-//   }
-// };
-const getAllPensiun = (page = 0, size = 10, cabang = null, bulan = null, tahun = null, keyword = null) => {
+const getAllPensiun = (
+  page = 0,
+  size = 10,
+  cabang = null,
+  bulan = null,
+  tahun = null,
+  keyword = null
+) => {
   const params = new URLSearchParams({ page, size });
 
   if (cabang) params.append("cabang", cabang);
@@ -1177,46 +1173,6 @@ const getAllPensiun = (page = 0, size = 10, cabang = null, bulan = null, tahun =
 
   return axiosClient.get(`/api/pensiun?${params.toString()}`);
 };
-// const getAllPensiun = (page = 0, size = 10, cabang = null) => {
-//   return axiosClient.get(`/api/pensiun?page=${page}&size=${size}&cabang=${cabang}`);
-// };
-// getAllPensiun(0, 10, 'BANGSRI')
-//   .then(response => console.log(response.data))
-//   .catch(error => console.error(error));
-
-// const getAllPensiun = async (page = 0) => {
-//   const fetchAllPages = async () => {
-//     let currentPage = page;
-//     let allData = [];
-//     let hasMoreData = true;
-
-//     while (hasMoreData) {
-//       const params = new URLSearchParams({
-//         page: currentPage,
-//         size: 0
-//       });
-
-//       try {
-//         const response = await axiosClient.get(`/api/pensiun?${params.toString()}`);
-//         const pageData = response.data.content;
-//         const totalPages = response.data.totalPages;
-
-//         allData = [...allData, ...pageData];
-
-//         hasMoreData = currentPage + 1 < totalPages;
-//         currentPage++;
-//       } catch (error) {
-//         console.error("Error fetching pensiun pages:", error);
-//         break;
-//       }
-//     }
-
-//     return allData;
-//   };
-
-//   return fetchAllPages();
-// };
-// ENd
 
 //Notifikasi
 const getNotifikasi = async (count) => {

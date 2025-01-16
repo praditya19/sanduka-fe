@@ -1,379 +1,273 @@
 "use client";
-import React from "react";
-import { useState, useEffect, useMemo, useRef } from "react";
-import Modal from "react-modal";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import Image from "next/image";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  FaPlusCircle,
-  FaMinusCircle,
-  FaEdit,
-  FaExchangeAlt,
-  FaExclamationTriangle,
-  FaWhatsapp,
-  FaSortUp,
-  FaSortDown,
-  FaSort,
-  FaTimes,
-} from "react-icons/fa";
-import { Input } from "@/components/ui/input";
-import { useRouter } from "next/navigation";
-import toast, { Toaster } from "react-hot-toast";
+  faCheckCircle,
+  faTimesCircle,
+  faPlusCircle,
+  faMinusCircle,
+} from "@fortawesome/free-solid-svg-icons";
+import Modal from "react-modal";
+import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
+import { useRouter } from "next/navigation";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import { Badge } from "@/components/ui/badge";
+import toast, { Toaster } from "react-hot-toast";
 import { ClipLoader } from "react-spinners";
+import {
+  FaEdit,
+  FaExchangeAlt,
+  FaExclamationTriangle,
+  FaTimes,
+  FaUserCheck,
+  FaWhatsapp,
+} from "react-icons/fa";
+import Link from "next/link";
+import dynamic from "next/dynamic";
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
-function StatusAnggota() {
-  const [maxItems, setMaxItems] = useState(10);
-  const [filterCabang, setFilterCabang] = useState("");
-  const [filterUnitKerja, setFilterUnitKerja] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("Semua");
-  const [sortConfig, setSortConfig] = useState({
-    key: null,
-    direction: "ascending",
-  });
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentItem, setCurrentItem] = useState(null);
-  const [anggota, setAnggota] = useState([]);
-  const [expandedIndex, setExpandedIndex] = useState(null);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+const MapComponent = dynamic(
+  () => import("../../../_components/MapComponent"),
+  {
+    ssr: false,
+  }
+);
+
+const StatusAnggota = () => {
+  const [selectedRow, setSelectedRow] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [popupVisibleKeluar, setPopupVisibleKeluar] = useState(false);
-  const [popupVisible, setPopupVisible] = useState(false);
-  const dropdownRef = useRef(null);
-  const [fotoBase64, setFotoBase64] = useState("");
-  const [rekapData, setRekapData] = useState([]);
-  const [unitKerjaOptions, setUnitKerjaOptions] = useState([]);
-  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
-  const [searchCabang, setSearchCabang] = useState("");
-  const [listCabang, setListCabang] = useState([]);
-  const [showDropdownCabang, setShowDropdownCabang] = useState(false);
-  const [showDropdownUnit, setShowDropdownUnit] = useState(false);
-  const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
-  const [searchUnitKerja, setSearchUnitKerja] = useState("");
-  const [filteredUnitKerjaOptions, setFilteredUnitKerjaOptions] = useState([]);
-  const [formData, setFormData] = useState({ unit: "" });
-  const [isUnitKerjaDisabled, setIsUnitKerjaDisabled] = useState(true);
-  const [selectedCabang, setSelectedCabang] = useState("");
+  const [cabang, setCabang] = useState([]);
+  const [unitKerja, setUnitKerja] = useState([]);
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
-  const [allUnitKerja, setAllUnitKerja] = useState([]);
-  const [cabangOptions, setCabangOptions] = useState([]);
-  const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
-  const [isPopupVisible, setIsPopupVisible] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const unitKerjaRef = useRef(null);
-  const profileImageUrl = "/profile.png";
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
+  const [selectedTingkatSekolah, setSelectedTingkatSekolah] = useState("");
+  const [anggotaData, setAnggotaData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [fotoBase64, setFotoBase64] = useState("");
+  const [setSelectedRowIndex] = useState(null);
+  const [nama, setNama] = useState("");
+  const [status, setStatus] = React.useState("Aktif");
   const [role, setRole] = useState("");
-  const [isPopupDaspen, setIsPopupDaspen] = useState(false);
-  const [daspenData, setDaspenData] = useState(null);
-  const [kategoriDaspen, setKategoriDaspen] = useState("");
-  const [previousKategoriDaspen, setPreviousKategoriDaspen] =
-    useState(kategoriDaspen);
-  const [isKategoriChanged, setIsKategoriChanged] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState("");
-  const [selectedTingkat, setSelectedTingkat] = useState("");
-  const dropdownCabangRef = useRef(null);
-  const dropdownUnitKerjaRef = useRef(null);
-  const [totalAnggota, setTotalAnggota] = useState(0);
-  const [loadedData, setLoadedData] = useState([]);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMoreData, setHasMoreData] = useState(true);
-  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
-  const INITIAL_LOAD_SIZE = 100;
-  const BATCH_SIZE = 100;
-  const loadingRef = useRef(null);
+  const [totalElements, setTotalElements] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        dropdownCabangRef.current &&
-        !dropdownCabangRef.current.contains(event.target)
-      ) {
-        setShowDropdownCabang(false);
-      }
-      if (
-        dropdownUnitKerjaRef.current &&
-        !dropdownUnitKerjaRef.current.contains(event.target)
-      ) {
-        setShowDropdownUnitKerja(false);
-      }
-    };
+  const [currentFilters, setCurrentFilters] = useState({
+    cabang: "",
+    unitKerja: "",
+    tingkatSekolah: "",
+    keyword: "",
+    status: "Aktif"
+  });
 
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!token) {
-      router.push("/sign-in");
-    } else {
-      const fetchInitialData = async () => {
-        setLoading(true);
-        try {
-          const anggotaResponse = await GlobalApi.getAllAnggota();
-
-          if (anggotaResponse && anggotaResponse.content) {
-            setAnggota(anggotaResponse.content);
-            setTotalAnggota(anggotaResponse.content.length);
-            setInitialDataLoaded(true);
-          } else {
-            setAnggota([]);
-            setTotalAnggota(0);
-          }
-        } catch (error) {
-          console.error("Error fetching initial data:", error);
-          setTotalAnggota(0);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      const fetchCabangAndUnitKerja = async () => {
-        try {
-          const cabangResponse = await GlobalApi.getCabang();
-          setListCabang(cabangResponse.data);
-          setCabangOptions(cabangResponse.data);
-          setFilteredCabangOptions(cabangResponse.data);
-
-          const unitKerjaResponse = await GlobalApi.getUnitKerja();
-          setAllUnitKerja(unitKerjaResponse.data);
-          setUnitKerjaOptions(unitKerjaResponse.data);
-        } catch (error) {
-          console.error("Error fetching additional data:", error);
-        }
-      };
-
-      fetchInitialData().then(() => fetchCabangAndUnitKerja());
-
-      const storedRole = sessionStorage.getItem("role");
-      const storedCabang = sessionStorage.getItem("cabang");
-
-      setRole(storedRole || "");
-      if (storedRole === "ADMIN" && storedCabang) {
-        setSelectedCabang(storedCabang);
-      } else if (storedRole === "USER") {
-        const userName = sessionStorage.getItem("nama") || "";
-        setSearchKeyword(userName);
-      }
-
-      const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
-      setIsSidebarOpen(sidebarState);
-
-      const handleResize = () => {
-        setIsMobile(window.innerWidth <= 768);
-      };
-      handleResize();
-      window.addEventListener("resize", handleResize);
-
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
-    }
-  }, [token, router]);
-
-  useEffect(() => {
-    if (!initialDataLoaded || !hasMoreData || isLoadingMore) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          loadMoreData();
-        }
-      },
-      { threshold: 0.5 }
-    );
-
-    if (loadingRef.current) {
-      observer.observe(loadingRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [initialDataLoaded, hasMoreData, isLoadingMore, loadedData.length]);
-
-  const loadMoreData = async () => {
-    if (isLoadingMore || !hasMoreData) return;
-
-    setIsLoadingMore(true);
+  const fetchDataAnggota = async (
+    page = 0,
+    size = 10,
+    filters = currentFilters
+  ) => {
     try {
-      const currentSize = loadedData.length;
-      const nextBatch = anggota.slice(currentSize, currentSize + BATCH_SIZE);
+      const response = await GlobalApi.getAllAnggota(
+        page,
+        size,
+        filters.cabang,
+        filters.unitKerja,
+        filters.keyword,
+        filters.status,
+        filters.tingkatSekolah
+      );
 
-      if (nextBatch.length > 0) {
-        setLoadedData((prev) => [...prev, ...nextBatch]);
-        setHasMoreData(currentSize + nextBatch.length < anggota.length);
-      } else {
-        setHasMoreData(false);
-      }
-    } catch (error) {
-      console.error("Error loading more data:", error);
-    } finally {
-      setIsLoadingMore(false);
-    }
-  };
+      const fetchedData = response.content;
 
-  const handleDataDaspen = async () => {
-    const anggotaId = sessionStorage.getItem("anggotaId");
-    if (anggotaId) {
-      try {
-        const response = await GlobalApi.getUserById(anggotaId);
+      const fotoBase64Array = [];
 
-        if (response) {
-          setKategoriDaspen(response.kategoriDaspen || "Tidak tersedia");
+      if (fetchedData && fetchedData.length > 0) {
+        fetchedData.forEach((item, index) => {
 
-          const nip = response.nip;
-
-          if (nip) {
-            const fileResponse = await GlobalApi.getFileByNip(nip);
-
-            if (fileResponse) {
-              setDaspenData(fileResponse);
-              setIsPopupDaspen(true);
-            } else {
-              console.log("File tidak ditemukan untuk NIP:", nip);
+          if (item.foto) {
+            try {
+              const decodedString = atob(item.foto);
+              fotoBase64Array.push(decodedString);
+            } catch (error) {
+              console.error("Error decoding Base64:", error);
+              fotoBase64Array.push(null);
             }
           } else {
-            toast.error(
-              <div style={{ textAlign: "center" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    textAlign: "center",
-                  }}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{
-                      width: "150px",
-                      height: "150px",
-                      color: "red",
-                      marginBottom: "16px",
-                    }}
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-                    <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-                  </svg>
-                </div>
-
-                <h3 style={{ fontSize: "1.75rem", display: "block" }}>
-                  NIP tidak ditemukan, silahkan melakukan sinkronisasi dahulu.
-                </h3>
-              </div>,
-              {
-                icon: null,
-                duration: 4000,
-                style: {
-                  marginTop: "12%",
-                  fontSize: "1.75rem",
-                  padding: "10px",
-                  width: "80%",
-                  maxWidth: "450px",
-                  height: "50%",
-                  maxHeight: "400px",
-                  transform: "translate(-50%, -50%)",
-                  textAlign: "center",
-                  zIndex: 9999,
-                  backgroundColor: "#fff",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                },
-              }
-            );
+            fotoBase64Array.push(null);
           }
-        } else {
-          console.log("Data anggota tidak ditemukan");
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error(
-          <div style={{ textAlign: "center" }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                marginBottom: "8px",
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                style={{ width: "48px", height: "48px", color: "red" }}
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-                <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-              </svg>
-            </div>
-
-            <h3 style={{ fontSize: "1.75rem", display: "block" }}>
-              NIP tidak ditemukan, silahkan melakukan sinkronisasi dahulu.
-            </h3>
-          </div>,
-          {
-            icon: false,
-            duration: 5000,
-            style: {
-              borderRadius: "10px",
-              background: "white",
-              padding: "16px",
-            },
-          }
-        );
+        });
+      } else {
+        console.warn("No data found.");
       }
-    } else {
-      console.log("Anggota ID tidak ditemukan di sessionStorage");
+
+      setAnggotaData(fetchedData || []);
+      setFotoBase64(fotoBase64Array);
+      setTotalPages(response.totalPages || 0);
+      setTotalElements(response.totalElements || 0);
+      setLoading(false);
+
+      return fetchedData || [];
+    } catch (error) {
+      console.error("Error fetching anggota data:", error);
     }
   };
 
-  const closePopup = () => {
-    setIsPopupDaspen(false);
+  const getUserById = async (userId) => {
+    try {
+      const response = await GlobalApi.getUserById(userId);
+      setAnggotaData(response ? [response] : []);
+    } catch (error) {
+      console.error("Error fetching cabang:", error);
+    }
   };
 
-  const handleUnitKerjaChange = (e) => {
-    const value = e.target.value.toLowerCase();
-    setSearchUnitKerja(value);
+  const fetchData = async () => {
+    try {
+      const response = await GlobalApi.getCabang();
+      setCabang(response.data);
+    } catch (error) {
+      console.error("Error fetching cabang:", error);
+    }
+  };
 
-    const filteredOptions = allUnitKerja.filter((uk) =>
-      uk.unitKerja.toLowerCase().includes(value)
+  const fetchUnitKerja = async () => {
+    try {
+      const response = await GlobalApi.getUnitKerja();
+      setUnitKerja(response.data);
+    } catch (error) {
+      console.error("Error fetching unit kerja:", error);
+    }
+  };
+
+  const handleNamaChange = (e) => {
+    const namaAnggota = e.target.value;
+    setNama(namaAnggota);
+    fetchDataAnggota(
+      0,
+      pageSize,
+      selectedCabang,
+      selectedUnitKerja,
+      namaAnggota
     );
-
-    setFilteredUnitKerjaOptions(filteredOptions);
   };
 
-  const handleCabangSelect = (cabang) => {
-    setSelectedCabang(cabang.kecamatan);
-    setFormData((prev) => ({
-      ...prev,
-      unit: "",
-    }));
-    setFilteredUnitKerja(
-      allUnitKerja.filter(
-        (unit) => unit.cabang.toLowerCase() === cabang.kecamatan.toLowerCase()
-      )
+  const handleCabangChange = (value) => {
+    const newFilters = {
+      ...currentFilters,
+      cabang: value,
+      unitKerja: "" // Reset unit kerja when cabang changes
+    };
+    setCurrentFilters(newFilters);
+    setSelectedCabang(value);
+    updateUnitKerja(value);
+    fetchDataAnggota(0, pageSize, newFilters);
+    setCurrentPage(0); // Reset to first page
+  };
+
+  const handleUnitKerjaChange = (value) => {
+    const newFilters = {
+      ...currentFilters,
+      unitKerja: value
+    };
+    setCurrentFilters(newFilters);
+    setSelectedUnitKerja(value);
+    fetchDataAnggota(0, pageSize, newFilters);
+    setCurrentPage(0);
+  };
+
+  const handleTingkatSekolahChange = (value) => {
+    const newFilters = {
+      ...currentFilters,
+      tingkatSekolah: value
+    };
+    setCurrentFilters(newFilters);
+    setSelectedTingkatSekolah(value);
+    fetchDataAnggota(0, pageSize, newFilters);
+    setCurrentPage(0);
+  };
+
+  const updateUnitKerja = (kecamatan) => {
+    const filteredUnitKerja = unitKerja.filter(
+      (item) => item.cabang === kecamatan
     );
-    setIsUnitKerjaDisabled(false);
-    setShowDropdownCabang(false);
+    setFilteredUnitKerja(filteredUnitKerja);
   };
 
-  const handleUnitKerjaSelect = (selectedItem) => {
-    setSelectedUnitKerja(selectedItem.unitKerja || "");
-    setShowDropdownUnitKerja(false);
-    setSearchUnitKerja("");
+  useEffect(() => {
+    const initializeData = async () => {
+      if (!token) {
+        router.push("/sign-in");
+      } else {
+        setLoading(false);
+        fetchData();
+        fetchUnitKerja();
+
+        const userId = sessionStorage.getItem("userId");
+        const role = sessionStorage.getItem("role");
+        const cabangFromSession = sessionStorage.getItem("cabang") || "";
+        if (role === "ADMIN" && cabangFromSession) {
+          setSelectedCabang(cabangFromSession);
+          handleCabangChange(cabangFromSession);
+        } else if (role === "USER") {
+          getUserById(userId);
+          setRole(role);
+        } else {
+          fetchDataAnggota(currentPage, pageSize);
+        }
+
+        const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+        setIsSidebarOpen(sidebarState);
+
+        const handleResize = () => {
+          setIsMobile(window.innerWidth <= 768);
+        };
+
+        handleResize();
+        window.addEventListener("resize", handleResize);
+
+        return () => {
+          window.removeEventListener("resize", handleResize);
+        };
+      }
+    };
+
+    initializeData();
+  }, [token, router, currentPage, pageSize]);
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <ClipLoader color="#3498db" size={50} />
+      </div>
+    );
+  }
+
+  const handleUserClick = (rowId, index) => {
+    const row = anggotaData.find((item) => item.id === rowId);
+    setSelectedRow(row);
+    setSelectedRowIndex(index);
+  };
+
+  const handleClosePopup = () => {
+    setSelectedRow(null);
   };
 
   const toggleSidebar = () => {
@@ -382,11 +276,1055 @@ function StatusAnggota() {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  const handleKategoriChange = (e) => {
-    setPreviousKategoriDaspen(kategoriDaspen);
+  const handlePageChange = (newPage, filters = currentFilters) => {
+    setCurrentPage(newPage);
+    fetchDataAnggota(newPage, pageSize, filters);
+  };
 
-    setKategoriDaspen(e.target.value);
-    setIsKategoriChanged(true);
+  const handleSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setCurrentPage(0);
+    fetchDataAnggota(
+      0,
+      newSize,
+      selectedCabang,
+      selectedUnitKerja,
+      nama,
+      status,
+      selectedTingkatSekolah // Include tingkatSekolah in size changes
+    );
+  };
+
+  const handleSearchClick = () => {
+    setCurrentPage(0);
+    fetchDataAnggota(
+      0,
+      pageSize,
+      selectedCabang,
+      selectedUnitKerja,
+      nama,
+      status,
+      selectedTingkatSekolah // Include tingkatSekolah in search
+    );
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
+  const calculateAge = (birthDateString) => {
+    const birthDate = new Date(birthDateString);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDifference = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDifference < 0 ||
+      (monthDifference === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    return `${age} tahun`;
+  };
+
+  const calculateRetirementDate = (birthDateString, employmentType) => {
+    const birthDate = new Date(birthDateString);
+    const retirementAge = employmentType === "PNS" ? 60 : 58;
+    const retirementYear = birthDate.getFullYear() + retirementAge;
+    const retirementDate = new Date(
+      retirementYear,
+      birthDate.getMonth(),
+      birthDate.getDate()
+    );
+
+    const formattedRetirementDate = retirementDate
+      .toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+      .replace(/\//g, "-");
+
+    return formattedRetirementDate;
+  };
+
+  const formatTingkatSekolah = (tingkat) => {
+    const tingkatMap = {
+      'PAUD': 'PAUD',
+      'TK_RA': 'TK/RA',
+      'SD_MI': 'SD/MI',
+      'SMP_MTS': 'SMP/MTS',
+      'SMA_MA': 'SMA/MA',
+      'SMK': 'SMK',
+      'PERGURUAN_TINGGI': 'Perguruan Tinggi',
+      'SEKOLAH_LUAR_BIASA': 'Sekolah Luar Biasa',
+      'LAINNYA': 'Lainnya'
+    };
+
+    return tingkatMap[tingkat] || tingkat;
+  };
+
+  const handleEditClick = () => {
+    router.push("/anggota/edit-anggota");
+  };
+
+  const handlePindahCabangUnit = () => {
+    router.push("/anggota/data-anggota/mutasiCabangUnit");
+  };
+
+  const handleStatusChange = (e) => {
+    setStatus(e.target.value);
+    fetchDataAnggota(
+      0,
+      pageSize,
+      selectedCabang,
+      selectedUnitKerja,
+      nama,
+      e.target.value
+    );
+  };
+
+  const formatCurrency = (amount) =>
+    `Rp ${parseInt(amount).toLocaleString("id-ID")}`;
+
+  const handlePrint = async () => {
+    setIsLoading(true);
+    try {
+      const filteredDataForPrint = await fetchDataAnggota(0, totalElements);
+      if (!filteredDataForPrint || filteredDataForPrint.length === 0) {
+        console.warn("No data available for printing.");
+        return;
+      }
+
+      const printWindow = window.open("", "_blank", "width=800,height=600");
+
+      const htmlContent = `
+      <html>
+        <head>
+          <title>Status Anggota</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .title, .subtitle { text-align: center; margin-bottom: 10px; }
+            .title { font-size: 28px; font-weight: bold; color: #00796b; }
+            .subtitle { font-size: 20px; font-weight: normal; color: #555; }
+            table { width: 100%; border-collapse: collapse; border: 1px solid #ccc; }
+            th, td { padding: 8px; border: 1px solid #ccc; }
+            .header-row th[colspan="2"] { text-align: center; }
+            .total-row { font-weight: bold; background-color: #e0f2f1; }
+          </style>
+        </head>
+        <body>
+          <div class="title">Data Anggota</div>
+          <div class="subtitle">Jumlah Anggota: ${totalElements}</div>
+          <table>
+            <thead>
+              <tr class="header-row">
+                <th>No</th>
+                <th>Foto</th>
+                <th>Nama</th>
+                <th>Tanggal Lahir</th>
+                <th>Unit Kerja</th>
+                <th>Tingkat Sekolah</th>
+                <th>Keterangan</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredDataForPrint
+          .map(
+            (item, index) => `
+                    <tr>
+                      <td>${index + 1}</td>
+                      <td>${item.foto
+                ? `<img src="data:image/png;base64,${item.foto}" alt="foto" width="50" height="50"/>`
+                : ""
+              }</td>
+                      <td>
+                        <div class="font-bold">${item.namaLengkap}</div>
+                        <div>${item.npaPgri}</div>
+                        <div>${item.jabatan}</div>
+                      </td>
+                      <td>
+                        <div>${item.tempatLahir},</div>
+                        <div>${formatDate(item.tanggalLahir)}</div>
+                        <div>${calculateAge(item.tanggalLahir)} Tahun</div>
+                        <div>${calculateRetirementDate(
+                item.tanggalLahir,
+                item.statusPegawai
+              )}</div>
+                      </td>
+                      <td>
+                        <div>${item.cabang},</div>
+                        <div>${item.unitKerja}</div>
+                        <div>Anggota: ${item.tahunDiangkat ? item.tahunDiangkat : "-"
+              }</div>
+                        <div>
+                          ${item.pangkatGolongan} || ${formatCurrency(
+                item.iuran
+              )}
+                        </div>
+                      </td>
+                      <td>
+                        <div>${formatTingkatSekolah(item.tingkatSekolah)}</div>
+                      </td>
+                      <td>
+                        <div>${item.statusKeanggotaan ? item.statusKeanggotaan : "-"
+              }</div>
+                      </td>
+                    </tr>
+                  `
+          )
+          .join("")}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+        printWindow.close();
+      };
+    } catch (error) {
+      console.error("Error during print process:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-gray-100">
+      <Toaster
+        toastOptions={{
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+          success: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+          error: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+        }}
+      />
+      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
+      <div>
+        <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        <div
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
+        >
+          <div className="container mx-auto p-4 md:p-6">
+            <FilterSection
+              cabang={cabang}
+              unitKerja={filteredUnitKerja}
+              selectedCabang={selectedCabang}
+              handleCabangChange={handleCabangChange}
+              handleUnitKerjaChange={handleUnitKerjaChange}
+              handleSearchClick={handleSearchClick}
+              handleNamaChange={handleNamaChange}
+              nama={nama}
+              handleStatusChange={handleStatusChange}
+              status={status}
+              role={role}
+              handlePrint={handlePrint}
+              totalElements={totalElements}
+              isLoading={isLoading}
+              selectedTingkatSekolah={selectedTingkatSekolah}
+              handleTingkatSekolahChange={handleTingkatSekolahChange}
+            />
+
+            <DataCounts
+              totalElements={totalElements}
+              selectedCabang={selectedCabang}
+              selectedUnitKerja={selectedUnitKerja}
+              selectedTingkatSekolah={selectedTingkatSekolah}
+            />
+
+            <div className="overflow-x-auto mt-8">
+              <DataTable
+                anggotaData={anggotaData}
+                formatDate={formatDate}
+                calculateAge={calculateAge}
+                handleEditClick={handleEditClick}
+                handlePindahCabangUnit={handlePindahCabangUnit}
+                calculateRetirementDate={calculateRetirementDate}
+                handleUserClick={handleUserClick}
+                fotoBase64={fotoBase64}
+                loading={loading}
+                currentPage={currentPage}
+                pageSize={pageSize}
+                selectedTingkatSekolah={selectedTingkatSekolah}
+              />
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              selectedFilters={currentFilters}
+            />
+          </div>
+        </div>
+      </div>
+      {selectedRow && (
+        <PopupDetail
+          selectedRow={selectedRow}
+          handleClosePopup={handleClosePopup}
+          fotoBase64={fotoBase64}
+          handleVerifyUserClick={handleVerifyUserClick}
+          handleRejectUserClick={handleRejectUserClick}
+        />
+      )}
+    </div>
+  );
+};
+
+const FilterSection = ({
+  cabang,
+  selectedCabang,
+  selectedUnitKerja,
+  handleCabangChange,
+  handleUnitKerjaChange,
+  handleNamaChange,
+  nama,
+  handleStatusChange,
+  status,
+  role,
+  handlePrint,
+  totalElements,
+  isLoading,
+  selectedTingkatSekolah,
+  handleTingkatSekolahChange,
+}) => {
+  if (role === "USER") return null;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-16 text-sm">
+      <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
+        <div className="w-full md:w-auto">
+          <DropdownCabang
+            label="Cabang"
+            options={cabang}
+            selectedCabang={selectedCabang}
+            handleChange={handleCabangChange}
+          />
+        </div>
+
+        <div className="w-full md:w-auto">
+          <DropdownUnitKerja
+            label="Unit Kerja"
+            selectedCabang={selectedCabang}
+            selectedUnitKerja={selectedUnitKerja}
+            handleChange={handleUnitKerjaChange}
+          />
+        </div>
+
+        <div className="w-full md:w-auto">
+          <DropdownTingkatSekolah
+            label="Tingkat Sekolah"
+            selectedValue={selectedTingkatSekolah}
+            handleChange={handleTingkatSekolahChange}
+          />
+        </div>
+
+        {/* <div className="flex flex-col gap-2">
+          <label htmlFor="searchInput" className="font-semibold text-gray-800">
+            Cari Anggota
+          </label>
+          <div className="w-full">
+            <input
+              className="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-2 md:mb-0 w-44"
+              type="text"
+              placeholder="Cari Anggota"
+              value={nama}
+              onChange={handleNamaChange}
+            />
+          </div>
+        </div> */}
+
+        <div className="flex flex-col gap-2">
+          <label htmlFor="searchInput" className="font-semibold text-gray-800">
+            Status Anggota
+          </label>
+          <div className="w-full">
+            <select
+              className="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-44"
+              value={status}
+              onChange={handleStatusChange}
+            >
+              <option value="Semua">Semua</option>
+              <option value="Aktif">Aktif</option>
+              <option value="Tidak Aktif">Tidak Aktif</option>
+              <option value="Pensiun">Pensiun</option>
+              <option value="Meninggal">Meninggal</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2 text-center md:ml-20 ml-0">
+          <p className="py-2 rounded focus:outline-none focus:shadow-outline w-44 text-base">
+            {/* Jumlah Anggota : {totalElements} */}
+          </p>
+        </div>
+
+        <div className="flex w-full justify-end md:ml-44 ml-0">
+          <Button
+            className="px-8 mt-2 md:mt-0 flex items-center justify-center"
+            variant="outline"
+            onClick={handlePrint}
+            disabled={role === "USER" || isLoading}
+          >
+            {isLoading ? (
+              <svg
+                className="animate-spin h-5 w-5 text-gray-800"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8H4z"
+                ></path>
+              </svg>
+            ) : (
+              "Cetak"
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
+  const [query, setQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [filterQuery, setFilterQuery] = useState("");
+  const [isDisabled, setIsDisabled] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const roleFromSession = sessionStorage.getItem("role");
+    const cabangFromSession = sessionStorage.getItem("cabang") || "";
+
+    if (roleFromSession === "ADMIN") {
+      setIsDisabled(true);
+      setQuery(cabangFromSession);
+      handleChange(cabangFromSession);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const filteredOptions = options.filter((option) =>
+    option.kecamatan.toLowerCase().includes(filterQuery.toLowerCase())
+  );
+
+  useEffect(() => {
+    if (!isDisabled) {
+      setQuery(selectedCabang);
+    }
+  }, [selectedCabang]);
+
+  return (
+    <div className="relative inline-block w-44" ref={dropdownRef}>
+      <label className="block mb-2 font-semibold text-gray-800">{label}</label>
+      <input
+        type="text"
+        className="border rounded-lg p-2 w-full bg-white shadow-sm"
+        placeholder={`Pilih ${label}`}
+        value={isDisabled ? sessionStorage.getItem("cabang") : query}
+        readOnly
+        onFocus={() => {
+          if (!isDisabled) {
+            setQuery("");
+            setShowDropdown(true);
+            setFilterQuery("");
+          }
+        }}
+        disabled={isDisabled} // Input akan ter-disable jika role adalah ADMIN
+      />
+
+      {showDropdown && !isDisabled && (
+        <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-full">
+          <ul className="max-h-44 overflow-y-auto">
+            <li className="py-2 px-2">
+              <input
+                type="text"
+                className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={`Filter ${label}`}
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                autoFocus
+              />
+            </li>
+
+            <li
+              key="default-option"
+              className="p-2 cursor-pointer hover:bg-gray-100 font-semibold text-gray-600"
+              onClick={() => {
+                setQuery("");
+                handleChange("");
+                setShowDropdown(false);
+                setFilterQuery("");
+              }}
+            >
+              Pilih Cabang
+            </li>
+
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((item) => (
+                <li
+                  key={item.idKecamatan}
+                  className="p-2 cursor-pointer hover:bg-gray-100"
+                  onClick={() => {
+                    setQuery(item.kecamatan);
+                    handleChange(item.kecamatan);
+                    setShowDropdown(false);
+                    setFilterQuery("");
+                  }}
+                >
+                  {item.kecamatan}
+                </li>
+              ))
+            ) : (
+              <li className="p-2 text-gray-500">No results found</li>
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const DropdownUnitKerja = ({
+  label,
+  selectedCabang,
+  selectedUnitKerja,
+  handleChange,
+}) => {
+  const [query, setQuery] = React.useState(selectedUnitKerja || "");
+  const [showDropdown, setShowDropdown] = React.useState(false);
+  const [filterQuery, setFilterQuery] = React.useState("");
+  const [unitKerja, setUnitKerja] = React.useState([]);
+  const dropdownRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const fetchUnitKerja = async () => {
+      try {
+        const response = await GlobalApi.getUnitKerja();
+        setUnitKerja(response.data);
+      } catch (error) {
+        console.error("Error fetching unit kerja:", error);
+      }
+    };
+
+    fetchUnitKerja();
+  }, []);
+
+  const filteredOptions = unitKerja
+    .filter((option) =>
+      selectedCabang
+        ? option.cabang.trim().toLowerCase() ===
+        selectedCabang.trim().toLowerCase()
+        : true
+    )
+    .filter((option) =>
+      option.unitKerja.toLowerCase().includes(filterQuery.toLowerCase())
+    );
+
+  const handleOptionSelect = (item) => {
+    setQuery(item.unitKerja || "");
+    setShowDropdown(false);
+    handleChange(item.unitKerja || "");
+  };
+
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    setQuery("");
+  }, [selectedCabang]);
+
+  return (
+    <div className="relative inline-block w-44" ref={dropdownRef}>
+      <label className="block mb-2 font-semibold text-gray-800">{label}</label>
+      <input
+        type="text"
+        className={`border rounded-lg p-2 w-full bg-white shadow-sm ${!selectedCabang ? "bg-gray-200 cursor-not-allowed" : ""
+          }`}
+        placeholder={
+          !selectedCabang ? "Pilih cabang terlebih dahulu" : `Pilih ${label}`
+        }
+        value={query}
+        readOnly
+        onFocus={() => {
+          if (selectedCabang) {
+            setFilterQuery("");
+            setShowDropdown(true);
+          }
+        }}
+        disabled={!selectedCabang}
+      />
+
+      {showDropdown && (
+        <div className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full">
+          <ul className="max-h-44 overflow-y-auto">
+            {unitKerja.length === 0 ? (
+              <div className="p-2 text-gray-500">Loading...</div>
+            ) : (
+              <>
+                <li className="py-2 px-2">
+                  <input
+                    type="text"
+                    className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder={`Filter ${label}`}
+                    value={filterQuery}
+                    onChange={(e) => setFilterQuery(e.target.value)}
+                    autoFocus
+                  />
+                </li>
+                <li
+                  className="p-2 cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleOptionSelect({ unitKerja: "" })}
+                >
+                  Pilih Unit Kerja
+                </li>
+                {filteredOptions.map((item) => (
+                  <li
+                    key={item.id}
+                    className="p-2 cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleOptionSelect(item)}
+                  >
+                    {item.unitKerja}
+                  </li>
+                ))}
+              </>
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const DropdownTingkatSekolah = ({ label, selectedValue, handleChange }) => {
+  const [query, setQuery] = useState(selectedValue || "");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [filterQuery, setFilterQuery] = useState("");
+  const dropdownRef = useRef(null);
+
+  const tingkatSekolahOptions = [
+    { id: 'PAUD', label: 'PAUD' },
+    { id: 'TK_RA', label: 'TK/RA' },
+    { id: 'SD_MI', label: 'SD/MI' },
+    { id: 'SMP_MTS', label: 'SMP/MTS' },
+    { id: 'SMA_MA', label: 'SMA/MA' },
+    { id: 'SMK', label: 'SMK' },
+    { id: 'PERGURUAN_TINGGI', label: 'Perguruan Tinggi' },
+    { id: 'SEKOLAH_LUAR_BIASA', label: 'Sekolah Luar Biasa' },
+    { id: 'LAINNYA', label: 'Lainnya' },
+  ];
+
+  const filteredOptions = tingkatSekolahOptions.filter((option) =>
+    option.label.toLowerCase().includes(filterQuery.toLowerCase())
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  return (
+    <div className="relative inline-block w-44" ref={dropdownRef}>
+      <label className="block mb-2 font-semibold text-gray-800">{label}</label>
+      <input
+        type="text"
+        className="border rounded-lg p-2 w-full bg-white shadow-sm"
+        placeholder={`Pilih ${label}`}
+        value={query}
+        readOnly
+        onFocus={() => {
+          setQuery("");
+          setShowDropdown(true);
+          setFilterQuery("");
+        }}
+      />
+
+      {showDropdown && (
+        <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-1 w-full">
+          <ul className="max-h-44 overflow-y-auto">
+            <li className="py-2 px-2">
+              <input
+                type="text"
+                className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder={`Filter ${label}`}
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                autoFocus
+              />
+            </li>
+
+            <li
+              key="default-option"
+              className="p-2 cursor-pointer hover:bg-gray-100 font-semibold text-gray-600"
+              onClick={() => {
+                setQuery("");
+                handleChange("");
+                setShowDropdown(false);
+                setFilterQuery("");
+              }}
+            >
+              Semua Tingkat
+            </li>
+
+            {filteredOptions.map((option) => (
+              <li
+                key={option.id}
+                className="p-2 cursor-pointer hover:bg-gray-100"
+                onClick={() => {
+                  setQuery(option.label);
+                  handleChange(option.id);
+                  setShowDropdown(false);
+                  setFilterQuery("");
+                }}
+              >
+                {option.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const imageMap = {
+  PAUD: "/images/paud.png",
+  SMP_MTS: "/images/smp.png",
+  TK_RA: "/images/tk.png",
+  SMA_MA: "/images/sma.png",
+  SMK: "/images/smk.png",
+  SD_MI: "/images/sd.png",
+  PERGURUAN_TINGGI: "/images/perguruan_tinggi.png",
+  SEKOLAH_LUAR_BIASA: "/images/slb.png",
+  LAINNYA: "/images/lainnya.png",
+};
+
+const DataCounts = ({
+  totalElements,
+  selectedCabang,
+  selectedUnitKerja,
+  selectedTingkatSekolah
+}) => {
+  const [counts, setCounts] = useState({
+    schoolLevelCounts: {
+      PAUD: 0,
+      TK_RA: 0,
+      SD_MI: 0,
+      SMP_MTS: 0,
+      SMA_MA: 0,
+      SMK: 0,
+      PERGURUAN_TINGGI: 0,
+      SEKOLAH_LUAR_BIASA: 0,
+      LAINNYA: 0
+    },
+    employmentCounts: {
+      PNS: 0,
+      NON_PNS: 0,
+      PPPK: 0,
+      GTY: 0,
+      GTTY: 0
+    }
+  });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchAllCounts = useCallback(async () => {
+    if (!totalElements) return;
+
+    setIsLoading(true);
+    try {
+      const response = await GlobalApi.getAllAnggota(
+        0,
+        totalElements,
+        selectedCabang,
+        selectedUnitKerja,
+        null,
+        null,
+        selectedTingkatSekolah
+      );
+
+      const allData = response.content;
+
+      const newCounts = {
+        schoolLevelCounts: Object.fromEntries(
+          Object.keys(counts.schoolLevelCounts).map(key => [key, 0])
+        ),
+        employmentCounts: Object.fromEntries(
+          Object.keys(counts.employmentCounts).map(key => [key, 0])
+        )
+      };
+
+      allData.forEach(item => {
+        if ((!selectedCabang || item.cabang === selectedCabang) &&
+          (!selectedUnitKerja || item.unitKerja === selectedUnitKerja) &&
+          (!selectedTingkatSekolah || item.tingkatSekolah === selectedTingkatSekolah)) {
+
+          if (item.tingkatSekolah) {
+            newCounts.schoolLevelCounts[item.tingkatSekolah]++;
+          }
+          if (item.statusPegawai) {
+            newCounts.employmentCounts[item.statusPegawai]++;
+          }
+        }
+      });
+
+      setCounts(newCounts);
+    } catch (error) {
+      console.error('Error fetching count data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [totalElements, selectedCabang, selectedUnitKerja, selectedTingkatSekolah]);
+
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      if (totalElements > 0) {
+        fetchAllCounts();
+      }
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [fetchAllCounts]);
+
+  const schoolLevelNames = useMemo(() => ({
+    PAUD: 'PAUD',
+    TK_RA: 'TK/RA',
+    SD_MI: 'SD/MI',
+    SMP_MTS: 'SMP/MTS',
+    SMA_MA: 'SMA/MA',
+    SMK: 'SMK',
+    PERGURUAN_TINGGI: 'Perguruan Tinggi',
+    SEKOLAH_LUAR_BIASA: 'Sekolah Luar Biasa',
+    LAINNYA: 'Lainnya'
+  }), []);
+
+  const employmentStatusNames = useMemo(() => ({
+    PNS: 'PNS',
+    NON_PNS: 'NON PNS',
+    PPPK: 'PPPK',
+    GTY: 'Guru Tetap Yayasan',
+    GTTY: 'Guru Tidak Tetap Yayasan'
+  }), []);
+
+  const colorClasses = useMemo(() => ({
+    PAUD: 'bg-white',
+    TK_RA: 'bg-white',
+    SD_MI: 'bg-white',
+    SMP_MTS: 'bg-white',
+    SMA_MA: 'bg-white',
+    SMK: 'bg-white',
+    PERGURUAN_TINGGI: 'bg-white',
+    SEKOLAH_LUAR_BIASA: 'bg-white',
+    LAINNYA: 'bg-white',
+    PNS: 'bg-green-100',
+    NON_PNS: 'bg-green-100',
+    PPPK: 'bg-green-100',
+    GTY: 'bg-green-100',
+    GTTY: 'bg-green-100',
+  }), []);
+
+  const totalEmployees = useMemo(() =>
+    Object.values(counts.employmentCounts)
+      .reduce((sum, count) => sum + (isNaN(count) ? 0 : count), 0),
+    [counts.employmentCounts]
+  );
+
+  const LoaderContent = () => (
+    <div className="flex justify-center items-center min-h-[150px]">
+      <ClipLoader color="#3498db" size={40} />
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-center">Status Pegawai</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <LoaderContent />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Object.entries(counts.employmentCounts).map(([key, count]) => (
+                <Card key={key} className={`${colorClasses[key]} border-none flex-1 min-w-[150px]`}>
+                  <CardContent className="p-4">
+                    <div className="text-sm text-center font-bold">{employmentStatusNames[key]}</div>
+                    <div className="text-2xl text-center font-bold mt-2">{count}</div>
+                  </CardContent>
+                </Card>
+              ))}
+              <Card className="bg-green-100 border-none flex-1 min-w-[150px]">
+                <CardContent className="p-4">
+                  <div className="text-sm text-center font-bold">Total Anggota</div>
+                  <div className="text-2xl text-center font-bold mt-2">
+                    {totalEmployees}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-center">Tingkat Sekolah</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <LoaderContent />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Object.entries(counts.schoolLevelCounts).map(([key, count]) => (
+                <Card key={key} className={`${colorClasses[key]} border-green-300`}>
+                  <CardContent className="p-2 sm:p-3 text-center flex flex-col items-center">
+                    <img
+                      src={imageMap[key]}
+                      alt={schoolLevelNames[key]}
+                      className="mb-2 h-14 sm:h-16 w-auto object-contain"
+                    />
+                    <p className="text-xs sm:text-sm font-bold text-gray-800 mb-2">
+                      {schoolLevelNames[key]}
+                    </p>
+                    <Button className="bg-teal-600 hover:bg-teal-800 w-full text-xs sm:text-sm">
+                      {count} Anggota
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const DataTable = ({
+  anggotaData,
+  formatDate,
+  calculateAge,
+  calculateRetirementDate,
+  fotoBase64,
+  currentPage,
+  pageSize,
+  handleEditClick,
+  handlePindahCabangUnit,
+  loading,
+  selectedTingkatSekolah
+}) => {
+  const currentPageNumber = Number(currentPage) || 0;
+  const pageSizeNumber = Number(pageSize) || 10;
+  const [expandedRow, setExpandedRow] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [isPopupDaspen, setIsPopupDaspen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null);
+  const [popupVisibleKeluar, setPopupVisibleKeluar] = useState(false);
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [kategoriDaspen, setKategoriDaspen] = useState("");
+  const [daspenData, setDaspenData] = useState(null);
+  const [isKategoriChanged, setIsKategoriChanged] = useState(false);
+  const [previousKategoriDaspen, setPreviousKategoriDaspen] =
+    useState(kategoriDaspen);
+  const profileImageUrl = "/profile.png";
+  const router = useRouter();
+
+  const filteredData = useMemo(() => {
+    if (!selectedTingkatSekolah) {
+      return anggotaData;
+    }
+    return anggotaData.filter(item => item.tingkatSekolah === selectedTingkatSekolah);
+  }, [anggotaData, selectedTingkatSekolah]);
+
+  const formatTingkatSekolah = (tingkat) => {
+    const tingkatMap = {
+      'PAUD': 'PAUD',
+      'TK_RA': 'TK/RA',
+      'SD_MI': 'SD/MI',
+      'SMP_MTS': 'SMP/MTS',
+      'SMA_MA': 'SMA/MA',
+      'SMK': 'SMK',
+      'PERGURUAN_TINGGI': 'Perguruan Tinggi',
+      'SEKOLAH_LUAR_BIASA': 'Sekolah Luar Biasa',
+      'LAINNYA': 'Lainnya'
+    };
+
+    return tingkatMap[tingkat] || tingkat;
   };
 
   const handleConfirmChange = async () => {
@@ -587,572 +1525,122 @@ function StatusAnggota() {
     }
   };
 
-  const formatCurrency = (amount) =>
-    `Rp ${parseInt(amount).toLocaleString("id-ID")}`;
+  const handleDataDaspen = async () => {
+    const anggotaId = sessionStorage.getItem("anggotaId");
+    if (anggotaId) {
+      try {
+        const response = await GlobalApi.getUserById(anggotaId);
 
-  const handlePrint = () => {
-    // Cek apakah ada filter yang dipilih
-    const filteredDataForPrint =
-      filterCabang || filterUnitKerja || selectedStatus || selectedTingkat
-        ? filteredData // Jika ada filter, ambil data yang sudah difilter
-        : anggota; // Jika tidak ada filter, ambil semua data
+        if (response) {
+          setKategoriDaspen(response.kategoriDaspen || "Tidak tersedia");
 
-    const printWindow = window.open("", "_blank", "width=800,height=600");
-    printWindow.document.write(`
-          <html>
-            <head>
-              <title>Status Anggota</title>
-              <style>
-                body {
-                  font-family: Arial, sans-serif;
-                  margin: 20px;
-                }
-                .title, .subtitle {
-                  text-align: center;
-                  margin-bottom: 10px;
-                }
-                .title {
-                  font-size: 28px;
-                  font-weight: bold;
-                  color: #00796b;
-                }
-                .subtitle {
-                  font-size: 20px;
-                  font-weight: normal;
-                  color: #555;
-                }
-                table {
-                  width: 100%;
-                  border-collapse: collapse;
-                  border: 1px solid #ccc;
-                }
-                th, td {
-                  text-align: center;
-                  padding: 8px;
-                  border: 1px solid #ccc;
-                }
-                .header-row th[colspan="2"] {
-                  text-align: center;
-                }
-                .total-row {
-                  font-weight: bold;
-                  background-color: #e0f2f1;
-                }
-              </style>
-            </head>
-            <body>
-              <div class="title">Status Anggota</div>
-              <table>
-                <thead>
-                  <tr class="header-row">
-                    <th>No</th>
-                    <th>Foto</th>
-                    <th>Data Anggota</th>
-                    <th>Tingkat Sekolah</th>
-                    <th>Cabang</th>
-                    <th>Keterangan</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${filteredDataForPrint
-                    .map(
-                      (item, index) => `
-                    <tr>
-                      <td>${index + 1}</td>
-                      <td></td>
-                      <td>
-                        <div class="font-bold">${item.namaLengkap}</div>
-                        <div>${item.npaPgri}</div>
-                        <div>${formatDate(item.tanggalLahir)}, ${calculateAge(
-                        item.tanggalLahir
-                      )}</div>
-                        <div>Usia ${calculateAge(item.tanggalLahir)} Tahun</div>
-                        <div>${item.unitKerja}</div>
-                        <div>${item.jabatan}</div>
-                        <div>${item.nomorHp}</div>
-                      </td>
-                      <td>${item.tingkatSekolah}</td>
-                      <td>${item.cabang}</td>
-                      <td>${item.statusKeanggotaan}</td>
-                    </tr>
-                  `
-                    )
-                    .join("")}
-                </tbody>
-              </table>
-            </body>
-          </html>
-        `);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
-  };
+          const nip = response.nip;
 
-  const sortedData = useMemo(() => {
-    if (!Array.isArray(anggota)) return [];
+          if (nip) {
+            const fileResponse = await GlobalApi.getFileByNip(nip);
 
-    let sortableItems = [...anggota];
+            if (fileResponse) {
+              setDaspenData(fileResponse);
+              setIsPopupDaspen(true);
+            } else {
+              console.log("File tidak ditemukan untuk NIP:", nip);
+            }
+          } else {
+            toast.error(
+              <div style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textAlign: "center",
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{
+                      width: "150px",
+                      height: "150px",
+                      color: "red",
+                      marginBottom: "16px",
+                    }}
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+                    <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+                  </svg>
+                </div>
 
-    if (sortConfig && sortConfig.key) {
-      sortableItems.sort((a, b) => {
-        const key = sortConfig.key;
-        const direction = sortConfig.direction === "ascending" ? 1 : -1;
-
-        if (a[key] < b[key]) return direction * -1;
-        if (a[key] > b[key]) return direction;
-        return 0;
-      });
-    }
-
-    return sortableItems;
-  }, [anggota, sortConfig]);
-
-  const requestSort = (key) => {
-    let direction = "ascending";
-    if (
-      sortConfig &&
-      sortConfig.key === key &&
-      sortConfig.direction === "ascending"
-    ) {
-      direction = "descending";
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const filteredData = useMemo(() => {
-    return loadedData.filter((item) => {
-      const statusFilter =
-        selectedStatus === "Semua" || item.statusKeanggotaan === selectedStatus;
-      const cabangFilter =
-        selectedCabang === "" || item.cabang === selectedCabang;
-      const unitKerjaFilter =
-        selectedUnitKerja === "" || item.unitKerja === selectedUnitKerja;
-      const tingkatFilter =
-        selectedTingkat === "" || item.tingkatSekolah === selectedTingkat;
-
-      const searchCabangFilter = item.cabang
-        .toLowerCase()
-        .includes(filterCabang.toLowerCase());
-      const searchUnitKerjaFilter = item.unitKerja
-        .toLowerCase()
-        .includes(filterUnitKerja.toLowerCase());
-
-      const globalSearchFilter = Object.values(item).some((value) =>
-        String(value).toLowerCase().includes(searchKeyword.toLowerCase())
-      );
-
-      return (
-        statusFilter &&
-        cabangFilter &&
-        unitKerjaFilter &&
-        tingkatFilter &&
-        (filterCabang ? searchCabangFilter : true) &&
-        (filterUnitKerja ? searchUnitKerjaFilter : true) &&
-        (searchKeyword ? globalSearchFilter : true)
-      );
-    });
-  }, [
-    loadedData,
-    selectedStatus,
-    selectedCabang,
-    selectedUnitKerja,
-    selectedTingkat,
-    filterCabang,
-    filterUnitKerja,
-    searchKeyword,
-  ]);
-  // const totalAnggota = anggota.length;
-
-  useEffect(() => {
-    setTotalAnggota(filteredData.length);
-  }, [filteredData]);
-
-  const openModal = (item) => {
-    setCurrentItem(item);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setCurrentItem(null);
-    sessionStorage.removeItem("anggotaId");
-  };
-
-  const handleCabangChange = (e) => {
-    const value = e.target.value;
-    setSearchCabang(value);
-    const filtered = cabangOptions.filter((cabang) =>
-      cabang.kecamatan.toLowerCase().includes(value.toLowerCase())
-    );
-    setFilteredCabangOptions(filtered);
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
-  };
-
-  const calculateAge = (birthDateString) => {
-    const birthDate = new Date(birthDateString);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDifference = today.getMonth() - birthDate.getMonth();
-    if (
-      monthDifference < 0 ||
-      (monthDifference === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-    return ` ${age} `;
-  };
-
-  const calculateRetirementDate = (birthDateString, employmentType) => {
-    const birthDate = new Date(birthDateString);
-    const retirementAge = employmentType === "PNS" ? 60 : 58;
-    const retirementYear = birthDate.getFullYear() + retirementAge;
-    const retirementDate = new Date(
-      retirementYear,
-      birthDate.getMonth(),
-      birthDate.getDate()
-    );
-
-    const formattedRetirementDate = retirementDate
-      .toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      })
-      .replace(/\//g, "-");
-
-    return formattedRetirementDate;
-  };
-
-  const handleExpand = (index) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
-  };
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-  const totalItems = filteredData.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handlePopupKeluar = () => {
-    setPopupVisibleKeluar(true);
-  };
-
-  const handleKeluarAnggota = async () => {
-    try {
-      const anggotaId = sessionStorage.getItem("anggotaId");
-      await GlobalApi.keluarAnggota(anggotaId);
-      setPopupVisibleKeluar(false);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <h3
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Anggota berhasil dikeluar!
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
+                <h3 style={{ fontSize: "1.75rem", display: "block" }}>
+                  NIP tidak ditemukan, silahkan melakukan sinkronisasi dahulu.
+                </h3>
+              </div>,
+              {
+                icon: null,
+                duration: 2000,
+                style: {
+                  marginTop: "12%",
+                  fontSize: "1.75rem",
+                  padding: "10px",
+                  width: "80%",
+                  maxWidth: "450px",
+                  height: "50%",
+                  maxHeight: "400px",
+                  transform: "translate(-50%, -50%)",
+                  textAlign: "center",
+                  zIndex: 9999,
+                  backgroundColor: "#fff",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                },
+              }
+            );
+          }
+        } else {
+          console.log("Data anggota tidak ditemukan");
         }
-      );
-    } catch (error) {
-      console.error("Gagal mengeluarkan anggota:", error);
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Gagal mengeluarkan anggota.
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
-    }
-  };
-
-  const handleDeleteClick = async () => {
-    try {
-      const anggotaId = sessionStorage.getItem("anggotaId");
-
-      if (!anggotaId) {
+      } catch (error) {
+        console.error("Error fetching data:", error);
         toast.error(
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
+          <div style={{ textAlign: "center" }}>
+            <div
               style={{
-                width: "150px",
-                height: "150px",
-                color: "red",
-                marginBottom: "16px",
-              }}
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-            </svg>
-            <h3
-              style={{
-                fontSize: "1.75rem",
-                display: "block",
+                display: "flex",
+                justifyContent: "center",
                 marginBottom: "8px",
               }}
             >
-              ID Anggota tidak ditemukan.
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                style={{ width: "48px", height: "48px", color: "red" }}
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+                <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+              </svg>
+            </div>
+
+            <h3 style={{ fontSize: "1.75rem", display: "block" }}>
+              NIP tidak ditemukan, silahkan melakukan sinkronisasi dahulu.
             </h3>
           </div>,
           {
-            icon: null,
-            duration: 4000,
+            icon: false,
+            duration: 2000,
             style: {
-              marginTop: "12%",
-              fontSize: "1.75rem",
-              padding: "10px",
-              width: "80%",
-              maxWidth: "450px",
-              height: "50%",
-              maxHeight: "400px",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 9999,
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              borderRadius: "10px",
+              background: "white",
+              padding: "16px",
             },
           }
         );
-        return;
       }
-
-      const result = await GlobalApi.deleteUser(anggotaId);
-
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <h3
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Data Anggota Berhasil Dihapus!
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 4000);
-
-      setTimeout(() => {
-        setIsPopupVisible(false);
-      }, 4000);
-    } catch (error) {
-      console.error("Gagal Menghapus Data:", error);
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Gagal pensiun anggota.
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+    } else {
+      console.log("Anggota ID tidak ditemukan di sessionStorage");
     }
-  };
-
-  const handleCancelKeluar = () => {
-    setPopupVisibleKeluar(false);
-    setPopupVisible(false);
-  };
-
-  const handlePopup = () => {
-    setPopupVisible(true);
   };
 
   const handlePensiunAnggota = async () => {
@@ -1210,8 +1698,10 @@ function StatusAnggota() {
           },
         }
       );
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
     } catch (error) {
-      console.error("Gagal mengeluarkan anggota:", error);
       toast.error(
         <div
           style={{
@@ -1266,606 +1756,567 @@ function StatusAnggota() {
           },
         }
       );
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
     }
   };
 
-  const handlePindahCabangUnit = () => {
-    router.push("/anggota/data-anggota/mutasiCabangUnit");
+  const handleKategoriChange = (e) => {
+    setPreviousKategoriDaspen(kategoriDaspen);
+
+    setKategoriDaspen(e.target.value);
+    setIsKategoriChanged(true);
   };
 
-  const handleEditClick = () => {
-    router.push("/anggota/edit-anggota");
-  };
+  const handleDeleteClick = async () => {
+    try {
+      const anggotaId = sessionStorage.getItem("anggotaId");
 
-  const getVisiblePages = () => {
-    const visiblePages = [];
-    const leftLimit = Math.max(1, currentPage - 1);
-    const rightLimit = Math.min(totalPages, currentPage + 1);
+      if (!anggotaId) {
+        toast.error(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                width: "150px",
+                height: "150px",
+                color: "red",
+                marginBottom: "16px",
+              }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+            </svg>
+            <h3
+              style={{
+                fontSize: "1.75rem",
+                display: "block",
+                marginBottom: "8px",
+              }}
+            >
+              ID Anggota tidak ditemukan.
+            </h3>
+          </div>,
+          {
+            icon: null,
+            duration: 2000,
+            style: {
+              marginTop: "12%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "450px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
+        );
+        return;
+      }
 
-    for (let i = leftLimit; i <= rightLimit; i++) {
-      visiblePages.push(i);
-    }
+      const result = await GlobalApi.deleteUser(anggotaId);
 
-    return visiblePages;
-  };
-
-  const tingkatSekolahMap = {
-    TK_RA: "TK/RA",
-    SD_MI: "SD/MI",
-    SMP_MTS: "SMP/MTS",
-    SMA_MA: "SMA/MA",
-    SMK: "SMK",
-    PERGURUAN_TINGGI: "Perguruan Tinggi",
-    PAUD: "PAUD",
-    SEKOLAH_LUAR_BIASA: "SEKOLAH LUAR BIASA",
-    LAINNYA: "LAINNYA",
-  };
-
-  const formatTingkat = (tingkat) => {
-    return tingkatSekolahMap[tingkat] || tingkat;
-  };
-
-  const FilteredCategories = ({
-    anggota,
-    selectedCabang,
-    selectedUnitKerja,
-    selectedTingkat,
-  }) => {
-    const filteredCounts = useMemo(() => {
-      // Filter anggota berdasarkan semua filter yang dipilih
-      const filteredAnggota = anggota.filter((member) => {
-        const cabangMatch = !selectedCabang || member.cabang === selectedCabang;
-        const unitKerjaMatch =
-          !selectedUnitKerja || member.unitKerja === selectedUnitKerja;
-        const tingkatMatch =
-          !selectedTingkat || member.tingkatSekolah === selectedTingkat;
-        return cabangMatch && unitKerjaMatch && tingkatMatch;
-      });
-
-      // Hitung berdasarkan status
-      const statusCounts = {
-        PNS: filteredAnggota.filter((member) => member.statusPegawai === "PNS")
-          .length,
-        NON_PNS: filteredAnggota.filter(
-          (member) => member.statusPegawai === "NON_PNS"
-        ).length,
-        PPPK: filteredAnggota.filter(
-          (member) => member.statusPegawai === "PPPK"
-        ).length,
-      };
-
-      // Hitung berdasarkan tingkat sekolah
-      const tingkatCounts = {
-        PAUD: filteredAnggota.filter(
-          (member) => member.tingkatSekolah === "PAUD"
-        ).length,
-        TK_RA: filteredAnggota.filter(
-          (member) => member.tingkatSekolah === "TK_RA"
-        ).length,
-        SD_MI: filteredAnggota.filter(
-          (member) => member.tingkatSekolah === "SD_MI"
-        ).length,
-        SMP_MTS: filteredAnggota.filter(
-          (member) => member.tingkatSekolah === "SMP_MTS"
-        ).length,
-        SMA_MA: filteredAnggota.filter(
-          (member) => member.tingkatSekolah === "SMA_MA"
-        ).length,
-        SMK: filteredAnggota.filter((member) => member.tingkatSekolah === "SMK")
-          .length,
-        PERGURUAN_TINGGI: filteredAnggota.filter(
-          (member) => member.tingkatSekolah === "PERGURUAN_TINGGI"
-        ).length,
-        SEKOLAH_LUAR_BIASA: filteredAnggota.filter(
-          (member) => member.tingkatSekolah === "SEKOLAH_LUAR_BIASA"
-        ).length,
-        LAINNYA: filteredAnggota.filter(
-          (member) => member.tingkatSekolah === "LAINNYA"
-        ).length,
-      };
-
-      // Calculate total from status counts
-      const totalAnggota = Object.values(statusCounts).reduce(
-        (acc, curr) => acc + curr,
-        0
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+              marginTop: "14px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <h3
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Data Anggota Berhasil Dihapus!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
       );
 
-      const categories = [
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+
+      setTimeout(() => {
+        setIsPopupVisible(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Gagal Menghapus Data:", error);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal pensiun anggota.
+          </h3>
+        </div>,
         {
-          title: "Status Kepegawaian",
-          items: [
-            { title: "PNS", count: statusCounts.PNS },
-            { title: "NON PNS", count: statusCounts.NON_PNS },
-            { title: "PPPK", count: statusCounts.PPPK },
-          ],
-        },
-        {
-          title: "Jenjang Pendidikan",
-          items: [
-            { type: "PAUD", count: tingkatCounts.PAUD },
-            { type: "TK_RA", count: tingkatCounts.TK_RA },
-            { type: "SD_MI", count: tingkatCounts.SD_MI },
-            { type: "SMP_MTS", count: tingkatCounts.SMP_MTS },
-            { type: "SMA_MA", count: tingkatCounts.SMA_MA },
-            { type: "SMK", count: tingkatCounts.SMK },
-            { type: "PERGURUAN_TINGGI", count: tingkatCounts.PERGURUAN_TINGGI },
-            {
-              type: "SEKOLAH_LUAR_BIASA",
-              count: tingkatCounts.SEKOLAH_LUAR_BIASA,
-            },
-            { type: "LAINNYA", count: tingkatCounts.LAINNYA },
-          ],
-        },
-      ];
-
-      return { categories, totalAnggota };
-    }, [anggota, selectedCabang, selectedUnitKerja, selectedTingkat]);
-
-    return (
-      <div className="flex flex-col mt-8 mb-4 mx-4 space-y-8">
-        {/* Status Kepegawaian Section */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-center items-center mx-auto">
-          {filteredCounts.categories[0].items.map((item, idx) => (
-            <div
-              key={idx}
-              className="bg-white border rounded-lg shadow-md p-6 w-full sm:w-64 text-center"
-            >
-              <div className="bg-teal-500 text-white p-2 rounded-lg mb-4">
-                {item.title}
-              </div>
-              <div className="text-3xl font-bold text-gray-700">
-                {item.count}
-              </div>
-              <div className="text-sm text-gray-500 mt-2">Anggota</div>
-            </div>
-          ))}
-          <div className="bg-white border rounded-lg shadow-md p-6 w-full sm:w-64 text-center">
-            <div className="bg-teal-500 text-white p-2 rounded-lg mb-4">
-              Total Anggota
-            </div>
-            <div className="text-3xl font-bold text-gray-700">
-              {filteredCounts.totalAnggota}
-            </div>
-            <div className="text-sm text-gray-500 mt-2">Anggota</div>
-          </div>
-        </div>
-
-        {/* Jenjang Pendidikan Section */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-4 sm:gap-x-6 sm:gap-y-6 justify-items-center items-center">
-          {filteredCounts.categories[1].items.map((item, idx) => (
-            <div
-              key={idx}
-              className="bg-white border rounded-lg shadow-md p-2 sm:p-3 w-full sm:w-80 text-center flex flex-col items-center"
-            >
-              <img
-                src={`/${imageMap[item.type] || "default.png"}`}
-                alt={item.type}
-                className="mb-2 h-14 sm:h-16 w-auto object-contain"
-              />
-              <p className="text-xs sm:text-sm font-bold text-gray-800 mb-2">
-                {item.type === "PERGURUAN_TINGGI" ||
-                item.type === "SEKOLAH_LUAR_BIASA"
-                  ? item.type.replace(/_/g, " ")
-                  : item.type.replace(/_/g, "/")}
-              </p>
-              <Button className="bg-blue-500 hover:bg-blue-700 w-full text-xs sm:text-sm">
-                {item.count} Anggota
-              </Button>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+    }
   };
 
-  const imageMap = {
-    PAUD: "paud.png",
-    SMP_MTS: "smp.png",
-    TK_RA: "tk.png",
-    SMA_MA: "sma.png",
-    SMK: "smk.png",
-    SD_MI: "sd.png",
-    PERGURUAN_TINGGI: "perguruan_tinggi.png",
-    SEKOLAH_LUAR_BIASA: "slb.png",
-    LAINNYA: "lainnya.png",
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  const toggleExpandRow = (index) => {
+    setExpandedRow(expandedRow === index ? null : index);
   };
 
-  // if (loading) {
-  //   return (
-  //     <div
-  //       style={{
-  //         display: "flex",
-  //         justifyContent: "center",
-  //         alignItems: "center",
-  //         height: "100vh",
-  //       }}
-  //     >
-  //       <ClipLoader color="#3498db" size={50} />
-  //     </div>
-  //   );
-  // }
+  const openModal = (item) => {
+    setCurrentItem(item);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setCurrentItem(null);
+    sessionStorage.removeItem("anggotaId");
+  };
+
+  const handlePopupKeluar = () => {
+    setPopupVisibleKeluar(true);
+  };
+
+  const handlePopup = () => {
+    setPopupVisible(true);
+  };
+
+  const closePopup = () => {
+    setIsPopupDaspen(false);
+  };
+
+  const updateAktivasiUser = async (userId) => {
+    try {
+      const response = await GlobalApi.activasiUser(userId);
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+              marginTop: "14px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <h3
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Anggota Berhasil Diaktifkan!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      setTimeout(() => {
+        window.location.reload();
+      }, 4000);
+    } catch (error) {
+      console.error("Error fetching cabang:", error);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Anggota Gagal Diaktifkan.
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 5000,
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+    }
+  };
+
+  const handleCancelKeluar = () => {
+    setPopupVisibleKeluar(false);
+    setPopupVisible(false);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
-      {/* <div ref={loadingRef} className="w-full text-center py-4">
-        {isLoadingMore && (
-          <div className="flex justify-center">
-            <ClipLoader color="#3498db" size={30} />
-          </div>
-        )}
-      </div> */}
-      <div>
-        <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-
-        <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
-        >
-          <Toaster
-            toastOptions={{
-              style: {
-                marginTop: "16%",
-                fontSize: "1.75rem",
-                padding: "10px",
-                width: "80%",
-                maxWidth: "700px",
-                height: "50%",
-                maxHeight: "400px",
-                transform: "translate(-50%, -50%)",
-                textAlign: "center",
-                zIndex: 9999,
-                backgroundColor: "#fff",
-                borderRadius: "8px",
-                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-              },
-              success: {
-                style: {
-                  background: "white",
-                  color: "black",
-                },
-              },
-              error: {
-                style: {
-                  background: "white",
-                  color: "black",
-                },
-              },
-            }}
-          />
-          <div className="mb-4">
-            <div className="flex flex-wrap items-start mt-10 justify-between">
-              <div className="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
-                {role !== "USER" && (
-                  <>
-                    <div
-                      ref={dropdownRef}
-                      className="relative flex flex-col md:flex ml-2 w-full md:w-40"
-                    >
-                      <Input
-                        type="text"
-                        placeholder="Pilih Cabang"
-                        value={selectedCabang}
-                        readOnly
-                        disabled={role === "ADMIN"}
-                        onFocus={() => {
-                          if (role === "SUPER ADMIN") {
-                            setShowDropdownCabang(true);
-                            setFilteredCabangOptions(cabangOptions);
-                          }
-                        }}
-                        className="border rounded-lg p-2 w-full bg-white shadow-sm"
-                      />
-
-                      {showDropdownCabang && role === "SUPER ADMIN" && (
-                        <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full ">
-                          <ul className="max-h-44 overflow-y-auto">
-                            <li className="py-2 px-2">
-                              <Input
-                                type="text"
-                                value={searchCabang}
-                                onChange={handleCabangChange}
-                                className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Cari Cabang..."
-                                autoFocus
-                              />
-                            </li>
-                            <li
-                              className="p-2 cursor-pointer hover:bg-gray-100"
-                              onClick={() => {
-                                handleCabangSelect({ kecamatan: "" });
-                              }}
-                            >
-                              Pilih Cabang
-                            </li>
-                            {filteredCabangOptions.length > 0 ? (
-                              filteredCabangOptions.map((cabang) => (
-                                <li
-                                  key={cabang.idKecamatan}
-                                  className="p-2 cursor-pointer hover:bg-gray-100"
-                                  onClick={() => handleCabangSelect(cabang)}
-                                >
-                                  {cabang.kecamatan}
-                                </li>
-                              ))
-                            ) : (
-                              <li className="px-4 py-2 text-gray-500 cursor-default">
-                                Tidak ada hasil
-                              </li>
-                            )}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Dropdown Pilih Unit Kerja */}
-                    <div ref={unitKerjaRef} className="relative w-full md:w-40">
-                      <Input
-                        type="text"
-                        placeholder="Pilih Unit Kerja"
-                        value={selectedUnitKerja}
-                        readOnly
-                        onFocus={() => {
-                          setShowDropdownUnitKerja(true);
-                          setFilteredUnitKerjaOptions(
-                            selectedCabang === "Pilih Cabang"
-                              ? allUnitKerja
-                              : allUnitKerja.filter(
-                                  (uk) => uk.cabang === selectedCabang
-                                )
-                          );
-                        }}
-                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        // disabled={selectedCabang === "Pilih Cabang"}
-                        disabled={role === "USER"}
-                      />
-
-                      {showDropdownUnitKerja && (
-                        <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
-                          <div className="p-2">
-                            <Input
-                              type="text"
-                              value={searchUnitKerja}
-                              onChange={handleUnitKerjaChange}
-                              placeholder="Cari Unit Kerja..."
-                              className="w-full border rounded py-2 px-3 mb-2"
-                            />
-                          </div>
-                          <ul className="max-h-44 overflow-y-auto -mt-3">
-                            <li
-                              className="p-2 cursor-pointer hover:bg-gray-100"
-                              onClick={() => handleUnitKerjaSelect({})}
-                            >
-                              Semua Unit Kerja
-                            </li>
-                            {filteredUnitKerjaOptions.map((item) => (
-                              <li
-                                key={item.id}
-                                className="p-2 cursor-pointer hover:bg-gray-100"
-                                onClick={() => handleUnitKerjaSelect(item)}
-                              >
-                                {item.unitKerja}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-                {/* {role !== "USER" && (
-                  <select
-                    className="shadow appearance-none border rounded w-full md:w-40 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                  >
-                    <option>Semua</option>
-                    <option>Aktif</option>
-                    <option>Tidak Aktif</option>
-                    <option>Meninggal</option>
-                    <option>Keluar</option>
-                  </select>
-                )} */}
-                <select
-                  className="shadow appearance-none border rounded w-full md:w-44 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline md:mb-0"
-                  value={selectedTingkat}
-                  onChange={(e) => setSelectedTingkat(e.target.value)} // Pastikan ini ada
-                >
-                  <option value="">Pilih Jenjang</option>
-                  <option value="PAUD">PAUD</option>
-                  <option value="TK_RA">TK/RA</option>
-                  <option value="SD_MI">SD/MI</option>
-                  <option value="SMP_MTS">SMP/MTS</option>
-                  <option value="SMA_MA">SMA/MA</option>
-                  <option value="SMK">SMK</option>
-                  <option value="PERGURUAN_TINGGI">Perguruan Tinggi</option>
-                  <option value="SEKOLAH_LUAR_BIASA">Sekolah Luar Biasa</option>
-                  <option value="LAINNYA">Lainnya</option>
-                </select>
-                {/* {role !== "USER" && (
-                  <div className="flex flex-wrap items-center space-x-2 w-full md:w-40">
-                    <Input
-                      type="text"
-                      placeholder="Cari..."
-                      value={searchKeyword}
-                      onChange={(e) => setSearchKeyword(e.target.value)}
-                      className="border rounded-lg p-2 w-full md:w-60 bg-white shadow-sm"
-                      disabled={role === "USER"}
-                    />
-                  </div>
-               )} */}
+    <div>
+      <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+        <thead>
+          <tr>
+            <th className="p-2 md:p-3 border text-white bg-teal-700">
+              <div className="flex justify-between items-center">
+                <span>No</span>
               </div>
-              {/* {role !== "USER" && (
-                <p className="py-2 rounded focus:outline-none focus:shadow-outline w-full md:w-40 ">
-                  Jumlah Anggota : {jumlahAnggota}
-                </p>
-              )} */}
-              <div className="flex items-end w-full md:w-auto mt-2 md:mt-0">
-                <div className="space-x-2 w-full flex md:block">
-                  {/* <label htmlFor="maxItems" className="mr-2">
-                    Tampilkan:
-                  </label>
-                  <select
-                    id="maxItems"
-                    value={maxItems}
-                    onChange={(e) => setMaxItems(parseInt(e.target.value))}
-                    className="shadow appearance-none border rounded w-full md:w-20 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  >
-                    <option value={5}>5</option>
-                    <option value={10}>10</option>
-                    <option value={15}>15</option>
-                    <option value={20}>20</option>
-                  </select> */}
-                  {role !== "USER" && (
-                    <Button
-                      className="border rounded-lg p-2 w-full bg-white shadow-sm"
-                      variant="outline"
-                      onClick={handlePrint}
-                      disabled={role === "USER"}
-                    >
-                      Cetak
-                    </Button>
-                  )}
+            </th>
+            <th className="p-2 md:p-3 border text-white bg-teal-700">
+              <div className="text-center">
+                <span>Foto</span>
+              </div>
+            </th>
+            <th className="p-2 md:p-3 border text-white bg-teal-700">
+              <div className="text-center">
+                <span>Nama</span>
+              </div>
+            </th>
+            <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
+              <div className="text-center">
+                <span>Tanggal Lahir</span>
+              </div>
+            </th>
+            <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
+              <div className="text-center">
+                <span>Unit Kerja</span>
+              </div>
+            </th>
+            <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
+              <div className="text-center">
+                <span>Tingkat Sekolah</span>
+              </div>
+            </th>
+            <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
+              <div className="text-center">
+                <span>Keterangan</span>
+              </div>
+            </th>
+            {/* <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
+              <div className="text-center">
+                <span>Lokasi</span>
+              </div>
+            </th> */}
+            <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
+              <div className="text-center">
+                <span>Aksi</span>
+              </div>
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {loading ? (
+            <tr>
+              <td colSpan="7" className="py-4 px-4">
+                <div className="flex justify-center items-center h-10">
+                  <ClipLoader color="#3498db" size={50} />
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <FilteredCategories
-            anggota={anggota}
-            selectedCabang={selectedCabang}
-            selectedUnitKerja={selectedUnitKerja}
-            selectedTingkat={selectedTingkat}
-          />
-
-          <div className="overflow-x-auto">
-            <table className="container w-full table-auto mb-8 mt-8">
-              <thead>
-                <tr>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
-                    <div className="flex justify-between items-center">
-                      <span>No</span>
-                    </div>
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
-                    Foto
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
-                    <div className="flex justify-between items-center">
-                      <span>Nama</span>
-                    </div>
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
-                    <div className="flex justify-between items-center">
-                      <span>Jenjang Sekolah</span>
-                    </div>
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
-                    <div className="flex justify-between items-center">
-                      <span>Unit Kerja</span>
-                    </div>
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
-                    <div className="flex justify-between items-center">
-                      <span>Keterangan</span>
-                      <span
-                        className="ml-1 cursor-pointer"
-                        onClick={() => requestSort("keterangan")}
-                      ></span>
-                    </div>
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
-                    Aksi
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentData.map((item, index) => {
-                  const globalIndex =
-                    (currentPage - 1) * itemsPerPage + index + 1;
-                  return (
-                    <React.Fragment key={index}>
-                      <tr
-                        className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                      >
-                        <td className="p-2 md:p-3 border text-center">
-                          <div className="flex justify-center items-center">
-                            {globalIndex}
-                            <Button
-                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
-                              onClick={() => handleExpand(index)}
-                            >
-                              {expandedIndex === index ? (
-                                <FaMinusCircle />
-                              ) : (
-                                <FaPlusCircle />
-                              )}
-                            </Button>
-                          </div>
-                        </td>
-                        <td className="p-2 md:p-3 border">
+              </td>
+            </tr>
+          ) : filteredData.length === 0 ? (
+            <tr>
+              <td colSpan="7" className="py-4 px-4 text-center text-gray-600">
+                <span>Tidak Ada Data Anggota</span>
+              </td>
+            </tr>
+          ) : (
+            filteredData.map((item, index) => {
+              const nomorUrut = currentPageNumber * pageSizeNumber + index + 1;
+              return (
+                <React.Fragment key={item.id}>
+                  <tr className="hover:bg-gray-50 text-sm">
+                    <td className="py-2 px-4 border text-center">
+                      {nomorUrut}
+                      <div className="flex justify-between items-center">
+                        {isMobile && (
+                          <FontAwesomeIcon
+                            icon={
+                              expandedRow === index
+                                ? faMinusCircle
+                                : faPlusCircle
+                            }
+                            className="text-blue-500 cursor-pointer"
+                            size="lg"
+                            onClick={() => toggleExpandRow(index)}
+                          />
+                        )}
+                      </div>
+                    </td>
+                    {isMobile ? (
+                      <td className="py-2 px-4 border-b">
+                        <div className="flex flex-col items-center justify-center">
                           <Image
                             src={
                               fotoBase64[index]
                                 ? `data:image/jpeg;base64,${fotoBase64[index]}`
                                 : profileImageUrl
                             }
-                            alt={`Foto ${item.namaPelapor || "User"}`}
                             width={50}
                             height={50}
+                            alt="Anggota Foto"
                             className="rounded"
                             unoptimized={true}
                           />
-                        </td>
-                        <td className="p-2 md:p-3 border">
-                          <div className="font-bold text-sm">
-                            {item.namaLengkap}
-                          </div>
+                          <div>{item.namaLengkap}</div>
+                        </div>
+                      </td>
+                    ) : (
+                      <td className="py-2 px-4 border-b">
+                        <div className="w-12 h-12 rounded-full overflow-hidden">
+                          <Image
+                            src={
+                              fotoBase64[index]
+                                ? `data:image/jpeg;base64,${fotoBase64[index]}`
+                                : profileImageUrl
+                            }
+                            width={50}
+                            height={50}
+                            alt="Anggota Foto"
+                            className="object-cover"
+                          />
+                        </div>
+                      </td>
+                    )}
+                    <td className="p-2 md:p-3 border">
+                      <div className="font-bold text-sm">
+                        {item.namaLengkap}
+                      </div>
+                      <div className="text-sm">{item.npaPgri}</div>
+                      <div className="text-sm">{item.jabatan}</div>
+                      <div
+                        className={`text-sm p-1 inline-block ${item.nip
+                          ? "bg-green-500 text-white rounded-full px-3"
+                          : "bg-red-500 text-white rounded-full px-3"
+                          }`}
+                      >
+                        {item.nip ? item.nip : "Tidak Terdaftar Daspen"}
+                      </div>
+                    </td>
+                    {!isMobile && (
+                      <>
+                        <td className="py-2 px-4 border">
                           <div className="text-sm">{item.tempatLahir},</div>
                           <div className="text-sm">
                             {formatDate(item.tanggalLahir)}
                           </div>
                           <div className="text-sm">
-                            {" "}
-                            Usia
-                            {calculateAge(item.tanggalLahir)} Tahun
+                            {calculateAge(item.tanggalLahir)}
                           </div>
+                          <div className="text-sm">
+                            Pensiun :{" "}
+                            {calculateRetirementDate(
+                              item.tanggalLahir,
+                              item.statusPegawai
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-2 px-4 border">
+                          <div className="text-sm">{item.cabang},</div>
                           <div className="text-sm">{item.unitKerja}</div>
-                          <div className="text-sm">{item.npaPgri}</div>
-                          <div className="text-sm">{item.jabatan}</div>
-                          <div className="text-sm">{item.nomorHp}</div>
-                          {/* <div
-                            className={`text-sm p-1 inline-block ${item.nip
-                              ? "bg-green-500 text-white rounded-full px-3"
-                              : "bg-red-500 text-white rounded-full px-3"
+                          <div className="text-sm">
+                            Anggota:{" "}
+                            {item.tahunDiangkat
+                              ? (() => {
+                                const date = new Date(item.tahunDiangkat);
+                                const day = String(date.getDate()).padStart(
+                                  2,
+                                  "0"
+                                );
+                                const month = String(
+                                  date.getMonth() + 1
+                                ).padStart(2, "0");
+                                const year = date.getFullYear();
+                                return `${day}-${month}-${year}`;
+                              })()
+                              : "-"}
+                          </div>
+
+                          <div className="text-sm">{item.pangkatGolongan}</div>
+                        </td>
+                        <td className="py-2 px-4 text-center border">
+                          <div className="text-sm">{formatTingkatSekolah(item.tingkatSekolah)}</div>
+                        </td>
+                        <td className="py-2 px-4 border w-36 text-center ">
+                          <div
+                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
+                              ? "bg-red-200 text-red-900"
+                              : "bg-green-200 text-green-900"
                               }`}
                           >
-                            {item.nip ? item.nip : "NIP tidak ada"}
-                          </div> */}
-                        </td>
-                        <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
-                          <div className="text-sm">
-                            {formatTingkat(item.tingkatSekolah)}
+                            {item.statusKeanggotaan}
                           </div>
                         </td>
-                        <td className="p-2 md:p-3 border text-center text-sm md:table-cell hidden">
-                          <div className="text-sm">{item.cabang}</div>
-                        </td>
-                        <td className="p-2 text-center md:p-3 border md:table-cell hidden">
+                        {/* <td className="py-2 px-4 border text-center">
                           <div
-                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${
-                              item.status === "BUKAN ANGGOTA"
-                                ? "bg-red-200 text-red-900"
-                                : "bg-green-200 text-green-900"
-                            }`}
+                            className="text-sm cursor-pointer text-blue-500 hover:underline"
+                            onClick={() => {
+                              const url = `https://www.google.com/maps?q=${item.latitude},${item.longitude}`;
+                              window.open(url, "_blank");
+                            }}
                           >
-                            {item.role === "USER"
-                              ? "Aktif"
-                              : item.status_keanggotaan}
+                            {item.latitude}, {item.longitude}
                           </div>
-                        </td>
-                        <td className="p-2 md:p-3 border md:table-cell hidden">
+                        </td> */}
+                        <td className="px-4 py-2 border">
                           <div className="flex justify-center space-x-2">
                             <Button
                               type="button"
@@ -1927,7 +2378,7 @@ function StatusAnggota() {
                                 </Button>
 
                                 {sessionStorage.getItem("role") ===
-                                "SUPER ADMIN" ? (
+                                  "SUPER ADMIN" ? (
                                   <Button
                                     className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
                                     onClick={() => {
@@ -1948,7 +2399,7 @@ function StatusAnggota() {
                                     type="button"
                                     disabled
                                   >
-                                    <FaExclamationTriangle className="w-4 h-4" />
+                                    <FaExclamationTriangle className="w-5 h-4" />
                                   </Link>
                                 )}
 
@@ -1979,7 +2430,8 @@ function StatusAnggota() {
                                   </div>
                                 )}
                                 <Link
-                                  href={`https://wa.me/62${item.nomorHp}`}
+                                  href={`https://wa.me/${item.nomorHp?.replace(/^0/, "62") || ""
+                                    }`}
                                   className="text-white bg-green-500 hover:bg-green-600 p-2 border rounded-md"
                                   target="_blank"
                                   rel="noopener noreferrer"
@@ -1987,6 +2439,7 @@ function StatusAnggota() {
                                 >
                                   <FaWhatsapp className="w-4 h-4" />
                                 </Link>
+
                               </>
                             )}
                             <div>
@@ -2074,14 +2527,14 @@ function StatusAnggota() {
                                         <p>
                                           {daspenData.tanggalLahir
                                             ? new Intl.DateTimeFormat("id-ID", {
-                                                day: "2-digit",
-                                                month: "long",
-                                                year: "numeric",
-                                              }).format(
-                                                new Date(
-                                                  daspenData.tanggalLahir
-                                                )
+                                              day: "2-digit",
+                                              month: "long",
+                                              year: "numeric",
+                                            }).format(
+                                              new Date(
+                                                daspenData.tanggalLahir
                                               )
+                                            )
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2106,14 +2559,14 @@ function StatusAnggota() {
                                         <p>
                                           {daspenData.mulaiJadiAnggotaDaspen
                                             ? new Intl.DateTimeFormat("id-ID", {
-                                                day: "2-digit",
-                                                month: "long",
-                                                year: "numeric",
-                                              }).format(
-                                                new Date(
-                                                  daspenData.mulaiJadiAnggotaDaspen
-                                                )
+                                              day: "2-digit",
+                                              month: "long",
+                                              year: "numeric",
+                                            }).format(
+                                              new Date(
+                                                daspenData.mulaiJadiAnggotaDaspen
                                               )
+                                            )
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2132,23 +2585,23 @@ function StatusAnggota() {
                                         <p>
                                           {daspenData.prediksiPensiun
                                             ? (() => {
-                                                const prediksiPensiunDate =
-                                                  new Date(
-                                                    daspenData.prediksiPensiun
-                                                  );
-                                                prediksiPensiunDate.setMonth(
-                                                  prediksiPensiunDate.getMonth() +
-                                                    1
+                                              const prediksiPensiunDate =
+                                                new Date(
+                                                  daspenData.prediksiPensiun
                                                 );
-                                                return new Intl.DateTimeFormat(
-                                                  "id-ID",
-                                                  {
-                                                    day: "2-digit",
-                                                    month: "long",
-                                                    year: "numeric",
-                                                  }
-                                                ).format(prediksiPensiunDate);
-                                              })()
+                                              prediksiPensiunDate.setMonth(
+                                                prediksiPensiunDate.getMonth() +
+                                                1
+                                              );
+                                              return new Intl.DateTimeFormat(
+                                                "id-ID",
+                                                {
+                                                  day: "2-digit",
+                                                  month: "long",
+                                                  year: "numeric",
+                                                }
+                                              ).format(prediksiPensiunDate);
+                                            })()
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2159,9 +2612,9 @@ function StatusAnggota() {
                                         <p>
                                           {daspenData.sumbangan
                                             ? new Intl.NumberFormat("id-ID", {
-                                                style: "currency",
-                                                currency: "IDR",
-                                              }).format(daspenData.sumbangan)
+                                              style: "currency",
+                                              currency: "IDR",
+                                            }).format(daspenData.sumbangan)
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2196,580 +2649,825 @@ function StatusAnggota() {
                                 </div>
                               )}
                             </div>
+
+                            {sessionStorage.getItem("role") === "USER" ? (
+                              <Button
+                                className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2 cursor-not-allowed opacity-50"
+                                title="Aktivasi Anggota"
+                                type="button"
+                                disabled
+                              >
+                                <FaUserCheck className="w-4 h-4" />
+                                <span>Aktivasi</span>
+                              </Button>
+                            ) : (
+                              <Button
+                                className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
+                                title="Aktivasi Anggota"
+                                type="button"
+                                onClick={() => updateAktivasiUser(item.id)}
+                              >
+                                <FaUserCheck className="w-4 h-4" />
+                                <span>Aktivasi</span>
+                              </Button>
+                            )}
                           </div>
                         </td>
-                      </tr>
-
-                      <tr className="md:hidden">
-                        <td colSpan="7" className="p-2 border">
-                          {expandedIndex === index && (
-                            <div className="mt-2">
-                              <div
-                                style={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  alignItems: "center", // Memusatkan elemen secara horizontal
-                                  gap: "6px", // Jarak antar elemen
-                                }}
-                              >
-                                {/* Bagian Foto, Nama, dan NPA */}
-                                <div>
-                                  <Image
-                                    src={
-                                      fotoBase64[index]
-                                        ? `data:image/jpeg;base64,${fotoBase64[index]}`
-                                        : profileImageUrl
-                                    }
-                                    alt={`Foto ${item.namaPelapor || "User"}`}
-                                    width={50}
-                                    height={50}
-                                    className="rounded"
-                                    unoptimized={true}
-                                  />
-                                </div>
-                                <div className="font-bold">
-                                  {item.namaLengkap}
-                                </div>
-                                <div>{item.npaPgri}</div>
-
-                                {/* Bagian Grid 2x2 */}
-                                <div
-                                  style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "1fr 1fr",
-                                    gap: "10px",
-                                    marginTop: "20px",
-                                    width: "100%",
-                                  }}
-                                >
-                                  {/* <div>
-                                    {item.tempatLahir}, {formatDate(item.tanggalLahir)}
-                                  </div> */}
-                                  <div>
-                                    {calculateAge(item.tanggalLahir)} Tahun
-                                  </div>
-                                  <div>{item.cabang}</div>
-                                  <div>{item.unitKerja}</div>
-                                  <div>
-                                    {formatTingkat(item.tingkatSekolah)}
-                                  </div>
-                                  {/* <div>{item.gabung}</div> */}
-                                  <div>{item.jabatan}</div>
-                                  <div
-                                    className={`text-center rounded-md px-3 py-2 text-sm font-semibold w-20 ${
-                                      item.status === "BUKAN ANGGOTA"
-                                        ? "bg-red-200 text-red-900"
-                                        : "bg-green-200 text-green-900"
-                                    }`}
-                                  >
-                                    {item.role === "USER"
-                                      ? "Aktif"
-                                      : item.status_keanggotaan}
-                                  </div>
-                                </div>
+                      </>
+                    )}
+                  </tr>
+                  {expandedRow === index && (
+                    <tr>
+                      <td colSpan="9" className="px-4 py-4 bg-gray-50">
+                        <div className="flex flex-col items-center space-y-4">
+                          <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
+                            <div className="text-left">
+                              <h3 className="font-semibold">Tanggal Lahir:</h3>
+                              <div className="text-sm">{item.tempatLahir},</div>
+                              <div className="text-sm">
+                                {formatDate(item.tanggalLahir)}
                               </div>
-                              <div className="flex justify-center space-x-2 mt-4">
-                                <Button
-                                  className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
-                                  title="Edit Data"
-                                  onClick={() =>
-                                    router.push(
-                                      `/anggota/edit-anggota?id=${item.id}`
-                                    )
-                                  }
-                                >
-                                  <FaEdit className="w-4 h-4" />
-                                </Button>
-                                {sessionStorage.getItem("role") ===
-                                "SUPER ADMIN" ? (
-                                  <Button
-                                    className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
-                                    title="Mutasi"
-                                    onClick={() => openModal(item)}
-                                  >
-                                    <FaExchangeAlt className="w-4 h-4" />
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
-                                    title="Mutasi"
-                                  >
-                                    <FaExchangeAlt className="w-4 h-4" />
-                                  </Button>
+                              <div className="text-sm">
+                                {calculateAge(item.tanggalLahir)}
+                              </div>
+                              <div className="text-sm">
+                                Pensiun :{" "}
+                                {calculateRetirementDate(
+                                  item.tanggalLahir,
+                                  item.statusPegawai
                                 )}
-                                {sessionStorage.getItem("role") ===
-                                "SUPER ADMIN" ? (
-                                  <Button
-                                    className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
-                                    onClick={() => {
-                                      sessionStorage.setItem(
-                                        "anggotaId",
-                                        item.id
-                                      );
-                                      setIsPopupVisible(true);
-                                    }}
-                                  >
-                                    <FaExclamationTriangle className="w-4 h-4" />
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    className="text-white bg-red-500 p-2 border rounded-md cursor-not-allowed opacity-50"
-                                    title="Lapor"
-                                    type="button"
-                                    disabled
-                                  >
-                                    <FaExclamationTriangle className="w-4 h-4" />
-                                  </Button>
-                                )}
-
-                                <Link
-                                  href={`https://wa.me/62${item.nomorHp}`}
-                                  className="text-white bg-green-500 p-2 border rounded-md"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  <FaWhatsapp className="w-4 h-4" title="WA" />
-                                </Link>
-                                <div>
-                                  <Button
-                                    type="button"
-                                    className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
-                                    title="Data Daspen"
-                                    onClick={() => {
-                                      sessionStorage.setItem(
-                                        "anggotaId",
-                                        item.id
-                                      );
-                                      handleDataDaspen();
-                                    }}
-                                  >
-                                    Daspen
-                                  </Button>
-
-                                  {isPopupDaspen && daspenData && (
-                                    <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
-                                      <div className="bg-white p-6 rounded-md w-11/12 sm:w-8/12 md:w-6/12 lg:w-5/12 xl:w-4/12 relative max-h-[80vh] overflow-y-auto">
-                                        <button
-                                          onClick={closePopup}
-                                          className="absolute top-2 right-2 p-2 bg-white rounded-full"
-                                        >
-                                          <FaTimes className="h-6 w-6 text-red-600" />
-                                        </button>
-
-                                        <h2 className="text-xl font-bold">
-                                          Data Daspen
-                                        </h2>
-
-                                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                          <div>
-                                            <p className="font-semibold">
-                                              Nama Anggota:
-                                            </p>
-                                            <p>
-                                              {daspenData.namaAnggota ||
-                                                "Tidak tersedia"}
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <p className="font-semibold">
-                                              Kategori Daspen:
-                                            </p>
-                                            <select
-                                              className="w-full p-2 border rounded-md border-teal-500"
-                                              value={kategoriDaspen}
-                                              onChange={handleKategoriChange}
-                                            >
-                                              <option value="I">I</option>
-                                              <option value="II">II</option>
-                                              <option value="III">III</option>
-                                            </select>
-
-                                            {isKategoriChanged && (
-                                              <div className="popup">
-                                                <p>
-                                                  Apakah Anda yakin ingin
-                                                  mengganti kategori Daspen?
-                                                </p>
-
-                                                <button
-                                                  onClick={handleConfirmChange}
-                                                  className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition duration-200 px-6"
-                                                >
-                                                  Ya
-                                                </button>
-
-                                                <button
-                                                  onClick={() => {
-                                                    setKategoriDaspen(
-                                                      previousKategoriDaspen
-                                                    );
-                                                    setIsKategoriChanged(false);
-                                                  }}
-                                                  className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-200 ml-2 px-4"
-                                                >
-                                                  Tidak
-                                                </button>
-                                              </div>
-                                            )}
-                                          </div>
-                                          <div>
-                                            <p className="font-semibold">
-                                              Tanggal Lahir:
-                                            </p>
-                                            <p>
-                                              {daspenData.tanggalLahir
-                                                ? new Intl.DateTimeFormat(
-                                                    "id-ID",
-                                                    {
-                                                      day: "2-digit",
-                                                      month: "long",
-                                                      year: "numeric",
-                                                    }
-                                                  ).format(
-                                                    new Date(
-                                                      daspenData.tanggalLahir
-                                                    )
-                                                  )
-                                                : "Tidak tersedia"}
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <p className="font-semibold">
-                                              Usia:
-                                            </p>
-                                            <p>
-                                              {calculateAge(
-                                                daspenData.tanggalLahir
-                                              ) || "Tidak tersedia"}
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <p className="font-semibold">
-                                              NIP:
-                                            </p>
-                                            <p>
-                                              {daspenData.nip ||
-                                                "Tidak tersedia"}
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <p className="font-semibold">
-                                              Mulai Jadi Anggota:
-                                            </p>
-                                            <p>
-                                              {daspenData.mulaiJadiAnggotaDaspen
-                                                ? new Intl.DateTimeFormat(
-                                                    "id-ID",
-                                                    {
-                                                      day: "2-digit",
-                                                      month: "long",
-                                                      year: "numeric",
-                                                    }
-                                                  ).format(
-                                                    new Date(
-                                                      daspenData.mulaiJadiAnggotaDaspen
-                                                    )
-                                                  )
-                                                : "Tidak tersedia"}
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <p className="font-semibold">
-                                              Kelompok Jabatan:
-                                            </p>
-                                            <p>
-                                              {daspenData.kelompokJabatan ||
-                                                "-"}
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <p className="font-semibold">
-                                              Prediksi Pensiun:
-                                            </p>
-                                            <p>
-                                              {daspenData.prediksiPensiun
-                                                ? (() => {
-                                                    const prediksiPensiunDate =
-                                                      new Date(
-                                                        daspenData.prediksiPensiun
-                                                      );
-                                                    prediksiPensiunDate.setMonth(
-                                                      prediksiPensiunDate.getMonth() +
-                                                        1
-                                                    );
-                                                    return new Intl.DateTimeFormat(
-                                                      "id-ID",
-                                                      {
-                                                        day: "2-digit",
-                                                        month: "long",
-                                                        year: "numeric",
-                                                      }
-                                                    ).format(
-                                                      prediksiPensiunDate
-                                                    );
-                                                  })()
-                                                : "Tidak tersedia"}
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <p className="font-semibold">
-                                              Sumbangan:
-                                            </p>
-                                            <p>
-                                              {daspenData.sumbangan
-                                                ? new Intl.NumberFormat(
-                                                    "id-ID",
-                                                    {
-                                                      style: "currency",
-                                                      currency: "IDR",
-                                                    }
-                                                  ).format(daspenData.sumbangan)
-                                                : "Tidak tersedia"}
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <p className="font-semibold">
-                                              Untuk Lihat Data Lengkap:
-                                            </p>
-                                            <div className="flex items-center">
-                                              <p className="text-sm mr-1">
-                                                Link Website:
-                                              </p>
-                                              <Link
-                                                href="https://www.dansetjateng.org/"
-                                                className="text-blue-400"
-                                                target="_blank"
-                                              >
-                                                www.dansetjateng.org
-                                              </Link>
-                                            </div>
-                                          </div>
-                                        </div>
-
-                                        <div className="flex justify-end mt-4">
-                                          <button
-                                            className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
-                                            onClick={closePopup}
-                                          >
-                                            Tutup
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
                               </div>
                             </div>
-                          )}
-                        </td>
-                      </tr>
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
-            {hasMoreData && (
-              <div ref={loadingRef} className="flex justify-center py-2">
-                <ClipLoader color="#3498db" size={30} />
-              </div>
-            )}
-            <div className="flex justify-center mt-4 gap-1">
-              <button
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-              >
-                First
-              </button>
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-              >
-                Prev
-              </button>
+                            <div className="text-left">
+                              <h3 className="font-semibold">Unit Kerja:</h3>
+                              <div className="text-sm">{item.cabang},</div>
+                              <div className="text-sm">{item.unitKerja}</div>
+                              <div className="text-sm">
+                                Anggota:{" "}
+                                {item.tahunDiangkat
+                                  ? (() => {
+                                    const date = new Date(item.tahunDiangkat);
+                                    const day = String(
+                                      date.getDate()
+                                    ).padStart(2, "0");
+                                    const month = String(
+                                      date.getMonth() + 1
+                                    ).padStart(2, "0");
+                                    const year = date.getFullYear();
+                                    return `${day}-${month}-${year}`;
+                                  })()
+                                  : "-"}
+                              </div>
 
-              {getVisiblePages().map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-3 py-1 border rounded text-sm ${
-                    page === currentPage
-                      ? "bg-blue-500 text-white"
-                      : "bg-white hover:bg-gray-50"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
+                              <div className="text-sm">
+                                {item.pangkatGolongan}
+                              </div>
+                            </div>
+                            <div className="text-left">
+                              <h3 className="font-semibold">
+                                Status Keanggotaan:
+                              </h3>
+                              {item.statusKeanggotaan}
+                            </div>
+                            <div className="text-left">
+                              <h3 className="font-semibold">
+                                Tingkat Sekolah:
+                              </h3>
+                              {formatTingkatSekolah(item.tingkatSekolah)}
+                            </div>
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-center">Aksi:</h3>
+                            <div className="flex justify-center space-x-2 mt-2">
+                              <Button
+                                className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                                title="Edit Data"
+                                onClick={() =>
+                                  router.push(
+                                    `/anggota/edit-anggota?id=${item.id}`
+                                  )
+                                }
+                              >
+                                <FaEdit className="w-4 h-4" />
+                              </Button>
 
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                              {sessionStorage.getItem("role") ===
+                                "SUPER ADMIN" ||
+                                sessionStorage.getItem("role") === "ADMIN" ? (
+                                <Button
+                                  className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                  title="Mutasi"
+                                  onClick={() => openModal(item)}
+                                >
+                                  <FaExchangeAlt className="w-4 h-4" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
+                                  title="Mutasi"
+                                  disabled
+                                >
+                                  <FaExchangeAlt className="w-4 h-4" />
+                                </Button>
+                              )}
+
+                              {sessionStorage.getItem("role") ===
+                                "SUPER ADMIN" ? (
+                                <Button
+                                  className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
+                                  onClick={() => {
+                                    sessionStorage.setItem(
+                                      "anggotaId",
+                                      item.id
+                                    );
+                                    setIsPopupVisible(true);
+                                  }}
+                                >
+                                  <FaExclamationTriangle className="w-4 h-4" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  className="text-white bg-red-500 p-2 border rounded-md cursor-not-allowed opacity-50"
+                                  title="Lapor"
+                                  type="button"
+                                  disabled
+                                >
+                                  <FaExclamationTriangle className="w-4 h-4" />
+                                </Button>
+                              )}
+
+                              <Link
+                                href={`https://wa.me/62${item.nomorHp}`}
+                                className="text-white bg-green-500 p-2 border rounded-md"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <FaWhatsapp className="w-4 h-4" title="WA" />
+                              </Link>
+                              <div>
+                                <Button
+                                  type="button"
+                                  className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
+                                  title="Data Daspen"
+                                  onClick={() => {
+                                    sessionStorage.setItem(
+                                      "anggotaId",
+                                      item.id
+                                    );
+                                    handleDataDaspen();
+                                  }}
+                                >
+                                  Daspen
+                                </Button>
+                                {isPopupDaspen && daspenData && (
+                                  <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
+                                    <div className="bg-white p-6 rounded-md w-11/12 sm:w-8/12 md:w-6/12 lg:w-5/12 xl:w-4/12 relative max-h-[80vh] overflow-y-auto">
+                                      <button
+                                        onClick={closePopup}
+                                        className="absolute top-2 right-2 p-2 bg-white rounded-full"
+                                      >
+                                        <FaTimes className="h-6 w-6 text-red-600" />
+                                      </button>
+
+                                      <h2 className="text-xl font-bold">
+                                        Data Daspen
+                                      </h2>
+
+                                      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                          <p className="font-semibold">
+                                            Nama Anggota:
+                                          </p>
+                                          <p>
+                                            {daspenData.namaAnggota ||
+                                              "Tidak tersedia"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">
+                                            Kategori Daspen:
+                                          </p>
+                                          <select
+                                            className="w-full p-2 border rounded-md border-teal-500"
+                                            value={kategoriDaspen}
+                                            onChange={handleKategoriChange}
+                                          >
+                                            <option value="I">I</option>
+                                            <option value="II">II</option>
+                                            <option value="III">III</option>
+                                          </select>
+
+                                          {isKategoriChanged && (
+                                            <div className="popup">
+                                              <p>
+                                                Apakah Anda yakin ingin
+                                                mengganti kategori Daspen?
+                                              </p>
+
+                                              <button
+                                                onClick={handleConfirmChange}
+                                                className="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition duration-200 px-6"
+                                              >
+                                                Ya
+                                              </button>
+
+                                              <button
+                                                onClick={() => {
+                                                  setKategoriDaspen(
+                                                    previousKategoriDaspen
+                                                  );
+                                                  setIsKategoriChanged(false);
+                                                }}
+                                                className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition duration-200 ml-2 px-4"
+                                              >
+                                                Tidak
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">
+                                            Tanggal Lahir:
+                                          </p>
+                                          <p>
+                                            {daspenData.tanggalLahir
+                                              ? new Intl.DateTimeFormat(
+                                                "id-ID",
+                                                {
+                                                  day: "2-digit",
+                                                  month: "long",
+                                                  year: "numeric",
+                                                }
+                                              ).format(
+                                                new Date(
+                                                  daspenData.tanggalLahir
+                                                )
+                                              )
+                                              : "Tidak tersedia"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">Usia:</p>
+                                          <p>
+                                            {calculateAge(
+                                              daspenData.tanggalLahir
+                                            ) || "Tidak tersedia"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">NIP:</p>
+                                          <p>
+                                            {daspenData.nip || "Tidak tersedia"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">
+                                            Mulai Jadi Anggota:
+                                          </p>
+                                          <p>
+                                            {daspenData.mulaiJadiAnggotaDaspen
+                                              ? new Intl.DateTimeFormat(
+                                                "id-ID",
+                                                {
+                                                  day: "2-digit",
+                                                  month: "long",
+                                                  year: "numeric",
+                                                }
+                                              ).format(
+                                                new Date(
+                                                  daspenData.mulaiJadiAnggotaDaspen
+                                                )
+                                              )
+                                              : "Tidak tersedia"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">
+                                            Kelompok Jabatan:
+                                          </p>
+                                          <p>
+                                            {daspenData.kelompokJabatan || "-"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">
+                                            Prediksi Pensiun:
+                                          </p>
+                                          <p>
+                                            {daspenData.prediksiPensiun
+                                              ? (() => {
+                                                const prediksiPensiunDate =
+                                                  new Date(
+                                                    daspenData.prediksiPensiun
+                                                  );
+                                                prediksiPensiunDate.setMonth(
+                                                  prediksiPensiunDate.getMonth() +
+                                                  1
+                                                );
+                                                return new Intl.DateTimeFormat(
+                                                  "id-ID",
+                                                  {
+                                                    day: "2-digit",
+                                                    month: "long",
+                                                    year: "numeric",
+                                                  }
+                                                ).format(prediksiPensiunDate);
+                                              })()
+                                              : "Tidak tersedia"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">
+                                            Sumbangan:
+                                          </p>
+                                          <p>
+                                            {daspenData.sumbangan
+                                              ? new Intl.NumberFormat("id-ID", {
+                                                style: "currency",
+                                                currency: "IDR",
+                                              }).format(daspenData.sumbangan)
+                                              : "Tidak tersedia"}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold">
+                                            Untuk Lihat Data Lengkap:
+                                          </p>
+                                          <div className="flex items-center">
+                                            <p className="text-sm mr-1">
+                                              Link Website:
+                                            </p>
+                                            <Link
+                                              href="https://www.dansetjateng.org/"
+                                              className="text-blue-400"
+                                              target="_blank"
+                                            >
+                                              www.dansetjateng.org
+                                            </Link>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex justify-end mt-4">
+                                        <button
+                                          className="bg-red-500 text-white p-2 rounded-md hover:bg-red-600"
+                                          onClick={closePopup}
+                                        >
+                                          Tutup
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              {sessionStorage.getItem("role") === "USER" ? (
+                                <Button
+                                  className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2 cursor-not-allowed opacity-50"
+                                  title="Aktivasi Anggota"
+                                  type="button"
+                                  disabled
+                                >
+                                  <FaUserCheck className="w-4 h-4" />
+                                  <span>Aktivasi</span>
+                                </Button>
+                              ) : (
+                                <Button
+                                  className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
+                                  title="Aktivasi Anggota"
+                                  type="button"
+                                  onClick={() => updateAktivasiUser(item.id)}
+                                >
+                                  <FaUserCheck className="w-4 h-4" />
+                                  <span>Aktivasi</span>
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-center mt-4 w-full">
+                            <h3 className="font-semibold">Lokasi:</h3>
+                            {item.latitude && item.longitude ? (
+                              <>
+                                <p>
+                                  {item.latitude.toFixed(6)},{" "}
+                                  {item.longitude.toFixed(6)}
+                                </p>
+                                <div className="mt-8">
+                                  <div
+                                    className="relative w-full"
+                                    style={{
+                                      height: "400px",
+                                      maxWidth: "800px",
+                                      margin: "0 auto",
+                                    }}
+                                  >
+                                    <MapComponent
+                                      latitude={item.latitude}
+                                      longitude={item.longitude}
+                                    />
+                                  </div>
+                                </div>
+                              </>
+                            ) : (
+                              <p className="text-gray-500">
+                                Lokasi tidak tersedia
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={closeModal}
+        contentLabel="Mutation Actions"
+        className="fixed inset-0 flex items-center justify-center p-4"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+      >
+        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Mutasi Anggota</h2>
+            <button
+              className="text-2xl font-bold text-gray-700 hover:text-red-500 focus:outline-none"
+              onClick={closeModal}
+            >
+              x
+            </button>
+          </div>
+          <div className="flex flex-col items-center gap-4 p-4 rounded-md shadow-md bg-white">
+            <div className="w-full flex justify-center mb-4">
+              <Image
+                src={
+                  fotoBase64
+                    ? "/profile.png"
+                    : `data:image/jpeg;base64,${fotoBase64}`
                 }
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-              >
-                Next
-              </button>
-              <button
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-              >
-                Last
-              </button>
+                width={100}
+                height={100}
+                alt="Anggota Foto"
+                className="rounded-full border-2 border-gray-300"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-6 w-full">
+              <div className="flex flex-col">
+                <p className="font-semibold text-gray-700 text-sm">
+                  Nama Lengkap:
+                </p>
+                <p className="text-base text-gray-900">
+                  {currentItem?.namaLengkap || "-"}
+                </p>
+                <p className="font-semibold text-gray-700 text-sm mt-4">
+                  Cabang:
+                </p>
+                <p className="text-base text-gray-900">
+                  {currentItem?.cabang || "-"}
+                </p>
+              </div>
+
+              <div className="flex flex-col">
+                <p className="font-semibold text-gray-700 text-sm">NPA:</p>
+                <p className="text-base text-gray-900">
+                  {currentItem?.npaPgri || "-"}
+                </p>
+                <p className="font-semibold text-gray-700 text-sm mt-4">
+                  Unit Kerja:
+                </p>
+                <p className="text-base text-gray-900">
+                  {currentItem?.unitKerja || "-"}
+                </p>
+              </div>
             </div>
           </div>
 
-          <Modal
-            isOpen={isModalOpen}
-            onRequestClose={closeModal}
-            contentLabel="Mutation Actions"
-            className="fixed inset-0 flex items-center justify-center p-4"
-            overlayClassName="fixed inset-0 bg-black bg-opacity-50"
-          >
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Mutasi Anggota</h2>
-                <button
-                  className="text-2xl font-bold text-gray-700 hover:text-red-500 focus:outline-none"
-                  onClick={closeModal}
-                >
-                  x
-                </button>
-              </div>
-              <div className="flex flex-col items-center gap-4 p-4 rounded-md shadow-md bg-white">
-                <div className="w-full flex justify-center mb-4">
-                  <Image
-                    src={
-                      fotoBase64
-                        ? "/profile.png"
-                        : `data:image/jpeg;base64,${fotoBase64}`
-                    }
-                    width={100}
-                    height={100}
-                    alt="Anggota Foto"
-                    className="rounded-full border-2 border-gray-300"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-6 w-full">
-                  <div className="flex flex-col">
-                    <p className="font-semibold text-gray-700 text-sm">
-                      Nama Lengkap:
-                    </p>
-                    <p className="text-base text-gray-900">
-                      {currentItem?.namaLengkap || "-"}
-                    </p>
-                    <p className="font-semibold text-gray-700 text-sm mt-4">
-                      Cabang:
-                    </p>
-                    <p className="text-base text-gray-900">
-                      {currentItem?.cabang || "-"}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col">
-                    <p className="font-semibold text-gray-700 text-sm">NPA:</p>
-                    <p className="text-base text-gray-900">
-                      {currentItem?.npaPgri || "-"}
-                    </p>
-                    <p className="font-semibold text-gray-700 text-sm mt-4">
-                      Unit Kerja:
-                    </p>
-                    <p className="text-base text-gray-900">
-                      {currentItem?.unitKerja || "-"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2 mt-4">
-                <div>
-                  <Button
-                    className="w-full bg-teal-700 hover:bg-teal-500"
-                    onClick={handlePindahCabangUnit}
-                  >
-                    Pindah Cabang dan Unit Kerja
-                  </Button>
-                </div>
-                <div>
-                  <Button
-                    className="w-full bg-teal-700 hover:bg-teal-500"
-                    onClick={handlePopupKeluar}
-                  >
-                    Keluar Anggota
-                  </Button>
-
-                  {popupVisibleKeluar && (
-                    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-                      <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
-                        <h2 className="text-lg font-semibold text-gray-800">
-                          Apakah Anda yakin?
-                        </h2>
-                        <p className="text-gray-600 mt-2 mb-4">
-                          Apakah Anda yakin akan menghapus anggota ini?
-                        </p>
-                        <div className="flex justify-center gap-4">
-                          <button
-                            onClick={handleCancelKeluar}
-                            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
-                          >
-                            Batal
-                          </button>
-                          <button
-                            onClick={handleKeluarAnggota}
-                            className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
-                          >
-                            Ya, Saya Yakin
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <Button
-                    className="w-full bg-teal-700 hover:bg-teal-500"
-                    onClick={handlePopup}
-                  >
-                    Pensiun
-                  </Button>
-                  {popupVisible && (
-                    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-                      <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
-                        <h2 className="text-lg font-semibold text-gray-800">
-                          Apakah Anda yakin ?
-                        </h2>
-                        <p className="text-gray-600 mt-2 mb-4">
-                          Apakah Anda yakin untuk mengubah anggota menjadi
-                          pensiun?
-                        </p>
-                        <div className="flex justify-center gap-4">
-                          <button
-                            onClick={handleCancelKeluar}
-                            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
-                          >
-                            Batal
-                          </button>
-                          <button
-                            onClick={handlePensiunAnggota}
-                            className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
-                          >
-                            Ya, Saya Yakin
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+          <div className="space-y-2 mt-4">
+            <div>
+              <Button
+                className="w-full bg-teal-700 hover:bg-teal-500"
+                onClick={handlePindahCabangUnit}
+              >
+                Pindah Cabang dan Unit Kerja
+              </Button>
             </div>
-          </Modal>
+            <div>
+              <Button
+                className="w-full bg-teal-700 hover:bg-teal-500"
+                onClick={handlePopupKeluar}
+              >
+                Keluar Anggota
+              </Button>
+
+              {popupVisibleKeluar && (
+                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+                  <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
+                    <h2 className="text-lg font-semibold text-gray-800">
+                      Apakah Anda yakin?
+                    </h2>
+                    <p className="text-gray-600 mt-2 mb-4">
+                      Apakah Anda yakin akan menghapus anggota ini?
+                    </p>
+                    <div className="flex justify-center gap-4">
+                      <button
+                        onClick={handleCancelKeluar}
+                        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        onClick={handleKeluarAnggota}
+                        className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                      >
+                        Ya, Saya Yakin
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div>
+              <Button
+                className="w-full bg-teal-700 hover:bg-teal-500"
+                onClick={handlePopup}
+              >
+                Pensiun
+              </Button>
+              {popupVisible && (
+                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+                  <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
+                    <h2 className="text-lg font-semibold text-gray-800">
+                      Apakah Anda yakin ?
+                    </h2>
+                    <p className="text-gray-600 mt-2 mb-4">
+                      Apakah Anda yakin untuk mengubah anggota menjadi pensiun?
+                    </p>
+                    <div className="flex justify-center gap-4">
+                      <button
+                        onClick={handleCancelKeluar}
+                        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        onClick={handlePensiunAnggota}
+                        className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                      >
+                        Ya, Saya Yakin
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      </Modal>
     </div>
   );
-}
+};
+
+const PopupDetail = ({
+  selectedRow,
+  handleClosePopup,
+  fotoBase64,
+  handleVerifyUserClick,
+  handleRejectUserClick,
+  selectedRowIndex,
+}) => {
+  const [showConfirmReject, setShowConfirmReject] = useState(false);
+  const profileImageUrl = "/profile.png";
+
+  const handleRejectConfirmation = () => {
+    setShowConfirmReject(false); // Close the confirmation pop-up
+    handleRejectUserClick(selectedRow.id); // Trigger reject action
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-60 z-50 transition-opacity duration-300 ease-in-out">
+      <div className="bg-white p-4 sm:p-8 rounded-lg shadow-xl w-full max-w-lg transform transition-transform duration-300 ease-in-out">
+        <div className="flex justify-between items-center mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+            Detail Anggota
+          </h2>
+          <button
+            onClick={handleClosePopup}
+            className="text-red-500 hover:text-gray-900 transition-colors duration-300 ease-in-out"
+          >
+            <FontAwesomeIcon icon={faTimesCircle} size="lg" />
+          </button>
+        </div>
+
+        <div className="flex flex-col space-y-4 sm:space-y-6">
+          {/* Profile Image */}
+          <div className="flex justify-center">
+            <Image
+              src={
+                fotoBase64[selectedRowIndex]
+                  ? `data:image/jpeg;base64,${fotoBase64[selectedRowIndex]}`
+                  : profileImageUrl
+              }
+              width={80}
+              height={80}
+              alt="Anggota Foto"
+              className="rounded-full"
+            />
+          </div>
+
+          {/* Verification Badge */}
+          <div className="text-center">
+            {!selectedRow.isVerified && (
+              <Badge variant="destructive" className="">
+                <FontAwesomeIcon
+                  icon={faTimesCircle}
+                  className="mr-1 p-1 text-white"
+                  size="lg"
+                />
+                <span>Belum Terverifikasi</span>
+              </Badge>
+            )}
+          </div>
+
+          {/* User Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700 mb-4">
+            <div>
+              <p className="font-medium text-gray-600">Nama Lengkap:</p>
+              <p>{selectedRow.namaLengkap}</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-600">Email:</p>
+              <p>{selectedRow.email}</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-600">NPA PGRI:</p>
+              <p>{selectedRow.npaPgri}</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-600">NIK:</p>
+              <p>{selectedRow.nik}</p>
+            </div>
+          </div>
+
+          {/* Additional Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+            <div>
+              <p className="font-medium text-gray-600">Cabang:</p>
+              <p>{selectedRow.cabang}</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-600">Unit Kerja:</p>
+              <p>{selectedRow.unitKerja}</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-600">Nomor Hp:</p>
+              <a
+                href={`https://wa.me/${selectedRow.nomorHp.replace(
+                  /^0/,
+                  "62"
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-green-500"
+              >
+                <FontAwesomeIcon icon={faWhatsapp} className="mr-2" size="lg" />
+                <span>{selectedRow.nomorHp}</span>
+              </a>
+            </div>
+
+            <div>
+              <p className="font-medium text-gray-600 mr-4">Status:</p>
+              <div className="flex text-center justify-between px-1">
+                <Button className="w-24 hover:bg-green-600">
+                  <FontAwesomeIcon
+                    icon={faCheckCircle}
+                    size="2xl"
+                    className="cursor-pointer"
+                    onClick={() => handleVerifyUserClick(selectedRow.id)}
+                  />
+                </Button>
+                <Button
+                  className="w-24 bg-red-500 hover:bg-red-600"
+                  onClick={() => setShowConfirmReject(true)}
+                >
+                  <FontAwesomeIcon
+                    icon={faTimesCircle}
+                    size="2xl"
+                    className="cursor-pointer"
+                  />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Confirmation Popup */}
+      {showConfirmReject && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-60">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <p className="text-center text-gray-800 font-semibold mb-4">
+              Apa Anda yakin tidak memverifikasi Anggota ini?
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                onClick={handleRejectConfirmation}
+              >
+                Ya
+              </button>
+              <button
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                onClick={() => setShowConfirmReject(false)}
+              >
+                Tidak
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const Pagination = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+  selectedFilters // Add this prop to track current filter state
+}) => {
+  const getVisiblePages = () => {
+    const pages = [];
+    const maxVisiblePages = 4;
+    let startPage = Math.max(1, currentPage);
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  };
+
+  // Helper function to handle page changes while preserving filters
+  const handlePageChange = (newPage) => {
+    onPageChange(newPage, selectedFilters);
+  };
+
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex justify-center mt-4 gap-1">
+      <button
+        onClick={() => handlePageChange(0)}
+        disabled={currentPage === 0}
+        className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+      >
+        First
+      </button>
+      <button
+        onClick={() => handlePageChange(Math.max(currentPage - 1, 0))}
+        disabled={currentPage === 0}
+        className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+      >
+        Prev
+      </button>
+
+      {getVisiblePages().map((page) => (
+        <button
+          key={page}
+          onClick={() => handlePageChange(page - 1)}
+          className={`px-3 py-1 border rounded text-sm ${page - 1 === currentPage
+            ? "bg-blue-500 text-white"
+            : "bg-white hover:bg-gray-50"
+            }`}
+        >
+          {page}
+        </button>
+      ))}
+
+      <button
+        onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages - 1))}
+        disabled={currentPage === totalPages - 1}
+        className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+      >
+        Next
+      </button>
+      <button
+        onClick={() => handlePageChange(totalPages - 1)}
+        disabled={currentPage === totalPages - 1}
+        className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+      >
+        Last
+      </button>
+    </div>
+  );
+};
 
 export default StatusAnggota;

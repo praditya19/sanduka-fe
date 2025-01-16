@@ -1242,6 +1242,126 @@ const DataTable = ({
     }
   };
 
+  const handlePensiunAnggota = async () => {
+    try {
+      const anggotaId = sessionStorage.getItem("anggotaId");
+
+      await GlobalApi.pensiunAnggota(anggotaId);
+      setPopupVisible(false);
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+              marginTop: "14px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <h3
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Anggota berhasil Pensiun!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
+    } catch (error) {
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal pensiun anggota.
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
+    }
+  };
+
   const handleKategoriChange = (e) => {
     setPreviousKategoriDaspen(kategoriDaspen);
 
@@ -1470,9 +1590,12 @@ const DataTable = ({
     setIsPopupDaspen(false);
   };
 
-  const updateAktivasiUser = async (userId) => {
+  const updateAktivasiUser = async () => {
     try {
-      const response = await GlobalApi.activasiUser(userId);
+      const anggotaId = sessionStorage.getItem("anggotaId");
+      console.log(anggotaId);
+
+      const response = await GlobalApi.activasiUser(anggotaId);
       toast.success(
         <div
           style={{
@@ -1585,6 +1708,11 @@ const DataTable = ({
     }
   };
 
+  const handleCancelKeluar = () => {
+    setPopupVisibleKeluar(false);
+    setPopupVisible(false);
+  };
+
   return (
     <div>
       <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
@@ -1680,7 +1808,7 @@ const DataTable = ({
                     </td>
                     {isMobile ? (
                       <td className="py-2 px-4 border-b">
-                        <div className="flex flex-col items-center justify-center">
+                        <div className="w-16 h-16 flex flex-col items-center justify-center">
                           <Image
                             src={
                               fotoBase64[index]
@@ -1690,15 +1818,14 @@ const DataTable = ({
                             width={50}
                             height={50}
                             alt="Anggota Foto"
-                            className="rounded"
+                            className="object-cover"
                             unoptimized={true}
                           />
-                          <div>{item.namaLengkap}</div>
                         </div>
                       </td>
                     ) : (
                       <td className="py-2 px-4 border-b">
-                        <div className="w-12 h-12 rounded-full overflow-hidden">
+                        <div className="w-16 h-16 overflow-hidden">
                           <Image
                             src={
                               fotoBase64[index]
@@ -1905,6 +2032,7 @@ const DataTable = ({
                                     </div>
                                   </div>
                                 )}
+
                                 <Link
                                   href={`https://wa.me/${item.nomorHp.replace(
                                     /^0/,
@@ -1931,6 +2059,7 @@ const DataTable = ({
                               >
                                 Daspen
                               </Button>
+
                               {isPopupDaspen && daspenData && (
                                 <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-10 z-50">
                                   <div className="bg-white p-6 rounded-md w-5/12 relative">
@@ -2126,28 +2255,6 @@ const DataTable = ({
                                 </div>
                               )}
                             </div>
-
-                            {sessionStorage.getItem("role") === "USER" ? (
-                              <Button
-                                className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2 cursor-not-allowed opacity-50"
-                                title="Aktivasi Anggota"
-                                type="button"
-                                disabled
-                              >
-                                <FaUserCheck className="w-4 h-4" />
-                                <span>Aktivasi</span>
-                              </Button>
-                            ) : (
-                              <Button
-                                className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
-                                title="Aktivasi Anggota"
-                                type="button"
-                                onClick={() => updateAktivasiUser(item.id)}
-                              >
-                                <FaUserCheck className="w-4 h-4" />
-                                <span>Aktivasi</span>
-                              </Button>
-                            )}
                           </div>
                         </td>
                       </>
@@ -2228,7 +2335,13 @@ const DataTable = ({
                                 <Button
                                   className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
                                   title="Mutasi"
-                                  onClick={() => openModal(item)}
+                                  onClick={() => {
+                                    sessionStorage.setItem(
+                                      "anggotaId",
+                                      item.id
+                                    );
+                                    openModal(item);
+                                  }}
                                 >
                                   <FaExchangeAlt className="w-4 h-4" />
                                 </Button>
@@ -2266,7 +2379,30 @@ const DataTable = ({
                                   <FaExclamationTriangle className="w-4 h-4" />
                                 </Button>
                               )}
-
+                              {isPopupVisible && (
+                                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-10 z-40 w-screen h-screen">
+                                  <div className="bg-white p-6 rounded-lg shadow-md w-96">
+                                    <h2 className="text-xl text-center mb-4">
+                                      Apakah Anda Yakin ingin Menghapus Data
+                                      Anggota ini?
+                                    </h2>
+                                    <div className="flex justify-end gap-4">
+                                      <button
+                                        onClick={() => setIsPopupVisible(false)}
+                                        className="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-md"
+                                      >
+                                        Batal
+                                      </button>
+                                      <button
+                                        onClick={handleDeleteClick}
+                                        className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                                      >
+                                        Ya, Saya Sakin
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                               <Link
                                 href={`https://wa.me/62${item.nomorHp}`}
                                 className="text-white bg-green-500 p-2 border rounded-md"
@@ -2491,27 +2627,6 @@ const DataTable = ({
                                   </div>
                                 )}
                               </div>
-                              {sessionStorage.getItem("role") === "USER" ? (
-                                <Button
-                                  className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2 cursor-not-allowed opacity-50"
-                                  title="Aktivasi Anggota"
-                                  type="button"
-                                  disabled
-                                >
-                                  <FaUserCheck className="w-4 h-4" />
-                                  <span>Aktivasi</span>
-                                </Button>
-                              ) : (
-                                <Button
-                                  className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
-                                  title="Aktivasi Anggota"
-                                  type="button"
-                                  onClick={() => updateAktivasiUser(item.id)}
-                                >
-                                  <FaUserCheck className="w-4 h-4" />
-                                  <span>Aktivasi</span>
-                                </Button>
-                              )}
                             </div>
                           </div>
                           <div className="text-center mt-4 w-full">
@@ -2685,6 +2800,41 @@ const DataTable = ({
                       </button>
                       <button
                         onClick={handlePensiunAnggota}
+                        className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                      >
+                        Ya, Saya Yakin
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div>
+              <Button
+                className="w-full bg-teal-700 hover:bg-teal-500"
+                onClick={handlePopup}
+              >
+                Aktivasi Anggota
+              </Button>
+              {popupVisible && (
+                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+                  <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
+                    <h2 className="text-lg font-semibold text-gray-800">
+                      Apakah Anda yakin ?
+                    </h2>
+                    <p className="text-gray-600 mt-2 mb-4">
+                      Apakah Anda yakin untuk mengaktifkan anggota menjadi
+                      Aktif?
+                    </p>
+                    <div className="flex justify-center gap-4">
+                      <button
+                        onClick={handleCancelKeluar}
+                        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        onClick={updateAktivasiUser}
                         className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
                       >
                         Ya, Saya Yakin
