@@ -759,10 +759,6 @@ const Page = () => {
                         Keanggotaan
                       </th>
                       <th className="py-2 px-3 text-center hidden lg:table-cell">
-                        Cabang
-                      </th>
-                      <th className="py-2 px-3 text-center">Status</th>
-                      <th className="py-2 px-3 text-center hidden lg:table-cell">
                         Aksi
                       </th>
                     </tr>
@@ -808,21 +804,17 @@ const Page = () => {
                                 {pensiun.tempatLahir},{" "}
                                 {formatDate(pensiun.tanggalLahir)}
                               </div>
+                              <div>{pensiun.cabang}</div>
                             </td>
                             <td className="py-2 px-3 text-center hidden lg:table-cell">
                               <div>{pensiun.jabatan}</div>
                               <div>{pensiun.unitKerja}</div>
                               <div>Usia: {pensiun.usia}</div>
-                            </td>
-                            <td className="py-2 px-3 text-center hidden lg:table-cell">
-                              {pensiun.cabang}
-                            </td>
-                            <td className="py-2 px-3 text-center">
-                              {pensiun.keterangan === null
+                              <div> {pensiun.keterangan === null
                                 ? pensiun.status === "Segera"
                                   ? "Segera"
                                   : "Aktif"
-                                : "Aktif"}
+                                : "Aktif"}</div>
                             </td>
                             <td className="py-2 px-3 text-center hidden lg:table-cell">
                               <div className="flex items-center justify-center space-x-2">

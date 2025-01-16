@@ -872,6 +872,11 @@ function Pengeluaran() {
         width: 22%;
     }
 
+    .data-item p {
+  margin: 4px 0; /* Mengurangi jarak antar paragraf */
+  line-height: 1.4; /* Menyesuaikan jarak antar teks */
+}
+  
     @media (max-width: 600px) {
       .data-meninggal {
         flex-direction: column;
@@ -929,12 +934,13 @@ function Pengeluaran() {
 
 <div class="signature">
   <div>
-    <p>Yang Menyerahkan</p>
-    <p>${data.menyerahkan}</p>
+    <p>Yang Menyerahkan,</p>
+
   </div>
   <div>
-    <p>Penerima</p>
-    <p>${data.penerima}</p>
+  ................., ..................
+    <p>Penerima,</p>
+  
   </div>
 </div>
 
