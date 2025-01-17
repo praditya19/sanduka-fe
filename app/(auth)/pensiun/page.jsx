@@ -320,15 +320,10 @@ const Page = () => {
   };
 
   useEffect(() => {
-    const uniqueYears = Array.from(
-      new Set(
-        pensiunList.map((pensiun) =>
-          new Date(pensiun.prediksiPensiun).getFullYear()
-        )
-      )
-    ).sort();
-    setYearOptions(uniqueYears);
-  }, [pensiunList]);
+    const currentYear = new Date().getFullYear();
+    const futureYears = Array.from({ length: 11 }, (_, i) => currentYear + i); // Membuat array dari tahun sekarang hingga 10 tahun ke depan
+    setYearOptions(futureYears);
+  }, []);
 
   useEffect(() => {
     if (!token) {
