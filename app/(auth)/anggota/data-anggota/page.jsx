@@ -25,7 +25,6 @@ import {
   FaExchangeAlt,
   FaExclamationTriangle,
   FaTimes,
-  FaUserCheck,
   FaWhatsapp,
 } from "react-icons/fa";
 import Link from "next/link";
@@ -1713,6 +1712,10 @@ const DataTable = ({
     setPopupVisible(false);
   };
 
+  const handleDetailAnggota = () => {
+    router.push("/anggota/detail-anggota");
+  };
+
   return (
     <div>
       <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
@@ -2255,6 +2258,26 @@ const DataTable = ({
                                 </div>
                               )}
                             </div>
+                            {["SUPER ADMIN", "ADMIN"].includes(
+                              sessionStorage.getItem("role")
+                            ) && (
+                              <div className="flex justify-center">
+                                <Button
+                                  type="button"
+                                  className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
+                                  title="Detail Anggota"
+                                  onClick={() => {
+                                    sessionStorage.setItem(
+                                      "anggotaId",
+                                      item.id
+                                    );
+                                    handleDetailAnggota();
+                                  }}
+                                >
+                                  Detail Anggota
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </td>
                       </>
@@ -2627,6 +2650,26 @@ const DataTable = ({
                                   </div>
                                 )}
                               </div>
+                              {["SUPER ADMIN", "ADMIN"].includes(
+                                sessionStorage.getItem("role")
+                              ) && (
+                                <div className="flex justify-center">
+                                  <Button
+                                    type="button"
+                                    className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
+                                    title="Detail Anggota"
+                                    onClick={() => {
+                                      sessionStorage.setItem(
+                                        "anggotaId",
+                                        item.id
+                                      );
+                                      handleDetailAnggota();
+                                    }}
+                                  >
+                                    Detail Anggota
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           </div>
                           <div className="text-center mt-4 w-full">

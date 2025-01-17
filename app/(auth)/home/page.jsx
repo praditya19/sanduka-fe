@@ -12,7 +12,7 @@ import {
   faUserGraduate,
   faWallet,
   faUser,
-  faSyncAlt ,
+  faSyncAlt,
   faMoneyBill,
   faCheckCircle,
   faCog,
@@ -398,6 +398,7 @@ export default function IconGrid() {
               "Bantuan",
               "Data Anggota",
               "History data",
+              "Detail Anggota",
             ].includes(item.label)
           )
           .concat({
@@ -411,6 +412,14 @@ export default function IconGrid() {
             label: "Daspen",
             href: "/daspen",
             color: "text-teal-700",
+          })
+          .concat({
+            icon: faUser,
+            label: "Detail Anggota",
+            href: "/anggota/detail-anggota",
+            color: "text-blue-600 hover:text-blue-800",
+            bgHover: "hover:bg-blue-100",
+            iconColor: "text-blue-600",
           })
       : icons;
 
