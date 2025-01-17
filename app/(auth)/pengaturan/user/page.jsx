@@ -317,7 +317,6 @@ const Page = () => {
       password: editablePassword,
       passwordNew: editablePassword,
       role: role,
-      foto: adminData.foto,
     };
 
     try {
