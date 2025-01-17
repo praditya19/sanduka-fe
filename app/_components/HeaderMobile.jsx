@@ -55,7 +55,11 @@ const HeaderMobile = () => {
   };
 
   const handleBackClick = () => {
-    router.back();
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/");
+    }
   };
 
   const handleNotificationClick = () => {
