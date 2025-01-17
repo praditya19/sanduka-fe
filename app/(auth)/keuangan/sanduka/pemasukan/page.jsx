@@ -1174,22 +1174,55 @@ function Pemasukan() {
                         <td className="px-6 py-4 text-sm">
                           {formatCurrency(transaction.saldo || 0)}
                         </td>
-                        <td className="px-6 py-4 text-sm">
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              type="checkbox"
-                              className="form-checkbox h-4 w-4"
-                              checked={transaction.checked}
-                              onChange={() => handleCheck(transaction.id)}
-                            />
-                            <Button
-                              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
-                              onClick={() => handleEditClick(transaction.id)}
-                            >
-                              Edit
-                            </Button>
-                          </div>
-                        </td>
+                       <td className="px-6 py-4 text-sm">
+  <div className="flex items-center space-x-2">
+    <Input
+      type="checkbox"
+      className="form-checkbox h-4 w-4"
+      checked={transaction.checked}
+      onChange={() => handleCheck(transaction.id)}
+    />
+    <Button
+      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+      onClick={() => handleEditClick(transaction.id)}
+    >
+      Edit
+    </Button>
+    <button
+      className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center`}
+      onClick={() => handleDeleteClick(transaction.id)}
+      disabled={isLoading}
+    >
+      {isLoading ? (
+        <div className="flex items-center">
+          <svg
+            className="animate-spin h-5 w-5 text-white mr-2"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v8H4z"
+            ></path>
+          </svg>
+        </div>
+      ) : (
+        "Hapus"
+      )}
+    </button>
+  </div>
+</td>
+
                       </tr>
                     ))}
                   {/* Baris Total */}
