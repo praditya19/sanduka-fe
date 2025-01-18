@@ -7,8 +7,10 @@ import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import { ClipLoader } from "react-spinners";
 
 const Page = () => {
+  const [allData, setAllData] = useState([]);
   const [filter, setFilter] = useState("");
   const [data, setData] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
@@ -26,46 +28,6 @@ const Page = () => {
   const [bulanOptions, setBulanOptions] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
   const [currentItems, setCurrentItems] = useState([]);
-
-  useEffect(() => {
-    const filtered = data.filter((item) => {
-      const matchesCabang = selectedCabang
-        ? (item.npaDetail.cabang?.toLowerCase() ||
-            item.cabang?.toLowerCase()) === selectedCabang.toLowerCase()
-        : true;
-
-      const matchesMonth = selectedMonth
-        ? new Date(item.tanggal).getMonth() + 1 === parseInt(selectedMonth, 10)
-        : true;
-
-      const matchesYear = selectedYear
-        ? new Date(item.tanggal).getFullYear() === parseInt(selectedYear, 10)
-        : true;
-
-      return matchesCabang && matchesMonth && matchesYear;
-    });
-
-    // Update total items based on filtered data
-    setTotalItems(filtered.length);
-
-    // Calculate pagination
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    setCurrentItems(filtered.slice(indexOfFirstItem, indexOfLastItem));
-
-    // Adjust current page if it exceeds the new total pages
-    const newTotalPages = Math.ceil(filtered.length / itemsPerPage);
-    if (currentPage > newTotalPages) {
-      setCurrentPage(Math.max(1, newTotalPages));
-    }
-  }, [
-    data,
-    selectedCabang,
-    selectedMonth,
-    selectedYear,
-    currentPage,
-    itemsPerPage,
-  ]);
 
   useEffect(() => {
     GlobalApi.getCabang()
@@ -98,78 +60,84 @@ const Page = () => {
     window.print();
   };
 
-  const fetchData = async () => {
+  const fetchAllData = async () => {
     try {
       const userRole = sessionStorage.getItem("role");
       const npa = sessionStorage.getItem("npa");
+      setLoading(true);
 
       let historyData = [];
-      let totalItems = 0;
-      let pageIndex = 0;
-      const itemsPerPage = 10000; // Default size per page
 
-      if (userRole === "USER" || userRole === "ADMIN") {
-        const currentPage = 1; // Replace with actual current page if available
-        pageIndex = currentPage - 1;
-
-        let historyResponse = await GlobalApi.getHistoryByNpa(
-          npa,
-          pageIndex,
-          itemsPerPage
-        );
-        historyResponse = historyResponse.reduce((acc, item) => {
-          acc[item.npa] = item;
-          return acc;
-        }, {});
-
-        historyData = Object.values(historyResponse);
-        totalItems = historyData.length;
-      } else {
-        let hasMore = true;
-
-        do {
-          const historyResponse = await GlobalApi.getHistoryData(
-            pageIndex,
-            itemsPerPage
-          );
-
-          if (historyResponse.content.length > 0) {
-            historyData = [...historyData, ...historyResponse.content];
-            totalItems = historyResponse.totalElements;
-            pageIndex += 1;
-          } else {
-            hasMore = false;
-          }
-        } while (historyData.length < totalItems && hasMore);
-      }
-
-      setTotalItems(totalItems);
-
-      const npaList = historyData.map((item) => item.npa).filter((npa) => npa);
-
-      let npaData = [];
-      if (npaList.length > 0) {
-        npaData = await GlobalApi.cekNpaList(npaList);
-      }
-
-      const npaMap = npaData.reduce((acc, item) => {
-        if (item.npaPgri) {
-          acc[item.npaPgri.trim().toLowerCase()] = item;
+      // Fetch history data based on user role
+      if (userRole === "USER") {
+        try {
+          const historyResponse = await GlobalApi.getHistoryByNpa(npa);
+          // For USER role, only get the latest history entry for display
+          historyData = Array.isArray(historyResponse)
+            ? [historyResponse[0]] // Only take the latest entry
+            : [historyResponse];
+        } catch (error) {
+          console.error("Error fetching user history:", error);
+          historyData = [];
         }
-        return acc;
-      }, {});
+      } else if (userRole === "ADMIN") {
+        try {
+          const historyResponse = await GlobalApi.getHistoryByNpa(npa);
+          historyData = Array.isArray(historyResponse) ? historyResponse : [historyResponse];
+        } catch (error) {
+          console.error("Error fetching admin history:", error);
+          historyData = [];
+        }
+      } else {
+        try {
+          const historyResponse = await GlobalApi.getHistoryData(0, 10000);
+          if (historyResponse && historyResponse.content) {
+            historyData = historyResponse.content;
+          }
+        } catch (error) {
+          console.error("Error fetching all history:", error);
+          historyData = [];
+        }
+      }
 
-      const enrichedData = historyData.map((item) => {
-        const npaDetail = npaMap[item.npa?.trim().toLowerCase()];
-        return {
+      // Process NPA data (rest of the NPA processing code remains the same)
+      if (historyData.length > 0) {
+        const uniqueNpas = [...new Set(
+          historyData
+            .map(item => item.npa)
+            .filter(npa => npa && npa.trim())
+        )];
+
+        let npaDetailsMap = {};
+
+        if (uniqueNpas.length > 0) {
+          try {
+            const npaDetails = await GlobalApi.cekNpaList(uniqueNpas);
+            npaDetailsMap = (Array.isArray(npaDetails) ? npaDetails : [])
+              .reduce((acc, item) => {
+                if (item && item.npaPgri) {
+                  acc[item.npaPgri.trim().toLowerCase()] = item;
+                }
+                return acc;
+              }, {});
+          } catch (npaError) {
+            console.warn("Error fetching NPA details:", npaError);
+          }
+        }
+
+        const enrichedData = historyData.map(item => ({
           ...item,
-          npaDetail: npaDetail || {},
-        };
-      });
+          npaDetail: item.npa && npaDetailsMap[item.npa.trim().toLowerCase()]
+            ? npaDetailsMap[item.npa.trim().toLowerCase()]
+            : {}
+        }));
 
-      setData(enrichedData);
+        setAllData(enrichedData);
+      }
     } catch (error) {
-      console.error("Error fetching history data:", error);
+      console.error("Error in fetchAllData:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -177,16 +145,52 @@ const Page = () => {
     if (!token) {
       router.push("/sign-in");
     } else {
-      setLoading(false);
-      fetchData();
-
+      fetchAllData();
       const handleResize = () => setIsMobile(window.innerWidth <= 768);
       handleResize();
       window.addEventListener("resize", handleResize);
-
       return () => window.removeEventListener("resize", handleResize);
     }
-  }, [token, router, currentPage]); // Add currentPage as dependency
+  }, [token, router]);
+
+  useEffect(() => {
+    const filtered = allData.filter((item) => {
+      const shouldHideRow = (!item.npaDetail?.cabang || item.npaDetail?.cabang.trim() === '') &&
+        (!item.npaDetail?.namaLengkap || item.npaDetail?.namaLengkap === '-') &&
+        (!item.npaDetail?.npaPgri || item.npaDetail?.npaPgri === '-') &&
+        (!item.npaDetail?.tempatLahir || item.npaDetail?.tempatLahir === '-') &&
+        (!item.npaDetail?.jabatan || item.npaDetail?.jabatan === '-') &&
+        (!item.npaDetail?.unitKerja || item.npaDetail?.unitKerja === '-');
+
+      if (shouldHideRow) return false;
+
+      const matchesCabang = selectedCabang
+        ? (item.npaDetail?.cabang?.toLowerCase() || item.cabang?.toLowerCase()) === selectedCabang.toLowerCase()
+        : true;
+
+      const matchesMonth = selectedMonth
+        ? new Date(item.tanggal).getMonth() + 1 === parseInt(selectedMonth, 10)
+        : true;
+
+      const matchesYear = selectedYear
+        ? new Date(item.tanggal).getFullYear() === parseInt(selectedYear, 10)
+        : true;
+
+      return matchesCabang && matchesMonth && matchesYear;
+    });
+
+    setTotalItems(filtered.length);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    setCurrentItems(filtered.slice(indexOfFirstItem, indexOfLastItem));
+    setData(filtered);
+
+    // Adjust current page if needed
+    const maxPage = Math.ceil(filtered.length / itemsPerPage);
+    if (currentPage > maxPage) {
+      setCurrentPage(Math.max(1, maxPage));
+    }
+  }, [allData, selectedCabang, selectedMonth, selectedYear, currentPage, itemsPerPage]);
 
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -221,23 +225,6 @@ const Page = () => {
 
     return visiblePages;
   };
-
-  const filteredData = data.filter((item) => {
-    const matchesCabang = selectedCabang
-      ? (item.npaDetail.cabang?.toLowerCase() || item.cabang?.toLowerCase()) ===
-        selectedCabang.toLowerCase()
-      : true;
-
-    const matchesMonth = selectedMonth
-      ? new Date(item.tanggal).getMonth() + 1 === parseInt(selectedMonth, 10)
-      : true;
-
-    const matchesYear = selectedYear
-      ? new Date(item.tanggal).getFullYear() === parseInt(selectedYear, 10)
-      : true;
-
-    return matchesCabang && matchesMonth && matchesYear;
-  });
 
   const handleEdit = (item) => {
     const npa = item.npaDetail?.npaPgri;
@@ -279,9 +266,20 @@ const Page = () => {
     return age;
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  // if (loading) {
+  //   return (
+  //     <div
+  //       style={{
+  //         display: "flex",
+  //         justifyContent: "center",
+  //         alignItems: "center",
+  //         height: "100vh",
+  //       }}
+  //     >
+  //       <ClipLoader color="#3498db" size={50} />
+  //     </div>
+  //   );
+  // }
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
@@ -293,9 +291,8 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="w-full p-4 container shadow-lg rounded-lg mt-12">
             <div className="rounded-md flex flex-col py-4">
@@ -349,7 +346,6 @@ const Page = () => {
                     Cetak
                   </button>
                 </div>
-
                 <table className="w-full table-auto mb-8">
                   <thead className="p-2 md:p-3 border bg-green-300">
                     <tr>
@@ -364,104 +360,123 @@ const Page = () => {
                         <th
                           key={header}
                           rowSpan="2"
-                          className={`border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white ${
-                            idx > 2 ? "hidden lg:table-cell" : ""
-                          }`}
+                          className={`border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white ${idx > 2 ? "hidden lg:table-cell" : ""
+                            }`}
                         >
                           {header}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody>
-                    {currentItems.map((item, index) => (
-                      <React.Fragment key={index}>
-                        <tr
-                          className={
-                            index % 2 === 0 ? "bg-gray-200" : "bg-white"
-                          }
-                        >
-                          <td className="text-center border">
-                            {startIndex + index + 1}
-                            <button
-                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden ml-2"
-                              onClick={() => handleExpand(index)}
-                            >
-                              {expandedIndex === index ? (
-                                <FaMinusCircle className="w-4 h-4" />
+                  {loading ? (
+                    <tbody>
+                      <tr>
+                        <td colSpan="6" className="text-center py-20">
+                          <div className="flex justify-center items-center">
+                            <ClipLoader color="#3498db" size={50} />
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  ) : currentItems.length === 0 ? (
+                    <tbody>
+                      <tr>
+                      <td colSpan="6" className="text-center py-20">
+                          <div className="flex justify-center items-center">
+                            <ClipLoader color="#3498db" size={50} />
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  ) : (
+                    <tbody>
+                      {currentItems.map((item, index) => (
+                        <React.Fragment key={index}>
+                          <tr
+                            className={index % 2 === 0 ? "bg-gray-200" : "bg-white"}
+                          >
+                            <td className="text-center border">
+                              {startIndex + index + 1}
+                              <button
+                                className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden ml-2"
+                                onClick={() => handleExpand(index)}
+                              >
+                                {expandedIndex === index ? (
+                                  <FaMinusCircle className="w-4 h-4" />
+                                ) : (
+                                  <FaPlusCircle className="w-4 h-4" />
+                                )}
+                              </button>
+                            </td>
+                            <td className="border">{`${item.hari}, ${formatDate(
+                              item.tanggal
+                            )}, ${item.jam}`}</td>
+                            <td className="border">
+                              {item.npaDetail ? (
+                                <div>
+                                  <div>{item.npaDetail.namaLengkap ?? "-"}</div>
+                                  <div>{item.npaDetail.npaPgri ?? "-"}</div>
+                                  <div>
+                                    {item.npaDetail.tempatLahir ?? "-"}{" "}
+                                    {item.npaDetail.tanggalLahir
+                                      ? formatDate(item.npaDetail.tanggalLahir)
+                                      : "-"}
+                                  </div>
+                                  <div>{item.npaDetail.jabatan ?? "-"}</div>
+                                  <div>{item.npaDetail.unitKerja ?? "-"}</div>
+                                  <div>
+                                    {item.npaDetail.tanggalLahir
+                                      ? calculateAge(item.npaDetail.tanggalLahir)
+                                      : "-"}{" "}
+                                    Tahun
+                                  </div>
+                                </div>
                               ) : (
-                                <FaPlusCircle className="w-4 h-4" />
+                                "-"
                               )}
-                            </button>
-                          </td>
-                          <td className="border">{`${item.hari}, ${formatDate(
-                            item.tanggal
-                          )}, ${item.jam}`}</td>
-                          <td className="border">
-                            {item.npaDetail ? (
-                              <div>
-                                <div>{item.npaDetail.namaLengkap ?? "-"}</div>
-                                <div>{item.npaDetail.npaPgri ?? "-"}</div>
-                                <div>
-                                  {item.npaDetail.tempatLahir ?? "-"}{" "}
-                                  {item.npaDetail.tanggalLahir
-                                    ? formatDate(item.npaDetail.tanggalLahir)
-                                    : "-"}
-                                </div>
-                                <div>{item.npaDetail.jabatan ?? "-"}</div>
-                                <div>{item.npaDetail.unitKerja ?? "-"}</div>
-                                <div>
-                                  {item.npaDetail.tanggalLahir
-                                    ? calculateAge(item.npaDetail.tanggalLahir)
-                                    : "-"}{" "}
-                                  Tahun
-                                </div>
-                              </div>
-                            ) : (
-                              "-"
-                            )}
-                          </td>
-                          <td className="text-center border hidden lg:table-cell">
-                            {item.npaDetail.cabang}
-                          </td>
-                          <td className="border hidden lg:table-cell">
-                            {item.uraian}
-                          </td>
-                          <td className="text-center border hidden lg:table-cell">
-                            <button
-                              onClick={() => handleEdit(item)}
-                              className="px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                            >
-                              Detail
-                            </button>
-                          </td>
-                        </tr>
-
-                        {expandedIndex === index && (
-                          <tr className="bg-gray-100 lg:hidden">
-                            <td colSpan="6" className="border px-4 py-2">
-                              <div>
-                                <strong>Cabang:</strong> {item.cabang ?? "-"}
-                              </div>
-                              <div className="mt-2">
-                                <strong>Detail:</strong> {item.uraian ?? "-"}
-                              </div>
-                              <div className="mt-2">
-                                <button
-                                  onClick={() => handleEdit(item)}
-                                  className="ml-2 px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                                >
-                                  Detail
-                                </button>
-                              </div>
+                            </td>
+                            <td className="text-center border hidden lg:table-cell">
+                              {item.npaDetail.cabang}
+                            </td>
+                            <td className="border hidden lg:table-cell">
+                              {item.uraian}
+                            </td>
+                            <td className="text-center border hidden lg:table-cell">
+                              <button
+                                onClick={() => handleEdit(item)}
+                                className="px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                              >
+                                Detail
+                              </button>
                             </td>
                           </tr>
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </tbody>
-                </table>
 
+                          {expandedIndex === index && (
+                            <tr className="bg-gray-100 lg:hidden">
+                              <td colSpan="6" className="border px-4 py-2">
+                                <div>
+                                  <strong>Cabang:</strong> {item.cabang ?? "-"}
+                                </div>
+                                <div className="mt-2">
+                                  <strong>Detail:</strong> {item.uraian ?? "-"}
+                                </div>
+                                <div className="mt-2">
+                                  <button
+                                    onClick={() => handleEdit(item)}
+                                    className="ml-2 px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                  >
+                                    Detail
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </tbody>
+                  )}
+                </table>
+                  
                 <div className="flex justify-center items-center mt-4">
                   <div className="flex justify-center gap-1">
                     <button
@@ -486,11 +501,10 @@ const Page = () => {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1 border rounded text-sm ${
-                          page === currentPage
-                            ? "bg-blue-500 text-white"
-                            : "bg-white hover:bg-gray-50"
-                        }`}
+                        className={`px-3 py-1 border rounded text-sm ${page === currentPage
+                          ? "bg-blue-500 text-white"
+                          : "bg-white hover:bg-gray-50"
+                          }`}
                       >
                         {page}
                       </button>
@@ -499,15 +513,10 @@ const Page = () => {
                     <button
                       onClick={() =>
                         setCurrentPage((prev) =>
-                          Math.min(
-                            prev + 1,
-                            Math.ceil(totalItems / itemsPerPage)
-                          )
+                          Math.min(prev + 1, Math.ceil(totalItems / itemsPerPage))
                         )
                       }
-                      disabled={
-                        currentPage === Math.ceil(totalItems / itemsPerPage)
-                      }
+                      disabled={currentPage === Math.ceil(totalItems / itemsPerPage)}
                       className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                     >
                       Next
@@ -517,23 +526,19 @@ const Page = () => {
                       onClick={() =>
                         setCurrentPage(Math.ceil(totalItems / itemsPerPage))
                       }
-                      disabled={
-                        currentPage === Math.ceil(totalItems / itemsPerPage)
-                      }
+                      disabled={currentPage === Math.ceil(totalItems / itemsPerPage)}
                       className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                     >
                       Last
                     </button>
                   </div>
                 </div>
-
-                {/* </div> */}
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

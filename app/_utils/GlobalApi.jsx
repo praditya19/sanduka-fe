@@ -484,41 +484,67 @@ const getHistoryData = async (page = 0, size = 10) => {
   try {
     const response = await axiosClient.get(`/api/history`, {
       params: {
-        page: page,
-        size: size,
+        page,
+        size,
       },
     });
-    return response.data;
+    return response.data || { content: [], totalElements: 0 };
   } catch (error) {
     console.error("Error fetching history data:", error);
-    throw error;
+    return { content: [], totalElements: 0 };
   }
 };
 
 const cekNpaList = async (npaList) => {
   try {
-    const response = await axiosClient.get(
-      `/api/auth/getByNpa?npaList=${npaList.join(",")}`
-    );
-    return response.data;
-  } catch (error) {
-    if (error.response) {
-      throw new Error(
-        error.response.data.message || "Terjadi kesalahan pada server"
-      );
-    } else {
-      throw new Error("Terjadi kesalahan pada jaringan");
+    if (!Array.isArray(npaList) || npaList.length === 0) {
+      return [];
     }
+
+    const validNpaList = npaList.filter(npa => npa && npa.trim());
+    
+    if (validNpaList.length === 0) {
+      return [];
+    }
+
+    const chunkSize = 10;
+    const chunks = [];
+    for (let i = 0; i < validNpaList.length; i += chunkSize) {
+      chunks.push(validNpaList.slice(i, i + chunkSize));
+    }
+
+    const results = [];
+    for (const chunk of chunks) {
+      try {
+        const response = await axiosClient.get(
+          `/api/auth/getByNpa?npaList=${chunk.join(",")}`
+        );
+        if (response.data) {
+          results.push(...(Array.isArray(response.data) ? response.data : [response.data]));
+        }
+      } catch (chunkError) {
+        console.warn(`Error fetching chunk of NPAs: ${chunk.join(",")}`, chunkError);
+        continue;
+      }
+    }
+
+    return results;
+  } catch (error) {
+    console.error("Error in cekNpaList:", error);
+    return [];
   }
 };
 
 const getHistoryByNpa = async (npa) => {
   try {
+    if (!npa) {
+      return [];
+    }
     const response = await axiosClient.get(`/api/history/npa/${npa}`);
-    return response.data;
+    return response.data || [];
   } catch (error) {
     console.error(`Error fetching history for NPA ${npa}:`, error);
-    throw error;
+    return [];
   }
 };
 
