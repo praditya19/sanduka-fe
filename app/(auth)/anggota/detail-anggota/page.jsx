@@ -133,16 +133,15 @@ const DetailAnggota = () => {
         }) + ` ${updatedDate.toLocaleTimeString("id-ID")}`;
     }
 
-    doc.setFontSize(12);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "italic");
     doc.setTextColor(220, 53, 69);
     doc.text(`Tanggal Cetak: ${fullFormattedDate}`, rightColX, yPosition + 40);
 
-    doc.setFontSize(12);
-    doc.setTextColor(220, 53, 69);
     doc.text(
       `Tanggal Update: ${formattedUpdatedAt}`,
       rightColX,
-      yPosition + 50
+      yPosition + 45
     );
 
     const addSection = (title, y) => {
@@ -257,6 +256,30 @@ const DetailAnggota = () => {
       rightY += 8;
     });
 
+    // Data Keluarga
+    rightY += 5;
+    rightY = addSection("DATA KELUARGA", rightY);
+
+    const keluarga = [
+      `Nama Suami/Istri: ${anggotaData.namaSuamiIstri ?? "-"}`,
+      `Nama Anak: ${
+        Array.isArray(anggotaData.namaAnak) && anggotaData.namaAnak.length > 0
+          ? anggotaData.namaAnak.join(", ")
+          : "-"
+      }`,
+    ];
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+
+    keluarga.forEach((line) => {
+      const wrappedText = doc.splitTextToSize(line, 60);
+      wrappedText.forEach((wrappedLine) => {
+        doc.text(wrappedLine, rightColX, rightY);
+        rightY += 8;
+      });
+    });
+
     return doc;
   };
 
@@ -332,6 +355,15 @@ const DetailAnggota = () => {
     `Peserta Daspen: ${anggotaData.pesertaDaspen ?? "-"}`,
   ];
 
+  const familyData = [
+    `Nama Suami/Istri: ${anggotaData.namaSuamiIstri ?? "-"}`,
+    `Nama Anak: ${
+      Array.isArray(anggotaData.namaAnak) && anggotaData.namaAnak.length > 0
+        ? anggotaData.namaAnak.join(", ")
+        : "-"
+    }`,
+  ];
+
   return (
     <div className="max-w-[1000px] mx-auto p-4 md:p-6 printable-content">
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
@@ -390,7 +422,7 @@ const DetailAnggota = () => {
             <div className="bg-neutral-500 text-white py-2 px-4 mb-6 pb-2">
               <h2>DATA PRIBADI</h2>
             </div>
-            <ul className="list-none space-y-2">
+            <ul className="list-none space-y-2 ml-3">
               {personalData.map((item, index) => (
                 <li key={index} className="break-words">
                   {item}
@@ -403,7 +435,7 @@ const DetailAnggota = () => {
             <div className="bg-neutral-500 text-white py-2 px-4 mb-6 pb-2">
               <h2>DATA KEANGGOTAAN</h2>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 ml-3">
               {membershipData.map((item, index) => (
                 <div key={index} className="break-words">
                   {item}
@@ -431,7 +463,7 @@ const DetailAnggota = () => {
             <div className="bg-neutral-500 text-white py-2 px-4 mb-6 pb-2">
               <h2>DATA TUGAS</h2>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-4 ml-3">
               {jobData.map((item, index) => (
                 <div key={index} className="break-words">
                   {item}
@@ -444,7 +476,7 @@ const DetailAnggota = () => {
             <div className="bg-neutral-500 text-white py-2 px-4 mb-6 pb-2">
               <h2>DATA PENDIDIKAN</h2>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-4 ml-3">
               <div className="break-words">
                 <span>Pendidikan Terakhir:</span>{" "}
                 {anggotaData.pendidikanTerakhir}
@@ -453,6 +485,19 @@ const DetailAnggota = () => {
                 <span>Sertifikat Pendidik:</span>{" "}
                 {anggotaData.sertifikatPendidik}
               </div>
+            </div>
+          </div>
+
+          <div className="mt-6 text-base mb-6">
+            <div className="bg-neutral-500 text-white py-2 px-4 mb-6 pb-2">
+              <h2>DATA KELUARGA</h2>
+            </div>
+            <div className="space-y-4 ml-3">
+              {familyData.map((item, index) => (
+                <div key={index} className="break-words">
+                  {item}
+                </div>
+              ))}
             </div>
           </div>
         </div>
