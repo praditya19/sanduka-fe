@@ -2343,11 +2343,10 @@ const DataTable = ({
                               <Button
                                 className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
                                 title="Edit Data"
-                                onClick={() =>
-                                  router.push(
-                                    `/anggota/edit-anggota?id=${item.id}`
-                                  )
-                                }
+                                onClick={() => {
+                                  sessionStorage.setItem("anggotaId", item.id);
+                                  handleEditClick();
+                                }}
                               >
                                 <FaEdit className="w-4 h-4" />
                               </Button>
