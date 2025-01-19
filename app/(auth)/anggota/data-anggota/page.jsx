@@ -67,7 +67,7 @@ const DataAnggota = () => {
     cabang = null,
     unitKerja = null,
     keyword = null,
-    statusKeanggotaan
+    statusKeanggotaan = "Aktif"
   ) => {
     try {
       const response = await GlobalApi.getAllAnggota(
@@ -195,7 +195,7 @@ const DataAnggota = () => {
           getUserById(userId);
           setRole(role);
         } else {
-          fetchDataAnggota(currentPage, pageSize);
+          fetchDataAnggota(currentPage, pageSize, null, null, null, status);
         }
 
         const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -215,7 +215,7 @@ const DataAnggota = () => {
     };
 
     initializeData();
-  }, [token, router, currentPage, pageSize]);
+  }, [token, router, currentPage, pageSize, status]);
 
   if (loading) {
     return (
@@ -249,7 +249,7 @@ const DataAnggota = () => {
   };
 
   const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
+    console.log("Status saat ini:", status);
     fetchDataAnggota(
       newPage,
       pageSize,
@@ -258,12 +258,20 @@ const DataAnggota = () => {
       nama,
       status
     );
+    setCurrentPage(newPage);
   };
 
   const handleSizeChange = (newSize) => {
     setPageSize(newSize);
     setCurrentPage(0);
-    fetchDataAnggota(0, newSize, selectedCabang, selectedUnitKerja, nama);
+    fetchDataAnggota(
+      0,
+      newSize,
+      selectedCabang,
+      selectedUnitKerja,
+      nama,
+      status
+    );
   };
 
   const handleSearchClick = () => {
@@ -323,14 +331,15 @@ const DataAnggota = () => {
   };
 
   const handleStatusChange = (e) => {
-    setStatus(e.target.value);
+    const newStatus = e.target.value;
+    setStatus(newStatus);
     fetchDataAnggota(
       0,
       pageSize,
       selectedCabang,
       selectedUnitKerja,
       nama,
-      e.target.value
+      newStatus
     );
   };
 
@@ -917,6 +926,7 @@ const DataTable = ({
   const [currentItem, setCurrentItem] = useState(null);
   const [popupVisibleKeluar, setPopupVisibleKeluar] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
+  const [popupVisibleAktifasi, setPopupVisibleAktifasi] = useState(false);
   const [kategoriDaspen, setKategoriDaspen] = useState("");
   const [daspenData, setDaspenData] = useState(null);
   const [isKategoriChanged, setIsKategoriChanged] = useState(false);
@@ -1710,6 +1720,14 @@ const DataTable = ({
   const handleCancelKeluar = () => {
     setPopupVisibleKeluar(false);
     setPopupVisible(false);
+  };
+
+  const handlePopupAktivasi = () => {
+    setPopupVisibleAktifasi(true);
+  };
+
+  const handleCancelKeluarAktivasi = () => {
+    setPopupVisibleAktifasi(false);
   };
 
   const handleDetailAnggota = () => {
@@ -2854,11 +2872,11 @@ const DataTable = ({
             <div>
               <Button
                 className="w-full bg-teal-700 hover:bg-teal-500"
-                onClick={handlePopup}
+                onClick={handlePopupAktivasi}
               >
                 Aktivasi Anggota
               </Button>
-              {popupVisible && (
+              {popupVisibleAktifasi && (
                 <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
                   <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
                     <h2 className="text-lg font-semibold text-gray-800">
@@ -2870,7 +2888,7 @@ const DataTable = ({
                     </p>
                     <div className="flex justify-center gap-4">
                       <button
-                        onClick={handleCancelKeluar}
+                        onClick={handleCancelKeluarAktivasi}
                         className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
                       >
                         Batal
