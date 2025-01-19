@@ -150,12 +150,12 @@ export default function IconGrid() {
       color: "text-gray-700",
     },
 
-    // {
-    //   icon: faUsers,
-    //   label: "Teman Unit",
-    //   href: "/teman-unit-kerja",
-    //   color: "text-green-600",
-    // },
+    {
+      icon: faUsers,
+      label: "Teman Unit",
+      href: "/teman-unit-kerja",
+      color: "text-green-600",
+    },
   ];
   const sortByDate = (data) => {
     return [...data].sort((a, b) => {
