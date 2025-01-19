@@ -1035,7 +1035,7 @@ const Page = () => {
                   <Label className="block text-sm font-medium mb-3">
                     NIP
                     <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                      *Wajib Isi
+                      Jika Tidak Memiliki NIP isi "0"
                     </span>
                   </Label>
                   <Input
