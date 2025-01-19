@@ -1869,12 +1869,14 @@ const DataTable = ({
                       <div className="text-sm">{item.jabatan}</div>
                       <div
                         className={`text-sm p-1 inline-block ${
-                          item.nip
+                          item.nip && item.nip !== "0"
                             ? "bg-green-500 text-white rounded-full px-3"
                             : "bg-red-500 text-white rounded-full px-3"
                         }`}
                       >
-                        {item.nip ? item.nip : "Tidak Terdaftar Daspen"}
+                        {item.nip && item.nip !== "0"
+                          ? item.nip
+                          : "Tidak Terdaftar Daspen"}
                       </div>
                     </td>
                     {!isMobile && (
