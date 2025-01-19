@@ -1,29 +1,23 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
-import {
-  FaPlusCircle,
-  FaMinusCircle,
-  FaExclamationTriangle,
-  FaTrash,
-} from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import * as XLSX from "xlsx";
 import { Input } from "@/components/ui/input";
 import { LoaderIcon } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import Modal from "react-modal";
 
 const SyncData = () => {
   const [cabangList, setCabangList] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
   const [unitKerjaList, setUnitKerjaList] = useState([]);
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
-  const [rekapData, setRekapData] = useState([]);
   const [originalCabangList, setOriginalCabangList] = useState([]);
   const [filteredCabangList, setFilteredCabangList] = useState([]);
   const [showCabangDropdown, setShowCabangDropdown] = useState(false);
@@ -32,28 +26,29 @@ const SyncData = () => {
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [unitKerjaInput, setUnitKerjaInput] = useState("");
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
-  const [originalRekapData, setOriginalRekapData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [expandedRows, setExpandedRows] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [templateType, setTemplateType] = useState("");
   const [data, setData] = useState([]);
   const tableRef = useRef();
-  const [expandedIndex, setExpandedIndex] = useState(null);
   const [formData, setFormData] = useState({
     file: null,
     category: "",
   });
   const [loader, setLoader] = useState(false);
-  const [totalFiles, setTotalFiles] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage] = useState(10);
   const [displayedPages, setDisplayedPages] = useState([1, 2, 3]);
   const [visiblePages, setVisiblePages] = useState([1, 2, 3]);
-  const totalData = data.length; // Hitung total data
+  const totalData = data.length;
   const [role, setRole] = useState("");
   const [filteredTotalFiles, setFilteredTotalFiles] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   useEffect(() => {
     const storedRole = sessionStorage.getItem("role");
@@ -141,22 +136,6 @@ const SyncData = () => {
       setFilteredCabangList(originalCabangList);
       setShowCabangDropdown(true);
     }
-  };
-
-  const renderCabangInput = () => {
-    return (
-      <Input
-        type="text"
-        value={selectedCabang}
-        readOnly
-        onClick={handleCabangClick}
-        className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
-          role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
-        }`}
-        placeholder="Pilih Cabang"
-        disabled={role === "ADMIN"}
-      />
-    );
   };
 
   const handleUnitKerjaChange = (e) => {
@@ -270,12 +249,6 @@ const SyncData = () => {
     };
   }, []);
 
-  const toggleRowExpand = (index) => {
-    setExpandedRows((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-    );
-  };
-
   const filteredData = data.filter((item) => {
     // For ADMIN users
     if (role === "ADMIN") {
@@ -301,7 +274,6 @@ const SyncData = () => {
     setTotalPages(Math.ceil(filteredData.length / itemsPerPage));
   }, [filteredData, itemsPerPage]);
 
-  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedCabang, searchTerm]);
@@ -324,46 +296,16 @@ const SyncData = () => {
     fetchData();
   }, [itemsPerPage]);
 
-  const calculateFilteredTotal = (allData) => {
-    if (!allData) return 0;
-
-    let filtered = allData;
-
-    // Apply cabang filter
-    if (selectedCabang) {
-      filtered = filtered.filter((item) => item.cabang === selectedCabang);
-    }
-
-    // Apply unit kerja filter if selected
-    if (selectedUnitKerja) {
-      filtered = filtered.filter(
-        (item) =>
-          item.unitKerja.toLowerCase() === selectedUnitKerja.toLowerCase()
-      );
-    }
-
-    return filtered.length;
-  };
-
   const fetchTotalFiles = async () => {
     try {
-      const result = await GlobalApi.getAllFiles();
-      setData(result);
-      console.log(result);
-      setTotalFiles(result.length);
-      setFilteredTotalFiles(calculateFilteredTotal(result));
-      setTotalPages(Math.ceil(result.length / itemsPerPage));
+      const result = await GlobalApi.getAllTotalData();
+      setFilteredTotalFiles(result);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching files:", error);
       setLoading(false);
     }
   };
-
-  // Add effect to update filtered total when filters change
-  useEffect(() => {
-    setFilteredTotalFiles(calculateFilteredTotal(data));
-  }, [selectedCabang, selectedUnitKerja, data]);
 
   useEffect(() => {
     fetchTotalFiles();
@@ -391,6 +333,8 @@ const SyncData = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoader(true);
+    setProgress(0);
+    setIsUploading(true);
 
     let fileToSend = formData.file;
 
@@ -418,7 +362,6 @@ const SyncData = () => {
 
       try {
         const response = await GlobalApi.uploadFile(dataToSend);
-
         toast.success(
           <div
             style={{
@@ -473,11 +416,8 @@ const SyncData = () => {
             },
           }
         );
-        setTimeout(() => {
-          window.location.reload();
-        }, 3000);
-        setIsModalOpen(false);
       } catch (error) {
+        setIsUploading(false);
         toast.error(
           <div
             style={{
@@ -551,8 +491,44 @@ const SyncData = () => {
     setLoader(false);
   };
 
+  const getProgressFile = async () => {
+    try {
+      const response = await GlobalApi.getProgressFile();
+      return Number(response) || 0;
+    } catch (error) {
+      return 0;
+    }
+  };
+
+  useEffect(() => {
+    let intervalId;
+
+    if (isUploading) {
+      intervalId = setInterval(async () => {
+        const currentProgress = await getProgressFile();
+        setProgress(currentProgress);
+
+        if (currentProgress >= 100) {
+          setIsUploading(false);
+          setIsModalOpen(false);
+          setTimeout(() => {
+            window.location.reload();
+          }, 3000);
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isUploading]);
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setShowModal(false);
+    setSelectedTemplate(null);
   };
 
   const [isMobile, setIsMobile] = useState(false);
@@ -560,10 +536,6 @@ const SyncData = () => {
 
   const handleBackClick = () => {
     router.back();
-  };
-
-  const handleExpand = (index) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
   };
 
   useEffect(() => {
@@ -911,6 +883,32 @@ const SyncData = () => {
     }
   };
 
+  const openModal = () => setShowModal(true);
+  const closeModal = () => setShowModal(false);
+
+  const handleDownloadTemplate = () => {
+    if (selectedTemplate) {
+      downloadTemplate(selectedTemplate);
+    }
+    closeModal();
+  };
+
+  const downloadTemplate = (template) => {
+    if (template === "daspen") {
+      window.open(
+        "https://docs.google.com/spreadsheets/d/19YgMVfGCOq4iK4vNzGTpr3ezPVrsKROb/edit?usp=sharing&ouid=104657245264175519758&rtpof=true&sd=true",
+        "_blank"
+      );
+    } else if (template === "kta") {
+      window.open(
+        "https://docs.google.com/spreadsheets/d/1WGxbFRHjtAGxhSC77OEdyXTYAs8R98F6/edit?usp=sharing&ouid=104657245264175519758&rtpof=true&sd=true",
+        "_blank"
+      );
+    } else {
+      console.error("Template tidak ditemukan.");
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
       <Toaster
@@ -1028,14 +1026,10 @@ const SyncData = () => {
                         </Button>
                         <Button
                           type="submit"
-                          onClick={handleSubmit}
                           className="bg-green-600 hover:bg-green-800 text-white py-2 px-4 rounded-lg"
+                          disabled={loader}
                         >
-                          {loader ? (
-                            <LoaderIcon className="animate-spin mr-2" />
-                          ) : (
-                            "Submit"
-                          )}
+                          {loader ? `Uploading... ${progress}%` : "Submit"}
                         </Button>
                       </div>
                     </form>
@@ -1044,127 +1038,202 @@ const SyncData = () => {
               </>
             )}
 
-            <div className="flex flex-wrap items-center space-x-2 mb-4 justify-between">
-             <div className="flex w-full sm:w-3/6 flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-  {/* Filter Cabang */}
-  <div className="flex flex-col relative w-full md:w-1/2 lg:w-1/3" ref={cabangRef}>
-    <Input
-      type="text"
-      value={selectedCabang}
-      readOnly
-      onClick={handleCabangClick}
-      className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
-        role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
-      }`}
-      placeholder="Pilih Cabang"
-      disabled={role === "ADMIN"}
-    />
-    {showCabangDropdown && role !== "ADMIN" && (
-      <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
-        <ul className="max-h-44 overflow-y-auto">
-          <li className="py-2 px-2">
-            <Input
-              type="text"
-              onChange={(e) => handleCabangSearch(e.target.value)}
-              className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
-              placeholder="Cari atau ketik Cabang..."
-              autoFocus
-            />
-          </li>
-          <li
-            onClick={() => handleSelectCabang({ kecamatan: "" })}
-            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-          >
-            Pilih Cabang
-          </li>
-          {filteredCabangList.map((cabang) => (
-            <li
-              key={cabang.id}
-              onClick={() => handleSelectCabang(cabang)}
-              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-            >
-              {cabang.kecamatan}
-            </li>
-          ))}
-        </ul>
-      </div>
-    )}
-  </div>
+            <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 mb-4">
+              {/* Filter Section */}
+              <div className="flex flex-wrap w-full md:w-auto space-x-4">
+                {/* Filter Cabang */}
+                <div
+                  className="flex flex-col relative w-full md:w-auto"
+                  ref={cabangRef}
+                >
+                  <Input
+                    type="text"
+                    value={selectedCabang}
+                    readOnly
+                    onClick={handleCabangClick}
+                    className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                      role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
+                    }`}
+                    placeholder="Pilih Cabang"
+                    disabled={role === "ADMIN"}
+                  />
+                  {showCabangDropdown && role !== "ADMIN" && (
+                    <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                      <ul className="max-h-44 overflow-y-auto">
+                        <li className="py-2 px-2">
+                          <Input
+                            type="text"
+                            onChange={(e) => handleCabangSearch(e.target.value)}
+                            className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                            placeholder="Cari atau ketik Cabang..."
+                            autoFocus
+                          />
+                        </li>
+                        <li
+                          onClick={() => handleSelectCabang({ kecamatan: "" })}
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                        >
+                          Pilih Cabang
+                        </li>
+                        {filteredCabangList.map((cabang) => (
+                          <li
+                            key={cabang.id}
+                            onClick={() => handleSelectCabang(cabang)}
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                          >
+                            {cabang.kecamatan}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
 
-  {/* Filter Unit Kerja */}
-  <div className="flex flex-col relative w-full md:w-1/2 lg:w-1/3" ref={unitKerjaRef}>
-    <Input
-      type="text"
-      value={unitKerjaInput}
-      onChange={handleUnitKerjaChange}
-      onFocus={handleUnitKerjaFocus}
-      placeholder="Pilih Unit Kerja"
-      className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
-      disabled={!selectedCabang}
-    />
-    {showUnitKerjaDropdown && (
-      <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
-        <ul className="max-h-44 overflow-y-auto">
-          <li className="py-2 px-2">
-            <Input
-              type="text"
-              onChange={(e) => handleUnitKerjaSearch(e.target.value)}
-              placeholder="Cari atau ketik Unit Kerja..."
-              autoFocus
-              className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-2"
-            />
-          </li>
-          <li
-            onClick={() => handleUnitKerjaSelect({ unitKerja: "" })}
-            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-          >
-            Pilih Unit Kerja
-          </li>
-          {filteredUnitKerja.length > 0 ? (
-            filteredUnitKerja.map((unitKerja) => (
-              <li
-                key={unitKerja.id}
-                onClick={() => handleUnitKerjaSelect(unitKerja)}
-                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-              >
-                {unitKerja.unitKerja}
-              </li>
-            ))
-          ) : (
-            <li className="px-4 py-2 text-gray-500 cursor-default">
-              Tidak ada hasil
-            </li>
-          )}
-        </ul>
-      </div>
-    )}
-  </div>
-</div>
-
-
-              <div className="flex flex-wrap items-center space-x-2 mb-4">
-                <div className="flex flex-col md:flex-row justify-center md:space-x-4">
-                  <h1>
-                    {loading
-                      ? "Loading..."
-                      : `Total Data Terupload: ${filteredTotalFiles}`}
-                  </h1>
+                {/* Filter Unit Kerja */}
+                <div
+                  className="flex flex-col relative w-full md:w-auto"
+                  ref={unitKerjaRef}
+                >
+                  <Input
+                    type="text"
+                    value={unitKerjaInput}
+                    onChange={handleUnitKerjaChange}
+                    onFocus={handleUnitKerjaFocus}
+                    placeholder="Pilih Unit Kerja"
+                    className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
+                    disabled={!selectedCabang}
+                  />
+                  {showUnitKerjaDropdown && (
+                    <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                      <ul className="max-h-44 overflow-y-auto">
+                        <li className="py-2 px-2">
+                          <Input
+                            type="text"
+                            onChange={(e) =>
+                              handleUnitKerjaSearch(e.target.value)
+                            }
+                            placeholder="Cari atau ketik Unit Kerja..."
+                            autoFocus
+                            className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-2"
+                          />
+                        </li>
+                        <li
+                          onClick={() =>
+                            handleUnitKerjaSelect({ unitKerja: "" })
+                          }
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                        >
+                          Pilih Unit Kerja
+                        </li>
+                        {filteredUnitKerja.length > 0 ? (
+                          filteredUnitKerja.map((unitKerja) => (
+                            <li
+                              key={unitKerja.id}
+                              onClick={() => handleUnitKerjaSelect(unitKerja)}
+                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                            >
+                              {unitKerja.unitKerja}
+                            </li>
+                          ))
+                        ) : (
+                          <li className="px-4 py-2 text-gray-500 cursor-default">
+                            Tidak ada hasil
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="flex flex-col md:flex-row justify-center md:space-x-4">
+              {/* Total Data Section */}
+              <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-8">
+                <h1>
+                  {loading
+                    ? "Loading..."
+                    : `Total Data Daspen: ${filteredTotalFiles.totalDaspen}`}
+                </h1>
+                <h1>
+                  {loading
+                    ? "Loading..."
+                    : `Total Data Kta Digital: ${filteredTotalFiles.totalKtaDigital}`}
+                </h1>
+              </div>
+
+              {/* Button Section */}
+              <div className="flex flex-wrap items-center space-x-4">
                 <Button
-                  className="bg-green-600 hover:bg-green-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300 mb-2 md:mb-0"
+                  onClick={openModal}
+                  className="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300"
+                >
+                  Download Template
+                </Button>
+
+                <Modal
+                  isOpen={showModal}
+                  onRequestClose={closeModal}
+                  contentLabel="Pilih Template"
+                  className="fixed inset-0 flex items-center justify-center p-4"
+                  overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+                >
+                  <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-xl font-bold">
+                        Pilih Template untuk Download
+                      </h2>
+                      <button
+                        className="text-2xl font-bold text-gray-700 hover:text-red-500 focus:outline-none"
+                        onClick={closeModal}
+                      >
+                        x
+                      </button>
+                    </div>
+
+                    {/* Pilihan Template */}
+                    <div className="flex flex-col gap-4">
+                      <button
+                        className="w-full bg-teal-700 hover:bg-teal-500 text-white px-4 py-2 rounded-md"
+                        onClick={() => setSelectedTemplate("daspen")}
+                      >
+                        Template Daspen
+                      </button>
+                      <button
+                        className="w-full bg-teal-700 hover:bg-teal-500 text-white px-4 py-2 rounded-md"
+                        onClick={() => setSelectedTemplate("kta")}
+                      >
+                        Template KTA Digital
+                      </button>
+                    </div>
+
+                    {/* Tombol untuk download setelah memilih template */}
+                    {selectedTemplate && (
+                      <div className="mt-4">
+                        <Button
+                          className="w-full bg-teal-700 hover:bg-teal-500 text-white px-4 py-2 rounded-md"
+                          onClick={handleDownloadTemplate}
+                        >
+                          Download{" "}
+                          {selectedTemplate === "daspen"
+                            ? "Template Daspen"
+                            : "Template KTA Digital"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </Modal>
+
+                <Button
+                  className="bg-green-600 hover:bg-green-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300"
                   onClick={() => setIsModalOpen(true)}
                 >
                   Upload Data
                 </Button>
-                <Button
+                {/* <Button
                   onClick={handlePrint}
                   className="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300"
                 >
                   Cetak
-                </Button>
+                </Button> */}
               </div>
             </div>
 
