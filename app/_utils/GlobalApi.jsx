@@ -8,6 +8,7 @@ const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
 });
+
 // Konversi Gambar Dalam Format Base64
 const base64ToBlob = (base64, mime) => {
   const byteChars = atob(base64);
@@ -500,8 +501,8 @@ const cekNpaList = async (npaList) => {
       return [];
     }
 
-    const validNpaList = npaList.filter(npa => npa && npa.trim());
-    
+    const validNpaList = npaList.filter((npa) => npa && npa.trim());
+
     if (validNpaList.length === 0) {
       return [];
     }
@@ -519,10 +520,15 @@ const cekNpaList = async (npaList) => {
           `/api/auth/getByNpa?npaList=${chunk.join(",")}`
         );
         if (response.data) {
-          results.push(...(Array.isArray(response.data) ? response.data : [response.data]));
+          results.push(
+            ...(Array.isArray(response.data) ? response.data : [response.data])
+          );
         }
       } catch (chunkError) {
-        console.warn(`Error fetching chunk of NPAs: ${chunk.join(",")}`, chunkError);
+        console.warn(
+          `Error fetching chunk of NPAs: ${chunk.join(",")}`,
+          chunkError
+        );
         continue;
       }
     }
@@ -1589,6 +1595,26 @@ const activasiUser = async (userId) => {
   }
 };
 
+const getAllTotalData = async () => {
+  try {
+    const response = await axiosClient.get("/api/files/total-category");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching files:", error);
+    throw error;
+  }
+};
+
+const getProgressFile = async () => {
+  try {
+    const response = await axiosClient.get("/api/files/progress");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching files:", error);
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1702,4 +1728,6 @@ export default {
   deleteUnitKerja,
   getUnverifiedUsersCountSuperAdmin,
   activasiUser,
+  getAllTotalData,
+  getProgressFile,
 };
