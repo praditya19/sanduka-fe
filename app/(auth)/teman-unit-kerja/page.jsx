@@ -26,7 +26,7 @@ const TemanUnitKerja = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedCabang, setSelectedCabang] = useState("");
   const [cabangOptions, setCabangOptions] = useState([]);
-  const [unitKerja, setUnitKerja] = useState("");
+  // const [unitKerja, setUnitKerja] = useState("");
   const [showDropdownCabang, setShowDropdownCabang] = useState(false);
   const [showDropdownUnit, setShowDropdownUnit] = useState(false);
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
@@ -36,8 +36,19 @@ const TemanUnitKerja = () => {
   const [queryCabang, setQueryCabang] = useState("");
   const [fotoBase64, setFotoBase64] = useState("");
 
-  const fetchTemanUnitKerja = async (unitKerja) => {
+  const fetchTemanUnitKerja = async () => {
     try {
+      // Ambil nilai unitKerja dari sessionStorage
+      const unitKerja = sessionStorage.getItem("unitKerja");
+
+      if (!unitKerja) {
+        console.error("unitKerja is not available in sessionStorage.");
+        return;
+      }
+
+      // Tampilkan unitKerja di console
+      console.log("Fetched unitKerja from sessionStorage:", unitKerja);
+
       const result = await GlobalApi.getTemanUnitKerja(
         unitKerja,
         currentPage - 1,
@@ -63,6 +74,10 @@ const TemanUnitKerja = () => {
       console.error("Error fetching data:", error);
     }
   };
+
+  useEffect(() => {
+    fetchTemanUnitKerja();
+  }, []);
 
   useEffect(() => {
     if (!token) {
@@ -102,7 +117,7 @@ const TemanUnitKerja = () => {
       const unitsForSelectedCabang = unitKerjaOptions.filter(
         (unit) => unit.cabangId === selectedCabang.idKecamatan
       );
-      setFilteredUnitKerja(unitsForSelectedCabang);  // Update filtered unit kerja
+      setFilteredUnitKerja(unitsForSelectedCabang); // Update filtered unit kerja
     } else {
       // Jika cabang belum dipilih, tampilkan seluruh unit kerja
       setFilteredUnitKerja(unitKerjaOptions);
@@ -111,20 +126,20 @@ const TemanUnitKerja = () => {
 
   const handleCabangSelect = (cabang) => {
     console.log("Cabang selected:", cabang);
-  
+
     setQueryCabang(cabang.kecamatan);
     setSelectedCabang(cabang.kecamatan);
     setShowDropdownCabang(false);
-  
+
     // Filter unit kerja berdasarkan cabang yang dipilih
     const unitsForSelectedCabang = unitKerjaOptions.filter(
       (unit) => unit.cabang === cabang.kecamatan
     );
-  
+
     setFilteredUnitKerja(unitsForSelectedCabang);
     console.log("Filtered Unit Kerja:", unitsForSelectedCabang);
   };
-  
+
   const handleFilterCabangClick = () => {
     setQueryCabang("");
     setSelectedCabang(null);
@@ -137,13 +152,12 @@ const TemanUnitKerja = () => {
     setCurrentPage(pageNumber);
   };
 
-  const handleUnitKerjaChange = async (selectedUnitKerja) => {
-    console.log("Unit Kerja yang dipilih:", selectedUnitKerja);
-  
-    // Panggil fetchTemanUnitKerja setelah unit kerja dipilih
-    await fetchTemanUnitKerja(selectedUnitKerja);
-  };
-  
+  // const handleUnitKerjaChange = async (selectedUnitKerja) => {
+  //   console.log("Unit Kerja yang dipilih:", selectedUnitKerja);
+
+  //   // Panggil fetchTemanUnitKerja setelah unit kerja dipilih
+  //   await fetchTemanUnitKerja(selectedUnitKerja);
+  // };
 
   const renderPageNumbers = () => {
     const pageNumbers = [];
@@ -206,7 +220,7 @@ const TemanUnitKerja = () => {
           }`}
         >
           <div className="min-h-screen flex flex-col items-center justify-start bg-gray-300 pt-4 px-4">
-            <div className="w-full flex flex-col items-start relative">
+            {/* <div className="w-full flex flex-col items-start relative">
               <Label className="block text-sm font-medium mb-1">Cabang</Label>
               <Input
                 id="cabangInput"
@@ -277,74 +291,73 @@ const TemanUnitKerja = () => {
                     </ul>
                   </div>
                 )}
-            </div>
+            </div> */}
 
-            <div className="w-full flex flex-col items-start mt-3">
-                      <Label className="block text-sm font-medium mb-1">
-                        Unit Kerja
-                      </Label>
+            {/* <div className="w-full flex flex-col items-start mt-3">
+              <Label className="block text-sm font-medium mb-1">
+                Unit Kerja
+              </Label>
+              <Input
+                type="text"
+                className="border rounded-lg p-2 w-full bg-white shadow-sm"
+                placeholder="Pilih Unit Kerja"
+                value={queryUnit}
+                readOnly
+                onChange={(e) => setQueryUnit(e.target.value)}
+                onClick={() => {
+                  setQueryUnit("");
+                  setShowDropdownUnit(true);
+                }}
+              />
+
+              {showDropdownUnit && filteredUnitKerja.length > 0 && (
+                <div
+                  className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[4.5%] w-[43%]"
+                  id="dropdownUnit"
+                >
+                  <ul className="max-h-44 overflow-y-auto">
+                    <li className="py-2 px-2">
                       <Input
+                        id="searchInput"
                         type="text"
-                        className="border rounded-lg p-2 w-full bg-white shadow-sm"
-                        placeholder="Pilih Unit Kerja"
+                        className="border-b p-2 w-full bg-white mb-1"
+                        placeholder="Cari Unit Kerja..."
                         value={queryUnit}
-                        readOnly
                         onChange={(e) => setQueryUnit(e.target.value)}
-                        onClick={() => {
-                          setQueryUnit("");
-                          setShowDropdownUnit(true);
-                        }}
+                        autoFocus
                       />
-
-{showDropdownUnit && filteredUnitKerja.length > 0 && (
-  <div
-    className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[4.5%] w-[43%]"
-    id="dropdownUnit"
-  >
-    <ul className="max-h-44 overflow-y-auto">
-      <li className="py-2 px-2">
-        <Input
-          id="searchInput"
-          type="text"
-          className="border-b p-2 w-full bg-white mb-1"
-          placeholder="Cari Unit Kerja..."
-          value={queryUnit}
-          onChange={(e) => setQueryUnit(e.target.value)}
-          autoFocus
-        />
-      </li>
-      <li
-        className="p-2 cursor-pointer hover:bg-gray-100"
-        onClick={() => {
-          setShowDropdownUnit(false);
-        }}
-      >
-        Pilih Unit Kerja
-      </li>
-      {filteredUnitKerja
-        .filter((unit) =>
-          unit.unitKerja
-            .toLowerCase()
-            .includes(queryUnit.toLowerCase())
-        )
-        .map((unit) => (
-          <li
-            key={unit.id}
-            value={unit.unitKerja}
-            className="p-2 cursor-pointer hover:bg-gray-100"
-            onClick={async () => {
-              await handleUnitKerjaChange(unit.unitKerja); // Panggil fungsi handle
-              setShowDropdownUnit(false); // Tutup dropdown
-            }}
-          >
-            {unit.unitKerja}
-          </li>
-        ))}
-    </ul>
-  </div>
-)}
-
-                    </div>
+                    </li>
+                    <li
+                      className="p-2 cursor-pointer hover:bg-gray-100"
+                      onClick={() => {
+                        setShowDropdownUnit(false);
+                      }}
+                    >
+                      Pilih Unit Kerja
+                    </li>
+                    {filteredUnitKerja
+                      .filter((unit) =>
+                        unit.unitKerja
+                          .toLowerCase()
+                          .includes(queryUnit.toLowerCase())
+                      )
+                      .map((unit) => (
+                        <li
+                          key={unit.id}
+                          value={unit.unitKerja}
+                          className="p-2 cursor-pointer hover:bg-gray-100"
+                          onClick={async () => {
+                            await handleUnitKerjaChange(unit.unitKerja); // Panggil fungsi handle
+                            setShowDropdownUnit(false); // Tutup dropdown
+                          }}
+                        >
+                          {unit.unitKerja}
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              )}
+            </div> */}
 
             <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
               {currentItems.map((data, index) => {
