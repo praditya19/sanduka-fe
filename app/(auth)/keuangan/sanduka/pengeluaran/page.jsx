@@ -69,7 +69,8 @@ function Pengeluaran() {
   const [selectAll, setSelectAll] = useState(false);
   const [isIframeVisible, setIsIframeVisible] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-   const [checkedIds, setCheckedIds] = useState([]);
+  const [loadingId, setLoadingId] = useState(null);
+  const [checkedIds, setCheckedIds] = useState([]);
 
   const getBulanAngka = (bulanNama) => {
     const bulanObj = bulanList.find((bulan) => bulan.namaBulan === bulanNama);
@@ -77,7 +78,7 @@ function Pengeluaran() {
   };
 
   useEffect(() => {
-    const tanggalStr = formValues.tanggalTransaksi || ""; // Pastikan ada nilai default
+    const tanggalStr = formValues.tanggalTransaksi || "";
 
     if (tanggalStr) {
       const [tanggalPart, bulanPart, tahunPart] = tanggalStr.split("");
@@ -96,11 +97,6 @@ function Pengeluaran() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // const formattedTanggal = `${tahun}-${String(bulan + 1).padStart(
-    //   2,
-    //   "0"
-    // )}-${String(tanggal).padStart(2, "0")}`;
 
     const dataToSend = {
       noBukti: formValues.noBukti,
@@ -172,6 +168,9 @@ function Pengeluaran() {
           },
         }
       );
+      setTimeout(() => {
+        window.location.reload();
+      }, 2500);
     } catch (error) {
       toast.error(
         <div
@@ -436,6 +435,57 @@ function Pengeluaran() {
     }
   };
 
+  const handleDeleteClickId = async (id) => {
+    setLoadingId(id);
+
+    try {
+      const response = await GlobalApi.hapusPemasukanUangMasuk(id);
+
+      if (response) {
+        setTransactions((prevTransactions) =>
+          prevTransactions.filter((transaction) => transaction.id !== id)
+        );
+        setPaginatedTransactions((prevPaginatedTransactions) =>
+          prevPaginatedTransactions.filter(
+            (transaction) => transaction.id !== id
+          )
+        );
+
+        toast.success("Data berhasil dihapus!");
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      window.location.reload();
+    } catch (error) {
+      console.error("Gagal menghapus data dengan ID:", id, error);
+      toast.error("Terjadi kesalahan saat menghapus data.");
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  const handleEditClick = async (id) => {
+    try {
+      const data = await GlobalApi.editPemasukanUangMasuk(id);
+
+      const tanggalTransaksi = data.tglTransaksi
+        ? data.tglTransaksi.split(", ")[1]
+        : "";
+
+      setFormValues({
+        tanggalTransaksi: tanggalTransaksi,
+        posTransaksi: data.uraian || "",
+        nominal: data.debet?.trim() !== "" ? parseFloat(data.debet) : 0,
+        kredit: data.kredit?.trim() !== "" ? parseFloat(data.kredit) : 0,
+        saldo: data.saldo?.trim() !== "" ? parseFloat(data.saldo) : 0,
+        noBukti: data.noBukti || "",
+        totalAnggota: data.totalAnggota || null,
+        totalAnggotaByAdmin: data.totalAnggotaByAdmin || null,
+      });
+    } catch (error) {
+      console.error("Gagal mengambil data berdasarkan id:", error);
+    }
+  };
+
   const formatCurrency = (value) => {
     if (value === "-") return "-";
     return new Intl.NumberFormat("id-ID", {
@@ -467,24 +517,23 @@ function Pengeluaran() {
 
     setFormValues((prevValues) => {
       const updatedValues = { ...prevValues };
-    
+
       if (name === "nominal") {
-        // Hanya ambil angka tanpa format pemisah
-        const numericValue = Number(value.replace(/\D/g, "")); // Hapus semua karakter non-digit
-    
+        const numericValue = Number(value.replace(/\D/g, ""));
+
         if (!isNaN(numericValue)) {
-          updatedValues.nominal = numericValue; // Simpan angka mentah tanpa pemisah ribuan
-          updatedValues.terbilang = convertToTerbilangWithRupiah(numericValue); // Konversi ke terbilang
+          updatedValues.nominal = numericValue; 
+          updatedValues.terbilang = convertToTerbilangWithRupiah(numericValue);
         } else {
-          updatedValues.nominal = ""; // Jika bukan angka, kosongkan nominal
+          updatedValues.nominal = "";
           updatedValues.terbilang = "";
         }
       } else {
-        updatedValues[name] = value; // Untuk input lain, gunakan nilai asli
+        updatedValues[name] = value;
       }
-    
+
       return updatedValues;
-    });        
+    });
 
     if (name === "tahun" || name === "bulan") {
       const year = name === "tahun" ? value : formValues.tahun;
@@ -503,7 +552,7 @@ function Pengeluaran() {
     }
   };
   const capitalizeFirstLetter = (text) => {
-    if (typeof text !== "string" || !text) return ""; // Jika bukan string atau kosong, kembalikan string kosong
+    if (typeof text !== "string" || !text) return "";
     return text
       .split(" ")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -570,7 +619,7 @@ function Pengeluaran() {
     return "Jumlah terlalu besar";
   };
   const convertToTerbilangWithRupiah = (number) => {
-    if (isNaN(number) || number <= 0) return ""; // Validasi angka, kembalikan string kosong jika tidak valid
+    if (isNaN(number) || number <= 0) return "";
     const terbilang = convertToTerbilang(number);
     return `${capitalizeFirstLetter(terbilang)} Rupiah`.trim();
   };
@@ -650,11 +699,9 @@ function Pengeluaran() {
 
         const htmlContent = generateKwitansiHTML(generateData);
 
-        // Buat URL Blob untuk iframe
         const blob = new Blob([htmlContent], { type: "text/html" });
         const blobUrl = URL.createObjectURL(blob);
 
-        // Set URL ke state
         setKwitansiData(blobUrl);
       } catch (error) {
         console.error("Error:", error.message);
@@ -672,7 +719,6 @@ function Pengeluaran() {
         return;
       }
 
-      // Ambil konten dari iframe
       const iframeDocument =
         iframe.contentDocument || iframe.contentWindow.document;
       const kwitansiElement = iframeDocument.body;
@@ -682,17 +728,13 @@ function Pengeluaran() {
         const width = pdf.internal.pageSize.getWidth();
         const height = pdf.internal.pageSize.getHeight();
 
-        // Ambil elemen HTML dan konversi ke PNG
         const imageData = await toPng(kwitansiElement);
 
-        // Tambahkan gambar ke PDF
         pdf.addImage(imageData, "PNG", 0, 0, width, height);
         pdf.save("kwitansi.pdf");
       } else if (type === "image") {
-        // Konversi elemen HTML ke gambar PNG
         const imageData = await toPng(kwitansiElement);
 
-        // Buat link unduh untuk gambar
         const link = document.createElement("a");
         link.href = imageData;
         link.download = "kwitansi.png";
@@ -715,13 +757,13 @@ function Pengeluaran() {
 
     try {
       const canvas = await html2canvas(kwitansiElement, {
-        scale: 2, // Tingkatkan kualitas
-        useCORS: true, // Izinkan pengambilan gambar eksternal
+        scale: 2,
+        useCORS: true,
       });
 
       const imgData = canvas.toDataURL("image/png");
 
-      const pdf = new jsPDF("l", "mm", "a4"); // Landscape
+      const pdf = new jsPDF("l", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
@@ -743,17 +785,15 @@ function Pengeluaran() {
     const kwitansiElement = iframeDocument.body;
 
     try {
-      // Pastikan elemen memiliki ukuran penuh
       const canvas = await html2canvas(kwitansiElement, {
-        scale: 2, // Tingkatkan skala untuk kualitas lebih tinggi
-        useCORS: true, // Izinkan pengambilan gambar dengan resource eksternal
+        scale: 2,
+        useCORS: true,
         scrollX: 0,
         scrollY: 0,
       });
 
       const imgData = canvas.toDataURL("image/png");
 
-      // Buat link untuk unduh
       const link = document.createElement("a");
       link.href = imgData;
       link.download = "kwitansi.png";
@@ -1424,9 +1464,44 @@ function Pengeluaran() {
                               checked={transaction.checked}
                               onChange={() => handleCheck(transaction.id)}
                             />
-                            <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                            <Button
+                              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+                              onClick={() => handleEditClick(transaction.id)}
+                            >
                               Edit
                             </Button>
+                            <button
+                              className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center`}
+                              onClick={() => handleDeleteClickId(transaction.id)}
+                              disabled={loadingId === transaction.id}
+                            >
+                              {loadingId === transaction.id ? (
+                                <div className="flex items-center">
+                                  <svg
+                                    className="animate-spin h-5 w-5 text-white mr-2"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8v8H4z"
+                                    ></path>
+                                  </svg>
+                                </div>
+                              ) : (
+                                "Hapus"
+                              )}
+                            </button>
                           </div>
                         </td>
                       </tr>
