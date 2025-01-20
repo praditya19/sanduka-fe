@@ -16,6 +16,7 @@ function Pemasukan() {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const dropdownRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingId, setLoadingId] = useState(null);
   const bulanList = [
     { id: "01", angkaBulan: 0, namaBulan: "Januari" },
     { id: "02", angkaBulan: 1, namaBulan: "Februari" },
@@ -68,25 +69,6 @@ function Pemasukan() {
     totalAnggotaByAdmin: "",
     totalSumbangan: "",
   });
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-  const getVisiblePages = () => {
-    const totalPagesToShow = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
-    let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
-
-    if (endPage - startPage + 1 < totalPagesToShow) {
-      startPage = Math.max(1, endPage - totalPagesToShow + 1);
-    }
-
-    return Array.from(
-      { length: endPage - startPage + 1 },
-      (_, i) => startPage + i
-    );
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -204,10 +186,7 @@ function Pemasukan() {
           selectedBulan,
           newSelectedYear
         );
-        setTotalItems(data.length);
-        const paginatedData = data.slice(indexOfFirstItem, indexOfLastItem);
-        setTransactions(paginatedData);
-        setPaginatedTransactions(paginatedData);
+        setTransactions(data);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -216,7 +195,27 @@ function Pemasukan() {
 
   useEffect(() => {
     fetchData();
-  }, [selectedBulan, newSelectedYear, currentPage, itemsPerPage]);
+  }, [selectedBulan, newSelectedYear]);
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentTransactions = transactions.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(transactions.length / itemsPerPage);
+
+  const getVisiblePages = () => {
+    const range = 2;
+    let start = Math.max(1, currentPage - range);
+    let end = Math.min(totalPages, currentPage + range);
+
+    const pages = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
 
   const years = Array.from(
     { length: currentYear - startYear + 1 },
@@ -380,7 +379,7 @@ function Pemasukan() {
       //   totalSumbangan: formValues.totalSumbangan,
       //   totalAnggotaByAdmin: formValues.totalAnggotaByAdmin,
       // };
- const dataToSend = {
+      const dataToSend = {
         // noBukti: formValues.noBukti,
         tanggalTransaksi: formValues.tanggalTransaksi,
         posTransaksi: formValues.posTransaksi,
@@ -395,7 +394,7 @@ function Pemasukan() {
         namaPenerima: "",
         yangMeninggal: "",
         totalAnggota: formValues.totalAnggota,
-   totalSumbangan: formValues.totalSumbangan,
+        totalSumbangan: formValues.totalSumbangan,
         totalAnggotaByAdmin: formValues.totalAnggotaByAdmin,
       };
 
@@ -588,6 +587,35 @@ function Pemasukan() {
     }
   };
 
+  const handleDeleteClickId = async (id) => {
+    setLoadingId(id);
+
+    try {
+      const response = await GlobalApi.hapusPemasukanUangMasuk(id);
+
+      if (response) {
+        setTransactions((prevTransactions) =>
+          prevTransactions.filter((transaction) => transaction.id !== id)
+        );
+        setPaginatedTransactions((prevPaginatedTransactions) =>
+          prevPaginatedTransactions.filter(
+            (transaction) => transaction.id !== id
+          )
+        );
+
+        toast.success("Data berhasil dihapus!");
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      window.location.reload();
+    } catch (error) {
+      console.error("Gagal menghapus data dengan ID:", id, error);
+      toast.error("Terjadi kesalahan saat menghapus data.");
+    } finally {
+      setLoadingId(null); 
+    }
+  };
+
   useEffect(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -620,17 +648,14 @@ function Pemasukan() {
   const handleEditClick = async (id) => {
     try {
       
-      // Panggil API dengan parameter id
       const data = await GlobalApi.editPemasukanUangMasuk(id);
-  
-      // Ekstrak tanggal, bulan, dan tahun dari tglTransaksi
+
       const tanggalTransaksi = data.tglTransaksi
-        ? data.tglTransaksi.split(", ")[1] // Mengambil bagian setelah koma (e.g., "10/01/2025")
+        ? data.tglTransaksi.split(", ")[1]
         : "";
-  
-      // Atur nilai form berdasarkan respon data
+
       setFormValues({
-        tanggalTransaksi: tanggalTransaksi, // Format tanggal yang sudah diolah
+        tanggalTransaksi: tanggalTransaksi,
         posTransaksi: data.uraian || "",
         nominal: data.debet?.trim() !== "" ? parseFloat(data.debet) : 0,
         kredit: data.kredit?.trim() !== "" ? parseFloat(data.kredit) : 0,
@@ -642,7 +667,7 @@ function Pemasukan() {
     } catch (error) {
       console.error("Gagal mengambil data berdasarkan id:", error);
     }
-  };  
+  };
 
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -1138,7 +1163,7 @@ function Pemasukan() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedTransactions
+                  {currentTransactions
                     .filter((transaction) => transaction.tglTransaksi)
                     .map((transaction, index) => (
                       <tr
@@ -1174,55 +1199,54 @@ function Pemasukan() {
                         <td className="px-6 py-4 text-sm">
                           {formatCurrency(transaction.saldo || 0)}
                         </td>
-                       <td className="px-6 py-4 text-sm">
-  <div className="flex items-center space-x-2">
-    <Input
-      type="checkbox"
-      className="form-checkbox h-4 w-4"
-      checked={transaction.checked}
-      onChange={() => handleCheck(transaction.id)}
-    />
-    <Button
-      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
-      onClick={() => handleEditClick(transaction.id)}
-    >
-      Edit
-    </Button>
-    <button
-      className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center`}
-      onClick={() => handleDeleteClick(transaction.id)}
-      disabled={isLoading}
-    >
-      {isLoading ? (
-        <div className="flex items-center">
-          <svg
-            className="animate-spin h-5 w-5 text-white mr-2"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            ></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v8H4z"
-            ></path>
-          </svg>
-        </div>
-      ) : (
-        "Hapus"
-      )}
-    </button>
-  </div>
-</td>
-
+                        <td className="px-6 py-4 text-sm">
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              type="checkbox"
+                              className="form-checkbox h-4 w-4"
+                              checked={transaction.checked}
+                              onChange={() => handleCheck(transaction.id)}
+                            />
+                            <Button
+                              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+                              onClick={() => handleEditClick(transaction.id)}
+                            >
+                              Edit
+                            </Button>
+                            <button
+                              className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center`}
+                              onClick={() => handleDeleteClickId(transaction.id)}
+                              disabled={loadingId === transaction.id}
+                            >
+                              {loadingId === transaction.id ? ( 
+                                <div className="flex items-center">
+                                  <svg
+                                    className="animate-spin h-5 w-5 text-white mr-2"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8v8H4z"
+                                    ></path>
+                                  </svg>
+                                </div>
+                              ) : (
+                                "Hapus"
+                              )}
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   {/* Baris Total */}
@@ -1280,7 +1304,7 @@ function Pemasukan() {
               `}</style>
             </div>
             <div className="flex justify-center mt-4 gap-1">
-              {totalItems >= itemsPerPage && (
+              {transactions.length > itemsPerPage && (
                 <div className="flex justify-center mt-4 gap-1">
                   <button
                     onClick={() => setCurrentPage(1)}
@@ -1298,7 +1322,6 @@ function Pemasukan() {
                   >
                     Prev
                   </button>
-
                   {getVisiblePages().map((page) => (
                     <button
                       key={page}
@@ -1312,7 +1335,6 @@ function Pemasukan() {
                       {page}
                     </button>
                   ))}
-
                   <button
                     onClick={() =>
                       setCurrentPage((prev) => Math.min(prev + 1, totalPages))
