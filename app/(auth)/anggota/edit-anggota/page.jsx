@@ -89,7 +89,7 @@ const Page = () => {
   const [valueJabatan, setValueJabatan] = useState("");
   const [fotoBase64, setFotoBase64] = useState("");
   const [preview, setPreview] = useState(null);
-
+  const previousData = useRef(null);
   const [error, setError] = useState("");
   const [pesertaSanduka, setPesertaSanduka] = useState(false);
   const [pesertaDaspen, setPesertaDaspen] = useState(false);
@@ -180,6 +180,7 @@ const Page = () => {
 
     try {
       const response = await GlobalApi.getUserById(id);
+      previousData.current = response;
       // 35
       if (response) {
         setNamaLengkap(response.namaLengkap || "");
@@ -269,39 +270,104 @@ const Page = () => {
 
   const handleCreateHistory = async () => {
     const now = new Date();
-
-    // Format date components
     const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
     const tanggal = now.toISOString().split("T")[0];
     const jam = now.toTimeString().split(" ")[0];
     const bulan = now.toLocaleString("id-ID", { month: "long" });
     const tahun = now.getFullYear();
-
-    // Get user details
-    const userRole = sessionStorage.getItem("role");
-    const namaLengkapUser =
-      userRole === "USER"
-        ? namaLengkap // Using namaLengkap state from the form
-        : sessionStorage.getItem("nama");
-
-    const historyData = {
-      hari,
-      tanggal,
-      jam,
-      npa: npaPgri,
-      nama: namaLengkap,
-      cabang: selectedCabang,
-      uraian: "Edit Data",
-      masuk: "-", // Not applicable for edit
-      keluar: "-", // Not applicable for edit
-      bulan,
-      tahun,
-      cabang_ke_2: "-", // Not applicable for edit
-      user: namaLengkapUser,
-    };
-
+    const formatDate = (date) => (date ? new Date(date).toISOString().split("T")[0] : "");
+  
     try {
-      await GlobalApi.createHistoryData(historyData);
+      const userRole = sessionStorage.getItem("role");
+      const namaLengkapUser = userRole === "USER" 
+        ? namaLengkap 
+        : sessionStorage.getItem("nama");
+  
+      const changedFields = [];
+      
+      if (previousData.current) {
+        if (email !== previousData.current.email) changedFields.push("Email");
+        if (password !== previousData.current.password) changedFields.push("Password");
+        if (npaPgri !== previousData.current.npaPgri) changedFields.push("NPA PGRI");
+        if (namaLengkap !== previousData.current.namaLengkap) changedFields.push("Nama Lengkap");
+        if (nomorHp !== previousData.current.nomorHp) changedFields.push("Nomor HP");
+        if (alamat !== previousData.current.alamat) changedFields.push("Alamat");
+        if (nik !== previousData.current.nik) changedFields.push("NIK");
+        if (nip !== previousData.current.nip) changedFields.push("NIP");
+      
+        if (tempatLahir !== previousData.current.tempatLahir) changedFields.push("Tempat Lahir");
+        if (tanggalLahir !== previousData.current.tanggalLahir) changedFields.push("Tanggal Lahir");
+        if (jenisKelamin !== previousData.current.jenisKelamin) changedFields.push("Jenis Kelamin");
+        if (agama !== previousData.current.agama) changedFields.push("Agama");
+        if (golonganDarah !== previousData.current.golonganDarah) changedFields.push("Golongan Darah");
+        if (kodePos !== previousData.current.kodePos) changedFields.push("Kode Pos");
+  
+        if (selectedFile || (previousData.current.foto && !fotoBase64[0])) changedFields.push("Foto");
+  
+        if (latitude !== previousData.current.latitude) changedFields.push("Latitude");
+        if (longitude !== previousData.current.longitude) changedFields.push("Longitude");
+      
+        if (namaSuamiIstri !== previousData.current.namaSuamiIstri) changedFields.push("Nama Suami/Istri");
+        
+        const prevNamaAnak = previousData.current.namaAnak || [];
+        const currentNamaAnak = namaAnak || [];
+        
+        // Only compare if there are actual changes
+        if (prevNamaAnak.length !== currentNamaAnak.length || 
+            currentNamaAnak.some((name, index) => name !== prevNamaAnak[index])) {
+          // Only add to changedFields if there are actual changes and at least one non-empty name
+          if (currentNamaAnak.some(name => name.trim() !== '')) {
+            changedFields.push("Nama Anak");
+          }
+        }
+      
+        if (selectedCabang !== previousData.current.cabang) changedFields.push("Cabang");
+        if (selectedUnitKerja !== previousData.current.unitKerja) changedFields.push("Unit Kerja");
+        if (valueJabatan !== previousData.current.jabatan) changedFields.push("Jabatan");
+        if (tingkatSekolah !== previousData.current.tingkatSekolah) changedFields.push("Tingkat Sekolah");
+        if (statusSekolah !== previousData.current.statusSekolah) changedFields.push("Status Sekolah");
+        if (statusPegawai !== previousData.current.statusPegawai) changedFields.push("Status Pegawai");
+        if (pangkatGolongan !== previousData.current.pangkatGolongan) changedFields.push("Pangkat Golongan");
+        if (pendidikanTerakhir !== previousData.current.pendidikanTerakhir) changedFields.push("Pendidikan");
+        if (valueGolonganJabatan !== previousData.current.golonganJabatan) changedFields.push("Golongan Jabatan");
+        if (valueKategoriDaspen !== previousData.current.kategoriDaspen) changedFields.push("Kategori Daspen");
+        if (mengajar !== previousData.current.mengajar) changedFields.push("Mengajar");
+      
+        if (sertifikatPendidik !== previousData.current.sertifikatPendidik) changedFields.push("Sertifikat Pendidik");
+        if (formatDate(tahunDiangkat) !== formatDate(previousData.current.tahunDiangkat)) changedFields.push("Tahun Diangkat");
+        if (mulaiJadiAnggotaPgri !== previousData.current.mulaiJadiAnggotaPgri) changedFields.push("Mulai Jadi Anggota PGRI");
+      }      
+  
+      if (changedFields.length > 0) {
+        let uraian = "Edit Data";
+    
+        if (changedFields.length === 1) {
+          uraian = `Edit ${changedFields[0]}`;
+        } else if (changedFields.length === 2) {
+          uraian = `Edit ${changedFields[0]} dan ${changedFields[1]}`;
+        } else if (changedFields.length > 2) {
+          const lastField = changedFields.pop();
+          uraian = `Edit ${changedFields.join(", ")}, dan ${lastField}`;
+        }
+    
+        const historyData = {
+          hari,
+          tanggal,
+          jam,
+          npa: npaPgri,
+          nama: namaLengkap,
+          cabang: selectedCabang,
+          uraian,
+          masuk: "-",
+          keluar: "-",
+          bulan,
+          tahun,
+          cabang_ke_2: "-",
+          user: namaLengkapUser,
+        };
+    
+        await GlobalApi.createHistoryData(historyData);
+      }
     } catch (error) {
       console.error("Failed to create history data:", error);
       throw new Error("Gagal menyimpan riwayat edit data");
