@@ -21,7 +21,8 @@ const TemanUnitKerja = () => {
   const router = useRouter();
   const [cardsData, setCardsData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9;
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 12;
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedCabang, setSelectedCabang] = useState("");
@@ -56,7 +57,7 @@ const TemanUnitKerja = () => {
       );
 
       setCardsData(result.content || []);
-
+      setTotalPages(result.totalPages || 0);
       const fotoBase64Array = result.content.map((item) => {
         if (item.foto) {
           try {
@@ -77,7 +78,13 @@ const TemanUnitKerja = () => {
 
   useEffect(() => {
     fetchTemanUnitKerja();
-  }, []);
+  }, [currentPage]);
+
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   useEffect(() => {
     if (!token) {
@@ -147,11 +154,6 @@ const TemanUnitKerja = () => {
     setUnitKerja("");
   };
 
-  const handleClick = (event, pageNumber) => {
-    event.preventDefault();
-    setCurrentPage(pageNumber);
-  };
-
   // const handleUnitKerjaChange = async (selectedUnitKerja) => {
   //   console.log("Unit Kerja yang dipilih:", selectedUnitKerja);
 
@@ -179,6 +181,11 @@ const TemanUnitKerja = () => {
       );
     }
     return pageNumbers;
+  };
+
+  const handleClick = (event, pageNumber) => {
+    event.preventDefault();
+    setCurrentPage(pageNumber);
   };
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -360,7 +367,7 @@ const TemanUnitKerja = () => {
             </div> */}
 
             <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
-              {currentItems.map((data, index) => {
+              {cardsData.map((data, index) => {
                 const fotoFromState = fotoBase64[index];
                 const base64Image = fotoFromState
                   ? `data:image/jpeg;base64,${fotoFromState}`
@@ -446,31 +453,64 @@ const TemanUnitKerja = () => {
                 );
               })}
             </div>
+            <ul className="flex mt-4 space-x-2 justify-center">
+              <li>
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-lg shadow-md ${
+                    currentPage === 1
+                      ? "bg-gray-300 cursor-not-allowed"
+                      : "bg-white text-blue-600 hover:bg-blue-600 hover:text-white transition duration-300"
+                  }`}
+                >
+                  Previous
+                </button>
+              </li>
+              {(() => {
+                const maxVisible = 3; // Jumlah pagination yang ingin ditampilkan
+                const startPage = Math.max(
+                  1,
+                  currentPage - Math.floor(maxVisible / 2)
+                );
+                const endPage = Math.min(
+                  totalPages,
+                  startPage + maxVisible - 1
+                );
 
-            <ul className="flex mt-4 space-x-2">
-              {currentPage > 1 && (
-                <li>
-                  <a
-                    href="#"
-                    onClick={(event) => handleClick(event, currentPage - 1)}
-                    className="px-2 py-1 bg-white text-blue-600 rounded-full shadow-md hover:bg-blue-600 hover:text-white transition duration-300"
-                  >
-                    &lt;
-                  </a>
-                </li>
-              )}
-              {renderPageNumbers()}
-              {currentPage < Math.ceil(cardsData.length / itemsPerPage) && (
-                <li>
-                  <a
-                    href="#"
-                    onClick={(event) => handleClick(event, currentPage + 1)}
-                    className="px-2 py-1 bg-white text-blue-600 rounded-full shadow-md hover:bg-blue-600 hover:text-white transition duration-300"
-                  >
-                    &gt;
-                  </a>
-                </li>
-              )}
+                const pages = [];
+                for (let i = startPage; i <= endPage; i++) {
+                  pages.push(i);
+                }
+
+                return pages.map((page) => (
+                  <li key={page}>
+                    <button
+                      onClick={() => handlePageChange(page)}
+                      className={`px-3 py-1 rounded-full shadow-md ${
+                        currentPage === page
+                          ? "bg-blue-600 text-white"
+                          : "bg-white text-blue-600 hover:bg-blue-600 hover:text-white transition duration-300"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  </li>
+                ));
+              })()}
+              <li>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className={`px-4 py-2 rounded-lg shadow-md ${
+                    currentPage === totalPages
+                      ? "bg-gray-300 cursor-not-allowed"
+                      : "bg-white text-blue-600 hover:bg-blue-600 hover:text-white transition duration-300"
+                  }`}
+                >
+                  Next
+                </button>
+              </li>
             </ul>
           </div>
         </div>
