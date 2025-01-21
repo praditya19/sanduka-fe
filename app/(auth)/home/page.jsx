@@ -377,6 +377,73 @@ export default function IconGrid() {
     return null;
   };
 
+  const MobileDeceasedScroll = ({ sortedData, formatDate }) => {
+    return (
+      <div className="w-full overflow-x-auto pb-4 mb-16">
+        <div className="flex space-x-4 px-4 min-w-min">
+          {sortedData.map((currentData, index) => (
+            <div key={index} className="flex-shrink-0 w-72 bg-white rounded-lg shadow-md">
+              {/* Gradient Header */}
+              <div className="bg-gradient-to-r from-blue-400 to-blue-800 p-4 rounded-t-lg">
+                <div className="flex justify-center mb-2">
+                  <Image
+                    src="/profile.png"
+                    width={80}
+                    height={80}
+                    alt="Profile"
+                    className="rounded-full border-2 border-white shadow-md"
+                  />
+                </div>
+                <h2 className="text-base font-bold text-white text-center mb-1">
+                  {currentData.namaLengkap}
+                </h2>
+                <p className="text-sm text-white text-center">
+                  Meninggal {formatDate(currentData.waktuMeninggalTerlapor)}
+                </p>
+              </div>
+
+              {/* Content */}
+              <div className="p-4">
+                <div className="text-center space-y-1 mb-3">
+                  <p className="text-sm">{currentData.npaPgri || "N/A"}</p>
+                  <p className="text-sm">
+                    {currentData.tempatLahir}, {formatDate(currentData.tanggalLahir)}
+                  </p>
+                  <p className="text-sm">{currentData.jabatan}</p>
+                  <p className="text-sm">{currentData.unitKerja}</p>
+                  <p className="text-sm">{currentData.cabang}</p>
+                  <p className="text-sm">{currentData.alamat}</p>
+                </div>
+
+                <p className="text-center text-gray-600 mb-3 text-sm">
+                  Catatan: {currentData.keteranganTerlapor}
+                </p>
+
+                <div className="flex justify-center mb-3">
+                  <button className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-1 px-4 rounded-full transition duration-300">
+                    <FontAwesomeIcon icon={faLocation} className="mr-1" /> Lokasi
+                  </button>
+                </div>
+
+                <div className="bg-blue-700 text-white text-sm font-medium py-1 px-3 rounded-full text-center flex items-center justify-center mb-2">
+                  <FontAwesomeIcon icon={faBullhorn} className="mr-2" /> PELAPOR
+                </div>
+
+                <div className="text-center space-y-1">
+                  <p className="text-sm">
+                    {formatDate(currentData.tanggalPelaporan)}, {currentData.jamLapor}
+                  </p>
+                  <p className="text-sm">{currentData.namaPelapor || "N/A"}</p>
+                  <p className="text-sm">📞 {currentData.nomorHpPelapor || "N/A"}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -390,37 +457,37 @@ export default function IconGrid() {
   const filteredIcons =
     role === "USER"
       ? icons
-          .filter((item) =>
-            [
-              "Lapor",
-              "Teman Unit",
-              "Ketentuan",
-              "Bantuan",
-              "Data Anggota",
-              "History data",
-              "Detail Anggota",
-            ].includes(item.label)
-          )
-          .concat({
-            icon: faRightLeft,
-            label: "Mutasi",
-            href: "/anggota/data-anggota/mutasiCabangUnit",
-            color: "text-cyan-500",
-          })
-          .concat({
-            icon: faFileAlt,
-            label: "Daspen",
-            href: "/daspen",
-            color: "text-teal-700",
-          })
-          .concat({
-            icon: faUser,
-            label: "Detail Anggota",
-            href: "/anggota/detail-anggota",
-            color: "text-blue-600 hover:text-blue-800",
-            bgHover: "hover:bg-blue-100",
-            iconColor: "text-blue-600",
-          })
+        .filter((item) =>
+          [
+            "Lapor",
+            "Teman Unit",
+            "Ketentuan",
+            "Bantuan",
+            "Data Anggota",
+            "History data",
+            "Detail Anggota",
+          ].includes(item.label)
+        )
+        .concat({
+          icon: faRightLeft,
+          label: "Mutasi",
+          href: "/anggota/data-anggota/mutasiCabangUnit",
+          color: "text-cyan-500",
+        })
+        .concat({
+          icon: faFileAlt,
+          label: "Daspen",
+          href: "/daspen",
+          color: "text-teal-700",
+        })
+        .concat({
+          icon: faUser,
+          label: "Detail Anggota",
+          href: "/anggota/detail-anggota",
+          color: "text-blue-600 hover:text-blue-800",
+          bgHover: "hover:bg-blue-100",
+          iconColor: "text-blue-600",
+        })
       : icons;
 
   return (
@@ -430,9 +497,8 @@ export default function IconGrid() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="flex-1 mt-[3.1%]">
             <img
@@ -669,9 +735,8 @@ export default function IconGrid() {
         </div>
 
         <div
-          className={` flex flex-col items-center my-4 ${
-            isSidebarOpen ? "ml-32" : "ml-0"
-          }`}
+          className={` flex flex-col items-center my-4 ${isSidebarOpen ? "ml-32" : "ml-0"
+            }`}
         >
           <hr className="mt-2 border-gray-300 w-full" />
           <h5 className="text-lg sm:text-xl font-semibold text-gray-800 mt-4 text-center">
@@ -680,114 +745,96 @@ export default function IconGrid() {
         </div>
 
         <div
-          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${
-            isSidebarOpen ? "ml-32" : "ml-0"
-          }`}
+          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${isSidebarOpen ? "ml-32" : "ml-0"
+            }`}
         >
-          <button
-            onClick={handlePrev}
-            className="hidden text-red-500 lg:block absolute left-32 top-1/2 transform -translate-y-1/2 z-10 bg-gray-100 p-2 rounded-full shadow-md hover:bg-gray-300"
-          >
-            <FontAwesomeIcon icon={faChevronLeft} />
-          </button>
+          {isMobile ? (
+            <MobileDeceasedScroll sortedData={sortedData} formatDate={formatDate} />
+          ) : (
+            <>
+              <button
+                onClick={handlePrev}
+                className="hidden text-red-500 lg:block absolute left-32 top-1/2 transform -translate-y-1/2 z-10 bg-gray-100 p-2 rounded-full shadow-md hover:bg-gray-300"
+              >
+                <FontAwesomeIcon icon={faChevronLeft} />
+              </button>
 
-          <div className="flex mx-auto sm:mx-44 space-x-4 overflow-x-auto w-full px-4 lg:px-0 lg:grid lg:grid-cols-5 lg:gap-4 lg:overflow-hidden">
-            {sortedData
-              .slice(currentIndex, currentIndex + itemsPerPage)
-              .map((currentData, index) => (
-                <div key={index} className="mb-3 max-w-xs">
-                  {/* Gradient Header */}
-                  <div className="bg-gradient-to-r from-blue-400 to-blue-800 p-2 text-center rounded-lg mb-2 relative">
-                    <div className="flex justify-center mb-1">
-                      <Image
-                        src="/profile.png"
-                        width={80}
-                        height={80}
-                        alt="Profile"
-                        className="rounded-full border-2 border-white shadow-md"
-                      />
-                    </div>
-                    <h2 className="text-sm font-bold text-white mb-0.5">
-                      {currentData.namaLengkap}
-                    </h2>
-                    <p className="text-xs font-medium text-white">
-                      Meninggal {formatDate(currentData.waktuMeninggalTerlapor)}
-                    </p>
-                  </div>
+              <div className="flex mx-auto sm:mx-44 space-x-4 overflow-x-auto w-full px-4 lg:px-0 lg:grid lg:grid-cols-5 lg:gap-4 lg:overflow-hidden">
+                {sortedData &&
+                  sortedData
+                    .slice(currentIndex, currentIndex + itemsPerPage)
+                    .map((currentData, index) => (
+                      <div key={index} className="mb-3 max-w-xs">
+                        {/* Gradient Header */}
+                        <div className="bg-gradient-to-r from-blue-400 to-blue-800 p-2 text-center rounded-lg mb-2 relative">
+                          <div className="flex justify-center mb-1">
+                            <Image
+                              src="/profile.png"
+                              width={80}
+                              height={80}
+                              alt="Profile"
+                              className="rounded-full border-2 border-white shadow-md"
+                            />
+                          </div>
+                          <h2 className="text-sm font-bold text-white mb-0.5">
+                            {currentData.namaLengkap}
+                          </h2>
+                          <p className="text-xs font-medium text-white">
+                            Meninggal {formatDate(currentData.waktuMeninggalTerlapor)}
+                          </p>
+                        </div>
 
-                  {/* Detailed Information */}
-                  <div className="text-center text-gray-700 mb-2 -mt-2">
-                    <p className="text-xs">{currentData.npaPgri || "N/A"}</p>
-                    <p className="text-xs">
-                      {currentData.tempatLahir},{" "}
-                      {formatDate(currentData.tanggalLahir)}
-                    </p>
-                    <p className="text-xs">{currentData.jabatan}</p>
-                    <p className="text-xs">{currentData.unitKerja}</p>
-                    <p className="text-xs">{currentData.cabang}</p>
-                    <p className="text-xs">{currentData.alamat}</p>
-                  </div>
+                        {/* Detailed Information */}
+                        <div className="text-center text-gray-700 mb-2 -mt-2">
+                          <p className="text-xs">{currentData.npaPgri || "N/A"}</p>
+                          <p className="text-xs">
+                            {currentData.tempatLahir},{" "}
+                            {formatDate(currentData.tanggalLahir)}
+                          </p>
+                          <p className="text-xs">{currentData.jabatan}</p>
+                          <p className="text-xs">{currentData.unitKerja}</p>
+                          <p className="text-xs">{currentData.cabang}</p>
+                          <p className="text-xs">{currentData.alamat}</p>
+                        </div>
 
-                  {/* Notes */}
-                  <p className="text-center text-gray-600 mb-1 text-xs font-medium">
-                    Catatan: {currentData.keteranganTerlapor}
-                  </p>
+                        {/* Notes */}
+                        <p className="text-center text-gray-600 mb-1 text-xs font-medium">
+                          Catatan: {currentData.keteranganTerlapor}
+                        </p>
 
-                  {/* Action Buttons */}
-                  <div className="flex justify-around mb-2 gap-1">
-                    <button className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-0.5 px-2 rounded-full transition duration-300">
-                      <FontAwesomeIcon icon={faLocation} className="mr-1" />{" "}
-                      Lokasi
-                    </button>
-                    {/* <button
-                      className={`${["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
-                          ? "bg-red-600 hover:bg-red-700"
-                          : "bg-gray-400 cursor-not-allowed"
-                        } text-white text-xs font-medium py-0.5 px-2 rounded-full transition duration-300`}
-                      disabled={
-                        !["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
-                      }
-                    >
-                      <FontAwesomeIcon icon={faCancel} className="mr-1" /> Batal
-                    </button>
-                    <button
-                      className={`${["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
-                          ? "bg-purple-600 hover:bg-purple-700"
-                          : "bg-gray-400 cursor-not-allowed"
-                        } text-white text-xs font-medium py-0.5 px-2 rounded-full transition duration-300`}
-                      disabled={
-                        !["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
-                      }
-                    >
-                      <FontAwesomeIcon icon={faCheck} className="mr-1" /> Verifikasi
-                    </button> */}
-                  </div>
+                        {/* Action Buttons */}
+                        <div className="flex justify-around mb-2 gap-1">
+                          <button className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-0.5 px-2 rounded-full transition duration-300">
+                            <FontAwesomeIcon icon={faLocation} className="mr-1" /> Lokasi
+                          </button>
+                        </div>
 
-                  {/* Reporter Section */}
-                  <div className="bg-blue-700 text-white text-xs font-medium py-1 px-3 rounded-full text-center flex items-center justify-center mb-2">
-                    <FontAwesomeIcon icon={faBullhorn} className="mr-1" />{" "}
-                    PELAPOR
-                  </div>
-                  <p className="text-center text-gray-600 mt-1 text-xs">
-                    {formatDate(currentData.tanggalPelaporan)},{" "}
-                    {currentData.jamLapor}
-                  </p>
-                  <p className="text-center text-gray-600 text-xs">
-                    {currentData.namaPelapor || "N/A"}
-                  </p>
-                  <p className="text-center text-gray-600 text-xs">
-                    📞 {currentData.nomorHpPelapor || "N/A"}
-                  </p>
-                </div>
-              ))}
-          </div>
+                        {/* Reporter Section */}
+                        <div className="bg-blue-700 text-white text-xs font-medium py-1 px-3 rounded-full text-center flex items-center justify-center mb-2">
+                          <FontAwesomeIcon icon={faBullhorn} className="mr-1" /> PELAPOR
+                        </div>
+                        <p className="text-center text-gray-600 mt-1 text-xs">
+                          {formatDate(currentData.tanggalPelaporan)},{" "}
+                          {currentData.jamLapor}
+                        </p>
+                        <p className="text-center text-gray-600 text-xs">
+                          {currentData.namaPelapor || "N/A"}
+                        </p>
+                        <p className="text-center text-gray-600 text-xs">
+                          📞 {currentData.nomorHpPelapor || "N/A"}
+                        </p>
+                      </div>
+                    ))}
+              </div>
 
-          <button
-            onClick={handleNext}
-            className="hidden text-red-500 lg:block absolute right-32 top-1/2 transform -translate-y-1/2 z-10 bg-gray-100 p-2 rounded-full shadow-md hover:bg-gray-300"
-          >
-            <FontAwesomeIcon icon={faChevronRight} />
-          </button>
+              <button
+                onClick={handleNext}
+                className="hidden text-red-500 lg:block absolute right-32 top-1/2 transform -translate-y-1/2 z-10 bg-gray-100 p-2 rounded-full shadow-md hover:bg-gray-300"
+              >
+                <FontAwesomeIcon icon={faChevronRight} />
+              </button>
+            </>
+          )}
         </div>
 
         <div className="w-full col-span-2">

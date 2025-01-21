@@ -65,17 +65,23 @@ const Page = () => {
       const userRole = sessionStorage.getItem("role");
       const npa = sessionStorage.getItem("npa");
       setLoading(true);
-
+  
       let historyData = [];
-
+  
       // Fetch history data based on user role
       if (userRole === "USER") {
         try {
           const historyResponse = await GlobalApi.getHistoryByNpa(npa);
-          // For USER role, only get the latest history entry for display
-          historyData = Array.isArray(historyResponse)
-            ? [historyResponse[0]] // Only take the latest entry
+          // Sort the data before taking the latest entry
+          const sortedData = Array.isArray(historyResponse) 
+            ? historyResponse.sort((a, b) => {
+                const dateA = new Date(`${a.tanggal} ${a.jam}`);
+                const dateB = new Date(`${b.tanggal} ${b.jam}`);
+                return dateB - dateA;
+              })
             : [historyResponse];
+          // For USER role, only get the latest history entry for display
+          historyData = [sortedData[0]];
         } catch (error) {
           console.error("Error fetching user history:", error);
           historyData = [];
@@ -83,7 +89,14 @@ const Page = () => {
       } else if (userRole === "ADMIN") {
         try {
           const historyResponse = await GlobalApi.getHistoryByNpa(npa);
-          historyData = Array.isArray(historyResponse) ? historyResponse : [historyResponse];
+          // Sort all data for admin
+          historyData = Array.isArray(historyResponse) 
+            ? historyResponse.sort((a, b) => {
+                const dateA = new Date(`${a.tanggal} ${a.jam}`);
+                const dateB = new Date(`${b.tanggal} ${b.jam}`);
+                return dateB - dateA;
+              })
+            : [historyResponse];
         } catch (error) {
           console.error("Error fetching admin history:", error);
           historyData = [];
@@ -92,14 +105,19 @@ const Page = () => {
         try {
           const historyResponse = await GlobalApi.getHistoryData(0, 10000);
           if (historyResponse && historyResponse.content) {
-            historyData = historyResponse.content;
+            // Sort all history data
+            historyData = historyResponse.content.sort((a, b) => {
+              const dateA = new Date(`${a.tanggal} ${a.jam}`);
+              const dateB = new Date(`${b.tanggal} ${b.jam}`);
+              return dateB - dateA;
+            });
           }
         } catch (error) {
           console.error("Error fetching all history:", error);
           historyData = [];
         }
       }
-
+  
       // Process NPA data (rest of the NPA processing code remains the same)
       if (historyData.length > 0) {
         const uniqueNpas = [...new Set(
@@ -107,9 +125,9 @@ const Page = () => {
             .map(item => item.npa)
             .filter(npa => npa && npa.trim())
         )];
-
+  
         let npaDetailsMap = {};
-
+  
         if (uniqueNpas.length > 0) {
           try {
             const npaDetails = await GlobalApi.cekNpaList(uniqueNpas);
@@ -124,14 +142,14 @@ const Page = () => {
             console.warn("Error fetching NPA details:", npaError);
           }
         }
-
+  
         const enrichedData = historyData.map(item => ({
           ...item,
           npaDetail: item.npa && npaDetailsMap[item.npa.trim().toLowerCase()]
             ? npaDetailsMap[item.npa.trim().toLowerCase()]
             : {}
         }));
-
+  
         setAllData(enrichedData);
       }
     } catch (error) {
@@ -154,30 +172,37 @@ const Page = () => {
   }, [token, router]);
 
   useEffect(() => {
-    const filtered = allData.filter((item) => {
-      const shouldHideRow = (!item.npaDetail?.cabang || item.npaDetail?.cabang.trim() === '') &&
-        (!item.npaDetail?.namaLengkap || item.npaDetail?.namaLengkap === '-') &&
-        (!item.npaDetail?.npaPgri || item.npaDetail?.npaPgri === '-') &&
-        (!item.npaDetail?.tempatLahir || item.npaDetail?.tempatLahir === '-') &&
-        (!item.npaDetail?.jabatan || item.npaDetail?.jabatan === '-') &&
-        (!item.npaDetail?.unitKerja || item.npaDetail?.unitKerja === '-');
+    const filtered = allData
+      .filter((item) => {
+        const shouldHideRow = (!item.npaDetail?.cabang || item.npaDetail?.cabang.trim() === '') &&
+          (!item.npaDetail?.namaLengkap || item.npaDetail?.namaLengkap === '-') &&
+          (!item.npaDetail?.npaPgri || item.npaDetail?.npaPgri === '-') &&
+          (!item.npaDetail?.tempatLahir || item.npaDetail?.tempatLahir === '-') &&
+          (!item.npaDetail?.jabatan || item.npaDetail?.jabatan === '-') &&
+          (!item.npaDetail?.unitKerja || item.npaDetail?.unitKerja === '-');
 
-      if (shouldHideRow) return false;
+        if (shouldHideRow) return false;
 
-      const matchesCabang = selectedCabang
-        ? (item.npaDetail?.cabang?.toLowerCase() || item.cabang?.toLowerCase()) === selectedCabang.toLowerCase()
-        : true;
+        const matchesCabang = selectedCabang
+          ? (item.npaDetail?.cabang?.toLowerCase() || item.cabang?.toLowerCase()) === selectedCabang.toLowerCase()
+          : true;
 
-      const matchesMonth = selectedMonth
-        ? new Date(item.tanggal).getMonth() + 1 === parseInt(selectedMonth, 10)
-        : true;
+        const matchesMonth = selectedMonth
+          ? new Date(item.tanggal).getMonth() + 1 === parseInt(selectedMonth, 10)
+          : true;
 
-      const matchesYear = selectedYear
-        ? new Date(item.tanggal).getFullYear() === parseInt(selectedYear, 10)
-        : true;
+        const matchesYear = selectedYear
+          ? new Date(item.tanggal).getFullYear() === parseInt(selectedYear, 10)
+          : true;
 
-      return matchesCabang && matchesMonth && matchesYear;
-    });
+        return matchesCabang && matchesMonth && matchesYear;
+      })
+      .sort((a, b) => {
+        // Create Date objects that combine the date and time
+        const dateA = new Date(`${a.tanggal} ${a.jam}`);
+        const dateB = new Date(`${b.tanggal} ${b.jam}`);
+        return dateB - dateA; // Sort in descending order (newest first)
+      });
 
     setTotalItems(filtered.length);
     const indexOfLastItem = currentPage * itemsPerPage;
