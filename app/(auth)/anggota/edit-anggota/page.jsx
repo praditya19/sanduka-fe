@@ -993,7 +993,7 @@ const Page = () => {
               marginBottom: "8px",
             }}
           >
-            Data NIP tidak ada
+            Data NIP tidak ada, Silahkan Hubungi Admin.
           </strong>
         </div>,
         {
@@ -1519,6 +1519,9 @@ const Page = () => {
                               </p>
                               <p>
                                 <strong>Unit Kerja:</strong> {data.unitKerja}
+                              </p>
+                              <p>
+                                <strong>Kategori Daspen:</strong> {data.kategoriDaspen}
                               </p>
                             </div>
                           ) : (
