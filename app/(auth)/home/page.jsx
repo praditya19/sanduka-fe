@@ -366,7 +366,7 @@ export default function IconGrid() {
   const renderCheckmark = (value) => {
     if (value === "Ya") {
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-sm font-medium bg-green-500 text-white">
           Terdaftar
         </span>
       );
@@ -377,7 +377,7 @@ export default function IconGrid() {
       value === "TIDAK"
     ) {
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-500 text-white">
           Belum Terdaftar
         </span>
       );
@@ -621,21 +621,21 @@ export default function IconGrid() {
                   <div className="flex justify-center space-x-8 mb-10 -mt-36 items-center text-center">
                     <div className="flex items-center justify-center">
                       <span className=" text-lg ">Daspen:</span>
-                      <div className="w-14 h-14 flex ml-1 justify-center items-center text-2xl">
+                      <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
                         {renderCheckmark(userData?.pesertaDaspen)}
                       </div>
                     </div>
 
                     <div className="flex items-center justify-center">
                       <span className=" text-lg ">KTA Digital:</span>
-                      <div className="w-14 h-14 flex ml-1 justify-center items-center text-2xl">
+                      <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
                         {renderCheckmark(userData?.pesertaKtaDigital)}
                       </div>
                     </div>
 
                     <div className="flex items-center justify-center">
                       <span className=" text-lg ">Sanduka:</span>
-                      <div className="w-14 h-14 flex ml-1 justify-center items-center text-2xl">
+                      <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
                         {renderCheckmark(userData?.pesertaSanduka)}
                       </div>
                     </div>
