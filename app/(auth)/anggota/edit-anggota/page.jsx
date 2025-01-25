@@ -650,6 +650,64 @@ const Page = () => {
         return;
       }
 
+      const nipData = await GlobalApi.getFileByNip(nip);
+    if (nipData?.verifikasi === true) {
+      toast.success(
+        <div
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      textAlign: "center",
+    }}
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      style={{
+        width: "48px",
+        height: "48px",
+        color: "#FFA500", // Warna kuning-oranye untuk ikon info
+        marginBottom: "16px",
+      }}
+      fill="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 15c-.55 0-1-.45-1-1v-6c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1zm0-10c-.83 0-1.5-.67-1.5-1.5S11.17 4 12 4s1.5.67 1.5 1.5S12.83 7 12 7z" />
+    </svg>
+    <strong
+      style={{
+        fontSize: "1.75rem",
+        display: "block",
+        marginBottom: "8px",
+      }}
+    >
+            Data Anda Sudah Tersingkronisasi
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      return;
+      }
+      
       const response = await GlobalApi.updateRegisUser(userId, data);
       toast.success(
         <div
