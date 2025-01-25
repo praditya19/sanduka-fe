@@ -278,9 +278,7 @@ const Page = () => {
 
     const userRole = sessionStorage.getItem("role");
     const namaLengkapUser =
-      userRole === "USER"
-        ? namaLengkap
-        : sessionStorage.getItem("nama");
+      userRole === "USER" ? namaLengkap : sessionStorage.getItem("nama");
 
     const historyData = {
       hari,
@@ -311,12 +309,14 @@ const Page = () => {
     const anggotaId = sessionStorage.getItem("anggotaId");
     const userId = sessionStorage.getItem("userId");
     const id = anggotaId || userId;
-  
+
     if (!id) {
-      console.error("User ID atau Anggota ID tidak ditemukan atau tidak valid.");
+      console.error(
+        "User ID atau Anggota ID tidak ditemukan atau tidak valid."
+      );
       return;
     }
-  
+
     const formatTanggal = (tanggal) => {
       const date = new Date(tanggal);
       const year = date.getFullYear();
@@ -324,9 +324,9 @@ const Page = () => {
       const day = String(date.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
     };
-  
+
     const formattedTahunDiangkat = formatTanggal(tahunDiangkat);
-  
+
     const requiredFieldsStep2 = [
       { field: selectedCabang ?? "", name: "Cabang", id: "cabang" },
       { field: selectedUnitKerja ?? "", name: "Unit Kerja", id: "unitKerja" },
@@ -383,12 +383,12 @@ const Page = () => {
       },
       { field: mengajar ?? "", name: "Mengajar", id: "mengajar" },
     ];
-  
+
     const emptyFields = requiredFieldsStep2.filter(({ field }) => !field);
-  
+
     if (emptyFields.length > 0) {
       const firstEmptyField = emptyFields[0];
-  
+
       toast.error(`Field ${firstEmptyField.name} wajib diisi!`, {
         position: "top-right",
         autoClose: 2000,
@@ -398,25 +398,25 @@ const Page = () => {
         draggable: true,
         progress: undefined,
       });
-  
+
       const element = document.getElementById(firstEmptyField.id);
       if (element) {
         element.scrollIntoView({ behavior: "smooth", block: "center" });
         element.focus();
       }
-  
+
       return;
     }
-  
+
     const cleanNamaAnak = Array.isArray(namaAnak)
       ? namaAnak.map((name) => (typeof name === "string" ? name.trim() : name))
       : [];
-  
+
     const formattedNamaAnak = JSON.stringify(cleanNamaAnak);
-  
+
     const formattedTanggalLahir = formatTanggal(tanggalLahir);
     const formattedMulaiJadiAnggota = formatTanggal(mulaiJadiAnggotaPgri);
-  
+
     const formData = new FormData();
     formData.append("email", email);
     formData.append("password", password);
@@ -435,11 +435,11 @@ const Page = () => {
     formData.append("kodePos", kodePos);
     formData.append("nomorHp", nomorHp);
     formData.append("namaSuamiIstri", namaSuamiIstri);
-  
+
     if (selectedFile) {
       formData.append("foto", selectedFile);
     }
-  
+
     formData.append("cabang", selectedCabang);
     formData.append("unitKerja", selectedUnitKerja);
     formData.append("jabatan", valueJabatan);
@@ -458,17 +458,17 @@ const Page = () => {
     formData.append("pesertaSanduka", pesertaSanduka ? "Ya" : "");
     formData.append("pesertaDaspen", pesertaDaspen ? "Ya" : "");
     formData.append("pesertaKtaDigital", pesertaKtaDigital ? "Ya" : "");
-  
+
     for (let [key, value] of formData.entries()) {
       console.log(`${key}: ${value}`);
     }
-  
+
     if (!email) {
       console.error("Email tidak boleh kosong!");
       toast.error("Email wajib diisi sebelum melanjutkan.");
       return;
     }
-  
+
     try {
       const response = await GlobalApi.updateUserById(id, formData);
       await handleCreateHistory();
@@ -650,64 +650,6 @@ const Page = () => {
         return;
       }
 
-      const nipData = await GlobalApi.getFileByNip(nip);
-    if (nipData?.verifikasi === true) {
-      toast.success(
-        <div
-    style={{
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      textAlign: "center",
-    }}
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      style={{
-        width: "48px",
-        height: "48px",
-        color: "#FFA500",
-        marginBottom: "16px",
-      }}
-      fill="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 15c-.55 0-1-.45-1-1v-6c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1zm0-10c-.83 0-1.5-.67-1.5-1.5S11.17 4 12 4s1.5.67 1.5 1.5S12.83 7 12 7z" />
-    </svg>
-    <strong
-      style={{
-        fontSize: "1.75rem",
-        display: "block",
-        marginBottom: "8px",
-      }}
-    >
-            Data Anda Sudah Tersingkronisasi
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
-      return;
-    }
-    
       const response = await GlobalApi.updateRegisUser(userId, data);
       toast.success(
         <div
@@ -735,7 +677,7 @@ const Page = () => {
           <strong
             style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
           >
-            Data berhasil diupdate!
+            Data berhasil disinkronkan!
           </strong>
         </div>,
         {
@@ -969,7 +911,7 @@ const Page = () => {
 
   const handleCekNip = async () => {
     try {
-      const data = await GlobalApi.getFileByNip(nip);
+      const data = await GlobalApi.getByNIP(nip);
       setData(data);
       setIsPopupVisible(true);
       toast.success(
@@ -1304,7 +1246,7 @@ const Page = () => {
   };
 
   const cleanName = (name) => {
-    return name.replace(/[\[\]\"\\]/g, '').trim();
+    return name.replace(/[\[\]\"\\]/g, "").trim();
   };
 
   const handleResize = () => {
@@ -1491,7 +1433,7 @@ const Page = () => {
                           <p className="mt-2">
                             Pastikan password Anda kuat dan mudah diingat!
                             password yang berhasil di buat maka secara otomatis
-                            akan di hash supaya lebih aman
+                            akan di hash supaya lebih aman
                           </p>
                           <div className="flex justify-end mt-6">
                             <button
@@ -1532,7 +1474,7 @@ const Page = () => {
                     <Label className="block text-sm font-medium mb-3">
                       NIP
                       <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
-                      Jika Tidak Memiliki NIP isi "0"
+                        Jika Tidak Memiliki NIP isi "0"
                       </span>
                     </Label>
                     <Input
@@ -1578,7 +1520,8 @@ const Page = () => {
                                 <strong>Unit Kerja:</strong> {data.unitKerja}
                               </p>
                               <p>
-                                <strong>Kategori Daspen:</strong> {data.kategoriDaspen}
+                                <strong>Kategori Daspen:</strong>{" "}
+                                {data.kategoriDaspen}
                               </p>
                             </div>
                           ) : (
@@ -1928,7 +1871,7 @@ const Page = () => {
                           </Button>
                         </div>
                       ))}
-                    
+
                     <Button
                       type="button"
                       onClick={handleAddInput}

@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation"; // Pastikan ini diimpor
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"; // Jika menggunakan FontAwesome
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons"; // Jika menggunakan FontAwesome
+import { useRouter } from "next/navigation";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
 import {
@@ -29,7 +29,18 @@ const Page = () => {
         try {
           setLoading(true);
           const result = await GlobalApi.getHistoryByNpa(npa);
-          setData(result);
+          
+          // Sort the data by date and time in descending order
+          const sortedData = result.sort((a, b) => {
+            // Create Date objects combining the date and time
+            const [dayA, monthA, yearA] = a.tanggal.split('/');
+            const [dayB, monthB, yearB] = b.tanggal.split('/');
+            const dateA = new Date(`${yearA}-${monthA}-${dayA} ${a.jam}`);
+            const dateB = new Date(`${yearB}-${monthB}-${dayB} ${b.jam}`);
+            return dateB - dateA; // Sort in descending order
+          });
+
+          setData(sortedData);
         } catch (err) {
           setError(err.message);
         } finally {
@@ -52,7 +63,7 @@ const Page = () => {
           <FontAwesomeIcon icon={faArrowLeft} size="lg" />
         </button>
         <h1 className="text-2xl font-semibold text-white text-center flex-grow">
-          Detail
+          Detail History
         </h1>
       </div>
       {loading ? (
@@ -65,20 +76,14 @@ const Page = () => {
             <TableHeader className="p-2 md:p-3 bg-green-300">
               <TableRow>
                 {[
-                  "Hari",
-                  "Data",
-                  "Cabang",
+                  "Waktu",
+                  "Data Anggota",
                   "Uraian",
-                  "Bulan",
-                  "Tahun",
-                  "Cabang ke 2",
-                  "User",
-                ].map((header, idx) => (
+                  "Info Tambahan",
+                ].map((header) => (
                   <TableHead
                     key={header}
-                    className={`border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white ${
-                      idx > 2 ? "hidden lg:table-cell" : ""
-                    }`}
+                    className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
                   >
                     {header}
                   </TableHead>
@@ -89,83 +94,67 @@ const Page = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((item, index) => {
-                return (
-                  <>
-                    <TableRow
-                      key={index}
-                      className={`hover:bg-gray-100 transition duration-200 ${
-                        index % 2 === 0 ? "bg-gray-200" : "bg-white"
-                      }`}
-                    >
-                      <TableCell className="text-center border border-gray-300 p-2">
-                        {item.hari}, {item.tanggal}, {item.jam}
-                      </TableCell>
-                      <TableCell className="border border-gray-300 p-2">
-                        <div className="font-semibold">{item.nama}</div>
-                        <div className="text-gray-600">{item.npa}</div>
-                      </TableCell>
-                      <TableCell className="text-center border border-gray-300 p-2">
-                        {item.cabang}
-                      </TableCell>
-                      <TableCell className="border border-gray-300 p-2 hidden lg:table-cell">
-                        {item.uraian}
-                      </TableCell>
-                      <TableCell className="border text-center border-gray-300 p-2 hidden lg:table-cell">
-                        {item.bulan}
-                      </TableCell>
-                      <TableCell className="border text-center border-gray-300 p-2 hidden lg:table-cell">
-                        {item.tahun}
-                      </TableCell>
-                      <TableCell className="border text-center border-gray-300 p-2 hidden lg:table-cell">
-                        {item.cabang_ke_2}
-                      </TableCell>
-                      <TableCell className="border text-center border-gray-300 p-2 hidden lg:table-cell">
-                        {item.user}
-                      </TableCell>
+              {data.map((item, index) => (
+                <React.Fragment key={index}>
+                  <TableRow
+                    className={`hover:bg-gray-100 transition duration-200 ${
+                      index % 2 === 0 ? "bg-gray-200" : "bg-white"
+                    }`}
+                  >
+                    <TableCell className="text-center border border-gray-300 p-2">
+                      <div>{item.hari}</div>
+                      <div>{item.tanggal}</div>
+                      <div>{item.jam}</div>
+                    </TableCell>
+                    <TableCell className="border border-gray-300 p-2">
+                      <div className="font-semibold">{item.nama}</div>
+                      <div className="text-gray-600">NPA: {item.npa}</div>
+                      <div className="text-gray-600">Cabang: {item.cabang}</div>
+                    </TableCell>
+                    <TableCell className="border border-gray-300 p-2">
+                      {item.uraian}
+                    </TableCell>
+                    <TableCell className="border border-gray-300 p-2 hidden lg:table-cell">
+                      <div>Periode: {item.bulan} {item.tahun}</div>
+                      {item.cabang_ke_2 && <div>Cabang Baru : {item.cabang_ke_2}</div>}
+                      <div>Petugas: {item.user}</div>
+                    </TableCell>
+                    <TableCell className="text-center border border-gray-300 p-2 lg:hidden">
+                      <Button
+                        className="text-blue-500"
+                        onClick={() => handleExpand(index)}
+                      >
+                        {expandedIndex === index ? (
+                          <FaMinusCircle />
+                        ) : (
+                          <FaPlusCircle />
+                        )}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
 
-                      <TableCell className="text-center border border-gray-300 p-2 lg:hidden">
-                        <Button
-                          className="text-blue-500"
-                          onClick={() => handleExpand(index)}
-                        >
-                          {expandedIndex === index ? (
-                            <FaMinusCircle />
-                          ) : (
-                            <FaPlusCircle />
-                          )}
-                        </Button>
+                  {expandedIndex === index && (
+                    <TableRow className="bg-gray-100 lg:hidden">
+                      <TableCell
+                        colSpan="5"
+                        className="border border-gray-300 p-4 text-sm"
+                      >
+                        <div>
+                          <strong>Periode:</strong> {item.bulan} {item.tahun}
+                        </div>
+                        {item.cabang_ke_2 && (
+                          <div>
+                            <strong>Cabang Baru :</strong> {item.cabang_ke_2}
+                          </div>
+                        )}
+                        <div>
+                          <strong>Petugas:</strong> {item.user}
+                        </div>
                       </TableCell>
                     </TableRow>
-
-                    {expandedIndex === index && (
-                      <TableRow className="bg-gray-100 lg:hidden">
-                        <TableCell
-                          colSpan="4"
-                          className="border border-gray-300 p-4 text-sm"
-                        >
-                          <div>
-                            <strong>Uraian:</strong> {item.uraian ?? "-"}
-                          </div>
-                          <div>
-                            <strong>Bulan:</strong> {item.bulan ?? "-"}
-                          </div>
-                          <div>
-                            <strong>Tahun:</strong> {item.tahun ?? "-"}
-                          </div>
-                          <div>
-                            <strong>Cabang ke 2:</strong>{" "}
-                            {item.cabang_ke_2 ?? "-"}
-                          </div>
-                          <div>
-                            <strong>User:</strong> {item.user ?? "-"}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </>
-                );
-              })}
+                  )}
+                </React.Fragment>
+              ))}
             </TableBody>
           </Table>
         </div>
