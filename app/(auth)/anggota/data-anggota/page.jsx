@@ -279,12 +279,15 @@ const DataAnggota = () => {
     fetchDataAnggota(0, pageSize, selectedCabang, selectedUnitKerja, nama);
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
+  const formatDate = (dateArray) => {
+    if (!Array.isArray(dateArray) || dateArray.length !== 3) {
+      return "-";
+    }
+  
+    const [year, month, day] = dateArray;
+    const formattedDay = String(day).padStart(2, "0");
+    const formattedMonth = String(month).padStart(2, "0");
+    return `${formattedDay}-${formattedMonth}-${year}`;
   };
 
   const calculateAge = (birthDateString) => {
@@ -301,16 +304,9 @@ const DataAnggota = () => {
     return `${age} tahun`;
   };
 
-  const calculateRetirementDate = (birthDateString, employmentType) => {
-    const birthDate = new Date(birthDateString);
-    const retirementAge = employmentType === "PNS" ? 60 : 58;
-    const retirementYear = birthDate.getFullYear() + retirementAge;
-    const retirementDate = new Date(
-      retirementYear,
-      birthDate.getMonth(),
-      birthDate.getDate()
-    );
-
+  const formatRetirementDate = (timestamp) => {
+    const retirementDate = new Date(timestamp);
+  
     const formattedRetirementDate = retirementDate
       .toLocaleDateString("id-ID", {
         day: "2-digit",
@@ -318,7 +314,7 @@ const DataAnggota = () => {
         year: "numeric",
       })
       .replace(/\//g, "-");
-
+  
     return formattedRetirementDate;
   };
 
@@ -407,10 +403,7 @@ const DataAnggota = () => {
                         <div>${item.tempatLahir},</div>
                         <div>${formatDate(item.tanggalLahir)}</div>
                         <div>${calculateAge(item.tanggalLahir)} Tahun</div>
-                        <div>${calculateRetirementDate(
-                          item.tanggalLahir,
-                          item.statusPegawai
-                        )}</div>
+                        <div>${formatRetirementDate(item.prediksiPensiun)}</div>
                       </td>
                       <td>
                         <div>${item.cabang},</div>
@@ -522,7 +515,7 @@ const DataAnggota = () => {
                 calculateAge={calculateAge}
                 handleEditClick={handleEditClick}
                 handlePindahCabangUnit={handlePindahCabangUnit}
-                calculateRetirementDate={calculateRetirementDate}
+                formatRetirementDate={formatRetirementDate}
                 handleUserClick={handleUserClick}
                 fotoBase64={fotoBase64}
                 loading={loading}
@@ -908,7 +901,7 @@ const DataTable = ({
   anggotaData,
   formatDate,
   calculateAge,
-  calculateRetirementDate,
+  formatRetirementDate,
   fotoBase64,
   currentPage,
   pageSize,
@@ -2072,10 +2065,9 @@ const DataTable = ({
                           </div>
                           <div className="text-sm">
                             Pensiun :{" "}
-                            {calculateRetirementDate(
-                              item.tanggalLahir,
-                              item.statusPegawai
-                            )}
+                            {item.prediksiPensiun
+    ? formatRetirementDate(item.prediksiPensiun)
+    : "-"}
                           </div>
                         </td>
                         <td className="py-2 px-4 border">
@@ -2500,10 +2492,9 @@ const DataTable = ({
                               </div>
                               <div className="text-sm">
                                 Pensiun :{" "}
-                                {calculateRetirementDate(
-                                  item.tanggalLahir,
-                                  item.statusPegawai
-                                )}
+                                {item.prediksiPensiun
+    ? formatRetirementDate(item.prediksiPensiun)
+    : "-"}
                               </div>
                             </div>
                             <div className="text-left">
