@@ -365,14 +365,22 @@ export default function IconGrid() {
 
   const renderCheckmark = (value) => {
     if (value === "Ya") {
-      return <span className="text-green-500">✔</span>;
+      return (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+          Terdaftar
+        </span>
+      );
     } else if (
       value === "" ||
       value === null ||
       value === undefined ||
       value === "TIDAK"
     ) {
-      return <span className="text-red-500">✘</span>;
+      return (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+          Belum Terdaftar
+        </span>
+      );
     }
     return null;
   };
@@ -382,7 +390,10 @@ export default function IconGrid() {
       <div className="w-full overflow-x-auto pb-4 mb-16">
         <div className="flex space-x-4 px-4 min-w-min">
           {sortedData.map((currentData, index) => (
-            <div key={index} className="flex-shrink-0 w-72 bg-white rounded-lg shadow-md">
+            <div
+              key={index}
+              className="flex-shrink-0 w-72 bg-white rounded-lg shadow-md"
+            >
               {/* Gradient Header */}
               <div className="bg-gradient-to-r from-blue-400 to-blue-800 p-4 rounded-t-lg">
                 <div className="flex justify-center mb-2">
@@ -407,7 +418,8 @@ export default function IconGrid() {
                 <div className="text-center space-y-1 mb-3">
                   <p className="text-sm">{currentData.npaPgri || "N/A"}</p>
                   <p className="text-sm">
-                    {currentData.tempatLahir}, {formatDate(currentData.tanggalLahir)}
+                    {currentData.tempatLahir},{" "}
+                    {formatDate(currentData.tanggalLahir)}
                   </p>
                   <p className="text-sm">{currentData.jabatan}</p>
                   <p className="text-sm">{currentData.unitKerja}</p>
@@ -421,7 +433,8 @@ export default function IconGrid() {
 
                 <div className="flex justify-center mb-3">
                   <button className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-1 px-4 rounded-full transition duration-300">
-                    <FontAwesomeIcon icon={faLocation} className="mr-1" /> Lokasi
+                    <FontAwesomeIcon icon={faLocation} className="mr-1" />{" "}
+                    Lokasi
                   </button>
                 </div>
 
@@ -431,10 +444,13 @@ export default function IconGrid() {
 
                 <div className="text-center space-y-1">
                   <p className="text-sm">
-                    {formatDate(currentData.tanggalPelaporan)}, {currentData.jamLapor}
+                    {formatDate(currentData.tanggalPelaporan)},{" "}
+                    {currentData.jamLapor}
                   </p>
                   <p className="text-sm">{currentData.namaPelapor || "N/A"}</p>
-                  <p className="text-sm">📞 {currentData.nomorHpPelapor || "N/A"}</p>
+                  <p className="text-sm">
+                    📞 {currentData.nomorHpPelapor || "N/A"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -457,37 +473,37 @@ export default function IconGrid() {
   const filteredIcons =
     role === "USER"
       ? icons
-        .filter((item) =>
-          [
-            "Lapor",
-            "Teman Unit",
-            "Ketentuan",
-            "Bantuan",
-            "Data Anggota",
-            "History data",
-            "Detail Anggota",
-          ].includes(item.label)
-        )
-        .concat({
-          icon: faRightLeft,
-          label: "Mutasi",
-          href: "/anggota/data-anggota/mutasiCabangUnit",
-          color: "text-cyan-500",
-        })
-        .concat({
-          icon: faFileAlt,
-          label: "Daspen",
-          href: "/daspen",
-          color: "text-teal-700",
-        })
-        .concat({
-          icon: faUser,
-          label: "Detail Anggota",
-          href: "/anggota/detail-anggota",
-          color: "text-blue-600 hover:text-blue-800",
-          bgHover: "hover:bg-blue-100",
-          iconColor: "text-blue-600",
-        })
+          .filter((item) =>
+            [
+              "Lapor",
+              "Teman Unit",
+              "Ketentuan",
+              "Bantuan",
+              "Data Anggota",
+              "History data",
+              "Detail Anggota",
+            ].includes(item.label)
+          )
+          .concat({
+            icon: faRightLeft,
+            label: "Mutasi",
+            href: "/anggota/data-anggota/mutasiCabangUnit",
+            color: "text-cyan-500",
+          })
+          .concat({
+            icon: faFileAlt,
+            label: "Daspen",
+            href: "/daspen",
+            color: "text-teal-700",
+          })
+          .concat({
+            icon: faUser,
+            label: "Detail Anggota",
+            href: "/anggota/detail-anggota",
+            color: "text-blue-600 hover:text-blue-800",
+            bgHover: "hover:bg-blue-100",
+            iconColor: "text-blue-600",
+          })
       : icons;
 
   return (
@@ -497,8 +513,9 @@ export default function IconGrid() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="flex-1 mt-[3.1%]">
             <img
@@ -511,24 +528,24 @@ export default function IconGrid() {
             {isMobile ? (
               <>
                 {(role === "USER" || role === "ADMIN") && (
-                  <div className="flex justify-center mb-[18%] ml-3 -mt-32 items-center text-center overflow-x-hidden max-w-full">
-                    <div className="flex items-center justify-center">
-                      <span className=" text-lg ">Daspen:</span>
-                      <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                  <div className="flex justify-center mb-[17%] -mt-36 items-center text-center overflow-x-hidden max-w-full gap-8">
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="text-lg">Daspen:</span>
+                      <div className="w-14 h-14 flex justify-center items-center text-2xl -mt-2">
                         {renderCheckmark(userData?.pesertaDaspen)}
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-center">
-                      <span className=" text-lg ">KTA Digital:</span>
-                      <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="text-lg">KTA Digital:</span>
+                      <div className="w-14 h-14 flex justify-center items-center text-2xl -mt-2">
                         {renderCheckmark(userData?.pesertaKtaDigital)}
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-center">
-                      <span className=" text-lg ">Sanduka:</span>
-                      <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="text-lg">Sanduka:</span>
+                      <div className="w-14 h-14 flex justify-center items-center text-2xl -mt-2">
                         {renderCheckmark(userData?.pesertaSanduka)}
                       </div>
                     </div>
@@ -604,21 +621,21 @@ export default function IconGrid() {
                   <div className="flex justify-center space-x-8 mb-10 -mt-36 items-center text-center">
                     <div className="flex items-center justify-center">
                       <span className=" text-lg ">Daspen:</span>
-                      <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                      <div className="w-14 h-14 flex ml-1 justify-center items-center text-2xl">
                         {renderCheckmark(userData?.pesertaDaspen)}
                       </div>
                     </div>
 
                     <div className="flex items-center justify-center">
                       <span className=" text-lg ">KTA Digital:</span>
-                      <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                      <div className="w-14 h-14 flex ml-1 justify-center items-center text-2xl">
                         {renderCheckmark(userData?.pesertaKtaDigital)}
                       </div>
                     </div>
 
                     <div className="flex items-center justify-center">
                       <span className=" text-lg ">Sanduka:</span>
-                      <div className="w-14 h-14 flex -ml-2 justify-center items-center text-2xl">
+                      <div className="w-14 h-14 flex ml-1 justify-center items-center text-2xl">
                         {renderCheckmark(userData?.pesertaSanduka)}
                       </div>
                     </div>
@@ -735,8 +752,9 @@ export default function IconGrid() {
         </div>
 
         <div
-          className={` flex flex-col items-center my-4 ${isSidebarOpen ? "ml-32" : "ml-0"
-            }`}
+          className={` flex flex-col items-center my-4 ${
+            isSidebarOpen ? "ml-32" : "ml-0"
+          }`}
         >
           <hr className="mt-2 border-gray-300 w-full" />
           <h5 className="text-lg sm:text-xl font-semibold text-gray-800 mt-4 text-center">
@@ -745,11 +763,15 @@ export default function IconGrid() {
         </div>
 
         <div
-          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${isSidebarOpen ? "ml-32" : "ml-0"
-            }`}
+          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${
+            isSidebarOpen ? "ml-32" : "ml-0"
+          }`}
         >
           {isMobile ? (
-            <MobileDeceasedScroll sortedData={sortedData} formatDate={formatDate} />
+            <MobileDeceasedScroll
+              sortedData={sortedData}
+              formatDate={formatDate}
+            />
           ) : (
             <>
               <button
@@ -780,13 +802,16 @@ export default function IconGrid() {
                             {currentData.namaLengkap}
                           </h2>
                           <p className="text-xs font-medium text-white">
-                            Meninggal {formatDate(currentData.waktuMeninggalTerlapor)}
+                            Meninggal{" "}
+                            {formatDate(currentData.waktuMeninggalTerlapor)}
                           </p>
                         </div>
 
                         {/* Detailed Information */}
                         <div className="text-center text-gray-700 mb-2 -mt-2">
-                          <p className="text-xs">{currentData.npaPgri || "N/A"}</p>
+                          <p className="text-xs">
+                            {currentData.npaPgri || "N/A"}
+                          </p>
                           <p className="text-xs">
                             {currentData.tempatLahir},{" "}
                             {formatDate(currentData.tanggalLahir)}
@@ -805,13 +830,18 @@ export default function IconGrid() {
                         {/* Action Buttons */}
                         <div className="flex justify-around mb-2 gap-1">
                           <button className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-0.5 px-2 rounded-full transition duration-300">
-                            <FontAwesomeIcon icon={faLocation} className="mr-1" /> Lokasi
+                            <FontAwesomeIcon
+                              icon={faLocation}
+                              className="mr-1"
+                            />{" "}
+                            Lokasi
                           </button>
                         </div>
 
                         {/* Reporter Section */}
                         <div className="bg-blue-700 text-white text-xs font-medium py-1 px-3 rounded-full text-center flex items-center justify-center mb-2">
-                          <FontAwesomeIcon icon={faBullhorn} className="mr-1" /> PELAPOR
+                          <FontAwesomeIcon icon={faBullhorn} className="mr-1" />{" "}
+                          PELAPOR
                         </div>
                         <p className="text-center text-gray-600 mt-1 text-xs">
                           {formatDate(currentData.tanggalPelaporan)},{" "}
