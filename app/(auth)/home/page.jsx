@@ -85,7 +85,7 @@ export default function IconGrid() {
     },
     {
       icon: faSyncAlt,
-      label: "Sinkornisasi",
+      label: "Sinkronisasi",
       href: "/anggota/by-name",
       color: "text-yellow-500",
     },

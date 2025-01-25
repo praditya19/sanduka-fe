@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 
-
 const splitTextIntoLines = (text, maxWordsPerLine) => {
   const words = text.split(" ");
   const lines = [];
@@ -20,7 +19,7 @@ const Slider = () => {
     {
       id: 1,
       imageUrl:
-       "https://media.suara.com/pictures/653x366/2023/01/16/86458-ilustrasi-pantai-unsplashderek-oulasin.jpg",
+        "https://media.suara.com/pictures/653x366/2023/01/16/86458-ilustrasi-pantai-unsplashderek-oulasin.jpg",
       title: "APA ITU SANDUKA?",
       description:
         "Sanduka adalah santunan duka cita bagi anggota PGRI Aktif yang terdaftar di dalam database keanggotaan PGRI Kabupaten Jepara sebagai wujud solidaritas.",
@@ -28,15 +27,15 @@ const Slider = () => {
     {
       id: 2,
       imageUrl:
-      "https://media.suara.com/pictures/653x366/2023/01/16/86458-ilustrasi-pantai-unsplashderek-oulasin.jpg",
-      title: "BERAPA SUMBANGAN ANGGOTA?",
+        "https://media.suara.com/pictures/653x366/2023/01/16/86458-ilustrasi-pantai-unsplashderek-oulasin.jpg",
+      title: "UPDATE DATA",
       description:
         "Berdasarkan surat keputusan Pengurus PGRI Kabupaten Jepara nomor :034/SK/PGRI JPR/XXII/2020 tentang Teknis Pelaksanaan Dana Setia Kawan Duka PGRI Kabupaten Jepara, sumbangan Sanduka ditetapkan sebesar Rp. 3000 tiap anggota, dibayarkan tiap bulan, bersamaan dengan iuran anggota PGRI.",
     },
     {
       id: 3,
       imageUrl:
-       "https://media.suara.com/pictures/653x366/2023/01/16/86458-ilustrasi-pantai-unsplashderek-oulasin.jpg",
+        "https://media.suara.com/pictures/653x366/2023/01/16/86458-ilustrasi-pantai-unsplashderek-oulasin.jpg",
       title: " BERAPA SANTUNAN YANG DITERIMA?",
       description:
         "Sesuai keputusan bersama Pengurus PGRI Kabupaten Jepara dan Pengurus Cabang se-Kabupaten Jepara, maka disepakati sebesar Rp.2.500.000,- dengan kuota 5 orang tiap bulan dan apabila anggota meninggal lebih daripada kuota akan diperhitungkan pada bulan berikutnya.",
@@ -53,13 +52,13 @@ const Slider = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setFade(true); 
+      setFade(true);
       setTimeout(() => {
         setCurrentSlide((prevSlide) =>
           prevSlide === sliderList.length - 1 ? 0 : prevSlide + 1
         );
-        setFade(false); 
-      }, 500); 
+        setFade(false);
+      }, 500);
     }, 3000);
     return () => clearInterval(interval);
   }, [sliderList]);
@@ -86,16 +85,18 @@ const Slider = () => {
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      
       <div
         className="absolute inset-0 flex transition-transform duration-1000 ease-in-out z-10"
         style={{ transform: `translateX(-${currentSlide * 100}%)` }}
       >
         {sliderList.map((slider) => (
-          <div key={slider.id} className="relative w-full h-full flex-shrink-0">
+          <div
+            key={slider.title}
+            className="relative w-full h-full flex-shrink-0"
+          >
             <Image
               src={slider.imageUrl}
-              alt={`Slide ${slider.id}`}
+              alt={`Slide ${slider.title}`}
               layout="fill"
               objectFit="cover"
               quality={100}
@@ -104,7 +105,6 @@ const Slider = () => {
         ))}
       </div>
 
-      
       <div
         className={`absolute top-[-33%] inset-x-0 z-30 w-full h-full lg:w-screen lg:left-[-35%] lg:top-0`}
       >
@@ -115,12 +115,11 @@ const Slider = () => {
         />
       </div>
 
-     
       <div
         className={`relative z-30 text-white  py-64 px-20 max-w-7xl mx-auto transition-all duration-500 transform rounded-lg ${
           fade ? "opacity-0 translate-y-8" : "opacity-100 translate-y-0"
         } ${sliderList[currentSlide].textBackgroundColor} 
-    md:top-0 top-[-30%] -left-12 sm:-left-14`} 
+    md:top-0 top-[-30%] -left-12 sm:-left-14`}
       >
         <h1
           className={`text-xl md:text-3xl font-bold mb-2 transition-all duration-500 transform ${
@@ -142,7 +141,6 @@ const Slider = () => {
           )
         )}
       </div>
-
 
       <button
         className="absolute top-1/2 left-0 transform -translate-y-1/2 text-white p-4 rounded-full opacity-70 hover:opacity-100 text-3xl z-40"
