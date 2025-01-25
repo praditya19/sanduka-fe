@@ -285,9 +285,6 @@ const Page = () => {
                         <th className="border border-gray-300 p-2 text-center font-bold uppercase hidden lg:table-cell">
                           Keterangan
                         </th>
-                        <th className="border border-gray-300 p-2 text-center font-bold uppercase hidden lg:table-cell">
-                          Diterimakan
-                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -370,8 +367,7 @@ const Page = () => {
                               <td className="border px-4 py-2 hidden lg:table-cell">
                                 {item.keteranganTerlapor ||
                                   "Keterangan tidak tersedia"}
-                              </td>
-                              <td className="border text-center px-4 py-2 hidden lg:table-cell">
+                                <br />
                                 Diterimakan (Sesuaikan jika ada)
                               </td>
                             </tr>
