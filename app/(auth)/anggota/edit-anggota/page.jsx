@@ -81,7 +81,7 @@ const Page = () => {
   const [statusSekolah, setStatusSekolah] = useState("");
   const [statusPegawai, setStatusPegawai] = useState("");
   const [pangkatGolongan, setPangkatGolongan] = useState("");
-  const [mulaiJadiAnggotaPgri, setMulaiJadiAnggotaPgri] = useState([]);
+  const [mulaiJadiAnggotaPgri, setMulaiJadiAnggotaPgri] = useState("");
   const [pendidikanTerakhir, setPendidikanTerakhir] = useState("");
   const [sertifikatPendidik, setSertifikatPendidik] = useState("");
   const [mengajar, setMengajar] = useState("");
@@ -210,7 +210,6 @@ const Page = () => {
         setSelectedCabang(response.cabang);
         setValue("cabang", response.cabang || "");
         setValue("unitKerja", response.unitKerja || "");
-
         setTingkatSekolah(response.tingkatSekolah || "");
         setValue("tingkatSekolah", response.tingkatSekolah);
         setStatusSekolah(response.statusSekolah || "");
@@ -220,6 +219,7 @@ const Page = () => {
         setPangkatGolongan(response.pangkatGolongan || "");
         setTahunDiangkat(response.tahunDiangkat || "");
         setMulaiJadiAnggotaPgri(response.mulaiJadiAnggotaPgri || "");
+        setFormattedMulaiJadiAnggota(response.mulaiJadiAnggotaPgri || "");
         setPendidikanTerakhir(response.pendidikanTerakhir || "");
         setValue("pendidikanTerakhir", response.pendidikanTerakhir);
         setSertifikatPendidik(response.sertifikatPendidik || "");
@@ -270,18 +270,16 @@ const Page = () => {
   const handleCreateHistory = async () => {
     const now = new Date();
 
-    // Format date components
     const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
     const tanggal = now.toISOString().split("T")[0];
     const jam = now.toTimeString().split(" ")[0];
     const bulan = now.toLocaleString("id-ID", { month: "long" });
     const tahun = now.getFullYear();
 
-    // Get user details
     const userRole = sessionStorage.getItem("role");
     const namaLengkapUser =
       userRole === "USER"
-        ? namaLengkap // Using namaLengkap state from the form
+        ? namaLengkap
         : sessionStorage.getItem("nama");
 
     const historyData = {
@@ -292,11 +290,11 @@ const Page = () => {
       nama: namaLengkap,
       cabang: selectedCabang,
       uraian: "Edit Data",
-      masuk: "-", // Not applicable for edit
-      keluar: "-", // Not applicable for edit
+      masuk: "-",
+      keluar: "-",
       bulan,
       tahun,
-      cabang_ke_2: "-", // Not applicable for edit
+      cabang_ke_2: "-",
       user: namaLengkapUser,
     };
 
@@ -312,15 +310,13 @@ const Page = () => {
     e.preventDefault();
     const anggotaId = sessionStorage.getItem("anggotaId");
     const userId = sessionStorage.getItem("userId");
-
     const id = anggotaId || userId;
-
+  
     if (!id) {
-      console.error(
-        "User ID atau Anggota ID tidak ditemukan atau tidak valid."
-      );
+      console.error("User ID atau Anggota ID tidak ditemukan atau tidak valid.");
       return;
     }
+  
     const formatTanggal = (tanggal) => {
       const date = new Date(tanggal);
       const year = date.getFullYear();
@@ -328,9 +324,9 @@ const Page = () => {
       const day = String(date.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
     };
+  
     const formattedTahunDiangkat = formatTanggal(tahunDiangkat);
-
-    // Validasi field yang wajib diisi
+  
     const requiredFieldsStep2 = [
       { field: selectedCabang ?? "", name: "Cabang", id: "cabang" },
       { field: selectedUnitKerja ?? "", name: "Unit Kerja", id: "unitKerja" },
@@ -387,12 +383,12 @@ const Page = () => {
       },
       { field: mengajar ?? "", name: "Mengajar", id: "mengajar" },
     ];
-
+  
     const emptyFields = requiredFieldsStep2.filter(({ field }) => !field);
-
+  
     if (emptyFields.length > 0) {
       const firstEmptyField = emptyFields[0];
-
+  
       toast.error(`Field ${firstEmptyField.name} wajib diisi!`, {
         position: "top-right",
         autoClose: 2000,
@@ -402,19 +398,25 @@ const Page = () => {
         draggable: true,
         progress: undefined,
       });
-
+  
       const element = document.getElementById(firstEmptyField.id);
       if (element) {
         element.scrollIntoView({ behavior: "smooth", block: "center" });
         element.focus();
       }
-
+  
       return;
     }
-
+  
+    const cleanNamaAnak = Array.isArray(namaAnak)
+      ? namaAnak.map((name) => (typeof name === "string" ? name.trim() : name))
+      : [];
+  
+    const formattedNamaAnak = JSON.stringify(cleanNamaAnak);
+  
     const formattedTanggalLahir = formatTanggal(tanggalLahir);
     const formattedMulaiJadiAnggota = formatTanggal(mulaiJadiAnggotaPgri);
-
+  
     const formData = new FormData();
     formData.append("email", email);
     formData.append("password", password);
@@ -433,11 +435,11 @@ const Page = () => {
     formData.append("kodePos", kodePos);
     formData.append("nomorHp", nomorHp);
     formData.append("namaSuamiIstri", namaSuamiIstri);
-
+  
     if (selectedFile) {
       formData.append("foto", selectedFile);
     }
-
+  
     formData.append("cabang", selectedCabang);
     formData.append("unitKerja", selectedUnitKerja);
     formData.append("jabatan", valueJabatan);
@@ -452,20 +454,21 @@ const Page = () => {
     formData.append("golonganJabatan", valueGolonganJabatan);
     formData.append("kategoriDaspen", valueKategoriDaspen);
     formData.append("mengajar", mengajar);
-
+    formData.append("namaAnak", formattedNamaAnak);
     formData.append("pesertaSanduka", pesertaSanduka ? "Ya" : "");
     formData.append("pesertaDaspen", pesertaDaspen ? "Ya" : "");
     formData.append("pesertaKtaDigital", pesertaKtaDigital ? "Ya" : "");
-
+  
     for (let [key, value] of formData.entries()) {
       console.log(`${key}: ${value}`);
     }
-
+  
     if (!email) {
       console.error("Email tidak boleh kosong!");
       toast.error("Email wajib diisi sebelum melanjutkan.");
       return;
     }
+  
     try {
       const response = await GlobalApi.updateUserById(id, formData);
       await handleCreateHistory();
@@ -647,6 +650,64 @@ const Page = () => {
         return;
       }
 
+      const nipData = await GlobalApi.getFileByNip(nip);
+    if (nipData?.verifikasi === true) {
+      toast.success(
+        <div
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      textAlign: "center",
+    }}
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      style={{
+        width: "48px",
+        height: "48px",
+        color: "#FFA500",
+        marginBottom: "16px",
+      }}
+      fill="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 15c-.55 0-1-.45-1-1v-6c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1zm0-10c-.83 0-1.5-.67-1.5-1.5S11.17 4 12 4s1.5.67 1.5 1.5S12.83 7 12 7z" />
+    </svg>
+    <strong
+      style={{
+        fontSize: "1.75rem",
+        display: "block",
+        marginBottom: "8px",
+      }}
+    >
+            Data Anda Sudah Tersingkronisasi
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      return;
+    }
+    
       const response = await GlobalApi.updateRegisUser(userId, data);
       toast.success(
         <div
@@ -674,7 +735,7 @@ const Page = () => {
           <strong
             style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
           >
-            Data berhasil disinkronkan!
+            Data berhasil diupdate!
           </strong>
         </div>,
         {
@@ -908,7 +969,7 @@ const Page = () => {
 
   const handleCekNip = async () => {
     try {
-      const data = await GlobalApi.getByNIP(nip);
+      const data = await GlobalApi.getFileByNip(nip);
       setData(data);
       setIsPopupVisible(true);
       toast.success(
@@ -1132,14 +1193,6 @@ const Page = () => {
           setTahunDiangkat(formattedDate);
           setValue("tahunDiangkat", formattedDate);
         }
-
-        if (data.mulaiJadiAnggotaPgri) {
-          const formattedDate = new Date(data.mulaiJadiAnggotaPgri)
-            .toISOString()
-            .split("T")[0];
-          setFormattedMulaiJadiAnggota(formattedDate);
-          setValue("mulaiJadiAnggotaPgri", formattedDate);
-        }
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
@@ -1248,6 +1301,10 @@ const Page = () => {
 
   const handleAddInput = () => {
     setNamaAnak((prevNamaAnak) => [...prevNamaAnak, ""]);
+  };
+
+  const cleanName = (name) => {
+    return name.replace(/[\[\]\"\\]/g, '').trim();
   };
 
   const handleResize = () => {
@@ -1854,13 +1911,11 @@ const Page = () => {
                               Nama Anak {index + 1}
                             </Label>
                             <Input
-                              className={`block w-full text-sm p-2 mt-2 mb-2 border-teal-500 ${
-                                errorFields.kodePos ? "border-red-500" : ""
-                              } rounded`}
+                              className={`block w-full text-sm p-2 mt-2 mb-2 border-teal-500 rounded`}
                               type="text"
                               name={`namaAnak-${index}`}
                               placeholder={`Tuliskan Nama Anak ${index + 1}`}
-                              value={name || ""}
+                              value={cleanName(name) || ""}
                               onChange={(e) => handleChange(index, e)}
                             />
                           </div>
@@ -1873,7 +1928,7 @@ const Page = () => {
                           </Button>
                         </div>
                       ))}
-
+                    
                     <Button
                       type="button"
                       onClick={handleAddInput}
@@ -2087,8 +2142,8 @@ const Page = () => {
                       <Select
                         value={value || ""}
                         onValueChange={(e) => {
-                          onChange(e); // Mengirim nilai ke React Hook Form
-                          setValueJabatan(e); // Update state lokal
+                          onChange(e);
+                          setValueJabatan(e);
                         }}
                       >
                         <SelectTrigger
@@ -2386,7 +2441,7 @@ const Page = () => {
                         value={value || formattedMulaiJadiAnggota}
                         onChange={(e) => {
                           const selectedDate = e.target.value;
-                          setFormattedMulaiJadiAnggota(selectedDate);
+                          setMulaiJadiAnggotaPgri(selectedDate);
                           onChange(selectedDate);
                         }}
                       />
