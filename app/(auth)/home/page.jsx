@@ -27,6 +27,7 @@ import {
   faCancel,
   faCheck,
   faSitemap,
+  faUserPen,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
@@ -471,40 +472,61 @@ export default function IconGrid() {
   };
 
   const filteredIcons =
-    role === "USER"
-      ? icons
-          .filter((item) =>
-            [
-              "Lapor",
-              "Teman Unit",
-              "Ketentuan",
-              "Bantuan",
-              "Data Anggota",
-              "History data",
-              "Detail Anggota",
-            ].includes(item.label)
-          )
-          .concat({
-            icon: faRightLeft,
-            label: "Mutasi",
-            href: "/anggota/data-anggota/mutasiCabangUnit",
-            color: "text-cyan-500",
-          })
-          .concat({
-            icon: faFileAlt,
-            label: "Daspen",
-            href: "/daspen",
-            color: "text-teal-700",
-          })
-          .concat({
-            icon: faUser,
-            label: "Detail Anggota",
-            href: "/anggota/detail-anggota",
-            color: "text-blue-600 hover:text-blue-800",
-            bgHover: "hover:bg-blue-100",
-            iconColor: "text-blue-600",
-          })
-      : icons;
+  role === "USER"
+    ? icons
+        .filter((item) =>
+          [
+            "Lapor",
+            "Teman Unit",
+            "Ketentuan",
+            "Bantuan",
+            "History data",
+          ].includes(item.label)
+        )
+        .concat({
+          icon: faUser,
+          label: "Detail Anggota",
+          href: "/anggota/detail-anggota",
+          color: "text-blue-600 hover:text-blue-800",
+          bgHover: "hover:bg-blue-100",
+          iconColor: "text-blue-600",
+        })
+        .concat({
+          icon: faUserPen,
+          label: "Edit Anggota",
+          href: "/anggota/edit-anggota",
+          color: "text-orange-500",
+          bgHover: "hover:bg-blue-100",
+          iconColor: "text-blue-600",
+        })
+        .concat({
+          icon: faRightLeft,
+          label: "Mutasi",
+          href: "/anggota/data-anggota/mutasiCabangUnit",
+          color: "text-cyan-500",
+        })
+        .concat({
+          icon: faFileAlt,
+          label: "Daspen",
+          href: "/daspen",
+          color: "text-teal-700",
+        })
+        .sort((a, b) => {
+          const order = [
+            "Lapor",
+            "Detail Anggota",
+            "Edit Anggota",
+            "Mutasi",
+            "History data",
+            "Daspen",
+            "Ketentuan",
+            "Bantuan",
+            "Teman Unit",
+          ];
+          return order.indexOf(a.label) - order.indexOf(b.label);
+        })
+    : icons;
+
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">

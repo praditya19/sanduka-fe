@@ -92,7 +92,7 @@ const Page = () => {
   const previousData = useRef(null);
   const [error, setError] = useState("");
   const [pesertaSanduka, setPesertaSanduka] = useState(false);
-  const [pesertaDaspen, setPesertaDaspen] = useState(false);
+  // const [pesertaDaspen, setPesertaDaspen] = useState(false);
   const [pesertaKtaDigital, setPesertaKtaDigital] = useState(false);
   const jabatanList = [
     { id: 1, jabatan: "Guru" },
@@ -156,13 +156,18 @@ const Page = () => {
   const unitKerjaRef = useRef(null);
   const [errorFields, setErrorFields] = useState({});
 
+  // const handleChange = (index, e) => {
+  //   const { value } = e.target;
+  //   setNamaAnak((prevNamaAnak) => {
+  //     const updatedNamaAnak = [...prevNamaAnak];
+  //     updatedNamaAnak[index] = value;
+  //     return updatedNamaAnak;
+  //   });
+  // };
   const handleChange = (index, e) => {
-    const { value } = e.target;
-    setNamaAnak((prevNamaAnak) => {
-      const updatedNamaAnak = [...prevNamaAnak];
-      updatedNamaAnak[index] = value;
-      return updatedNamaAnak;
-    });
+    const updatedNamaAnak = [...namaAnak];
+    updatedNamaAnak[index] = e.target.value; // Ambil nilai input
+    setNamaAnak(updatedNamaAnak); // Perbarui state
   };
 
   const getAnggotaById = async () => {
@@ -269,110 +274,141 @@ const Page = () => {
   }, []);
 
   const handleCreateHistory = async () => {
-      const now = new Date();
-      const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
-      const tanggal = now.toISOString().split("T")[0];
-      const jam = now.toTimeString().split(" ")[0];
-      const bulan = now.toLocaleString("id-ID", { month: "long" });
-      const tahun = now.getFullYear();
-      const formatDate = (date) => (date ? new Date(date).toISOString().split("T")[0] : "");
-    
-      try {
-        const userRole = sessionStorage.getItem("role");
-        const namaLengkapUser = userRole === "USER" 
-          ? namaLengkap 
-          : sessionStorage.getItem("nama");
-    
-        const changedFields = [];
-        
-        if (previousData.current) {
-          if (email !== previousData.current.email) changedFields.push("Email");
-          if (password !== previousData.current.password) changedFields.push("Password");
-          if (npaPgri !== previousData.current.npaPgri) changedFields.push("NPA PGRI");
-          if (namaLengkap !== previousData.current.namaLengkap) changedFields.push("Nama Lengkap");
-          if (nomorHp !== previousData.current.nomorHp) changedFields.push("Nomor HP");
-          if (alamat !== previousData.current.alamat) changedFields.push("Alamat");
-          if (nik !== previousData.current.nik) changedFields.push("NIK");
-          if (nip !== previousData.current.nip) changedFields.push("NIP");
-        
-          if (tempatLahir !== previousData.current.tempatLahir) changedFields.push("Tempat Lahir");
-          if (tanggalLahir !== previousData.current.tanggalLahir) changedFields.push("Tanggal Lahir");
-          if (jenisKelamin !== previousData.current.jenisKelamin) changedFields.push("Jenis Kelamin");
-          if (agama !== previousData.current.agama) changedFields.push("Agama");
-          if (golonganDarah !== previousData.current.golonganDarah) changedFields.push("Golongan Darah");
-          if (kodePos !== previousData.current.kodePos) changedFields.push("Kode Pos");
-    
-          if (selectedFile || (previousData.current.foto && !fotoBase64[0])) changedFields.push("Foto");
-    
-          if (latitude !== previousData.current.latitude) changedFields.push("Latitude");
-          if (longitude !== previousData.current.longitude) changedFields.push("Longitude");
-        
-          if (namaSuamiIstri !== previousData.current.namaSuamiIstri) changedFields.push("Nama Suami/Istri");
-          
-          const prevNamaAnak = previousData.current.namaAnak || [];
-          const currentNamaAnak = namaAnak || [];
-          
-          // Only compare if there are actual changes
-          if (prevNamaAnak.length !== currentNamaAnak.length || 
-              currentNamaAnak.some((name, index) => name !== prevNamaAnak[index])) {
-            // Only add to changedFields if there are actual changes and at least one non-empty name
-            if (currentNamaAnak.some(name => name.trim() !== '')) {
-              changedFields.push("Nama Anak");
-            }
+    const now = new Date();
+    const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
+    const tanggal = now.toISOString().split("T")[0];
+    const jam = now.toTimeString().split(" ")[0];
+    const bulan = now.toLocaleString("id-ID", { month: "long" });
+    const tahun = now.getFullYear();
+    const formatDate = (date) =>
+      date ? new Date(date).toISOString().split("T")[0] : "";
+
+    try {
+      const userRole = sessionStorage.getItem("role");
+      const namaLengkapUser =
+        userRole === "USER" ? namaLengkap : sessionStorage.getItem("nama");
+
+      const changedFields = [];
+
+      if (previousData.current) {
+        if (email !== previousData.current.email) changedFields.push("Email");
+        if (password !== previousData.current.password)
+          changedFields.push("Password");
+        if (npaPgri !== previousData.current.npaPgri)
+          changedFields.push("NPA PGRI");
+        if (namaLengkap !== previousData.current.namaLengkap)
+          changedFields.push("Nama Lengkap");
+        if (nomorHp !== previousData.current.nomorHp)
+          changedFields.push("Nomor HP");
+        if (alamat !== previousData.current.alamat)
+          changedFields.push("Alamat");
+        if (nik !== previousData.current.nik) changedFields.push("NIK");
+        if (nip !== previousData.current.nip) changedFields.push("NIP");
+
+        if (tempatLahir !== previousData.current.tempatLahir)
+          changedFields.push("Tempat Lahir");
+        if (tanggalLahir !== previousData.current.tanggalLahir)
+          changedFields.push("Tanggal Lahir");
+        if (jenisKelamin !== previousData.current.jenisKelamin)
+          changedFields.push("Jenis Kelamin");
+        if (agama !== previousData.current.agama) changedFields.push("Agama");
+        if (golonganDarah !== previousData.current.golonganDarah)
+          changedFields.push("Golongan Darah");
+        if (kodePos !== previousData.current.kodePos)
+          changedFields.push("Kode Pos");
+
+        if (selectedFile || (previousData.current.foto && !fotoBase64[0]))
+          changedFields.push("Foto");
+
+        if (latitude !== previousData.current.latitude)
+          changedFields.push("Latitude");
+        if (longitude !== previousData.current.longitude)
+          changedFields.push("Longitude");
+
+        if (namaSuamiIstri !== previousData.current.namaSuamiIstri)
+          changedFields.push("Nama Suami/Istri");
+
+        const prevNamaAnak = previousData.current.namaAnak || [];
+        const currentNamaAnak = namaAnak || [];
+
+        // Only compare if there are actual changes
+        if (
+          prevNamaAnak.length !== currentNamaAnak.length ||
+          currentNamaAnak.some((name, index) => name !== prevNamaAnak[index])
+        ) {
+          // Only add to changedFields if there are actual changes and at least one non-empty name
+          if (currentNamaAnak.some((name) => name.trim() !== "")) {
+            changedFields.push("Nama Anak");
           }
-        
-          if (selectedCabang !== previousData.current.cabang) changedFields.push("Cabang");
-          if (selectedUnitKerja !== previousData.current.unitKerja) changedFields.push("Unit Kerja");
-          if (valueJabatan !== previousData.current.jabatan) changedFields.push("Jabatan");
-          if (tingkatSekolah !== previousData.current.tingkatSekolah) changedFields.push("Tingkat Sekolah");
-          if (statusSekolah !== previousData.current.statusSekolah) changedFields.push("Status Sekolah");
-          if (statusPegawai !== previousData.current.statusPegawai) changedFields.push("Status Pegawai");
-          if (pangkatGolongan !== previousData.current.pangkatGolongan) changedFields.push("Pangkat Golongan");
-          if (pendidikanTerakhir !== previousData.current.pendidikanTerakhir) changedFields.push("Pendidikan");
-          if (valueGolonganJabatan !== previousData.current.golonganJabatan) changedFields.push("Golongan Jabatan");
-          if (valueKategoriDaspen !== previousData.current.kategoriDaspen) changedFields.push("Kategori Daspen");
-          if (mengajar !== previousData.current.mengajar) changedFields.push("Mengajar");
-        
-          if (sertifikatPendidik !== previousData.current.sertifikatPendidik) changedFields.push("Sertifikat Pendidik");
-          if (formatDate(tahunDiangkat) !== formatDate(previousData.current.tahunDiangkat)) changedFields.push("Tahun Diangkat");
-          if (mulaiJadiAnggotaPgri !== previousData.current.mulaiJadiAnggotaPgri) changedFields.push("Mulai Jadi Anggota PGRI");
-        }      
-    
-        if (changedFields.length > 0) {
-          let uraian = "Edit Data";
-      
-          if (changedFields.length === 1) {
-            uraian = `Edit ${changedFields[0]}`;
-          } else if (changedFields.length === 2) {
-            uraian = `Edit ${changedFields[0]} dan ${changedFields[1]}`;
-          } else if (changedFields.length > 2) {
-            const lastField = changedFields.pop();
-            uraian = `Edit ${changedFields.join(", ")}, dan ${lastField}`;
-          }
-      
-          const historyData = {
-            hari,
-            tanggal,
-            jam,
-            npa: npaPgri,
-            nama: namaLengkap,
-            cabang: selectedCabang,
-            uraian,
-            masuk: "-",
-            keluar: "-",
-            bulan,
-            tahun,
-            cabang_ke_2: "-",
-            user: namaLengkapUser,
-          };
-      
-          await GlobalApi.createHistoryData(historyData);
         }
-      } catch (error) {
-        console.error("Failed to create history data:", error);
-        throw new Error("Gagal menyimpan riwayat edit data");
+
+        if (selectedCabang !== previousData.current.cabang)
+          changedFields.push("Cabang");
+        if (selectedUnitKerja !== previousData.current.unitKerja)
+          changedFields.push("Unit Kerja");
+        if (valueJabatan !== previousData.current.jabatan)
+          changedFields.push("Jabatan");
+        if (tingkatSekolah !== previousData.current.tingkatSekolah)
+          changedFields.push("Tingkat Sekolah");
+        if (statusSekolah !== previousData.current.statusSekolah)
+          changedFields.push("Status Sekolah");
+        if (statusPegawai !== previousData.current.statusPegawai)
+          changedFields.push("Status Pegawai");
+        if (pangkatGolongan !== previousData.current.pangkatGolongan)
+          changedFields.push("Pangkat Golongan");
+        if (pendidikanTerakhir !== previousData.current.pendidikanTerakhir)
+          changedFields.push("Pendidikan");
+        if (valueGolonganJabatan !== previousData.current.golonganJabatan)
+          changedFields.push("Golongan Jabatan");
+        if (valueKategoriDaspen !== previousData.current.kategoriDaspen)
+          changedFields.push("Kategori Daspen");
+        if (mengajar !== previousData.current.mengajar)
+          changedFields.push("Mengajar");
+
+        if (sertifikatPendidik !== previousData.current.sertifikatPendidik)
+          changedFields.push("Sertifikat Pendidik");
+        if (
+          formatDate(tahunDiangkat) !==
+          formatDate(previousData.current.tahunDiangkat)
+        )
+          changedFields.push("Tahun Diangkat");
       }
-    };
+
+      if (changedFields.length > 0) {
+        let uraian = "Edit Data";
+
+        if (changedFields.length === 1) {
+          uraian = `Edit ${changedFields[0]}`;
+        } else if (changedFields.length === 2) {
+          uraian = `Edit ${changedFields[0]} dan ${changedFields[1]}`;
+        } else if (changedFields.length > 2) {
+          const lastField = changedFields.pop();
+          uraian = `Edit ${changedFields.join(", ")}, dan ${lastField}`;
+        }
+
+        const historyData = {
+          hari,
+          tanggal,
+          jam,
+          npa: npaPgri,
+          nama: namaLengkap,
+          cabang: selectedCabang,
+          uraian,
+          masuk: "-",
+          keluar: "-",
+          bulan,
+          tahun,
+          cabang_ke_2: "-",
+          user: namaLengkapUser,
+        };
+
+        await GlobalApi.createHistoryData(historyData);
+      }
+    } catch (error) {
+      console.error("Failed to create history data:", error);
+      throw new Error("Gagal menyimpan riwayat edit data");
+    }
+  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -437,11 +473,6 @@ const Page = () => {
         id: "sertifikatPendidik",
       },
       {
-        field: mulaiJadiAnggotaPgri ?? "",
-        name: "Mulai Jadi Anggota PGRI",
-        id: "mulaiJadiAnggotaPgri",
-      },
-      {
         field: valueKategoriDaspen ?? "",
         name: "Kategori Daspen",
         id: "kategoriDaspen",
@@ -478,14 +509,29 @@ const Page = () => {
       return;
     }
 
-    const cleanNamaAnak = Array.isArray(namaAnak)
-      ? namaAnak.map((name) => (typeof name === "string" ? name.trim() : name))
-      : [];
+    // const cleanNamaAnak = Array.isArray(namaAnak)
+    //   ? namaAnak.map((name) => (typeof name === "string" ? name.trim() : name))
+    //   : [];
+    const cleanNamaAnak = (namaAnakArray) => {
+      return namaAnakArray.map((name) =>
+        typeof name === "string" ? name.replace(/[[\]"\\]/g, "").trim() : name
+      );
+    };
 
-    const formattedNamaAnak = JSON.stringify(cleanNamaAnak);
+    const cleanedNamaAnak = cleanNamaAnak(namaAnak);
 
     const formattedTanggalLahir = formatTanggal(tanggalLahir);
-    const formattedMulaiJadiAnggota = formatTanggal(mulaiJadiAnggotaPgri);
+
+    const formatTanggalPgri = (tanggal) => {
+      if (!tanggal) return new Date().toISOString().split("T")[0]; // Gunakan tanggal hari ini jika nilai tidak valid
+      const date = new Date(tanggal);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
+    const formattedMulaiJadiAnggota = formatTanggalPgri(mulaiJadiAnggotaPgri);
 
     const formData = new FormData();
     formData.append("email", email);
@@ -524,9 +570,9 @@ const Page = () => {
     formData.append("golonganJabatan", valueGolonganJabatan);
     formData.append("kategoriDaspen", valueKategoriDaspen);
     formData.append("mengajar", mengajar);
-    formData.append("namaAnak", formattedNamaAnak);
+    formData.append("namaAnak", cleanedNamaAnak);
     formData.append("pesertaSanduka", pesertaSanduka ? "Ya" : "");
-    formData.append("pesertaDaspen", pesertaDaspen ? "Ya" : "");
+    // formData.append("pesertaDaspen", pesertaDaspen ? "Ya" : "");
     formData.append("pesertaKtaDigital", pesertaKtaDigital ? "Ya" : "");
 
     for (let [key, value] of formData.entries()) {
@@ -598,7 +644,13 @@ const Page = () => {
       );
       sessionStorage.removeItem("anggotaId");
       setTimeout(() => {
-        router.push("/anggota/data-anggota");
+        const role = sessionStorage.getItem("role");
+
+        if (role === "USER") {
+          router.push("/home");
+        } else {
+          router.push("/anggota/data-anggota");
+        }
       }, 3000);
     } catch (error) {
       console.error("Gagal mengupdate data:", error);
@@ -661,8 +713,12 @@ const Page = () => {
 
   const handleConfirmAndSendData = async () => {
     try {
-      const userId = sessionStorage.getItem("anggotaId");
-      if (!userId) {
+      const anggotaId = sessionStorage.getItem("anggotaId");
+      const userId = sessionStorage.getItem("userId");
+
+      const id = anggotaId || userId;
+
+      if (!id) {
         toast.error(
           <div
             style={{
@@ -721,63 +777,63 @@ const Page = () => {
       }
 
       const nipData = await GlobalApi.getFileByNip(nip);
-    if (nipData?.verifikasi === true) {
-      toast.success(
-        <div
-    style={{
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      textAlign: "center",
-    }}
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      style={{
-        width: "48px",
-        height: "48px",
-        color: "#FFA500", // Warna kuning-oranye untuk ikon info
-        marginBottom: "16px",
-      }}
-      fill="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 15c-.55 0-1-.45-1-1v-6c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1zm0-10c-.83 0-1.5-.67-1.5-1.5S11.17 4 12 4s1.5.67 1.5 1.5S12.83 7 12 7z" />
-    </svg>
-    <strong
-      style={{
-        fontSize: "1.75rem",
-        display: "block",
-        marginBottom: "8px",
-      }}
-    >
-            Data Anda Sudah Tersingkronisasi
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
-      return;
+      if (nipData?.verifikasi === true) {
+        toast.success(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                width: "48px",
+                height: "48px",
+                color: "#FFA500", // Warna kuning-oranye untuk ikon info
+                marginBottom: "16px",
+              }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 15c-.55 0-1-.45-1-1v-6c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1zm0-10c-.83 0-1.5-.67-1.5-1.5S11.17 4 12 4s1.5.67 1.5 1.5S12.83 7 12 7z" />
+            </svg>
+            <strong
+              style={{
+                fontSize: "1.75rem",
+                display: "block",
+                marginBottom: "8px",
+              }}
+            >
+              Data Anda Sudah Tersingkronisasi
+            </strong>
+          </div>,
+          {
+            icon: null,
+            duration: 2000,
+            style: {
+              marginTop: "12%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "450px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
+        );
+        return;
       }
-      
+
       const response = await GlobalApi.updateRegisUser(userId, data);
       toast.success(
         <div
@@ -1374,7 +1430,8 @@ const Page = () => {
   };
 
   const cleanName = (name) => {
-    return name.replace(/[\[\]\"\\]/g, "").trim();
+    if (typeof name !== "string") return name; // Pastikan input adalah string
+    return name.replace(/[[\]"\\]/g, "").trim(); // Hapus karakter yang tidak diperlukan
   };
 
   const handleResize = () => {
@@ -2494,34 +2551,6 @@ const Page = () => {
 
                 <div className="w-full">
                   <Label className="block text-sm font-medium mb-3">
-                    Mulai Jadi Anggota PGRI
-                  </Label>
-                  <Controller
-                    name="mulaiJadiAnggotaPgri"
-                    control={control}
-                    defaultValue={formattedMulaiJadiAnggota}
-                    render={({ field: { onChange, value } }) => (
-                      <Input
-                        className={`border-teal-500 ${
-                          errorFields.mulaiJadiAnggotaPgri
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                        type="date"
-                        id="mulaiJadiAnggotaPgri"
-                        value={value || formattedMulaiJadiAnggota}
-                        onChange={(e) => {
-                          const selectedDate = e.target.value;
-                          setMulaiJadiAnggotaPgri(selectedDate);
-                          onChange(selectedDate);
-                        }}
-                      />
-                    )}
-                  />
-                </div>
-
-                <div className="w-full">
-                  <Label className="block text-sm font-medium mb-3">
                     Kategori Daspen
                     <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-1 rounded-md">
                       Berdasarkan data-data Daspen Jateng
@@ -2633,6 +2662,33 @@ const Page = () => {
                         onChange={(e) => {
                           setMengajar(e.target.value);
                           onChange(e.target.value);
+                        }}
+                      />
+                    )}
+                  />
+                </div>
+
+                <div className="w-full">
+                  <Controller
+                    name="mulaiJadiAnggotaPgri"
+                    control={control}
+                    defaultValue={
+                      formattedMulaiJadiAnggota ||
+                      new Date().toISOString().split("T")[0]
+                    }
+                    render={({ field: { onChange, value } }) => (
+                      <Input
+                        type="hidden"
+                        id="mulaiJadiAnggotaPgri"
+                        value={
+                          value ||
+                          formattedMulaiJadiAnggota ||
+                          new Date().toISOString().split("T")[0]
+                        }
+                        onChange={(e) => {
+                          const selectedDate = e.target.value;
+                          setMulaiJadiAnggotaPgri(selectedDate);
+                          onChange(selectedDate);
                         }}
                       />
                     )}
@@ -2771,11 +2827,6 @@ const Page = () => {
                           field: sertifikatPendidik ?? "",
                           name: "Sertifikat Pendidik",
                           id: "sertifikatPendidik",
-                        },
-                        {
-                          field: mulaiJadiAnggotaPgri ?? "",
-                          name: "Mulai Jadi Anggota PGRI",
-                          id: "mulaiJadiAnggotaPgri",
                         },
                         {
                           field: valueGolonganJabatan ?? "",

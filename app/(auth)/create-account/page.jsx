@@ -508,6 +508,7 @@ const Page = () => {
       tahunDiangkat: formattedTahunDiangkat,
       mulaiJadiAnggotaPgri: formattedMulaiJadiAnggotaPgri,
     };
+    console.log(finalData);
     handleCreateHistory();
 
     try {
@@ -1817,25 +1818,6 @@ const Page = () => {
 
               <div className="w-full">
                 <Label className="block text-sm font-medium mb-3">
-                  Mulai Jadi Anggota Sanduka
-                </Label>
-                <Input
-                  type="date"
-                  id="mulaiJadiAnggotaPgri"
-                  placeholder="dd/mm/yyyy"
-                  max={today}
-                  {...register("mulaiJadiAnggotaPgri")}
-                  className="border-teal-500"
-                />
-                {errors.mulaiJadiAnggotaPgri && (
-                  <span className="text-red-500 text-sm">
-                    Mulai jadi anggota PGRI is required
-                  </span>
-                )}
-              </div>
-
-              <div className="w-full">
-                <Label className="block text-sm font-medium mb-3">
                   Golongan Jabatan
                 </Label>
                 <Controller
@@ -1897,6 +1879,14 @@ const Page = () => {
                     Mengajar is required
                   </span>
                 )}
+              </div>
+              <div className="w-full">
+                <Input
+                  type="hidden"
+                  id="mulaiJadiAnggotaPgri"
+                  value={today}
+                  {...register("mulaiJadiAnggotaPgri")}
+                />
               </div>
 
               <div className="col-span-1 sm:col-span-2 flex justify-between mt-4">
