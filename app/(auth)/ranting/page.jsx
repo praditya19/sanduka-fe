@@ -417,18 +417,6 @@ const Page = () => {
                 <div className="bg-white p-6 rounded-lg shadow-md">
                   <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-bold mb-1">
-                      Nama Ranting
-                    </label>
-                    <Input
-                      placeholder="Nama Ranting"
-                      value={newCabang}
-                      onChange={(e) => setNewCabang(e.target.value)}
-                      className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                    />
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-1">
                       Nama Cabang
                     </label>
                     <div className="flex items-center relative">
@@ -555,6 +543,18 @@ const Page = () => {
                           </div>
                         )}
                     </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-gray-700 text-sm font-bold mb-1">
+                      Nama Ranting
+                    </label>
+                    <Input
+                      placeholder="Nama Ranting"
+                      value={newCabang}
+                      onChange={(e) => setNewCabang(e.target.value)}
+                      className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                    />
                   </div>
 
                   <div className="flex justify-end mt-6">

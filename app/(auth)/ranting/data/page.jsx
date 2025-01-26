@@ -164,6 +164,7 @@ const Page = () => {
       const cabangFromSession = sessionStorage.getItem("cabang") || "";
       if (role === "ADMIN" && cabangFromSession) {
         setSelectedCabang(cabangFromSession);
+        fetchRantingData(currentPage, entries, cabangFromSession);
       } else {
         fetchRantingData(currentPage, entries);
       }
