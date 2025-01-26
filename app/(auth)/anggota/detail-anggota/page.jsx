@@ -266,7 +266,10 @@ const DetailAnggota = () => {
         Array.isArray(anggotaData.namaAnak) && anggotaData.namaAnak.length > 0
           ? anggotaData.namaAnak
               .map((namaAnak, index) => {
-                const formattedName = namaAnak.replace(/\n/g, " ");
+                const formattedName = namaAnak
+                  .replace(/[\[\]"]/g, "")
+                  .replace(/\n/g, " ")
+                  .trim();
                 return `${index + 1}. ${formattedName}`;
               })
               .join("\n")
@@ -504,25 +507,19 @@ const DetailAnggota = () => {
                         anggotaData.namaAnak.length > 0
                           ? anggotaData.namaAnak.map((anak, anakIndex) => {
                               if (typeof anak === "string") {
-                                try {
+                                // Periksa apakah anak adalah array JSON yang terpisah dengan koma
+                                let cleanedAnak = anak
+                                  .replace(/\[|\]|\"/g, "")
+                                  .trim(); // Menghapus tanda [] dan ""
+                                if (cleanedAnak) {
                                   return (
                                     <div key={anakIndex}>
-                                      {anakIndex + 1}. {JSON.parse(anak)}
-                                    </div>
-                                  );
-                                } catch (e) {
-                                  return (
-                                    <div key={anakIndex}>
-                                      {anakIndex + 1}. {anak}
+                                      {anakIndex + 1}. {cleanedAnak}
                                     </div>
                                   );
                                 }
                               }
-                              return (
-                                <div key={anakIndex}>
-                                  {anakIndex + 1}. {anak}
-                                </div>
-                              );
+                              return null; // Menghindari menampilkan data yang tidak valid
                             })
                           : "-"}
                       </div>
