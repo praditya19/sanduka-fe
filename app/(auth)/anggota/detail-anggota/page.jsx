@@ -264,7 +264,12 @@ const DetailAnggota = () => {
       `Nama Suami/Istri: ${anggotaData.namaSuamiIstri ?? "-"}`,
       `Nama Anak: ${
         Array.isArray(anggotaData.namaAnak) && anggotaData.namaAnak.length > 0
-          ? anggotaData.namaAnak.join(", ")
+          ? anggotaData.namaAnak
+              .map((namaAnak, index) => {
+                const formattedName = namaAnak.replace(/\n/g, " ");
+                return `${index + 1}. ${formattedName}`;
+              })
+              .join("\n")
           : "-"
       }`,
     ];
@@ -357,11 +362,7 @@ const DetailAnggota = () => {
 
   const familyData = [
     `Nama Suami/Istri: ${anggotaData.namaSuamiIstri ?? "-"}`,
-    `Nama Anak: ${
-      Array.isArray(anggotaData.namaAnak) && anggotaData.namaAnak.length > 0
-        ? anggotaData.namaAnak.join(", ")
-        : "-"
-    }`,
+    `Nama Anak: `,
   ];
 
   return (
@@ -495,7 +496,40 @@ const DetailAnggota = () => {
             <div className="space-y-4 ml-3">
               {familyData.map((item, index) => (
                 <div key={index} className="break-words">
-                  {item}
+                  {index === 1 ? (
+                    <>
+                      <div>{item.split("\n")[0]}</div>
+                      <div>
+                        {Array.isArray(anggotaData.namaAnak) &&
+                        anggotaData.namaAnak.length > 0
+                          ? anggotaData.namaAnak.map((anak, anakIndex) => {
+                              if (typeof anak === "string") {
+                                try {
+                                  return (
+                                    <div key={anakIndex}>
+                                      {anakIndex + 1}. {JSON.parse(anak)}
+                                    </div>
+                                  );
+                                } catch (e) {
+                                  return (
+                                    <div key={anakIndex}>
+                                      {anakIndex + 1}. {anak}
+                                    </div>
+                                  );
+                                }
+                              }
+                              return (
+                                <div key={anakIndex}>
+                                  {anakIndex + 1}. {anak}
+                                </div>
+                              );
+                            })
+                          : "-"}
+                      </div>
+                    </>
+                  ) : (
+                    <div>{item}</div>
+                  )}
                 </div>
               ))}
             </div>
