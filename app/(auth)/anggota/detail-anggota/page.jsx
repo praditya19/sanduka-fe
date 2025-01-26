@@ -264,7 +264,15 @@ const DetailAnggota = () => {
       `Nama Suami/Istri: ${anggotaData.namaSuamiIstri ?? "-"}`,
       `Nama Anak: ${
         Array.isArray(anggotaData.namaAnak) && anggotaData.namaAnak.length > 0
-          ? anggotaData.namaAnak.join(", ")
+          ? anggotaData.namaAnak
+              .map((namaAnak, index) => {
+                const formattedName = namaAnak
+                  .replace(/[\[\]"]/g, "")
+                  .replace(/\n/g, " ")
+                  .trim();
+                return `${index + 1}. ${formattedName}`;
+              })
+              .join("\n")
           : "-"
       }`,
     ];
@@ -357,11 +365,7 @@ const DetailAnggota = () => {
 
   const familyData = [
     `Nama Suami/Istri: ${anggotaData.namaSuamiIstri ?? "-"}`,
-    `Nama Anak: ${
-      Array.isArray(anggotaData.namaAnak) && anggotaData.namaAnak.length > 0
-        ? anggotaData.namaAnak.join(", ")
-        : "-"
-    }`,
+    `Nama Anak: `,
   ];
 
   return (
@@ -495,7 +499,34 @@ const DetailAnggota = () => {
             <div className="space-y-4 ml-3">
               {familyData.map((item, index) => (
                 <div key={index} className="break-words">
-                  {item}
+                  {index === 1 ? (
+                    <>
+                      <div>{item.split("\n")[0]}</div>
+                      <div>
+                        {Array.isArray(anggotaData.namaAnak) &&
+                        anggotaData.namaAnak.length > 0
+                          ? anggotaData.namaAnak.map((anak, anakIndex) => {
+                              if (typeof anak === "string") {
+                                // Periksa apakah anak adalah array JSON yang terpisah dengan koma
+                                let cleanedAnak = anak
+                                  .replace(/\[|\]|\"/g, "")
+                                  .trim(); // Menghapus tanda [] dan ""
+                                if (cleanedAnak) {
+                                  return (
+                                    <div key={anakIndex}>
+                                      {anakIndex + 1}. {cleanedAnak}
+                                    </div>
+                                  );
+                                }
+                              }
+                              return null; // Menghindari menampilkan data yang tidak valid
+                            })
+                          : "-"}
+                      </div>
+                    </>
+                  ) : (
+                    <div>{item}</div>
+                  )}
                 </div>
               ))}
             </div>
