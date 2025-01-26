@@ -9,7 +9,6 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Input } from "@/components/ui/input";
-import { LoaderIcon } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import Modal from "react-modal";
 
@@ -28,7 +27,6 @@ const SyncData = () => {
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [templateType, setTemplateType] = useState("");
   const [data, setData] = useState([]);
   const tableRef = useRef();
   const [formData, setFormData] = useState({
@@ -49,6 +47,9 @@ const SyncData = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [searchNama, setSearchNama] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const storedRole = sessionStorage.getItem("role");
@@ -250,21 +251,35 @@ const SyncData = () => {
   }, []);
 
   const filteredData = data.filter((item) => {
-    // For ADMIN users
+    // Logika untuk ADMIN
     if (role === "ADMIN") {
       const cabangMatch = item.cabang === selectedCabang;
       const unitKerjaMatch = selectedUnitKerja
-        ? item.unitKerja.toLowerCase() === selectedUnitKerja.toLowerCase()
+        ? item.unitKerja?.toLowerCase() === selectedUnitKerja?.toLowerCase()
         : true;
-      return cabangMatch && unitKerjaMatch;
+
+      const namaMatch = searchNama
+        ? item.namaAnggota?.toLowerCase().includes(searchNama) ||
+          item.npa?.toLowerCase().includes(searchNama) ||
+          item.nip?.toLowerCase().includes(searchNama)
+        : true;
+
+      return cabangMatch && unitKerjaMatch && namaMatch;
     }
 
-    // For other roles
+    // Logika untuk role lainnya
     const cabangMatch = selectedCabang ? item.cabang === selectedCabang : true;
     const unitKerjaMatch = selectedUnitKerja
-      ? item.unitKerja.toLowerCase() === selectedUnitKerja.toLowerCase()
+      ? item.unitKerja?.toLowerCase() === selectedUnitKerja?.toLowerCase()
       : true;
-    return cabangMatch && unitKerjaMatch;
+
+    const namaMatch = searchNama
+      ? item.namaAnggota?.toLowerCase().includes(searchNama) ||
+        item.npa?.toLowerCase().includes(searchNama) ||
+        item.nip?.toLowerCase().includes(searchNama)
+      : true;
+
+    return cabangMatch && unitKerjaMatch && namaMatch;
   });
 
   const paginatedData = paginateData(filteredData);
@@ -531,9 +546,6 @@ const SyncData = () => {
     setSelectedTemplate(null);
   };
 
-  const [isMobile, setIsMobile] = useState(false);
-  const router = useRouter();
-
   const handleBackClick = () => {
     router.back();
   };
@@ -550,6 +562,10 @@ const SyncData = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  const handleNamaChange = (e) => {
+    setSearchNama(e.target.value.toLowerCase());
+  };
 
   const renderTableBody = () => {
     return (
@@ -1040,10 +1056,10 @@ const SyncData = () => {
 
             <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 mb-4">
               {/* Filter Section */}
-              <div className="flex flex-wrap w-full md:w-auto space-x-4">
+              <div className="flex flex-wrap gap-4 w-full md:w-auto">
                 {/* Filter Cabang */}
                 <div
-                  className="flex flex-col relative w-full md:w-auto"
+                  className="relative flex flex-col w-full md:w-auto"
                   ref={cabangRef}
                 >
                   <Input
@@ -1051,20 +1067,20 @@ const SyncData = () => {
                     value={selectedCabang}
                     readOnly
                     onClick={handleCabangClick}
-                    className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                    className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition duration-150 ${
                       role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
                     }`}
                     placeholder="Pilih Cabang"
                     disabled={role === "ADMIN"}
                   />
                   {showCabangDropdown && role !== "ADMIN" && (
-                    <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                    <div className="absolute z-10 border rounded-md bg-white shadow-md mt-2 w-full">
                       <ul className="max-h-44 overflow-y-auto">
-                        <li className="py-2 px-2">
+                        <li className="py-2 px-3">
                           <Input
                             type="text"
                             onChange={(e) => handleCabangSearch(e.target.value)}
-                            className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                            className="block w-full px-3 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none"
                             placeholder="Cari atau ketik Cabang..."
                             autoFocus
                           />
@@ -1091,7 +1107,7 @@ const SyncData = () => {
 
                 {/* Filter Unit Kerja */}
                 <div
-                  className="flex flex-col relative w-full md:w-auto"
+                  className="relative flex flex-col w-full md:w-auto"
                   ref={unitKerjaRef}
                 >
                   <Input
@@ -1100,13 +1116,15 @@ const SyncData = () => {
                     onChange={handleUnitKerjaChange}
                     onFocus={handleUnitKerjaFocus}
                     placeholder="Pilih Unit Kerja"
-                    className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
+                    className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition ${
+                      !selectedCabang ? "bg-gray-100 cursor-not-allowed" : ""
+                    }`}
                     disabled={!selectedCabang}
                   />
                   {showUnitKerjaDropdown && (
-                    <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                    <div className="absolute z-10 border rounded-md bg-white shadow-md mt-2 w-full">
                       <ul className="max-h-44 overflow-y-auto">
-                        <li className="py-2 px-2">
+                        <li className="py-2 px-3">
                           <Input
                             type="text"
                             onChange={(e) =>
@@ -1114,7 +1132,7 @@ const SyncData = () => {
                             }
                             placeholder="Cari atau ketik Unit Kerja..."
                             autoFocus
-                            className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 mt-2"
+                            className="block w-full px-3 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none"
                           />
                         </li>
                         <li
@@ -1143,6 +1161,16 @@ const SyncData = () => {
                       </ul>
                     </div>
                   )}
+                </div>
+
+                {/* Filter Query */}
+                <div className="relative flex flex-col w-full md:w-auto">
+                  <Input
+                    type="text"
+                    className="block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none"
+                    placeholder="Cari Data"
+                    onChange={handleNamaChange}
+                  />
                 </div>
               </div>
 
