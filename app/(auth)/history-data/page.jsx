@@ -28,11 +28,29 @@ const Page = () => {
   const [bulanOptions, setBulanOptions] = useState([]);
   const [selectedYear, setSelectedYear] = useState("");
   const [currentItems, setCurrentItems] = useState([]);
+  const [userCabang, setUserCabang] = useState("");
+
+  useEffect(() => {
+    const userRole = sessionStorage.getItem("role");
+    if (userRole === "ADMIN") {
+      const adminCabang = sessionStorage.getItem("cabang");
+      setUserCabang(adminCabang);
+      setSelectedCabang(adminCabang); 
+    }
+  }, []);
 
   useEffect(() => {
     GlobalApi.getCabang()
       .then((response) => {
-        setCabangOptions(response.data);
+        const userRole = sessionStorage.getItem("role");
+        if (userRole === "ADMIN") {
+          const adminCabang = sessionStorage.getItem("cabang");
+          setCabangOptions(response.data.filter(cabang => 
+            cabang.kecamatan.toLowerCase() === adminCabang.toLowerCase()
+          ));
+        } else {
+          setCabangOptions(response.data);
+        }
         setLoading(false);
       })
       .catch((error) => {
@@ -64,100 +82,92 @@ const Page = () => {
     try {
       const userRole = sessionStorage.getItem("role");
       const npa = sessionStorage.getItem("npa");
+      const adminCabang = sessionStorage.getItem("cabang");
       setLoading(true);
-  
+
       let historyData = [];
-  
-      // Fetch history data based on user role
-      if (userRole === "USER") {
+      let page = 0;
+      const size = 10000;
+      let hasMoreData = true;
+
+      if (userRole === "ADMIN") {
         try {
-          const historyResponse = await GlobalApi.getHistoryByNpa(npa);
-          // Sort the data before taking the latest entry
-          const sortedData = Array.isArray(historyResponse) 
-            ? historyResponse.sort((a, b) => {
-                const dateA = new Date(`${a.tanggal} ${a.jam}`);
-                const dateB = new Date(`${b.tanggal} ${b.jam}`);
-                return dateB - dateA;
-              })
-            : [historyResponse];
-          // For USER role, only get the latest history entry for display
-          historyData = [sortedData[0]];
+          while (hasMoreData) {
+            const historyResponse = await GlobalApi.getHistoryData(page, size);
+
+            if (historyResponse && historyResponse.content) {
+              const filteredData = historyResponse.content.filter(item => 
+                item.cabang.toLowerCase() === adminCabang.toLowerCase()
+              );
+
+              historyData = [
+                ...historyData,
+                ...filteredData.sort((a, b) => {
+                  const dateA = new Date(`${a.tanggal} ${a.jam}`);
+                  const dateB = new Date(`${b.tanggal} ${b.jam}`);
+                  return dateB - dateA;
+                }),
+              ];
+
+              hasMoreData = !historyResponse.last;
+              page += 1;
+            } else {
+              hasMoreData = false;
+            }
+          }
         } catch (error) {
-          console.error("Error fetching user history:", error);
+          console.error("Error fetching admin history data:", error);
           historyData = [];
         }
-      } else if (userRole === "ADMIN") {
+      } else if (userRole === "USER") {
         try {
           const historyResponse = await GlobalApi.getHistoryByNpa(npa);
-          // Sort all data for admin
-          historyData = Array.isArray(historyResponse) 
+          historyData = Array.isArray(historyResponse)
             ? historyResponse.sort((a, b) => {
-                const dateA = new Date(`${a.tanggal} ${a.jam}`);
-                const dateB = new Date(`${b.tanggal} ${b.jam}`);
-                return dateB - dateA;
-              })
+              const dateA = new Date(`${a.tanggal} ${a.jam}`);
+              const dateB = new Date(`${b.tanggal} ${b.jam}`);
+              return dateB - dateA;
+            })
             : [historyResponse];
         } catch (error) {
-          console.error("Error fetching admin history:", error);
+          console.error("Error fetching USER history:", error);
           historyData = [];
         }
       } else {
         try {
-          const historyResponse = await GlobalApi.getHistoryData(0, 10000);
-          if (historyResponse && historyResponse.content) {
-            // Sort all history data
-            historyData = historyResponse.content.sort((a, b) => {
-              const dateA = new Date(`${a.tanggal} ${a.jam}`);
-              const dateB = new Date(`${b.tanggal} ${b.jam}`);
-              return dateB - dateA;
-            });
+          while (hasMoreData) {
+            const historyResponse = await GlobalApi.getHistoryData(page, size);
+
+            if (historyResponse && historyResponse.content) {
+              historyData = [
+                ...historyData,
+                ...historyResponse.content.sort((a, b) => {
+                  const dateA = new Date(`${a.tanggal} ${a.jam}`);
+                  const dateB = new Date(`${b.tanggal} ${b.jam}`);
+                  return dateB - dateA;
+                }),
+              ];
+
+              hasMoreData = !historyResponse.last;
+              page += 1;
+            } else {
+              hasMoreData = false;
+            }
           }
         } catch (error) {
-          console.error("Error fetching all history:", error);
+          console.error("Error fetching history data:", error);
           historyData = [];
         }
       }
-  
-      // Process NPA data (rest of the NPA processing code remains the same)
-      if (historyData.length > 0) {
-        const uniqueNpas = [...new Set(
-          historyData
-            .map(item => item.npa)
-            .filter(npa => npa && npa.trim())
-        )];
-  
-        let npaDetailsMap = {};
-  
-        if (uniqueNpas.length > 0) {
-          try {
-            const npaDetails = await GlobalApi.cekNpaList(uniqueNpas);
-            npaDetailsMap = (Array.isArray(npaDetails) ? npaDetails : [])
-              .reduce((acc, item) => {
-                if (item && item.npaPgri) {
-                  acc[item.npaPgri.trim().toLowerCase()] = item;
-                }
-                return acc;
-              }, {});
-          } catch (npaError) {
-            console.warn("Error fetching NPA details:", npaError);
-          }
-        }
-  
-        const enrichedData = historyData.map(item => ({
-          ...item,
-          npaDetail: item.npa && npaDetailsMap[item.npa.trim().toLowerCase()]
-            ? npaDetailsMap[item.npa.trim().toLowerCase()]
-            : {}
-        }));
-  
-        setAllData(enrichedData);
-      }
+
+      setAllData(historyData);
     } catch (error) {
       console.error("Error in fetchAllData:", error);
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     if (!token) {
@@ -174,17 +184,8 @@ const Page = () => {
   useEffect(() => {
     const filtered = allData
       .filter((item) => {
-        const shouldHideRow = (!item.npaDetail?.cabang || item.npaDetail?.cabang.trim() === '') &&
-          (!item.npaDetail?.namaLengkap || item.npaDetail?.namaLengkap === '-') &&
-          (!item.npaDetail?.npaPgri || item.npaDetail?.npaPgri === '-') &&
-          (!item.npaDetail?.tempatLahir || item.npaDetail?.tempatLahir === '-') &&
-          (!item.npaDetail?.jabatan || item.npaDetail?.jabatan === '-') &&
-          (!item.npaDetail?.unitKerja || item.npaDetail?.unitKerja === '-');
-
-        if (shouldHideRow) return false;
-
         const matchesCabang = selectedCabang
-          ? (item.npaDetail?.cabang?.toLowerCase() || item.cabang?.toLowerCase()) === selectedCabang.toLowerCase()
+          ? item.cabang?.toLowerCase() === selectedCabang.toLowerCase()
           : true;
 
         const matchesMonth = selectedMonth
@@ -198,10 +199,9 @@ const Page = () => {
         return matchesCabang && matchesMonth && matchesYear;
       })
       .sort((a, b) => {
-        // Create Date objects that combine the date and time
         const dateA = new Date(`${a.tanggal} ${a.jam}`);
         const dateB = new Date(`${b.tanggal} ${b.jam}`);
-        return dateB - dateA; // Sort in descending order (newest first)
+        return dateB - dateA;
       });
 
     setTotalItems(filtered.length);
@@ -210,7 +210,6 @@ const Page = () => {
     setCurrentItems(filtered.slice(indexOfFirstItem, indexOfLastItem));
     setData(filtered);
 
-    // Adjust current page if needed
     const maxPage = Math.ceil(filtered.length / itemsPerPage);
     if (currentPage > maxPage) {
       setCurrentPage(Math.max(1, maxPage));
@@ -224,24 +223,19 @@ const Page = () => {
     const visiblePages = [];
 
     if (totalPages <= 5) {
-      // Show all pages if total pages are 5 or less
       for (let i = 1; i <= totalPages; i++) {
         visiblePages.push(i);
       }
     } else {
-      // Show pages around current page
       if (currentPage <= 3) {
-        // Near the start
         for (let i = 1; i <= 5; i++) {
           visiblePages.push(i);
         }
       } else if (currentPage >= totalPages - 2) {
-        // Near the end
         for (let i = totalPages - 4; i <= totalPages; i++) {
           visiblePages.push(i);
         }
       } else {
-        // In the middle
         for (let i = currentPage - 2; i <= currentPage + 2; i++) {
           visiblePages.push(i);
         }
@@ -252,8 +246,7 @@ const Page = () => {
   };
 
   const handleEdit = (item) => {
-    const npa = item.npaDetail?.npaPgri;
-    sessionStorage.setItem("npaDetailHistory", npa);
+    sessionStorage.setItem("npaDetailHistory", item.npa);
     router.push(`/history-data/detail`);
   };
 
@@ -276,36 +269,6 @@ const Page = () => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-  const calculateAge = (birthDate) => {
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDifference = today.getMonth() - birth.getMonth();
-
-    if (
-      monthDifference < 0 ||
-      (monthDifference === 0 && today.getDate() < birth.getDate())
-    ) {
-      age--;
-    }
-    return age;
-  };
-
-  // if (loading) {
-  //   return (
-  //     <div
-  //       style={{
-  //         display: "flex",
-  //         justifyContent: "center",
-  //         alignItems: "center",
-  //         height: "100vh",
-  //       }}
-  //     >
-  //       <ClipLoader color="#3498db" size={50} />
-  //     </div>
-  //   );
-  // }
-
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
 
@@ -315,10 +278,7 @@ const Page = () => {
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-        <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
-        >
+        <div className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"}`}>
           <div className="w-full p-4 container shadow-lg rounded-lg mt-12">
             <div className="rounded-md flex flex-col py-4">
               <div className="container px-2">
@@ -379,14 +339,13 @@ const Page = () => {
                         "Date",
                         "Data",
                         "Cabang",
-                        "Detail",
                         "Keterangan",
+                        "Detail",
                       ].map((header, idx) => (
                         <th
                           key={header}
                           rowSpan="2"
-                          className={`border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white ${idx > 2 ? "hidden lg:table-cell" : ""
-                            }`}
+                          className={`border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white ${idx > 2 ? "hidden lg:table-cell" : ""}`}
                         >
                           {header}
                         </th>
@@ -406,9 +365,9 @@ const Page = () => {
                   ) : currentItems.length === 0 ? (
                     <tbody>
                       <tr>
-                      <td colSpan="6" className="text-center py-20">
-                          <div className="flex justify-center items-center">
-                            <ClipLoader color="#3498db" size={50} />
+                        <td colSpan="6" className="text-center py-20">
+                          <div className="flex flex-col justify-center items-center space-y-2">
+                            <p className="text-gray-500 text-lg">Tidak Ada Data History</p>
                           </div>
                         </td>
                       </tr>
@@ -418,9 +377,10 @@ const Page = () => {
                       {currentItems.map((item, index) => (
                         <React.Fragment key={index}>
                           <tr
-                            className={index % 2 === 0 ? "bg-gray-200" : "bg-white"}
+                            className={`${index % 2 === 0 ? "bg-gray-200" : "bg-white"
+                              }`}
                           >
-                            <td className="text-center border">
+                            <td className="text-center border py-4">
                               {startIndex + index + 1}
                               <button
                                 className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden ml-2"
@@ -433,40 +393,36 @@ const Page = () => {
                                 )}
                               </button>
                             </td>
-                            <td className="border">{`${item.hari}, ${formatDate(
-                              item.tanggal
-                            )}, ${item.jam}`}</td>
-                            <td className="border">
-                              {item.npaDetail ? (
-                                <div>
-                                  <div>{item.npaDetail.namaLengkap ?? "-"}</div>
-                                  <div>{item.npaDetail.npaPgri ?? "-"}</div>
-                                  <div>
-                                    {item.npaDetail.tempatLahir ?? "-"}{" "}
-                                    {item.npaDetail.tanggalLahir
-                                      ? formatDate(item.npaDetail.tanggalLahir)
-                                      : "-"}
-                                  </div>
-                                  <div>{item.npaDetail.jabatan ?? "-"}</div>
-                                  <div>{item.npaDetail.unitKerja ?? "-"}</div>
-                                  <div>
-                                    {item.npaDetail.tanggalLahir
-                                      ? calculateAge(item.npaDetail.tanggalLahir)
-                                      : "-"}{" "}
-                                    Tahun
-                                  </div>
+                            <td className="border px-4 py-4 lg:table-cell w-[300px]">
+                              {`${item.hari}, ${formatDate(item.tanggal)}, ${item.jam}`}
+                            </td>
+                            <td className="border px-4 py-4 lg:table-cell w-[300px]">
+                              <div>
+                                <div>{item.nama ?? "-"}</div>
+                                <div>{item.npa ?? "-"}</div>
+                                {/* <div>
+                                  {item.npaDetail.tempatLahir ?? "-"}{" "}
+                                  {item.npaDetail.tanggalLahir
+                                    ? formatDate(item.npaDetail.tanggalLahir)
+                                    : "-"}
                                 </div>
-                              ) : (
-                                "-"
-                              )}
+                                <div>{item.npaDetail.jabatan ?? "-"}</div>
+                                <div>{item.npaDetail.unitKerja ?? "-"}</div>
+                                <div>
+                                  {item.npaDetail.tanggalLahir
+                                    ? calculateAge(item.npaDetail.tanggalLahir)
+                                    : "-"}{" "}
+                                  Tahun
+                                </div> */}
+                              </div>
                             </td>
-                            <td className="text-center border hidden lg:table-cell">
-                              {item.npaDetail.cabang}
+                            <td className="text-center border hidden lg:table-cell px-4 py-4 w-[150px]">
+                              {item.cabang}
                             </td>
-                            <td className="border hidden lg:table-cell">
+                            <td className="border hidden lg:table-cell px-4 py-4 w-[400px]">
                               {item.uraian}
                             </td>
-                            <td className="text-center border hidden lg:table-cell">
+                            <td className="text-center border hidden lg:table-cell px-4 py-4">
                               <button
                                 onClick={() => handleEdit(item)}
                                 className="px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -478,14 +434,14 @@ const Page = () => {
 
                           {expandedIndex === index && (
                             <tr className="bg-gray-100 lg:hidden">
-                              <td colSpan="6" className="border px-4 py-2">
+                              <td colSpan="6" className="border px-4 py-4">
                                 <div>
                                   <strong>Cabang:</strong> {item.cabang ?? "-"}
                                 </div>
                                 <div className="mt-2">
-                                  <strong>Detail:</strong> {item.uraian ?? "-"}
+                                  <strong>Keterangan:</strong> {item.uraian ?? "-"}
                                 </div>
-                                <div className="mt-2">
+                                <div className="mt-4 text-center">
                                   <button
                                     onClick={() => handleEdit(item)}
                                     className="ml-2 px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -501,7 +457,7 @@ const Page = () => {
                     </tbody>
                   )}
                 </table>
-                  
+
                 <div className="flex justify-center items-center mt-4">
                   <div className="flex justify-center gap-1">
                     <button
