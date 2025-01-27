@@ -714,11 +714,8 @@ const Page = () => {
   const handleConfirmAndSendData = async () => {
     try {
       const anggotaId = sessionStorage.getItem("anggotaId");
-      const userId = sessionStorage.getItem("userId");
 
-      const id = anggotaId || userId;
-
-      if (!id) {
+    if (!anggotaId) {
         toast.error(
           <div
             style={{
@@ -831,10 +828,11 @@ const Page = () => {
             },
           }
         );
+        handleClosePopup();
         return;
       }
 
-      const response = await GlobalApi.updateRegisUser(userId, data);
+      const response = await GlobalApi.updateRegisUser(anggotaId, data);
       toast.success(
         <div
           style={{
