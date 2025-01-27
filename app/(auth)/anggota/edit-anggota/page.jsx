@@ -1129,7 +1129,6 @@ const Page = () => {
         </div>,
         {
           icon: null,
-          duration: 1000,
           style: {
             marginTop: "16%",
             fontSize: "1.75rem",
@@ -1146,7 +1145,7 @@ const Page = () => {
             boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
           },
         }
-      );
+      );      
     } catch (error) {
       console.error("Gagal mengambil data NIP:", error);
       toast.error(
@@ -1685,7 +1684,15 @@ const Page = () => {
 
                     {isPopupVisible && (
                       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                        <div className="bg-white rounded-lg p-6 w-1/2">
+                        <div className="bg-white rounded-lg p-6 w-1/2 relative">
+                          <button
+                            type="button"
+                            onClick={handleClosePopup}
+                            className="absolute top-2 right-5 text-red-500 hover:text-red-700 text-xl"
+                            aria-label="Close"
+                          >
+                            &#10005;
+                          </button>
                           <h2 className="text-lg font-semibold mb-4">
                             Apakah Data Anda Sudah Benar?
                           </h2>
