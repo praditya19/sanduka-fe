@@ -29,15 +29,13 @@ const Page = () => {
         try {
           setLoading(true);
           const result = await GlobalApi.getHistoryByNpa(npa);
-          
-          // Sort the data by date and time in descending order
+
           const sortedData = result.sort((a, b) => {
-            // Create Date objects combining the date and time
             const [dayA, monthA, yearA] = a.tanggal.split('/');
             const [dayB, monthB, yearB] = b.tanggal.split('/');
             const dateA = new Date(`${yearA}-${monthA}-${dayA} ${a.jam}`);
             const dateB = new Date(`${yearB}-${monthB}-${dayB} ${b.jam}`);
-            return dateB - dateA; // Sort in descending order
+            return dateB - dateA;
           });
 
           setData(sortedData);
@@ -75,15 +73,13 @@ const Page = () => {
           <Table className="min-w-full table-auto mb-8 border border-black rounded-lg overflow-hidden">
             <TableHeader className="p-2 md:p-3 bg-green-300">
               <TableRow>
-                {[
-                  "Waktu",
-                  "Data Anggota",
-                  "Uraian",
-                  "Info Tambahan",
-                ].map((header) => (
+                {["Waktu", "Data Anggota", "Uraian", "Info Tambahan"].map((header) => (
                   <TableHead
                     key={header}
-                    className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
+                    className={`border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white ${header === "Uraian" || header === "Info Tambahan"
+                      ? "hidden lg:table-cell"
+                      : ""
+                      }`}
                   >
                     {header}
                   </TableHead>
@@ -97,9 +93,8 @@ const Page = () => {
               {data.map((item, index) => (
                 <React.Fragment key={index}>
                   <TableRow
-                    className={`hover:bg-gray-100 transition duration-200 ${
-                      index % 2 === 0 ? "bg-gray-200" : "bg-white"
-                    }`}
+                    className={`hover:bg-gray-100 transition duration-200 ${index % 2 === 0 ? "bg-gray-200" : "bg-white"
+                      }`}
                   >
                     <TableCell className="text-center border border-gray-300 p-2">
                       <div>{item.hari}</div>
@@ -111,7 +106,7 @@ const Page = () => {
                       <div className="text-gray-600">NPA: {item.npa}</div>
                       <div className="text-gray-600">Cabang: {item.cabang}</div>
                     </TableCell>
-                    <TableCell className="border border-gray-300 p-2">
+                    <TableCell className="border border-gray-300 p-2 hidden lg:table-cell">
                       {item.uraian}
                     </TableCell>
                     <TableCell className="border border-gray-300 p-2 hidden lg:table-cell">
@@ -121,7 +116,7 @@ const Page = () => {
                     </TableCell>
                     <TableCell className="text-center border border-gray-300 p-2 lg:hidden">
                       <Button
-                        className="text-blue-500"
+                        className="text-blue-500 bg-transparent hover:bg-transparent text-xl p-4"
                         onClick={() => handleExpand(index)}
                       >
                         {expandedIndex === index ? (
@@ -131,8 +126,10 @@ const Page = () => {
                         )}
                       </Button>
                     </TableCell>
+
                   </TableRow>
 
+                  {/* Expanded Row: Muncul di mobile */}
                   {expandedIndex === index && (
                     <TableRow className="bg-gray-100 lg:hidden">
                       <TableCell
@@ -140,15 +137,15 @@ const Page = () => {
                         className="border border-gray-300 p-4 text-sm"
                       >
                         <div>
-                          <strong>Periode:</strong> {item.bulan} {item.tahun}
+                          <strong>Uraian:</strong> {item.uraian}
                         </div>
-                        {item.cabang_ke_2 && (
-                          <div>
-                            <strong>Cabang Baru :</strong> {item.cabang_ke_2}
-                          </div>
-                        )}
                         <div>
-                          <strong>Petugas:</strong> {item.user}
+                          <strong>Info Tambahan:</strong>
+                          <div>Periode: {item.bulan} {item.tahun}</div>
+                          {item.cabang_ke_2 && (
+                            <div>Cabang Baru : {item.cabang_ke_2}</div>
+                          )}
+                          <div>Petugas: {item.user}</div>
                         </div>
                       </TableCell>
                     </TableRow>
