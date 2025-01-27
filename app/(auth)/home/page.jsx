@@ -367,7 +367,7 @@ export default function IconGrid() {
   const renderCheckmark = (value) => {
     if (value === "Ya") {
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-sm font-medium bg-green-500 text-white">
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-[0.625rem] sm:text-xs md:text-xs font-medium bg-green-500 text-white">
           Terdaftar
         </span>
       );
@@ -378,7 +378,7 @@ export default function IconGrid() {
       value === "TIDAK"
     ) {
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-500 text-white">
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-[0.625rem] sm:text-xs md:text-xs font-medium bg-red-500 text-white sm:whitespace-normal whitespace-nowrap">
           Belum Terdaftar
         </span>
       );
@@ -550,32 +550,32 @@ export default function IconGrid() {
             {isMobile ? (
               <>
                 {(role === "USER" || role === "ADMIN") && (
-                  <div className="flex justify-center mb-[17%] -mt-36 items-center text-center overflow-x-hidden max-w-full gap-8">
+                  <div className="flex justify-center mb-[10%] -mt-20 items-center text-center overflow-x-hidden max-w-full gap-8">
                     <div className="flex flex-col items-center justify-center">
-                      <span className="text-lg">Daspen:</span>
-                      <div className="w-14 h-14 flex justify-center items-center text-2xl -mt-2">
+                      <span className="text-xs">Daspen:</span>
+                      <div className="w-14 h-14 flex justify-center items-center text-xs -mt-4">
                         {renderCheckmark(userData?.pesertaDaspen)}
                       </div>
                     </div>
 
                     <div className="flex flex-col items-center justify-center">
-                      <span className="text-lg">KTA Digital:</span>
-                      <div className="w-14 h-14 flex justify-center items-center text-2xl -mt-2">
+                      <span className="text-xs">KTA Digital:</span>
+                      <div className="w-14 h-14 flex justify-center items-center text-xs -mt-4">
                         {renderCheckmark(userData?.pesertaKtaDigital)}
                       </div>
                     </div>
 
                     <div className="flex flex-col items-center justify-center">
-                      <span className="text-lg">Sanduka:</span>
-                      <div className="w-14 h-14 flex justify-center items-center text-2xl -mt-2">
+                      <span className="text-xs">Sanduka:</span>
+                      <div className="w-14 h-14 flex justify-center items-center text-xs -mt-4">
                         {renderCheckmark(userData?.pesertaSanduka)}
                       </div>
                     </div>
                   </div>
                 )}
                 <div className="w-full border overflow-x-auto -mt-11">
-                  <div className="flex space-x-4 px-4">
-                    <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 flex-shrink-0 w-48">
+                  <div className="flex space-x-2 px-1">
+                    <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 flex-shrink-0 w-40">
                       <div>
                         <p className="text-sm font-bold text-gray-800">
                           Lapor Meninggal
@@ -595,7 +595,7 @@ export default function IconGrid() {
                       </div>
                     </div>
 
-                    <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 flex-shrink-0 w-48">
+                    <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 flex-shrink-0 w-40">
                       <div>
                         <p className="text-sm font-bold text-gray-800">
                           Sanduka Diberikan
@@ -615,7 +615,7 @@ export default function IconGrid() {
                       </div>
                     </div>
 
-                    <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 flex-shrink-0 w-48">
+                    <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 flex-shrink-0 w-40">
                       <div>
                         <p className="text-sm font-bold text-gray-800">
                           Total Santunan
