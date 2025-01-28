@@ -79,6 +79,7 @@ const DataAnggota = () => {
         statusKeanggotaan
       );
 
+      console.log(response.content);
       const fetchedData = response.content;
 
       const fotoBase64Array = [];
@@ -283,7 +284,7 @@ const DataAnggota = () => {
     if (!Array.isArray(dateArray) || dateArray.length !== 3) {
       return "-";
     }
-  
+
     const [year, month, day] = dateArray;
     const formattedDay = String(day).padStart(2, "0");
     const formattedMonth = String(month).padStart(2, "0");
@@ -306,7 +307,7 @@ const DataAnggota = () => {
 
   const formatRetirementDate = (timestamp) => {
     const retirementDate = new Date(timestamp);
-  
+
     const formattedRetirementDate = retirementDate
       .toLocaleDateString("id-ID", {
         day: "2-digit",
@@ -314,7 +315,7 @@ const DataAnggota = () => {
         year: "numeric",
       })
       .replace(/\//g, "-");
-  
+
     return formattedRetirementDate;
   };
 
@@ -345,7 +346,14 @@ const DataAnggota = () => {
   const handlePrint = async () => {
     setIsLoading(true);
     try {
-      const filteredDataForPrint = await fetchDataAnggota(0, totalElements);
+      const filteredDataForPrint = await fetchDataAnggota(
+        currentPage,
+        totalElements,
+        selectedCabang,
+        selectedUnitKerja,
+        nama
+      );
+
       if (!filteredDataForPrint || filteredDataForPrint.length === 0) {
         console.warn("No data available for printing.");
         return;
@@ -354,87 +362,91 @@ const DataAnggota = () => {
       const printWindow = window.open("", "_blank", "width=800,height=600");
 
       const htmlContent = `
-      <html>
-        <head>
-          <title>Data Anggota</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .title, .subtitle { text-align: center; margin-bottom: 10px; }
-            .title { font-size: 28px; font-weight: bold; color: #00796b; }
-            .subtitle { font-size: 20px; font-weight: normal; color: #555; }
-            table { width: 100%; border-collapse: collapse; border: 1px solid #ccc; }
-            th, td { padding: 8px; border: 1px solid #ccc; }
-            .header-row th[colspan="2"] { text-align: center; }
-            .total-row { font-weight: bold; background-color: #e0f2f1; }
-          </style>
-        </head>
-        <body>
-          <div class="title">Data Anggota</div>
-          <div class="subtitle">Jumlah Anggota: ${totalElements}</div>
-          <table>
-            <thead>
-              <tr class="header-row">
-                <th>No</th>
-                <th>Foto</th>
-                <th>Nama</th>
-                <th>Tanggal Lahir</th>
-                <th>Unit Kerja</th>
-                <th>Keterangan</th>
-                <th>Lokasi</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredDataForPrint
-                .map(
-                  (item, index) => `
-                    <tr>
-                      <td>${index + 1}</td>
-                      <td>${
-                        item.foto
-                          ? `<img src="data:image/png;base64,${item.foto}" alt="foto" width="50" height="50"/>`
-                          : ""
-                      }</td>
-                      <td>
-                        <div class="font-bold">${item.namaLengkap}</div>
-                        <div>${item.npaPgri}</div>
-                        <div>${item.jabatan}</div>
-                      </td>
-                      <td>
-                        <div>${item.tempatLahir},</div>
-                        <div>${formatDate(item.tanggalLahir)}</div>
-                        <div>${calculateAge(item.tanggalLahir)} Tahun</div>
-                        <div>${formatRetirementDate(item.prediksiPensiun)}</div>
-                      </td>
-                      <td>
-                        <div>${item.cabang},</div>
-                        <div>${item.unitKerja}</div>
-                        <div>Anggota: ${
-                          item.tahunDiangkat ? item.tahunDiangkat : "-"
-                        }</div>
-                        <div>
-                          ${item.pangkatGolongan} || ${formatCurrency(
-                    item.iuran
-                  )}
-                        </div>
-                      </td>
-                      <td>
-                        <div>${
-                          item.statusKeanggotaan ? item.statusKeanggotaan : "-"
-                        }</div>
-                      </td>
-                      <td>
-                        <div>${item.latitude ? item.latitude : "-"},</div>
-                        <div>${item.longitude ? item.longitude : "-"}</div>
-                      </td>
-                    </tr>
-                  `
-                )
-                .join("")}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `;
+        <html>
+          <head>
+            <title>Data Anggota</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .title, .subtitle { text-align: center; margin-bottom: 10px; }
+              .title { font-size: 28px; font-weight: bold; color: #00796b; }
+              .subtitle { font-size: 20px; font-weight: normal; color: #555; }
+              table { width: 100%; border-collapse: collapse; border: 1px solid #ccc; }
+              th, td { padding: 8px; border: 1px solid #ccc; }
+              .header-row th[colspan="2"] { text-align: center; }
+              .total-row { font-weight: bold; background-color: #e0f2f1; }
+            </style>
+          </head>
+          <body>
+            <div class="title">Data Anggota</div>
+            <div class="subtitle">Jumlah Anggota: ${
+              filteredDataForPrint.length
+            }</div>
+            <table>
+              <thead>
+                <tr class="header-row">
+                  <th>No</th>
+                  <th>Foto</th>
+                  <th>Nama</th>
+                  <th>Tanggal Lahir</th>
+                  <th>Unit Kerja</th>
+                  <th>Keterangan</th>
+                  <th>Lokasi</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filteredDataForPrint
+                  .map(
+                    (item, index) => `
+                      <tr>
+                        <td>${index + 1}</td>
+                        <td>${
+                          item.foto
+                            ? `<img src="data:image/png;base64,${item.foto}" alt="foto" width="50" height="50"/>`
+                            : ""
+                        }</td>
+                        <td>
+                          <div class="font-bold">${item.namaLengkap}</div>
+                          <div>${item.npaPgri}</div>
+                          <div>${item.jabatan}</div>
+                        </td>
+                        <td>
+                          <div>${formatDate(item.tanggalLahir)} ${item.nip},</div>
+                           <div>${item.jabatan}</div>
+                          <div>${formatRetirementDate(
+                            item.prediksiPensiun
+                          )}</div>
+                        </td>
+                        <td>
+                          <div>${item.cabang},</div>
+                          <div>${item.unitKerja}</div>
+                        </td>
+                        <td>
+                          <div>${
+                            item.statusKeanggotaan
+                              ? item.statusKeanggotaan
+                              : "-"
+                          }</div>
+                           <div>
+  ${
+    item.updatedAt
+      ? `${item.updatedAt[2]}-${item.updatedAt[1]}-${item.updatedAt[0]}`
+      : "-"
+  }
+</div>
+                        </td>
+                        <td>
+                          <div>${item.latitude ? item.latitude : "-"},</div>
+                          <div>${item.longitude ? item.longitude : "-"}</div>
+                        </td>
+                      </tr>
+                    `
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+          </body>
+        </html>
+      `;
 
       printWindow.document.write(htmlContent);
       printWindow.document.close();
@@ -2066,8 +2078,8 @@ const DataTable = ({
                           <div className="text-sm">
                             Pensiun :{" "}
                             {item.prediksiPensiun
-    ? formatRetirementDate(item.prediksiPensiun)
-    : "-"}
+                              ? formatRetirementDate(item.prediksiPensiun)
+                              : "-"}
                           </div>
                         </td>
                         <td className="py-2 px-4 border">
@@ -2493,8 +2505,8 @@ const DataTable = ({
                               <div className="text-sm">
                                 Pensiun :{" "}
                                 {item.prediksiPensiun
-    ? formatRetirementDate(item.prediksiPensiun)
-    : "-"}
+                                  ? formatRetirementDate(item.prediksiPensiun)
+                                  : "-"}
                               </div>
                             </div>
                             <div className="text-left">
