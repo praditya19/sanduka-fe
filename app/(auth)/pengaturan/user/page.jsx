@@ -492,6 +492,16 @@ const Page = () => {
                     Unit Kerja
                   </Link>
                 </li>
+                {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                  <li>
+                    <Link
+                      href="/pengaturan/backup-data"
+                      className="text-gray-700 hover:text-teal-600"
+                    >
+                      Backup Data
+                    </Link>
+                  </li>
+                )}
               </ul>
             </nav>
             <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-4">
