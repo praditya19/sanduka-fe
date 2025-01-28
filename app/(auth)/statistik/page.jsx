@@ -141,19 +141,30 @@ const Page = () => {
         selectedTahun,
         selectedCabang || null
       );
-
+  
       if (Array.isArray(data)) {
-        setTableData(data);
-
-        const totalMasuk = data.reduce((sum, item) => sum + (item.baru || 0), 0);
-        const totalKeluar = data.reduce((sum, item) =>
-          sum +
-          (item.pensiun || 0) +
-          (item.meninggal || 0) +
-          (item.keluarAnggota || 0),
-          0);
-        const totalSekarang = data.reduce((sum, item) => sum + (item.dataSekarang || 0), 0);
-
+        // Filter data to exclude rows where cabang is 'KABUPATEN'
+        const filteredData = data.filter(item => item.cabang !== "KABUPATEN");
+  
+        setTableData(filteredData);
+  
+        const totalMasuk = filteredData.reduce(
+          (sum, item) => sum + (item.baru || 0),
+          0
+        );
+        const totalKeluar = filteredData.reduce(
+          (sum, item) =>
+            sum +
+            (item.pensiun || 0) +
+            (item.meninggal || 0) +
+            (item.keluarAnggota || 0),
+          0
+        );
+        const totalSekarang = filteredData.reduce(
+          (sum, item) => sum + (item.dataSekarang || 0),
+          0
+        );
+  
         setAnggotaMasuk(totalMasuk);
         setAnggotaKeluar(totalKeluar);
         setTotalAnggota(totalSekarang);
@@ -172,11 +183,10 @@ const Page = () => {
       setTotalAnggota(0);
     }
   };
-
-
+  
   useEffect(() => {
     fetchCalculateSanduka();
-  }, [selectedBulan, selectedTahun, selectedCabang]);
+  }, [selectedBulan, selectedTahun, selectedCabang]);  
 
   useEffect(() => { }, [tableData]);
   
