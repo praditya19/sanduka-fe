@@ -1616,6 +1616,55 @@ const getProgressFile = async () => {
   }
 };
 
+const getBackupDatabaseFile = async () => {
+  try {
+    const response = await axiosClient.get("/api/backup-all", {
+      responseType: "arraybuffer",
+    });
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.toLocaleString("id-ID", { month: "long" });
+    const year = today.getFullYear();
+
+    const formattedDate = `${day}-${month}-${year}`;
+
+    const contentDisposition = response.headers["content-disposition"];
+    const fileName = contentDisposition
+      ? contentDisposition.split("filename=")[1].replace(/"/g, "")
+      : `backup-sanduka-${formattedDate}.xlsx`;
+
+    const file = new Blob([response.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(file);
+    link.download = fileName;
+    link.click();
+  } catch (error) {
+    console.error("Error fetching files:", error);
+  }
+};
+
+const getBackupHistoryFile = async (
+  page = 0,
+  size = 10,
+  searchFileName = null
+) => {
+  try {
+    const params = {
+      page,
+      size,
+      ...(searchFileName && { searchFileName: searchFileName }),
+    };
+    const response = await axiosClient.get(`/api/backup-history`, { params });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching files:", error);
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1731,4 +1780,6 @@ export default {
   activasiUser,
   getAllTotalData,
   getProgressFile,
+  getBackupDatabaseFile,
+  getBackupHistoryFile,
 };
