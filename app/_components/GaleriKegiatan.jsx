@@ -3,12 +3,18 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 
 const galleryItems = [
-  { id: 1, src: "https://picsum.photos/800/600?random=2", alt: "Gambar 2" },
-  { id: 2, src: "https://picsum.photos/800/600?random=3", alt: "Gambar 3" },
-  { id: 3, src: "https://picsum.photos/800/600?random=4", alt: "Gambar 4" },
-  { id: 4, src: "https://picsum.photos/800/600?random=5", alt: "Gambar 5" },
-  { id: 5, src: "https://picsum.photos/800/600?random=6", alt: "Gambar 6" },
-];
+  { id: 1, src: "/gallery/galeri1.jpg", alt: "Gambar 2" },
+  { id: 2, src: "/gallery/galeri2.jpg", alt: "Gambar 3" },
+  { id: 3, src: "/gallery/galeri3.jpg", alt: "Gambar 4" },
+  { id: 4, src: "/gallery/galeri4.jpg", alt: "Gambar 5" },
+  { id: 5, src: "/gallery/galeri6.jpg", alt: "Gambar 6" },
+  { id: 6, src: "/gallery/galeri8.jpg", alt: "Gambar 7" },
+  { id: 7, src: "/gallery/galeri9.jpg", alt: "Gambar 8" },
+  { id: 8, src: "/gallery/galeri10.jpg", alt: "Gambar 9" },
+  { id: 9, src: "/gallery/galeri12.jpg", alt: "Gambar 10" },
+  { id: 10, src: "/gallery/galeri13.jpg", alt: "Gambar 11" },
+  { id: 11, src: "/gallery/galeri14.jpg", alt: "Gambar 12" },
+]
 
 function GaleriKegiatan() {
   const [activeIndex, setActiveIndex] = useState(0);

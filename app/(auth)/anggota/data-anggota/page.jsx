@@ -407,10 +407,11 @@ const DataAnggota = () => {
                         <td>
                           <div class="font-bold">${item.namaLengkap}</div>
                           <div>${item.npaPgri}</div>
-                          <div>${item.jabatan}</div>
                         </td>
                         <td>
-                          <div>${formatDate(item.tanggalLahir)} ${item.nip},</div>
+                          <div>${formatDate(item.tanggalLahir)} ${
+                      item.nip
+                    },</div>
                            <div>${item.jabatan}</div>
                           <div>${formatRetirementDate(
                             item.prediksiPensiun

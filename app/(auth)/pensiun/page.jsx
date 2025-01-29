@@ -33,7 +33,7 @@ const Page = () => {
   const [yearOptions, setYearOptions] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [filteredPensiunList, setFilteredPensiunList] = useState([]);
-
+  const [fetchedPages, setFetchedPages] = useState([]);
   const itemsPerPage = 10;
   // end
   const [isMobile, setIsMobile] = useState(false);
@@ -49,18 +49,13 @@ const Page = () => {
 
   const fetchPensiunData = async (
     page,
-    size = 50,
+    size = 10,
     cabang = "",
-    search = ""
+    searchText = ""
   ) => {
     setLoading(true);
     try {
-      const fetchedData = await GlobalApi.getAllPensiun(
-        page,
-        size,
-        cabang,
-        search
-      );
+      const fetchedData = await GlobalApi.getAllPensiun(page, size, cabang, null, null, searchText);
       console.log("Data yang diambil dari API:", fetchedData.data.content);
 
       if (fetchedData && fetchedData.data.content) {
@@ -77,6 +72,12 @@ const Page = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchText(value);
+    fetchPensiunData(0, 10, selectedCabang, value); // Memanggil fetchPensiunData dengan nilai searchText
   };
 
   useEffect(() => {
@@ -99,7 +100,7 @@ const Page = () => {
   }, [searchText, pensiunList]);
 
   useEffect(() => {
-    fetchPensiunData(0, 50, selectedCabang);
+    fetchPensiunData(0, 10, selectedCabang);
   }, [selectedCabang]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -113,7 +114,7 @@ const Page = () => {
     if (indexOfLastItem < pensiunList.length) {
       setCurrentPage((prevPage) => prevPage + 1);
     } else if (hasMore) {
-      fetchPensiunData(currentPage, 50, selectedCabang);
+      fetchPensiunData(currentPage, 10, selectedCabang);
     }
   };
 
@@ -128,7 +129,7 @@ const Page = () => {
     setQueryCabang("");
     setShowDropdownCabang(false);
     setCurrentPage(1);
-    fetchPensiunData(0, 50, cabang.kecamatan || "");
+    fetchPensiunData(0, 10, cabang.kecamatan || "");
   };
 
   useEffect(() => {
@@ -300,6 +301,17 @@ const Page = () => {
     }
 
     return pages;
+  };
+
+  const handlePageClick = async (pageNumber) => {
+    if (pageNumber !== currentPage) {
+      setCurrentPage(pageNumber);  // Mengatur halaman yang dipilih
+      // Memuat data hanya jika data untuk halaman tersebut belum dimuat
+      if (!fetchedPages.includes(pageNumber)) {
+        fetchPensiunData(pageNumber - 1, 10, selectedCabang, searchText);  // Memanggil API untuk memuat data
+        setFetchedPages([...fetchedPages, pageNumber]);  // Menyimpan halaman yang sudah dimuat
+      }
+    }
   };
 
   useEffect(() => {
@@ -673,7 +685,7 @@ const Page = () => {
                 </div>
 
                 {/* Filter Cari */}
-                <div className="w-full sm:w-1/4 flex flex-col">
+                <div className="w-full flex flex-col">
                   <label
                     htmlFor="searchInput"
                     className="text-sm font-medium mb-1"
@@ -685,7 +697,7 @@ const Page = () => {
                     type="text"
                     placeholder="Cari ..."
                     value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
+                    onChange={handleSearchChange} // Mengubah pencarian
                     className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
                   />
                 </div>
@@ -805,11 +817,14 @@ const Page = () => {
                               <div>{pensiun.jabatan}</div>
                               <div>{pensiun.unitKerja}</div>
                               <div>Usia: {pensiun.usia}</div>
-                              <div> {pensiun.keterangan === null
-                                ? pensiun.status === "Segera"
-                                  ? "Segera"
-                                  : "Aktif"
-                                : "Aktif"}</div>
+                              <div>
+                                {" "}
+                                {pensiun.keterangan === null
+                                  ? pensiun.status === "Segera"
+                                    ? "Segera"
+                                    : "Aktif"
+                                  : "Aktif"}
+                              </div>
                             </td>
                             <td className="py-2 px-3 text-center hidden lg:table-cell">
                               <div className="flex items-center justify-center space-x-2">
@@ -954,33 +969,32 @@ const Page = () => {
                 </button>
 
                 {getVisiblePages().map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-1 border rounded text-sm ${
-                      page === currentPage
-                        ? "bg-blue-500 text-white"
-                        : "bg-white hover:bg-gray-50"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+  <button
+    key={page}
+    onClick={() => handlePageClick(page)}
+    className={`px-3 py-1 border rounded text-sm ${
+      page === currentPage
+        ? "bg-blue-500 text-white"
+        : "bg-white hover:bg-gray-50"
+    }`}
+  >
+    {page}
+  </button>
+))}
 
-                {totalPages > 5 && currentPage < totalPages - 3 && (
+
+                {totalPages > 3 && currentPage < totalPages - 3 && (
                   <span className="px-2">...</span>
                 )}
 
                 <button
                   onClick={handleNextPage}
-                  disabled={!hasMore}
                   className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                 >
                   Next
                 </button>
                 <button
                   onClick={() => setCurrentPage(totalPages)}
-                  disabled={currentPage === totalPages}
                   className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                 >
                   Last
