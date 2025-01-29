@@ -513,10 +513,24 @@ const Page = () => {
     //   ? namaAnak.map((name) => (typeof name === "string" ? name.trim() : name))
     //   : [];
     const cleanNamaAnak = (namaAnakArray) => {
+      if (typeof namaAnakArray === "string") {
+          try {
+              namaAnakArray = JSON.parse(namaAnakArray); // Ubah jadi array
+          } catch (error) {
+              console.error("Gagal parse JSON:", error);
+              return [];
+          }
+      }
+  
+      if (!Array.isArray(namaAnakArray)) {
+          console.error("namaAnakArray bukan array:", namaAnakArray);
+          return [];
+      }
+  
       return namaAnakArray.map((name) =>
-        typeof name === "string" ? name.replace(/[[\]"\\]/g, "").trim() : name
+          typeof name === "string" ? name.replace(/[[\]"\\]/g, "").trim() : name
       );
-    };
+  };  
 
     const cleanedNamaAnak = cleanNamaAnak(namaAnak);
 
