@@ -181,7 +181,7 @@ function LayananKami() {
           </Link> */}
 
         <Link
-          href="/bantuan"
+          href="/bantuan/all"
           className="bg-white rounded-lg shadow-lg p-4 transition-transform duration-300 transform hover:scale-105 hover:shadow-2xl flex flex-col items-center justify-center text-center border border-gray-200 w-full"
         >
           <div className="flex flex-col items-center text-gray-700">
