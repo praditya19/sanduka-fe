@@ -1202,9 +1202,9 @@ const getAllPensiun = (
   if (cabang) params.append("cabang", cabang);
   if (bulan) params.append("bulan", bulan);
   if (tahun) params.append("tahun", tahun);
-  if (keyword) params.append("keyword", keyword);
+  if (keyword) params.append("keyword", encodeURIComponent(keyword));
 
-  return axiosClient.get(`/api/pensiun?${params.toString()}`);
+  return axiosClient.get(`/api/pensiun?${params.toString()}`);  // Mengambil data dari endpoint API
 };
 
 //Notifikasi
