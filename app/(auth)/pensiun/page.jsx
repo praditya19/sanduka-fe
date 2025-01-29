@@ -56,7 +56,6 @@ const Page = () => {
     setLoading(true);
     try {
       const fetchedData = await GlobalApi.getAllPensiun(page, size, cabang, null, null, searchText);
-      console.log("Data yang diambil dari API:", fetchedData.data.content);
 
       if (fetchedData && fetchedData.data.content) {
         setPensiunList((prevList) =>
@@ -77,7 +76,7 @@ const Page = () => {
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchText(value);
-    fetchPensiunData(0, 10, selectedCabang, value); // Memanggil fetchPensiunData dengan nilai searchText
+    fetchPensiunData(0, 10, selectedCabang, value);
   };
 
   useEffect(() => {
@@ -177,10 +176,6 @@ const Page = () => {
         month,
         year
       );
-      console.log(
-        "Data yang diambil dari API setelah filter:",
-        fetchedData.data.content
-      );
 
       if (fetchedData && fetchedData.data.content) {
         setPensiunList(fetchedData.data.content);
@@ -220,8 +215,6 @@ const Page = () => {
         bulan,
         tahun
       );
-
-      console.log("Response Data:", response.data);
 
       const jsonData = Array.isArray(response.data.content)
         ? response.data.content
@@ -269,12 +262,10 @@ const Page = () => {
   const handleWhatsApp = (nomorHp) => {
     try {
       if (nomorHp) {
-        // Jika nomor HP diawali dengan "0", ubah ke format "+62"
         let phoneNumber = nomorHp.startsWith("0")
           ? `+62${nomorHp.slice(1)}`
           : nomorHp;
 
-        // Buat URL WhatsApp
         const whatsappUrl = `https://wa.me/${phoneNumber}`;
         window.open(whatsappUrl, "_blank");
       } else {
@@ -305,11 +296,10 @@ const Page = () => {
 
   const handlePageClick = async (pageNumber) => {
     if (pageNumber !== currentPage) {
-      setCurrentPage(pageNumber);  // Mengatur halaman yang dipilih
-      // Memuat data hanya jika data untuk halaman tersebut belum dimuat
+      setCurrentPage(pageNumber); 
       if (!fetchedPages.includes(pageNumber)) {
-        fetchPensiunData(pageNumber - 1, 10, selectedCabang, searchText);  // Memanggil API untuk memuat data
-        setFetchedPages([...fetchedPages, pageNumber]);  // Menyimpan halaman yang sudah dimuat
+        fetchPensiunData(pageNumber - 1, 10, selectedCabang, searchText);
+        setFetchedPages([...fetchedPages, pageNumber]);
       }
     }
   };
@@ -333,7 +323,7 @@ const Page = () => {
 
   useEffect(() => {
     const currentYear = new Date().getFullYear();
-    const futureYears = Array.from({ length: 11 }, (_, i) => currentYear + i); // Membuat array dari tahun sekarang hingga 10 tahun ke depan
+    const futureYears = Array.from({ length: 11 }, (_, i) => currentYear + i);
     setYearOptions(futureYears);
   }, []);
 
@@ -685,7 +675,7 @@ const Page = () => {
                 </div>
 
                 {/* Filter Cari */}
-                <div className="w-full flex flex-col">
+                <div className="w-full md:w-1/4 flex flex-col">
                   <label
                     htmlFor="searchInput"
                     className="text-sm font-medium mb-1"
@@ -697,7 +687,7 @@ const Page = () => {
                     type="text"
                     placeholder="Cari ..."
                     value={searchText}
-                    onChange={handleSearchChange} // Mengubah pencarian
+                    onChange={handleSearchChange}
                     className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
                   />
                 </div>
