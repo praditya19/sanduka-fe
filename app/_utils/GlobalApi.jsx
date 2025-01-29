@@ -96,6 +96,15 @@ const getJabatan = () => axiosClient.get("/api/daftarJabatan");
 const getGolonganJabatan = () => axiosClient.get("/api/daftarGolongan");
 const getUnitKerja = () => axiosClient.get("/api/unit-kerja");
 const getBulan = () => axiosClient.get("/api/bulan");
+const getJumlahSantunan = async () => {
+  try {
+    const response = await axiosClient.get(`/api/auth/jumlah-santunan`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching jumlah santunan:", error);
+    throw error;
+  }
+}
 const searchUsersByName = (namaLengkap) => {
   return axiosClient.get(
     `/api/auth/search-users?namaLengkap=${encodeURIComponent(namaLengkap)}`
@@ -1782,4 +1791,5 @@ export default {
   getProgressFile,
   getBackupDatabaseFile,
   getBackupHistoryFile,
+  getJumlahSantunan,
 };
