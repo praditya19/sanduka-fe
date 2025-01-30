@@ -45,9 +45,9 @@ const icons = [
     color: "text-gray-500",
   },
   {
-    icon: faUsersGear,
-    label: "by Name",
-    href: "/anggota/by-name",
+    icon: faSyncAlt,
+    label: "Sinkronisasi",
+    href: "/singkron-data",
     color: "text-yellow-500",
   },
   {

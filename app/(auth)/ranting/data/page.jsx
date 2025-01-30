@@ -591,6 +591,61 @@ const Page = () => {
                       )}
                     </div>
 
+                    <div
+                      ref={unitKerjaRef}
+                      className="relative w-full md:w-48 mt-4 sm:mt-0"
+                    >
+                      <Input
+                        type="text"
+                        placeholder="Pilih Unit Kerja"
+                        value={selectedUnitKerja}
+                        readOnly
+                        onFocus={() => {
+                          setShowDropdownUnitKerja(true);
+                          setFilteredUnitKerjaOptions(
+                            selectedCabang === "Pilih Cabang"
+                              ? allUnitKerja
+                              : allUnitKerja.filter(
+                                  (uk) => uk.cabang === selectedCabang
+                                )
+                          );
+                        }}
+                        className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        disabled={selectedCabang === "Pilih Cabang"}
+                      />
+
+                      {showDropdownUnitKerja && (
+                        <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
+                          <div className="p-1">
+                            <Input
+                              type="text"
+                              value={searchUnitKerja}
+                              onChange={handleUnitKerjaChange}
+                              placeholder="Cari Unit Kerja..."
+                              className="w-full border rounded py-2 px-3 mb-2"
+                            />
+                          </div>
+                          <ul className="max-h-44 overflow-y-auto -mt-3">
+                            <li
+                              className="p-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleUnitKerjaSelect({})}
+                            >
+                              Semua Unit Kerja
+                            </li>
+                            {filteredUnitKerjaOptions.map((item) => (
+                              <li
+                                key={item.id}
+                                className="p-2 cursor-pointer hover:bg-gray-100"
+                                onClick={() => handleUnitKerjaSelect(item)}
+                              >
+                                {item.unitKerja}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
                     <div className="relative flex flex-col w-full md:w-48">
                       <Input
                         type="text"
@@ -658,61 +713,6 @@ const Page = () => {
                                 Tidak ada hasil
                               </li>
                             )}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-
-                    <div
-                      ref={unitKerjaRef}
-                      className="relative w-full md:w-48 mt-4 sm:mt-0"
-                    >
-                      <Input
-                        type="text"
-                        placeholder="Pilih Unit Kerja"
-                        value={selectedUnitKerja}
-                        readOnly
-                        onFocus={() => {
-                          setShowDropdownUnitKerja(true);
-                          setFilteredUnitKerjaOptions(
-                            selectedCabang === "Pilih Cabang"
-                              ? allUnitKerja
-                              : allUnitKerja.filter(
-                                  (uk) => uk.cabang === selectedCabang
-                                )
-                          );
-                        }}
-                        className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        disabled={selectedCabang === "Pilih Cabang"}
-                      />
-
-                      {showDropdownUnitKerja && (
-                        <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
-                          <div className="p-1">
-                            <Input
-                              type="text"
-                              value={searchUnitKerja}
-                              onChange={handleUnitKerjaChange}
-                              placeholder="Cari Unit Kerja..."
-                              className="w-full border rounded py-2 px-3 mb-2"
-                            />
-                          </div>
-                          <ul className="max-h-44 overflow-y-auto -mt-3">
-                            <li
-                              className="p-2 cursor-pointer hover:bg-gray-100"
-                              onClick={() => handleUnitKerjaSelect({})}
-                            >
-                              Semua Unit Kerja
-                            </li>
-                            {filteredUnitKerjaOptions.map((item) => (
-                              <li
-                                key={item.id}
-                                className="p-2 cursor-pointer hover:bg-gray-100"
-                                onClick={() => handleUnitKerjaSelect(item)}
-                              >
-                                {item.unitKerja}
-                              </li>
-                            ))}
                           </ul>
                         </div>
                       )}
@@ -892,7 +892,10 @@ const Page = () => {
                     ) : (
                       <tr>
                         <td colSpan="7" className="p-4 text-center">
-                          No data found
+                          <div className="flex justify-center items-center space-x-2">
+                            <div className="w-6 h-6 border-4 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
+                            <span>Loading...</span>
+                          </div>
                         </td>
                       </tr>
                     )}

@@ -1665,6 +1665,30 @@ const getBackupHistoryFile = async (
   }
 };
 
+const getCekHistoryData = async (
+  page = 0,
+  size = 10,
+  cabang = null,
+  unitKerja = null,
+  search = null
+) => {
+  try {
+    const response = await axiosClient.get(`/api/history/cekData`, {
+      params: {
+        page: page,
+        size: size,
+        ...(cabang && { cabang: encodeURIComponent(cabang) }),
+        ...(unitKerja && { unitKerja: unitKerja }),
+        ...(search && { search: search }),
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all history data:", error);
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1782,4 +1806,5 @@ export default {
   getProgressFile,
   getBackupDatabaseFile,
   getBackupHistoryFile,
+  getCekHistoryData,
 };
