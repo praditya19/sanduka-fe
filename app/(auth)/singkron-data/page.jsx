@@ -334,17 +334,6 @@ const SyncData = () => {
     });
   };
 
-  const handlePrint = () => {
-    const printContents = tableRef.current.innerHTML;
-    const originalContents = document.body.innerHTML;
-
-    document.body.innerHTML = printContents;
-    window.print();
-
-    document.body.innerHTML = originalContents;
-    window.location.reload();
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoader(true);
@@ -925,8 +914,12 @@ const SyncData = () => {
     }
   };
 
+  const handleCekData = () => {
+    router.push("/singkron-data/cek-data");
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
+    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
       <Toaster
         toastOptions={{
           style: {
@@ -1054,149 +1047,149 @@ const SyncData = () => {
               </>
             )}
 
-            <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 mb-4">
-              {/* Filter Section */}
-              <div className="flex flex-wrap gap-4 w-full md:w-auto">
-                {/* Filter Cabang */}
-                <div
-                  className="relative flex flex-col w-full md:w-auto"
-                  ref={cabangRef}
-                >
-                  <Input
-                    type="text"
-                    value={selectedCabang}
-                    readOnly
-                    onClick={handleCabangClick}
-                    className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition duration-150 ${
-                      role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
-                    }`}
-                    placeholder="Pilih Cabang"
-                    disabled={role === "ADMIN"}
-                  />
-                  {showCabangDropdown && role !== "ADMIN" && (
-                    <div className="absolute z-10 border rounded-md bg-white shadow-md mt-2 w-full">
-                      <ul className="max-h-44 overflow-y-auto">
-                        <li className="py-2 px-3">
-                          <Input
-                            type="text"
-                            onChange={(e) => handleCabangSearch(e.target.value)}
-                            className="block w-full px-3 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none"
-                            placeholder="Cari atau ketik Cabang..."
-                            autoFocus
-                          />
-                        </li>
-                        <li
-                          onClick={() => handleSelectCabang({ kecamatan: "" })}
-                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                        >
-                          Pilih Cabang
-                        </li>
-                        {filteredCabangList.map((cabang) => (
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-4 mb-4">
+              {/* Filter Controls */}
+              <div className="flex flex-col lg:flex-row gap-4 w-full lg:w-auto">
+                {/* Filter Group */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
+                  {/* Cabang Filter */}
+                  <div className="w-full" ref={cabangRef}>
+                    <Input
+                      type="text"
+                      value={selectedCabang}
+                      readOnly
+                      onClick={handleCabangClick}
+                      className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition duration-150 ${
+                        role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
+                      }`}
+                      placeholder="Pilih Cabang"
+                      disabled={role === "ADMIN"}
+                    />
+                    {showCabangDropdown && role !== "ADMIN" && (
+                      <div className="absolute z-10 border rounded-md bg-white shadow-md mt-2">
+                        <ul className="max-h-44 overflow-y-auto">
+                          <li className="py-2 px-3">
+                            <Input
+                              type="text"
+                              onChange={(e) =>
+                                handleCabangSearch(e.target.value)
+                              }
+                              className="block w-full px-3 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none"
+                              placeholder="Cari atau ketik Cabang..."
+                              autoFocus
+                            />
+                          </li>
                           <li
-                            key={cabang.id}
-                            onClick={() => handleSelectCabang(cabang)}
+                            onClick={() =>
+                              handleSelectCabang({ kecamatan: "" })
+                            }
                             className="px-4 py-2 cursor-pointer hover:bg-gray-200"
                           >
-                            {cabang.kecamatan}
+                            Pilih Cabang
                           </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-
-                {/* Filter Unit Kerja */}
-                <div
-                  className="relative flex flex-col w-full md:w-auto"
-                  ref={unitKerjaRef}
-                >
-                  <Input
-                    type="text"
-                    value={unitKerjaInput}
-                    onChange={handleUnitKerjaChange}
-                    onFocus={handleUnitKerjaFocus}
-                    placeholder="Pilih Unit Kerja"
-                    className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition ${
-                      !selectedCabang ? "bg-gray-100 cursor-not-allowed" : ""
-                    }`}
-                    disabled={!selectedCabang}
-                  />
-                  {showUnitKerjaDropdown && (
-                    <div className="absolute z-10 border rounded-md bg-white shadow-md mt-2 w-full">
-                      <ul className="max-h-44 overflow-y-auto">
-                        <li className="py-2 px-3">
-                          <Input
-                            type="text"
-                            onChange={(e) =>
-                              handleUnitKerjaSearch(e.target.value)
-                            }
-                            placeholder="Cari atau ketik Unit Kerja..."
-                            autoFocus
-                            className="block w-full px-3 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none"
-                          />
-                        </li>
-                        <li
-                          onClick={() =>
-                            handleUnitKerjaSelect({ unitKerja: "" })
-                          }
-                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                        >
-                          Pilih Unit Kerja
-                        </li>
-                        {filteredUnitKerja.length > 0 ? (
-                          filteredUnitKerja.map((unitKerja) => (
+                          {filteredCabangList.map((cabang) => (
                             <li
-                              key={unitKerja.id}
-                              onClick={() => handleUnitKerjaSelect(unitKerja)}
+                              key={cabang.id}
+                              onClick={() => handleSelectCabang(cabang)}
                               className="px-4 py-2 cursor-pointer hover:bg-gray-200"
                             >
-                              {unitKerja.unitKerja}
+                              {cabang.kecamatan}
                             </li>
-                          ))
-                        ) : (
-                          <li className="px-4 py-2 text-gray-500 cursor-default">
-                            Tidak ada hasil
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-                  )}
-                </div>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
 
-                {/* Filter Query */}
-                <div className="relative flex flex-col w-full md:w-auto">
-                  <Input
-                    type="text"
-                    className="block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none"
-                    placeholder="Cari Data"
-                    onChange={handleNamaChange}
-                  />
+                  {/* Unit Kerja Filter */}
+                  <div className="w-full" ref={unitKerjaRef}>
+                    <Input
+                      type="text"
+                      value={unitKerjaInput}
+                      onChange={handleUnitKerjaChange}
+                      onFocus={handleUnitKerjaFocus}
+                      placeholder="Pilih Unit Kerja"
+                      className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition ${
+                        !selectedCabang ? "bg-gray-100 cursor-not-allowed" : ""
+                      }`}
+                      disabled={!selectedCabang}
+                    />
+                    {showUnitKerjaDropdown && (
+                      <div className="absolute z-10 border rounded-md bg-white shadow-md mt-2">
+                        <ul className="max-h-44 overflow-y-auto">
+                          <li className="py-2 px-3">
+                            <Input
+                              type="text"
+                              onChange={(e) =>
+                                handleUnitKerjaSearch(e.target.value)
+                              }
+                              placeholder="Cari atau ketik Unit Kerja..."
+                              autoFocus
+                              className="block w-full px-3 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none"
+                            />
+                          </li>
+                          <li
+                            onClick={() =>
+                              handleUnitKerjaSelect({ unitKerja: "" })
+                            }
+                            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                          >
+                            Pilih Unit Kerja
+                          </li>
+                          {filteredUnitKerja.length > 0 ? (
+                            filteredUnitKerja.map((unitKerja) => (
+                              <li
+                                key={unitKerja.id}
+                                onClick={() => handleUnitKerjaSelect(unitKerja)}
+                                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                              >
+                                {unitKerja.unitKerja}
+                              </li>
+                            ))
+                          ) : (
+                            <li className="px-4 py-2 text-gray-500 cursor-default">
+                              Tidak ada hasil
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Search Filter */}
+                  <div>
+                    <Input
+                      type="text"
+                      className="block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none"
+                      placeholder="Cari Data"
+                      onChange={handleNamaChange}
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Total Data Section */}
-              <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-8">
-                <h1>
+              {/* Data Totals */}
+              <div className="flex flex-col lg:flex-row items-center gap-4 lg:gap-8 whitespace-nowrap">
+                <span>
                   {loading
                     ? "Loading..."
                     : `Total Data Daspen: ${filteredTotalFiles.totalDaspen}`}
-                </h1>
-                <h1>
+                </span>
+                <span>
                   {loading
                     ? "Loading..."
                     : `Total Data Kta Digital: ${filteredTotalFiles.totalKtaDigital}`}
-                </h1>
+                </span>
               </div>
 
-              {/* Button Section */}
-              <div className="flex flex-wrap items-center space-x-4">
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-4">
                 <Button
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                   onClick={openModal}
-                  className="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300"
                 >
                   Download Template
                 </Button>
-
                 <Modal
                   isOpen={showModal}
                   onRequestClose={closeModal}
@@ -1251,17 +1244,18 @@ const SyncData = () => {
                 </Modal>
 
                 <Button
-                  className="bg-green-600 hover:bg-green-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300"
+                  className="bg-green-600 hover:bg-green-700 text-white"
                   onClick={() => setIsModalOpen(true)}
                 >
                   Upload Data
                 </Button>
-                {/* <Button
-                  onClick={handlePrint}
-                  className="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-6 rounded-lg transition duration-300"
+
+                <Button
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                  onClick={() => handleCekData()}
                 >
-                  Cetak
-                </Button> */}
+                  Cek Data
+                </Button>
               </div>
             </div>
 
