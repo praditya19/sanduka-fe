@@ -64,6 +64,9 @@ export default function IconGrid() {
   const dropdownRef = useRef(null);
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
+  const [jumlahMeninggal, setJumlahMeninggal] = useState(0);
+  const [jumlahSantunan, setJumlahSantunan] = useState(0);
+  const [formattedAmount, setFormattedAmount] = useState('');
   const icons = [
     { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
     {
@@ -220,15 +223,39 @@ export default function IconGrid() {
       return;
     }
 
+    const fetchJumlahSantunan = async () => {
+      try {
+        const data = await GlobalApi.getJumlahSantunan();
+        console.log("Jumlah Santunan:", data);
+        setJumlahSantunan(data[0].jumlah);
+        setFormattedAmount(data[0].totalUangSantunan);
+
+        // Setelah setTotalSantunan dipanggil, format totalSantunan menjadi IDR
+        const formatted = new Intl.NumberFormat('id-ID', {
+          style: 'currency',
+          currency: 'IDR',
+        }).format(data[0].totalUangSantunan);
+
+        setFormattedAmount(formatted); // Simpan hasil format ke state
+
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+
+    // Panggil fungsi untuk mengambil data
+    fetchJumlahSantunan();
+
     const fetchCombinedUserData = async () => {
       try {
         const today = new Date();
-        const year = today.getFullYear();
         const month = today.getMonth() + 1;
+        const year = today.getFullYear();
 
         // Dapatkan data meninggal
         const deceasedData = await GlobalApi.getAnggotaMeninggal(year, month);
-
+        setJumlahMeninggal(deceasedData.length);
+    
         // Fetch detail untuk setiap anggota meninggal
         const detailedData = await Promise.all(
           deceasedData.map(async (deceased) => {
@@ -580,7 +607,7 @@ export default function IconGrid() {
                           Lapor Meninggal
                         </p>
                         <p className="text-xs font-semibold text-gray-500 uppercase">
-                          1 Orang
+                        {jumlahMeninggal} Orang
                         </p>
                         <p className="text-sm text-red-500 font-medium mt-1">
                           <span className="mr-1">
@@ -600,7 +627,7 @@ export default function IconGrid() {
                           Sanduka Diberikan
                         </p>
                         <p className="text-xs font-semibold text-gray-500 uppercase">
-                          173 Orang
+                        {jumlahSantunan} Orang
                         </p>
                         <p className="text-sm text-green-500 font-medium mt-1">
                           <span className="mr-1">
@@ -620,7 +647,7 @@ export default function IconGrid() {
                           Total Santunan
                         </p>
                         <p className="text-xs font-semibold text-gray-500 uppercase">
-                          Rp.432.500.000,-
+                        {formattedAmount}
                         </p>
                         <p className="text-sm text-green-500 font-medium mt-1">
                           <span className="mr-1">
@@ -670,7 +697,7 @@ export default function IconGrid() {
                           Lapor Meninggal
                         </p>
                         <p className="text-xs font-semibold text-gray-500 uppercase mt-1">
-                          1 Orang
+                        {jumlahMeninggal} Orang
                         </p>
                         <p className="text-sm text-red-500 font-medium mt-1">
                           <span className="mr-1">
@@ -698,7 +725,7 @@ export default function IconGrid() {
                           Sanduka Diberikan
                         </p>
                         <p className="text-xs font-semibold text-gray-500 uppercase mt-1">
-                          173 Orang
+                        {jumlahSantunan} Orang
                         </p>
                         <p className="text-sm text-green-500 font-medium mt-1">
                           <span className="mr-1">
@@ -726,7 +753,7 @@ export default function IconGrid() {
                           Total Santunan
                         </p>
                         <p className="text-xs font-semibold text-gray-500 uppercase mt-1">
-                          Rp.432.500.000,-
+                        {formattedAmount}
                         </p>
                         <p className="text-sm text-green-500 font-medium mt-1">
                           <span className="mr-1">

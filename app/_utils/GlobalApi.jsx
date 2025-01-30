@@ -96,6 +96,15 @@ const getJabatan = () => axiosClient.get("/api/daftarJabatan");
 const getGolonganJabatan = () => axiosClient.get("/api/daftarGolongan");
 const getUnitKerja = () => axiosClient.get("/api/unit-kerja");
 const getBulan = () => axiosClient.get("/api/bulan");
+const getJumlahSantunan = async () => {
+  try {
+    const response = await axiosClient.get(`/api/auth/jumlah-santunan`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching jumlah santunan:", error);
+    throw error;
+  }
+};
 const searchUsersByName = (namaLengkap) => {
   return axiosClient.get(
     `/api/auth/search-users?namaLengkap=${encodeURIComponent(namaLengkap)}`
@@ -1202,9 +1211,9 @@ const getAllPensiun = (
   if (cabang) params.append("cabang", cabang);
   if (bulan) params.append("bulan", bulan);
   if (tahun) params.append("tahun", tahun);
-  if (keyword) params.append("keyword", keyword);
+  if (keyword) params.append("keyword", encodeURIComponent(keyword));
 
-  return axiosClient.get(`/api/pensiun?${params.toString()}`);
+  return axiosClient.get(`/api/pensiun?${params.toString()}`); // Mengambil data dari endpoint API
 };
 
 //Notifikasi
@@ -1807,4 +1816,5 @@ export default {
   getBackupDatabaseFile,
   getBackupHistoryFile,
   getCekHistoryData,
+  getJumlahSantunan,
 };

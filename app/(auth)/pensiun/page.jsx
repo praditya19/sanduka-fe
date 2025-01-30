@@ -33,7 +33,7 @@ const Page = () => {
   const [yearOptions, setYearOptions] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [filteredPensiunList, setFilteredPensiunList] = useState([]);
-
+  const [fetchedPages, setFetchedPages] = useState([]);
   const itemsPerPage = 10;
   // end
   const [isMobile, setIsMobile] = useState(false);
@@ -49,19 +49,13 @@ const Page = () => {
 
   const fetchPensiunData = async (
     page,
-    size = 50,
+    size = 10,
     cabang = "",
-    search = ""
+    searchText = ""
   ) => {
     setLoading(true);
     try {
-      const fetchedData = await GlobalApi.getAllPensiun(
-        page,
-        size,
-        cabang,
-        search
-      );
-      console.log("Data yang diambil dari API:", fetchedData.data.content);
+      const fetchedData = await GlobalApi.getAllPensiun(page, size, cabang, null, null, searchText);
 
       if (fetchedData && fetchedData.data.content) {
         setPensiunList((prevList) =>
@@ -77,6 +71,12 @@ const Page = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchText(value);
+    fetchPensiunData(0, 10, selectedCabang, value);
   };
 
   useEffect(() => {
@@ -99,7 +99,7 @@ const Page = () => {
   }, [searchText, pensiunList]);
 
   useEffect(() => {
-    fetchPensiunData(0, 50, selectedCabang);
+    fetchPensiunData(0, 10, selectedCabang);
   }, [selectedCabang]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -113,7 +113,7 @@ const Page = () => {
     if (indexOfLastItem < pensiunList.length) {
       setCurrentPage((prevPage) => prevPage + 1);
     } else if (hasMore) {
-      fetchPensiunData(currentPage, 50, selectedCabang);
+      fetchPensiunData(currentPage, 10, selectedCabang);
     }
   };
 
@@ -128,7 +128,7 @@ const Page = () => {
     setQueryCabang("");
     setShowDropdownCabang(false);
     setCurrentPage(1);
-    fetchPensiunData(0, 50, cabang.kecamatan || "");
+    fetchPensiunData(0, 10, cabang.kecamatan || "");
   };
 
   useEffect(() => {
@@ -176,10 +176,6 @@ const Page = () => {
         month,
         year
       );
-      console.log(
-        "Data yang diambil dari API setelah filter:",
-        fetchedData.data.content
-      );
 
       if (fetchedData && fetchedData.data.content) {
         setPensiunList(fetchedData.data.content);
@@ -219,8 +215,6 @@ const Page = () => {
         bulan,
         tahun
       );
-
-      console.log("Response Data:", response.data);
 
       const jsonData = Array.isArray(response.data.content)
         ? response.data.content
@@ -268,12 +262,10 @@ const Page = () => {
   const handleWhatsApp = (nomorHp) => {
     try {
       if (nomorHp) {
-        // Jika nomor HP diawali dengan "0", ubah ke format "+62"
         let phoneNumber = nomorHp.startsWith("0")
           ? `+62${nomorHp.slice(1)}`
           : nomorHp;
 
-        // Buat URL WhatsApp
         const whatsappUrl = `https://wa.me/${phoneNumber}`;
         window.open(whatsappUrl, "_blank");
       } else {
@@ -302,6 +294,16 @@ const Page = () => {
     return pages;
   };
 
+  const handlePageClick = async (pageNumber) => {
+    if (pageNumber !== currentPage) {
+      setCurrentPage(pageNumber); 
+      if (!fetchedPages.includes(pageNumber)) {
+        fetchPensiunData(pageNumber - 1, 10, selectedCabang, searchText);
+        setFetchedPages([...fetchedPages, pageNumber]);
+      }
+    }
+  };
+
   useEffect(() => {
     const role = sessionStorage.getItem("role");
 
@@ -321,7 +323,7 @@ const Page = () => {
 
   useEffect(() => {
     const currentYear = new Date().getFullYear();
-    const futureYears = Array.from({ length: 11 }, (_, i) => currentYear + i); // Membuat array dari tahun sekarang hingga 10 tahun ke depan
+    const futureYears = Array.from({ length: 11 }, (_, i) => currentYear + i);
     setYearOptions(futureYears);
   }, []);
 
@@ -673,7 +675,7 @@ const Page = () => {
                 </div>
 
                 {/* Filter Cari */}
-                <div className="w-full sm:w-1/4 flex flex-col">
+                <div className="w-full md:w-1/4 flex flex-col">
                   <label
                     htmlFor="searchInput"
                     className="text-sm font-medium mb-1"
@@ -685,7 +687,7 @@ const Page = () => {
                     type="text"
                     placeholder="Cari ..."
                     value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
+                    onChange={handleSearchChange}
                     className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
                   />
                 </div>
@@ -805,11 +807,14 @@ const Page = () => {
                               <div>{pensiun.jabatan}</div>
                               <div>{pensiun.unitKerja}</div>
                               <div>Usia: {pensiun.usia}</div>
-                              <div> {pensiun.keterangan === null
-                                ? pensiun.status === "Segera"
-                                  ? "Segera"
-                                  : "Aktif"
-                                : "Aktif"}</div>
+                              <div>
+                                {" "}
+                                {pensiun.keterangan === null
+                                  ? pensiun.status === "Segera"
+                                    ? "Segera"
+                                    : "Aktif"
+                                  : "Aktif"}
+                              </div>
                             </td>
                             <td className="py-2 px-3 text-center hidden lg:table-cell">
                               <div className="flex items-center justify-center space-x-2">
@@ -954,33 +959,32 @@ const Page = () => {
                 </button>
 
                 {getVisiblePages().map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-1 border rounded text-sm ${
-                      page === currentPage
-                        ? "bg-blue-500 text-white"
-                        : "bg-white hover:bg-gray-50"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+  <button
+    key={page}
+    onClick={() => handlePageClick(page)}
+    className={`px-3 py-1 border rounded text-sm ${
+      page === currentPage
+        ? "bg-blue-500 text-white"
+        : "bg-white hover:bg-gray-50"
+    }`}
+  >
+    {page}
+  </button>
+))}
 
-                {totalPages > 5 && currentPage < totalPages - 3 && (
+
+                {totalPages > 3 && currentPage < totalPages - 3 && (
                   <span className="px-2">...</span>
                 )}
 
                 <button
                   onClick={handleNextPage}
-                  disabled={!hasMore}
                   className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                 >
                   Next
                 </button>
                 <button
                   onClick={() => setCurrentPage(totalPages)}
-                  disabled={currentPage === totalPages}
                   className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
                 >
                   Last

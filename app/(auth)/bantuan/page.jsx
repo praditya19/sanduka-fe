@@ -154,7 +154,7 @@ const HelpPage = () => {
                           </h3>
                           <a
                             href={`https://wa.me/${admin.nohp.replace(
-                              /^08/,
+                              /^0/,
                               "+62"
                             )}`}
                             className="block text-blue-500 hover:underline text-sm"
