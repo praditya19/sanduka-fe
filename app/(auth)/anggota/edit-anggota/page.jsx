@@ -507,23 +507,23 @@ const Page = () => {
     //   : [];
     const cleanNamaAnak = (namaAnakArray) => {
       if (typeof namaAnakArray === "string") {
-          try {
-              namaAnakArray = JSON.parse(namaAnakArray); // Ubah jadi array
-          } catch (error) {
-              console.error("Gagal parse JSON:", error);
-              return [];
-          }
-      }
-  
-      if (!Array.isArray(namaAnakArray)) {
-          console.error("namaAnakArray bukan array:", namaAnakArray);
+        try {
+          namaAnakArray = JSON.parse(namaAnakArray); // Ubah jadi array
+        } catch (error) {
+          console.error("Gagal parse JSON:", error);
           return [];
+        }
       }
-  
+
+      if (!Array.isArray(namaAnakArray)) {
+        console.error("namaAnakArray bukan array:", namaAnakArray);
+        return [];
+      }
+
       return namaAnakArray.map((name) =>
-          typeof name === "string" ? name.replace(/[[\]"\\]/g, "").trim() : name
+        typeof name === "string" ? name.replace(/[[\]"\\]/g, "").trim() : name
       );
-  };  
+    };
 
     const cleanedNamaAnak = cleanNamaAnak(namaAnak);
 
@@ -722,7 +722,7 @@ const Page = () => {
     try {
       const anggotaId = sessionStorage.getItem("anggotaId");
 
-    if (!anggotaId) {
+      if (!anggotaId) {
         toast.error(
           <div
             style={{
@@ -1150,7 +1150,7 @@ const Page = () => {
             boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
           },
         }
-      );      
+      );
     } catch (error) {
       console.error("Gagal mengambil data NIP:", error);
       toast.error(
@@ -1461,6 +1461,11 @@ const Page = () => {
       setIsValidRole(false);
     }
   }, []);
+
+  const handlePositionChange = (newLatitude, newLongitude) => {
+    setLatitude(newLatitude);
+    setLongitude(newLongitude);
+  };
 
   return (
     <div className="w-full mx-auto px-4 py-6 bg-slate-200">
@@ -2085,7 +2090,11 @@ const Page = () => {
                   </h2>
                   {latitude && longitude && (
                     <div className="mt-8">
-                      <MapComponent latitude={latitude} longitude={longitude} />
+                      <MapComponent
+                        latitude={latitude}
+                        longitude={longitude}
+                        onPositionChange={handlePositionChange}
+                      />
                     </div>
                   )}
                 </div>
