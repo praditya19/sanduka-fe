@@ -13,18 +13,15 @@ const DefaultIcon = L.icon({
 const MapComponent = ({ latitude, longitude, onPositionChange }) => {
   const [position, setPosition] = useState([latitude, longitude]);
 
-  // Perbarui state saat latitude atau longitude berubah
   useEffect(() => {
     setPosition([latitude, longitude]);
   }, [latitude, longitude]);
 
-  // Fungsi untuk menangani pergeseran marker
   const handleDragEnd = (e) => {
     const marker = e.target;
     const newPosition = marker.getLatLng();
     setPosition([newPosition.lat, newPosition.lng]);
 
-    // Panggil callback function untuk mengirim posisi baru ke parent component
     if (onPositionChange) {
       onPositionChange(newPosition.lat, newPosition.lng);
     }
@@ -46,9 +43,9 @@ const MapComponent = ({ latitude, longitude, onPositionChange }) => {
         <Marker
           position={position}
           icon={DefaultIcon}
-          draggable={true} // Aktifkan drag
+          draggable={true}
           eventHandlers={{
-            dragend: handleDragEnd, // Tangani event dragend
+            dragend: handleDragEnd,
           }}
         >
           <Popup>
