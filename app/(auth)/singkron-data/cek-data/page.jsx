@@ -75,15 +75,16 @@ const CekData = () => {
     if (storedRole === "ADMIN" && storedCabang) {
       setSelectedCabang(storedCabang);
       filterUnitKerjaForCabang(storedCabang);
+      fetchData(currentPage, pageSize, storedCabang);
+    } else {
+      fetchData(
+        currentPage,
+        pageSize,
+        selectedCabang,
+        selectedUnitKerja,
+        searchNama
+      );
     }
-
-    fetchData(
-      currentPage,
-      pageSize,
-      selectedCabang,
-      selectedUnitKerja,
-      searchNama
-    );
 
     const fetchInitialData = async () => {
       try {
