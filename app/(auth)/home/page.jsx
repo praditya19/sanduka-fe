@@ -226,7 +226,6 @@ export default function IconGrid() {
     const fetchJumlahSantunan = async () => {
       try {
         const data = await GlobalApi.getJumlahSantunan();
-        console.log("Jumlah Santunan:", data);
         setJumlahSantunan(data[0].jumlah);
         setFormattedAmount(data[0].totalUangSantunan);
 
@@ -314,7 +313,6 @@ export default function IconGrid() {
         console.error("ID tidak ditemukan di sessionStorage");
         return;
       }
-
       try {
         const idToFetch = userId;
         const response = await GlobalApi.getUserById(idToFetch);

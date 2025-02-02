@@ -721,8 +721,11 @@ const Page = () => {
   const handleConfirmAndSendData = async () => {
     try {
       const anggotaId = sessionStorage.getItem("anggotaId");
+      const userId = sessionStorage.getItem("userId");
 
-      if (!anggotaId) {
+      const idToUse = userId || anggotaId;
+
+      if (!idToUse) {
         toast.error(
           <div
             style={{
@@ -754,7 +757,7 @@ const Page = () => {
                 marginBottom: "8px",
               }}
             >
-              User ID tidak ditemukan.
+              ID tidak ditemukan.
             </strong>
           </div>,
           {
@@ -797,7 +800,7 @@ const Page = () => {
               style={{
                 width: "48px",
                 height: "48px",
-                color: "#FFA500", // Warna kuning-oranye untuk ikon info
+                color: "#FFA500",
                 marginBottom: "16px",
               }}
               fill="currentColor"
@@ -839,7 +842,7 @@ const Page = () => {
         return;
       }
 
-      const response = await GlobalApi.updateRegisUser(anggotaId, data);
+      const response = await GlobalApi.updateRegisUser(idToUse, data);
       toast.success(
         <div
           style={{

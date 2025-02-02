@@ -189,10 +189,12 @@ const getUserById = async (userId) => {
     return response.data;
   } catch (error) {
     if (error.response) {
+      console.error("Error Response:", error.response);
       throw new Error(
         error.response.data.message || "Terjadi kesalahan pada server"
       );
     } else {
+      console.error("Error Request:", error);
       throw new Error("Terjadi kesalahan pada jaringan");
     }
   }
