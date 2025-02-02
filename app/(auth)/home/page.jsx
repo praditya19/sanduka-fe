@@ -28,6 +28,7 @@ import {
   faCheck,
   faSitemap,
   faUserPen,
+  faImage,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
@@ -160,6 +161,13 @@ export default function IconGrid() {
       icon: faUsers,
       label: "Teman Unit",
       href: "/teman-unit-kerja",
+      color: "text-green-600",
+    },
+
+    {
+      icon: faImage,
+      label: "Galeri",
+      href: "/galeri",
       color: "text-green-600",
     },
   ];
@@ -535,58 +543,60 @@ export default function IconGrid() {
   const filteredIcons =
     role === "USER"
       ? icons
-          .filter((item) =>
-            [
-              "Lapor",
-              "Teman Unit",
-              "Ketentuan",
-              "Bantuan",
-              "History data",
-            ].includes(item.label)
-          )
-          .concat({
-            icon: faUser,
-            label: "Detail Anggota",
-            href: "/anggota/detail-anggota",
-            color: "text-blue-600 hover:text-blue-800",
-            bgHover: "hover:bg-blue-100",
-            iconColor: "text-blue-600",
-          })
-          .concat({
-            icon: faUserPen,
-            label: "Edit Anggota",
-            href: "/anggota/edit-anggota",
-            color: "text-orange-500",
-            bgHover: "hover:bg-blue-100",
-            iconColor: "text-blue-600",
-          })
-          .concat({
-            icon: faRightLeft,
-            label: "Mutasi",
-            href: "/anggota/data-anggota/mutasiCabangUnit",
-            color: "text-cyan-500",
-          })
-          .concat({
-            icon: faFileAlt,
-            label: "Daspen",
-            href: "/daspen",
-            color: "text-teal-700",
-          })
-          .sort((a, b) => {
-            const order = [
-              "Lapor",
-              "Detail Anggota",
-              "Edit Anggota",
-              "Mutasi",
-              "History data",
-              "Daspen",
-              "Ketentuan",
-              "Bantuan",
-              "Teman Unit",
-            ];
-            return order.indexOf(a.label) - order.indexOf(b.label);
-          })
-      : icons;
+        .filter((item) =>
+          [
+            "Lapor",
+            "Teman Unit",
+            "Ketentuan",
+            "Bantuan",
+            "History data",
+          ].includes(item.label)
+        )
+        .concat({
+          icon: faUser,
+          label: "Detail Anggota",
+          href: "/anggota/detail-anggota",
+          color: "text-blue-600 hover:text-blue-800",
+          bgHover: "hover:bg-blue-100",
+          iconColor: "text-blue-600",
+        })
+        .concat({
+          icon: faUserPen,
+          label: "Edit Anggota",
+          href: "/anggota/edit-anggota",
+          color: "text-orange-500",
+          bgHover: "hover:bg-blue-100",
+          iconColor: "text-blue-600",
+        })
+        .concat({
+          icon: faRightLeft,
+          label: "Mutasi",
+          href: "/anggota/data-anggota/mutasiCabangUnit",
+          color: "text-cyan-500",
+        })
+        .concat({
+          icon: faFileAlt,
+          label: "Daspen",
+          href: "/daspen",
+          color: "text-teal-700",
+        })
+        .sort((a, b) => {
+          const order = [
+            "Lapor",
+            "Detail Anggota",
+            "Edit Anggota",
+            "Mutasi",
+            "History data",
+            "Daspen",
+            "Ketentuan",
+            "Bantuan",
+            "Teman Unit",
+          ];
+          return order.indexOf(a.label) - order.indexOf(b.label);
+        })
+      : role === "SUPER ADMIN"
+        ? icons
+        : icons.filter((item) => item.label !== "Galeri");
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -595,9 +605,8 @@ export default function IconGrid() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="flex-1 mt-[3.1%]">
             <img
@@ -861,9 +870,8 @@ export default function IconGrid() {
         </div>
 
         <div
-          className={` flex flex-col items-center my-4 ${
-            isSidebarOpen ? "ml-32" : "ml-0"
-          }`}
+          className={` flex flex-col items-center my-4 ${isSidebarOpen ? "ml-32" : "ml-0"
+            }`}
         >
           <hr className="mt-2 border-gray-300 w-full" />
           <h5 className="text-lg sm:text-xl font-semibold text-gray-800 mt-4 text-center">
@@ -872,9 +880,8 @@ export default function IconGrid() {
         </div>
 
         <div
-          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${
-            isSidebarOpen ? "ml-32" : "ml-0"
-          }`}
+          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${isSidebarOpen ? "ml-32" : "ml-0"
+            }`}
         >
           {isMobile ? (
             <MobileDeceasedScroll
