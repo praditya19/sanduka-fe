@@ -67,7 +67,9 @@ export default function IconGrid() {
   const [longitude, setLongitude] = useState("");
   const [jumlahMeninggal, setJumlahMeninggal] = useState(0);
   const [jumlahSantunan, setJumlahSantunan] = useState(0);
-  const [formattedAmount, setFormattedAmount] = useState('');
+  const [formattedAmount, setFormattedAmount] = useState("");
+  const [fotoBase64, setFotoBase64] = useState(null);
+  const profileImageUrl = "/profile.png";
   const icons = [
     { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
     {
@@ -238,13 +240,12 @@ export default function IconGrid() {
         setFormattedAmount(data[0].totalUangSantunan);
 
         // Setelah setTotalSantunan dipanggil, format totalSantunan menjadi IDR
-        const formatted = new Intl.NumberFormat('id-ID', {
-          style: 'currency',
-          currency: 'IDR',
+        const formatted = new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
         }).format(data[0].totalUangSantunan);
 
         setFormattedAmount(formatted); // Simpan hasil format ke state
-
       } catch (error) {
         console.error("Error:", error);
       }
@@ -316,19 +317,54 @@ export default function IconGrid() {
 
     const fetchUserData = async () => {
       const userId = sessionStorage.getItem("userId");
+      const userRole = sessionStorage.getItem("role"); // Ambil role dari sessionStorage
+      const npa = sessionStorage.getItem("npa"); // Ambil NPA jika ada
 
+      // Cek apakah userId tersedia
       if (!userId) {
         console.error("ID tidak ditemukan di sessionStorage");
         return;
       }
+
       try {
-        const idToFetch = userId;
+        let idToFetch = userId;
+
+        // Jika role adalah ADMIN, cek berdasarkan NPA
+        if (userRole === "ADMIN" && npa) {
+          const npaResponse = await GlobalApi.cekNpa(npa); // Panggil API untuk cek NPA
+          if (npaResponse && npaResponse.id) {
+            idToFetch = npaResponse.id; // Ambil id dari response NPA
+          } else {
+            console.error("NPA tidak valid atau tidak ditemukan");
+            return;
+          }
+        }
+
+        // Panggil API untuk mendapatkan data user berdasarkan idToFetch
         const response = await GlobalApi.getUserById(idToFetch);
         setUserData(response);
+        console.log(response);
+
+        // Cek foto dan decode jika ada
+        if (response.foto) {
+          try {
+            const decodedString = atob(response.foto);
+            setFotoBase64(decodedString);
+          } catch (error) {
+            console.error("Error decoding Base64:", error);
+            setFotoBase64(null);
+          }
+        } else {
+          setFotoBase64(null);
+        }
+
+        // Set data lainnya
         setLatitude(response.latitude);
         setLongitude(response.longitude);
+        setLoading(false);
       } catch (error) {
         console.error("Error saat mendapatkan data user:", error);
+        setLoading(false);
       }
     };
 
@@ -583,7 +619,19 @@ export default function IconGrid() {
             {isMobile ? (
               <>
                 {(role === "USER" || role === "ADMIN") && (
-                  <div className="flex justify-center mb-[10%] -mt-20 items-center text-center overflow-x-hidden max-w-full gap-8">
+                  <div className="flex justify-center mb-14 -mt-40 items-center text-center overflow-x-hidden max-w-full gap-6">
+                    <Image
+                      src={
+                        fotoBase64
+                          ? `data:image/jpeg;base64,${fotoBase64}`
+                          : profileImageUrl
+                      }
+                      width={80}
+                      height={80}
+                      alt={`Foto User ${userData?.name}`}
+                      className="object-cover rounded"
+                      unoptimized={true}
+                    />
                     <div className="flex flex-col items-center justify-center">
                       <span className="text-xs">Daspen:</span>
                       <div className="w-14 h-14 flex justify-center items-center text-xs -mt-4">
@@ -671,32 +719,47 @@ export default function IconGrid() {
                 </div>
               </>
             ) : (
-              <div className="w-full -mt-12">
+              <div className="w-full border">
                 {(role === "USER" || role === "ADMIN") && (
-                  <div className="flex justify-center space-x-8 mb-10 -mt-36 items-center text-center">
-                    <div className="flex items-center justify-center">
-                      <span className=" text-lg ">Daspen:</span>
-                      <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
-                        {renderCheckmark(userData?.pesertaDaspen)}
+                  <div className="flex space-x-5 mb-16 justify-center -mt-48">
+                    <Image
+                      src={
+                        fotoBase64
+                          ? `data:image/jpeg;base64,${fotoBase64}`
+                          : profileImageUrl
+                      }
+                      width={100}
+                      height={100}
+                      alt={`Foto User ${userData?.name}`}
+                      className="object-cover rounded"
+                      unoptimized={true}
+                    />
+                    <div className="flex justify-center space-x-8 mb-1 items-center text-center">
+                      <div className="flex items-center justify-center">
+                        <span className="text-lg">Daspen:</span>
+                        <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
+                          {renderCheckmark(userData?.pesertaDaspen)}
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center justify-center">
-                      <span className=" text-lg ">KTA Digital:</span>
-                      <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
-                        {renderCheckmark(userData?.pesertaKtaDigital)}
+                      <div className="flex items-center justify-center">
+                        <span className="text-lg">KTA Digital:</span>
+                        <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
+                          {renderCheckmark(userData?.pesertaKtaDigital)}
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center justify-center">
-                      <span className=" text-lg ">Sanduka:</span>
-                      <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
-                        {renderCheckmark(userData?.pesertaSanduka)}
+                      <div className="flex items-center justify-center">
+                        <span className="text-lg">Sanduka:</span>
+                        <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
+                          {renderCheckmark(userData?.pesertaSanduka)}
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 px-12">
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 px-12 -mt-12">
                   <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105">
                     <div className="flex justify-between items-center">
                       <div>
@@ -921,9 +984,13 @@ export default function IconGrid() {
         </div>
 
         <div className="w-full col-span-2">
-          <h2 className="text-2xl font-semibold text-gray-800">
+          <h2 className="text-2xl font-semibold text-gray-800 ml-2">
             Maps Lokasi Rumah
           </h2>
+          <p className="ml-2">
+            Anda Bisa Menyesuaikan Lokasi Dengan Menggeser Posisi Maps Sesuai
+            Dengan Lokasi yang Sesuai
+          </p>
           {latitude && longitude && (
             <div className="mt-8">
               <MapComponent latitude={latitude} longitude={longitude} />
