@@ -79,7 +79,6 @@ const DataAnggota = () => {
         statusKeanggotaan
       );
 
-      console.log(response.content);
       const fetchedData = response.content;
 
       const fotoBase64Array = [];
