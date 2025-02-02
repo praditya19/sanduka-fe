@@ -360,8 +360,6 @@ const Page = () => {
           changedFields.push("Pendidikan");
         if (valueGolonganJabatan !== previousData.current.golonganJabatan)
           changedFields.push("Golongan Jabatan");
-        if (valueKategoriDaspen !== previousData.current.kategoriDaspen)
-          changedFields.push("Kategori Daspen");
         if (mengajar !== previousData.current.mengajar)
           changedFields.push("Mengajar");
 
@@ -471,11 +469,6 @@ const Page = () => {
         field: sertifikatPendidik ?? "",
         name: "Sertifikat Pendidik",
         id: "sertifikatPendidik",
-      },
-      {
-        field: valueKategoriDaspen ?? "",
-        name: "Kategori Daspen",
-        id: "kategoriDaspen",
       },
       {
         field: valueGolonganJabatan ?? "",

@@ -33,6 +33,7 @@ const Page = () => {
   const [yearOptions, setYearOptions] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [filteredPensiunList, setFilteredPensiunList] = useState([]);
+  const [isFiltered, setIsFiltered] = useState(false);
   const [fetchedPages, setFetchedPages] = useState([]);
   const itemsPerPage = 10;
   // end
@@ -103,23 +104,50 @@ const Page = () => {
   }, [selectedCabang]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems =
-    filteredPensiunList.length > itemsPerPage
-      ? filteredPensiunList.slice(indexOfFirstItem, indexOfLastItem)
-      : filteredPensiunList;
+const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+const currentItems =
+  filteredPensiunList.length > itemsPerPage
+    ? filteredPensiunList.slice(indexOfFirstItem, indexOfLastItem)
+    : filteredPensiunList;
 
-  const handleNextPage = () => {
-    if (indexOfLastItem < pensiunList.length) {
-      setCurrentPage((prevPage) => prevPage + 1);
-    } else if (hasMore) {
-      fetchPensiunData(currentPage, 10, selectedCabang);
-    }
-  };
+    const handleNextPage = () => {
+      if (indexOfLastItem < pensiunList.length) {
+        setCurrentPage((prevPage) => prevPage + 1);
+      } else if (hasMore) {
+        // Tambahkan selectedMonth dan selectedYear agar filter tetap berlaku
+        fetchPensiunData(currentPage, 10, selectedCabang, selectedMonth, selectedYear);
+      }
+    };
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage((prevPage) => prevPage - 1);
+    }
+  };
+
+  const getVisiblePages = () => {
+    const visibleRange = 2;
+    const pages = [];
+
+    for (
+      let i = Math.max(1, currentPage - visibleRange);
+      i <= Math.min(totalPages, currentPage + visibleRange);
+      i++
+    ) {
+      pages.push(i);
+    }
+
+    return pages;
+  };
+
+  const handlePageClick = async (pageNumber) => {
+    if (pageNumber !== currentPage) {
+      setCurrentPage(pageNumber);
+      if (!fetchedPages.includes(pageNumber)) {
+        // Pastikan filter tetap digunakan saat berpindah halaman
+        fetchPensiunData(pageNumber - 1, 10, selectedCabang, selectedMonth, selectedYear, searchText);
+        setFetchedPages([...fetchedPages, pageNumber]);
+      }
     }
   };
 
@@ -169,18 +197,23 @@ const Page = () => {
   const applyFilters = async (month, year) => {
     setLoading(true);
     try {
+      // Jika ada filter, ambil 50 data
+      const size = month || year ? 50 : itemsPerPage;
+  
       const fetchedData = await GlobalApi.getAllPensiun(
         0,
-        itemsPerPage,
+        size,
         selectedCabang,
         month,
         year
       );
-
+  
       if (fetchedData && fetchedData.data.content) {
-        setPensiunList(fetchedData.data.content);
-        setTotalPages(fetchedData.data.totalPages || 0);
+        setFilteredPensiunList(fetchedData.data.content);
+        setIsFiltered(true); // Tandai bahwa filter aktif
+        setTotalPages(Math.ceil(fetchedData.data.content.length / itemsPerPage)); // Hitung total halaman dari data yang sudah diambil
         setHasMore(fetchedData.data.content.length > 0);
+        setCurrentPage(1); // Reset ke halaman pertama setelah filter diterapkan
       }
     } catch (err) {
       setError(err.message);
@@ -276,31 +309,6 @@ const Page = () => {
         "Terjadi kesalahan saat memproses permintaan:",
         error.message
       );
-    }
-  };
-
-  const getVisiblePages = () => {
-    const visibleRange = 2;
-    const pages = [];
-
-    for (
-      let i = Math.max(1, currentPage - visibleRange);
-      i <= Math.min(totalPages, currentPage + visibleRange);
-      i++
-    ) {
-      pages.push(i);
-    }
-
-    return pages;
-  };
-
-  const handlePageClick = async (pageNumber) => {
-    if (pageNumber !== currentPage) {
-      setCurrentPage(pageNumber); 
-      if (!fetchedPages.includes(pageNumber)) {
-        fetchPensiunData(pageNumber - 1, 10, selectedCabang, searchText);
-        setFetchedPages([...fetchedPages, pageNumber]);
-      }
     }
   };
 
