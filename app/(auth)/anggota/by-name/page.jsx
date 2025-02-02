@@ -299,10 +299,11 @@ function DataAnggota() {
               </style>
             </head>
             <body>
-              <div class="title">Data Anggota ${selectedCabang === "-- Cabang --"
-        ? "Cabang"
-        : `Unit Kerja ${selectedCabang}`
-      }</div>
+              <div class="title">Data Anggota ${
+                selectedCabang === "-- Cabang --"
+                  ? "Cabang"
+                  : `Unit Kerja ${selectedCabang}`
+              }</div>
               <table>
                 <thead>
                   <tr class="header-row">
@@ -315,22 +316,25 @@ function DataAnggota() {
                 </thead>
                 <tbody>
                   ${groupedData
-        .slice(0, maxItems)
-        .map(
-          (group, index) => `
+                    .slice(0, maxItems)
+                    .map(
+                      (group, index) => `
                     <tr>
                       <td rowspan="${group.items.length + 1}">${index + 1}</td>
-                      <td rowspan="${group.items.length + 1}">${group.kerja
-            }</td>
-                      <td rowspan="${group.items.length + 1}">${group.jumlah
-            }</td>
+                      <td rowspan="${group.items.length + 1}">${
+                        group.kerja
+                      }</td>
+                      <td rowspan="${group.items.length + 1}">${
+                        group.jumlah
+                      }</td>
                     </tr>
                     ${group.items
-              .map(
-                (item, subIndex) => `
+                      .map(
+                        (item, subIndex) => `
                       <tr>
-                        <td>${subIndex + 1}. <span class="font-bold">${item.namaLengkap
-                  }</span> / ${item.npaPgri}</td>
+                        <td>${subIndex + 1}. <span class="font-bold">${
+                          item.namaLengkap
+                        }</span> / ${item.npaPgri}</td>
                         <td class="vertical-text">
                             <div>KTA Digital : ${item.anggota}</div>
                             <div>Daspen : ${item.pgri}</div>
@@ -338,11 +342,11 @@ function DataAnggota() {
                         </td>
                       </tr>
                     `
-              )
-              .join("")}
+                      )
+                      .join("")}
                   `
-        )
-        .join("")}
+                    )
+                    .join("")}
                 </tbody>
               </table>
             </body>
@@ -554,8 +558,9 @@ function DataAnggota() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <SinkronData />
 
@@ -563,14 +568,16 @@ function DataAnggota() {
             <div>
               <Button
                 onClick={toggleSidebar}
-                className={`p-2 rounded-md text-black ${isSidebarOpen ? "bg-black" : "bg-transparent"
-                  } transition-colors duration-300 hover:bg-gray-500 focus:outline-none fixed top-5 sm:top-1 left-2 sm:left-4 z-50`}
+                className={`p-2 rounded-md text-black ${
+                  isSidebarOpen ? "bg-black" : "bg-transparent"
+                } transition-colors duration-300 hover:bg-gray-500 focus:outline-none fixed top-5 sm:top-1 left-2 sm:left-4 z-50`}
               >
                 <FontAwesomeIcon
                   icon={isSidebarOpen ? faTimes : faBars}
                   size="lg"
-                  className={`text-black ${isSidebarOpen ? "text-white" : "text-black"
-                    }`}
+                  className={`text-black ${
+                    isSidebarOpen ? "text-white" : "text-black"
+                  }`}
                 />
               </Button>
             </div>

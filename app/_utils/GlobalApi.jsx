@@ -104,7 +104,7 @@ const getJumlahSantunan = async () => {
     console.error("Error fetching jumlah santunan:", error);
     throw error;
   }
-}
+};
 const searchUsersByName = (namaLengkap) => {
   return axiosClient.get(
     `/api/auth/search-users?namaLengkap=${encodeURIComponent(namaLengkap)}`
@@ -1213,7 +1213,7 @@ const getAllPensiun = (
   if (tahun) params.append("tahun", tahun);
   if (keyword) params.append("keyword", encodeURIComponent(keyword));
 
-  return axiosClient.get(`/api/pensiun?${params.toString()}`);  // Mengambil data dari endpoint API
+  return axiosClient.get(`/api/pensiun?${params.toString()}`); // Mengambil data dari endpoint API
 };
 
 //Notifikasi
@@ -1674,6 +1674,30 @@ const getBackupHistoryFile = async (
   }
 };
 
+const getCekHistoryData = async (
+  page = 0,
+  size = 10,
+  cabang = null,
+  unitKerja = null,
+  search = null
+) => {
+  try {
+    const response = await axiosClient.get(`/api/history/cekData`, {
+      params: {
+        page: page,
+        size: size,
+        ...(cabang && { cabang: encodeURIComponent(cabang) }),
+        ...(unitKerja && { unitKerja: unitKerja }),
+        ...(search && { search: search }),
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all history data:", error);
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1791,5 +1815,6 @@ export default {
   getProgressFile,
   getBackupDatabaseFile,
   getBackupHistoryFile,
+  getCekHistoryData,
   getJumlahSantunan,
 };
