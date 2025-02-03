@@ -987,10 +987,11 @@ export default function IconGrid() {
           <h2 className="text-2xl font-semibold text-gray-800 ml-2">
             Maps Lokasi Rumah
           </h2>
-          <p className="ml-2">
-            Anda Bisa Menyesuaikan Lokasi Dengan Menggeser Posisi Maps Sesuai
-            Dengan Lokasi yang Sesuai
-          </p>
+          <>
+        <p className="ml-2 text-blue-600">
+          Anda Bisa Menyesuaikan Lokasi Dengan Menggeser Posisi Maps Sesuai Dengan Lokasi yang Sesuai Melalui Menu Edit Anggota
+        </p>
+    </>
           {latitude && longitude && (
             <div className="mt-8">
               <MapComponent latitude={latitude} longitude={longitude} />
