@@ -1391,10 +1391,10 @@ const getRantingSummary = async (
             namaRanting: data.namaRanting,
             unitKerja: data.unitKerja,
             namaAnggota: processNamaAnggota(data.namaAnggota),
-            anggotaUnitKerja: data.anggotaUnitKerja,
-            jumlahAnggotaRanting: data.jumlahAnggotaRanting,
+            anggotaUnitKerja: data.jumlahAnggota,
+            jumlahAnggotaRanting: data.jumlahUnitKerja,
             totalUnitKerja: data.totalUnitKerja,
-            totalAnggota: data.totalAnggotaSemuaRanting,
+            totalAnggota: data.totalAnggota,
           }))
         : [],
       totalElements: response.data.totalElements,
