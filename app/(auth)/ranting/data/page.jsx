@@ -1,13 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faMagnifyingGlass,
-  faMinusCircle,
-  faPlusCircle,
-  faTrash,
-} from "@fortawesome/free-solid-svg-icons";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +36,6 @@ const Page = () => {
   const [allUnitKerja, setAllUnitKerja] = useState([]);
   const [, setFilteredUnitKerja] = useState([]);
   const [, setIsUnitKerjaDisabled] = useState(true);
-  const [expandedRow, setExpandedRow] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [totalEntries, setTotalEntries] = useState(0);
@@ -200,67 +192,6 @@ const Page = () => {
     );
   }
 
-  const deleteAdmin = async (idAdmin) => {
-    try {
-      const response = await GlobalApi.deleteAdmin(idAdmin);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Admin Berhasil Dihapus!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
-      setTimeout(() => {
-        window.location.reload();
-      }, 4000);
-    } catch (error) {
-      console.error("Error fetching cabang:", error);
-    }
-  };
-
   const handleEntriesChange = (e) => {
     setEntries(parseInt(e.target.value));
     setCurrentPage(0);
@@ -343,77 +274,70 @@ const Page = () => {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  const handleDeleteAdminClick = (idAdmin) => {
-    deleteAdmin(idAdmin);
-  };
-
-  const toggleDetails = (id) => {
-    setExpandedRow((prevExpandedRow) => (prevExpandedRow === id ? null : id));
-  };
-
   const handleProcessingStatus = (status) => {
     setIsPrintingOrDownloading(status);
   };
 
   const handlePrint = () => {
     handleProcessingStatus(true);
+    const totalAnggotaUnitKerja = filteredData.reduce(
+      (total, item) => total + (item.anggotaUnitKerja || 0),
+      0
+    );
+    const totalUnitKerja = filteredData.reduce(
+      (total, item) => total + (item.totalUnitKerja || 0),
+      0
+    );
+    const totalJumlahAnggotaRanting = filteredData.reduce(
+      (total, item) => total + (item.jumlahAnggotaRanting || 0),
+      0
+    );
+    const totalTotalAnggota = filteredData.reduce(
+      (total, item) => total + (item.totalAnggota || 0),
+      0
+    );
+
     const filteredDataForPrint = filteredData;
-    const printWindow = window.open();
+    const printWindow = window.open("", "_blank");
 
     printWindow.document.write(`
       <html>
         <head>
           <title>Data Ranting</title>
           <style>
+            @page {
+              size: auto;
+              margin: 10mm;
+            }
             body {
               font-family: Arial, sans-serif;
-              margin: 20px;
-              line-height: 1.6;
-            }
-            .title, .subtitle {
-              text-align: center;
-              margin-bottom: 10px;
+              display: table;
+              width: 100%;
+              margin: 0;
             }
             .title {
-              font-size: 28px;
+              text-align: center;
+              font-size: 22px;
               font-weight: bold;
               color: #00796b;
-            }
-            .subtitle {
-              font-size: 20px;
-              font-weight: normal;
-              color: #555;
+              margin-bottom: 10px;
             }
             table {
               width: 100%;
               border-collapse: collapse;
-              margin-top: 20px;
+              margin-top: 10px;
+              font-size: 12px;
+              table-layout: fixed;
             }
             th, td {
-              padding: 8px;
+              padding: 5px;
               border: 1px solid #ccc;
-            }
-            .header-row th[colspan="2"] {
+              word-wrap: break-word;
               text-align: center;
             }
-            .total-row {
-              font-weight: bold;
-              background-color: #e0f2f1;
+            .header-row th {
+              background-color: #f2f2f2;
             }
-            /* Prevent page breaks inside the table */
-            table, tr, td {
-              page-break-inside: avoid;
-            }
-            /* Ensure no page break between rows */
-            tr {
-              page-break-after: auto;
-            }
-            /* Allow table content to overflow if necessary */
-            body {
-              width: 100%;
-              overflow: auto;
-            }
-            /* Additional styling to avoid large table content breaking */
             @media print {
               body {
                 width: auto;
@@ -433,8 +357,8 @@ const Page = () => {
                 <th>Unit Kerja</th>
                 <th>Nama Anggota</th>
                 <th>Anggota Unit Kerja</th>
-                <th>Jumlah Anggota ranting</th>
-                <th>Total unit Kerja</th>
+                <th>Jumlah Anggota Ranting</th>
+                <th>Total Unit Kerja</th>
                 <th>Total Anggota</th>
               </tr>
             </thead>
@@ -444,18 +368,39 @@ const Page = () => {
                   (item, index) => `
                     <tr>
                       <td>${index + 1}</td>
-                      <td>${item.cabang}</td>
-                      <td>${item.namaRanting}</td>
-                      <td>${item.unitKerja}</td>
-                      <td>${item.namaAnggota}</td>
-                      <td>${item.anggotaUnitKerja}</td>
-                      <td>${item.totalUnitKerja}</td>
-                       <td>${item.jumlahAnggotaRanting}</td>
-                      <td>${item.totalAnggota}</td>
+                      <td>${item.cabang || "-"}</td>
+                      <td>${item.namaRanting || "-"}</td>
+                      <td>${item.unitKerja || "-"}</td>
+                      <td>
+                        ${
+                          item.namaAnggota
+                            ? item.namaAnggota
+                                .split("\n")
+                                .map((nama, i) => `${i + 1}. ${nama}`)
+                                .join("<br>")
+                            : "-"
+                        }
+                      </td>
+                      <td>${item.anggotaUnitKerja || 0}</td>
+                      <td>${item.jumlahAnggotaRanting || 0}</td>
+                      <td>${item.totalUnitKerja || 0}</td>
+                      <td>${item.totalAnggota || 0}</td>
                     </tr>
                   `
                 )
                 .join("")}
+              <!-- Baris Total -->
+              <tr style="font-weight: bold; background-color: #f2f2f2;">
+                <td>Total</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>${totalAnggotaUnitKerja}</td>
+                <td>${totalJumlahAnggotaRanting}</td>
+                <td>${totalUnitKerja}</td>
+                <td>${totalTotalAnggota}</td>
+              </tr>
             </tbody>
           </table>
         </body>
@@ -473,16 +418,57 @@ const Page = () => {
     handleProcessingStatus(true);
     const data = filteredData.map((item, index) => ({
       No: index + 1,
-      "Nama Ranting": item.namaRanting,
-      "Unit Kerja": item.unitKerja,
-      "Nama Anggota": item.namaAnggota,
-      "Anggota Unit Kerja": item.anggotaUnitKerja,
-      "Total Unit Kerja": item.totalUnitKerja,
-      "Jumlah Anggota Ranting": item.jumlahAnggotaRanting,
-      "Total Anggota": item.totalAnggota,
+      "Nama Ranting": item.namaRanting || "-",
+      "Unit Kerja": item.unitKerja || "-",
+      "Nama Anggota": item.namaAnggota
+        ? item.namaAnggota
+            .split("\n")
+            .map((nama, i) => `${i + 1}. ${nama}`)
+            .join("\n")
+        : "-",
+      "Anggota Unit Kerja": item.anggotaUnitKerja || 0,
+      "Total Unit Kerja": item.totalUnitKerja || 0,
+      "Jumlah Anggota Ranting": item.jumlahAnggotaRanting || 0,
+      "Total Anggota": item.totalAnggota || 0,
     }));
 
+    const totalAnggotaUnitKerja = filteredData.reduce(
+      (total, item) => total + (item.anggotaUnitKerja || 0),
+      0
+    );
+    const totalUnitKerja = filteredData.reduce(
+      (total, item) => total + (item.totalUnitKerja || 0),
+      0
+    );
+    const totalJumlahAnggotaRanting = filteredData.reduce(
+      (total, item) => total + (item.jumlahAnggotaRanting || 0),
+      0
+    );
+    const totalTotalAnggota = filteredData.reduce(
+      (total, item) => total + (item.totalAnggota || 0),
+      0
+    );
+
+    data.push({
+      No: "Total",
+      "Nama Ranting": "-",
+      "Unit Kerja": "-",
+      "Nama Anggota": "-",
+      "Anggota Unit Kerja": totalAnggotaUnitKerja,
+      "Total Unit Kerja": totalUnitKerja,
+      "Jumlah Anggota Ranting": totalJumlahAnggotaRanting,
+      "Total Anggota": totalTotalAnggota,
+    });
+
     const ws = XLSX.utils.json_to_sheet(data);
+    const range = XLSX.utils.decode_range(ws["!ref"]);
+    for (let row = range.s.r + 1; row <= range.e.r; row++) {
+      const cellRef = XLSX.utils.encode_cell({ r: row, c: 3 });
+      if (ws[cellRef]) {
+        ws[cellRef].s = { alignment: { wrapText: true } };
+      }
+    }
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Data Ranting");
 
@@ -754,7 +740,7 @@ const Page = () => {
                   <thead>
                     <tr className="bg-gray-50">
                       <th className="p-2 md:p-3 border text-left">No</th>
-                      <th className="p-2 md:p-3 border text-left ">Cabang</th>
+                      <th className="p-2 md:p-3 border text-left">Cabang</th>
                       <th className="p-2 md:p-3 border hidden md:table-cell">
                         Nama Ranting
                       </th>
@@ -768,10 +754,10 @@ const Page = () => {
                         Anggota Unit Kerja
                       </th>
                       <th className="p-2 md:p-3 border hidden md:table-cell">
-                        Jumlah Anggota ranting
+                        Jumlah Ranting
                       </th>
                       <th className="p-2 md:p-3 border hidden md:table-cell">
-                        Total unit Kerja
+                        Total Unit Kerja
                       </th>
                       <th className="p-2 md:p-3 border hidden md:table-cell">
                         Total Anggota
@@ -783,123 +769,91 @@ const Page = () => {
                       )}
                     </tr>
                   </thead>
-                  <tbody>
-                    {filteredData.length > 0 ? (
-                      filteredData.map((item, index) => {
-                        return (
-                          <React.Fragment key={item.id}>
-                            <tr className="bg-gray-100">
-                              <td className="p-2 md:p-3 border text-center">
-                                {index + 1 + currentPage * entries}
-                              </td>
-                              <td className="p-2 md:p-3 border text-center">
-                                {item.cabang}
-                              </td>
-                              <td className="p-2 md:p-3 border hidden md:table-cell">
-                                {item.namaRanting}
-                              </td>
-                              <td className="p-2 md:p-3 border hidden md:table-cell">
-                                {item.unitKerja}
-                              </td>
-                              <td
-                                className="p-2 md:p-3 border hidden md:table-cell"
-                                style={{ whiteSpace: "pre-line" }}
-                              >
-                                {item.namaAnggota}
-                              </td>
-                              <td className="p-2 md:p-3 border hidden md:table-cell">
-                                {item.anggotaUnitKerja}
-                              </td>
-                              <td className="p-2 md:p-3 border hidden md:table-cell">
-                                {item.totalUnitKerja}
-                              </td>
-                              <td className="p-2 md:p-3 border hidden md:table-cell">
-                                {item.jumlahAnggotaRanting}
-                              </td>
-                              <td className="p-2 md:p-3 border hidden md:table-cell">
-                                {item.totalAnggota}
-                              </td>
-                              {isMobile && (
-                                <td className="p-2 border text-center">
-                                  <div className="flex justify-center">
-                                    <Button
-                                      className="bg-blue-500 text-white  text-sm shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-300 transition ease-in-out duration-150"
-                                      onClick={() => toggleDetails(item.id)}
-                                    >
-                                      <FontAwesomeIcon
-                                        icon={
-                                          expandedRow === item.id
-                                            ? faMinusCircle
-                                            : faPlusCircle
-                                        }
-                                      />
-                                    </Button>
-                                  </div>
-                                </td>
-                              )}
-                            </tr>
-                            {expandedRow === item.id && (
-                              <tr className="bg-gray-200">
-                                <td colSpan="7" className="p-4">
-                                  <div className="flex flex-col md:flex-row">
-                                    <div className="md:w-1/2">
-                                      <strong>Nama Ranting:</strong>{" "}
-                                      {item.namaRanting}
-                                      <br />
-                                      <strong>Unit Kerja:</strong>{" "}
-                                      {item.unitKerja}
-                                      <br />
-                                      <strong>Nama Anggota:</strong>{" "}
-                                      {item.namaAnggota}
-                                      <br />
-                                      <strong>Anggota Unit Kerja:</strong>{" "}
-                                      {item.anggotaUnitKerja}
-                                      <br />
-                                      <strong>
-                                        Jumlah Anggota Ranting:
-                                      </strong>{" "}
-                                      {item.jumlahAnggotaRanting}
-                                      <br />
-                                      <strong>Total UnitKerja:</strong>{" "}
-                                      {item.totalUnitKerja}
-                                      <br />
-                                      <strong>Total Anggota:</strong>{" "}
-                                      {item.totalAnggota}
-                                      <br />
-                                      <div className="flex flex-col space-y-2 mt-2">
-                                        <strong className="text-lg font-semibold">
-                                          Action:
-                                        </strong>
-                                        <div className="flex space-x-2">
-                                          <Button
-                                            className="bg-red-500 text-white px-3 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
-                                            onClick={() =>
-                                              handleDeleteAdminClick(item.id)
-                                            }
-                                          >
-                                            <FontAwesomeIcon icon={faTrash} />
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                          </React.Fragment>
-                        );
-                      })
-                    ) : (
-                      <tr>
-                        <td colSpan="7" className="p-4 text-center">
-                          <div className="flex justify-center items-center space-x-2">
-                            <div className="w-6 h-6 border-4 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
-                            <span>Loading...</span>
-                          </div>
+
+                  {filteredData.length > 0 ? (
+                    <>
+                      {filteredData.map((item, index) => (
+                        <React.Fragment key={index}>
+                          <tr className="bg-gray-100">
+                            <td className="p-2 md:p-3 border text-center">
+                              {index + 1 + currentPage * entries}
+                            </td>
+                            <td className="p-2 md:p-3 border text-center">
+                              {item.cabang}
+                            </td>
+                            <td className="p-2 md:p-3 border hidden md:table-cell">
+                              {item.namaRanting || "-"}
+                            </td>
+                            <td className="p-2 md:p-3 border hidden md:table-cell">
+                              {item.unitKerja || "-"}
+                            </td>
+                            <td
+                              className="p-2 md:p-3 border hidden md:table-cell"
+                              style={{ whiteSpace: "pre-line" }}
+                            >
+                              {item.namaAnggota
+                                ? item.namaAnggota
+                                    .split("\n")
+                                    .map((nama, i) => `${i + 1}. ${nama}`)
+                                    .join("\n")
+                                : "-"}
+                            </td>
+                            <td className="p-2 md:p-3 border hidden md:table-cell">
+                              {item.anggotaUnitKerja || "-"}
+                            </td>
+                            <td className="p-2 md:p-3 border hidden md:table-cell">
+                              {item.jumlahAnggotaRanting || "-"}
+                            </td>
+                            <td className="p-2 md:p-3 border hidden md:table-cell">
+                              {item.totalUnitKerja || "-"}
+                            </td>
+                            <td className="p-2 md:p-3 border hidden md:table-cell">
+                              {item.totalAnggota || "-"}
+                            </td>
+                          </tr>
+                        </React.Fragment>
+                      ))}
+
+                      <tr className="bg-gray-200 font-bold">
+                        <td colSpan="4" className="p-2 md:p-3 text-center">
+                          Total
+                        </td>
+                        <td className="p-2 md:p-3 text-center"></td>{" "}
+                        <td className="p-2 md:p-3 text-center">
+                          {filteredData.reduce(
+                            (total, item) =>
+                              total + (item.anggotaUnitKerja || 0),
+                            0
+                          )}
+                        </td>
+                        <td className="p-2 md:p-3 text-center">
+                          {filteredData.reduce(
+                            (total, item) =>
+                              total + (item.jumlahAnggotaRanting || 0),
+                            0
+                          )}
+                        </td>
+                        <td className="p-2 md:p-3 text-center">
+                          {filteredData.reduce(
+                            (total, item) => total + (item.totalUnitKerja || 0),
+                            0
+                          )}
+                        </td>
+                        <td className="p-2 md:p-3 text-center">
+                          {filteredData.reduce(
+                            (total, item) => total + (item.totalAnggota || 0),
+                            0
+                          )}
                         </td>
                       </tr>
-                    )}
-                  </tbody>
+                    </>
+                  ) : (
+                    <tr>
+                      <td colSpan="9" className="p-4 text-center">
+                        Tidak Ada Data
+                      </td>
+                    </tr>
+                  )}
                 </table>
               </div>
 
