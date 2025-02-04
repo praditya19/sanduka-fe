@@ -1388,10 +1388,10 @@ const getRantingSummary = async (
             namaRanting: data.namaRanting,
             unitKerja: data.unitKerja,
             namaAnggota: processNamaAnggota(data.namaAnggota),
-            anggotaUnitKerja: data.anggotaUnitKerja,
-            jumlahAnggotaRanting: data.jumlahAnggotaRanting,
+            anggotaUnitKerja: data.jumlahAnggota,
+            jumlahAnggotaRanting: data.jumlahUnitKerja,
             totalUnitKerja: data.totalUnitKerja,
-            totalAnggota: data.totalAnggotaSemuaRanting,
+            totalAnggota: data.totalAnggota,
           }))
         : [],
       totalElements: response.data.totalElements,
@@ -1698,6 +1698,26 @@ const getCekHistoryData = async (
   }
 };
 
+const createNamaRanting = async (namaRanting) => {
+  try {
+    const response = await axiosClient.post("/api/nama-ranting", namaRanting);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error creating nama ranting:",
+      error.response?.data || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Gagal membuat nama ranting"
+    );
+  }
+};
+
+const getNamaRantingCabang = () => axiosClient.get("/api/nama-ranting");
+const getNamaRantingByCabang = (cabang) => {
+  return axiosClient.get(`/api/nama-ranting/cabang/${cabang}`);
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1817,4 +1837,7 @@ export default {
   getBackupHistoryFile,
   getCekHistoryData,
   getJumlahSantunan,
+  createNamaRanting,
+  getNamaRantingCabang,
+  getNamaRantingByCabang,
 };

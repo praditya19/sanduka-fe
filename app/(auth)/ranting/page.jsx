@@ -20,7 +20,6 @@ const Page = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [newCabang, setNewCabang] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [namaRanting, setNamaRanting] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
@@ -39,17 +38,39 @@ const Page = () => {
   const unitKerjaRef = useRef(null);
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [selectedRanting, setSelectedRanting] = useState("");
+  const [originalRantingList, setOriginalRantingList] = useState([]);
+  const [allRantingList, setAllRantingList] = useState([]);
+  const [showRantingDropdown, setShowRantingDropdown] = useState(false);
+  const [role, setRole] = useState("");
+  const [filteredCabang, setFilteredCabang] = useState("");
+  const [showFilteredCabangDropdown, setShowFilteredCabangDropdown] =
+    useState(false);
+  const [filteredRanting, setFilteredRanting] = useState("");
+  const [showFilteredRantingDropdown, setShowFilteredRantingDropdown] =
+    useState(false);
+  const [allFilteredRantingList, setAllFilteredRantingList] = useState([]);
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [selectedNamaRantingCabang, setSelectedNamaRantingCabang] =
+    useState("");
+  const [showNamaRantingCabangDropdown, setShowNamaRantingCabangDropdown] =
+    useState(false);
+  const [filteredNamaRantingCabangList, setFilteredNamaRantingCabangList] =
+    useState([]);
+  const [originalTambahRantingList, setOriginalTambahRantingList] = useState(
+    []
+  );
+  const [buatNamaRanting, setBuatNamaRanting] = useState("");
 
   const addRanting = async () => {
-    if (!newCabang || !selectedCabang) {
+    if (!selectedRanting || !selectedCabang) {
       toast.error("Harap lengkapi Nama Ranting dan Cabang!");
       return;
     }
-
     try {
       const rantingData = {
         cabang: selectedCabang,
-        namaRanting: newCabang,
+        namaRanting: selectedRanting,
         unitKerja: selectedUnitKerja,
       };
       const response = await GlobalApi.createRanting(rantingData);
@@ -104,8 +125,9 @@ const Page = () => {
           },
         }
       );
-      setNewCabang("");
+      setSelectedRanting("");
       setSelectedCabang("");
+      setSelectedUnitKerja("");
       setTimeout(() => {
         window.location.reload();
       }, 4000);
@@ -168,6 +190,133 @@ const Page = () => {
     }
   };
 
+  const addNamaRanting = async () => {
+    if (!buatNamaRanting || !selectedNamaRantingCabang) {
+      toast.error("Harap lengkapi Nama Ranting dan Cabang!");
+      return;
+    }
+
+    try {
+      const namaRanting = {
+        cabang: selectedNamaRantingCabang,
+        namaRanting: buatNamaRanting,
+      };
+      const response = await GlobalApi.createNamaRanting(namaRanting);
+
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+              marginTop: "14px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Nama Ranting berhasil ditambahkan!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      setBuatNamaRanting("");
+      setSelectedNamaRantingCabang("");
+      setTimeout(() => {
+        window.location.reload();
+      }, 4000);
+    } catch (error) {
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal Menambahkan Nama Ranting. Coba lagi.
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      console.error("Error adding ranting:", error);
+    }
+  };
+
   const fetchData = async (page = currentPage, size = entries) => {
     try {
       const response = await GlobalApi.getGroupedNamaRantingWithCabang(
@@ -197,6 +346,8 @@ const Page = () => {
       const response = await GlobalApi.getCabang();
       setOriginalCabangList(response.data);
       setFilteredCabangList(response.data);
+      setFilteredNamaRantingCabangList(response.data);
+      setOriginalTambahRantingList(response.data);
     } catch (error) {
       console.error("Error fetching cabang data:", error);
     }
@@ -263,6 +414,25 @@ const Page = () => {
     }
   };
 
+  const fetchRantingByCabang = async (cabang) => {
+    if (!cabang) {
+      console.warn("Cabang belum dipilih!");
+      return;
+    }
+
+    try {
+      const cabangToFetch = cabang.kecamatan || cabang;
+
+      const response = await GlobalApi.getNamaRantingByCabang(cabangToFetch);
+
+      setOriginalRantingList(response.data);
+      setAllRantingList(response.data);
+      setAllFilteredRantingList(response.data);
+    } catch (error) {
+      console.error("Error fetching nama ranting:", error);
+    }
+  };
+
   useEffect(() => {
     if (!token) router.push("/sign-in");
     else {
@@ -271,11 +441,27 @@ const Page = () => {
       fetchUnitKerjaData();
       fetchData(currentPage, entries);
 
+      const storedRole = sessionStorage.getItem("role");
+      if (storedRole) {
+        setRole(storedRole);
+      }
+
+      const role = sessionStorage.getItem("role");
+      const cabangFromSession = sessionStorage.getItem("cabang") || "";
+      if (role === "ADMIN" && cabangFromSession) {
+        fetchRantingByCabang(cabangFromSession);
+        setSelectedCabang(cabangFromSession);
+        setFilteredCabang(cabangFromSession);
+      } else {
+        fetchRantingByCabang(selectedCabang);
+        fetchRantingByCabang(filteredCabang);
+      }
+
       const handleResize = () => setIsMobile(window.innerWidth <= 768);
       window.addEventListener("resize", handleResize);
       return () => window.removeEventListener("resize", handleResize);
     }
-  }, [token, router]);
+  }, [token, router, selectedCabang, filteredCabang]);
 
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
@@ -305,13 +491,10 @@ const Page = () => {
 
   const handleSelectCabang = async (cabang) => {
     const role = sessionStorage.getItem("role");
-
     if (cabang.id === "All" && role === "SUPER ADMIN") {
       setSelectedCabang("All");
       setShowCabangDropdown(false);
-
       const allCabang = filteredCabangList.map((item) => item.kecamatan);
-      console.log("All kecamatan:", allCabang);
     } else if (cabang.id !== "All") {
       setSelectedCabang(cabang.kecamatan);
       setShowCabangDropdown(false);
@@ -351,11 +534,15 @@ const Page = () => {
   };
 
   const filteredData = namaRanting?.filter((item) => {
-    // const cabang = item.cabang || "";
-    const namaRanting = item.namaRanting || "";
+    const namaRanting = item.namaRanting?.toLowerCase().trim() || "";
+    const namaCabang = item.cabangList?.toLowerCase().trim() || "";
+    const selectedCabang = filteredCabang?.toLowerCase().trim() || "";
+    const selectedRanting = filteredRanting?.toLowerCase().trim() || "";
+
     return (
-      // cabang.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      namaRanting.toLowerCase().includes(searchQuery.toLowerCase())
+      namaRanting.includes(searchQuery.toLowerCase()) &&
+      (selectedCabang ? namaCabang.includes(selectedCabang) : true) &&
+      (selectedRanting ? namaRanting.includes(selectedRanting) : true)
     );
   });
 
@@ -376,6 +563,90 @@ const Page = () => {
 
   const handleDeleteAdminClick = (deleteByNamaRanting) => {
     deleteRanting(deleteByNamaRanting);
+  };
+
+  const handleSelectRanting = (ranting) => {
+    setSelectedRanting(ranting.namaRanting);
+    setShowRantingDropdown(false);
+  };
+
+  const handleRantingSearch = (searchTerm) => {
+    const allRantingList = originalRantingList.filter((ranting) =>
+      ranting.namaRanting.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setAllRantingList(allRantingList);
+  };
+
+  const handleFilteredCabangClick = () => {
+    setFilteredCabangList(originalCabangList);
+    setShowFilteredCabangDropdown(true);
+  };
+
+  const handleFilteredCabangSearch = (query) => {
+    const filtered = originalCabangList.filter((cabang) =>
+      cabang.kecamatan.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredCabangList(filtered);
+  };
+
+  const handlefilteredCabang = async (cabang) => {
+    const role = sessionStorage.getItem("role");
+    if (cabang.id === "All" && role === "SUPER ADMIN") {
+      setFilteredCabang("All");
+      setShowFilteredCabangDropdown(false);
+      const allCabang = filteredCabangList.map((item) => item.kecamatan);
+    } else if (cabang.id !== "All") {
+      setFilteredCabang(cabang.kecamatan);
+      setShowFilteredCabangDropdown(false);
+    } else {
+      console.error("Role tidak memiliki akses ke opsi 'All'");
+    }
+  };
+
+  const handleFilteredRantingSearch = (searchTerm) => {
+    const allRantingList = originalRantingList.filter((ranting) =>
+      ranting.namaRanting.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setAllFilteredRantingList(allRantingList);
+  };
+
+  const handleSelectFilteredRanting = (ranting) => {
+    setFilteredRanting(ranting.namaRanting);
+    setShowFilteredRantingDropdown(false);
+  };
+
+  const handleOpenPopup = () => {
+    setIsPopupVisible(true);
+  };
+
+  const handleClosePopup = () => {
+    setIsPopupVisible(false);
+  };
+
+  const handleCabangNamaRantingClick = () => {
+    setFilteredNamaRantingCabangList(originalTambahRantingList);
+    setShowNamaRantingCabangDropdown(true);
+  };
+
+  const handleTambahRanting = (query) => {
+    const filtered = originalTambahRantingList.filter((cabang) =>
+      cabang.kecamatan.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredNamaRantingCabangList(filtered);
+  };
+
+  const handleSelectNamaRantingCabang = async (cabang) => {
+    const role = sessionStorage.getItem("role");
+
+    if (cabang.id === "All" && role === "SUPER ADMIN") {
+      setSelectedNamaRantingCabang("All");
+      setShowNamaRantingCabangDropdown(false);
+    } else if (cabang.id !== "All") {
+      setSelectedNamaRantingCabang(cabang.kecamatan);
+      setShowNamaRantingCabangDropdown(false);
+    } else {
+      console.error("Role tidak memiliki akses ke opsi 'All'");
+    }
   };
 
   return (
@@ -415,6 +686,7 @@ const Page = () => {
               <div className="mb-2">
                 <h3 className="text-base font-bold mb-2">Tambah Ranting</h3>
                 <div className="bg-white p-6 rounded-lg shadow-md">
+                  {/* Tambah Nama Cabang */}
                   <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-bold mb-1">
                       Nama Cabang
@@ -424,6 +696,7 @@ const Page = () => {
                         type="text"
                         value={selectedCabang}
                         readOnly
+                        disabled={role === "ADMIN"}
                         onClick={handleCabangClick}
                         className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
                         placeholder="Pilih Cabang"
@@ -475,6 +748,65 @@ const Page = () => {
                     </div>
                   </div>
 
+                  {/* Tambah Nama Ranting */}
+                  <div className="mb-4">
+                    <label className="block text-gray-700 text-sm font-bold mb-1">
+                      Nama Ranting
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        value={selectedRanting}
+                        readOnly
+                        onClick={() => setShowRantingDropdown(true)}
+                        className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                          !selectedCabang ? "cursor-not-allowed opacity-50" : ""
+                        }`}
+                        placeholder="Pilih Nama Ranting"
+                      />
+                      {showRantingDropdown && selectedCabang && (
+                        <div
+                          className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full"
+                          style={{ top: "100%", left: 0 }}
+                        >
+                          <ul className="max-h-44 overflow-y-auto">
+                            <li className="py-2 px-2">
+                              <Input
+                                type="text"
+                                onChange={(e) =>
+                                  handleRantingSearch(e.target.value)
+                                }
+                                className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                                placeholder="Cari atau ketik Nama Ranting..."
+                                autoFocus
+                              />
+                            </li>
+
+                            <li
+                              onClick={() =>
+                                handleSelectRanting({ namaRanting: "" })
+                              }
+                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                            >
+                              Pilih Nama Ranting
+                            </li>
+
+                            {allRantingList.map((ranting) => (
+                              <li
+                                key={ranting.id}
+                                onClick={() => handleSelectRanting(ranting)}
+                                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                              >
+                                {ranting.namaRanting}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Tambah Unit Kerja */}
                   <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-bold mb-1">
                       Nama Unit Kerja
@@ -490,8 +822,8 @@ const Page = () => {
                         readOnly
                         onFocus={() => {
                           if (
-                            selectedCabang !== "Pilih Cabang" &&
-                            selectedCabang
+                            selectedRanting &&
+                            selectedCabang !== "Pilih Cabang"
                           ) {
                             setShowDropdownUnitKerja(true);
                             setFilteredUnitKerjaOptions(
@@ -503,12 +835,12 @@ const Page = () => {
                             );
                           }
                         }}
-                        className={`shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-300 ${
-                          selectedCabang === "Pilih Cabang"
-                            ? "cursor-not-allowed"
+                        className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                          !selectedRanting
+                            ? "cursor-not-allowed opacity-50"
                             : ""
                         }`}
-                        disabled={selectedCabang === "Pilih Cabang"} // Disable when no Cabang selected
+                        disabled={!selectedRanting}
                       />
 
                       {showDropdownUnitKerja &&
@@ -545,18 +877,7 @@ const Page = () => {
                     </div>
                   </div>
 
-                  <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-1">
-                      Nama Ranting
-                    </label>
-                    <Input
-                      placeholder="Nama Ranting"
-                      value={newCabang}
-                      onChange={(e) => setNewCabang(e.target.value)}
-                      className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                    />
-                  </div>
-
+                  {/* Tambah Ranting */}
                   <div className="flex justify-end mt-6">
                     <Button
                       type="button"
@@ -586,17 +907,260 @@ const Page = () => {
                   </div>
                 </div>
 
-                <div className="relative mb-4">
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="p-2 pl-10 border rounded max-w-sm w-full"
-                    onChange={handleSearchChange}
-                  />
-                  <FontAwesomeIcon
-                    icon={faMagnifyingGlass}
-                    className="absolute left-3 top-2.5 w-5 h-5 text-gray-500"
-                  />
+                <div className="relative mb-4 flex items-end gap-x-4">
+                  {/* Input Search */}
+                  <div className="relative flex-grow">
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      className="p-2 pl-10 border rounded w-full"
+                      onChange={handleSearchChange}
+                    />
+                    <FontAwesomeIcon
+                      icon={faMagnifyingGlass}
+                      className="absolute left-3 top-2.5 w-5 h-5 text-gray-500"
+                    />
+                  </div>
+
+                  {/* Nama Cabang */}
+                  <div className="flex-grow">
+                    <label className="block text-gray-700 text-sm font-bold mb-1">
+                      Nama Cabang
+                    </label>
+                    <div className="flex items-center relative">
+                      <Input
+                        type="text"
+                        value={filteredCabang}
+                        readOnly
+                        disabled={role === "ADMIN"}
+                        onClick={handleFilteredCabangClick}
+                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                        placeholder="Pilih Cabang"
+                      />
+                      {showFilteredCabangDropdown && (
+                        <div
+                          className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full"
+                          style={{ top: "100%", left: 0 }}
+                        >
+                          <ul className="max-h-44 overflow-y-auto">
+                            <li className="py-2 px-2">
+                              <Input
+                                type="text"
+                                onChange={(e) =>
+                                  handleFilteredCabangSearch(e.target.value)
+                                }
+                                className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                                placeholder="Cari atau ketik Cabang..."
+                                autoFocus
+                              />
+                            </li>
+
+                            <li
+                              onClick={() =>
+                                handlefilteredCabang({ kecamatan: "" })
+                              }
+                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                            >
+                              Pilih Cabang
+                            </li>
+                            {[
+                              ...(sessionStorage.getItem("role") ===
+                              "SUPER ADMIN"
+                                ? [{ id: "All", kecamatan: "All" }]
+                                : []),
+                              ...filteredCabangList,
+                            ].map((cabang) => (
+                              <li
+                                key={cabang.id}
+                                onClick={() => handlefilteredCabang(cabang)}
+                                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                              >
+                                {cabang.kecamatan}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Nama Ranting */}
+                  <div className="flex-grow">
+                    <label className="block text-gray-700 text-sm font-bold mb-1">
+                      Nama Ranting
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        value={filteredRanting}
+                        readOnly
+                        onClick={() => setShowFilteredRantingDropdown(true)}
+                        className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                          !filteredCabang ? "cursor-not-allowed opacity-50" : ""
+                        }`}
+                        placeholder="Pilih Nama Ranting"
+                      />
+                      {showFilteredRantingDropdown && filteredCabang && (
+                        <div
+                          className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full"
+                          style={{ top: "100%", left: 0 }}
+                        >
+                          <ul className="max-h-44 overflow-y-auto">
+                            <li className="py-2 px-2">
+                              <Input
+                                type="text"
+                                onChange={(e) =>
+                                  handleFilteredRantingSearch(e.target.value)
+                                }
+                                className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                                placeholder="Cari atau ketik Nama Ranting..."
+                                autoFocus
+                              />
+                            </li>
+
+                            <li
+                              onClick={() =>
+                                handleSelectFilteredRanting({ namaRanting: "" })
+                              }
+                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                            >
+                              Pilih Nama Ranting
+                            </li>
+
+                            {allFilteredRantingList.map((ranting) => (
+                              <li
+                                key={ranting.id}
+                                onClick={() =>
+                                  handleSelectFilteredRanting(ranting)
+                                }
+                                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                              >
+                                {ranting.namaRanting}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Tombol Tambah Nama Ranting */}
+                  <div className="flex-shrink-0">
+                    <Button
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      onClick={handleOpenPopup}
+                    >
+                      Tambah Nama Ranting
+                    </Button>
+                  </div>
+
+                  {/* Popup */}
+                  {isPopupVisible && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                      <div className="bg-white p-6 rounded shadow-lg w-full sm:w-3/4 md:w-2/4 lg:w-2/5">
+                        <h2 className="text-lg font-bold mb-4">
+                          Tambah Nama Ranting
+                        </h2>
+
+                        {/* Nama Cabang */}
+                        <div className="flex-grow">
+                          <label className="block text-gray-700 text-sm font-bold mb-1">
+                            Nama Cabang
+                          </label>
+                          <div className="flex items-center relative">
+                            <Input
+                              type="text"
+                              value={selectedNamaRantingCabang}
+                              readOnly
+                              onClick={handleCabangNamaRantingClick}
+                              className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                              placeholder="Pilih Cabang"
+                            />
+                            {showNamaRantingCabangDropdown && (
+                              <div
+                                className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full"
+                                style={{ top: "100%", left: 0 }}
+                              >
+                                <ul className="max-h-44 overflow-y-auto">
+                                  <li className="py-2 px-2">
+                                    <Input
+                                      type="text"
+                                      onChange={(e) =>
+                                        handleTambahRanting(e.target.value)
+                                      }
+                                      className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                                      placeholder="Cari atau ketik Cabang..."
+                                      autoFocus
+                                    />
+                                  </li>
+
+                                  <li
+                                    onClick={() =>
+                                      handleSelectNamaRantingCabang({
+                                        kecamatan: "",
+                                      })
+                                    }
+                                    className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                                  >
+                                    Pilih Cabang
+                                  </li>
+                                  {[
+                                    ...(sessionStorage.getItem("role") ===
+                                    "SUPER ADMIN"
+                                      ? [{ id: "All", kecamatan: "All" }]
+                                      : []),
+                                    ...filteredNamaRantingCabangList,
+                                  ].map((cabang) => (
+                                    <li
+                                      key={cabang.id}
+                                      onClick={() =>
+                                        handleSelectNamaRantingCabang(cabang)
+                                      }
+                                      className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                                    >
+                                      {cabang.kecamatan}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Input Nama Ranting */}
+                          <div className="mb-4">
+                            <label className="block text-gray-700 text-sm font-bold mb-1 mt-3">
+                              Nama Ranting
+                            </label>
+                            <Input
+                              type="text"
+                              className="border rounded w-full p-2"
+                              placeholder="Masukkan Nama Ranting"
+                              value={buatNamaRanting}
+                              onChange={(e) =>
+                                setBuatNamaRanting(e.target.value)
+                              }
+                            />
+                          </div>
+
+                          {/* Tombol Aksi */}
+                          <div className="flex justify-end">
+                            <Button
+                              className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded mr-2"
+                              onClick={handleClosePopup}
+                            >
+                              Batal
+                            </Button>
+                            <Button
+                              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                              onClick={addNamaRanting}
+                            >
+                              Simpan
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="overflow-x-auto">
@@ -634,7 +1198,11 @@ const Page = () => {
                                   {item.namaRanting}
                                 </td>
                                 <td className="p-2 md:p-3 border">
-                                  {item.unitKerja}
+                                  {item.unitKerja.split(", ").map((uk, i) => (
+                                    <div key={i}>
+                                      {i + 1}. {uk}
+                                    </div>
+                                  ))}
                                 </td>
                                 <td className="p-2 border text-center">
                                   <div className="flex space-x-2 justify-center">
@@ -659,7 +1227,7 @@ const Page = () => {
                       ) : (
                         <tr>
                           <td colSpan="7" className="p-4 text-center">
-                            No data found
+                            Tidak Ada Data
                           </td>
                         </tr>
                       )}
