@@ -1,10 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import GlobalApi from "@/app/_utils/GlobalApi";
 
 const GaleriKegiatan = () => {
   const [galleries, setGalleries] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchGalleries();
@@ -22,17 +24,37 @@ const GaleriKegiatan = () => {
 
   const fetchGalleries = async () => {
     try {
+      setIsLoading(true);
       const data = await GlobalApi.getAllSidebarGallery();
-      setGalleries(data);
+      
+      const processedGalleries = await Promise.all(
+        data.map(async (item) => {
+          const blob = await fetch(`data:image/jpeg;base64,${item.photo}`).then(r => r.blob());
+          const objectUrl = URL.createObjectURL(blob);
+          return { ...item, imageUrl: objectUrl };
+        })
+      );
+      
+      setGalleries(processedGalleries);
     } catch (error) {
       console.error("Error fetching galleries:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const getPrevIndex = (index) =>
-    index === 0 ? galleries.length - 1 : index - 1;
-  const getNextIndex = (index) =>
-    index === galleries.length - 1 ? 0 : index + 1;
+  useEffect(() => {
+    return () => {
+      galleries.forEach(item => {
+        if (item.imageUrl) {
+          URL.revokeObjectURL(item.imageUrl);
+        }
+      });
+    };
+  }, [galleries]);
+
+  const getPrevIndex = (index) => index === 0 ? galleries.length - 1 : index - 1;
+  const getNextIndex = (index) => index === galleries.length - 1 ? 0 : index + 1;
 
   const getVisibleItems = () => {
     if (galleries.length < 3) return galleries;
@@ -42,6 +64,21 @@ const GaleriKegiatan = () => {
       galleries[getNextIndex(activeIndex)],
     ];
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-gray-100 py-12">
+        <div className="container mx-auto px-4 md:px-12 lg:px-24">
+          <h2 className="text-xl font-bold mb-6 text-center">Galeri Kegiatan</h2>
+          <div className="flex justify-center items-center space-x-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="animate-pulse bg-gray-300 rounded-lg w-[400px] h-[200px]" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div id="galeriSec" className="bg-gray-100 py-12">
@@ -61,11 +98,18 @@ const GaleriKegiatan = () => {
                         : "scale-90 opacity-60 z-10"
                     }`}
                   >
-                    <img
-                      src={`data:image/jpeg;base64,${item.photo}`}
-                      alt={item.category}
-                      className="rounded-lg shadow-md w-[400px] h-[200px] object-cover"
-                    />
+                    <div className="relative w-[400px] h-[200px]">
+                      <Image
+                        src={item.imageUrl}
+                        alt={item.category}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="rounded-lg shadow-md object-cover"
+                        priority={isActive}
+                        loading={isActive ? "eager" : "lazy"}
+                        quality={isActive ? 100 : 75}
+                      />
+                    </div>
                   </div>
                 );
               })}
