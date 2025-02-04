@@ -8,6 +8,7 @@ const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
 });
+
 // Konversi Gambar Dalam Format Base64
 const base64ToBlob = (base64, mime) => {
   const byteChars = atob(base64);
@@ -188,10 +189,12 @@ const getUserById = async (userId) => {
     return response.data;
   } catch (error) {
     if (error.response) {
+      console.error("Error Response:", error.response);
       throw new Error(
         error.response.data.message || "Terjadi kesalahan pada server"
       );
     } else {
+      console.error("Error Request:", error);
       throw new Error("Terjadi kesalahan pada jaringan");
     }
   }
@@ -1388,10 +1391,10 @@ const getRantingSummary = async (
             namaRanting: data.namaRanting,
             unitKerja: data.unitKerja,
             namaAnggota: processNamaAnggota(data.namaAnggota),
-            anggotaUnitKerja: data.jumlahAnggota,
-            jumlahAnggotaRanting: data.jumlahUnitKerja,
+            anggotaUnitKerja: data.anggotaUnitKerja,
+            jumlahAnggotaRanting: data.jumlahAnggotaRanting,
             totalUnitKerja: data.totalUnitKerja,
-            totalAnggota: data.totalAnggota,
+            totalAnggota: data.totalAnggotaSemuaRanting,
           }))
         : [],
       totalElements: response.data.totalElements,
@@ -1698,26 +1701,6 @@ const getCekHistoryData = async (
   }
 };
 
-const createNamaRanting = async (namaRanting) => {
-  try {
-    const response = await axiosClient.post("/api/nama-ranting", namaRanting);
-    return response.data;
-  } catch (error) {
-    console.error(
-      "Error creating nama ranting:",
-      error.response?.data || error.message
-    );
-    throw new Error(
-      error.response?.data?.message || "Gagal membuat nama ranting"
-    );
-  }
-};
-
-const getNamaRantingCabang = () => axiosClient.get("/api/nama-ranting");
-const getNamaRantingByCabang = (cabang) => {
-  return axiosClient.get(`/api/nama-ranting/cabang/${cabang}`);
-};
-
 // Export all functions
 export default {
   registerUser,
@@ -1837,7 +1820,4 @@ export default {
   getBackupHistoryFile,
   getCekHistoryData,
   getJumlahSantunan,
-  createNamaRanting,
-  getNamaRantingCabang,
-  getNamaRantingByCabang,
 };
