@@ -1701,6 +1701,79 @@ const getCekHistoryData = async (
   }
 };
 
+const createSidebarGallery = async (data) => {
+  try {
+    const formData = new FormData();
+    formData.append("category", data.category);
+    if (data.photo) {
+      formData.append("photo", data.photo);
+    }
+    const response = await axiosClient.post("/api/sidebar-gallery", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+const updateSidebarGallery = async (id, data) => {
+  try {
+    const formData = new FormData();
+    formData.append("category", data.category);
+    if (data.photo) {
+      formData.append("photo", data.photo);
+    }
+    const response = await axiosClient.put(
+      `/api/sidebar-gallery/${id}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+const getAllSidebarGallery = async () => {
+  try {
+    const response = await axiosClient.get("/api/sidebar-gallery");
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+const getSidebarGalleryById = async (id) => {
+  try {
+    const response = await axiosClient.get(`/api/sidebar-gallery/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+const getSidebarGalleryByCategory = async (category) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/sidebar-gallery/category/${category}`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+const deleteSidebarGallery = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/sidebar-gallery/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1820,4 +1893,10 @@ export default {
   getBackupHistoryFile,
   getCekHistoryData,
   getJumlahSantunan,
+  createSidebarGallery,
+  updateSidebarGallery,
+  getAllSidebarGallery,
+  getSidebarGalleryById,
+  getSidebarGalleryByCategory,
+  deleteSidebarGallery,
 };
