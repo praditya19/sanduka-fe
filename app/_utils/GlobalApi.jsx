@@ -1774,6 +1774,25 @@ const deleteSidebarGallery = async (id) => {
   }
 };
 
+const createNamaRanting = async (namaRanting) => {
+  try {
+    const response = await axiosClient.post("/api/nama-ranting", namaRanting);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error creating nama ranting:",
+      error.response?.data || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Gagal membuat nama ranting"
+    );
+  }
+};
+
+const getNamaRantingCabang = () => axiosClient.get("/api/nama-ranting");
+const getNamaRantingByCabang = (cabang) => {
+  return axiosClient.get(`/api/nama-ranting/cabang/${cabang}`);
+};
 // Export all functions
 export default {
   registerUser,
@@ -1899,4 +1918,7 @@ export default {
   getSidebarGalleryById,
   getSidebarGalleryByCategory,
   deleteSidebarGallery,
+  createNamaRanting,
+  getNamaRantingCabang,
+  getNamaRantingByCabang,
 };
