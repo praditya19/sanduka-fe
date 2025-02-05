@@ -726,6 +726,7 @@ const Page = () => {
             <Seldata />
           </div>
         </div>
+        
       </div>
     </div>
   );
