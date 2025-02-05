@@ -1375,7 +1375,7 @@ const getRantingSummary = async (
     const params = {};
 
     if (cabang && cabang.trim() !== "") {
-      params.cabang = encodeURIComponent(cabang);
+      params.cabang = cabang;
     }
 
     if (unitKerja && unitKerja.trim() !== "") {
@@ -1392,8 +1392,6 @@ const getRantingSummary = async (
     if (Array.isArray(data)) {
       return {
         content: data.map((dataItem) => {
-          console.log("Data Item:", dataItem.unitKerja);
-
           return {
             cabang: dataItem.cabang,
             namaRanting: dataItem.namaRanting,
