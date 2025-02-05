@@ -2348,8 +2348,11 @@ const Page = () => {
                             <SelectItem value="TK_RA">TK/RA</SelectItem>
                             <SelectItem value="SD_MI">SD/MI</SelectItem>
                             <SelectItem value="SMP_MTS">SMP/MTS</SelectItem>
-                            <SelectItem value="SMA_SMK_MA">
-                              SMA/SMK/MA
+                            <SelectItem value="SMA_MA">
+                              SMA/MA
+                            </SelectItem>
+                            <SelectItem value="SMK">
+                              SMK
                             </SelectItem>
                             <SelectItem value="SEKOLAH_LUAR_BIASA">
                               SEKOLAH LUAR BIASA
