@@ -51,7 +51,7 @@ const DataAnggota = () => {
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [anggotaData, setAnggotaData] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
   const [totalPages, setTotalPages] = useState(0);
   const [fotoBase64, setFotoBase64] = useState("");
   const [setSelectedRowIndex] = useState(null);
@@ -63,7 +63,7 @@ const DataAnggota = () => {
 
   const fetchDataAnggota = async (
     page = 0,
-    size = 10,
+    size = 20,
     cabang = null,
     unitKerja = null,
     keyword = null,
@@ -376,7 +376,7 @@ const DataAnggota = () => {
             </style>
           </head>
           <body>
-            <div class="title">Data Anggota</div>
+            <div class="title">Data Anggota Cabang ${selectedCabang}</div>
             <div class="subtitle">Jumlah Anggota: ${
               filteredDataForPrint.length
             }</div>
@@ -384,12 +384,11 @@ const DataAnggota = () => {
               <thead>
                 <tr class="header-row">
                   <th>No</th>
+                  <th>Unit Kerja</th>
                   <th>Foto</th>
                   <th>Nama</th>
                   <th>Tanggal Lahir</th>
-                  <th>Unit Kerja</th>
                   <th>Keterangan</th>
-                  <th>Lokasi</th>
                 </tr>
               </thead>
               <tbody>
@@ -398,6 +397,10 @@ const DataAnggota = () => {
                     (item, index) => `
                       <tr>
                         <td>${index + 1}</td>
+                         <td>
+                          <div>${item.cabang},</div>
+                          <div>${item.unitKerja}</div>
+                        </td>
                         <td>${
                           item.foto
                             ? `<img src="data:image/png;base64,${item.foto}" alt="foto" width="50" height="50"/>`
@@ -416,10 +419,7 @@ const DataAnggota = () => {
                             item.prediksiPensiun
                           )}</div>
                         </td>
-                        <td>
-                          <div>${item.cabang},</div>
-                          <div>${item.unitKerja}</div>
-                        </td>
+                       
                         <td>
                           <div>${
                             item.statusKeanggotaan
@@ -433,10 +433,6 @@ const DataAnggota = () => {
       : "-"
   }
 </div>
-                        </td>
-                        <td>
-                          <div>${item.latitude ? item.latitude : "-"},</div>
-                          <div>${item.longitude ? item.longitude : "-"}</div>
                         </td>
                       </tr>
                     `
@@ -732,7 +728,7 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
             setFilterQuery("");
           }
         }}
-        disabled={isDisabled} // Input akan ter-disable jika role adalah ADMIN
+        disabled={isDisabled}
       />
 
       {showDropdown && !isDisabled && (
@@ -922,7 +918,7 @@ const DataTable = ({
   loading,
 }) => {
   const currentPageNumber = Number(currentPage) || 0;
-  const pageSizeNumber = Number(pageSize) || 10;
+  const pageSizeNumber = Number(pageSize) || 20;
   const [expandedRow, setExpandedRow] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
@@ -2242,7 +2238,7 @@ const DataTable = ({
                                 )}
 
                                 <Link
-                                  href={`https://wa.me/${item.nomorHp.replace(
+                                  href={`https://wa.me/${item.nomorHp?.replace(
                                     /^0/,
                                     "62"
                                   )}`}

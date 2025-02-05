@@ -43,7 +43,7 @@ const Page = () => {
   const [totalAnggota, setTotalAnggota] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState('');
+  const [role, setRole] = useState("");
   const [anggotaMasuk, setAnggotaMasuk] = useState(0);
   const [anggotaKeluar, setAnggotaKeluar] = useState(0);
   // const [currentPage, setCurrentPage] = useState(1);
@@ -64,7 +64,6 @@ const Page = () => {
   //   }
   //   return pages;
   // };
-  
 
   useEffect(() => {
     const today = new Date();
@@ -141,13 +140,13 @@ const Page = () => {
         selectedTahun,
         selectedCabang || null
       );
-  
+
       if (Array.isArray(data)) {
         // Filter data to exclude rows where cabang is 'KABUPATEN'
-        const filteredData = data.filter(item => item.cabang !== "KABUPATEN");
-  
+        const filteredData = data.filter((item) => item.cabang !== "KABUPATEN");
+
         setTableData(filteredData);
-  
+
         const totalMasuk = filteredData.reduce(
           (sum, item) => sum + (item.baru || 0),
           0
@@ -164,7 +163,7 @@ const Page = () => {
           (sum, item) => sum + (item.dataSekarang || 0),
           0
         );
-  
+
         setAnggotaMasuk(totalMasuk);
         setAnggotaKeluar(totalKeluar);
         setTotalAnggota(totalSekarang);
@@ -183,16 +182,15 @@ const Page = () => {
       setTotalAnggota(0);
     }
   };
-  
+
   useEffect(() => {
     fetchCalculateSanduka();
-  }, [selectedBulan, selectedTahun, selectedCabang]);  
+  }, [selectedBulan, selectedTahun, selectedCabang]);
 
-  useEffect(() => { }, [tableData]);
-  
+  useEffect(() => {}, [tableData]);
 
   const handleCabangClick = () => {
-    if (role !== 'ADMIN') {
+    if (role !== "ADMIN") {
       setShowDropdown(!showDropdown);
     }
     setSearchTerm("");
@@ -247,7 +245,6 @@ const Page = () => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
     setIsSidebarOpen(sidebarState);
   }, []);
-  
 
   const handlePrint = () => {
     const printWindow = window.open("", "", "width=800,height=600");
@@ -299,15 +296,14 @@ const Page = () => {
     }
 
     // Ambil role dan cabang dari sessionStorage
-    const storedRole = sessionStorage.getItem('role');
-    const storedCabang = sessionStorage.getItem('cabang');
+    const storedRole = sessionStorage.getItem("role");
+    const storedCabang = sessionStorage.getItem("cabang");
 
-    setRole(storedRole || '');
-    if (storedRole === 'ADMIN') {
-      setSelectedCabang(storedCabang || ''); // Set default cabang jika role ADMIN
+    setRole(storedRole || "");
+    if (storedRole === "ADMIN") {
+      setSelectedCabang(storedCabang || ""); // Set default cabang jika role ADMIN
     }
   }, [token, router]);
-  
 
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
@@ -329,19 +325,19 @@ const Page = () => {
   }, []);
 
   if (loading) {
-      return (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100vh",
-          }}
-        >
-          <ClipLoader color="#3498db" size={50} />
-        </div>
-      );
-    }
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <ClipLoader color="#3498db" size={50} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
@@ -350,8 +346,9 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="w-full p-4 container shadow-lg rounded-lg mt-5">
             <div className="rounded-md flex flex-col py-4">
@@ -418,9 +415,12 @@ const Page = () => {
                         type="text"
                         placeholder="Cabang terpilih"
                         value={selectedCabang}
-                        readOnly={role === 'ADMIN'}
-                        className={`p-2 border border-gray-300 rounded-md w-full ${role === 'ADMIN' ? 'bg-gray-100 cursor-not-allowed' : ''
-                          }`}
+                        readOnly={role === "ADMIN"}
+                        className={`p-2 border border-gray-300 rounded-md w-full ${
+                          role === "ADMIN"
+                            ? "bg-gray-100 cursor-not-allowed"
+                            : ""
+                        }`}
                         onClick={handleCabangClick}
                       />
                       {showDropdown && (
@@ -612,6 +612,61 @@ const Page = () => {
                           </td>
                         </tr>
                       )}
+
+                      {/* Baris total */}
+                      <tr className="font-bold">
+                        <td
+                          className="px-4 py-2 text-center font-bold"
+                          colSpan={2}
+                        >
+                          Total
+                        </td>
+                        <td className="border border-gray-300 p-2 text-xs text-center">
+                          {tableData.reduce(
+                            (acc, item) => acc + item.dataLalu,
+                            0
+                          )}
+                        </td>
+                        <td className="border border-gray-300 p-2 text-xs text-center">
+                          {tableData.reduce((acc, item) => acc + item.baru, 0)}
+                        </td>
+                        <td className="border border-gray-300 p-2 text-xs text-center">
+                          {tableData.reduce(
+                            (acc, item) => acc + item.pensiun,
+                            0
+                          )}
+                        </td>
+                        <td className="border border-gray-300 p-2 text-xs text-center">
+                          {tableData.reduce(
+                            (acc, item) => acc + item.meninggal,
+                            0
+                          )}
+                        </td>
+                        <td className="border border-gray-300 p-2 text-xs text-center">
+                          {tableData.reduce(
+                            (acc, item) => acc + item.keluarAnggota,
+                            0
+                          )}
+                        </td>
+                        <td className="border border-gray-300 p-2 text-xs text-center">
+                          {tableData.reduce(
+                            (acc, item) => acc + item.pindahCabangMasuk,
+                            0
+                          )}
+                        </td>
+                        <td className="border border-gray-300 p-2 text-xs text-center">
+                          {tableData.reduce(
+                            (acc, item) => acc + item.pindahCabangKeluar,
+                            0
+                          )}
+                        </td>
+                        <td className="border border-gray-300 p-2 text-xs text-center">
+                          {tableData.reduce(
+                            (acc, item) => acc + item.dataSekarang,
+                            0
+                          )}
+                        </td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
