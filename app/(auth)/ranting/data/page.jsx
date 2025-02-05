@@ -913,7 +913,10 @@ const Page = () => {
                               {index + 1 + currentPage * entries}
                             </td>
                             <td className="p-2 md:p-3 border text-center">
-                              {item.cabang}
+                              {index === 0 ||
+                              filteredData[index - 1].cabang !== item.cabang
+                                ? item.cabang
+                                : "-"}
                             </td>
                             <td className="p-2 md:p-3 border hidden md:table-cell">
                               {item.namaRanting || "-"}
