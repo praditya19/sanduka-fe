@@ -1386,15 +1386,15 @@ const getRantingSummary = async (
     return {
       content: Array.isArray(response.data.content)
         ? response.data.content.map((data) => ({
-          cabang: data.cabang,
-          namaRanting: data.namaRanting,
-          unitKerja: data.unitKerja,
-          namaAnggota: processNamaAnggota(data.namaAnggota),
-          anggotaUnitKerja: data.anggotaUnitKerja,
-          jumlahAnggotaRanting: data.jumlahAnggotaRanting,
-          totalUnitKerja: data.totalUnitKerja,
-          totalAnggota: data.totalAnggotaSemuaRanting,
-        }))
+            cabang: data.cabang,
+            namaRanting: data.namaRanting,
+            unitKerja: data.unitKerja,
+            namaAnggota: processNamaAnggota(data.namaAnggota),
+            anggotaUnitKerja: data.jumlahAnggota,
+            jumlahAnggotaRanting: data.jumlahUnitKerja,
+            totalUnitKerja: data.totalUnitKerja,
+            totalAnggota: data.totalAnggota,
+          }))
         : [],
       totalElements: response.data.totalElements,
       totalPages: response.data.totalPages,
@@ -1700,7 +1700,6 @@ const getCekHistoryData = async (
   }
 };
 
-
 const createSidebarGallery = async (data) => {
   try {
     const formData = new FormData();
@@ -1708,19 +1707,16 @@ const createSidebarGallery = async (data) => {
     if (data.photo) {
       formData.append("photo", data.photo);
     }
-
     const response = await axiosClient.post("/api/sidebar-gallery", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
-
     return response.data;
   } catch (error) {
     throw error;
   }
 };
-
 const updateSidebarGallery = async (id, data) => {
   try {
     const formData = new FormData();
@@ -1728,19 +1724,20 @@ const updateSidebarGallery = async (id, data) => {
     if (data.photo) {
       formData.append("photo", data.photo);
     }
-
-    const response = await axiosClient.put(`/api/sidebar-gallery/${id}`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-
+    const response = await axiosClient.put(
+      `/api/sidebar-gallery/${id}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     throw error;
   }
 };
-
 const getAllSidebarGallery = async () => {
   try {
     const response = await axiosClient.get("/api/sidebar-gallery");
@@ -1749,7 +1746,6 @@ const getAllSidebarGallery = async () => {
     throw error;
   }
 };
-
 const getSidebarGalleryById = async (id) => {
   try {
     const response = await axiosClient.get(`/api/sidebar-gallery/${id}`);
@@ -1758,16 +1754,16 @@ const getSidebarGalleryById = async (id) => {
     throw error;
   }
 };
-
 const getSidebarGalleryByCategory = async (category) => {
   try {
-    const response = await axiosClient.get(`/api/sidebar-gallery/category/${category}`);
+    const response = await axiosClient.get(
+      `/api/sidebar-gallery/category/${category}`
+    );
     return response.data;
   } catch (error) {
     throw error;
   }
 };
-
 const deleteSidebarGallery = async (id) => {
   try {
     const response = await axiosClient.delete(`/api/sidebar-gallery/${id}`);
@@ -1777,6 +1773,25 @@ const deleteSidebarGallery = async (id) => {
   }
 };
 
+const createNamaRanting = async (namaRanting) => {
+  try {
+    const response = await axiosClient.post("/api/nama-ranting", namaRanting);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error creating nama ranting:",
+      error.response?.data || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Gagal membuat nama ranting"
+    );
+  }
+};
+
+const getNamaRantingCabang = () => axiosClient.get("/api/nama-ranting");
+const getNamaRantingByCabang = (cabang) => {
+  return axiosClient.get(`/api/nama-ranting/cabang/${cabang}`);
+};
 // Export all functions
 export default {
   registerUser,
@@ -1902,4 +1917,7 @@ export default {
   getSidebarGalleryById,
   getSidebarGalleryByCategory,
   deleteSidebarGallery,
+  createNamaRanting,
+  getNamaRantingCabang,
+  getNamaRantingByCabang,
 };
