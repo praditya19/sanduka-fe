@@ -338,6 +338,16 @@ const Page = () => {
             .header-row th {
               background-color: #f2f2f2;
             }
+            th:nth-child(1), td:nth-child(1) { width: 5%; }  /* No */
+            th:nth-child(2), td:nth-child(2) { width: 10%; } /* Cabang */
+            th:nth-child(3), td:nth-child(3) { width: 10%; } /* Nama Ranting */
+            th:nth-child(4), td:nth-child(4) { width: 10%; } /* Unit Kerja */
+            th:nth-child(5), td:nth-child(5) { width: 35%; text-align: left; } /* Nama Anggota */
+            th:nth-child(6), td:nth-child(6) { width: 10%; } /* Anggota Unit Kerja */
+            th:nth-child(7), td:nth-child(7) { width: 10%; } /* Jumlah Anggota Ranting */
+            th:nth-child(8), td:nth-child(8) { width: 10%; } /* Total Unit Kerja */
+            th:nth-child(9), td:nth-child(9) { width: 10%; } /* Total Anggota */
+
             @media print {
               body {
                 width: auto;
@@ -476,6 +486,139 @@ const Page = () => {
     handleProcessingStatus(false);
   };
 
+  const handleRekapRanting = () => {
+    handleProcessingStatus(true);
+    const totalAnggotaUnitKerja = filteredData.reduce(
+      (total, item) => total + (item.anggotaUnitKerja || 0),
+      0
+    );
+    const totalUnitKerja = filteredData.reduce(
+      (total, item) => total + (item.totalUnitKerja || 0),
+      0
+    );
+    const totalJumlahAnggotaRanting = filteredData.reduce(
+      (total, item) => total + (item.jumlahAnggotaRanting || 0),
+      0
+    );
+    const totalTotalAnggota = filteredData.reduce(
+      (total, item) => total + (item.totalAnggota || 0),
+      0
+    );
+
+    const filteredDataForPrint = filteredData;
+    const printWindow = window.open("", "_blank");
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Rekap Ranting</title>
+          <style>
+            @page {
+              size: auto;
+              margin: 10mm;
+            }
+            body {
+              font-family: Arial, sans-serif;
+              display: table;
+              width: 100%;
+              margin: 0;
+            }
+            .title {
+              text-align: center;
+              font-size: 22px;
+              font-weight: bold;
+              color: #00796b;
+              margin-bottom: 10px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 10px;
+              font-size: 12px;
+              table-layout: fixed;
+            }
+            th, td {
+              padding: 5px;
+              border: 1px solid #ccc;
+              word-wrap: break-word;
+              text-align: center;
+            }
+            .header-row th {
+              background-color: #f2f2f2;
+            }
+            th:nth-child(1), td:nth-child(1)  { width: 5%; } /* No */
+            th:nth-child(2), td:nth-child(2) { width: 15%; }/* Cabang */
+            th:nth-child(3), td:nth-child(3)  { width: 15%; }/* Nama Ranting */
+            th:nth-child(4), td:nth-child(4)  { width: 15%; }/* Unit Kerja */
+            th:nth-child(6), td:nth-child(6)  { width: 10%; }/* Anggota Unit Kerja */
+            th:nth-child(7), td:nth-child(7)  { width: 10%; }/* Jumlah Anggota Ranting */
+            th:nth-child(8), td:nth-child(8)  { width: 10%; }/* Total Unit Kerja */
+            th:nth-child(9), td:nth-child(9)  { width: 10%; }/* Total Anggota */
+
+            @media print {
+              body {
+                width: auto;
+                overflow: visible;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="title">Rekap Ranting</div>
+          <table>
+            <thead>
+              <tr class="header-row">
+                <th>No</th>
+                <th>Cabang</th>
+                <th>Nama Ranting</th>
+                <th>Unit Kerja</th>
+                <th>Anggota Unit Kerja</th>
+                <th>Jumlah Anggota Ranting</th>
+                <th>Total Unit Kerja</th>
+                <th>Total Anggota</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredDataForPrint
+                .map(
+                  (item, index) => `
+                    <tr>
+                      <td>${index + 1}</td>
+                      <td>${item.cabang || "-"}</td>
+                      <td>${item.namaRanting || "-"}</td>
+                      <td>${item.unitKerja || "-"}</td>
+                      <td>${item.anggotaUnitKerja || 0}</td>
+                      <td>${item.jumlahAnggotaRanting || 0}</td>
+                      <td>${item.totalUnitKerja || 0}</td>
+                      <td>${item.totalAnggota || 0}</td>
+                    </tr>
+                  `
+                )
+                .join("")}
+              <!-- Baris Total -->
+              <tr style="font-weight: bold; background-color: #f2f2f2;">
+                <td>Total</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>${totalAnggotaUnitKerja}</td>
+                <td>${totalJumlahAnggotaRanting}</td>
+                <td>${totalUnitKerja}</td>
+                <td>${totalTotalAnggota}</td>
+              </tr>
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+    handleProcessingStatus(false);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
       <Toaster />
@@ -518,6 +661,7 @@ const Page = () => {
                 </Label>
                 <div className="flex flex-wrap items-start mt-5 justify-between space-y-4 md:space-y-0">
                   <div className="flex flex-wrap items-center space-x-2 w-full md:w-auto">
+                    {/* Nama Cabang */}
                     <div
                       ref={dropdownRef}
                       className="relative flex flex-col w-full md:w-48"
@@ -577,61 +721,7 @@ const Page = () => {
                       )}
                     </div>
 
-                    <div
-                      ref={unitKerjaRef}
-                      className="relative w-full md:w-48 mt-4 sm:mt-0"
-                    >
-                      <Input
-                        type="text"
-                        placeholder="Pilih Unit Kerja"
-                        value={selectedUnitKerja}
-                        readOnly
-                        onFocus={() => {
-                          setShowDropdownUnitKerja(true);
-                          setFilteredUnitKerjaOptions(
-                            selectedCabang === "Pilih Cabang"
-                              ? allUnitKerja
-                              : allUnitKerja.filter(
-                                  (uk) => uk.cabang === selectedCabang
-                                )
-                          );
-                        }}
-                        className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        disabled={selectedCabang === "Pilih Cabang"}
-                      />
-
-                      {showDropdownUnitKerja && (
-                        <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
-                          <div className="p-1">
-                            <Input
-                              type="text"
-                              value={searchUnitKerja}
-                              onChange={handleUnitKerjaChange}
-                              placeholder="Cari Unit Kerja..."
-                              className="w-full border rounded py-2 px-3 mb-2"
-                            />
-                          </div>
-                          <ul className="max-h-44 overflow-y-auto -mt-3">
-                            <li
-                              className="p-2 cursor-pointer hover:bg-gray-100"
-                              onClick={() => handleUnitKerjaSelect({})}
-                            >
-                              Semua Unit Kerja
-                            </li>
-                            {filteredUnitKerjaOptions.map((item) => (
-                              <li
-                                key={item.id}
-                                className="p-2 cursor-pointer hover:bg-gray-100"
-                                onClick={() => handleUnitKerjaSelect(item)}
-                              >
-                                {item.unitKerja}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-
+                    {/* Nama Ranting */}
                     <div className="relative flex flex-col w-full md:w-48">
                       <Input
                         type="text"
@@ -639,10 +729,12 @@ const Page = () => {
                         value={selectedRanting}
                         readOnly
                         onFocus={() => setShowDropdownRanting(true)}
-                        className="border rounded-lg p-2 w-full bg-white shadow-sm"
+                        className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                          !selectedCabang ? "cursor-not-allowed opacity-50" : ""
+                        }`}
                       />
 
-                      {showDropdownRanting && (
+                      {showDropdownRanting && selectedCabang && (
                         <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full">
                           <div className="p-2">
                             <Input
@@ -703,6 +795,72 @@ const Page = () => {
                         </div>
                       )}
                     </div>
+
+                    {/* Nama Unit Kerja */}
+                    <div
+                      ref={unitKerjaRef}
+                      className="relative w-full md:w-48 mt-4 sm:mt-0"
+                    >
+                      <Input
+                        type="text"
+                        placeholder="Pilih Unit Kerja"
+                        value={selectedUnitKerja}
+                        readOnly
+                        onFocus={() => {
+                          if (
+                            selectedRanting &&
+                            selectedCabang !== "Pilih Cabang"
+                          ) {
+                            setShowDropdownUnitKerja(true);
+                            setFilteredUnitKerjaOptions(
+                              selectedCabang === "Pilih Cabang"
+                                ? allUnitKerja
+                                : allUnitKerja.filter(
+                                    (uk) => uk.cabang === selectedCabang
+                                  )
+                            );
+                          }
+                          setShowDropdownUnitKerja(true);
+                        }}
+                        className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                          !selectedRanting
+                            ? "cursor-not-allowed opacity-50"
+                            : ""
+                        }`}
+                        disabled={!selectedRanting}
+                      />
+
+                      {showDropdownUnitKerja && (
+                        <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
+                          <div className="p-1">
+                            <Input
+                              type="text"
+                              value={searchUnitKerja}
+                              onChange={handleUnitKerjaChange}
+                              placeholder="Cari Unit Kerja..."
+                              className="w-full border rounded py-2 px-3 mb-2"
+                            />
+                          </div>
+                          <ul className="max-h-44 overflow-y-auto -mt-3">
+                            <li
+                              className="p-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() => handleUnitKerjaSelect({})}
+                            >
+                              Semua Unit Kerja
+                            </li>
+                            {filteredUnitKerjaOptions.map((item) => (
+                              <li
+                                key={item.id}
+                                className="p-2 cursor-pointer hover:bg-gray-100"
+                                onClick={() => handleUnitKerjaSelect(item)}
+                              >
+                                {item.unitKerja}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex flex-wrap justify-between w-full md:w-auto space-y-4 md:space-y-0 md:space-x-4">
@@ -732,13 +890,20 @@ const Page = () => {
                     >
                       Download
                     </Button>
+                    <Button
+                      className="px-8 mt-4 md:mt-0 bg-indigo-600 hover:bg-indigo-700 text-white"
+                      onClick={handleRekapRanting}
+                    >
+                      Rekap Ranting
+                    </Button>
                   </div>
                 </div>
               </div>
+
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead>
-                    <tr className="bg-gray-50">
+                    <tr className="bg-sky-100">
                       <th className="p-2 md:p-3 border text-left">No</th>
                       <th className="p-2 md:p-3 border text-left">Cabang</th>
                       <th className="p-2 md:p-3 border hidden md:table-cell">

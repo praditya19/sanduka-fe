@@ -1062,7 +1062,7 @@ const Page = () => {
                           Tambah Nama Ranting
                         </h2>
 
-                        {/* Nama Cabang */}
+                        {/* Nama Cabang dan Nama Ranting*/}
                         <div className="flex-grow">
                           <label className="block text-gray-700 text-sm font-bold mb-1">
                             Nama Cabang
