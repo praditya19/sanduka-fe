@@ -52,28 +52,18 @@ const Page = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchRantingData = async (
-    page = currentPage,
-    size = entries,
     cabang = "",
     unitKerja = "",
     namaRanting = ""
   ) => {
     try {
       const response = await GlobalApi.getRantingSummary(
-        page,
-        size,
         cabang,
         unitKerja,
         namaRanting
       );
 
-      const filteredData = response.content.filter((item) =>
-        item.namaAnggota.toLowerCase().includes(namaRanting.toLowerCase())
-      );
-
-      setRantingData(filteredData);
-      setTotalEntries(response.totalElements);
-      setTotalPages(response.totalPages);
+      setRantingData(response.content || []);
     } catch (error) {
       console.error("Error fetching ranting data:", error);
     }
@@ -86,8 +76,6 @@ const Page = () => {
   ) => {
     try {
       const response = await GlobalApi.getRantingSummary(
-        0,
-        500,
         cabang,
         unitKerja,
         namaRanting
@@ -156,9 +144,9 @@ const Page = () => {
       const cabangFromSession = sessionStorage.getItem("cabang") || "";
       if (role === "ADMIN" && cabangFromSession) {
         setSelectedCabang(cabangFromSession);
-        fetchRantingData(currentPage, entries, cabangFromSession);
+        fetchRantingData(cabangFromSession);
       } else {
-        fetchRantingData(currentPage, entries);
+        fetchRantingData();
       }
 
       const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -200,7 +188,6 @@ const Page = () => {
   const handlePageChange = (newPage) => {
     if (newPage >= 0 && newPage < totalPages) {
       setCurrentPage(newPage);
-      fetchRantingData(newPage, entries);
     }
   };
 
@@ -227,7 +214,7 @@ const Page = () => {
     setIsUnitKerjaDisabled(false);
     setShowDropdownCabang(false);
 
-    fetchRantingData(0, entries, cabang.kecamatan, "", "");
+    fetchRantingData(cabang.kecamatan, "", "");
     fetchRantingDataCetak(cabang.kecamatan);
   };
 
@@ -236,7 +223,7 @@ const Page = () => {
     setShowDropdownUnitKerja(false);
     setSearchUnitKerja("");
 
-    fetchRantingData(0, entries, "", selectedItem.unitKerja, "");
+    fetchRantingData("", selectedItem.unitKerja, "");
     fetchRantingDataCetak(selectedItem.unitKerja);
   };
 
@@ -296,10 +283,8 @@ const Page = () => {
       (total, item) => total + (item.totalAnggota || 0),
       0
     );
-
     const filteredDataForPrint = filteredData;
     const printWindow = window.open("", "_blank");
-
     printWindow.document.write(`
       <html>
         <head>
@@ -347,7 +332,6 @@ const Page = () => {
             th:nth-child(7), td:nth-child(7) { width: 10%; } /* Jumlah Anggota Ranting */
             th:nth-child(8), td:nth-child(8) { width: 10%; } /* Total Unit Kerja */
             th:nth-child(9), td:nth-child(9) { width: 10%; } /* Total Anggota */
-
             @media print {
               body {
                 width: auto;
@@ -416,7 +400,6 @@ const Page = () => {
         </body>
       </html>
     `);
-
     printWindow.document.close();
     printWindow.focus();
     printWindow.print();
@@ -441,7 +424,6 @@ const Page = () => {
       "Jumlah Anggota Ranting": item.jumlahAnggotaRanting || 0,
       "Total Anggota": item.totalAnggota || 0,
     }));
-
     const totalAnggotaUnitKerja = filteredData.reduce(
       (total, item) => total + (item.anggotaUnitKerja || 0),
       0
@@ -458,7 +440,6 @@ const Page = () => {
       (total, item) => total + (item.totalAnggota || 0),
       0
     );
-
     data.push({
       No: "Total",
       "Nama Ranting": "-",
@@ -469,7 +450,6 @@ const Page = () => {
       "Jumlah Anggota Ranting": totalJumlahAnggotaRanting,
       "Total Anggota": totalTotalAnggota,
     });
-
     const ws = XLSX.utils.json_to_sheet(data);
     const range = XLSX.utils.decode_range(ws["!ref"]);
     for (let row = range.s.r + 1; row <= range.e.r; row++) {
@@ -478,10 +458,8 @@ const Page = () => {
         ws[cellRef].s = { alignment: { wrapText: true } };
       }
     }
-
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Data Ranting");
-
     XLSX.writeFile(wb, "Data_Ranting.xlsx");
     handleProcessingStatus(false);
   };
@@ -504,10 +482,8 @@ const Page = () => {
       (total, item) => total + (item.totalAnggota || 0),
       0
     );
-
     const filteredDataForPrint = filteredData;
     const printWindow = window.open("", "_blank");
-
     printWindow.document.write(`
       <html>
         <head>
@@ -554,7 +530,6 @@ const Page = () => {
             th:nth-child(7), td:nth-child(7)  { width: 10%; }/* Jumlah Anggota Ranting */
             th:nth-child(8), td:nth-child(8)  { width: 10%; }/* Total Unit Kerja */
             th:nth-child(9), td:nth-child(9)  { width: 10%; }/* Total Anggota */
-
             @media print {
               body {
                 width: auto;
@@ -611,7 +586,6 @@ const Page = () => {
         </body>
       </html>
     `);
-
     printWindow.document.close();
     printWindow.focus();
     printWindow.print();
@@ -863,6 +837,7 @@ const Page = () => {
                     </div>
                   </div>
 
+                  {/* Filter */}
                   <div className="flex flex-wrap justify-between w-full md:w-auto space-y-4 md:space-y-0 md:space-x-4">
                     <div className="flex items-center w-full md:w-auto space-x-4">
                       <label htmlFor="entries" className="mr-2">
@@ -927,19 +902,13 @@ const Page = () => {
                       <th className="p-2 md:p-3 border hidden md:table-cell">
                         Total Anggota
                       </th>
-                      {isMobile && (
-                        <th className="p-2 md:p-3 border md:table-cell">
-                          Aksi
-                        </th>
-                      )}
                     </tr>
                   </thead>
-
-                  {filteredData.length > 0 ? (
-                    <>
-                      {filteredData.map((item, index) => (
-                        <React.Fragment key={index}>
-                          <tr className="bg-gray-100">
+                  <tbody>
+                    {filteredData.length > 0 ? (
+                      <>
+                        {filteredData.map((item, index) => (
+                          <tr className="bg-gray-100" key={index}>
                             <td className="p-2 md:p-3 border text-center">
                               {index + 1 + currentPage * entries}
                             </td>
@@ -976,115 +945,50 @@ const Page = () => {
                               {item.totalAnggota || "-"}
                             </td>
                           </tr>
-                        </React.Fragment>
-                      ))}
-
-                      <tr className="bg-gray-200 font-bold">
-                        <td colSpan="4" className="p-2 md:p-3 text-center">
-                          Total
-                        </td>
-                        <td className="p-2 md:p-3 text-center"></td>{" "}
-                        <td className="p-2 md:p-3 text-center">
-                          {filteredData.reduce(
-                            (total, item) =>
-                              total + (item.anggotaUnitKerja || 0),
-                            0
-                          )}
-                        </td>
-                        <td className="p-2 md:p-3 text-center">
-                          {filteredData.reduce(
-                            (total, item) =>
-                              total + (item.jumlahAnggotaRanting || 0),
-                            0
-                          )}
-                        </td>
-                        <td className="p-2 md:p-3 text-center">
-                          {filteredData.reduce(
-                            (total, item) => total + (item.totalUnitKerja || 0),
-                            0
-                          )}
-                        </td>
-                        <td className="p-2 md:p-3 text-center">
-                          {filteredData.reduce(
-                            (total, item) => total + (item.totalAnggota || 0),
-                            0
-                          )}
+                        ))}
+                        <tr className="bg-gray-200 font-bold">
+                          <td colSpan="4" className="p-2 md:p-3 text-center">
+                            Total
+                          </td>
+                          <td className="p-2 md:p-3 text-center"></td>
+                          <td className="p-2 md:p-3 text-center">
+                            {filteredData.reduce(
+                              (total, item) =>
+                                total + (item.anggotaUnitKerja || 0),
+                              0
+                            )}
+                          </td>
+                          <td className="p-2 md:p-3 text-center">
+                            {filteredData.reduce(
+                              (total, item) =>
+                                total + (item.jumlahAnggotaRanting || 0),
+                              0
+                            )}
+                          </td>
+                          <td className="p-2 md:p-3 text-center">
+                            {filteredData.reduce(
+                              (total, item) =>
+                                total + (item.totalUnitKerja || 0),
+                              0
+                            )}
+                          </td>
+                          <td className="p-2 md:p-3 text-center">
+                            {filteredData.reduce(
+                              (total, item) => total + (item.totalAnggota || 0),
+                              0
+                            )}
+                          </td>
+                        </tr>
+                      </>
+                    ) : (
+                      <tr>
+                        <td colSpan="9" className="p-4 text-center">
+                          Tidak Ada Data
                         </td>
                       </tr>
-                    </>
-                  ) : (
-                    <tr>
-                      <td colSpan="9" className="p-4 text-center">
-                        Tidak Ada Data
-                      </td>
-                    </tr>
-                  )}
+                    )}
+                  </tbody>
                 </table>
-              </div>
-
-              <div className="flex flex-col md:flex-row justify-between text-sm mt-4 items-center space-y-2 md:space-y-0 md:space-x-2">
-                <span className="text-center md:text-left">
-                  Showing {currentPage * entries + 1} to{" "}
-                  {Math.min((currentPage + 1) * entries, totalEntries)} of{" "}
-                  {totalEntries} entries
-                </span>
-
-                <div className="flex flex-wrap justify-center md:justify-end space-x-2">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    className={`px-3 py-1 border text-sm rounded ${
-                      currentPage === 0 ? "bg-gray-300" : "bg-white"
-                    }`}
-                    disabled={currentPage === 0}
-                  >
-                    Previous
-                  </button>
-
-                  {Array.from({ length: totalPages }).map((_, index) => {
-                    if (
-                      index < 3 ||
-                      index > totalPages - 4 ||
-                      (index >= currentPage - 1 && index <= currentPage + 1)
-                    ) {
-                      return (
-                        <button
-                          key={index}
-                          onClick={() => handlePageChange(index)}
-                          className={`px-3 py-1 border text-sm rounded ${
-                            currentPage === index
-                              ? "bg-blue-500 text-white"
-                              : "bg-white"
-                          }`}
-                        >
-                          {index + 1}
-                        </button>
-                      );
-                    }
-                    if (index === 3 || index === totalPages - 4) {
-                      return (
-                        <span
-                          key={index}
-                          className="px-3 py-1 border text-sm rounded text-gray-500"
-                        >
-                          ...
-                        </span>
-                      );
-                    }
-                    return null;
-                  })}
-
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    className={`px-3 py-1 border text-sm rounded ${
-                      currentPage === totalPages - 1
-                        ? "bg-gray-300"
-                        : "bg-white"
-                    }`}
-                    disabled={currentPage === totalPages - 1}
-                  >
-                    Next
-                  </button>
-                </div>
               </div>
             </main>
           </div>

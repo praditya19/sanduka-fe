@@ -1367,42 +1367,48 @@ const deleteFiles = async (id) => {
 };
 
 const getRantingSummary = async (
-  page = 0,
-  size = 10,
   cabang = "",
   unitKerja = "",
   namaRanting = ""
 ) => {
   try {
-    const params = {
-      page,
-      size,
-      ...(cabang && { cabang: encodeURIComponent(cabang) }),
-      ...(unitKerja && { unitKerja: unitKerja }),
-      ...(namaRanting && { namaRanting: encodeURIComponent(namaRanting) }),
-    };
+    const params = {};
+
+    if (cabang && cabang.trim() !== "") {
+      params.cabang = encodeURIComponent(cabang);
+    }
+
+    if (unitKerja && unitKerja.trim() !== "") {
+      params.unitKerja = unitKerja;
+    }
+
+    if (typeof namaRanting === "string" && namaRanting.trim() !== "") {
+      params.namaRanting = encodeURIComponent(namaRanting);
+    }
 
     const response = await axiosClient.get("/api/ranting", { params });
-    return {
-      content: Array.isArray(response.data.content)
-        ? response.data.content.map((data) => ({
-            cabang: data.cabang,
-            namaRanting: data.namaRanting,
-            unitKerja: data.unitKerja,
-            namaAnggota: processNamaAnggota(data.namaAnggota),
-            anggotaUnitKerja: data.jumlahAnggota,
-            jumlahAnggotaRanting: data.jumlahUnitKerja,
-            totalUnitKerja: data.totalUnitKerja,
-            totalAnggota: data.totalAnggota,
-          }))
-        : [],
-      totalElements: response.data.totalElements,
-      totalPages: response.data.totalPages,
-      number: response.data.number,
-      size: response.data.size,
-      first: response.data.first,
-      last: response.data.last,
-    };
+    const data = response.data;
+
+    if (Array.isArray(data)) {
+      return {
+        content: data.map((dataItem) => {
+          console.log("Data Item:", dataItem.unitKerja);
+
+          return {
+            cabang: dataItem.cabang,
+            namaRanting: dataItem.namaRanting,
+            unitKerja: dataItem.unitKerja,
+            namaAnggota: processNamaAnggota(dataItem.namaAnggota),
+            anggotaUnitKerja: dataItem.jumlahAnggota,
+            jumlahAnggotaRanting: dataItem.jumlahUnitKerja,
+            totalUnitKerja: dataItem.totalUnitKerja,
+            totalAnggota: dataItem.totalAnggota,
+          };
+        }),
+      };
+    }
+
+    return { content: [] };
   } catch (error) {
     console.error("Error fetching ranting summary:", error);
     throw error;
@@ -1468,16 +1474,9 @@ const createRanting = async (rantingData) => {
   }
 };
 
-const getGroupedNamaRantingWithCabang = async (page = 0, size = 10) => {
+const getGroupedNamaRantingWithCabang = async () => {
   try {
-    const params = {
-      page,
-      size,
-    };
-    const response = await axiosClient.get(
-      "/api/ranting/grouped-nama-ranting",
-      { params }
-    );
+    const response = await axiosClient.get("/api/ranting/grouped-nama-ranting");
     return response.data;
   } catch (error) {
     console.error("Error fetching grouped ranting:", error);

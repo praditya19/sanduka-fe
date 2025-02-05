@@ -317,15 +317,10 @@ const Page = () => {
     }
   };
 
-  const fetchData = async (page = currentPage, size = entries) => {
+  const fetchData = async () => {
     try {
-      const response = await GlobalApi.getGroupedNamaRantingWithCabang(
-        page,
-        size
-      );
-      setNamaRanting(response.content);
-      setTotalEntries(response.totalElements);
-      setTotalPages(response.totalPages);
+      const response = await GlobalApi.getGroupedNamaRantingWithCabang();
+      setNamaRanting(response);
     } catch (error) {
       console.error("Error fetching ranting data:", error);
     }
@@ -545,9 +540,6 @@ const Page = () => {
       (selectedRanting ? namaRanting.includes(selectedRanting) : true)
     );
   });
-
-  const startIndex = currentPage * entries;
-  const selectedData = filteredData?.slice(startIndex, startIndex + entries);
 
   const handleEntriesChange = (e) => {
     setEntries(parseInt(e.target.value));
@@ -1179,51 +1171,42 @@ const Page = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredData.length > 0 ? (
-                        filteredData.map((item, index) => {
-                          const showTotalAnggota =
-                            index === 0 ||
-                            item.cabang !== filteredData[index - 1].cabang;
-
-                          return (
-                            <React.Fragment key={item.id}>
-                              <tr className="bg-gray-100">
-                                <td className="p-2 md:p-3 border">
-                                  {index + 1 + currentPage * entries}
-                                </td>
-                                <td className="p-2 md:p-3 border hidden md:table-cell">
-                                  {item.cabangList}
-                                </td>
-                                <td className="p-2 md:p-3 border">
-                                  {item.namaRanting}
-                                </td>
-                                <td className="p-2 md:p-3 border">
-                                  {item.unitKerja.split(", ").map((uk, i) => (
-                                    <div key={i}>
-                                      {i + 1}. {uk}
-                                    </div>
-                                  ))}
-                                </td>
-                                <td className="p-2 border text-center">
-                                  <div className="flex space-x-2 justify-center">
-                                    <>
-                                      <Button
-                                        className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
-                                        onClick={() =>
-                                          handleDeleteAdminClick(
-                                            item.namaRanting
-                                          )
-                                        }
-                                      >
-                                        <FontAwesomeIcon icon={faTrash} />
-                                      </Button>
-                                    </>
+                      {Array.isArray(filteredData) &&
+                      filteredData.length > 0 ? (
+                        filteredData.map((item, index) => (
+                          <React.Fragment key={item.id}>
+                            <tr className="bg-gray-100">
+                              <td className="p-2 md:p-3 border">
+                                {index + 1 + currentPage * entries}
+                              </td>
+                              <td className="p-2 md:p-3 border hidden md:table-cell">
+                                {item.cabangList}
+                              </td>
+                              <td className="p-2 md:p-3 border">
+                                {item.namaRanting}
+                              </td>
+                              <td className="p-2 md:p-3 border">
+                                {item.unitKerja?.split(", ").map((uk, i) => (
+                                  <div key={i}>
+                                    {i + 1}. {uk}
                                   </div>
-                                </td>
-                              </tr>
-                            </React.Fragment>
-                          );
-                        })
+                                ))}
+                              </td>
+                              <td className="p-2 border text-center">
+                                <div className="flex space-x-2 justify-center">
+                                  <Button
+                                    className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
+                                    onClick={() =>
+                                      handleDeleteAdminClick(item.namaRanting)
+                                    }
+                                  >
+                                    <FontAwesomeIcon icon={faTrash} />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          </React.Fragment>
+                        ))
                       ) : (
                         <tr>
                           <td colSpan="7" className="p-4 text-center">
@@ -1233,71 +1216,6 @@ const Page = () => {
                       )}
                     </tbody>
                   </table>
-                </div>
-
-                <div className="flex flex-col md:flex-row justify-between text-sm mt-4 items-center space-y-2 md:space-y-0 md:space-x-2">
-                  <span className="text-center md:text-left">
-                    Showing {currentPage * entries + 1} to{" "}
-                    {Math.min((currentPage + 1) * entries, totalEntries)} of{" "}
-                    {totalEntries} entries
-                  </span>
-
-                  <div className="flex flex-wrap justify-center md:justify-end space-x-2">
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      className={`px-3 py-1 border text-sm rounded ${
-                        currentPage === 0 ? "bg-gray-300" : "bg-white"
-                      }`}
-                      disabled={currentPage === 0}
-                    >
-                      Previous
-                    </button>
-
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      if (
-                        index < 3 ||
-                        index > totalPages - 4 ||
-                        (index >= currentPage - 1 && index <= currentPage + 1)
-                      ) {
-                        return (
-                          <button
-                            key={index}
-                            onClick={() => handlePageChange(index)}
-                            className={`px-3 py-1 border text-sm rounded ${
-                              currentPage === index
-                                ? "bg-blue-500 text-white"
-                                : "bg-white"
-                            }`}
-                          >
-                            {index + 1}
-                          </button>
-                        );
-                      }
-                      if (index === 3 || index === totalPages - 4) {
-                        return (
-                          <span
-                            key={index}
-                            className="px-3 py-1 border text-sm rounded text-gray-500"
-                          >
-                            ...
-                          </span>
-                        );
-                      }
-                      return null;
-                    })}
-
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      className={`px-3 py-1 border text-sm rounded ${
-                        currentPage === totalPages - 1
-                          ? "bg-gray-300"
-                          : "bg-white"
-                      }`}
-                      disabled={currentPage === totalPages - 1}
-                    >
-                      Next
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
