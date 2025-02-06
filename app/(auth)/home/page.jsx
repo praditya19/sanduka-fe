@@ -69,6 +69,7 @@ export default function IconGrid() {
   const [jumlahSantunan, setJumlahSantunan] = useState(0);
   const [formattedAmount, setFormattedAmount] = useState("");
   const [fotoBase64, setFotoBase64] = useState(null);
+  const [fotoMeninggal, setFotoMeninggal] = useState([]);
   const profileImageUrl = "/profile.png";
   const icons = [
     { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
@@ -174,15 +175,13 @@ export default function IconGrid() {
   const sortByDate = (data) => {
     return [...data].sort((a, b) => {
       try {
-        // Check if waktuMeninggalTerlapor exists and is an array
         if (
           !Array.isArray(a.waktuMeninggalTerlapor) ||
           !Array.isArray(b.waktuMeninggalTerlapor)
         ) {
-          return 0; // Keep original order if data is invalid
+          return 0;
         }
 
-        // Convert array date format to Date object for comparison
         const dateA = new Date(
           a.waktuMeninggalTerlapor[0],
           a.waktuMeninggalTerlapor[1] - 1,
@@ -195,37 +194,26 @@ export default function IconGrid() {
           b.waktuMeninggalTerlapor[2]
         );
 
-        // Check if dates are valid
         if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
-          return 0; // Keep original order if dates are invalid
+          return 0;
         }
 
-        return dateB - dateA; // Sort descending (newest first)
+        return dateB - dateA;
       } catch (error) {
         console.error("Error sorting dates:", error);
-        return 0; // Keep original order if there's an error
+        return 0;
       }
     });
   };
 
-  // Dalam komponen, sebelum melakukan mapping:
   const sortedData = useMemo(() => {
     try {
       return sortByDate(anggotaMeninggal);
     } catch (error) {
       console.error("Error in sorting:", error);
-      return anggotaMeninggal; // Return unsorted data if sorting fails
+      return anggotaMeninggal;
     }
   }, [anggotaMeninggal]);
-
-  // if (role === "SUPER ADMIN") {
-  //   icons.push({
-  //     icon: faUserGraduate,
-  //     label: "Upload Galeri",
-  //     href: "/galeri",
-  //     color: "text-teal-500",
-  //   });
-  // }
 
   useEffect(() => {
     if (!token) {
@@ -239,19 +227,17 @@ export default function IconGrid() {
         setJumlahSantunan(data[0].jumlah);
         setFormattedAmount(data[0].totalUangSantunan);
 
-        // Setelah setTotalSantunan dipanggil, format totalSantunan menjadi IDR
         const formatted = new Intl.NumberFormat("id-ID", {
           style: "currency",
           currency: "IDR",
         }).format(data[0].totalUangSantunan);
 
-        setFormattedAmount(formatted); // Simpan hasil format ke state
+        setFormattedAmount(formatted);
       } catch (error) {
         console.error("Error:", error);
       }
     };
 
-    // Panggil fungsi untuk mengambil data
     fetchJumlahSantunan();
 
     const fetchCombinedUserData = async () => {
@@ -260,23 +246,33 @@ export default function IconGrid() {
         const month = today.getMonth() + 1;
         const year = today.getFullYear();
 
-        // Dapatkan data meninggal
         const deceasedData = await GlobalApi.getAnggotaMeninggal(year, month);
         setJumlahMeninggal(deceasedData.length);
 
-        // Fetch detail untuk setiap anggota meninggal
         const detailedData = await Promise.all(
           deceasedData.map(async (deceased) => {
             try {
               const userResponse = await GlobalApi.searchUsersByName(
                 deceased.namaLengkap
               );
+              console.log(userResponse.data);
+
+              let decodedFoto = null;
 
               if (
                 userResponse?.data?.users &&
                 userResponse.data.users.length > 0
               ) {
                 const userData = userResponse.data.users[0];
+
+                if (userData.foto) {
+                  try {
+                    decodedFoto = atob(userData.foto);
+                  } catch (error) {
+                    console.error("Error decoding Base64 foto:", error);
+                  }
+                }
+
                 return {
                   ...deceased,
                   waktuMeninggalTerlapor:
@@ -297,6 +293,7 @@ export default function IconGrid() {
                   namaPelapor: userData.namaPelapor || deceased.namaPelapor,
                   nomorHpPelapor:
                     userData.nomorHpPelapor || deceased.nomorHpPelapor,
+                  foto: decodedFoto || null,
                 };
               }
               return deceased;
@@ -309,7 +306,10 @@ export default function IconGrid() {
             }
           })
         );
+
         setAnggotaMeninggal(detailedData);
+
+        setFotoMeninggal(detailedData.map((data) => data.foto));
       } catch (error) {
         console.error("Error fetching combined user data:", error);
       }
@@ -317,10 +317,9 @@ export default function IconGrid() {
 
     const fetchUserData = async () => {
       const userId = sessionStorage.getItem("userId");
-      const userRole = sessionStorage.getItem("role"); // Ambil role dari sessionStorage
-      const npa = sessionStorage.getItem("npa"); // Ambil NPA jika ada
+      const userRole = sessionStorage.getItem("role");
+      const npa = sessionStorage.getItem("npa");
 
-      // Cek apakah userId tersedia
       if (!userId) {
         console.error("ID tidak ditemukan di sessionStorage");
         return;
@@ -329,23 +328,19 @@ export default function IconGrid() {
       try {
         let idToFetch = userId;
 
-        // Jika role adalah ADMIN, cek berdasarkan NPA
         if (userRole === "ADMIN" && npa) {
-          const npaResponse = await GlobalApi.cekNpa(npa); // Panggil API untuk cek NPA
+          const npaResponse = await GlobalApi.cekNpa(npa);
           if (npaResponse && npaResponse.id) {
-            idToFetch = npaResponse.id; // Ambil id dari response NPA
+            idToFetch = npaResponse.id;
           } else {
             console.error("NPA tidak valid atau tidak ditemukan");
             return;
           }
         }
 
-        // Panggil API untuk mendapatkan data user berdasarkan idToFetch
         const response = await GlobalApi.getUserById(idToFetch);
         setUserData(response);
-        console.log(response);
 
-        // Cek foto dan decode jika ada
         if (response.foto) {
           try {
             const decodedString = atob(response.foto);
@@ -358,7 +353,6 @@ export default function IconGrid() {
           setFotoBase64(null);
         }
 
-        // Set data lainnya
         setLatitude(response.latitude);
         setLongitude(response.longitude);
         setLoading(false);
@@ -468,11 +462,16 @@ export default function IconGrid() {
               <div className="bg-gradient-to-r from-blue-400 to-blue-800 p-4 rounded-t-lg">
                 <div className="flex justify-center mb-2">
                   <Image
-                    src="/profile.png"
+                    src={
+                      fotoMeninggal[index]
+                        ? `data:image/jpeg;base64,${fotoMeninggal[index]}`
+                        : profileImageUrl
+                    }
                     width={80}
                     height={80}
-                    alt="Profile"
-                    className="rounded-full border-2 border-white shadow-md"
+                    alt={`Foto User ${currentData.namaLengkap}`}
+                    className="object-cover rounded"
+                    unoptimized={true}
                   />
                 </div>
                 <h2 className="text-base font-bold text-white text-center mb-1">
@@ -543,60 +542,60 @@ export default function IconGrid() {
   const filteredIcons =
     role === "USER"
       ? icons
-        .filter((item) =>
-          [
-            "Lapor",
-            "Teman Unit",
-            "Ketentuan",
-            "Bantuan",
-            "History data",
-          ].includes(item.label)
-        )
-        .concat({
-          icon: faUser,
-          label: "Detail Anggota",
-          href: "/anggota/detail-anggota",
-          color: "text-blue-600 hover:text-blue-800",
-          bgHover: "hover:bg-blue-100",
-          iconColor: "text-blue-600",
-        })
-        .concat({
-          icon: faUserPen,
-          label: "Edit Anggota",
-          href: "/anggota/edit-anggota",
-          color: "text-orange-500",
-          bgHover: "hover:bg-blue-100",
-          iconColor: "text-blue-600",
-        })
-        .concat({
-          icon: faRightLeft,
-          label: "Mutasi",
-          href: "/anggota/data-anggota/mutasiCabangUnit",
-          color: "text-cyan-500",
-        })
-        .concat({
-          icon: faFileAlt,
-          label: "Daspen",
-          href: "/daspen",
-          color: "text-teal-700",
-        })
-        .sort((a, b) => {
-          const order = [
-            "Lapor",
-            "Detail Anggota",
-            "Edit Anggota",
-            "Mutasi",
-            "History data",
-            "Daspen",
-            "Ketentuan",
-            "Bantuan",
-            "Teman Unit",
-          ];
-          return order.indexOf(a.label) - order.indexOf(b.label);
-        })
+          .filter((item) =>
+            [
+              "Lapor",
+              "Teman Unit",
+              "Ketentuan",
+              "Bantuan",
+              "History data",
+            ].includes(item.label)
+          )
+          .concat({
+            icon: faUser,
+            label: "Detail Anggota",
+            href: "/anggota/detail-anggota",
+            color: "text-blue-600 hover:text-blue-800",
+            bgHover: "hover:bg-blue-100",
+            iconColor: "text-blue-600",
+          })
+          .concat({
+            icon: faUserPen,
+            label: "Edit Anggota",
+            href: "/anggota/edit-anggota",
+            color: "text-orange-500",
+            bgHover: "hover:bg-blue-100",
+            iconColor: "text-blue-600",
+          })
+          .concat({
+            icon: faRightLeft,
+            label: "Mutasi",
+            href: "/anggota/data-anggota/mutasiCabangUnit",
+            color: "text-cyan-500",
+          })
+          .concat({
+            icon: faFileAlt,
+            label: "Daspen",
+            href: "/daspen",
+            color: "text-teal-700",
+          })
+          .sort((a, b) => {
+            const order = [
+              "Lapor",
+              "Detail Anggota",
+              "Edit Anggota",
+              "Mutasi",
+              "History data",
+              "Daspen",
+              "Ketentuan",
+              "Bantuan",
+              "Teman Unit",
+            ];
+            return order.indexOf(a.label) - order.indexOf(b.label);
+          })
       : role === "SUPER ADMIN"
-        ? icons
-        : icons.filter((item) => item.label !== "Galeri");
+      ? icons
+      : icons.filter((item) => item.label !== "Galeri");
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -605,8 +604,9 @@ export default function IconGrid() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="flex-1 mt-[3.1%]">
             <img
@@ -870,8 +870,9 @@ export default function IconGrid() {
         </div>
 
         <div
-          className={` flex flex-col items-center my-4 ${isSidebarOpen ? "ml-32" : "ml-0"
-            }`}
+          className={` flex flex-col items-center my-4 ${
+            isSidebarOpen ? "ml-32" : "ml-0"
+          }`}
         >
           <hr className="mt-2 border-gray-300 w-full" />
           <h5 className="text-lg sm:text-xl font-semibold text-gray-800 mt-4 text-center">
@@ -880,8 +881,9 @@ export default function IconGrid() {
         </div>
 
         <div
-          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${isSidebarOpen ? "ml-32" : "ml-0"
-            }`}
+          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${
+            isSidebarOpen ? "ml-32" : "ml-0"
+          }`}
         >
           {isMobile ? (
             <MobileDeceasedScroll
@@ -907,11 +909,16 @@ export default function IconGrid() {
                         <div className="bg-gradient-to-r from-blue-400 to-blue-800 p-2 text-center rounded-lg mb-2 relative">
                           <div className="flex justify-center mb-1">
                             <Image
-                              src="/profile.png"
+                              src={
+                                fotoMeninggal[index]
+                                  ? `data:image/jpeg;base64,${fotoMeninggal[index]}`
+                                  : profileImageUrl
+                              }
                               width={80}
                               height={80}
-                              alt="Profile"
-                              className="rounded-full border-2 border-white shadow-md"
+                              alt={`Foto User ${currentData.namaLengkap}`}
+                              className="object-cover rounded"
+                              unoptimized={true}
                             />
                           </div>
                           <h2 className="text-sm font-bold text-white mb-0.5">
@@ -988,10 +995,11 @@ export default function IconGrid() {
             Maps Lokasi Rumah
           </h2>
           <>
-        <p className="ml-2 text-blue-600">
-          Anda Bisa Menyesuaikan Lokasi Dengan Menggeser Posisi Maps Sesuai Dengan Lokasi yang Sesuai Melalui Menu Edit Anggota
-        </p>
-    </>
+            <p className="ml-2 text-blue-600">
+              Anda Bisa Menyesuaikan Lokasi Dengan Menggeser Posisi Maps Sesuai
+              Dengan Lokasi yang Sesuai Melalui Menu Edit Anggota
+            </p>
+          </>
           {latitude && longitude && (
             <div className="mt-8">
               <MapComponent latitude={latitude} longitude={longitude} />
