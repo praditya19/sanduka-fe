@@ -25,32 +25,54 @@ const HeaderMobile = () => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
   const [role, setRole] = useState(null);
-  const [profileImageUrl, setProfileImageUrl] = useState("/profile.png");
+  const [userData, setUserData] = useState(null);
+  const profileImageUrl = "/profile.png";
+  const [fotoBase64, setFotoBase64] = useState(null);
+  const [loading, setLoading] = useState(true);
   const { isMuted, handleMuteToggle } = useMute();
 
-  const getAnggotaById = async () => {
+  const fetchUserData = async () => {
+    const userId = sessionStorage.getItem("userId");
+    const userRole = sessionStorage.getItem("role");
+    const npa = sessionStorage.getItem("npa");
+
+    if (!userId) {
+      console.error("ID tidak ditemukan di sessionStorage");
+      return;
+    }
+
     try {
-      const userId = sessionStorage.getItem("userId");
+      let idToFetch = userId;
 
-      if (!userId) {
-        console.error("ID tidak ditemukan di sessionStorage");
-        setProfileImageUrl("/profile.png");
-        return;
+      if (userRole === "ADMIN" && npa) {
+        const npaResponse = await GlobalApi.cekNpa(npa);
+        if (npaResponse && npaResponse.id) {
+          idToFetch = npaResponse.id;
+        } else {
+          console.error("NPA tidak valid atau tidak ditemukan");
+          return;
+        }
       }
-
-      const idToFetch = userId;
 
       const response = await GlobalApi.getUserById(idToFetch);
+      setUserData(response);
 
       if (response.foto) {
-        const decodedString = atob(response.foto);
-        setProfileImageUrl(decodedString);
+        try {
+          const decodedString = atob(response.foto);
+          setFotoBase64(decodedString);
+        } catch (error) {
+          console.error("Error decoding Base64:", error);
+          setFotoBase64(null);
+        }
       } else {
-        setProfileImageUrl("/profile.png");
+        setFotoBase64(null);
       }
+
+      setLoading(false);
     } catch (error) {
-      console.error("Error Saat Mendapatkan Foto:", error);
-      setProfileImageUrl("/profile.png");
+      console.error("Error saat mendapatkan data user:", error);
+      setLoading(false);
     }
   };
 
@@ -119,7 +141,7 @@ const HeaderMobile = () => {
   }, []);
 
   useEffect(() => {
-    getAnggotaById();
+    fetchUserData();
     if (isMuted) {
       return;
     }
@@ -149,34 +171,6 @@ const HeaderMobile = () => {
     isNotificationSoundPlaying,
     isMuted,
   ]);
-
-  useEffect(() => {
-    getAnggotaById();
-    if (isMuted) {
-      return;
-    }
-    if (notificationCount > 0 && !isNotificationSoundPlaying) {
-      const playNotificationSound = () => {
-        const audio = new Audio("/sound-notification.wav");
-        audioRef.current = audio;
-
-        audio
-          .play()
-          .then(() => {
-            setIsNotificationSoundPlaying(true);
-          })
-          .catch((error) => {
-            console.error("Error playing sound:", error);
-          });
-
-        audio.onended = () => {
-          setIsNotificationSoundPlaying(false);
-        };
-      };
-
-      playNotificationSound();
-    }
-  }, [notificationCount, isNotificationSoundPlaying, isMuted]);
 
   useEffect(() => {
     if (isProfileMenuOpen) {
@@ -260,18 +254,19 @@ const HeaderMobile = () => {
             </div>
             <button
               onClick={toggleProfileMenu}
-              className="relative flex items-center focus:outline-none border-2 border-gray-200 hover:border-gray-400 rounded-full p-1"
+              className="relative flex items-center justify-center focus:outline-none w-12 h-12 rounded-full border-2 border-gray-300 hover:border-blue-500 shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
             >
               <Image
                 src={
-                  profileImageUrl
-                    ? "/profile.png"
-                    : `data:image/jpeg;base64,${profileImageUrl}`
+                  fotoBase64
+                    ? `data:image/jpeg;base64,${fotoBase64}`
+                    : profileImageUrl
                 }
-                width={40}
-                height={40}
-                alt="Foto Profile"
-                className="rounded-full"
+                width={100}
+                height={100}
+                alt={`Foto User`}
+                className="w-full h-full rounded-full object-cover object-top"
+                unoptimized={true}
               />
             </button>
             {isProfileMenuOpen && (

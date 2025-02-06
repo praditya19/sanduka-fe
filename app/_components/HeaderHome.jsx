@@ -23,85 +23,56 @@ const HeaderHome = () => {
   const audioRef = useRef(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
-  const [profileImageUrl, setProfileImageUrl] = useState("/profile.png");
+  const [userData, setUserData] = useState(null);
+  const profileImageUrl = "/profile.png";
+  const [fotoBase64, setFotoBase64] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [role, setRole] = useState(null);
   const { isMuted, handleMuteToggle } = useMute();
   const [isIconBlinking, setIsIconBlinking] = useState(false);
 
-  const getAnggotaById = async () => {
+  const fetchUserData = async () => {
+    const userId = sessionStorage.getItem("userId");
+    const userRole = sessionStorage.getItem("role");
+    const npa = sessionStorage.getItem("npa");
+
+    if (!userId) {
+      console.error("ID tidak ditemukan di sessionStorage");
+      return;
+    }
+
     try {
-      const userId = sessionStorage.getItem("userId");
-      if (!userId) {
-        console.error("ID tidak ditemukan di sessionStorage");
-        setProfileImageUrl("/profile.png"); // Fallback ke gambar default
-        return;
+      let idToFetch = userId;
+
+      if (userRole === "ADMIN" && npa) {
+        const npaResponse = await GlobalApi.cekNpa(npa);
+        if (npaResponse && npaResponse.id) {
+          idToFetch = npaResponse.id;
+        } else {
+          console.error("NPA tidak valid atau tidak ditemukan");
+          return;
+        }
       }
 
-      const idToFetch = userId;
       const response = await GlobalApi.getUserById(idToFetch);
+      setUserData(response);
 
       if (response.foto) {
         try {
-          // Buat URL berbasis data untuk gambar Base64
-          // const imageUrl = `data:image/jpeg;base64,${response.foto}`;
-          // console.log(imageUrl);
-
-          // setProfileImageUrl(imageUrl);
-          setProfileImageUrl("/profile.png");
-        } catch (decodeError) {
-          console.error("Error decoding Base64 string:", decodeError);
-          setProfileImageUrl("/profile.png"); // Fallback ke gambar default
+          const decodedString = atob(response.foto);
+          setFotoBase64(decodedString);
+        } catch (error) {
+          console.error("Error decoding Base64:", error);
+          setFotoBase64(null);
         }
       } else {
-        setProfileImageUrl("/profile.png"); // Fallback jika tidak ada foto
+        setFotoBase64(null);
       }
+
+      setLoading(false);
     } catch (error) {
-      console.error("Error Saat Mendapatkan Foto:", error);
-      setProfileImageUrl("/profile.png"); // Fallback jika terjadi error API
-    }
-  };
-
-  const getAdminById = async () => {
-    try {
-      const userId = sessionStorage.getItem("userId");
-
-      // Validasi: pastikan setidaknya salah satu ID ada
-      if (!userId) {
-        console.error("ID tidak ditemukan di sessionStorage");
-        setProfileImageUrl("/profile.png");
-        return;
-      }
-
-      // Pilih ID yang tersedia
-      const idToFetch = userId;
-
-      const response = await GlobalApi.getAdminById(idToFetch);
-
-      if (response.foto) {
-        // Decode Base64
-        const decodedString = atob(response.foto);
-
-        // Convert the decoded string to binary data (Uint8Array)
-        const byteArray = new Uint8Array(decodedString.length);
-        for (let i = 0; i < decodedString.length; i++) {
-          byteArray[i] = decodedString.charCodeAt(i);
-        }
-
-        // Convert the byteArray into a Blob
-        const blob = new Blob([byteArray], { type: "image/jpeg" }); // Sesuaikan dengan tipe gambar yang Anda terima (jpeg, png, dll.)
-
-        // Create an object URL for the image blob
-        // const imageUrl = URL.createObjectURL(blob);
-
-        // Set image URL for the profile picture
-        // setProfileImageUrl(imageUrl);
-        setProfileImageUrl("/profile.png");
-      } else {
-        setProfileImageUrl("/profile.png");
-      }
-    } catch (error) {
-      console.error("Error Saat Mendapatkan Foto:", error);
-      setProfileImageUrl("/profile.png");
+      console.error("Error saat mendapatkan data user:", error);
+      setLoading(false);
     }
   };
 
@@ -159,18 +130,12 @@ const HeaderHome = () => {
   }, []);
 
   useEffect(() => {
-    // Ambil nilai role dari sessionStorage
     const storedRole = sessionStorage.getItem("role");
-    setRole(storedRole); // Menyimpan role dalam state
+    setRole(storedRole);
   }, []);
 
   useEffect(() => {
-    const role = sessionStorage.getItem("role");
-    if (role === "USER") {
-      getAnggotaById();
-    } else {
-      getAdminById();
-    }
+    fetchUserData();
 
     if (isMuted) {
       return;
@@ -196,7 +161,6 @@ const HeaderHome = () => {
       playNotificationSound();
     }
 
-    // Update blinking state
     if (notificationCount > 1) {
       setIsIconBlinking(true);
     } else {
@@ -309,10 +273,17 @@ const HeaderHome = () => {
                   onClick={toggleProfileMenu}
                   className="relative flex items-center justify-center focus:outline-none w-12 h-12 rounded-full border-2 border-gray-300 hover:border-blue-500 shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
                 >
-                  <img
-                    src={profileImageUrl}
-                    alt="Profile"
-                    className="w-full h-full rounded-full object-cover"
+                  <Image
+                    src={
+                      fotoBase64
+                        ? `data:image/jpeg;base64,${fotoBase64}`
+                        : profileImageUrl
+                    }
+                    width={100}
+                    height={100}
+                    alt={`Foto User`}
+                    className="w-full h-full rounded-full object-cover object-top"
+                    unoptimized={true}
                   />
                 </button>
 
