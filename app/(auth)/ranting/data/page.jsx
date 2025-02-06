@@ -306,7 +306,9 @@ const Page = () => {
       (total, item) => total + (item.totalAnggota || 0),
       0
     );
-    const filteredDataForPrint = filteredData;
+
+    let lastCabang = null;
+
     const printWindow = window.open("", "_blank");
     printWindow.document.write(`
       <html>
@@ -380,12 +382,15 @@ const Page = () => {
               </tr>
             </thead>
             <tbody>
-              ${filteredDataForPrint
-                .map(
-                  (item, index) => `
+              ${filteredData
+                .map((item, index) => {
+                  let cabangText =
+                    item.cabang !== lastCabang ? item.cabang || "-" : "-";
+                  lastCabang = item.cabang;
+                  return `
                     <tr>
                       <td>${index + 1}</td>
-                      <td>${item.cabang || "-"}</td>
+                      <td>${cabangText}</td>
                       <td>${item.namaRanting || "-"}</td>
                       <td>${item.unitKerja || "-"}</td>
                       <td>
@@ -403,8 +408,8 @@ const Page = () => {
                       <td>${item.totalUnitKerja || 0}</td>
                       <td>${item.totalAnggota || 0}</td>
                     </tr>
-                  `
-                )
+                  `;
+                })
                 .join("")}
               <!-- Baris Total -->
               <tr style="font-weight: bold; background-color: #f2f2f2;">
@@ -432,8 +437,19 @@ const Page = () => {
 
   const handleDownloadExcel = () => {
     handleProcessingStatus(true);
-    const data = filteredData.map((item, index) => ({
+    const seenCabangs = new Set();
+    const processedDataForExcel = filteredData.map((item) => {
+      if (seenCabangs.has(item.cabang)) {
+        return { ...item, cabang: "-" };
+      } else {
+        seenCabangs.add(item.cabang);
+        return item;
+      }
+    });
+
+    const data = processedDataForExcel.map((item, index) => ({
       No: index + 1,
+      Cabang: item.cabang || "-",
       "Nama Ranting": item.namaRanting || "-",
       "Unit Kerja": item.unitKerja || "-",
       "Nama Anggota": item.namaAnggota
@@ -447,6 +463,7 @@ const Page = () => {
       "Jumlah Anggota Ranting": item.jumlahAnggotaRanting || 0,
       "Total Anggota": item.totalAnggota || 0,
     }));
+
     const totalAnggotaUnitKerja = filteredData.reduce(
       (total, item) => total + (item.anggotaUnitKerja || 0),
       0
@@ -463,8 +480,10 @@ const Page = () => {
       (total, item) => total + (item.totalAnggota || 0),
       0
     );
+
     data.push({
       No: "Total",
+      Cabang: "-",
       "Nama Ranting": "-",
       "Unit Kerja": "-",
       "Nama Anggota": "-",
@@ -473,39 +492,26 @@ const Page = () => {
       "Jumlah Anggota Ranting": totalJumlahAnggotaRanting,
       "Total Anggota": totalTotalAnggota,
     });
+
     const ws = XLSX.utils.json_to_sheet(data);
-    const range = XLSX.utils.decode_range(ws["!ref"]);
-    for (let row = range.s.r + 1; row <= range.e.r; row++) {
-      const cellRef = XLSX.utils.encode_cell({ r: row, c: 3 });
-      if (ws[cellRef]) {
-        ws[cellRef].s = { alignment: { wrapText: true } };
-      }
-    }
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Data Ranting");
     XLSX.writeFile(wb, "Data_Ranting.xlsx");
+
     handleProcessingStatus(false);
   };
 
   const handleRekapRanting = () => {
     handleProcessingStatus(true);
-    const totalAnggotaUnitKerja = filteredData.reduce(
-      (total, item) => total + (item.anggotaUnitKerja || 0),
-      0
-    );
-    const totalUnitKerja = filteredData.reduce(
-      (total, item) => total + (item.totalUnitKerja || 0),
-      0
-    );
-    const totalJumlahAnggotaRanting = filteredData.reduce(
-      (total, item) => total + (item.jumlahAnggotaRanting || 0),
-      0
-    );
-    const totalTotalAnggota = filteredData.reduce(
-      (total, item) => total + (item.totalAnggota || 0),
-      0
-    );
-    const filteredDataForPrint = filteredData;
+
+    const groupedData = {};
+    filteredData.forEach((item) => {
+      if (!groupedData[item.cabang]) {
+        groupedData[item.cabang] = [];
+      }
+      groupedData[item.cabang].push(item);
+    });
+
     const printWindow = window.open("", "_blank");
     printWindow.document.write(`
       <html>
@@ -545,14 +551,14 @@ const Page = () => {
             .header-row th {
               background-color: #f2f2f2;
             }
-            th:nth-child(1), td:nth-child(1)  { width: 5%; } /* No */
+            th:nth-child(1), td:nth-child(1) { width: 5%; } /* No */
             th:nth-child(2), td:nth-child(2) { width: 15%; }/* Cabang */
-            th:nth-child(3), td:nth-child(3)  { width: 15%; }/* Nama Ranting */
-            th:nth-child(4), td:nth-child(4)  { width: 15%; }/* Unit Kerja */
-            th:nth-child(6), td:nth-child(6)  { width: 10%; }/* Anggota Unit Kerja */
-            th:nth-child(7), td:nth-child(7)  { width: 10%; }/* Jumlah Anggota Ranting */
-            th:nth-child(8), td:nth-child(8)  { width: 10%; }/* Total Unit Kerja */
-            th:nth-child(9), td:nth-child(9)  { width: 10%; }/* Total Anggota */
+            th:nth-child(3), td:nth-child(3) { width: 15%; }/* Nama Ranting */
+            th:nth-child(4), td:nth-child(4) { width: 15%; }/* Unit Kerja */
+            th:nth-child(5), td:nth-child(5) { width: 10%; }/* Anggota Unit Kerja */
+            th:nth-child(6), td:nth-child(6) { width: 10%; }/* Jumlah Anggota Ranting */
+            th:nth-child(7), td:nth-child(7) { width: 10%; }/* Total Unit Kerja */
+            th:nth-child(8), td:nth-child(8) { width: 10%; }/* Total Anggota */
             @media print {
               body {
                 width: auto;
@@ -577,38 +583,43 @@ const Page = () => {
               </tr>
             </thead>
             <tbody>
-              ${filteredDataForPrint
-                .map(
-                  (item, index) => `
-                    <tr>
-                      <td>${index + 1}</td>
-                      <td>${item.cabang || "-"}</td>
-                      <td>${item.namaRanting || "-"}</td>
-                      <td>${item.unitKerja || "-"}</td>
-                      <td>${item.anggotaUnitKerja || 0}</td>
-                      <td>${item.jumlahAnggotaRanting || 0}</td>
-                      <td>${item.totalUnitKerja || 0}</td>
-                      <td>${item.totalAnggota || 0}</td>
-                    </tr>
-                  `
-                )
+              ${Object.keys(groupedData)
+                .map((cabang, cabangIndex) => {
+                  const rantingRows = groupedData[cabang]
+                    .map(
+                      (item, index) => `
+                      <tr>
+                        ${
+                          index === 0
+                            ? `<td rowspan="${groupedData[cabang].length}">${
+                                cabangIndex + 1
+                              }</td>`
+                            : ""
+                        }
+                        ${
+                          index === 0
+                            ? `<td rowspan="${groupedData[cabang].length}">${cabang}</td>`
+                            : ""
+                        }
+                        <td>${item.namaRanting || "-"}</td>
+                        <td>${item.unitKerja || "-"}</td>
+                        <td>${item.anggotaUnitKerja || 0}</td>
+                        <td>${item.jumlahAnggotaRanting || 0}</td>
+                        <td>${item.totalUnitKerja || 0}</td>
+                        <td>${item.totalAnggota || 0}</td>
+                      </tr>
+                    `
+                    )
+                    .join("");
+                  return rantingRows;
+                })
                 .join("")}
-              <!-- Baris Total -->
-              <tr style="font-weight: bold; background-color: #f2f2f2;">
-                <td>Total</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td>${totalAnggotaUnitKerja}</td>
-                <td>${totalJumlahAnggotaRanting}</td>
-                <td>${totalUnitKerja}</td>
-                <td>${totalTotalAnggota}</td>
-              </tr>
             </tbody>
           </table>
         </body>
       </html>
     `);
+
     printWindow.document.close();
     printWindow.focus();
     printWindow.print();
