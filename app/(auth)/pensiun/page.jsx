@@ -13,6 +13,7 @@ import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import { ClipLoader } from "react-spinners";
 import { Input } from "@/components/ui/input";
+import Image from "next/image";
 
 const Page = () => {
   // baru
@@ -46,7 +47,8 @@ const Page = () => {
   const [popupVisible, setPopupVisible] = useState(false);
   const startNumber = (currentPage - 1) * itemsPerPage;
   const [statusSegeraCount, setStatusSegeraCount] = useState(0);
-  const [selectedStatus, setSelectedStatus] = useState("");
+  const [fotoBase64, setFotoBase64] = useState("");
+  const profileImageUrl = "/profile.png";
 
   const fetchPensiunData = async (
     page,
@@ -56,9 +58,34 @@ const Page = () => {
   ) => {
     setLoading(true);
     try {
-      const fetchedData = await GlobalApi.getAllPensiun(page, size, cabang, null, null, searchText);
+      const fetchedData = await GlobalApi.getAllPensiun(
+        page,
+        size,
+        cabang,
+        null,
+        null,
+        searchText
+      );
 
       if (fetchedData && fetchedData.data.content) {
+        const fotoBase64Array = [];
+
+        fetchedData.data.content.forEach((item) => {
+          if (item.foto) {
+            try {
+              const decodedString = atob(item.foto);
+              fotoBase64Array.push(decodedString);
+            } catch (error) {
+              console.error("Error decoding Base64:", error);
+              fotoBase64Array.push(null);
+            }
+          } else {
+            fotoBase64Array.push(null);
+          }
+        });
+
+        setFotoBase64(fotoBase64Array);
+
         setPensiunList((prevList) =>
           page === 0
             ? fetchedData.data.content
@@ -104,20 +131,25 @@ const Page = () => {
   }, [selectedCabang]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
-const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-const currentItems =
-  filteredPensiunList.length > itemsPerPage
-    ? filteredPensiunList.slice(indexOfFirstItem, indexOfLastItem)
-    : filteredPensiunList;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems =
+    filteredPensiunList.length > itemsPerPage
+      ? filteredPensiunList.slice(indexOfFirstItem, indexOfLastItem)
+      : filteredPensiunList;
 
-    const handleNextPage = () => {
-      if (indexOfLastItem < pensiunList.length) {
-        setCurrentPage((prevPage) => prevPage + 1);
-      } else if (hasMore) {
-        // Tambahkan selectedMonth dan selectedYear agar filter tetap berlaku
-        fetchPensiunData(currentPage, 10, selectedCabang, selectedMonth, selectedYear);
-      }
-    };
+  const handleNextPage = () => {
+    if (indexOfLastItem < pensiunList.length) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    } else if (hasMore) {
+      fetchPensiunData(
+        currentPage,
+        10,
+        selectedCabang,
+        selectedMonth,
+        selectedYear
+      );
+    }
+  };
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
@@ -144,8 +176,14 @@ const currentItems =
     if (pageNumber !== currentPage) {
       setCurrentPage(pageNumber);
       if (!fetchedPages.includes(pageNumber)) {
-        // Pastikan filter tetap digunakan saat berpindah halaman
-        fetchPensiunData(pageNumber - 1, 10, selectedCabang, selectedMonth, selectedYear, searchText);
+        fetchPensiunData(
+          pageNumber - 1,
+          10,
+          selectedCabang,
+          selectedMonth,
+          selectedYear,
+          searchText
+        );
         setFetchedPages([...fetchedPages, pageNumber]);
       }
     }
@@ -197,9 +235,8 @@ const currentItems =
   const applyFilters = async (month, year) => {
     setLoading(true);
     try {
-      // Jika ada filter, ambil 50 data
       const size = month || year ? 50 : itemsPerPage;
-  
+
       const fetchedData = await GlobalApi.getAllPensiun(
         0,
         size,
@@ -207,13 +244,15 @@ const currentItems =
         month,
         year
       );
-  
+
       if (fetchedData && fetchedData.data.content) {
         setFilteredPensiunList(fetchedData.data.content);
-        setIsFiltered(true); // Tandai bahwa filter aktif
-        setTotalPages(Math.ceil(fetchedData.data.content.length / itemsPerPage)); // Hitung total halaman dari data yang sudah diambil
+        setIsFiltered(true);
+        setTotalPages(
+          Math.ceil(fetchedData.data.content.length / itemsPerPage)
+        );
         setHasMore(fetchedData.data.content.length > 0);
-        setCurrentPage(1); // Reset ke halaman pertama setelah filter diterapkan
+        setCurrentPage(1);
       }
     } catch (err) {
       setError(err.message);
@@ -701,6 +740,10 @@ const currentItems =
                 </div>
               </div>
 
+              <div className="flex justify-between">
+                <span>Jumlah Anggota: {filteredPensiunList.length} Orang</span>
+              </div>
+
               <div className="w-full flex justify-center gap-2 md:w-auto">
                 <button
                   className={`bg-blue-500 text-white px-4 py-2 rounded flex items-center justify-center ${
@@ -746,86 +789,157 @@ const currentItems =
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <div className="flex justify-between mb-4">
-                <span>Jumlah Anggota: {filteredPensiunList.length} Orang</span>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full bg-white mt-4">
-                  <thead className="bg-teal-700 text-white">
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white mt-4">
+                <thead className="bg-teal-700 text-white ">
+                  <tr>
+                    <th className="py-2 px-3 text-center">No.</th>
+                    <th className="py-2 px-3 text-center">Foto</th>
+                    <th className="py-2 px-3 text-center hidden lg:table-cell">
+                      Prediksi Pensiun
+                    </th>
+                    <th className="py-2 px-3 text-center">Data Anggota</th>
+                    <th className="py-2 px-3 text-center hidden lg:table-cell">
+                      Keanggotaan
+                    </th>
+                    <th className="py-2 px-3 text-center hidden lg:table-cell">
+                      Aksi
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
                     <tr>
-                      <th className="py-2 px-3 text-center">No.</th>
-                      <th className="py-2 px-3 text-center">Foto</th>
-                      <th className="py-2 px-3 text-center hidden lg:table-cell">
-                        Prediksi Pensiun
-                      </th>
-                      <th className="py-2 px-3 text-center">Data Anggota</th>
-                      <th className="py-2 px-3 text-center hidden lg:table-cell">
-                        Keanggotaan
-                      </th>
-                      <th className="py-2 px-3 text-center hidden lg:table-cell">
-                        Aksi
-                      </th>
+                      <td colSpan="8" className="text-center py-4">
+                        <ClipLoader color="#3498db" size={50} />
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {loading ? (
-                      <tr>
-                        <td colSpan="8" className="text-center py-4">
-                          <ClipLoader color="#3498db" size={50} />
-                        </td>
-                      </tr>
-                    ) : (
-                      currentItems.map((pensiun, index) => (
-                        <>
-                          <tr key={pensiun.id} className="border-t">
-                            <td className="py-2 px-3 text-center">
-                              {startNumber + index + 1}
-                              <Button
-                                className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
-                                onClick={() => handleExpand(index)}
+                  ) : (
+                    currentItems.map((pensiun, index) => (
+                      <>
+                        <tr key={pensiun.id} className="border-t">
+                          <td className="py-2 px-3 text-center">
+                            {startNumber + index + 1}
+                            <Button
+                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
+                              onClick={() => handleExpand(index)}
+                            >
+                              {expandedIndex === index ? (
+                                <FaMinusCircle />
+                              ) : (
+                                <FaPlusCircle />
+                              )}
+                            </Button>
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <Image
+                              src={
+                                fotoBase64[index]
+                                  ? `data:image/jpeg;base64,${fotoBase64[index]}`
+                                  : profileImageUrl
+                              }
+                              width={50}
+                              height={50}
+                              alt="Anggota Foto"
+                              className="object-cover"
+                              unoptimized={true}
+                            />
+                          </td>
+                          <td className="py-2 px-3 text-center hidden lg:table-cell">
+                            {formatDate(pensiun.prediksiPensiun)}
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <div>{pensiun.namaLengkap}</div>
+                            <div>{pensiun.npa}</div>
+                            <div>
+                              {pensiun.tempatLahir},{" "}
+                              {formatDate(pensiun.tanggalLahir)}
+                            </div>
+                            <div>{pensiun.cabang}</div>
+                          </td>
+                          <td className="py-2 px-3 text-center hidden lg:table-cell">
+                            <div>{pensiun.jabatan}</div>
+                            <div>{pensiun.unitKerja}</div>
+                            <div>Usia: {pensiun.usia}</div>
+                            <div>
+                              {" "}
+                              {pensiun.keterangan === null
+                                ? pensiun.status === "Segera"
+                                  ? "Segera"
+                                  : "Aktif"
+                                : "Aktif"}
+                            </div>
+                          </td>
+                          <td className="py-2 px-3 text-center hidden lg:table-cell">
+                            <div className="flex items-center justify-center space-x-2">
+                              <button
+                                type="button"
+                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                onClick={() => handlePopup(pensiun.npa)}
                               >
-                                {expandedIndex === index ? (
-                                  <FaMinusCircle />
-                                ) : (
-                                  <FaPlusCircle />
-                                )}
-                              </Button>
-                            </td>
-                            <td className="py-2 px-3 text-center">
-                              <img
-                                src="/profile.png"
-                                alt="Foto"
-                                className="w-10 h-10 rounded-full"
-                              />
-                            </td>
-                            <td className="py-2 px-3 text-center hidden lg:table-cell">
-                              {formatDate(pensiun.prediksiPensiun)}
-                            </td>
-                            <td className="py-2 px-3 text-center">
-                              <div>{pensiun.namaLengkap}</div>
-                              <div>{pensiun.npa}</div>
-                              <div>
-                                {pensiun.tempatLahir},{" "}
-                                {formatDate(pensiun.tanggalLahir)}
+                                Pensiun
+                              </button>
+                              <button
+                                type="button"
+                                className=" text-white bg-green-500 hover:text-green-600 p-2 rounded-lg"
+                                onClick={() => handleWhatsApp(pensiun.nomorHp)}
+                              >
+                                <FaWhatsapp className="h-6 w-6" />
+                              </button>
+                            </div>
+                            {popupVisible && (
+                              <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex justify-center items-center z-50">
+                                <div className="bg-white rounded-lg p-6 w-2/5 text-center shadow-lg">
+                                  <h2 className="text-lg font-semibold text-gray-800">
+                                    Apakah Anda yakin ?
+                                  </h2>
+                                  <p className="text-gray-600 mt-2 mb-4">
+                                    Apakah Anda yakin untuk mengubah anggota
+                                    menjadi pensiun?
+                                  </p>
+                                  <div className="flex justify-center gap-4">
+                                    <button
+                                      onClick={handleCancelKeluar}
+                                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                                    >
+                                      Batal
+                                    </button>
+                                    <button
+                                      onClick={handlePensiunAnggota}
+                                      className="bg-teal-500 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition duration-200"
+                                    >
+                                      Ya, Saya Yakin
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
-                              <div>{pensiun.cabang}</div>
-                            </td>
-                            <td className="py-2 px-3 text-center hidden lg:table-cell">
-                              <div>{pensiun.jabatan}</div>
-                              <div>{pensiun.unitKerja}</div>
-                              <div>Usia: {pensiun.usia}</div>
+                            )}
+                          </td>
+                        </tr>
+                        {expandedIndex === index && (
+                          <tr className="bg-gray-100 lg:hidden">
+                            <td
+                              colSpan="3"
+                              className="py-2 px-3 text-sm border-t"
+                            >
                               <div>
-                                {" "}
-                                {pensiun.keterangan === null
-                                  ? pensiun.status === "Segera"
-                                    ? "Segera"
-                                    : "Aktif"
-                                  : "Aktif"}
+                                <strong>Prediksi Pensiun:</strong>{" "}
+                                {formatDate(pensiun.prediksiPensiun)}
                               </div>
-                            </td>
-                            <td className="py-2 px-3 text-center hidden lg:table-cell">
-                              <div className="flex items-center justify-center space-x-2">
+                              <div>
+                                <strong>Keanggotaan:</strong> {pensiun.jabatan},{" "}
+                                {pensiun.unitKerja}
+                              </div>
+                              <div>
+                                <strong>Usia:</strong> {pensiun.usia}
+                              </div>
+                              <div>
+                                <strong>Cabang ke-2:</strong> {pensiun.cabang}
+                              </div>
+                              <div>
+                                <strong>Status:</strong> {pensiun.status}
+                              </div>
+                              <div className="flex items-center space-x-2">
                                 <button
                                   type="button"
                                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -845,7 +959,7 @@ const currentItems =
                               </div>
                               {popupVisible && (
                                 <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex justify-center items-center z-50">
-                                  <div className="bg-white rounded-lg p-6 w-2/5 text-center shadow-lg">
+                                  <div className="bg-white rounded-lg p-6 w-4/5 sm:w-2/5 md:w-1/3 text-center shadow-lg">
                                     <h2 className="text-lg font-semibold text-gray-800">
                                       Apakah Anda yakin ?
                                     </h2>
@@ -872,134 +986,63 @@ const currentItems =
                               )}
                             </td>
                           </tr>
-                          {expandedIndex === index && (
-                            <tr className="bg-gray-100 lg:hidden">
-                              <td
-                                colSpan="3"
-                                className="py-2 px-3 text-sm border-t"
-                              >
-                                <div>
-                                  <strong>Prediksi Pensiun:</strong>{" "}
-                                  {formatDate(pensiun.prediksiPensiun)}
-                                </div>
-                                <div>
-                                  <strong>Keanggotaan:</strong>{" "}
-                                  {pensiun.jabatan}, {pensiun.unitKerja}
-                                </div>
-                                <div>
-                                  <strong>Usia:</strong> {pensiun.usia}
-                                </div>
-                                <div>
-                                  <strong>Cabang ke-2:</strong> {pensiun.cabang}
-                                </div>
-                                <div>
-                                  <strong>Status:</strong> {pensiun.status}
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <button
-                                    type="button"
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                    onClick={() => handlePopup(pensiun.npa)}
-                                  >
-                                    Pensiun
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="flex items-center text-green-500 hover:text-green-600"
-                                    onClick={() =>
-                                      handleWhatsApp(pensiun.nomorHp)
-                                    }
-                                  >
-                                    <FaWhatsapp className="h-6 w-6 mr-2" />
-                                  </button>
-                                </div>
-                                {popupVisible && (
-                                  <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex justify-center items-center z-50">
-                                    <div className="bg-white rounded-lg p-6 w-4/5 sm:w-2/5 md:w-1/3 text-center shadow-lg">
-                                      <h2 className="text-lg font-semibold text-gray-800">
-                                        Apakah Anda yakin ?
-                                      </h2>
-                                      <p className="text-gray-600 mt-2 mb-4">
-                                        Apakah Anda yakin untuk mengubah anggota
-                                        menjadi pensiun?
-                                      </p>
-                                      <div className="flex justify-center gap-4">
-                                        <button
-                                          onClick={handleCancelKeluar}
-                                          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
-                                        >
-                                          Batal
-                                        </button>
-                                        <button
-                                          onClick={handlePensiunAnggota}
-                                          className="bg-teal-500 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition duration-200"
-                                        >
-                                          Ya, Saya Yakin
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </td>
-                            </tr>
-                          )}
-                        </>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              {/* Pagination Controls */}
-              <div className="flex flex-wrap justify-center mt-4 gap-2">
+                        )}
+                      </>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination Controls */}
+            <div className="flex flex-wrap justify-center mt-4 gap-2">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                First
+              </button>
+              <button
+                onClick={handlePreviousPage}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Prev
+              </button>
+
+              {getVisiblePages().map((page) => (
                 <button
-                  onClick={() => setCurrentPage(1)}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  key={page}
+                  onClick={() => handlePageClick(page)}
+                  className={`px-3 py-1 border rounded text-sm ${
+                    page === currentPage
+                      ? "bg-blue-500 text-white"
+                      : "bg-white hover:bg-gray-50"
+                  }`}
                 >
-                  First
+                  {page}
                 </button>
-                <button
-                  onClick={handlePreviousPage}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                >
-                  Prev
-                </button>
+              ))}
 
-                {getVisiblePages().map((page) => (
-  <button
-    key={page}
-    onClick={() => handlePageClick(page)}
-    className={`px-3 py-1 border rounded text-sm ${
-      page === currentPage
-        ? "bg-blue-500 text-white"
-        : "bg-white hover:bg-gray-50"
-    }`}
-  >
-    {page}
-  </button>
-))}
+              {totalPages > 3 && currentPage < totalPages - 3 && (
+                <span className="px-2">...</span>
+              )}
 
+              <button
+                onClick={handleNextPage}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Next
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Last
+              </button>
+            </div>
 
-                {totalPages > 3 && currentPage < totalPages - 3 && (
-                  <span className="px-2">...</span>
-                )}
-
-                <button
-                  onClick={handleNextPage}
-                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                >
-                  Next
-                </button>
-                <button
-                  onClick={() => setCurrentPage(totalPages)}
-                  className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                >
-                  Last
-                </button>
-              </div>
-
-              {/* {filteredPensiunList.length > 0 && (
+            {/* {filteredPensiunList.length > 0 && (
                 <div className="flex justify-center mt-4 gap-1">
                   <button
                     onClick={() => setCurrentPage(1)}
@@ -1048,7 +1091,6 @@ const currentItems =
                   </button>
                 </div>
               )} */}
-            </div>
           </div>
         </div>
       </div>
