@@ -16,7 +16,7 @@ function RekapAnggota() {
   const [maxItems, setMaxItems] = useState(10);
   const { token } = useAuth();
   const router = useRouter();
-  const [rekapData, setRekapData] = useState([]);
+  // const [rekapData, setRekapData] = useState([]);
   const [originalCabangList, setOriginalCabangList] = useState([]);
   const [filteredCabangList, setFilteredCabangList] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
@@ -27,7 +27,6 @@ function RekapAnggota() {
   const [unitKerjaInput, setUnitKerjaInput] = useState("");
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(data.length / maxItems);
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -41,16 +40,17 @@ function RekapAnggota() {
     iuran: 0
   });
   const [loading, setLoading] = useState(true);
+  const [groupedData, setGroupedData] = useState([]);
+  const [expandedRows, setExpandedRows] = useState(new Set());
 
 
   const getVisiblePages = () => {
-    const maxVisiblePages = 2;
+    const maxVisiblePages = 3;
     const halfVisiblePages = Math.floor(maxVisiblePages / 2);
 
     let startPage = Math.max(1, currentPage - halfVisiblePages);
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-    // Adjust start page if end page is less than max visible pages
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
@@ -104,7 +104,6 @@ function RekapAnggota() {
 
     if (!selectedCabang) return;
 
-    // Filter unit kerja list based on input
     const filteredList = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang?.toLowerCase() === selectedCabang.toLowerCase() &&
@@ -114,18 +113,18 @@ function RekapAnggota() {
     setShowUnitKerjaDropdown(true);
     setFilteredUnitKerja(filteredList);
 
-    // Filter data based on input
     if (input === "") {
-      const cabangData = data.filter(
-        item => selectedCabang === "" || item.cabang?.toLowerCase() === selectedCabang.toLowerCase()
-      );
-      setData(cabangData);
-      calculateTotals(cabangData);
+      const processed = processData(originalRekapData);
+      setGroupedData(processed);
+      setData(originalRekapData);
+      calculateTotals(originalRekapData);
     } else {
-      const filteredData = data.filter(
+      const filteredData = originalRekapData.filter(
         (item) =>
-          item.alamatKerja?.toLowerCase().includes(input.toLowerCase())
+          item.unitKerja?.toLowerCase().includes(input.toLowerCase())
       );
+      const processed = processData(filteredData);
+      setGroupedData(processed);
       setData(filteredData);
       calculateTotals(filteredData);
     }
@@ -141,16 +140,20 @@ function RekapAnggota() {
   const handleSelectCabang = async (cabang) => {
     setSelectedCabang(cabang.kecamatan);
     setShowCabangDropdown(false);
-    setSelectedUnitKerja(""); // Reset unit kerja when changing cabang
-    setUnitKerjaInput(""); // Reset unit kerja input
+    setSelectedUnitKerja("");
+    setUnitKerjaInput("");
+    setCurrentPage(1);
 
     try {
-      const response = await GlobalApi.getRekapAnggota(cabang.kecamatan || "");
+      const response = await GlobalApi.getNominalAggregatedData(cabang.kecamatan || "");
       setData(response);
-      setOriginalRekapData(response); // Store original data
+      setOriginalRekapData(response);
+
+      const processed = processData(response);
+      setGroupedData(processed);
+
       calculateTotals(response);
 
-      // Filter unit kerja list for selected cabang
       const filtered = unitKerjaList.filter(
         (unitKerja) =>
           unitKerja.cabang &&
@@ -161,7 +164,6 @@ function RekapAnggota() {
       console.error("Error fetching rekap data:", error);
     }
   };
-
 
   const handleUnitKerjaSearch = (searchTerm) => {
     if (searchTerm === "") {
@@ -190,19 +192,20 @@ function RekapAnggota() {
     setShowUnitKerjaDropdown(false);
 
     if (!selectedValue) {
-      // If "Pilih Unit Kerja" is selected, show all data for selected cabang
+      const processed = processData(originalRekapData);
+      setGroupedData(processed);
       setData(originalRekapData);
       calculateTotals(originalRekapData);
     } else {
-      // Filter data for selected unit kerja
       const filteredData = originalRekapData.filter(
-        item => item.alamatKerja?.toLowerCase() === selectedValue.toLowerCase()
+        item => item.unitKerja?.toLowerCase() === selectedValue.toLowerCase()
       );
+      const processed = processData(filteredData);
+      setGroupedData(processed);
       setData(filteredData);
       calculateTotals(filteredData);
     }
   };
-
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -239,24 +242,50 @@ function RekapAnggota() {
     };
   }, []);
 
+  const processData = (rawData) => {
+    const grouped = rawData.reduce((acc, item) => {
+      const unitKey = item.unitKerja || 'Tidak Ada Unit Kerja';
+      const cabangKey = item.cabang || 'Tidak Ada Cabang';
+
+      if (!acc[unitKey]) {
+        acc[unitKey] = {
+          unitKerja: unitKey,
+          cabang: cabangKey,
+          namaAnggota: [],
+          jumlah: 0,
+          pgri: 0,
+          sanduka: 0,
+          daspen: 0,
+          totalIuran: 0
+        };
+      }
+      acc[unitKey].namaAnggota.push(item.namaAnggota);
+      acc[unitKey].jumlah += parseInt(item.jumlah) || 0;
+      acc[unitKey].pgri += parseFloat(item.pgri) || 0;
+      acc[unitKey].sanduka += parseFloat(item.sanduka) || 0;
+      acc[unitKey].daspen += parseFloat(item.daspen) || 0;
+      acc[unitKey].totalIuran += parseFloat(item.totalIuran) || 0;
+      return acc;
+    }, {});
+    return Object.values(grouped);
+  };
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // Get stored role and cabang from sessionStorage
         const storedRole = sessionStorage.getItem("role");
         const storedCabang = sessionStorage.getItem("cabang");
 
-        // If user is admin and has an assigned cabang
         if (storedRole === "ADMIN" && storedCabang) {
           setIsAdmin(true);
           setSelectedCabang(storedCabang);
-          // Fetch data for the admin's cabang
-          const response = await GlobalApi.getRekapAnggota(storedCabang);
+          const response = await GlobalApi.getNominalAggregatedData(storedCabang);
+          const processed = processData(response);
+          setGroupedData(processed);
           setData(response);
           setOriginalRekapData(response);
           calculateTotals(response);
 
-          // Filter unit kerja list for the admin's cabang
           const filtered = unitKerjaList.filter(
             (unitKerja) =>
               unitKerja.cabang &&
@@ -264,27 +293,40 @@ function RekapAnggota() {
           );
           setFilteredUnitKerja(filtered);
         } else {
-          // For non-admin users, fetch all data as before
-          const response = await GlobalApi.getRekapAnggota("");
+          const response = await GlobalApi.getNominalAggregatedData("");
+          const processed = processData(response);
+          setGroupedData(processed);
           setData(response);
           setOriginalRekapData(response);
           calculateTotals(response);
         }
-        setLoading(false); // Add this line to set loading to false after data is fetched
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching initial data:", error);
-        setLoading(false); // Add this line to set loading to false in case of error
+        setLoading(false);
       }
     };
     fetchInitialData();
   }, [unitKerjaList]);
 
+  const toggleExpand = (unitKerja) => {
+    setExpandedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(unitKerja)) {
+        newSet.delete(unitKerja);
+      } else {
+        newSet.add(unitKerja);
+      }
+      return newSet;
+    });
+  };
+
   const calculateTotals = (dataArray) => {
     const newTotals = dataArray.reduce((acc, item) => ({
       jumlah: acc.jumlah + (parseInt(item.jumlah) || 0),
-      pgri: acc.pgri + (parseInt(item.totalPns) || 0),
-      sanduka: acc.sanduka + (parseInt(item.totalNonPns) || 0),
-      daspen: acc.daspen + (parseInt(item.totalPppk) || 0),
+      pgri: acc.pgri + (parseFloat(item.pgri) || 0),
+      sanduka: acc.sanduka + (parseFloat(item.sanduka) || 0),
+      daspen: acc.daspen + (parseFloat(item.daspen) || 0),
       iuran: acc.iuran + (parseFloat(item.totalIuran) || 0)
     }), {
       jumlah: 0,
@@ -334,22 +376,9 @@ function RekapAnggota() {
   };
 
   const startIndex = (currentPage - 1) * maxItems;
+  const paginatedGroupedData = groupedData.slice(startIndex, startIndex + maxItems);
   const paginatedData = data.slice(startIndex, startIndex + maxItems);
-
-  // const jumlahPns = rekapData.reduce((acc, curr) => acc + curr.totalPns, 0);
-  // const jumlahPppk = rekapData.reduce((acc, curr) => acc + curr.totalPppk, 0);
-  // const jumlahNonPns = rekapData.reduce(
-  //   (acc, curr) => acc + curr.totalNonPns,
-  //   0
-  // );
-
-  // const jumlah = rekapData.reduce(
-  //   (acc, curr) => acc + (curr.totalPns + curr.totalPppk + curr.totalNonPns),
-  //   0
-  // );
-
-  // const jumlahIuran = rekapData.reduce((acc, curr) => acc + curr.totalIuran, 0);
-
+  const totalPages = Math.ceil(groupedData.length / maxItems);
 
   const renderCabangInput = () => {
     return (
@@ -496,123 +525,138 @@ function RekapAnggota() {
             <table className="container w-full table-auto mb-8">
               <thead>
                 <tr>
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
-                    rowSpan="2"
-                  >
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">
                     No
                   </th>
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700"
-                    rowSpan="2"
-                  >
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">
+                    Cabang
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">
                     Unit Kerja
                   </th>
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell"
-                    rowSpan="2"
-                  >
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">
+                    Nama Anggota
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell" rowSpan="2">
+                    Jumlah Anggota
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell" colSpan="3">
                     Jumlah
+                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">
+                    Total
                   </th>
                 </tr>
                 <tr>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell">
                     PGRI
                   </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell">
                     Sanduka
                   </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700">
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell">
                     Daspen
-                  </th>
-                  <th
-                    className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell"
-                  >
-                    Iuran
                   </th>
                 </tr>
               </thead>
+
               <tbody>
-                {paginatedData.length > 0 ? (
-                  paginatedData.map((item, index) => (
-                    <React.Fragment key={item.id}>
-                      <tr>
-                        <td className="p-2 md:p-3 border text-center">
-                          <div className="flex justify-center items-center">
-                            {startIndex + index + 1}
+                {paginatedGroupedData.map((group, index) => (
+                  <React.Fragment key={group.unitKerja}>
+                    <tr>
+                      <td className="p-2 md:p-3 border text-center">
+                        <div className="inline-flex items-center">
+                          {startIndex + index + 1}
+                          {isMobile && (
                             <Button
-                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
-                              onClick={() => handleExpand(startIndex + index)}
+                              className="text-blue-500 bg-transparent hover:bg-transparent"
+                              onClick={() => toggleExpand(group.unitKerja)}
                             >
-                              {expandedIndex === startIndex + index ? (
+                              {expandedRows.has(group.unitKerja) ? (
                                 <FaMinusCircle />
                               ) : (
                                 <FaPlusCircle />
                               )}
                             </Button>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-2 md:p-3 border">{group.cabang}</td>
+                      <td className="p-2 md:p-3 border">{group.unitKerja}</td>
+                      <td className="p-2 md:p-3 border text-center">
+                        <div className={`flex ${isMobile ? "flex-col gap-1" : "justify-center items-center"}`}>
+                          {isMobile && <span className="font-bold">{group.jumlah || 0} Anggota</span>}
+                          <Button
+                            className="text-blue-500 bg-transparent hover:bg-transparent"
+                            onClick={() => toggleExpand(group.unitKerja + '_members')}
+                          >
+                            {expandedRows.has(group.unitKerja + '_members') ? (
+                              <FaMinusCircle />
+                            ) : (
+                              <FaPlusCircle />
+                            )}
+                          </Button>
+                        </div>
+                        {expandedRows.has(group.unitKerja + '_members') && (
+                          <div className="pl-4 text-left">
+                            {group.namaAnggota.map((nama, idx) => (
+                              <div key={idx} className="py-1">
+                                {idx + 1}. {nama}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-2 md:p-3 border text-center hidden lg:table-cell">{group.jumlah || 0}</td>
+                      <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                        Rp. {parseInt(group.pgri).toLocaleString("id-ID")}
+                      </td>
+                      <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                        Rp. {parseInt(group.sanduka).toLocaleString("id-ID")}
+                      </td>
+                      <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                        Rp. {parseInt(group.daspen).toLocaleString("id-ID")}
+                      </td>
+                      <td className="p-2 md:p-3 border text-center">
+                        Rp. {parseInt(group.totalIuran).toLocaleString("id-ID")}
+                      </td>
+                    </tr>
+                    {isMobile && expandedRows.has(group.unitKerja) && (
+                      <tr>
+                        <td colSpan="7" className="p-2 md:p-3 border">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>PGRI: Rp. {parseInt(group.pgri).toLocaleString("id-ID")}</div>
+                            <div>Sanduka: Rp. {parseInt(group.sanduka).toLocaleString("id-ID")}</div>
+                            <div>Daspen: Rp. {parseInt(group.daspen).toLocaleString("id-ID")}</div>
                           </div>
                         </td>
-                        <td className="p-2 md:p-3 border">
-                          {item.alamatKerja}
-                        </td>
-                        <td className="p-2 md:p-3 border text-center">
-                          {item.jumlah}
-                        </td>
-                        <td className="p-2 md:p-3 border text-center">
-                          {item.totalPns}
-                        </td>
-                        <td className="p-2 md:p-3 border text-center">
-                          {item.totalNonPns}
-                        </td>
-                        <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
-                          {item.totalPppk}
-                        </td>
-                        <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
-                          Rp. {parseInt(item.totalIuran).toLocaleString("id-ID")}
-                        </td>
                       </tr>
-
-                      {expandedIndex === startIndex + index && (
-                        <tr className="lg:hidden bg-gray-100">
-                          <td colSpan="5" className="p-2 md:p-3 border text-sm">
-                            <div>
-                              <strong>Jumlah:</strong> {item.jumlah}
-                            </div>
-                            <div>
-                              <strong>Iuran:</strong> Rp.{" "}
-                              {parseInt(item.totalIuran).toLocaleString("id-ID")}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="p-2 md:p-3 border text-center">
-                      Tidak ada data
-                    </td>
-                  </tr>
-                )}
+                    )}
+                  </React.Fragment>
+                ))}
               </tbody>
               <tfoot>
                 <tr className="bg-gray-100 font-bold">
-                  <td colSpan="2" className="p-2 md:p-3 border text-right">
-                    Total:
+                  <td colSpan={isMobile ? 3 : 4} className="p-2 md:p-3 border text-center">
+                    Total :
                   </td>
                   <td className="p-2 md:p-3 border text-center">
                     {totals.jumlah}
                   </td>
+                  {!isMobile && (
+                    <>
+                      <td className="p-2 md:p-3 border text-center">
+                        Rp. {parseInt(totals.pgri).toLocaleString("id-ID")}
+                      </td>
+                      <td className="p-2 md:p-3 border text-center">
+                        Rp. {parseInt(totals.sanduka).toLocaleString("id-ID")}
+                      </td>
+                      <td className="p-2 md:p-3 border text-center">
+                        Rp. {parseInt(totals.daspen).toLocaleString("id-ID")}
+                      </td>
+                    </>
+                  )}
                   <td className="p-2 md:p-3 border text-center">
-                    {totals.pgri}
-                  </td>
-                  <td className="p-2 md:p-3 border text-center">
-                    {totals.sanduka}
-                  </td>
-                  <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
-                    {totals.daspen}
-                  </td>
-                  <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
                     Rp. {parseInt(totals.iuran).toLocaleString("id-ID")}
                   </td>
                 </tr>
@@ -620,7 +664,7 @@ function RekapAnggota() {
             </table>
           </div>
 
-          <div className="flex justify-center mt-4 gap-1">
+          <div className="flex justify-center mt-1 mb-2 gap-1">
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
