@@ -1200,6 +1200,22 @@ const getRekapAnggotaByCabang = async (cabang) => {
   }
 };
 
+const getNominalAggregatedData = async (cabang, unitKerja) => {
+  try {
+    const params = new URLSearchParams();
+    if (cabang) params.append('cabang', cabang);
+    if (unitKerja) params.append('unitKerja', unitKerja);
+
+    const response = await axiosClient.get(
+      `/api/by-nominal/aggregated?${params.toString()}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching aggregated data:", error);
+    throw error;
+  }
+};
+
 const getAllPensiun = (
   page = 0,
   size = 10,
@@ -1917,4 +1933,5 @@ export default {
   createNamaRanting,
   getNamaRantingCabang,
   getNamaRantingByCabang,
+  getNominalAggregatedData,
 };
