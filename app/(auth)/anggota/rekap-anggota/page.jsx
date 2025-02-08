@@ -13,10 +13,8 @@ import { ClipLoader } from "react-spinners";
 
 function RekapAnggota() {
   const [data, setData] = useState([]);
-  const [maxItems, setMaxItems] = useState(10);
   const { token } = useAuth();
   const router = useRouter();
-  // const [rekapData, setRekapData] = useState([]);
   const [originalCabangList, setOriginalCabangList] = useState([]);
   const [filteredCabangList, setFilteredCabangList] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
@@ -26,7 +24,6 @@ function RekapAnggota() {
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [unitKerjaInput, setUnitKerjaInput] = useState("");
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -42,24 +39,6 @@ function RekapAnggota() {
   const [loading, setLoading] = useState(true);
   const [groupedData, setGroupedData] = useState([]);
   const [expandedRows, setExpandedRows] = useState(new Set());
-
-
-  const getVisiblePages = () => {
-    const maxVisiblePages = 3;
-    const halfVisiblePages = Math.floor(maxVisiblePages / 2);
-
-    let startPage = Math.max(1, currentPage - halfVisiblePages);
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    return Array.from(
-      { length: endPage - startPage + 1 },
-      (_, index) => startPage + index
-    );
-  };
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -142,7 +121,6 @@ function RekapAnggota() {
     setShowCabangDropdown(false);
     setSelectedUnitKerja("");
     setUnitKerjaInput("");
-    setCurrentPage(1);
 
     try {
       const response = await GlobalApi.getNominalAggregatedData(cabang.kecamatan || "");
@@ -375,11 +353,6 @@ function RekapAnggota() {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-  const startIndex = (currentPage - 1) * maxItems;
-  const paginatedGroupedData = groupedData.slice(startIndex, startIndex + maxItems);
-  const paginatedData = data.slice(startIndex, startIndex + maxItems);
-  const totalPages = Math.ceil(groupedData.length / maxItems);
-
   const renderCabangInput = () => {
     return (
       <div className="flex flex-col relative w-64" ref={cabangRef}>
@@ -491,32 +464,15 @@ function RekapAnggota() {
             <div className="flex flex-wrap items-start mt-14 justify-between">
               <div className="flex flex-wrap items-center space-x-2">
                 {renderCabangInput()}
-
                 {renderUnitKerjaInput()}
               </div>
               <div className="flex items-end mt-2 md:mt-0">
-                <div className="mb-4 space-x-2">
-                  <label htmlFor="maxItems" className="mr-2">
-                    Tampilkan:
-                  </label>
-                  <select
-                    id="maxItems"
-                    value={maxItems}
-                    onChange={(e) => setMaxItems(parseInt(e.target.value))}
-                    className="shadow appearance-none border rounded w-20 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                  <button
-                    onClick={() => window.print()}
-                    className="p-2 px-4 bg-blue-500 text-white rounded w-full md:w-auto"
-                  >
-                    Cetak
-                  </button>
-                </div>
+                <button
+                  onClick={() => window.print()}
+                  className="p-2 px-4 bg-blue-500 text-white rounded w-full md:w-auto"
+                >
+                  Cetak
+                </button>
               </div>
             </div>
           </div>
@@ -561,12 +517,12 @@ function RekapAnggota() {
               </thead>
 
               <tbody>
-                {paginatedGroupedData.map((group, index) => (
+                {groupedData.map((group, index) => (
                   <React.Fragment key={group.unitKerja}>
                     <tr>
                       <td className="p-2 md:p-3 border text-center">
                         <div className="inline-flex items-center">
-                          {startIndex + index + 1}
+                          {index + 1}
                           {isMobile && (
                             <Button
                               className="text-blue-500 bg-transparent hover:bg-transparent"
@@ -662,51 +618,6 @@ function RekapAnggota() {
                 </tr>
               </tfoot>
             </table>
-          </div>
-
-          <div className="flex justify-center mt-1 mb-2 gap-1">
-            <button
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-              className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-            >
-              First
-            </button>
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-            >
-              Prev
-            </button>
-
-            {getVisiblePages().map((page) => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`px-3 py-1 border rounded text-sm ${page === currentPage
-                  ? "bg-blue-500 text-white"
-                  : "bg-white hover:bg-gray-50"
-                  }`}
-              >
-                {page}
-              </button>
-            ))}
-
-            <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-            >
-              Next
-            </button>
-            <button
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-            >
-              Last
-            </button>
           </div>
         </div>
       </div>
