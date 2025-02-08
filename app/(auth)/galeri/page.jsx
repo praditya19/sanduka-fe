@@ -1,22 +1,25 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import { ClipLoader } from "react-spinners";
 
 const Page = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [galleries, setGalleries] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [category, setCategory] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [galleryToDelete, setGalleryToDelete] = useState(null);
+  const fileInputRef = useRef(null);
   const itemsPerPage = 6;
 
   const handleResize = () => {
@@ -28,40 +31,11 @@ const Page = () => {
     setIsSidebarOpen(sidebarState);
     handleResize();
     window.addEventListener("resize", handleResize);
+
     fetchGalleries();
+
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  const fetchGalleries = async () => {
-    try {
-      const data = await GlobalApi.getAllSidebarGallery();
-
-      const compressedGalleries = await Promise.all(
-        data.map(async (gallery) => {
-          if (gallery.imageFile) {
-            try {
-              const compressedImage = await compressImage(gallery.imageFile);
-              return { ...gallery, imageFile: compressedImage };
-            } catch (error) {
-              console.error("Error compressing image:", error);
-              return gallery;
-            }
-          }
-          return gallery;
-        })
-      );
-
-      setGalleries(compressedGalleries);
-    } catch (error) {
-      console.error("Error fetching galleries:", error);
-    }
-  };
-
-  const toggleSidebar = () => {
-    const newSidebarState = !isSidebarOpen;
-    setIsSidebarOpen(newSidebarState);
-    localStorage.setItem("isSidebarOpen", newSidebarState);
-  };
 
   const compressImage = async (file, maxSizeKB = 50) => {
     const maxFileSizeBytes = maxSizeKB * 1024;
@@ -109,6 +83,36 @@ const Page = () => {
     }
   };
 
+  const fetchGalleries = async () => {
+    try {
+      const data = await GlobalApi.getAllSidebarGallery();
+
+      await Promise.all(
+        data.map(async (gallery) => {
+          if (gallery.photo) {
+            return new Promise((resolve) => {
+              const img = new Image();
+              img.src = `data:image/jpeg;base64,${gallery.photo}`;
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+            });
+          }
+          return Promise.resolve();
+        })
+      );
+
+      setGalleries(data);
+    } catch (error) {
+      console.error("Error fetching galleries:", error);
+    }
+  };
+
+  const toggleSidebar = () => {
+    const newSidebarState = !isSidebarOpen;
+    setIsSidebarOpen(newSidebarState);
+    localStorage.setItem("isSidebarOpen", newSidebarState);
+  };
+
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     try {
@@ -125,17 +129,30 @@ const Page = () => {
     setIsLoading(true);
 
     try {
-      const formData = { photo: selectedFile };
+      const formData = {
+        category: category,
+        photo: selectedFile
+      };
 
+      let newGallery;
       if (editingId) {
-        await GlobalApi.updateSidebarGallery(editingId, formData);
+        newGallery = await GlobalApi.updateSidebarGallery(editingId, formData);
+        setGalleries(prevGalleries =>
+          prevGalleries.map(gallery =>
+            gallery.id === editingId ? newGallery : gallery
+          )
+        );
       } else {
-        await GlobalApi.createSidebarGallery(formData);
+        newGallery = await GlobalApi.createSidebarGallery(formData);
+        setGalleries(prevGalleries => [...prevGalleries, newGallery]);
       }
 
       setSelectedFile(null);
+      setCategory("");
       setEditingId(null);
-      fetchGalleries();
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } catch (error) {
       console.error("Error saving gallery:", error);
     } finally {
@@ -145,6 +162,7 @@ const Page = () => {
 
   const handleEdit = (gallery) => {
     setEditingId(gallery.id);
+    setCategory(gallery.category);
   };
 
   const confirmDelete = async () => {
@@ -210,13 +228,20 @@ const Page = () => {
         <div className="relative w-full h-48 mb-2">
           <img
             src={`data:image/jpeg;base64,${gallery.photo}`}
-            alt="Gallery"
+            alt={gallery.category}
             className="absolute inset-0 w-full h-full object-cover rounded"
             loading="eager"
-            decoding="async"
+            decoding="sync"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = '/placeholder-image.jpg';
+            }}
           />
         </div>
       )}
+      <div className="text-sm text-gray-600 mb-2">
+        {gallery.category}
+      </div>
       <div className="mt-2 space-x-2">
         <button
           onClick={() => handleEdit(gallery)}
@@ -276,8 +301,8 @@ const Page = () => {
             key={page}
             onClick={() => onPageChange(page - 1)}
             className={`px-3 py-1 border rounded text-sm ${page - 1 === currentPage
-              ? "bg-blue-500 text-white"
-              : "bg-white hover:bg-gray-50"
+                ? "bg-blue-500 text-white"
+                : "bg-white hover:bg-gray-50"
               }`}
           >
             {page}
@@ -318,9 +343,9 @@ const Page = () => {
                 onSubmit={handleSubmit}
                 className="bg-white p-6 rounded-lg shadow-md w-full"
               >
-                {/* <div className="mb-4">
+                <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-bold mb-2">
-                    Kategori
+                    Keterangan
                   </label>
                   <input
                     type="text"
@@ -329,7 +354,7 @@ const Page = () => {
                     className="w-full p-2 border rounded"
                     required
                   />
-                </div> */}
+                </div>
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-bold mb-2">
                     Foto
@@ -340,6 +365,7 @@ const Page = () => {
                     className="w-full p-2 border rounded"
                     accept="image/*"
                     required={!editingId}
+                    ref={fileInputRef}
                   />
                 </div>
 
