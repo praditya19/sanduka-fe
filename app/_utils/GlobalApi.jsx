@@ -8,6 +8,7 @@ const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
 });
+
 // Konversi Gambar Dalam Format Base64
 const base64ToBlob = (base64, mime) => {
   const byteChars = atob(base64);
@@ -1203,8 +1204,8 @@ const getRekapAnggotaByCabang = async (cabang) => {
 const getNominalAggregatedData = async (cabang, unitKerja) => {
   try {
     const params = new URLSearchParams();
-    if (cabang) params.append('cabang', cabang);
-    if (unitKerja) params.append('unitKerja', unitKerja);
+    if (cabang) params.append("cabang", cabang);
+    if (unitKerja) params.append("unitKerja", unitKerja);
 
     const response = await axiosClient.get(
       `/api/by-nominal/aggregated?${params.toString()}`

@@ -50,15 +50,10 @@ const CekData = () => {
         search
       );
 
-      if (result && result.content && Array.isArray(result.content)) {
-        setData(result.content);
-        setTotalPages(result.totalPages || 0);
-        setTotalElements(result.totalElements);
-        return result.content;
-      } else {
-        console.warn("Data tidak sesuai format yang diharapkan.");
-        setData([]);
-      }
+      setData(result.content);
+      setTotalPages(result.totalPages || 0);
+      setTotalElements(result.totalElements);
+      return result.content;
     } catch (error) {
       console.error("Error fetching history data:", error);
       setData([]);
@@ -239,91 +234,15 @@ const CekData = () => {
     fetchData(0, pageSize, "", "", query);
   };
 
-  // const removeTitle = (fullName) => {
-  //   return fullName
-  //     .replace(
-  //       /\s*,?\s*(S\.?\s*Pd\.?\s*I?|M\.?\s*Pd\.?\s*I?|S\.?\s*Ag|S\.Ag|M\.?\s*Ag|M\.Ag|S\.?\s*H\.I|M\.?\s*H\.I|S\.H\.I|M\.H\.I|S\.?\s*E|S\.?\s*Si|S\.?\s*Sos|S\.?\s*Kom|S\.?\s*Ak|S\.?\s*Or|S\.?\s*Fil\.?\s*I|S\.?\s*Ds|Gr|SPd\s*SD|S\.?\s*Kom|S\.?\s*PD|S\.?\s*Si|S\.?\s*Pust|S\.?\s*Ps\s*I|M\.?\s*Kom|A\.?\s*Md|S\.?\s*Ps|S\.?\s*PDi|S\.?\s*M|SD)\.?\s*/gi,
-  //       ""
-  //     )
-  //     .replace(/\s+/g, " ")
-  //     .trim();
-  // };
-
-  const ensureArray = (data) =>
-    Array.isArray(data) ? data : data.split(",").map((n) => n.trim());
-
-  const formatNama = (nama) => {
-    return ensureArray(nama)
-      .map((part, index) => (index === 0 ? part.trim() : `\n${part.trim()}`))
-      .join(", ");
-  };
-
-  const checkMissingData = (nama, ktaDigitalNama, sandukaNama, daspenNama) => {
-    const formattedNama = formatNama(nama);
-    const namesToCheck = formattedNama
-      .split(",")
-      .map((name) => name.trim().toLowerCase());
-
-    const ktaDigitalNames = ktaDigitalNama
-      .split(",")
-      .map((name) => name.trim().toLowerCase());
-    const sandukaNames = sandukaNama
-      .split(",")
-      .map((name) => name.trim().toLowerCase());
-    const daspenNames = daspenNama
-      .split(",")
-      .map((name) => name.trim().toLowerCase());
-
-    return namesToCheck.map((name) => ({
-      name: name,
-      isMissing: !(
-        ktaDigitalNames.includes(name) &&
-        sandukaNames.includes(name) &&
-        daspenNames.includes(name)
-      ),
-    }));
-  };
-
-  const renderName = (nama, isMissingArray) => {
-    const names = formatNama(nama).split(",");
-
-    return names.map((name, idx) => {
-      const trimmedName = name.trim();
-      const status = isMissingArray[idx];
-      const isLast = idx === names.length - 1;
-
-      return (
-        <div key={idx} className={`${status?.isMissing ? "text-red-500" : ""}`}>
-          {trimmedName}
-          {!isLast && ","}
-        </div>
-      );
-    });
-  };
-
   const renderTableBody = () => {
     return (
       <tbody className="text-center">
-        {data?.map((item, index) => {
-          const [
-            cabang,
-            unitKerja,
-            nama,
-            npa,
-            ktaDigitalNama,
-            ktaDigitalJumlah,
-            sandukaNama,
-            sandukaJumlah,
-            daspenNama,
-            daspenJumlah,
-          ] = item;
-
-          const missingStatus = checkMissingData(
-            nama,
-            ktaDigitalNama,
-            sandukaNama,
-            daspenNama
-          );
+        {data.map((item, index) => {
+          const namaList = item.nama.split(" | ");
+          const npaList = item.npa.split(" | ");
+          const namaKtaList = item.ktaDigitalNama.split(" | ");
+          const namaSandukaList = item.sandukaNama.split(" | ");
+          const namaDaspenList = item.daspenNama.split(" | ");
 
           return (
             <tr
@@ -333,26 +252,60 @@ const CekData = () => {
               } hover:bg-gray-200 transition duration-150`}
             >
               <td className="py-2 px-4 border">{index + 1}</td>
-              <td className="py-2 px-4 border">{cabang}</td>
-              <td className="py-2 px-4 border">{unitKerja}</td>
-              <td className="p-2 md:p-3 border hidden md:table-cell">
-                {renderName(nama, missingStatus)}
+              <td className="py-2 px-4 border">{item.cabang}</td>
+              <td className="py-2 px-4 border">{item.unitKerja}</td>
+              <td className="py-2 px-4 border whitespace-pre-line text-left">
+                {namaList.map((nama, idx) => (
+                  <div key={idx}>
+                    {idx + 1}. {nama}
+                  </div>
+                ))}
               </td>
-              <td className="py-2 px-4 border">{npa}</td>
-              <td className="py-2 px-4 border whitespace-pre-line">
-                {formatNama(ktaDigitalNama)}{" "}
+              <td className="py-2 px-4 border whitespace-pre-line text-left">
+                {npaList.map((npa, idx) => {
+                  return (
+                    <div key={idx}>
+                      {idx + 1}. {npa}
+                    </div>
+                  );
+                })}
+              </td>
+              <td className="py-2 px-4 border whitespace-pre-line text-left">
+                {namaKtaList.map((namaKta, idx) => {
+                  return (
+                    <div key={idx}>
+                      {idx + 1}. {namaKta}
+                    </div>
+                  );
+                })}
               </td>
               <td className="py-2 px-4 border text-center">
-                {ktaDigitalJumlah}
+                {item.ktaDigitalJumlah}
               </td>
-              <td className="py-2 px-4 border whitespace-pre-line">
-                {formatNama(sandukaNama)}{" "}
+              <td className="py-2 px-4 border whitespace-pre-line text-left">
+                {namaSandukaList.map((namaSanduka, idx) => {
+                  return (
+                    <div key={idx}>
+                      {idx + 1}. {namaSanduka}
+                    </div>
+                  );
+                })}
               </td>
-              <td className="py-2 px-4 border text-center">{sandukaJumlah}</td>
-              <td className="py-2 px-4 border whitespace-pre-line">
-                {formatNama(daspenNama)}{" "}
+              <td className="py-2 px-4 border text-center">
+                {item.sandukaJumlah}
               </td>
-              <td className="py-2 px-4 border text-center">{daspenJumlah}</td>
+              <td className="py-2 px-4 border whitespace-pre-line text-left">
+                {namaDaspenList.map((namaDaspen, idx) => {
+                  return (
+                    <div key={idx}>
+                      {idx + 1}. {namaDaspen}
+                    </div>
+                  );
+                })}
+              </td>
+              <td className="py-2 px-4 border text-center">
+                {item.daspenJumlah}
+              </td>
             </tr>
           );
         })}
@@ -442,6 +395,7 @@ const CekData = () => {
         return;
       }
 
+      // Define headers
       const headers = [
         "No",
         "Cabang",
@@ -458,19 +412,20 @@ const CekData = () => {
 
       const data = filteredDataForPrint.map((item, index) => [
         index + 1,
-        item[0] || "-",
-        item[1] || "-",
-        item[2] || "-",
-        item[3] || "-",
-        item[4] || "-",
-        item[5] || "0",
-        item[6] || "-",
-        item[7] || "0",
-        item[8] || "-",
-        item[9] || "0",
+        item.cabang || "-",
+        item.unitKerja || "-",
+        item.nama || "-",
+        item.npa || "-",
+        item.ktaDigitalNama || "-",
+        item.ktaDigitalJumlah || 0,
+        item.sandukaNama || "-",
+        item.sandukaJumlah || 0,
+        item.daspenNama || "-",
+        item.daspenJumlah || 0,
       ]);
 
       const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
+
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Data Anggota");
 
@@ -664,10 +619,12 @@ const CekData = () => {
                   <th scope="col" className="py-3 px-6 border border-white">
                     Nama Anggota
                   </th>
-                  <th scope="col" className="py-3 px-6 border border-white">
+                  <th
+                    scope="col"
+                    className="py-3 px-6 border border-white w-32"
+                  >
                     Npa
                   </th>
-
                   <th scope="col" className="py-3 px-6 border border-white">
                     Nama Anggota
                   </th>
