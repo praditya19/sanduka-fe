@@ -1204,8 +1204,8 @@ const getRekapAnggotaByCabang = async (cabang) => {
 const getNominalAggregatedData = async (cabang, unitKerja) => {
   try {
     const params = new URLSearchParams();
-    if (cabang) params.append('cabang', cabang);
-    if (unitKerja) params.append('unitKerja', unitKerja);
+    if (cabang) params.append("cabang", cabang);
+    if (unitKerja) params.append("unitKerja", unitKerja);
 
     const response = await axiosClient.get(
       `/api/by-nominal/aggregated?${params.toString()}`
