@@ -124,13 +124,25 @@ function RekapAnggota() {
 
     try {
       const response = await GlobalApi.getNominalAggregatedData(cabang.kecamatan || "");
-      setData(response);
-      setOriginalRekapData(response);
 
-      const processed = processData(response);
+      const totalRow = response.find(item => item.cabang === "Total" && !item.unitKerja);
+      const regularData = response.filter(item => !(item.cabang === "Total" && !item.unitKerja));
+
+      if (totalRow) {
+        setGrandTotals({
+          jumlah: parseInt(totalRow.jumlah) || 0,
+          pgri: parseFloat(totalRow.pgri) || 0,
+          sanduka: parseFloat(totalRow.sanduka) || 0,
+          daspen: parseFloat(totalRow.daspen) || 0,
+          totalIuran: parseFloat(totalRow.totalIuran) || 0
+        });
+      }
+
+      setData(regularData);
+      setOriginalRekapData(regularData);
+
+      const processed = processData(regularData);
       setGroupedData(processed);
-
-      calculateTotals(response);
 
       const filtered = unitKerjaList.filter(
         (unitKerja) =>
@@ -258,25 +270,45 @@ function RekapAnggota() {
           setIsAdmin(true);
           setSelectedCabang(storedCabang);
           const response = await GlobalApi.getNominalAggregatedData(storedCabang);
-          const processed = processData(response);
-          setGroupedData(processed);
-          setData(response);
-          setOriginalRekapData(response);
-          calculateTotals(response);
 
-          const filtered = unitKerjaList.filter(
-            (unitKerja) =>
-              unitKerja.cabang &&
-              unitKerja.cabang.toLowerCase() === storedCabang.toLowerCase()
-          );
-          setFilteredUnitKerja(filtered);
+          const totalRow = response.find(item => item.cabang === "Total" && !item.unitKerja);
+          const regularData = response.filter(item => !(item.cabang === "Total" && !item.unitKerja));
+
+          if (totalRow) {
+            setGrandTotals({
+              jumlah: parseInt(totalRow.jumlah) || 0,
+              pgri: parseFloat(totalRow.pgri) || 0,
+              sanduka: parseFloat(totalRow.sanduka) || 0,
+              daspen: parseFloat(totalRow.daspen) || 0,
+              totalIuran: parseFloat(totalRow.totalIuran) || 0
+            });
+          }
+
+          const processed = processData(regularData);
+          setGroupedData(processed);
+          setData(regularData);
+          setOriginalRekapData(regularData);
+
         } else {
           const response = await GlobalApi.getNominalAggregatedData("");
-          const processed = processData(response);
+
+          const totalRow = response.find(item => item.cabang === "Total" && !item.unitKerja);
+          const regularData = response.filter(item => !(item.cabang === "Total" && !item.unitKerja));
+
+          if (totalRow) {
+            setGrandTotals({
+              jumlah: parseInt(totalRow.jumlah) || 0,
+              pgri: parseFloat(totalRow.pgri) || 0,
+              sanduka: parseFloat(totalRow.sanduka) || 0,
+              daspen: parseFloat(totalRow.daspen) || 0,
+              totalIuran: parseFloat(totalRow.totalIuran) || 0
+            });
+          }
+
+          const processed = processData(regularData);
           setGroupedData(processed);
-          setData(response);
-          setOriginalRekapData(response);
-          calculateTotals(response);
+          setData(regularData);
+          setOriginalRekapData(regularData);
         }
         setLoading(false);
       } catch (error) {
@@ -315,6 +347,14 @@ function RekapAnggota() {
     });
     setTotals(newTotals);
   };
+
+  const [grandTotals, setGrandTotals] = useState({
+    jumlah: 0,
+    pgri: 0,
+    sanduka: 0,
+    daspen: 0,
+    totalIuran: 0
+  });
 
   useEffect(() => {
     if (!token) {
@@ -435,6 +475,37 @@ function RekapAnggota() {
     </div>
   );
 
+  const FilterSection = ({
+    renderCabangInput,
+    renderUnitKerjaInput,
+    isMobile
+  }) => {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div>
+              <label className="block mb-2 text-sm">Cabang</label>
+              {renderCabangInput()}
+            </div>
+            <div>
+              <label className="block mb-2 text-sm">Unit Kerja</label>
+              {renderUnitKerjaInput()}
+            </div>
+          </div>
+          {isMobile && (
+            <Button
+              onClick={() => window.print()}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-8"
+            >
+              Cetak
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div
@@ -457,23 +528,27 @@ function RekapAnggota() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"}`}
         >
           <div className="mb-4 mx-12">
             <div className="flex flex-wrap items-start mt-14 justify-between">
               <div className="flex flex-wrap items-center space-x-2">
-                {renderCabangInput()}
-                {renderUnitKerjaInput()}
+                <FilterSection
+                  renderCabangInput={renderCabangInput}
+                  renderUnitKerjaInput={renderUnitKerjaInput}
+                  isMobile={isMobile}
+                />
               </div>
-              <div className="flex items-end mt-2 md:mt-0">
-                <button
-                  onClick={() => window.print()}
-                  className="p-2 px-4 bg-blue-500 text-white rounded w-full md:w-auto"
-                >
-                  Cetak
-                </button>
-              </div>
+              {!isMobile && (
+                <div className="flex items-end mt-2 md:mt-0">
+                  <button
+                    onClick={() => window.print()}
+                    className="p-2 px-4 bg-blue-500 text-white rounded w-full md:w-auto"
+                  >
+                    Cetak
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -597,23 +672,23 @@ function RekapAnggota() {
                     Total :
                   </td>
                   <td className="p-2 md:p-3 border text-center">
-                    {totals.jumlah}
+                    {grandTotals.jumlah}
                   </td>
                   {!isMobile && (
                     <>
                       <td className="p-2 md:p-3 border text-center">
-                        Rp. {parseInt(totals.pgri).toLocaleString("id-ID")}
+                        Rp. {parseInt(grandTotals.pgri).toLocaleString("id-ID")}
                       </td>
                       <td className="p-2 md:p-3 border text-center">
-                        Rp. {parseInt(totals.sanduka).toLocaleString("id-ID")}
+                        Rp. {parseInt(grandTotals.sanduka).toLocaleString("id-ID")}
                       </td>
                       <td className="p-2 md:p-3 border text-center">
-                        Rp. {parseInt(totals.daspen).toLocaleString("id-ID")}
+                        Rp. {parseInt(grandTotals.daspen).toLocaleString("id-ID")}
                       </td>
                     </>
                   )}
                   <td className="p-2 md:p-3 border text-center">
-                    Rp. {parseInt(totals.iuran).toLocaleString("id-ID")}
+                    Rp. {parseInt(grandTotals.totalIuran).toLocaleString("id-ID")}
                   </td>
                 </tr>
               </tfoot>
