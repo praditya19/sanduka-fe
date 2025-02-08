@@ -522,7 +522,7 @@ function Pengeluaran() {
         const numericValue = Number(value.replace(/\D/g, ""));
 
         if (!isNaN(numericValue)) {
-          updatedValues.nominal = numericValue; 
+          updatedValues.nominal = numericValue;
           updatedValues.terbilang = convertToTerbilangWithRupiah(numericValue);
         } else {
           updatedValues.nominal = "";
@@ -1202,9 +1202,9 @@ function Pengeluaran() {
                       value={formValues.namaPenerima}
                       onChange={handleChange}
                     />
-                    <Button className="mt-2" onClick={handleKwitansiClick}>
+                    {/* <Button className="mt-2" onClick={handleKwitansiClick}>
                       Kwitansi
-                    </Button>
+                    </Button> */}
                     {isPopupVisible && (
                       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                         <div className="bg-white rounded-lg p-6 w-3/4 max-w-lg">
@@ -1472,7 +1472,9 @@ function Pengeluaran() {
                             </Button>
                             <button
                               className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center`}
-                              onClick={() => handleDeleteClickId(transaction.id)}
+                              onClick={() =>
+                                handleDeleteClickId(transaction.id)
+                              }
                               disabled={loadingId === transaction.id}
                             >
                               {loadingId === transaction.id ? (

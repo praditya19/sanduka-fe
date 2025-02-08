@@ -42,6 +42,8 @@ function Pengeluaran() {
     nominal: "",
     bulanSantunan: "",
     yangMeninggal: "",
+    yangMeninggalList: [],
+    daftarYangMeninggal: [],
     namaPenerima: "",
     jenisPembayaran: "Sanduka",
     keterangan: "",
@@ -132,20 +134,6 @@ function Pengeluaran() {
     };
   }, []);
 
-  const handleResetForm = () => {
-    setFormValues({
-      tanggalTransaksi: "",
-      posPenerimaan: "",
-      tahun: "",
-      bulan: "",
-      yangMeninggal: "",
-      namaPenerima: "",
-      nominal: "",
-      terbilang: "",
-      keterangan: "",
-    });
-  };
-
   const handleSelectName = async (name) => {
     try {
       setFormValues((prevValues) => ({
@@ -161,6 +149,17 @@ function Pengeluaran() {
     } catch (error) {
       console.error("Error fetching user data by name:", error.message);
     }
+  };
+
+  const handleAddName = () => {
+    const { yangMeninggal, daftarYangMeninggal } = formValues;
+    if (!yangMeninggal) return;
+
+    setFormValues((prev) => ({
+      ...prev,
+      daftarYangMeninggal: [...daftarYangMeninggal, yangMeninggal],
+      yangMeninggal: "", // Kosongkan input
+    }));
   };
 
   const handleChange = async (e) => {
@@ -276,92 +275,102 @@ function Pengeluaran() {
   };
 
   const handleKwitansiClick = async () => {
-    const generateKwitansi = async () => {
-      try {
-        const selectedName = formValues.yangMeninggal;
-
-        if (!selectedName) {
-          console.error("Nama yang meninggal belum diisi.");
-          return;
-        }
-
-        const userDataList = await GlobalApi.searchUsersByName(selectedName);
-
-        if (!userDataList.data || !userDataList.data.users.length) {
-          console.error("Tidak ditemukan pengguna dengan nama:", selectedName);
-          return;
-        }
-
-        const userData = userDataList.data.users[0];
-
-        const formatDate = (dateArray, separator = "-") => {
-          if (!Array.isArray(dateArray) || dateArray.length !== 3) {
-            return "Tanggal tidak valid";
-          }
-          const [year, month, day] = dateArray;
-          return `${year}${separator}${String(month).padStart(
-            2,
-            "0"
-          )}${separator}${String(day).padStart(2, "0")}`;
-        };
-
-        const calculateAge = (tanggalLahir) => {
-          const today = new Date();
-          const birthDate = new Date(
-            tanggalLahir[0],
-            tanggalLahir[1] - 1,
-            tanggalLahir[2]
-          );
-
-          let age = today.getFullYear() - birthDate.getFullYear();
-          const monthDiff = today.getMonth() - birthDate.getMonth();
-          const dayDiff = today.getDate() - birthDate.getDate();
-
-          if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
-            age--;
-          }
-
-          return age;
-        };
-
-        // const dataPelaporan = formatDate(userData.tanggalPelaporan);
-        const tanggalMeninggal = formatDate(userData.waktuMeninggalTerlapor);
-        const umur = calculateAge(userData.tanggalLahir);
-        const mulaiJadiAnggotaPgri = formatDate(userData.mulaiJadiAnggotaPgri);
-
-        const generateData = {
-          noBukti: formValues.noBukti,
-          dataPelaporan: formValues.tanggalTransaksi,
-          // dataPelaporan,
-          nama: userData.namaLengkap,
-          tanggalMeninggal,
-          umur,
-          dataDukung: userData.unitKerja,
-          alamat: userData.alamat,
-          nomorHp: userData.nomorHp,
-          sejakMenjadiAnggota: mulaiJadiAnggotaPgri,
-          jabatan: userData.jabatan,
-          terbilang: formValues.terbilang,
-          // nominal: formValues.nominal,
-          nominal: "2.500.000",
-          menyerahkan: sessionStorage.getItem("nama"),
-          penerima: formValues.namaPenerima,
-        };
-
-        const htmlContent = generateKwitansiHTML(generateData);
-
-        const blob = new Blob([htmlContent], { type: "text/html" });
-        const blobUrl = URL.createObjectURL(blob);
-
-        setKwitansiData(blobUrl);
-        setKwitansiList(blobUrl);
-      } catch (error) {
-        console.error("Error:", error.message);
+    try {
+      const selectedNames = formValues.yangMeninggalList; // Daftar nama yang meninggal
+  
+      // Validasi minimal satu nama harus dipilih
+      if (!selectedNames || selectedNames.length < 1) {
+        alert("Harap pilih setidaknya satu nama.");
+        return;
       }
-    };
-
-    await generateKwitansi();
-  };
+  
+      const kwitansiDataList = [];
+  
+      for (const name of selectedNames) {
+        // Panggil API untuk mencari pengguna berdasarkan nama
+        const userDataList = await GlobalApi.searchUsersByName(name);
+  
+        // Validasi jika API mengembalikan data
+        if (userDataList.data && userDataList.data.users && userDataList.data.users.length > 0) {
+          const userData = userDataList.data.users[0];
+  
+          // Helper untuk format tanggal
+          const formatDate = (dateArray, separator = "-") => {
+            if (!Array.isArray(dateArray) || dateArray.length !== 3) {
+              return "Tanggal tidak valid";
+            }
+            const [year, month, day] = dateArray;
+            return `${year}${separator}${String(month).padStart(2, "0")}${separator}${String(day).padStart(2, "0")}`;
+          };
+  
+          // Helper untuk menghitung umur
+          const calculateAge = (tanggalLahir) => {
+            if (!tanggalLahir || !Array.isArray(tanggalLahir)) return 0; // Tambahan validasi
+            const today = new Date();
+            const birthDate = new Date(
+              tanggalLahir[0],
+              tanggalLahir[1] - 1,
+              tanggalLahir[2]
+            );
+  
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            const dayDiff = today.getDate() - birthDate.getDate();
+  
+            if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+              age--;
+            }
+  
+            return age;
+          };
+  
+          // Format tanggal meninggal dan mulai menjadi anggota
+          const tanggalMeninggal = formatDate(userData.waktuMeninggalTerlapor);
+          const umur = calculateAge(userData.tanggalLahir);
+          const mulaiJadiAnggotaPgri = formatDate(userData.mulaiJadiAnggotaPgri);
+  
+          // Tambahkan data kwitansi ke daftar
+          kwitansiDataList.push({
+            noBukti: formValues.noBukti,
+            dataPelaporan: formValues.tanggalTransaksi,
+            nama: userData.namaLengkap || "Tidak diketahui",
+            tanggalMeninggal: tanggalMeninggal || "Tidak diketahui",
+            umur: umur || "Tidak diketahui",
+            dataDukung: userData.unitKerja || "Tidak diketahui",
+            alamat: userData.alamat || "Tidak diketahui",
+            nomorHp: userData.nomorHp || "Tidak diketahui",
+            sejakMenjadiAnggota: mulaiJadiAnggotaPgri || "Tidak diketahui",
+            jabatan: userData.jabatan || "Tidak diketahui",
+            terbilang: formValues.terbilang,
+            nominal: "2.500.000",
+            menyerahkan: sessionStorage.getItem("nama") || "Tidak diketahui",
+            penerima: formValues.namaPenerima || "Tidak diketahui",
+          });
+        } else {
+          console.warn(`Data untuk nama "${name}" tidak ditemukan.`);
+        }
+      }
+  
+      // Jika tidak ada data valid, tampilkan pesan
+      if (kwitansiDataList.length === 0) {
+        alert("Tidak ada data kwitansi yang valid untuk digenerate.");
+        return;
+      }
+  
+      // Generate HTML kwitansi
+      const htmlContent = generateKwitansiHTML(kwitansiDataList);
+  
+      // Buat blob untuk kwitansi
+      const blob = new Blob([htmlContent], { type: "text/html" });
+      const blobUrl = URL.createObjectURL(blob);
+  
+      setKwitansiData(blobUrl);
+      setKwitansiList(blobUrl);
+    } catch (error) {
+      console.error("Error:", error.message);
+      alert("Terjadi kesalahan saat memproses kwitansi.");
+    }
+  };  
 
   const handleKwitansiDownloadPDF = async () => {
     const iframe = document.querySelector("iframe");
@@ -369,29 +378,33 @@ function Pengeluaran() {
       console.error("Iframe tidak ditemukan");
       return;
     }
-
+  
     const iframeDocument =
       iframe.contentDocument || iframe.contentWindow.document;
     const kwitansiElement = iframeDocument.body;
-
+  
     try {
       const canvas = await html2canvas(kwitansiElement, {
         scale: 2,
         useCORS: true,
       });
-
+  
       const imgData = canvas.toDataURL("image/png");
-
-      const pdf = new jsPDF("l", "mm", "a4");
+  
+      const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save("kwitansi_landscape.pdf");
+      let pdfHeight = pdf.internal.pageSize.getHeight();
+  
+      // Tentukan tinggi halaman berdasarkan jumlah kwitansi
+      const kwitansiCount = iframeDocument.querySelectorAll('.kwitansi').length; // Asumsi ada class .kwitansi untuk setiap kwitansi
+      const heightAdjustment = kwitansiCount === 1 ? pdfHeight : pdfHeight * kwitansiCount;
+  
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, heightAdjustment);
+      pdf.save("kwitansi_multiple.pdf");
     } catch (error) {
       console.error("Error saat mengonversi ke PDF:", error);
     }
-  };
+  };  
 
   const handleKwitansiDownloadPNG = async () => {
     const iframe = document.querySelector("iframe");
@@ -425,8 +438,8 @@ function Pengeluaran() {
 
   const handleCloseIframe = () => {
     setIsIframeVisible(false);
-    handleResetForm();
-  };
+    window.location.reload();
+  };  
 
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -460,8 +473,8 @@ function Pengeluaran() {
     };
   }, []);
 
-  const generateKwitansiHTML = (data) => {
-    const template = `<!DOCTYPE html>
+  const generateKwitansiHTML = (generateDataList) => {
+    const kwitansiHTML = generateDataList.map((data) => `<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
@@ -538,6 +551,7 @@ function Pengeluaran() {
     padding: 20px; /* Tambahkan padding */
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Tambahkan bayangan */
     background-color: #fff; /* Warna latar belakang putih */
+     margin-bottom: 100px;
   }
     .data-item p {
   margin: 4px 0; /* Mengurangi jarak antar paragraf */
@@ -619,9 +633,196 @@ function Pengeluaran() {
   </table>
 </footer>
 </body>
-</html>`;
-    return template;
+</html> `).join("");
+  
+    return `
+      <html>
+        <head>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 0;
+              padding: 0;
+            }
+            .container {
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              height: 100%;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            ${kwitansiHTML}
+          </div>
+        </body>
+      </html>
+    `;
   };
+  
+//   const generateKwitansiHTML = (data) => {
+//     const template = `<!DOCTYPE html>
+// <html lang="id">
+// <head>
+//   <meta charset="UTF-8" />
+//   <title>Kwitansi</title>
+//   <style>
+//     body {
+//         font-family: Arial, sans-serif;
+//         margin: 20px;
+//         background-color: #fff;
+//     }
+//     .header {
+//         display: flex;
+//         justify-content: space-between;
+//         align-items: center;
+//         margin-bottom: 20px;
+//         border-bottom: 2px solid #000;
+//         padding-bottom: 10px;
+//     }
+//     .left-header p, .right-header img {
+//         margin: 0;
+//     }
+//     .title {
+//         font-size: 20px;
+//         font-weight: bold;
+//         text-align: center;
+//     }
+//     .info, .footer {
+//         width: 100%;
+//         margin-top: 20px;
+//     }
+//     .info td{
+//         padding: 10px;
+//         vertical-align: top;
+//         border: 1px solid #ccc;
+//     }
+//     .nominal {
+//         font-weight: bold;
+//         background-color: #000;
+//         color: white;
+//         text-align: center;
+//     }
+//     .terbilang {
+//         font-weight: bold;
+//         color: black;
+//         text-align: center;
+//     }
+//     .signature {
+//         margin-top: 40px;
+//         width: 100%;
+//         display: flex;
+//         justify-content: space-between;
+//     }
+//     .signature div {
+//         text-align: center;
+//         width: 30%;
+//     }
+//     .footer {
+//         font-size: 12px;
+//         text-align: center;
+//     }
+
+//     .data-meninggal {
+//         display: flex;
+//         justify-content: space-between;
+//     }
+
+//     .data-item {
+//         width: 22%;
+//     }
+// .kwitansi {
+//     width: 210mm; /* Lebar A4 */
+//     height: 297mm; /* Tinggi A4 */
+//     margin: 0 auto; /* Pusatkan di halaman */
+//     padding: 20px; /* Tambahkan padding */
+//     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Tambahkan bayangan */
+//     background-color: #fff; /* Warna latar belakang putih */
+//   }
+//     .data-item p {
+//   margin: 4px 0; /* Mengurangi jarak antar paragraf */
+//   line-height: 1.4; /* Menyesuaikan jarak antar teks */
+// }
+  
+//     @media (max-width: 600px) {
+//       .data-meninggal {
+//         flex-direction: column;
+//       }
+//       .data-item {
+//         width: 100%;
+//       }
+//     }
+//   </style>
+// </head>
+// <body>
+// <div class="header">
+//   <div class="left-header">
+//     <p>Nomor Transaksi: ${data.noBukti}</p>
+//     <p>Tanggal Transaksi: ${data.dataPelaporan}</p>
+//   </div>
+//   <div class="title">TANDA TERIMA</div>
+//   <div class="right-header">
+//     <img src="https://sanduka-fe.vercel.app/_next/image?url=%2Fsanduka.png&amp;w=256&amp;q=75" alt="SANDUKA Logo" style="height: 50px;" />
+//   </div>
+// </div>
+
+// <div class="data-meninggal">
+//   <div class="data-item">
+//     <p>Data Meninggal</p>
+//     <p><strong>${data.nama}</strong></p>
+//             <p>${data.umur} Tahun</p>
+//             <p>${data.alamat}</p>
+//             <p>${data.nomorHp}</p>
+//   </div>
+//   <div class="data-item">
+//     <p>Data Dukung</p>
+//      <p><strong>${data.dataDukung}</strong></p>
+//             <p>${data.jabatan}</p>
+//             <p>Sejak Menjadi Anggota</p>
+//             <p>${data.sejakMenjadiAnggota}</p>
+//   </div>
+//   <div class="data-item">
+//     <p>Data Pelaporan</p>
+//     <p><strong>${data.dataPelaporan}</strong></p>
+//             <p><strong>Tanggal Meninggal:</strong> ${data.tanggalMeninggal}</p>
+//   </div>
+// </div>
+
+// <table class="info">
+//   <tr>
+//     <td class="nominal">Terbilang</td>
+//     <td class="nominal">Nominal</td>
+//   </tr>
+//   <tr>
+//     <td class="terbilang"><strong>${data.terbilang}</strong></td>
+//             <td class="terbilang"><strong>Rp ${data.nominal}</strong></td>
+//   </tr>
+// </table>
+
+// <div class="signature">
+//   <div>
+//     <p>Yang Menyerahkan,</p>
+
+//   </div>
+//   <div>
+//   ................., ..................
+//     <p>Penerima,</p>
+  
+//   </div>
+// </div>
+
+// <footer>
+//   <table class="footer">
+//     <tr>
+//       <td>Sekretariat PGRI: <br /> Jalan Bata Putih VI, Kelurahan Demaan, Kecamatan Jepara, Kabupaten Jepara, Jawa Tengah, Telp/Fax : 0291 592479, email : pgrijepara@gmail.com</td>
+//     </tr>
+//   </table>
+// </footer>
+// </body>
+// </html>`;
+//     return template;
+//   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
@@ -682,12 +883,11 @@ function Pengeluaran() {
               },
             }}
           />
-          <div className="container mx-auto p-6">
+          <div className="container mx-auto p-6 mt-2">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
               <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
-                KWITANSI
+                Kwitansi
               </h2>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {/* <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -704,6 +904,7 @@ function Pengeluaran() {
                     onChange={handleChange}
                   />
                 </div> */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -812,6 +1013,39 @@ function Pengeluaran() {
                       </ul>
                     )}
                   </div>
+                  <button
+  className="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+  onClick={() => {
+    if (formValues.yangMeninggal && !formValues.yangMeninggalList.includes(formValues.yangMeninggal)) {
+      setFormValues({
+        ...formValues,
+        yangMeninggalList: [...formValues.yangMeninggalList, formValues.yangMeninggal],
+        yangMeninggal: "",
+      });
+    }
+  }}
+>
+  Tambah Nama
+</button>
+      {/* Daftar Nama yang Dipilih */}
+<ul className="mt-4">
+  {formValues.yangMeninggalList.map((name, index) => (
+    <li key={index} className="flex items-center justify-between">
+      <span>{name}</span>
+      <button
+        className="text-red-500 hover:text-red-700"
+        onClick={() => {
+          setFormValues({
+            ...formValues,
+            yangMeninggalList: formValues.yangMeninggalList.filter((n) => n !== name),
+          });
+        }}
+      >
+        Hapus
+      </button>
+    </li>
+  ))}
+</ul>
                   <div className="flex flex-col">
                     <Label
                       className="block text-gray-700 text-sm font-semibold mb-2"
@@ -830,36 +1064,6 @@ function Pengeluaran() {
                     <Button className="mt-2" onClick={handleKwitansiClick}>
                       Kwitansi
                     </Button>
-                    {isPopupVisible && (
-                      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                        <div className="bg-white rounded-lg p-6 w-3/4 max-w-lg">
-                          <h2 className="text-xl font-bold mb-4">Kwitansi</h2>
-
-                          {kwitansiData ? (
-                            <div className="flex justify-center">
-                              <img
-                                src={kwitansiData}
-                                alt="Gambar Kwitansi"
-                                className="w-full max-h-96 object-contain"
-                              />
-                            </div>
-                          ) : (
-                            <p>Gambar kwitansi tidak tersedia.</p>
-                          )}
-
-                          <button
-                            className="mt-4 bg-teal-500 text-white py-2 px-4 rounded"
-                            onClick={() => {
-                              setPopupVisible(false);
-                              URL.revokeObjectURL(kwitansiData);
-                              setKwitansiData(null);
-                            }}
-                          >
-                            Tutup
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
                 <div className="flex flex-col">
@@ -932,12 +1136,6 @@ function Pengeluaran() {
                     >
                       Tutup
                     </button>
-                    {/* <button
-                      onClick={handleAddKwitansi}
-                      className="mt-4 bg-green-500 text-white py-2 px-4 rounded"
-                    >
-                      Tambah Kwitansi
-                    </button> */}
                   </div>
                 )}
               </div>
