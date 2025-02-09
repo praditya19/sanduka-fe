@@ -1,24 +1,17 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faMagnifyingGlass,
-  faMinusCircle,
-  faPlusCircle,
-  faTrash,
-} from "@fortawesome/free-solid-svg-icons";
-import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
-import { faTimes } from "@fortawesome/free-solid-svg-icons";
+import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import toast, { Toaster } from "react-hot-toast";
 
 const Page = () => {
   const [entries, setEntries] = useState(10);
@@ -33,6 +26,8 @@ const Page = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const fetchHistoryBackupData = async (
     page = currentPage,
@@ -45,8 +40,6 @@ const Page = () => {
         size,
         searchFileName
       );
-      console.log(response);
-
       setHistoryBackupDataAll(response.content || []);
       setTotalEntries(response.totalElements);
       setTotalPages(response.totalPages);
@@ -125,8 +118,183 @@ const Page = () => {
     }
   };
 
+  const handleUploudClick = () => {
+    setShowPopup(true);
+  };
+
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      toast.error("Pilih file terlebih dahulu!", {
+        duration: 3000,
+        style: {
+          fontSize: "1rem",
+          backgroundColor: "#D0011B",
+          color: "#fff",
+        },
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      const response = await GlobalApi.uploadFileRegister(formData);
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+              marginTop: "14px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "2rem",
+              display: "block",
+              marginBottom: "28px",
+            }}
+          >
+            File Berhasil Dikirim!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+    } catch (error) {
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#D0011B",
+              marginBottom: "16px",
+              marginTop: "14px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "2rem",
+              display: "block",
+              marginBottom: "28px",
+            }}
+          >
+            File Gagal Dikirim!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 3000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      console.error(
+        "Error submitting data:",
+        error.response?.data || error.message
+      );
+    } finally {
+      setShowPopup(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
+      <Toaster
+        toastOptions={{
+          style: {
+            marginTop: "16%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "700px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+          success: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+          error: {
+            style: {
+              background: "white",
+              color: "black",
+            },
+          },
+        }}
+      />
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
@@ -199,7 +367,7 @@ const Page = () => {
                     </select>
                     <span className="ml-2">entries</span>
                   </div>
-                  {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                  <div className="flex gap-2">
                     <Button
                       className={`bg-blue-500 text-white text-xs px-4 py-2 rounded flex items-center gap-2 ${
                         isLoading ? "opacity-75 cursor-not-allowed" : ""
@@ -216,7 +384,14 @@ const Page = () => {
                         "Backup Data"
                       )}
                     </Button>
-                  )}
+
+                    <Button
+                      className="bg-green-500 text-white text-xs px-4 py-2 rounded flex items-center gap-2"
+                      onClick={handleUploudClick}
+                    >
+                      Upload File
+                    </Button>
+                  </div>
                 </div>
                 <div className="relative mb-4">
                   <input
@@ -332,6 +507,35 @@ const Page = () => {
                   </button>
                 </div>
               </div>
+
+              {showPopup && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                  <div className="bg-white p-5 rounded-lg shadow-lg w-96">
+                    <h2 className="text-lg font-semibold mb-3">
+                      Unggah File Backup
+                    </h2>
+                    <input
+                      type="file"
+                      onChange={handleFileChange}
+                      className="mb-3"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        className="bg-gray-500 text-white px-4 py-2 rounded"
+                        onClick={() => setShowPopup(false)}
+                      >
+                        Batal
+                      </Button>
+                      <Button
+                        className="bg-green-500 text-white px-4 py-2 rounded"
+                        onClick={handleUpload}
+                      >
+                        {isLoading ? "Mengunggah..." : "Unggah"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </main>
           </div>
         </div>
