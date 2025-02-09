@@ -1806,6 +1806,22 @@ const getNamaRantingCabang = () => axiosClient.get("/api/nama-ranting");
 const getNamaRantingByCabang = (cabang) => {
   return axiosClient.get(`/api/nama-ranting/cabang/${cabang}`);
 };
+
+const uploadFileRegister = async (formData) => {
+  try {
+    const response = await axiosClient.post("/api/auth/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1935,4 +1951,5 @@ export default {
   getNamaRantingCabang,
   getNamaRantingByCabang,
   getNominalAggregatedData,
+  uploadFileRegister,
 };
