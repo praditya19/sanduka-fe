@@ -35,6 +35,7 @@ import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import FooterMobile from "@/app/_components/FooterMobile";
+import GaleriKegiatan from "@/app/_components/GaleriKegiatan";
 import Image from "next/image";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
@@ -989,7 +990,7 @@ export default function IconGrid() {
             </>
           )}
         </div>
-
+        <GaleriKegiatan />
         <div className="w-full col-span-2">
           <h2 className="text-2xl font-semibold text-gray-800 ml-2">
             Maps Lokasi Rumah
