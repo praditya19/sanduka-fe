@@ -69,6 +69,8 @@ const DataAnggota = () => {
     keyword = null,
     statusKeanggotaan = "Aktif"
   ) => {
+    setLoading(true);  // Menambahkan set loading ke true sebelum mulai fetch data
+    
     try {
       const response = await GlobalApi.getAllAnggota(
         page,
@@ -105,10 +107,12 @@ const DataAnggota = () => {
       setFotoBase64(fotoBase64Array);
       setTotalPages(response.totalPages || 0);
       setTotalElements(response.totalElements || 0);
-      setLoading(false);
+      
+      setLoading(false);  // Set loading ke false setelah data berhasil diambil
       return fetchedData || [];
     } catch (error) {
       console.error("Error fetching anggota data:", error);
+      setLoading(false);  // Set loading ke false jika terjadi error
     }
   };
 
@@ -216,21 +220,6 @@ const DataAnggota = () => {
 
     initializeData();
   }, [token, router, currentPage, pageSize, status]);
-
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <ClipLoader color="#3498db" size={50} />
-      </div>
-    );
-  }
 
   const handleUserClick = (rowId, index) => {
     const row = anggotaData.find((item) => item.id === rowId);
