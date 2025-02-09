@@ -51,7 +51,7 @@ const DataAnggota = () => {
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [anggotaData, setAnggotaData] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
   const [fotoBase64, setFotoBase64] = useState("");
   const [setSelectedRowIndex] = useState(null);
