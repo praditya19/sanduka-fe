@@ -63,7 +63,7 @@ const DataAnggota = () => {
 
   const fetchDataAnggota = async (
     page = 0,
-    size = 20,
+    size = 10,
     cabang = null,
     unitKerja = null,
     keyword = null,
