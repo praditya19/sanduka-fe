@@ -39,6 +39,8 @@ function RekapAnggota() {
   const [loading, setLoading] = useState(true);
   const [groupedData, setGroupedData] = useState([]);
   const [expandedRows, setExpandedRows] = useState(new Set());
+  const [searchCabang, setSearchCabang] = useState("");
+  const [searchUnitKerja, setSearchUnitKerja] = useState("");
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -93,13 +95,17 @@ function RekapAnggota() {
     setFilteredUnitKerja(filteredList);
 
     if (input === "") {
-      const processed = processData(originalRekapData);
+      const cabangData = originalRekapData.filter(
+        item => selectedCabang ? item.cabang?.toLowerCase() === selectedCabang.toLowerCase() : true
+      );
+      const processed = processData(cabangData);
       setGroupedData(processed);
-      setData(originalRekapData);
-      calculateTotals(originalRekapData);
+      setData(cabangData);
+      calculateTotals(cabangData);
     } else {
       const filteredData = originalRekapData.filter(
-        (item) =>
+        item =>
+          (!selectedCabang || item.cabang?.toLowerCase() === selectedCabang.toLowerCase()) &&
           item.unitKerja?.toLowerCase().includes(input.toLowerCase())
       );
       const processed = processData(filteredData);
@@ -114,6 +120,7 @@ function RekapAnggota() {
       cabang.kecamatan.toLowerCase().includes(query.toLowerCase())
     );
     setFilteredCabangList(filtered);
+    setSearchCabang(query);
   };
 
   const handleSelectCabang = async (cabang) => {
@@ -121,6 +128,7 @@ function RekapAnggota() {
     setShowCabangDropdown(false);
     setSelectedUnitKerja("");
     setUnitKerjaInput("");
+    setSearchCabang("");
 
     try {
       const response = await GlobalApi.getNominalAggregatedData(cabang.kecamatan || "");
@@ -156,6 +164,7 @@ function RekapAnggota() {
   };
 
   const handleUnitKerjaSearch = (searchTerm) => {
+    setSearchUnitKerja(searchTerm);
     if (searchTerm === "") {
       const allFiltered = unitKerjaList.filter(
         (unitKerja) => unitKerja.cabang === selectedCabang
@@ -171,8 +180,6 @@ function RekapAnggota() {
       );
       setFilteredUnitKerja(filtered);
     }
-
-    setShowUnitKerjaDropdown(true);
   };
 
   const handleUnitKerjaSelect = (unitKerja) => {
@@ -180,15 +187,21 @@ function RekapAnggota() {
     setSelectedUnitKerja(selectedValue);
     setUnitKerjaInput(selectedValue);
     setShowUnitKerjaDropdown(false);
+    setSearchUnitKerja("");
 
     if (!selectedValue) {
-      const processed = processData(originalRekapData);
+      const cabangData = originalRekapData.filter(
+        item => selectedCabang ? item.cabang?.toLowerCase() === selectedCabang.toLowerCase() : true
+      );
+      const processed = processData(cabangData);
       setGroupedData(processed);
-      setData(originalRekapData);
-      calculateTotals(originalRekapData);
+      setData(cabangData);
+      calculateTotals(cabangData);
     } else {
       const filteredData = originalRekapData.filter(
-        item => item.unitKerja?.toLowerCase() === selectedValue.toLowerCase()
+        item =>
+          (!selectedCabang || item.cabang?.toLowerCase() === selectedCabang.toLowerCase()) &&
+          item.unitKerja?.toLowerCase() === selectedValue.toLowerCase()
       );
       const processed = processData(filteredData);
       setGroupedData(processed);
@@ -393,6 +406,113 @@ function RekapAnggota() {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
+  const handlePrint = async () => {
+    try {
+      const htmlContent = `
+        <html>
+          <head>
+            <title>Rekap By Nominal</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .title { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 20px; }
+              table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+              th, td { border: 1px solid #000; padding: 8px; text-align: center; }
+              th { background-color: #00796b; color: white; }
+              .total-row { font-weight: bold; background-color: #f5f5f5; }
+              .member-list { text-align: left; padding-left: 20px; }
+              @media print {
+                .no-print { display: none; }
+                table { page-break-inside: auto; }
+                tr { page-break-inside: avoid; page-break-after: auto; }
+                th { color: #00796b; }
+                thead { display: table-header-group; }
+                tfoot { display: table-footer-group; }
+              }
+              .grand-total { 
+                display: block;
+                margin-top: 20px;
+              }
+              @page {
+                margin: 15mm;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="title">Rekap By Nominal ${selectedCabang ? `Cabang ${selectedCabang}` : ''}</div>
+            <table>
+              <thead>
+                <tr>
+                  <th rowspan="2">No</th>
+                  <th rowspan="2">Cabang</th>
+                  <th rowspan="2">Unit Kerja</th>
+                  <th rowspan="2">Nama Anggota</th>
+                  <th rowspan="2">Jumlah Anggota</th>
+                  <th colspan="3">Jumlah</th>
+                  <th rowspan="2">Total</th>
+                </tr>
+                <tr>
+                  <th>PGRI</th>
+                  <th>Sanduka</th>
+                  <th>Daspen</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${groupedData.map((group, index) => `
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td>${group.cabang}</td>
+                    <td>${group.unitKerja}</td>
+                    <td class="member-list">
+                      ${group.namaAnggota.map((nama, idx) => `
+                        ${idx + 1}. ${nama}<br>
+                      `).join('')}
+                    </td>
+                    <td>${group.jumlah || 0}</td>
+                    <td>Rp. ${parseInt(group.pgri).toLocaleString("id-ID")}</td>
+                    <td>Rp. ${parseInt(group.sanduka).toLocaleString("id-ID")}</td>
+                    <td>Rp. ${parseInt(group.daspen).toLocaleString("id-ID")}</td>
+                    <td>Rp. ${parseInt(group.totalIuran).toLocaleString("id-ID")}</td>
+                  </tr>
+                `).join('')}
+                <tr class="total-row">
+                  <td colspan="4" style="text-align: center">Total Keseluruhan :</td>
+                  <td>${grandTotals.jumlah}</td>
+                  <td>Rp. ${parseInt(grandTotals.pgri).toLocaleString("id-ID")}</td>
+                  <td>Rp. ${parseInt(grandTotals.sanduka).toLocaleString("id-ID")}</td>
+                  <td>Rp. ${parseInt(grandTotals.daspen).toLocaleString("id-ID")}</td>
+                  <td>Rp. ${parseInt(grandTotals.totalIuran).toLocaleString("id-ID")}</td>
+                </tr>
+              </tbody>
+            </table>
+          </body>
+        </html>
+      `;
+
+      const blob = new Blob([htmlContent], { type: 'application/pdf' });
+
+      const printFrame = document.createElement('iframe');
+      printFrame.style.display = 'none';
+      document.body.appendChild(printFrame);
+
+      printFrame.contentDocument.write(htmlContent);
+      printFrame.contentDocument.close();
+
+      printFrame.onload = () => {
+        try {
+          printFrame.contentWindow.print();
+
+          setTimeout(() => {
+            document.body.removeChild(printFrame);
+          }, 1000);
+        } catch (error) {
+          console.error('Print error:', error);
+        }
+      };
+    } catch (error) {
+      console.error("Error during print process:", error);
+    }
+  };
+
   const renderCabangInput = () => {
     return (
       <div className="flex flex-col relative w-64" ref={cabangRef}>
@@ -412,9 +532,10 @@ function RekapAnggota() {
               <li className="py-2 px-2">
                 <Input
                   type="text"
+                  value={searchCabang}
                   onChange={(e) => handleCabangSearch(e.target.value)}
                   className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
-                  placeholder="Cari ketik Cabang..."
+                  placeholder="Cari Cabang..."
                   autoFocus
                 />
               </li>
@@ -454,6 +575,16 @@ function RekapAnggota() {
       {showUnitKerjaDropdown && (
         <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
           <ul className="max-h-44 overflow-y-auto">
+            <li className="py-2 px-2">
+              <Input
+                type="text"
+                value={searchUnitKerja}
+                onChange={(e) => handleUnitKerjaSearch(e.target.value)}
+                className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                placeholder="Cari Unit Kerja..."
+                autoFocus
+              />
+            </li>
             <li
               onClick={() => handleUnitKerjaSelect({ unitKerja: "" })}
               className="px-4 py-2 cursor-pointer hover:bg-gray-200"
@@ -495,7 +626,7 @@ function RekapAnggota() {
           </div>
           {isMobile && (
             <Button
-              onClick={() => window.print()}
+              onClick={handlePrint}
               className="bg-blue-500 hover:bg-blue-600 text-white px-8"
             >
               Cetak
@@ -542,7 +673,7 @@ function RekapAnggota() {
               {!isMobile && (
                 <div className="flex items-end mt-2 md:mt-0">
                   <button
-                    onClick={() => window.print()}
+                    onClick={handlePrint}
                     className="p-2 px-4 bg-blue-500 text-white rounded w-full md:w-auto"
                   >
                     Cetak

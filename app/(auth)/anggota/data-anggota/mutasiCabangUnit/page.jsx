@@ -212,7 +212,7 @@ const page = () => {
         },
       }
       );
-      // handleCreateHistory();
+      handleCreateHistory();
       setShowDropdownCabangUnit(false);
       setIsDropdownVisible(false);
 
