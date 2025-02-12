@@ -40,12 +40,6 @@ function Pemasukan() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
-  const [paginatedTransactions, setPaginatedTransactions] = useState(
-    transactions.map((transaction) => ({
-      ...transaction,
-      checked: false,
-    }))
-  );
   const [checkedIds, setCheckedIds] = useState([]);
   const [selectedTransactions, setSelectedTransactions] = useState([]);
   const startYear = 2020;
@@ -187,6 +181,7 @@ function Pemasukan() {
           newSelectedYear
         );
         setTransactions(data);
+        console.log(data)
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -197,25 +192,16 @@ function Pemasukan() {
     fetchData();
   }, [selectedBulan, newSelectedYear]);
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentTransactions = transactions.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
-  const totalPages = Math.ceil(transactions.length / itemsPerPage);
-
-  const getVisiblePages = () => {
-    const range = 2;
-    let start = Math.max(1, currentPage - range);
-    let end = Math.min(totalPages, currentPage + range);
-
-    const pages = [];
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  };
+  const sortedTransactions = (() => {
+    if (!transactions) return [];
+  
+    // Pisahkan saldo awal
+    const saldoAwal = transactions.find((t) => t.uraian === "Saldo Awal");
+    const otherTransactions = transactions.filter((t) => t.uraian !== "Saldo Awal");
+  
+    // Gabungkan saldo awal di posisi paling atas
+    return saldoAwal ? [saldoAwal, ...otherTransactions] : otherTransactions;
+  })();
 
   const years = Array.from(
     { length: currentYear - startYear + 1 },
@@ -612,21 +598,9 @@ function Pemasukan() {
       console.error("Gagal menghapus data dengan ID:", id, error);
       toast.error("Terjadi kesalahan saat menghapus data.");
     } finally {
-      setLoadingId(null); 
+      setLoadingId(null);
     }
   };
-
-  useEffect(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-
-    const filteredTransactions = transactions.filter(
-      (transaction) => transaction.tglTransaksi
-    );
-
-    const paginatedData = filteredTransactions.slice(startIndex, endIndex);
-    setPaginatedTransactions(paginatedData);
-  }, [transactions, currentPage, itemsPerPage]);
 
   const parseNumber = (value) => {
     if (value === "" || isNaN(parseFloat(value))) {
@@ -647,7 +621,6 @@ function Pemasukan() {
 
   const handleEditClick = async (id) => {
     try {
-      
       const data = await GlobalApi.editPemasukanUangMasuk(id);
 
       const tanggalTransaksi = data.tglTransaksi
@@ -1163,7 +1136,7 @@ function Pemasukan() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentTransactions
+                  {sortedTransactions
                     .filter((transaction) => transaction.tglTransaksi)
                     .map((transaction, index) => (
                       <tr
@@ -1174,9 +1147,7 @@ function Pemasukan() {
                             : "hover:bg-gray-50"
                         }`}
                       >
-                        <td className="px-6 py-4 text-sm">
-                          {indexOfFirstItem + index + 1}
-                        </td>
+                        <td className="px-6 py-4 text-sm">{index + 1}</td>
                         <td className="px-6 py-4 text-sm">
                           {transaction.tglTransaksi}
                         </td>
@@ -1215,10 +1186,12 @@ function Pemasukan() {
                             </Button>
                             <button
                               className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center`}
-                              onClick={() => handleDeleteClickId(transaction.id)}
+                              onClick={() =>
+                                handleDeleteClickId(transaction.id)
+                              }
                               disabled={loadingId === transaction.id}
                             >
-                              {loadingId === transaction.id ? ( 
+                              {loadingId === transaction.id ? (
                                 <div className="flex items-center">
                                   <svg
                                     className="animate-spin h-5 w-5 text-white mr-2"
@@ -1256,29 +1229,29 @@ function Pemasukan() {
                     </td>
                     <td className="px-6 py-4 text-sm">
                       {formatCurrency(
-                        paginatedTransactions.reduce((total, transaction) => {
+                        transactions.reduce((total, transaction) => {
                           const debet = Math.floor(
-                            parseFloat(transaction.debet.replace(",", "")) || 0
+                            parseFloat(transaction.debet.replace(",")) || 0
                           );
-                          return total + debet;
+                          return debet;
                         }, 0)
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       {formatCurrency(
-                        paginatedTransactions.reduce((total, transaction) => {
+                        transactions.reduce((total, transaction) => {
                           const kredit = Math.floor(
-                            parseFloat(transaction.kredit.replace(",", "")) || 0
+                            parseFloat(transaction.kredit.replace(",")) || 0
                           );
-                          return total + kredit;
+                          return kredit;
                         }, 0)
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       {formatCurrency(
-                        paginatedTransactions.reduce((total, transaction) => {
+                        transactions.reduce((total, transaction) => {
                           const saldo = Math.floor(
-                            parseFloat(transaction.saldo.replace(",", "")) || 0
+                            parseFloat(transaction.saldo.replace(",")) || 0
                           );
                           return saldo;
                         }, 0)
@@ -1302,57 +1275,6 @@ function Pemasukan() {
                   }
                 }
               `}</style>
-            </div>
-            <div className="flex justify-center mt-4 gap-1">
-              {transactions.length > itemsPerPage && (
-                <div className="flex justify-center mt-4 gap-1">
-                  <button
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    First
-                  </button>
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Prev
-                  </button>
-                  {getVisiblePages().map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 border rounded text-sm ${
-                        page === currentPage
-                          ? "bg-blue-500 text-white"
-                          : "bg-white hover:bg-gray-50"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Next
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Last
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </div>

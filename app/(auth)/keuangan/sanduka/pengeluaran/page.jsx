@@ -230,42 +230,31 @@ function Pengeluaran() {
   };
 
   const fetchData = async () => {
-    try {
-      if (selectedBulan && newSelectedYear) {
-        const data = await GlobalApi.getTablePemasukanSanduka(
-          selectedBulan,
-          newSelectedYear
-        );
-        setTransactions(data);
+      try {
+        if (selectedBulan && newSelectedYear) {
+          const data = await GlobalApi.getTablePemasukanSanduka(
+            selectedBulan,
+            newSelectedYear
+          );
+          setTransactions(data);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
+    };
 
   useEffect(() => {
     fetchData();
   }, [selectedBulan, newSelectedYear]);
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentTransactions = transactions.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
-  const totalPages = Math.ceil(transactions.length / itemsPerPage);
-
-  const getVisiblePages = () => {
-    const range = 2;
-    let start = Math.max(1, currentPage - range);
-    let end = Math.min(totalPages, currentPage + range);
-
-    const pages = [];
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  };
+  const sortedTransactions = (() => {
+    if (!transactions) return [];
+  
+    const saldoAwal = transactions.find((t) => t.uraian === "Saldo Awal");
+    const otherTransactions = transactions.filter((t) => t.uraian !== "Saldo Awal");
+  
+    return saldoAwal ? [saldoAwal, ...otherTransactions] : otherTransactions;
+  })();
 
   useEffect(() => {
     const today = new Date();
@@ -1423,7 +1412,7 @@ function Pengeluaran() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentTransactions.map((transaction, index) =>
+                  {sortedTransactions.map((transaction, index) =>
                     transaction.tglTransaksi ? (
                       <tr
                         key={index}
@@ -1549,57 +1538,6 @@ function Pengeluaran() {
                   </tr>
                 </tbody>
               </table>
-            </div>
-            <div className="flex justify-center mt-4 gap-1">
-              {transactions.length > itemsPerPage && (
-                <div className="flex justify-center mt-4 gap-1">
-                  <button
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    First
-                  </button>
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Prev
-                  </button>
-                  {getVisiblePages().map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 border rounded text-sm ${
-                        page === currentPage
-                          ? "bg-blue-500 text-white"
-                          : "bg-white hover:bg-gray-50"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Next
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Last
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </div>
