@@ -254,7 +254,7 @@ function RekapAnggota() {
         acc[unitKey] = {
           unitKerja: unitKey,
           cabang: cabangKey,
-          namaAnggota: [],
+          members: [],
           jumlah: 0,
           pgri: 0,
           sanduka: 0,
@@ -262,8 +262,14 @@ function RekapAnggota() {
           totalIuran: 0
         };
       }
-      acc[unitKey].namaAnggota.push(item.namaAnggota);
-      acc[unitKey].jumlah += parseInt(item.jumlah) || 0;
+      acc[unitKey].members.push({
+        namaAnggota: item.namaAnggota,
+        pgri: parseFloat(item.pgri) || 0,
+        sanduka: parseFloat(item.sanduka) || 0,
+        daspen: parseFloat(item.daspen) || 0,
+        totalIuran: parseFloat(item.totalIuran) || 0
+      });
+      acc[unitKey].jumlah += 1;
       acc[unitKey].pgri += parseFloat(item.pgri) || 0;
       acc[unitKey].sanduka += parseFloat(item.sanduka) || 0;
       acc[unitKey].daspen += parseFloat(item.daspen) || 0;
@@ -408,6 +414,13 @@ function RekapAnggota() {
 
   const handlePrint = async () => {
     try {
+      if (!groupedData || groupedData.length === 0) {
+        console.error("Data kosong, tidak dapat mencetak.");
+        return;
+      }
+  
+      const titleText = `Rekap By Nominal${selectedCabang ? ` Cabang ${selectedCabang}` : ''}${selectedUnitKerja ? ` Unit Kerja ${selectedUnitKerja}` : ''}`;
+  
       const htmlContent = `
         <html>
           <head>
@@ -424,21 +437,15 @@ function RekapAnggota() {
                 .no-print { display: none; }
                 table { page-break-inside: auto; }
                 tr { page-break-inside: avoid; page-break-after: auto; }
-                th { color: #00796b; }
                 thead { display: table-header-group; }
+                th { color: #00796b; }
                 tfoot { display: table-footer-group; }
               }
-              .grand-total { 
-                display: block;
-                margin-top: 20px;
-              }
-              @page {
-                margin: 15mm;
-              }
+              @page { margin: 15mm; }
             </style>
           </head>
           <body>
-            <div class="title">Rekap By Nominal ${selectedCabang ? `Cabang ${selectedCabang}` : ''}</div>
+            <div class="title">${titleText}</div>
             <table>
               <thead>
                 <tr>
@@ -457,30 +464,31 @@ function RekapAnggota() {
                 </tr>
               </thead>
               <tbody>
-                ${groupedData.map((group, index) => `
-                  <tr>
-                    <td>${index + 1}</td>
-                    <td>${group.cabang}</td>
-                    <td>${group.unitKerja}</td>
-                    <td class="member-list">
-                      ${group.namaAnggota.map((nama, idx) => `
-                        ${idx + 1}. ${nama}<br>
-                      `).join('')}
-                    </td>
-                    <td>${group.jumlah || 0}</td>
-                    <td>Rp. ${parseInt(group.pgri).toLocaleString("id-ID")}</td>
-                    <td>Rp. ${parseInt(group.sanduka).toLocaleString("id-ID")}</td>
-                    <td>Rp. ${parseInt(group.daspen).toLocaleString("id-ID")}</td>
-                    <td>Rp. ${parseInt(group.totalIuran).toLocaleString("id-ID")}</td>
-                  </tr>
-                `).join('')}
+                ${groupedData?.map((group, index) => {
+        const members = group.members || [];
+        return members?.map((member, memberIndex) => `
+                    <tr>
+                      ${memberIndex === 0 ? `
+                        <td rowspan="${members.length}">${index + 1}</td>
+                        <td rowspan="${members.length}">${group.cabang}</td>
+                        <td rowspan="${members.length}">${group.unitKerja}</td>
+                      ` : ''}
+                      <td class="member-list">${member.namaAnggota}</td>
+                      ${memberIndex === 0 ? `<td rowspan="${members.length}">${group.jumlah || 0}</td>` : ''}
+                      <td>Rp. ${parseInt(member.pgri || 0).toLocaleString("id-ID")}</td>
+                      <td>Rp. ${parseInt(member.sanduka || 0).toLocaleString("id-ID")}</td>
+                      <td>Rp. ${parseInt(member.daspen || 0).toLocaleString("id-ID")}</td>
+                      <td>Rp. ${parseInt(member.totalIuran || 0).toLocaleString("id-ID")}</td>
+                    </tr>
+                  `).join('');
+      }).join('')}
                 <tr class="total-row">
                   <td colspan="4" style="text-align: center">Total Keseluruhan :</td>
-                  <td>${grandTotals.jumlah}</td>
-                  <td>Rp. ${parseInt(grandTotals.pgri).toLocaleString("id-ID")}</td>
-                  <td>Rp. ${parseInt(grandTotals.sanduka).toLocaleString("id-ID")}</td>
-                  <td>Rp. ${parseInt(grandTotals.daspen).toLocaleString("id-ID")}</td>
-                  <td>Rp. ${parseInt(grandTotals.totalIuran).toLocaleString("id-ID")}</td>
+                  <td>${grandTotals?.jumlah || 0}</td>
+                  <td>Rp. ${parseInt(grandTotals?.pgri || 0).toLocaleString("id-ID")}</td>
+                  <td>Rp. ${parseInt(grandTotals?.sanduka || 0).toLocaleString("id-ID")}</td>
+                  <td>Rp. ${parseInt(grandTotals?.daspen || 0).toLocaleString("id-ID")}</td>
+                  <td>Rp. ${parseInt(grandTotals?.totalIuran || 0).toLocaleString("id-ID")}</td>
                 </tr>
               </tbody>
             </table>
@@ -488,25 +496,16 @@ function RekapAnggota() {
         </html>
       `;
 
-      const blob = new Blob([htmlContent], { type: 'application/pdf' });
-
-      const printFrame = document.createElement('iframe');
-      printFrame.style.display = 'none';
+      const printFrame = document.createElement("iframe");
+      printFrame.style.display = "none";
+      printFrame.srcdoc = htmlContent;
       document.body.appendChild(printFrame);
 
-      printFrame.contentDocument.write(htmlContent);
-      printFrame.contentDocument.close();
-
       printFrame.onload = () => {
-        try {
-          printFrame.contentWindow.print();
-
-          setTimeout(() => {
-            document.body.removeChild(printFrame);
-          }, 1000);
-        } catch (error) {
-          console.error('Print error:', error);
-        }
+        printFrame.contentWindow.print();
+        setTimeout(() => {
+          document.body.removeChild(printFrame);
+        }, 1000);
       };
     } catch (error) {
       console.error("Error during print process:", error);
@@ -687,115 +686,102 @@ function RekapAnggota() {
             <table className="container w-full table-auto mb-8">
               <thead>
                 <tr>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">
-                    No
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">
-                    Cabang
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">
-                    Unit Kerja
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">
-                    Nama Anggota
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell" rowSpan="2">
-                    Jumlah Anggota
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell" colSpan="3">
-                    Jumlah
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">
-                    Total
-                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">No</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Cabang</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Unit Kerja</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Nama Anggota</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell" rowSpan="2">Jumlah Anggota</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell" colSpan="3">Jumlah</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700" rowSpan="2">Total</th>
                 </tr>
                 <tr>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell">
-                    PGRI
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell">
-                    Sanduka
-                  </th>
-                  <th className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell">
-                    Daspen
-                  </th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell">PGRI</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell">Sanduka</th>
+                  <th className="p-2 md:p-3 border text-white bg-teal-700 hidden lg:table-cell">Daspen</th>
                 </tr>
               </thead>
-
               <tbody>
-                {groupedData.map((group, index) => (
-                  <React.Fragment key={group.unitKerja}>
-                    <tr>
-                      <td className="p-2 md:p-3 border text-center">
-                        <div className="inline-flex items-center">
-                          {index + 1}
-                          {isMobile && (
-                            <Button
-                              className="text-blue-500 bg-transparent hover:bg-transparent"
-                              onClick={() => toggleExpand(group.unitKerja)}
-                            >
-                              {expandedRows.has(group.unitKerja) ? (
-                                <FaMinusCircle />
-                              ) : (
-                                <FaPlusCircle />
-                              )}
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-2 md:p-3 border">{group.cabang}</td>
-                      <td className="p-2 md:p-3 border">{group.unitKerja}</td>
-                      <td className="p-2 md:p-3 border text-center">
-                        <div className={`flex ${isMobile ? "flex-col gap-1" : "justify-center items-center"}`}>
-                          {isMobile && <span className="font-bold">{group.jumlah || 0} Anggota</span>}
-                          <Button
-                            className="text-blue-500 bg-transparent hover:bg-transparent"
-                            onClick={() => toggleExpand(group.unitKerja + '_members')}
-                          >
-                            {expandedRows.has(group.unitKerja + '_members') ? (
-                              <FaMinusCircle />
-                            ) : (
-                              <FaPlusCircle />
-                            )}
-                          </Button>
-                        </div>
-                        {expandedRows.has(group.unitKerja + '_members') && (
-                          <div className="pl-4 text-left">
-                            {group.namaAnggota.map((nama, idx) => (
-                              <div key={idx} className="py-1">
-                                {idx + 1}. {nama}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </td>
-                      <td className="p-2 md:p-3 border text-center hidden lg:table-cell">{group.jumlah || 0}</td>
-                      <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
-                        Rp. {parseInt(group.pgri).toLocaleString("id-ID")}
-                      </td>
-                      <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
-                        Rp. {parseInt(group.sanduka).toLocaleString("id-ID")}
-                      </td>
-                      <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
-                        Rp. {parseInt(group.daspen).toLocaleString("id-ID")}
-                      </td>
-                      <td className="p-2 md:p-3 border text-center">
-                        Rp. {parseInt(group.totalIuran).toLocaleString("id-ID")}
-                      </td>
-                    </tr>
-                    {isMobile && expandedRows.has(group.unitKerja) && (
+                {groupedData.map((group, index) => {
+                  const isExpanded = expandedRows.has(group.unitKerja);
+                  const rowSpanCount = isExpanded ? group.members.length + 1 : 1;
+
+                  return (
+                    <React.Fragment key={group.unitKerja}>
                       <tr>
-                        <td colSpan="7" className="p-2 md:p-3 border">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>PGRI: Rp. {parseInt(group.pgri).toLocaleString("id-ID")}</div>
-                            <div>Sanduka: Rp. {parseInt(group.sanduka).toLocaleString("id-ID")}</div>
-                            <div>Daspen: Rp. {parseInt(group.daspen).toLocaleString("id-ID")}</div>
-                          </div>
+                        <td className="p-2 md:p-3 border text-center" rowSpan={rowSpanCount}>
+                          <div className="inline-flex items-center">{index + 1}</div>
+                        </td>
+                        <td className="p-2 md:p-3 border" rowSpan={rowSpanCount}>{group.cabang}</td>
+                        <td className="p-2 md:p-3 border" rowSpan={rowSpanCount}>{group.unitKerja}</td>
+                        <td className="p-2 md:p-3 border text-center">
+                          <Button
+                            className="text-blue-500 bg-transparent hover:bg-transparent ml-2"
+                            onClick={() => toggleExpand(group.unitKerja)}
+                          >
+                            {isExpanded ? <FaMinusCircle /> : <FaPlusCircle />}
+                          </Button>
+                        </td>
+                        <td className="p-2 md:p-3 border text-center hidden lg:table-cell" rowSpan={rowSpanCount}>
+                          {group.jumlah}
+                        </td>
+                        <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                          Rp. {parseInt(group.pgri).toLocaleString("id-ID")}
+                        </td>
+                        <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                          Rp. {parseInt(group.sanduka).toLocaleString("id-ID")}
+                        </td>
+                        <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                          Rp. {parseInt(group.daspen).toLocaleString("id-ID")}
+                        </td>
+                        <td className="p-2 md:p-3 border text-center">
+                          Rp. {parseInt(group.totalIuran).toLocaleString("id-ID")}
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                ))}
+                      {isExpanded &&
+                        group.members.map((member, idx) => (
+                          <tr key={`${group.unitKerja}-member-${idx}`} className="bg-gray-50">
+                            <td className="p-2 md:p-3 border" colSpan={isMobile ? 5 : 1}>
+                              <div className="flex flex-col lg:flex-row">
+                                <div className="font-medium mb-2 lg:mb-0">
+                                  {idx + 1}. {member.namaAnggota}
+                                </div>
+                                <div className="lg:hidden space-y-2 mt-2">
+                                  <div className="flex justify-between px-4">
+                                    <span className="font-medium">PGRI:</span>
+                                    <span>Rp. {parseInt(member.pgri).toLocaleString("id-ID")}</span>
+                                  </div>
+                                  <div className="flex justify-between px-4">
+                                    <span className="font-medium">Sanduka:</span>
+                                    <span>Rp. {parseInt(member.sanduka).toLocaleString("id-ID")}</span>
+                                  </div>
+                                  <div className="flex justify-between px-4">
+                                    <span className="font-medium">Daspen:</span>
+                                    <span>Rp. {parseInt(member.daspen).toLocaleString("id-ID")}</span>
+                                  </div>
+                                  <div className="flex justify-between px-4 font-medium">
+                                    <span>Total:</span>
+                                    <span>Rp. {parseInt(member.totalIuran).toLocaleString("id-ID")}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                              Rp. {parseInt(member.pgri).toLocaleString("id-ID")}
+                            </td>
+                            <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                              Rp. {parseInt(member.sanduka).toLocaleString("id-ID")}
+                            </td>
+                            <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                              Rp. {parseInt(member.daspen).toLocaleString("id-ID")}
+                            </td>
+                            <td className="p-2 md:p-3 border text-center hidden lg:table-cell">
+                              Rp. {parseInt(member.totalIuran).toLocaleString("id-ID")}
+                            </td>
+                          </tr>
+                        ))}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
               <tfoot>
                 <tr className="bg-gray-100 font-bold">
