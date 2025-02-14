@@ -32,8 +32,6 @@ const Page = () => {
   const [originalCabangList, setOriginalCabangList] = useState([]);
   const [showCabangDropdown, setShowCabangDropdown] = useState(false);
   const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
-  const [totalEntries, setTotalEntries] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const router = useRouter();
   const unitKerjaRef = useRef(null);
   const { token } = useAuth();
@@ -61,6 +59,7 @@ const Page = () => {
     []
   );
   const [buatNamaRanting, setBuatNamaRanting] = useState("");
+  const [checkedUnitKerja, setCheckedUnitKerja] = useState([]);
 
   const addRanting = async () => {
     if (!selectedRanting || !selectedCabang) {
@@ -409,6 +408,76 @@ const Page = () => {
     }
   };
 
+  const deleteUnitKerjaRanting = async () => {
+    if (checkedUnitKerja.length === 0) {
+      toast.error("Pilih minimal satu Unit Kerja untuk dihapus.");
+      return;
+    }
+
+    try {
+      const unitKerjaIds = checkedUnitKerja.map((item) => item.unitKerjaId); // Ambil hanya ID
+      await GlobalApi.deleteUnitKerjaRanting(unitKerjaIds);
+
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+              marginTop: "14px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <strong
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Unit Kerja Berhasil Dihapus!
+          </strong>
+        </div>,
+        {
+          icon: null,
+          duration: 4000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      setTimeout(() => {
+        window.location.reload();
+      }, 4000);
+      setCheckedUnitKerja([]);
+    } catch (error) {
+      console.error("Error menghapus unit kerja:", error);
+      toast.error("Gagal menghapus unit kerja. Silakan coba lagi.");
+    }
+  };
+
   const fetchRantingByCabang = async (cabang) => {
     if (!cabang) {
       console.warn("Cabang belum dipilih!");
@@ -517,6 +586,14 @@ const Page = () => {
     setSearchUnitKerja("");
   };
 
+  const handleCheckboxChange = (unitKerjaId, unitKerjaName) => {
+    setCheckedUnitKerja((prev) =>
+      prev.some((item) => item.unitKerjaId === unitKerjaId)
+        ? prev.filter((item) => item.unitKerjaId !== unitKerjaId)
+        : [...prev, { unitKerjaId, unitKerjaName }]
+    );
+  };
+
   const handleUnitKerjaChange = (e) => {
     const value = e.target.value.toLowerCase();
     setSearchUnitKerja(value);
@@ -526,6 +603,15 @@ const Page = () => {
     );
 
     setFilteredUnitKerjaOptions(filteredOptions);
+  };
+
+  const handleRemoveRanting = async (id) => {
+    try {
+      await GlobalApi.deleteNamaRanting(id);
+      setAllRantingList((prev) => prev.filter((ranting) => ranting.id !== id));
+    } catch (error) {
+      console.error("Gagal menghapus Nama Ranting", error);
+    }
   };
 
   const filteredData = namaRanting?.filter((item) => {
@@ -546,15 +632,12 @@ const Page = () => {
     setCurrentPage(0);
   };
 
-  const handlePageChange = (newPage) => {
-    if (newPage >= 0 && newPage < totalPages) {
-      setCurrentPage(newPage);
-      fetchData(newPage, entries);
-    }
-  };
-
   const handleDeleteAdminClick = (deleteByNamaRanting) => {
-    deleteRanting(deleteByNamaRanting);
+    if (checkedUnitKerja.length > 0) {
+      deleteUnitKerjaRanting();
+    } else {
+      deleteRanting(deleteByNamaRanting);
+    }
   };
 
   const handleSelectRanting = (ranting) => {
@@ -678,206 +761,222 @@ const Page = () => {
               <div className="mb-2">
                 <h3 className="text-base font-bold mb-2">Tambah Ranting</h3>
                 <div className="bg-white p-6 rounded-lg shadow-md">
-                  {/* Tambah Nama Cabang */}
-                  <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-1">
-                      Nama Cabang
-                    </label>
-                    <div className="flex items-center relative">
-                      <Input
-                        type="text"
-                        value={selectedCabang}
-                        readOnly
-                        disabled={role === "ADMIN"}
-                        onClick={handleCabangClick}
-                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                        placeholder="Pilih Cabang"
-                      />
-                      {showCabangDropdown && (
-                        <div
-                          className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full"
-                          style={{ top: "100%", left: 0 }}
-                        >
-                          <ul className="max-h-44 overflow-y-auto">
-                            <li className="py-2 px-2">
-                              <Input
-                                type="text"
-                                onChange={(e) =>
-                                  handleCabangSearch(e.target.value)
-                                }
-                                className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
-                                placeholder="Cari atau ketik Cabang..."
-                                autoFocus
-                              />
-                            </li>
+                  {/* Kontainer Flex untuk Form */}
+                  <div className="flex flex-wrap gap-4">
+                    {/* Tambah Nama Cabang */}
+                    <div className="flex-1">
+                      <label className="block text-gray-700 text-sm font-bold mb-1">
+                        Nama Cabang
+                      </label>
+                      <div className="flex items-center relative">
+                        <Input
+                          type="text"
+                          value={selectedCabang}
+                          readOnly
+                          disabled={role === "ADMIN"}
+                          onClick={handleCabangClick}
+                          className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                          placeholder="Pilih Cabang"
+                        />
+                        {showCabangDropdown && (
+                          <div
+                            className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full"
+                            style={{ top: "100%", left: 0 }}
+                          >
+                            <ul className="max-h-44 overflow-y-auto">
+                              <li className="py-2 px-2">
+                                <Input
+                                  type="text"
+                                  onChange={(e) =>
+                                    handleCabangSearch(e.target.value)
+                                  }
+                                  className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                                  placeholder="Cari atau ketik Cabang..."
+                                  autoFocus
+                                />
+                              </li>
 
-                            <li
-                              onClick={() =>
-                                handleSelectCabang({ kecamatan: "" })
-                              }
-                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                            >
-                              Pilih Cabang
-                            </li>
-                            {[
-                              ...(sessionStorage.getItem("role") ===
-                              "SUPER ADMIN"
-                                ? [{ id: "All", kecamatan: "All" }]
-                                : []),
-                              ...filteredCabangList,
-                            ].map((cabang) => (
                               <li
-                                key={cabang.id}
-                                onClick={() => handleSelectCabang(cabang)}
+                                onClick={() =>
+                                  handleSelectCabang({ kecamatan: "" })
+                                }
                                 className="px-4 py-2 cursor-pointer hover:bg-gray-200"
                               >
-                                {cabang.kecamatan}
+                                Pilih Cabang
                               </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Tambah Nama Ranting */}
-                  <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-1">
-                      Nama Ranting
-                    </label>
-                    <div className="relative">
-                      <Input
-                        type="text"
-                        value={selectedRanting}
-                        readOnly
-                        onClick={() => setShowRantingDropdown(true)}
-                        className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
-                          !selectedCabang ? "cursor-not-allowed opacity-50" : ""
-                        }`}
-                        placeholder="Pilih Nama Ranting"
-                      />
-                      {showRantingDropdown && selectedCabang && (
-                        <div
-                          className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full"
-                          style={{ top: "100%", left: 0 }}
-                        >
-                          <ul className="max-h-44 overflow-y-auto">
-                            <li className="py-2 px-2">
-                              <Input
-                                type="text"
-                                onChange={(e) =>
-                                  handleRantingSearch(e.target.value)
-                                }
-                                className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
-                                placeholder="Cari atau ketik Nama Ranting..."
-                                autoFocus
-                              />
-                            </li>
-
-                            <li
-                              onClick={() =>
-                                handleSelectRanting({ namaRanting: "" })
-                              }
-                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                            >
-                              Pilih Nama Ranting
-                            </li>
-
-                            {allRantingList.map((ranting) => (
-                              <li
-                                key={ranting.id}
-                                onClick={() => handleSelectRanting(ranting)}
-                                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                              >
-                                {ranting.namaRanting}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Tambah Unit Kerja */}
-                  <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-1">
-                      Nama Unit Kerja
-                    </label>
-                    <div
-                      ref={unitKerjaRef}
-                      className="relative w-full mt-4 sm:mt-0"
-                    >
-                      <Input
-                        type="text"
-                        placeholder="Pilih Unit Kerja"
-                        value={selectedUnitKerja}
-                        readOnly
-                        onFocus={() => {
-                          if (
-                            selectedRanting &&
-                            selectedCabang !== "Pilih Cabang"
-                          ) {
-                            setShowDropdownUnitKerja(true);
-                            setFilteredUnitKerjaOptions(
-                              selectedCabang === "Pilih Cabang"
-                                ? allUnitKerja
-                                : allUnitKerja.filter(
-                                    (uk) => uk.cabang === selectedCabang
-                                  )
-                            );
-                          }
-                        }}
-                        className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
-                          !selectedRanting
-                            ? "cursor-not-allowed opacity-50"
-                            : ""
-                        }`}
-                        disabled={!selectedRanting}
-                      />
-
-                      {showDropdownUnitKerja &&
-                        selectedCabang !== "Pilih Cabang" && (
-                          <div className="absolute z-10 border rounded bg-white shadow-lg mt-1 w-full max-w-full">
-                            <div className="p-2 w-full">
-                              <Input
-                                type="text"
-                                value={searchUnitKerja}
-                                onChange={handleUnitKerjaChange}
-                                placeholder="Cari Unit Kerja..."
-                                className="w-full border rounded py-2 px-3 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                              />
-                            </div>
-                            <ul className="max-h-56 overflow-y-auto mt-1 rounded-md">
-                              <li
-                                className="p-3 cursor-pointer hover:bg-gray-100 transition duration-150 ease-in-out"
-                                onClick={() => handleUnitKerjaSelect({})}
-                              >
-                                Semua Unit Kerja
-                              </li>
-                              {filteredUnitKerjaOptions.map((item) => (
+                              {[
+                                ...(sessionStorage.getItem("role") ===
+                                "SUPER ADMIN"
+                                  ? [{ id: "All", kecamatan: "All" }]
+                                  : []),
+                                ...filteredCabangList,
+                              ].map((cabang) => (
                                 <li
-                                  key={item.id}
-                                  className="p-3 cursor-pointer hover:bg-gray-100 transition duration-150 ease-in-out"
-                                  onClick={() => handleUnitKerjaSelect(item)}
+                                  key={cabang.id}
+                                  onClick={() => handleSelectCabang(cabang)}
+                                  className="px-4 py-2 cursor-pointer hover:bg-gray-200"
                                 >
-                                  {item.unitKerja}
+                                  {cabang.kecamatan}
                                 </li>
                               ))}
                             </ul>
                           </div>
                         )}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Tambah Ranting */}
-                  <div className="flex justify-end mt-6">
-                    <Button
-                      type="button"
-                      className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ease-in-out duration-150"
-                      onClick={addRanting}
-                    >
-                      Tambah
-                    </Button>
+                    {/* Tambah Nama Ranting */}
+                    <div className="flex-1">
+                      <label className="block text-gray-700 text-sm font-bold mb-1">
+                        Nama Ranting
+                      </label>
+                      <div className="relative">
+                        <Input
+                          type="text"
+                          value={selectedRanting}
+                          readOnly
+                          onClick={() => setShowRantingDropdown(true)}
+                          className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                            !selectedCabang
+                              ? "cursor-not-allowed opacity-50"
+                              : ""
+                          }`}
+                          placeholder="Pilih Nama Ranting"
+                        />
+                        {showRantingDropdown && selectedCabang && (
+                          <div
+                            className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full"
+                            style={{ top: "100%", left: 0 }}
+                          >
+                            <ul className="max-h-44 overflow-y-auto">
+                              <li className="py-2 px-2">
+                                <Input
+                                  type="text"
+                                  onChange={(e) =>
+                                    handleRantingSearch(e.target.value)
+                                  }
+                                  className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                                  placeholder="Cari atau ketik Nama Ranting..."
+                                  autoFocus
+                                />
+                              </li>
+
+                              <li
+                                onClick={() =>
+                                  handleSelectRanting({ namaRanting: "" })
+                                }
+                                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                              >
+                                Pilih Nama Ranting
+                              </li>
+
+                              {allRantingList.map((ranting) => (
+                                <li
+                                  key={ranting.id}
+                                  className="px-4 py-2 cursor-pointer hover:bg-gray-200 flex justify-between items-center"
+                                >
+                                  <span
+                                    onClick={() => handleSelectRanting(ranting)}
+                                  >
+                                    {ranting.namaRanting}
+                                  </span>
+                                  <Button
+                                    className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
+                                    onClick={() =>
+                                      handleRemoveRanting(ranting.id)
+                                    }
+                                  >
+                                    <FontAwesomeIcon icon={faTrash} />
+                                  </Button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Tambah Unit Kerja */}
+                    <div className="flex-1">
+                      <label className="block text-gray-700 text-sm font-bold mb-1">
+                        Nama Unit Kerja
+                      </label>
+                      <div
+                        ref={unitKerjaRef}
+                        className="relative w-full mt-4 sm:mt-0"
+                      >
+                        <Input
+                          type="text"
+                          placeholder="Pilih Unit Kerja"
+                          value={selectedUnitKerja}
+                          readOnly
+                          onFocus={() => {
+                            if (
+                              selectedRanting &&
+                              selectedCabang !== "Pilih Cabang"
+                            ) {
+                              setShowDropdownUnitKerja(true);
+                              setFilteredUnitKerjaOptions(
+                                selectedCabang === "Pilih Cabang"
+                                  ? allUnitKerja
+                                  : allUnitKerja.filter(
+                                      (uk) => uk.cabang === selectedCabang
+                                    )
+                              );
+                            }
+                          }}
+                          className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                            !selectedRanting
+                              ? "cursor-not-allowed opacity-50"
+                              : ""
+                          }`}
+                          disabled={!selectedRanting}
+                        />
+
+                        {showDropdownUnitKerja &&
+                          selectedCabang !== "Pilih Cabang" && (
+                            <div className="absolute z-10 border rounded bg-white shadow-lg mt-1 w-full max-w-full">
+                              <div className="p-2 w-full">
+                                <Input
+                                  type="text"
+                                  value={searchUnitKerja}
+                                  onChange={handleUnitKerjaChange}
+                                  placeholder="Cari Unit Kerja..."
+                                  className="w-full border rounded py-2 px-3 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                />
+                              </div>
+                              <ul className="max-h-56 overflow-y-auto mt-1 rounded-md">
+                                <li
+                                  className="p-3 cursor-pointer hover:bg-gray-100 transition duration-150 ease-in-out"
+                                  onClick={() => handleUnitKerjaSelect({})}
+                                >
+                                  Semua Unit Kerja
+                                </li>
+                                {filteredUnitKerjaOptions.map((item) => (
+                                  <li
+                                    key={item.id}
+                                    className="p-3 cursor-pointer hover:bg-gray-100 transition duration-150 ease-in-out"
+                                    onClick={() => handleUnitKerjaSelect(item)}
+                                  >
+                                    {item.unitKerja}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                      </div>
+                    </div>
+
+                    {/* Tambah Ranting */}
+                    <div className="flex justify-end mt-6">
+                      <Button
+                        type="button"
+                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ease-in-out duration-150"
+                        onClick={addRanting}
+                      >
+                        Tambah
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
@@ -1186,11 +1285,36 @@ const Page = () => {
                                 {item.namaRanting}
                               </td>
                               <td className="p-2 md:p-3 border">
-                                {item.unitKerja?.split(", ").map((uk, i) => (
-                                  <div key={i}>
-                                    {i + 1}. {uk}
-                                  </div>
-                                ))}
+                                {item.unitKerja?.split(", ").map((uk, i) => {
+                                  const [unitKerjaId, unitKerjaName] =
+                                    uk.split(":");
+                                  return (
+                                    <div
+                                      key={unitKerjaId || i}
+                                      className="flex items-center space-x-2"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        id={`unitKerja-${item.id}-${
+                                          unitKerjaId || i
+                                        }`}
+                                        name={`unitKerja-${item.id}`}
+                                        value={unitKerjaId}
+                                        className="w-4 h-4"
+                                        onChange={() =>
+                                          handleCheckboxChange(unitKerjaId)
+                                        }
+                                      />
+                                      <label
+                                        htmlFor={`unitKerja-${item.id}-${
+                                          unitKerjaId || i
+                                        }`}
+                                      >
+                                        {unitKerjaName || uk}{" "}
+                                      </label>
+                                    </div>
+                                  );
+                                })}
                               </td>
                               <td className="p-2 border text-center">
                                 <div className="flex space-x-2 justify-center">
