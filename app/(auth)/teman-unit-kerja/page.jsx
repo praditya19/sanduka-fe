@@ -319,23 +319,47 @@ const TemanUnitKerja = () => {
                       </div>
 
                       <div className="mt-4 justify-items-center">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-gray-800 text-sm">
-                          <div className="flex items-center">
+                        <div className="grid grid-cols-3 md:grid-cols-3 gap-4 text-gray-800 text-sm">
+                          <div className="flex flex-col items-start">
                             <span className="font-semibold">Daspen:</span>
-                            <span className="ml-2">
-                              {data.pesertaDaspen ? "✔" : "✘"}
+                            <span className="mt-1">
+                              {data.pesertaDaspen ? (
+                                <span className="bg-green-500 text-white px-2 py-1 rounded">
+                                  Terdaftar
+                                </span>
+                              ) : (
+                                <span className="bg-red-500 text-white px-2 py-1 rounded text-xs">
+                                  Belum Terdaftar
+                                </span>
+                              )}
                             </span>
                           </div>
-                          <div className="flex items-center">
+                          <div className="flex flex-col items-start">
                             <span className="font-semibold">KTA Digital:</span>
-                            <span className="ml-2">
-                              {data.pesertaKtaDigital ? "✔" : "✘"}
+                            <span className="mt-1">
+                              {data.pesertaKtaDigital ? (
+                                <span className="bg-green-500 text-white px-2 py-1 rounded ml-1">
+                                  Terdaftar
+                                </span>
+                              ) : (
+                                <span className="bg-red-500 text-white px-2 py-1 rounded">
+                                  Belum Terdaftar
+                                </span>
+                              )}
                             </span>
                           </div>
-                          <div className="flex items-center">
+                          <div className="flex flex-col items-start">
                             <span className="font-semibold">Sanduka:</span>
-                            <span className="ml-2">
-                              {data.pesertaSanduka ? "✔" : "✘"}
+                            <span className="mt-1">
+                              {data.pesertaSanduka ? (
+                                <span className="bg-green-500 text-white px-2 py-1 rounded">
+                                  Terdaftar
+                                </span>
+                              ) : (
+                                <span className="bg-red-500 text-white px-2 py-1 rounded">
+                                  Belum Terdaftar
+                                </span>
+                              )}
                             </span>
                           </div>
                         </div>
