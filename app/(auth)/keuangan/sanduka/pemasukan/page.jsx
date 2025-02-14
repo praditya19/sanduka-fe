@@ -45,6 +45,8 @@ function Pemasukan() {
   const startYear = 2020;
   const currentYear = new Date().getFullYear();
   const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [formValues, setFormValues] = useState({
     tanggalTransaksi: "",
     posTransaksi: "",
@@ -181,7 +183,7 @@ function Pemasukan() {
           newSelectedYear
         );
         setTransactions(data);
-        console.log(data)
+        console.log(data);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -194,12 +196,12 @@ function Pemasukan() {
 
   const sortedTransactions = (() => {
     if (!transactions) return [];
-  
-    // Pisahkan saldo awal
+
     const saldoAwal = transactions.find((t) => t.uraian === "Saldo Awal");
-    const otherTransactions = transactions.filter((t) => t.uraian !== "Saldo Awal");
-  
-    // Gabungkan saldo awal di posisi paling atas
+    const otherTransactions = transactions.filter(
+      (t) => t.uraian !== "Saldo Awal"
+    );
+
     return saldoAwal ? [saldoAwal, ...otherTransactions] : otherTransactions;
   })();
 
@@ -525,17 +527,19 @@ function Pemasukan() {
   const handleSelectAll = () => {
     const newSelectAll = !selectAll;
     setSelectAll(newSelectAll);
-
+  
     const updatedCheckedIds = newSelectAll
-      ? paginatedTransactions.map((transaction) => transaction.id)
+      ? transactions
+          .filter((transaction) => transaction.uraian !== "Saldo Awal")
+          .map((transaction) => transaction.id)
       : [];
-
+  
     setCheckedIds(updatedCheckedIds);
-
-    setPaginatedTransactions((prevTransactions) =>
+  
+    setTransactions((prevTransactions) =>
       prevTransactions.map((transaction) => ({
         ...transaction,
-        checked: newSelectAll,
+        checked: newSelectAll && transaction.uraian !== "Saldo Awal",
       }))
     );
   };
@@ -619,28 +623,82 @@ function Pemasukan() {
     }).format(value);
   };
 
-  const handleEditClick = async (id) => {
+  const handleGetEdit = async (id) => {
+    console.log("ID yang diklik:", id);
     try {
-      const data = await GlobalApi.editPemasukanUangMasuk(id);
-
-      const tanggalTransaksi = data.tglTransaksi
-        ? data.tglTransaksi.split(", ")[1]
+      const data = await GlobalApi.getPemasukanUangMasukById(id);
+  
+      const tanggalTransaksi = data.tanggalTransaksi
+        ? data.tanggalTransaksi.split(", ")[1] || data.tanggalTransaksi
         : "";
-
-      setFormValues({
-        tanggalTransaksi: tanggalTransaksi,
-        posTransaksi: data.uraian || "",
-        nominal: data.debet?.trim() !== "" ? parseFloat(data.debet) : 0,
-        kredit: data.kredit?.trim() !== "" ? parseFloat(data.kredit) : 0,
-        saldo: data.saldo?.trim() !== "" ? parseFloat(data.saldo) : 0,
+  
+      const updatedFormValues = {
         noBukti: data.noBukti || "",
-        totalAnggota: data.totalAnggota || null,
-        totalAnggotaByAdmin: data.totalAnggotaByAdmin || null,
-      });
+        tanggalTransaksi: tanggalTransaksi || "",
+        posTransaksi: data.posTransaksi || "",
+        jenisPenerimaan: data.masukKe || "",
+        cabang: data.cabang || "",
+        setoranBulan: data.bulan || "",
+        totalAnggota: data.totalAnggota || "",
+        nominal: data.debet || "",
+        totalSumbangan: data.totalSumbangan || "",
+        totalAnggotaByAdmin: data.totalAnggotaByAdmin || "",
+        keterangan: data.posTransaksi || "",
+      };
+
+      setFormValues(updatedFormValues);
+
+      setEditId(id);
+
+      setIsEditing(true);
     } catch (error) {
       console.error("Gagal mengambil data berdasarkan id:", error);
     }
   };
+  
+  const handleSubmitEdit = async () => {
+    if (!editId) {
+      console.error("ID belum ada, tidak bisa mengedit");
+      return;
+    }
+  
+    console.log("ID yang akan dikirim untuk edit:", editId);
+  
+    try {
+      const data = await GlobalApi.getPemasukanUangMasukById(editId);
+
+      const updatedFormValues = {
+        noBukti: data.noBukti || "",
+        tanggalTransaksi: formValues.tanggalTransaksi || "",
+        posTransaksi: formValues.posTransaksi || "",
+        masukKe: formValues.jenisPenerimaan || "",
+        cabang: formValues.cabang || "",
+        bulan: formValues.setoranBulan || "",
+        debet:  formValues.nominal || "",
+        kredit: "",
+        bulanSantunan: "",
+        yangMeninggal: "",
+        namaPenerima: "",
+        keterangan: "",
+        jenisPembayaran: "Sanduka"
+      };
+  
+      console.log("Form Values yang akan dikirim:", updatedFormValues);
+  
+      // Set state form values
+      setFormValues(updatedFormValues);
+  
+      // Kirim data ke API (update data)
+      const response = await GlobalApi.editPemasukanUangMasuk(editId, updatedFormValues);
+  
+      console.log("Response setelah data terkirim:", response);
+  
+      // Jika perlu menonaktifkan mode edit, setIsEditing(false);
+    } catch (error) {
+      console.error("Gagal mengedit data:", error);
+    }
+  };
+  
 
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -1023,12 +1081,25 @@ function Pemasukan() {
                 >
                   Sesuai Jumlah Target
                 </Button>
-                <Button
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                  onClick={handleSubmit}
-                >
-                  Simpan
-                </Button>
+                <div className="flex space-x-4">
+  {/* Button Simpan jika tidak dalam mode edit */}
+  {!isEditing ? (
+    <Button
+      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+      onClick={handleSubmit}
+    >
+      Simpan
+    </Button>
+  ) : (
+    // Button Edit jika dalam mode edit
+    <Button
+      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+      onClick={handleSubmitEdit}
+    >
+      Edit
+    </Button>
+  )}
+</div>
                 <Button
                   className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-700 transition duration-150 ease-in-out"
                   type="button"
@@ -1177,19 +1248,27 @@ function Pemasukan() {
                               className="form-checkbox h-4 w-4"
                               checked={transaction.checked}
                               onChange={() => handleCheck(transaction.id)}
+                              disabled={transaction.uraian === "Saldo Awal"}
                             />
                             <Button
                               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
-                              onClick={() => handleEditClick(transaction.id)}
+                              onClick={() => handleGetEdit(transaction.id)}
                             >
                               Edit
                             </Button>
                             <button
-                              className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center`}
+                              className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center ${
+                                transaction.uraian === "Saldo Awal"
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
                               onClick={() =>
                                 handleDeleteClickId(transaction.id)
                               }
-                              disabled={loadingId === transaction.id}
+                              disabled={
+                                transaction.uraian === "Saldo Awal" ||
+                                loadingId === transaction.id
+                              }
                             >
                               {loadingId === transaction.id ? (
                                 <div className="flex items-center">
