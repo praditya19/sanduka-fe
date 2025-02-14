@@ -784,10 +784,20 @@ const getSaldoOrganisasi = async () => {
   }
 };
 
-const editPemasukanUangMasuk = async (id) => {
+const getPemasukanUangMasukById = async (id) => {
   try {
-    const response = await axiosClient.get(`/api/uang-masuk-keluar/${id}`); // id sebagai bagian dari path
-    return response.data; // Kembalikan data API
+    const response = await axiosClient.get(`/api/uang-masuk-keluar/${id}`);
+    return response.data
+  } catch (error) {
+    console.error("Error fetching data by id:", error);
+    throw error;
+  }
+}
+
+const editPemasukanUangMasuk = async (id, updatedFormValues) => {
+  try {
+    const response = await axiosClient.put(`/api/uang-masuk-keluar/${id}`, updatedFormValues);
+    return response.data;
   } catch (error) {
     console.error("Error fetching data by id:", error);
     throw error;
@@ -1898,6 +1908,7 @@ export default {
   updateRegisUser,
   getNoBukti,
   sendSesuaiJumlahTarget,
+  getPemasukanUangMasukById,
   editPemasukanUangMasuk,
   batalLaporanById,
   verifikasiLaporanById,
