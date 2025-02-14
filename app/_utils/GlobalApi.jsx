@@ -813,6 +813,7 @@ const hapusPemasukanUangMasuk = async (id) => {
     throw error;
   }
 };
+
 const getDefaultIuranById = async (id) => {
   try {
     const response = await axiosClient.get(`/api/defaultIuran/${id}`);
@@ -955,6 +956,7 @@ const createKalenderData = async (payload) => {
     throw error;
   }
 };
+
 const createTargetKalender = async (payload) => {
   try {
     const response = await axiosClient.post("/api/target-kalender", payload);
@@ -1832,6 +1834,35 @@ const uploadFileRegister = async (formData) => {
   }
 };
 
+const deleteUnitKerjaRanting = async (unitKerjaIds) => {
+  try {
+    const response = await axiosClient.delete(
+      "/api/ranting/deleteByUnitKerja",
+      {
+        params: { unitKerjaIds },
+        paramsSerializer: (params) => {
+          return new URLSearchParams(params).toString();
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting unit kerja: ", error);
+    throw error;
+  }
+};
+
+const deleteNamaRanting = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/nama-ranting/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error delete data by id", error);
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -1963,4 +1994,6 @@ export default {
   getNamaRantingByCabang,
   getNominalAggregatedData,
   uploadFileRegister,
+  deleteUnitKerjaRanting,
+  deleteNamaRanting,
 };
