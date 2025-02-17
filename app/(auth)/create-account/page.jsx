@@ -1835,7 +1835,7 @@ const Page = () => {
                       <SelectContent>
                         <SelectGroup>
                           <SelectItem value="Pendidik">Pendidik</SelectItem>
-                          <SelectItem value="Tenaga Pendidik">
+                          <SelectItem value="Tenaga Kependidikan">
                             Tenaga Pendidik
                           </SelectItem>
                         </SelectGroup>
