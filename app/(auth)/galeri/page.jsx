@@ -37,51 +37,12 @@ const Page = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const compressImage = async (file, maxSizeKB = 50) => {
-    const maxFileSizeBytes = maxSizeKB * 1024;
-
-    const img = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = e.target.result;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-
-    let quality = 0.8;
-    let scale = 1;
-
-    while (true) {
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-      const blob = await new Promise(resolve =>
-        canvas.toBlob(resolve, 'image/jpeg', quality)
-      );
-
-      if (blob.size <= maxFileSizeBytes) {
-        return new File([blob], file.name, {
-          type: 'image/jpeg',
-          lastModified: Date.now()
-        });
-      }
-
-      if (quality > 0.1) {
-        quality -= 0.1;
-      } else {
-        scale *= 0.9;
-      }
+  useEffect(() => {
+    const totalPages = Math.ceil(galleries.length / itemsPerPage);
+    if (currentPage >= totalPages && totalPages > 0) {
+      setCurrentPage(totalPages - 1);
     }
-  };
+  }, [galleries, currentPage]);
 
   const fetchGalleries = async () => {
     try {
@@ -113,15 +74,9 @@ const Page = () => {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  const handleFileChange = async (e) => {
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
-    try {
-      const compressedFile = await compressImage(file);
-      setSelectedFile(compressedFile);
-    } catch (error) {
-      console.error('Image compression failed', error);
-      setSelectedFile(file);
-    }
+    setSelectedFile(file);
   };
 
   const handleSubmit = async (e) => {
@@ -144,7 +99,13 @@ const Page = () => {
         );
       } else {
         newGallery = await GlobalApi.createSidebarGallery(formData);
-        setGalleries(prevGalleries => [...prevGalleries, newGallery]);
+        setGalleries(prevGalleries => {
+          const updatedGalleries = [...prevGalleries, newGallery];
+          const newItemIndex = updatedGalleries.length - 1;
+          const newItemPage = Math.floor(newItemIndex / itemsPerPage);
+          setCurrentPage(newItemPage);
+          return updatedGalleries;
+        });
       }
 
       setSelectedFile(null);
@@ -169,7 +130,16 @@ const Page = () => {
     if (galleryToDelete) {
       try {
         await GlobalApi.deleteSidebarGallery(galleryToDelete.id);
-        setGalleries(galleries.filter(gallery => gallery.id !== galleryToDelete.id));
+        setGalleries(prevGalleries => {
+          const updatedGalleries = prevGalleries.filter(gallery => gallery.id !== galleryToDelete.id);
+          const totalPages = Math.ceil(updatedGalleries.length / itemsPerPage);
+          
+          if (currentPage >= totalPages && totalPages > 0) {
+            setCurrentPage(totalPages - 1);
+          }
+          
+          return updatedGalleries;
+        });
         setIsDeleteModalOpen(false);
       } catch (error) {
         console.error("Error deleting gallery:", error);
@@ -300,10 +270,11 @@ const Page = () => {
           <button
             key={page}
             onClick={() => onPageChange(page - 1)}
-            className={`px-3 py-1 border rounded text-sm ${page - 1 === currentPage
+            className={`px-3 py-1 border rounded text-sm ${
+              page - 1 === currentPage
                 ? "bg-blue-500 text-white"
                 : "bg-white hover:bg-gray-50"
-              }`}
+            }`}
           >
             {page}
           </button>
@@ -334,8 +305,9 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="w-full p-6">
             <div className="mt-10 mb-8">
