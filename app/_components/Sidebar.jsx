@@ -19,6 +19,7 @@ import {
   faChartPie,
   faSitemap,
   faImage,
+  faExclamationCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
 import { Button } from "@/components/ui/button";
@@ -118,13 +119,18 @@ const icons = [
     href: "/teman-unit-kerja",
     color: "text-green-700",
   },
-
   {
     icon: faImage,
     label: "Galeri",
     href: "/galeri",
     color: "text-green-700",
   },
+  // {
+  //   icon: faExclamationCircle,
+  //   label: "Pengaduan",
+  //   href: "/pengaduan",
+  //   color: "text-red-700",
+  // },
 ];
 
 export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
@@ -177,22 +183,25 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
         <div>
           <Button
             onClick={toggleSidebar}
-            className={`p-2 rounded-md text-black ${isSidebarOpen ? "bg-black" : "bg-transparent"
-              } transition-colors duration-300 hover:bg-gray-500 focus:outline-none fixed top-1 left-2 sm:left-2 z-50`}
+            className={`p-2 rounded-md text-black ${
+              isSidebarOpen ? "bg-black" : "bg-transparent"
+            } transition-colors duration-300 hover:bg-gray-500 focus:outline-none fixed top-1 left-2 sm:left-2 z-50`}
           >
             <FontAwesomeIcon
               icon={isSidebarOpen ? faTimes : faBars}
               size="lg"
-              className={`text-black ${isSidebarOpen ? "text-white" : "text-black"
-                }`}
+              className={`text-black ${
+                isSidebarOpen ? "text-white" : "text-black"
+              }`}
             />
           </Button>
         </div>
       )}
 
       <div
-        className={`fixed top-0 left-0 w-64 min-h-screen bg-white p-4 flex flex-col space-y-2 shadow-lg mt-12 transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } overflow-hidden`}
+        className={`fixed top-0 left-0 w-64 min-h-screen bg-white p-4 flex flex-col space-y-2 shadow-lg mt-12 transition-transform duration-300 ease-in-out ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } overflow-hidden`}
       >
         <div className="flex flex-col space-y-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
           {filteredIcons.map((item, index) => {
@@ -202,8 +211,9 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
               <Link
                 href={item.href}
                 key={index}
-                className={`flex items-center p-3 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md ${isActive ? "bg-blue-400" : ""
-                  }`}
+                className={`flex items-center p-3 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md ${
+                  isActive ? "bg-blue-400" : ""
+                }`}
               >
                 <FontAwesomeIcon
                   icon={item.icon}
@@ -211,8 +221,9 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
                   className={`${item.color} w-6`}
                 />
                 <span
-                  className={`text-sm md:text-base font-medium ${isActive ? "text-white" : "text-gray-700"
-                    }`}
+                  className={`text-sm md:text-base font-medium ${
+                    isActive ? "text-white" : "text-gray-700"
+                  }`}
                 >
                   {item.label}
                 </span>
