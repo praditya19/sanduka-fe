@@ -1023,6 +1023,16 @@ const createPembayaranSanduka = async (payload) => {
     throw error;
   }
 };
+
+const createSaldoAwal = async (saldoAwalRequest) => {
+  try {
+    const response = await axiosClient.post("/api/uang-masuk-keluar/create-saldo-awal", saldoAwalRequest);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating saldo awal sanduka data:", error);
+    throw error;
+  }
+};
 // Rekap Lapor Sanduka
 const getRekapLaporDiterima = async () => {
   try {
@@ -1917,6 +1927,7 @@ export default {
   getTotalAnggota,
   getTablePemasukanSanduka,
   createPembayaranSanduka,
+  createSaldoAwal,
   getDataLapor,
   getRekapLaporDiterima,
   getRekapLaporBelom,

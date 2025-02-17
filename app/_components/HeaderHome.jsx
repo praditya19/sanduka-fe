@@ -102,8 +102,9 @@ const HeaderHome = () => {
 
   const handleLogout = () => {
     sessionStorage.clear();
+    localStorage.clear();
     window.location.href = "/";
-  };
+};
 
   const getEditProfilePath = () => {
     const userRole = sessionStorage.getItem("role");

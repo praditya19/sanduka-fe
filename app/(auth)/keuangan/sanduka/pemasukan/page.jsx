@@ -47,6 +47,7 @@ function Pemasukan() {
   const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [isSaldoAwalExist, setIsSaldoAwalExist] = useState(false);
   const [formValues, setFormValues] = useState({
     tanggalTransaksi: "",
     posTransaksi: "",
@@ -184,16 +185,91 @@ function Pemasukan() {
         );
         setTransactions(data);
         console.log(data);
+  
+        // Check if Saldo Awal exists in the fetched data
+        const saldoAwalData = data.find(item => item.uraian === "Saldo Awal");
+        
+        // If Saldo Awal is found, set isSaldoAwalExist to true
+        if (saldoAwalData) {
+          setIsSaldoAwalExist(true);
+        } else {
+          setIsSaldoAwalExist(false);
+        }
       }
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
-
+  
   useEffect(() => {
     fetchData();
   }, [selectedBulan, newSelectedYear]);
 
+const createSaldoAwal = async () => {
+  try {
+    setIsLoading(true);
+    const today = new Date();
+    const sixteenthDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 16);
+    const formattedDate = sixteenthDayOfMonth.toISOString().split("T")[0];
+
+    const prevMonth = today.getMonth() === 0 ? 11 : today.getMonth() - 1;
+    const prevYear = today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
+
+    const data = await GlobalApi.getTablePemasukanSanduka(prevMonth + 1, prevYear);
+    const saldoAwalData = data.find((item) => item.uraian === "Saldo Awal");
+    const lastData = data[data.length - 1];
+
+    const debetSaldoAwal = parseFloat(saldoAwalData.debet) || 0;
+    const saldoAkhir = parseFloat(lastData.saldo) || 0;
+    const totalDebet = debetSaldoAwal + saldoAkhir;
+
+    const saldoAwalRequest = {
+      tanggalTransaksi: formattedDate,
+      posTransaksi: "Saldo Awal",
+      masukKe: "Bank",
+      debet: totalDebet,
+      jenisPembayaran: "Sanduka",
+    };
+
+    console.log("Data yang akan dikirim:", saldoAwalRequest);
+
+    const responseSaldo = await GlobalApi.createSaldoAwal(saldoAwalRequest);
+
+    console.log("Saldo Awal berhasil dibuat:", responseSaldo);
+
+    // Refresh the page after successful creation
+    window.location.reload();
+  } catch (error) {
+    console.error("Error saat membuat Saldo Awal:", error);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+useEffect(() => {
+  const checkTime = () => {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    // Pastikan hanya dieksekusi jika saldo awal belum ada
+    if (currentHour === 7 && currentMinute === 10 && !isSaldoAwalExist) {
+      createSaldoAwal(); // Memanggil fungsi jika saldo awal belum ada
+    }
+  };
+
+  // Cek waktu setiap detik
+  const intervalId = setInterval(checkTime, 1000);
+
+  // Hentikan pengecekan setelah 1 menit (untuk menghindari pemeriksaan yang tidak perlu)
+  const timeoutId = setTimeout(() => clearInterval(intervalId), 60000);
+
+  return () => {
+    clearInterval(intervalId);
+    clearTimeout(timeoutId);
+  };
+}, [isSaldoAwalExist]);
+  
   const sortedTransactions = (() => {
     if (!transactions) return [];
 
@@ -527,15 +603,15 @@ function Pemasukan() {
   const handleSelectAll = () => {
     const newSelectAll = !selectAll;
     setSelectAll(newSelectAll);
-  
+
     const updatedCheckedIds = newSelectAll
       ? transactions
           .filter((transaction) => transaction.uraian !== "Saldo Awal")
           .map((transaction) => transaction.id)
       : [];
-  
+
     setCheckedIds(updatedCheckedIds);
-  
+
     setTransactions((prevTransactions) =>
       prevTransactions.map((transaction) => ({
         ...transaction,
@@ -627,11 +703,11 @@ function Pemasukan() {
     console.log("ID yang diklik:", id);
     try {
       const data = await GlobalApi.getPemasukanUangMasukById(id);
-  
+
       const tanggalTransaksi = data.tanggalTransaksi
         ? data.tanggalTransaksi.split(", ")[1] || data.tanggalTransaksi
         : "";
-  
+
       const updatedFormValues = {
         noBukti: data.noBukti || "",
         tanggalTransaksi: tanggalTransaksi || "",
@@ -655,15 +731,15 @@ function Pemasukan() {
       console.error("Gagal mengambil data berdasarkan id:", error);
     }
   };
-  
+
   const handleSubmitEdit = async () => {
     if (!editId) {
       console.error("ID belum ada, tidak bisa mengedit");
       return;
     }
-  
+
     console.log("ID yang akan dikirim untuk edit:", editId);
-  
+
     try {
       const data = await GlobalApi.getPemasukanUangMasukById(editId);
 
@@ -674,31 +750,139 @@ function Pemasukan() {
         masukKe: formValues.jenisPenerimaan || "",
         cabang: formValues.cabang || "",
         bulan: formValues.setoranBulan || "",
-        debet:  formValues.nominal || "",
+        debet: formValues.nominal || "",
         kredit: "",
         bulanSantunan: "",
         yangMeninggal: "",
         namaPenerima: "",
         keterangan: "",
-        jenisPembayaran: "Sanduka"
+        jenisPembayaran: "Sanduka",
       };
-  
+
       console.log("Form Values yang akan dikirim:", updatedFormValues);
-  
-      // Set state form values
+
       setFormValues(updatedFormValues);
-  
-      // Kirim data ke API (update data)
-      const response = await GlobalApi.editPemasukanUangMasuk(editId, updatedFormValues);
-  
-      console.log("Response setelah data terkirim:", response);
-  
-      // Jika perlu menonaktifkan mode edit, setIsEditing(false);
+
+      const response = await GlobalApi.editPemasukanUangMasuk(
+        editId,
+        updatedFormValues
+      );
+
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "2rem",
+              display: "block",
+              marginBottom: "28px",
+            }}
+          >
+            Data berhasil diupdate!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     } catch (error) {
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
+          </svg>
+          <h3
+            style={{
+              color: "black",
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal mengupdate data. Coba lagi!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
       console.error("Gagal mengedit data:", error);
     }
   };
-  
 
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -1082,24 +1266,22 @@ function Pemasukan() {
                   Sesuai Jumlah Target
                 </Button>
                 <div className="flex space-x-4">
-  {/* Button Simpan jika tidak dalam mode edit */}
-  {!isEditing ? (
-    <Button
-      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-      onClick={handleSubmit}
-    >
-      Simpan
-    </Button>
-  ) : (
-    // Button Edit jika dalam mode edit
-    <Button
-      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-      onClick={handleSubmitEdit}
-    >
-      Edit
-    </Button>
-  )}
-</div>
+                  {!isEditing ? (
+                    <Button
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                      onClick={handleSubmit}
+                    >
+                      Simpan
+                    </Button>
+                  ) : (
+                    <Button
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                      onClick={handleSubmitEdit}
+                    >
+                      Edit
+                    </Button>
+                  )}
+                </div>
                 <Button
                   className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-700 transition duration-150 ease-in-out"
                   type="button"
@@ -1107,6 +1289,38 @@ function Pemasukan() {
                 >
                   Reset
                 </Button>
+                <Button
+  className={`bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded transition duration-300 flex items-center justify-center`}
+  onClick={createSaldoAwal}
+  disabled={isLoading || isSaldoAwalExist}
+>
+  {isLoading ? (
+    <div className="flex items-center">
+      <svg
+        className="animate-spin h-5 w-5 text-white mr-2"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v8H4z"
+        ></path>
+      </svg>
+    </div>
+  ) : (
+    "Saldo Awal"
+  )}
+</Button>
               </div>
             </div>
 
@@ -1248,7 +1462,7 @@ function Pemasukan() {
                               className="form-checkbox h-4 w-4"
                               checked={transaction.checked}
                               onChange={() => handleCheck(transaction.id)}
-                              disabled={transaction.uraian === "Saldo Awal"}
+                              // disabled={transaction.uraian === "Saldo Awal"}
                             />
                             <Button
                               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
@@ -1329,10 +1543,11 @@ function Pemasukan() {
                     <td className="px-6 py-4 text-sm">
                       {formatCurrency(
                         transactions.reduce((total, transaction) => {
-                          const saldo = Math.floor(
-                            parseFloat(transaction.saldo.replace(",")) || 0
+                          const saldo = parseFloat(
+                            transaction.saldo?.replace(",", "") || "0"
                           );
-                          return saldo;
+
+                          return total + Math.floor(saldo);
                         }, 0)
                       )}
                     </td>

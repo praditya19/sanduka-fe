@@ -172,7 +172,7 @@ function Pengeluaran() {
       );
       setTimeout(() => {
         window.location.reload();
-      }, 2500);
+      }, 200);
     } catch (error) {
       toast.error(
         <div
@@ -200,6 +200,7 @@ function Pengeluaran() {
           </svg>
           <h3
             style={{
+              color: "black",
               fontSize: "1.75rem",
               display: "block",
               marginBottom: "8px",
@@ -232,18 +233,18 @@ function Pengeluaran() {
   };
 
   const fetchData = async () => {
-      try {
-        if (selectedBulan && newSelectedYear) {
-          const data = await GlobalApi.getTablePemasukanSanduka(
-            selectedBulan,
-            newSelectedYear
-          );
-          setTransactions(data);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+    try {
+      if (selectedBulan && newSelectedYear) {
+        const data = await GlobalApi.getTablePemasukanSanduka(
+          selectedBulan,
+          newSelectedYear
+        );
+        setTransactions(data);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -251,10 +252,12 @@ function Pengeluaran() {
 
   const sortedTransactions = (() => {
     if (!transactions) return [];
-  
+
     const saldoAwal = transactions.find((t) => t.uraian === "Saldo Awal");
-    const otherTransactions = transactions.filter((t) => t.uraian !== "Saldo Awal");
-  
+    const otherTransactions = transactions.filter(
+      (t) => t.uraian !== "Saldo Awal"
+    );
+
     return saldoAwal ? [saldoAwal, ...otherTransactions] : otherTransactions;
   })();
 
@@ -378,15 +381,15 @@ function Pengeluaran() {
   const handleSelectAll = () => {
     const newSelectAll = !selectAll;
     setSelectAll(newSelectAll);
-  
+
     const updatedCheckedIds = newSelectAll
       ? transactions
           .filter((transaction) => transaction.uraian !== "Saldo Awal")
           .map((transaction) => transaction.id)
       : [];
-  
+
     setCheckedIds(updatedCheckedIds);
-  
+
     setTransactions((prevTransactions) =>
       prevTransactions.map((transaction) => ({
         ...transaction,
@@ -457,83 +460,191 @@ function Pengeluaran() {
   };
 
   const handleGetEdit = async (id) => {
-      console.log("ID yang diklik:", id);
-      try {
-        const data = await GlobalApi.getPemasukanUangMasukById(id);
-    
-        const tanggalTransaksi = data.tanggalTransaksi
-          ? data.tanggalTransaksi.split(", ")[1] || data.tanggalTransaksi
-          : "";
-    
-        const updatedFormValues = {
-          noBukti: data.noBukti || "",
-          tanggalTransaksi: tanggalTransaksi || "",
-          posTransaksi: data.posTransaksi || "",
-          jenisPenerimaan: data.masukKe || "",
-          cabang: data.cabang || "",
-          setoranBulan: data.bulan || "",
-          totalAnggota: data.totalAnggota || "",
-          nominal: data.debet?.trim() !== "" ? parseFloat(data.debet) : parseFloat(data.kredit) || 0,
-          totalSumbangan: data.totalSumbangan || "",
-          totalAnggotaByAdmin: data.totalAnggotaByAdmin || "",
-          keterangan: data.posTransaksi || "",
-        };
-    
-        // Set state form values
-        setFormValues(updatedFormValues);
-    
-        // Set editId untuk digunakan saat submit
-        setEditId(id);
-    
-        // Set isEditing ke true saat memasuki mode edit
-        setIsEditing(true);
-      } catch (error) {
-        console.error("Gagal mengambil data berdasarkan id:", error);
-      }
-    };
-    
-    const handleSubmitEdit = async () => {
-      if (!editId) {
-        console.error("ID belum ada, tidak bisa mengedit");
-        return;
-      }
-    
-      console.log("ID yang akan dikirim untuk edit:", editId);
-    
-      try {
-        const data = await GlobalApi.getPemasukanUangMasukById(editId);
-  
-        const updatedFormValues = {
-          noBukti: data.noBukti || "",
-          tanggalTransaksi: formValues.tanggalTransaksi || "",
-          posTransaksi: formValues.posTransaksi || "",
-          masukKe: formValues.jenisPenerimaan || "",
-          cabang: formValues.cabang || "",
-          bulan: formValues.setoranBulan || "",
-          debet:  formValues.nominal || "",
-          kredit: "",
-          bulanSantunan: "",
-          yangMeninggal: "",
-          namaPenerima: "",
-          keterangan: "",
-          jenisPembayaran: "Sanduka"
-        };
-    
-        console.log("Form Values yang akan dikirim:", updatedFormValues);
-    
-        // Set state form values
-        setFormValues(updatedFormValues);
-    
-        // Kirim data ke API (update data)
-        const response = await GlobalApi.editPemasukanUangMasuk(editId, updatedFormValues);
-    
-        console.log("Response setelah data terkirim:", response);
-    
-        // Jika perlu menonaktifkan mode edit, setIsEditing(false);
-      } catch (error) {
-        console.error("Gagal mengedit data:", error);
-      }
-    };
+    console.log("ID yang diklik:", id);
+    try {
+      const data = await GlobalApi.getPemasukanUangMasukById(id);
+
+      const tanggalTransaksi = data.tanggalTransaksi
+        ? data.tanggalTransaksi.split(", ")[1] || data.tanggalTransaksi
+        : "";
+
+      const updatedFormValues = {
+        noBukti: data.noBukti || "",
+        tanggalTransaksi: tanggalTransaksi || "",
+        posTransaksi: data.posTransaksi || "",
+        jenisPenerimaan: data.masukKe || "",
+        cabang: data.cabang || "",
+        setoranBulan: data.bulan || "",
+        totalAnggota: data.totalAnggota || "",
+        nominal:
+          data.debet?.trim() !== ""
+            ? parseFloat(data.debet)
+            : parseFloat(data.kredit) || 0,
+        totalSumbangan: data.totalSumbangan || "",
+        totalAnggotaByAdmin: data.totalAnggotaByAdmin || "",
+        keterangan: data.keterangan || "",
+      };
+
+      setFormValues(updatedFormValues);
+
+      setEditId(id);
+
+      setIsEditing(true);
+    } catch (error) {
+      console.error("Gagal mengambil data berdasarkan id:", error);
+    }
+  };
+
+  const handleSubmitEdit = async () => {
+    if (!editId) {
+      console.error("ID belum ada, tidak bisa mengedit");
+      return;
+    }
+
+    console.log("ID yang akan dikirim untuk edit:", editId);
+
+    try {
+      const data = await GlobalApi.getPemasukanUangMasukById(editId);
+
+      const updatedFormValues = {
+        noBukti: data.noBukti || "",
+        tanggalTransaksi: formValues.tanggalTransaksi || "",
+        posTransaksi: formValues.posTransaksi || "",
+        masukKe: formValues.jenisPenerimaan || "",
+        cabang: formValues.cabang || "",
+        bulan: formValues.setoranBulan || "",
+        debet: "",
+        kredit: formValues.nominal || "",
+        bulanSantunan: "",
+        yangMeninggal: "",
+        namaPenerima: "",
+        keterangan: formValues.keterangan || "",
+        jenisPembayaran: "Sanduka",
+      };
+
+      console.log("Form Values yang akan dikirim:", updatedFormValues);
+
+      setFormValues(updatedFormValues);
+
+      const response = await GlobalApi.editPemasukanUangMasuk(
+        editId,
+        updatedFormValues
+      );
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "2rem",
+              display: "block",
+              marginBottom: "28px",
+            }}
+          >
+            Data berhasil diupdate!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      console.error("Gagal mengedit data:", error);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
+          </svg>
+          <h3
+            style={{
+              color: "black",
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal mengupdate data. Coba lagi!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+    }
+  };
 
   const formatCurrency = (value) => {
     if (value === "-") return "-";
@@ -1361,7 +1472,6 @@ function Pengeluaran() {
               </div>
               <div className="flex items-center mt-6 justify-center">
                 <div className="flex space-x-4">
-                  {/* Button Simpan jika tidak dalam mode edit */}
                   {!isEditing ? (
                     <Button
                       className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
@@ -1370,7 +1480,6 @@ function Pengeluaran() {
                       Simpan
                     </Button>
                   ) : (
-                    // Button Edit jika dalam mode edit
                     <Button
                       className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                       onClick={handleSubmitEdit}
@@ -1607,10 +1716,11 @@ function Pengeluaran() {
                     <td className="px-6 py-4 text-sm">
                       {formatCurrency(
                         transactions.reduce((total, transaction) => {
-                          const saldo = Math.floor(
-                            parseFloat(transaction.saldo.replace(",")) || 0
+                          const saldo = parseFloat(
+                            transaction.saldo?.replace(",", "") || "0"
                           );
-                          return saldo;
+
+                          return total + Math.floor(saldo);
                         }, 0)
                       )}
                     </td>
