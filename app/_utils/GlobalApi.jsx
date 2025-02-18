@@ -119,7 +119,7 @@ const getAllAnggota = async (
   keyword = null,
   statusKeanggotaan = null,
   tingkatSekolah = null,
-  statusPegawai = null,
+  statusPegawai = null
 ) => {
   try {
     const params = new URLSearchParams({
@@ -788,16 +788,19 @@ const getSaldoOrganisasi = async () => {
 const getPemasukanUangMasukById = async (id) => {
   try {
     const response = await axiosClient.get(`/api/uang-masuk-keluar/${id}`);
-    return response.data
+    return response.data;
   } catch (error) {
     console.error("Error fetching data by id:", error);
     throw error;
   }
-}
+};
 
 const editPemasukanUangMasuk = async (id, updatedFormValues) => {
   try {
-    const response = await axiosClient.put(`/api/uang-masuk-keluar/${id}`, updatedFormValues);
+    const response = await axiosClient.put(
+      `/api/uang-masuk-keluar/${id}`,
+      updatedFormValues
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching data by id:", error);
@@ -1027,7 +1030,10 @@ const createPembayaranSanduka = async (payload) => {
 
 const createSaldoAwal = async (saldoAwalRequest) => {
   try {
-    const response = await axiosClient.post("/api/uang-masuk-keluar/create-saldo-awal", saldoAwalRequest);
+    const response = await axiosClient.post(
+      "/api/uang-masuk-keluar/create-saldo-awal",
+      saldoAwalRequest
+    );
     return response.data;
   } catch (error) {
     console.error("Error creating saldo awal sanduka data:", error);
@@ -1440,7 +1446,6 @@ const getRantingSummary = async (
             anggotaUnitKerja: dataItem.jumlahAnggota,
             jumlahAnggotaRanting: dataItem.jumlahUnitKerja,
             totalUnitKerja: dataItem.totalUnitKerja,
-            totalAnggota: dataItem.totalAnggota,
           };
         }),
       };
