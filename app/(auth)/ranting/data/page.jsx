@@ -302,12 +302,9 @@ const Page = () => {
       (total, item) => total + (item.jumlahAnggotaRanting || 0),
       0
     );
-    const totalTotalAnggota = filteredData.reduce(
-      (total, item) => total + (item.totalAnggota || 0),
-      0
-    );
 
     let lastCabang = null;
+    let lastNamaRanting = null;
 
     const printWindow = window.open("", "_blank");
     printWindow.document.write(`
@@ -351,12 +348,11 @@ const Page = () => {
             th:nth-child(1), td:nth-child(1) { width: 5%; }  /* No */
             th:nth-child(2), td:nth-child(2) { width: 10%; } /* Cabang */
             th:nth-child(3), td:nth-child(3) { width: 10%; } /* Nama Ranting */
-            th:nth-child(4), td:nth-child(4) { width: 10%; } /* Unit Kerja */
-            th:nth-child(5), td:nth-child(5) { width: 35%; text-align: left; } /* Nama Anggota */
+            th:nth-child(4), td:nth-child(4) { width: 12%; } /* Unit Kerja */
+            th:nth-child(5), td:nth-child(5) { width: 30%; text-align: left; } /* Nama Anggota */
             th:nth-child(6), td:nth-child(6) { width: 10%; } /* Anggota Unit Kerja */
             th:nth-child(7), td:nth-child(7) { width: 10%; } /* Jumlah Anggota Ranting */
             th:nth-child(8), td:nth-child(8) { width: 10%; } /* Total Unit Kerja */
-            th:nth-child(9), td:nth-child(9) { width: 10%; } /* Total Anggota */
             @media print {
               body {
                 width: auto;
@@ -378,7 +374,6 @@ const Page = () => {
                 <th>Anggota Unit Kerja</th>
                 <th>Jumlah Anggota Ranting</th>
                 <th>Total Unit Kerja</th>
-                <th>Total Anggota</th>
               </tr>
             </thead>
             <tbody>
@@ -387,11 +382,17 @@ const Page = () => {
                   let cabangText =
                     item.cabang !== lastCabang ? item.cabang || "-" : "-";
                   lastCabang = item.cabang;
+
+                  let namaRanting =
+                    item.namaRanting !== lastNamaRanting
+                      ? item.namaRanting || "-"
+                      : "-";
+                  lastNamaRanting = item.namaRanting;
                   return `
                     <tr>
                       <td>${index + 1}</td>
                       <td>${cabangText}</td>
-                      <td>${item.namaRanting || "-"}</td>
+                      <td>${namaRanting}</td>
                       <td>${item.unitKerja || "-"}</td>
                       <td>
                         ${
@@ -406,7 +407,6 @@ const Page = () => {
                       <td>${item.anggotaUnitKerja || 0}</td>
                       <td>${item.jumlahAnggotaRanting || 0}</td>
                       <td>${item.totalUnitKerja || 0}</td>
-                      <td>${item.totalAnggota || 0}</td>
                     </tr>
                   `;
                 })
@@ -421,7 +421,6 @@ const Page = () => {
                 <td>${totalAnggotaUnitKerja}</td>
                 <td>${totalJumlahAnggotaRanting}</td>
                 <td>${totalUnitKerja}</td>
-                <td>${totalTotalAnggota}</td>
               </tr>
             </tbody>
           </table>
@@ -460,8 +459,7 @@ const Page = () => {
         : "-",
       "Anggota Unit Kerja": item.anggotaUnitKerja || 0,
       "Total Unit Kerja": item.totalUnitKerja || 0,
-      "Jumlah Anggota Ranting": item.jumlahAnggotaRanting || 0,
-      "Total Anggota": item.totalAnggota || 0,
+      "Jumlah Anggota Ranting": item.jumlahAnggotaRanting,
     }));
 
     const totalAnggotaUnitKerja = filteredData.reduce(
@@ -476,10 +474,6 @@ const Page = () => {
       (total, item) => total + (item.jumlahAnggotaRanting || 0),
       0
     );
-    const totalTotalAnggota = filteredData.reduce(
-      (total, item) => total + (item.totalAnggota || 0),
-      0
-    );
 
     data.push({
       No: "Total",
@@ -490,7 +484,6 @@ const Page = () => {
       "Anggota Unit Kerja": totalAnggotaUnitKerja,
       "Total Unit Kerja": totalUnitKerja,
       "Jumlah Anggota Ranting": totalJumlahAnggotaRanting,
-      "Total Anggota": totalTotalAnggota,
     });
 
     const ws = XLSX.utils.json_to_sheet(data);
@@ -558,7 +551,6 @@ const Page = () => {
             th:nth-child(5), td:nth-child(5) { width: 10%; }/* Anggota Unit Kerja */
             th:nth-child(6), td:nth-child(6) { width: 10%; }/* Jumlah Anggota Ranting */
             th:nth-child(7), td:nth-child(7) { width: 10%; }/* Total Unit Kerja */
-            th:nth-child(8), td:nth-child(8) { width: 10%; }/* Total Anggota */
             @media print {
               body {
                 width: auto;
@@ -579,42 +571,47 @@ const Page = () => {
                 <th>Anggota Unit Kerja</th>
                 <th>Jumlah Anggota Ranting</th>
                 <th>Total Unit Kerja</th>
-                <th>Total Anggota</th>
               </tr>
             </thead>
             <tbody>
-              ${Object.keys(groupedData)
-                .map((cabang, cabangIndex) => {
-                  const rantingRows = groupedData[cabang]
-                    .map(
-                      (item, index) => `
-                      <tr>
-                        ${
-                          index === 0
-                            ? `<td rowspan="${groupedData[cabang].length}">${
-                                cabangIndex + 1
-                              }</td>`
-                            : ""
-                        }
-                        ${
-                          index === 0
-                            ? `<td rowspan="${groupedData[cabang].length}">${cabang}</td>`
-                            : ""
-                        }
-                        <td>${item.namaRanting || "-"}</td>
-                        <td>${item.unitKerja || "-"}</td>
-                        <td>${item.anggotaUnitKerja || 0}</td>
-                        <td>${item.jumlahAnggotaRanting || 0}</td>
-                        <td>${item.totalUnitKerja || 0}</td>
-                        <td>${item.totalAnggota || 0}</td>
-                      </tr>
-                    `
-                    )
-                    .join("");
-                  return rantingRows;
-                })
-                .join("")}
-            </tbody>
+            ${Object.keys(groupedData)
+              .map((cabang, cabangIndex) => {
+                let lastNamaRanting = null;
+                const rantingRows = groupedData[cabang]
+                  .map((item, index) => {
+                    let namaRanting =
+                      item.namaRanting !== lastNamaRanting
+                        ? item.namaRanting || "-"
+                        : "-";
+                    lastNamaRanting = item.namaRanting;
+
+                    return `
+            <tr>
+              ${
+                index === 0
+                  ? `<td rowspan="${groupedData[cabang].length}">${
+                      cabangIndex + 1
+                    }</td>`
+                  : ""
+              }
+              ${
+                index === 0
+                  ? `<td rowspan="${groupedData[cabang].length}">${cabang}</td>`
+                  : ""
+              }
+              <td>${namaRanting}</td>
+              <td>${item.unitKerja || "-"}</td>
+              <td>${item.anggotaUnitKerja || 0}</td>
+              <td>${item.jumlahAnggotaRanting || 0}</td>
+              <td>${item.totalUnitKerja || 0}</td>
+            </tr>
+          `;
+                  })
+                  .join("");
+                return rantingRows;
+              })
+              .join("")}
+          </tbody>
           </table>
         </body>
       </html>
@@ -920,9 +917,6 @@ const Page = () => {
                       <th className="p-2 md:p-3 border hidden md:table-cell">
                         Total Unit Kerja
                       </th>
-                      <th className="p-2 md:p-3 border hidden md:table-cell">
-                        Total Anggota
-                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -940,7 +934,11 @@ const Page = () => {
                                 : "-"}
                             </td>
                             <td className="p-2 md:p-3 border hidden md:table-cell">
-                              {item.namaRanting || "-"}
+                              {index === 0 ||
+                              filteredData[index - 1].namaRanting !==
+                                item.namaRanting
+                                ? item.namaRanting
+                                : "-"}
                             </td>
                             <td className="p-2 md:p-3 border hidden md:table-cell">
                               {item.unitKerja || "-"}
@@ -964,9 +962,6 @@ const Page = () => {
                             </td>
                             <td className="p-2 md:p-3 border hidden md:table-cell">
                               {item.totalUnitKerja || "-"}
-                            </td>
-                            <td className="p-2 md:p-3 border hidden md:table-cell">
-                              {item.totalAnggota || "-"}
                             </td>
                           </tr>
                         ))}
@@ -993,12 +988,6 @@ const Page = () => {
                             {filteredData.reduce(
                               (total, item) =>
                                 total + (item.totalUnitKerja || 0),
-                              0
-                            )}
-                          </td>
-                          <td className="p-2 md:p-3 text-center">
-                            {filteredData.reduce(
-                              (total, item) => total + (item.totalAnggota || 0),
                               0
                             )}
                           </td>
