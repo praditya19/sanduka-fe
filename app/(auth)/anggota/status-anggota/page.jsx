@@ -166,13 +166,14 @@ const StatusAnggota = () => {
     const newFilters = {
       ...currentFilters,
       cabang: value,
-      unitKerja: "" // Reset unit kerja when cabang changes
+      unitKerja: ""
     };
     setCurrentFilters(newFilters);
     setSelectedCabang(value);
+    setSelectedUnitKerja("");
     updateUnitKerja(value);
     fetchDataAnggota(0, pageSize, newFilters);
-    setCurrentPage(0); // Reset to first page
+    setCurrentPage(0);
   };
 
   const handleUnitKerjaChange = (value) => {
@@ -291,7 +292,7 @@ const StatusAnggota = () => {
       selectedUnitKerja,
       nama,
       status,
-      selectedTingkatSekolah // Include tingkatSekolah in size changes
+      selectedTingkatSekolah
     );
   };
 
@@ -304,7 +305,7 @@ const StatusAnggota = () => {
       selectedUnitKerja,
       nama,
       status,
-      selectedTingkatSekolah // Include tingkatSekolah in search
+      selectedTingkatSekolah
     );
   };
 
@@ -330,26 +331,26 @@ const StatusAnggota = () => {
     return `${age} tahun`;
   };
 
-  const calculateRetirementDate = (birthDateString, employmentType) => {
-    const birthDate = new Date(birthDateString);
-    const retirementAge = employmentType === "PNS" ? 60 : 58;
-    const retirementYear = birthDate.getFullYear() + retirementAge;
-    const retirementDate = new Date(
-      retirementYear,
-      birthDate.getMonth(),
-      birthDate.getDate()
-    );
+  // const calculateRetirementDate = (birthDateString, employmentType) => {
+  //   const birthDate = new Date(birthDateString);
+  //   const retirementAge = employmentType === "PNS" ? 60 : 58;
+  //   const retirementYear = birthDate.getFullYear() + retirementAge;
+  //   const retirementDate = new Date(
+  //     retirementYear,
+  //     birthDate.getMonth(),
+  //     birthDate.getDate()
+  //   );
 
-    const formattedRetirementDate = retirementDate
-      .toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      })
-      .replace(/\//g, "-");
+  //   const formattedRetirementDate = retirementDate
+  //     .toLocaleDateString("id-ID", {
+  //       day: "2-digit",
+  //       month: "2-digit",
+  //       year: "numeric",
+  //     })
+  //     .replace(/\//g, "-");
 
-    return formattedRetirementDate;
-  };
+  //   return formattedRetirementDate;
+  // };
 
   const formatTingkatSekolah = (tingkat) => {
     const tingkatMap = {
@@ -367,6 +368,20 @@ const StatusAnggota = () => {
     return tingkatMap[tingkat] || tingkat;
   };
 
+  const formatRetirementDate = (timestamp) => {
+    const retirementDate = new Date(timestamp);
+
+    const formattedRetirementDate = retirementDate
+      .toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+      .replace(/\//g, "-");
+
+    return formattedRetirementDate;
+  };
+
   const handleEditClick = () => {
     router.push("/anggota/edit-anggota");
   };
@@ -376,15 +391,17 @@ const StatusAnggota = () => {
   };
 
   const handleStatusChange = (e) => {
-    setStatus(e.target.value);
-    fetchDataAnggota(
-      0,
-      pageSize,
-      selectedCabang,
-      selectedUnitKerja,
-      nama,
-      e.target.value
-    );
+    const newStatus = e.target.value;
+    setStatus(newStatus);
+
+    const newFilters = {
+      ...currentFilters,
+      status: newStatus,
+    };
+    setCurrentFilters(newFilters);
+
+    fetchDataAnggota(0, pageSize, newFilters);
+    setCurrentPage(0);
   };
 
   const formatCurrency = (amount) =>
@@ -393,10 +410,36 @@ const StatusAnggota = () => {
   const handlePrint = async () => {
     setIsLoading(true);
     try {
-      const filteredDataForPrint = await fetchDataAnggota(0, totalElements);
-      if (!filteredDataForPrint || filteredDataForPrint.length === 0) {
-        console.warn("No data available for printing.");
-        return;
+      const response = await GlobalApi.getAllAnggota(
+        0,
+        totalElements,
+        currentFilters.cabang,
+        currentFilters.unitKerja,
+        currentFilters.keyword,
+        currentFilters.status,
+        currentFilters.tingkatSekolah
+      );
+
+      const fetchedData = response.content;
+
+      const fotoBase64Array = [];
+
+      if (fetchedData && fetchedData.length > 0) {
+        fetchedData.forEach((item, index) => {
+          if (item.foto) {
+            try {
+              const decodedString = atob(item.foto);
+              fotoBase64Array.push(decodedString);
+            } catch (error) {
+              console.error("Error decoding Base64:", error);
+              fotoBase64Array.push(null);
+            }
+          } else {
+            fotoBase64Array.push(null);
+          }
+        });
+      } else {
+        console.warn("No data found.");
       }
 
       const printWindow = window.open("", "_blank", "width=800,height=600");
@@ -432,13 +475,13 @@ const StatusAnggota = () => {
               </tr>
             </thead>
             <tbody>
-              ${filteredDataForPrint
+              ${fetchedData
           .map(
             (item, index) => `
                     <tr>
                       <td>${index + 1}</td>
-                      <td>${item.foto
-                ? `<img src="data:image/png;base64,${item.foto}" alt="foto" width="50" height="50"/>`
+                      <td>${fotoBase64Array[index]
+                ? `<img src="data:image/png;base64,${fotoBase64Array[index]}" alt="foto" width="50" height="80"/>`
                 : ""
               }</td>
                       <td>
@@ -450,8 +493,8 @@ const StatusAnggota = () => {
                         <div>${item.tempatLahir},</div>
                         <div>${formatDate(item.tanggalLahir)}</div>
                         <div>${calculateAge(item.tanggalLahir)} Tahun</div>
-                        <div>${calculateRetirementDate(
-                item.tanggalLahir,
+                        <div>${formatRetirementDate(
+                item.prediksiPensiun,
                 item.statusPegawai
               )}</div>
                       </td>
@@ -488,6 +531,7 @@ const StatusAnggota = () => {
       printWindow.onload = () => {
         printWindow.print();
         printWindow.close();
+        fetchDataAnggota(currentPage, pageSize, currentFilters);
       };
     } catch (error) {
       console.error("Error during print process:", error);
@@ -561,6 +605,7 @@ const StatusAnggota = () => {
               selectedCabang={selectedCabang}
               selectedUnitKerja={selectedUnitKerja}
               selectedTingkatSekolah={selectedTingkatSekolah}
+              status={status}
             />
 
             <div className="overflow-x-auto mt-8">
@@ -570,13 +615,15 @@ const StatusAnggota = () => {
                 calculateAge={calculateAge}
                 handleEditClick={handleEditClick}
                 handlePindahCabangUnit={handlePindahCabangUnit}
-                calculateRetirementDate={calculateRetirementDate}
+                formatRetirementDate={formatRetirementDate}
+                // calculateRetirementDate={calculateRetirementDate}
                 handleUserClick={handleUserClick}
                 fotoBase64={fotoBase64}
                 loading={loading}
                 currentPage={currentPage}
                 pageSize={pageSize}
                 selectedTingkatSekolah={selectedTingkatSekolah}
+                status={status}
               />
             </div>
 
@@ -623,7 +670,7 @@ const FilterSection = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 mt-16 text-sm">
-      <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
+      <div className="col-span-2 flex flex-col md:flex-row items-start md:items-end gap-4">
         <div className="w-full md:w-auto">
           <DropdownCabang
             label="Cabang"
@@ -665,13 +712,14 @@ const FilterSection = ({
           </div>
         </div> */}
 
-        <div className="flex flex-col gap-2">
-          <label htmlFor="searchInput" className="font-semibold text-gray-800">
-            Status Anggota
-          </label>
-          <div className="w-full">
+        {/* Select Status Anggota */}
+        <div className="w-full md:w-auto">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="searchInput" className="font-semibold text-gray-800">
+              Status Anggota
+            </label>
             <select
-              className="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-44"
+              className="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-full md:w-44"
               value={status}
               onChange={handleStatusChange}
             >
@@ -684,45 +732,46 @@ const FilterSection = ({
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 text-center md:ml-20 ml-0">
+        {/* <div className="flex flex-col gap-2 text-center md:ml-20 ml-0">
           <p className="py-2 rounded focus:outline-none focus:shadow-outline w-44 text-base">
-            {/* Jumlah Anggota : {totalElements} */}
+            Jumlah Anggota : {totalElements}
           </p>
-        </div>
+        </div> */}
 
-        <div className="flex w-full justify-end md:ml-44 ml-0">
-          <Button
-            className="px-8 mt-2 md:mt-0 flex items-center justify-center"
-            variant="outline"
-            onClick={handlePrint}
-            disabled={role === "USER" || isLoading}
-          >
-            {isLoading ? (
-              <svg
-                className="animate-spin h-5 w-5 text-gray-800"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v8H4z"
-                ></path>
-              </svg>
-            ) : (
-              "Cetak"
-            )}
-          </Button>
-        </div>
+      </div>
+
+      <div className="flex justify-end items-end mt-4 md:mt-0">
+        <Button
+          className="px-8 w-full md:w-auto flex items-center justify-center"
+          variant="outline"
+          onClick={handlePrint}
+          disabled={role === "USER" || isLoading}
+        >
+          {isLoading ? (
+            <svg
+              className="animate-spin h-5 w-5 text-gray-800"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8H4z"
+              ></path>
+            </svg>
+          ) : (
+            "Cetak"
+          )}
+        </Button>
       </div>
     </div>
   );
@@ -785,7 +834,7 @@ const DropdownCabang = ({ label, options, selectedCabang, handleChange }) => {
             setFilterQuery("");
           }
         }}
-        disabled={isDisabled} // Input akan ter-disable jika role adalah ADMIN
+        disabled={isDisabled}
       />
 
       {showDropdown && !isDisabled && (
@@ -1072,91 +1121,28 @@ const imageMap = {
   LAINNYA: "/images/lainnya.png",
 };
 
-const DataCounts = ({
-  totalElements,
-  selectedCabang,
-  selectedUnitKerja,
-  selectedTingkatSekolah
-}) => {
-  const [counts, setCounts] = useState({
-    schoolLevelCounts: {
-      PAUD: 0,
-      TK_RA: 0,
-      SD_MI: 0,
-      SMP_MTS: 0,
-      SMA_MA: 0,
-      SMK: 0,
-      PERGURUAN_TINGGI: 0,
-      SEKOLAH_LUAR_BIASA: 0,
-      LAINNYA: 0
-    },
-    employmentCounts: {
-      PNS: 0,
-      NON_PNS: 0,
-      PPPK: 0,
-      GTY: 0,
-      GTTY: 0
-    }
+const DataCounts = ({ totalElements, selectedCabang, selectedUnitKerja, selectedTingkatSekolah, status }) => {
+  const [tingkatSekolahCounts, setTingkatSekolahCounts] = useState({
+    PAUD: 0,
+    TK_RA: 0,
+    SD_MI: 0,
+    SMP_MTS: 0,
+    SMA_MA: 0,
+    SMK: 0,
+    PERGURUAN_TINGGI: 0,
+    SEKOLAH_LUAR_BIASA: 0,
+    LAINNYA: 0
   });
-  const [isLoading, setIsLoading] = useState(false);
 
-  const fetchAllCounts = useCallback(async () => {
-    if (!totalElements) return;
+  const [statusPegawaiCounts, setStatusPegawaiCounts] = useState({
+    PNS: 0,
+    NON_PNS: 0,
+    PPPK: 0,
+    GTY: 0,
+    GTTY: 0
+  });
 
-    setIsLoading(true);
-    try {
-      const response = await GlobalApi.getAllAnggota(
-        0,
-        totalElements,
-        selectedCabang,
-        selectedUnitKerja,
-        null,
-        null,
-        selectedTingkatSekolah
-      );
-
-      const allData = response.content;
-
-      const newCounts = {
-        schoolLevelCounts: Object.fromEntries(
-          Object.keys(counts.schoolLevelCounts).map(key => [key, 0])
-        ),
-        employmentCounts: Object.fromEntries(
-          Object.keys(counts.employmentCounts).map(key => [key, 0])
-        )
-      };
-
-      allData.forEach(item => {
-        if ((!selectedCabang || item.cabang === selectedCabang) &&
-          (!selectedUnitKerja || item.unitKerja === selectedUnitKerja) &&
-          (!selectedTingkatSekolah || item.tingkatSekolah === selectedTingkatSekolah)) {
-
-          if (item.tingkatSekolah) {
-            newCounts.schoolLevelCounts[item.tingkatSekolah]++;
-          }
-          if (item.statusPegawai) {
-            newCounts.employmentCounts[item.statusPegawai]++;
-          }
-        }
-      });
-
-      setCounts(newCounts);
-    } catch (error) {
-      console.error('Error fetching count data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [totalElements, selectedCabang, selectedUnitKerja, selectedTingkatSekolah]);
-
-  useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      if (totalElements > 0) {
-        fetchAllCounts();
-      }
-    }, 300);
-
-    return () => clearTimeout(debounceTimer);
-  }, [fetchAllCounts]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const schoolLevelNames = useMemo(() => ({
     PAUD: 'PAUD',
@@ -1195,17 +1181,102 @@ const DataCounts = ({
     GTTY: 'bg-green-100',
   }), []);
 
-  const totalEmployees = useMemo(() =>
-    Object.values(counts.employmentCounts)
-      .reduce((sum, count) => sum + (isNaN(count) ? 0 : count), 0),
-    [counts.employmentCounts]
-  );
+  useEffect(() => {
+    const fetchAndCalculateCounts = async () => {
+      setIsLoading(true);
+      try {
+        const cabangParam = selectedCabang || "";
+        const unitKerjaParam = selectedUnitKerja || "";
+        const statusParam = status === "Semua" ? "" : status;
 
-  const LoaderContent = () => (
-    <div className="flex justify-center items-center min-h-[150px]">
-      <ClipLoader color="#3498db" size={40} />
-    </div>
-  );
+        const tingkatSekolahTypes = [
+          'PAUD', 'TK_RA', 'SD_MI', 'SMP_MTS', 'SMA_MA', 'SMK',
+          'PERGURUAN_TINGGI', 'SEKOLAH_LUAR_BIASA', 'LAINNYA'
+        ];
+
+        const statusPegawaiTypes = ['PNS', 'NON_PNS', 'PPPK', 'GTY', 'GTTY'];
+
+        const tingkatSekolahRequests = tingkatSekolahTypes.map(async (type) => {
+          try {
+            const response = await GlobalApi.getAllAnggota(
+              0,
+              1,
+              cabangParam,
+              unitKerjaParam,
+              "",
+              statusParam,
+              type
+            );
+
+            return {
+              type,
+              count: response?.totalElements || 0
+            };
+          } catch (error) {
+            console.error(`Error fetching count for type ${type}:`, error);
+            return { type, count: 0 };
+          }
+        });
+
+        const statusPegawaiRequests = statusPegawaiTypes.map(async (type) => {
+          try {
+            const currentTingkatSekolah = selectedTingkatSekolah || "";
+
+            const response = await GlobalApi.getAllAnggota(
+              0,
+              1,
+              cabangParam,
+              unitKerjaParam,
+              "",
+              statusParam,
+              currentTingkatSekolah,
+              type
+            );
+
+            return {
+              type,
+              count: response?.totalElements || 0
+            };
+          } catch (error) {
+            console.error(`Error fetching count for status ${type}:`, error);
+            return { type, count: 0 };
+          }
+        });
+
+        const [tingkatSekolahResults, statusPegawaiResults] = await Promise.all([
+          Promise.all(tingkatSekolahRequests),
+          Promise.all(statusPegawaiRequests)
+        ]);
+
+        const newTingkatSekolahCounts = {};
+        tingkatSekolahResults.forEach(result => {
+          newTingkatSekolahCounts[result.type] = result.count;
+        });
+
+        const newStatusPegawaiCounts = {};
+        statusPegawaiResults.forEach(result => {
+          newStatusPegawaiCounts[result.type] = result.count;
+        });
+
+        setTingkatSekolahCounts(newTingkatSekolahCounts);
+        setStatusPegawaiCounts(newStatusPegawaiCounts);
+      } catch (error) {
+        console.error("Error calculating counts:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAndCalculateCounts();
+  }, [selectedCabang, selectedUnitKerja, selectedTingkatSekolah, status]);
+
+  const getTotalTingkatSekolahCount = () => {
+    return Object.values(tingkatSekolahCounts).reduce((sum, count) => sum + count, 0) || totalElements;
+  };
+
+  const getTotalStatusPegawaiCount = () => {
+    return Object.values(statusPegawaiCounts).reduce((sum, count) => sum + count, 0) || totalElements;
+  };
 
   return (
     <div className="space-y-6">
@@ -1215,11 +1286,20 @@ const DataCounts = ({
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <LoaderContent />
+            <div className="flex justify-center p-8">
+              <ClipLoader color="#3498db" size={40} />
+            </div>
+          ) : getTotalStatusPegawaiCount() === 0 ? (
+            <div className="text-center p-4 bg-gray-50 rounded-md">
+              <p>Tidak ada data untuk ditampilkan dengan filter yang dipilih.</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {Object.entries(counts.employmentCounts).map(([key, count]) => (
-                <Card key={key} className={`${colorClasses[key]} border-none flex-1 min-w-[150px]`}>
+              {Object.entries(statusPegawaiCounts).map(([key, count]) => (
+                <Card
+                  key={key}
+                  className={`${colorClasses[key]} border-none flex-1 min-w-[150px]`}
+                >
                   <CardContent className="p-4">
                     <div className="text-sm text-center font-bold">{employmentStatusNames[key]}</div>
                     <div className="text-2xl text-center font-bold mt-2">{count}</div>
@@ -1230,7 +1310,7 @@ const DataCounts = ({
                 <CardContent className="p-4">
                   <div className="text-sm text-center font-bold">Total Anggota</div>
                   <div className="text-2xl text-center font-bold mt-2">
-                    {totalEmployees}
+                    {getTotalStatusPegawaiCount()}
                   </div>
                 </CardContent>
               </Card>
@@ -1245,14 +1325,24 @@ const DataCounts = ({
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <LoaderContent />
+            <div className="flex justify-center p-8">
+              <ClipLoader color="#3498db" size={40} />
+            </div>
+          ) : getTotalTingkatSekolahCount() === 0 ? (
+            <div className="text-center p-4 bg-gray-50 rounded-md">
+              <p>Tidak ada data untuk ditampilkan dengan filter yang dipilih.</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {Object.entries(counts.schoolLevelCounts).map(([key, count]) => (
-                <Card key={key} className={`${colorClasses[key]} border-green-300`}>
+              {Object.entries(tingkatSekolahCounts).map(([key, count]) => (
+                <Card
+                  key={key}
+                  className={`${colorClasses[key]} border-green-300 ${selectedTingkatSekolah === key ? 'border-2 border-blue-500' : ''
+                    }`}
+                >
                   <CardContent className="p-2 sm:p-3 text-center flex flex-col items-center">
                     <img
-                      src={imageMap[key]}
+                      src={imageMap[key] || "/images/lainnya.png"}
                       alt={schoolLevelNames[key]}
                       className="mb-2 h-14 sm:h-16 w-auto object-contain"
                     />
@@ -1277,17 +1367,17 @@ const DataTable = ({
   anggotaData,
   formatDate,
   calculateAge,
-  calculateRetirementDate,
+  formatRetirementDate,
   fotoBase64,
   currentPage,
   pageSize,
   handleEditClick,
   handlePindahCabangUnit,
   loading,
-  selectedTingkatSekolah
+  status,
 }) => {
   const currentPageNumber = Number(currentPage) || 0;
-  const pageSizeNumber = Number(pageSize) || 10;
+  const pageSizeNumber = Number(pageSize) || 20;
   const [expandedRow, setExpandedRow] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
@@ -1296,6 +1386,7 @@ const DataTable = ({
   const [currentItem, setCurrentItem] = useState(null);
   const [popupVisibleKeluar, setPopupVisibleKeluar] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
+  const [popupVisibleAktifasi, setPopupVisibleAktifasi] = useState(false);
   const [kategoriDaspen, setKategoriDaspen] = useState("");
   const [daspenData, setDaspenData] = useState(null);
   const [isKategoriChanged, setIsKategoriChanged] = useState(false);
@@ -1305,27 +1396,11 @@ const DataTable = ({
   const router = useRouter();
 
   const filteredData = useMemo(() => {
-    if (!selectedTingkatSekolah) {
+    if (status === "Semua") {
       return anggotaData;
     }
-    return anggotaData.filter(item => item.tingkatSekolah === selectedTingkatSekolah);
-  }, [anggotaData, selectedTingkatSekolah]);
-
-  const formatTingkatSekolah = (tingkat) => {
-    const tingkatMap = {
-      'PAUD': 'PAUD',
-      'TK_RA': 'TK/RA',
-      'SD_MI': 'SD/MI',
-      'SMP_MTS': 'SMP/MTS',
-      'SMA_MA': 'SMA/MA',
-      'SMK': 'SMK',
-      'PERGURUAN_TINGGI': 'Perguruan Tinggi',
-      'SEKOLAH_LUAR_BIASA': 'Sekolah Luar Biasa',
-      'LAINNYA': 'Lainnya'
-    };
-
-    return tingkatMap[tingkat] || tingkat;
-  };
+    return anggotaData.filter((item) => item.statusKeanggotaan === status);
+  }, [anggotaData, status]);
 
   const handleConfirmChange = async () => {
     const anggotaId = sessionStorage.getItem("anggotaId");
@@ -1646,6 +1721,7 @@ const DataTable = ({
   const handlePensiunAnggota = async () => {
     try {
       const anggotaId = sessionStorage.getItem("anggotaId");
+
       await GlobalApi.pensiunAnggota(anggotaId);
       setPopupVisible(false);
       toast.success(
@@ -1767,6 +1843,187 @@ const DataTable = ({
 
     setKategoriDaspen(e.target.value);
     setIsKategoriChanged(true);
+  };
+
+  const handleKeluarAnggota = async () => {
+    try {
+      const anggotaId = sessionStorage.getItem("anggotaId");
+
+      if (!anggotaId) {
+        toast.error(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                width: "150px",
+                height: "150px",
+                color: "red",
+                marginBottom: "16px",
+              }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+            </svg>
+            <h3
+              style={{
+                fontSize: "1.75rem",
+                display: "block",
+                marginBottom: "8px",
+              }}
+            >
+              ID Anggota tidak ditemukan.
+            </h3>
+          </div>,
+          {
+            icon: null,
+            duration: 2000,
+            style: {
+              marginTop: "12%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "450px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
+        );
+        return;
+      }
+
+      const result = await GlobalApi.keluarAnggota(anggotaId);
+
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+              marginTop: "14px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <h3
+            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          >
+            Data Anggota Berhasil Dihapus!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+
+      setTimeout(() => {
+        setIsPopupVisible(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Gagal Menghapus Data:", error);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal pensiun anggota.
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+    }
   };
 
   const handleDeleteClick = async () => {
@@ -1990,9 +2247,12 @@ const DataTable = ({
     setIsPopupDaspen(false);
   };
 
-  const updateAktivasiUser = async (userId) => {
+  const updateAktivasiUser = async () => {
     try {
-      const response = await GlobalApi.activasiUser(userId);
+      const anggotaId = sessionStorage.getItem("anggotaId");
+      console.log(anggotaId);
+
+      const response = await GlobalApi.activasiUser(anggotaId);
       toast.success(
         <div
           style={{
@@ -2110,6 +2370,18 @@ const DataTable = ({
     setPopupVisible(false);
   };
 
+  const handlePopupAktivasi = () => {
+    setPopupVisibleAktifasi(true);
+  };
+
+  const handleCancelKeluarAktivasi = () => {
+    setPopupVisibleAktifasi(false);
+  };
+
+  const handleDetailAnggota = () => {
+    router.push("/anggota/detail-anggota");
+  };
+
   return (
     <div>
       <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
@@ -2142,19 +2414,14 @@ const DataTable = ({
             </th>
             <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
               <div className="text-center">
-                <span>Tingkat Sekolah</span>
+                <span>Keterangan</span>
               </div>
             </th>
             <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
               <div className="text-center">
-                <span>Keterangan</span>
-              </div>
-            </th>
-            {/* <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
-              <div className="text-center">
                 <span>Lokasi</span>
               </div>
-            </th> */}
+            </th>
             <th className="p-2 md:p-3 border text-white bg-teal-700 md:table-cell hidden">
               <div className="text-center">
                 <span>Aksi</span>
@@ -2166,21 +2433,28 @@ const DataTable = ({
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan="7" className="py-4 px-4">
-                <div className="flex justify-center items-center h-10">
+              <td colSpan="9" className="py-4 px-4">
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "10vh",
+                  }}
+                >
                   <ClipLoader color="#3498db" size={50} />
                 </div>
               </td>
             </tr>
           ) : filteredData.length === 0 ? (
             <tr>
-              <td colSpan="7" className="py-4 px-4 text-center text-gray-600">
-                <span>Tidak Ada Data Anggota</span>
+              <td colSpan="9" className="py-4 px-4 text-center text-gray-600">
+                <span>Tidak Ada Anggota</span>
               </td>
             </tr>
           ) : (
             filteredData.map((item, index) => {
-              const nomorUrut = currentPageNumber * pageSizeNumber + index + 1;
+              const nomorUrut = currentPage * pageSize + index + 1;
               return (
                 <React.Fragment key={item.id}>
                   <tr className="hover:bg-gray-50 text-sm">
@@ -2203,7 +2477,7 @@ const DataTable = ({
                     </td>
                     {isMobile ? (
                       <td className="py-2 px-4 border-b">
-                        <div className="flex flex-col items-center justify-center">
+                        <div className="w-16 h-16 flex flex-col items-center justify-center">
                           <Image
                             src={
                               fotoBase64[index]
@@ -2213,15 +2487,14 @@ const DataTable = ({
                             width={50}
                             height={50}
                             alt="Anggota Foto"
-                            className="rounded"
+                            className="object-cover"
                             unoptimized={true}
                           />
-                          <div>{item.namaLengkap}</div>
                         </div>
                       </td>
                     ) : (
                       <td className="py-2 px-4 border-b">
-                        <div className="w-12 h-12 rounded-full overflow-hidden">
+                        <div className="w-16 h-16 overflow-hidden">
                           <Image
                             src={
                               fotoBase64[index]
@@ -2243,12 +2516,14 @@ const DataTable = ({
                       <div className="text-sm">{item.npaPgri}</div>
                       <div className="text-sm">{item.jabatan}</div>
                       <div
-                        className={`text-sm p-1 inline-block ${item.nip
+                        className={`text-sm p-1 inline-block ${item.nip && item.nip !== "0"
                           ? "bg-green-500 text-white rounded-full px-3"
                           : "bg-red-500 text-white rounded-full px-3"
                           }`}
                       >
-                        {item.nip ? item.nip : "Tidak Terdaftar Daspen"}
+                        {item.nip && item.nip !== "0"
+                          ? item.nip
+                          : "Tidak Terdaftar Daspen"}
                       </div>
                     </td>
                     {!isMobile && (
@@ -2263,10 +2538,9 @@ const DataTable = ({
                           </div>
                           <div className="text-sm">
                             Pensiun :{" "}
-                            {calculateRetirementDate(
-                              item.tanggalLahir,
-                              item.statusPegawai
-                            )}
+                            {item.prediksiPensiun
+                              ? formatRetirementDate(item.prediksiPensiun)
+                              : "-"}
                           </div>
                         </td>
                         <td className="py-2 px-4 border">
@@ -2292,9 +2566,6 @@ const DataTable = ({
 
                           <div className="text-sm">{item.pangkatGolongan}</div>
                         </td>
-                        <td className="py-2 px-4 text-center border">
-                          <div className="text-sm">{formatTingkatSekolah(item.tingkatSekolah)}</div>
-                        </td>
                         <td className="py-2 px-4 border w-36 text-center ">
                           <div
                             className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
@@ -2305,7 +2576,7 @@ const DataTable = ({
                             {item.statusKeanggotaan}
                           </div>
                         </td>
-                        {/* <td className="py-2 px-4 border text-center">
+                        <td className="py-2 px-4 border text-center">
                           <div
                             className="text-sm cursor-pointer text-blue-500 hover:underline"
                             onClick={() => {
@@ -2315,7 +2586,7 @@ const DataTable = ({
                           >
                             {item.latitude}, {item.longitude}
                           </div>
-                        </td> */}
+                        </td>
                         <td className="px-4 py-2 border">
                           <div className="flex justify-center space-x-2">
                             <Button
@@ -2429,9 +2700,12 @@ const DataTable = ({
                                     </div>
                                   </div>
                                 )}
+
                                 <Link
-                                  href={`https://wa.me/${item.nomorHp?.replace(/^0/, "62") || ""
-                                    }`}
+                                  href={`https://wa.me/${item.nomorHp?.replace(
+                                    /^0/,
+                                    "62"
+                                  )}`}
                                   className="text-white bg-green-500 hover:bg-green-600 p-2 border rounded-md"
                                   target="_blank"
                                   rel="noopener noreferrer"
@@ -2439,7 +2713,6 @@ const DataTable = ({
                                 >
                                   <FaWhatsapp className="w-4 h-4" />
                                 </Link>
-
                               </>
                             )}
                             <div>
@@ -2454,6 +2727,7 @@ const DataTable = ({
                               >
                                 Daspen
                               </Button>
+
                               {isPopupDaspen && daspenData && (
                                 <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-10 z-50">
                                   <div className="bg-white p-6 rounded-md w-5/12 relative">
@@ -2649,28 +2923,26 @@ const DataTable = ({
                                 </div>
                               )}
                             </div>
-
-                            {sessionStorage.getItem("role") === "USER" ? (
-                              <Button
-                                className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2 cursor-not-allowed opacity-50"
-                                title="Aktivasi Anggota"
-                                type="button"
-                                disabled
-                              >
-                                <FaUserCheck className="w-4 h-4" />
-                                <span>Aktivasi</span>
-                              </Button>
-                            ) : (
-                              <Button
-                                className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
-                                title="Aktivasi Anggota"
-                                type="button"
-                                onClick={() => updateAktivasiUser(item.id)}
-                              >
-                                <FaUserCheck className="w-4 h-4" />
-                                <span>Aktivasi</span>
-                              </Button>
-                            )}
+                            {["SUPER ADMIN", "ADMIN"].includes(
+                              sessionStorage.getItem("role")
+                            ) && (
+                                <div className="flex justify-center">
+                                  <Button
+                                    type="button"
+                                    className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
+                                    title="Detail Anggota"
+                                    onClick={() => {
+                                      sessionStorage.setItem(
+                                        "anggotaId",
+                                        item.id
+                                      );
+                                      handleDetailAnggota();
+                                    }}
+                                  >
+                                    Detail Anggota
+                                  </Button>
+                                </div>
+                              )}
                           </div>
                         </td>
                       </>
@@ -2692,10 +2964,9 @@ const DataTable = ({
                               </div>
                               <div className="text-sm">
                                 Pensiun :{" "}
-                                {calculateRetirementDate(
-                                  item.tanggalLahir,
-                                  item.statusPegawai
-                                )}
+                                {item.prediksiPensiun
+                                  ? formatRetirementDate(item.prediksiPensiun)
+                                  : "-"}
                               </div>
                             </div>
                             <div className="text-left">
@@ -2729,12 +3000,6 @@ const DataTable = ({
                               </h3>
                               {item.statusKeanggotaan}
                             </div>
-                            <div className="text-left">
-                              <h3 className="font-semibold">
-                                Tingkat Sekolah:
-                              </h3>
-                              {formatTingkatSekolah(item.tingkatSekolah)}
-                            </div>
                           </div>
                           <div>
                             <h3 className="font-semibold text-center">Aksi:</h3>
@@ -2742,11 +3007,10 @@ const DataTable = ({
                               <Button
                                 className="text-white bg-blue-500 hover:bg-blue-600 p-2 border rounded-md"
                                 title="Edit Data"
-                                onClick={() =>
-                                  router.push(
-                                    `/anggota/edit-anggota?id=${item.id}`
-                                  )
-                                }
+                                onClick={() => {
+                                  sessionStorage.setItem("anggotaId", item.id);
+                                  handleEditClick();
+                                }}
                               >
                                 <FaEdit className="w-4 h-4" />
                               </Button>
@@ -2757,7 +3021,13 @@ const DataTable = ({
                                 <Button
                                   className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
                                   title="Mutasi"
-                                  onClick={() => openModal(item)}
+                                  onClick={() => {
+                                    sessionStorage.setItem(
+                                      "anggotaId",
+                                      item.id
+                                    );
+                                    openModal(item);
+                                  }}
                                 >
                                   <FaExchangeAlt className="w-4 h-4" />
                                 </Button>
@@ -2795,7 +3065,30 @@ const DataTable = ({
                                   <FaExclamationTriangle className="w-4 h-4" />
                                 </Button>
                               )}
-
+                              {isPopupVisible && (
+                                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-10 z-40 w-screen h-screen">
+                                  <div className="bg-white p-6 rounded-lg shadow-md w-96">
+                                    <h2 className="text-xl text-center mb-4">
+                                      Apakah Anda Yakin ingin Menghapus Data
+                                      Anggota ini?
+                                    </h2>
+                                    <div className="flex justify-end gap-4">
+                                      <button
+                                        onClick={() => setIsPopupVisible(false)}
+                                        className="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-md"
+                                      >
+                                        Batal
+                                      </button>
+                                      <button
+                                        onClick={handleDeleteClick}
+                                        className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                                      >
+                                        Ya, Saya Sakin
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                               <Link
                                 href={`https://wa.me/62${item.nomorHp}`}
                                 className="text-white bg-green-500 p-2 border rounded-md"
@@ -3020,27 +3313,26 @@ const DataTable = ({
                                   </div>
                                 )}
                               </div>
-                              {sessionStorage.getItem("role") === "USER" ? (
-                                <Button
-                                  className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2 cursor-not-allowed opacity-50"
-                                  title="Aktivasi Anggota"
-                                  type="button"
-                                  disabled
-                                >
-                                  <FaUserCheck className="w-4 h-4" />
-                                  <span>Aktivasi</span>
-                                </Button>
-                              ) : (
-                                <Button
-                                  className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
-                                  title="Aktivasi Anggota"
-                                  type="button"
-                                  onClick={() => updateAktivasiUser(item.id)}
-                                >
-                                  <FaUserCheck className="w-4 h-4" />
-                                  <span>Aktivasi</span>
-                                </Button>
-                              )}
+                              {["SUPER ADMIN", "ADMIN"].includes(
+                                sessionStorage.getItem("role")
+                              ) && (
+                                  <div className="flex justify-center">
+                                    <Button
+                                      type="button"
+                                      className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
+                                      title="Detail Anggota"
+                                      onClick={() => {
+                                        sessionStorage.setItem(
+                                          "anggotaId",
+                                          item.id
+                                        );
+                                        handleDetailAnggota();
+                                      }}
+                                    >
+                                      Detail Anggota
+                                    </Button>
+                                  </div>
+                                )}
                             </div>
                           </div>
                           <div className="text-center mt-4 w-full">
@@ -3223,6 +3515,41 @@ const DataTable = ({
                 </div>
               )}
             </div>
+            <div>
+              <Button
+                className="w-full bg-teal-700 hover:bg-teal-500"
+                onClick={handlePopupAktivasi}
+              >
+                Aktivasi Anggota
+              </Button>
+              {popupVisibleAktifasi && (
+                <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
+                  <div className="bg-white rounded-lg p-6 w-11/12 sm:w-2/5 md:w-1/3 lg:w-1/4 text-center shadow-lg max-w-md">
+                    <h2 className="text-lg font-semibold text-gray-800">
+                      Apakah Anda yakin ?
+                    </h2>
+                    <p className="text-gray-600 mt-2 mb-4">
+                      Apakah Anda yakin untuk mengaktifkan anggota menjadi
+                      Aktif?
+                    </p>
+                    <div className="flex justify-center gap-4">
+                      <button
+                        onClick={handleCancelKeluarAktivasi}
+                        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        onClick={updateAktivasiUser}
+                        className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
+                      >
+                        Ya, Saya Yakin
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </Modal>
@@ -3242,8 +3569,8 @@ const PopupDetail = ({
   const profileImageUrl = "/profile.png";
 
   const handleRejectConfirmation = () => {
-    setShowConfirmReject(false); // Close the confirmation pop-up
-    handleRejectUserClick(selectedRow.id); // Trigger reject action
+    setShowConfirmReject(false);
+    handleRejectUserClick(selectedRow.id);
   };
 
   return (
@@ -3396,7 +3723,7 @@ const Pagination = ({
   currentPage,
   totalPages,
   onPageChange,
-  selectedFilters // Add this prop to track current filter state
+  selectedFilters
 }) => {
   const getVisiblePages = () => {
     const pages = [];
@@ -3415,7 +3742,6 @@ const Pagination = ({
     return pages;
   };
 
-  // Helper function to handle page changes while preserving filters
   const handlePageChange = (newPage) => {
     onPageChange(newPage, selectedFilters);
   };
