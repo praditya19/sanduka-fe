@@ -1010,6 +1010,7 @@ const Page = () => {
                     type="number"
                     id="npaPgri"
                     placeholder="Tuliskan NPA"
+                    defaultValue="332"
                     {...register("npaPgri", { required: true })}
                     onChange={(e) => {
                       const value = e.target.value;
