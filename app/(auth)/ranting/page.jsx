@@ -485,7 +485,7 @@ const Page = () => {
     }
 
     try {
-      const cabangToFetch = cabang.kecamatan || cabang;
+      const cabangToFetch = decodeURIComponent(cabang.kecamatan || cabang);
 
       const response = await GlobalApi.getNamaRantingByCabang(cabangToFetch);
 
@@ -595,12 +595,17 @@ const Page = () => {
   };
 
   const handleUnitKerjaChange = (e) => {
+    console.log(e.target.value);
+
     const value = e.target.value.toLowerCase();
     setSearchUnitKerja(value);
 
-    const filteredOptions = allUnitKerja.filter((uk) =>
-      uk.unitKerja.toLowerCase().includes(value)
-    );
+    const filteredOptions = allUnitKerja.filter((uk) => {
+      return (
+        uk.cabang === selectedCabang &&
+        uk.unitKerja.toLowerCase().includes(value.toLowerCase())
+      );
+    });
 
     setFilteredUnitKerjaOptions(filteredOptions);
   };
