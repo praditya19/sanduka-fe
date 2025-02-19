@@ -17,14 +17,12 @@ import { ClipLoader } from "react-spinners";
 const Page = () => {
   const [entries, setEntries] = useState(10);
   const [currentPage, setCurrentPage] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
   const [adminDataAll, setRantingData] = useState([]);
   const [adminDataAllCetak, setRantingDataCetak] = useState([]);
   const [role, setRole] = useState("");
   const [selectedCabang, setSelectedCabang] = useState("");
   const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
   const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
-  const [, setFormData] = useState({ unit: "" });
   const [cabangOptions, setCabangOptions] = useState([]);
   const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
   const [searchUnitKerja, setSearchUnitKerja] = useState("");
@@ -36,7 +34,6 @@ const Page = () => {
   const [isPrintingOrDownloading, setIsPrintingOrDownloading] = useState(false);
   const [namaRanting, setNamaRanting] = useState([]);
   const [filteredNamaRanting, setFilteredNamaRanting] = useState([]);
-  const dropdownRef = useRef(null);
   const unitKerjaRef = useRef(null);
   const { token } = useAuth();
   const router = useRouter();
@@ -302,12 +299,9 @@ const Page = () => {
       (total, item) => total + (item.jumlahAnggotaRanting || 0),
       0
     );
-    const totalTotalAnggota = filteredData.reduce(
-      (total, item) => total + (item.totalAnggota || 0),
-      0
-    );
 
     let lastCabang = null;
+    let lastNamaRanting = null;
 
     const printWindow = window.open("", "_blank");
     printWindow.document.write(`
@@ -351,12 +345,11 @@ const Page = () => {
             th:nth-child(1), td:nth-child(1) { width: 5%; }  /* No */
             th:nth-child(2), td:nth-child(2) { width: 10%; } /* Cabang */
             th:nth-child(3), td:nth-child(3) { width: 10%; } /* Nama Ranting */
-            th:nth-child(4), td:nth-child(4) { width: 10%; } /* Unit Kerja */
-            th:nth-child(5), td:nth-child(5) { width: 35%; text-align: left; } /* Nama Anggota */
+            th:nth-child(4), td:nth-child(4) { width: 12%; } /* Unit Kerja */
+            th:nth-child(5), td:nth-child(5) { width: 30%; text-align: left; } /* Nama Anggota */
             th:nth-child(6), td:nth-child(6) { width: 10%; } /* Anggota Unit Kerja */
             th:nth-child(7), td:nth-child(7) { width: 10%; } /* Jumlah Anggota Ranting */
             th:nth-child(8), td:nth-child(8) { width: 10%; } /* Total Unit Kerja */
-            th:nth-child(9), td:nth-child(9) { width: 10%; } /* Total Anggota */
             @media print {
               body {
                 width: auto;
@@ -378,7 +371,6 @@ const Page = () => {
                 <th>Anggota Unit Kerja</th>
                 <th>Jumlah Anggota Ranting</th>
                 <th>Total Unit Kerja</th>
-                <th>Total Anggota</th>
               </tr>
             </thead>
             <tbody>
@@ -387,11 +379,17 @@ const Page = () => {
                   let cabangText =
                     item.cabang !== lastCabang ? item.cabang || "-" : "-";
                   lastCabang = item.cabang;
+
+                  let namaRanting =
+                    item.namaRanting !== lastNamaRanting
+                      ? item.namaRanting || "-"
+                      : "-";
+                  lastNamaRanting = item.namaRanting;
                   return `
                     <tr>
                       <td>${index + 1}</td>
                       <td>${cabangText}</td>
-                      <td>${item.namaRanting || "-"}</td>
+                      <td>${namaRanting}</td>
                       <td>${item.unitKerja || "-"}</td>
                       <td>
                         ${
@@ -406,7 +404,6 @@ const Page = () => {
                       <td>${item.anggotaUnitKerja || 0}</td>
                       <td>${item.jumlahAnggotaRanting || 0}</td>
                       <td>${item.totalUnitKerja || 0}</td>
-                      <td>${item.totalAnggota || 0}</td>
                     </tr>
                   `;
                 })
@@ -421,7 +418,6 @@ const Page = () => {
                 <td>${totalAnggotaUnitKerja}</td>
                 <td>${totalJumlahAnggotaRanting}</td>
                 <td>${totalUnitKerja}</td>
-                <td>${totalTotalAnggota}</td>
               </tr>
             </tbody>
           </table>
@@ -460,8 +456,7 @@ const Page = () => {
         : "-",
       "Anggota Unit Kerja": item.anggotaUnitKerja || 0,
       "Total Unit Kerja": item.totalUnitKerja || 0,
-      "Jumlah Anggota Ranting": item.jumlahAnggotaRanting || 0,
-      "Total Anggota": item.totalAnggota || 0,
+      "Jumlah Anggota Ranting": item.jumlahAnggotaRanting,
     }));
 
     const totalAnggotaUnitKerja = filteredData.reduce(
@@ -476,10 +471,6 @@ const Page = () => {
       (total, item) => total + (item.jumlahAnggotaRanting || 0),
       0
     );
-    const totalTotalAnggota = filteredData.reduce(
-      (total, item) => total + (item.totalAnggota || 0),
-      0
-    );
 
     data.push({
       No: "Total",
@@ -490,7 +481,6 @@ const Page = () => {
       "Anggota Unit Kerja": totalAnggotaUnitKerja,
       "Total Unit Kerja": totalUnitKerja,
       "Jumlah Anggota Ranting": totalJumlahAnggotaRanting,
-      "Total Anggota": totalTotalAnggota,
     });
 
     const ws = XLSX.utils.json_to_sheet(data);
@@ -558,7 +548,6 @@ const Page = () => {
             th:nth-child(5), td:nth-child(5) { width: 10%; }/* Anggota Unit Kerja */
             th:nth-child(6), td:nth-child(6) { width: 10%; }/* Jumlah Anggota Ranting */
             th:nth-child(7), td:nth-child(7) { width: 10%; }/* Total Unit Kerja */
-            th:nth-child(8), td:nth-child(8) { width: 10%; }/* Total Anggota */
             @media print {
               body {
                 width: auto;
@@ -579,42 +568,47 @@ const Page = () => {
                 <th>Anggota Unit Kerja</th>
                 <th>Jumlah Anggota Ranting</th>
                 <th>Total Unit Kerja</th>
-                <th>Total Anggota</th>
               </tr>
             </thead>
             <tbody>
-              ${Object.keys(groupedData)
-                .map((cabang, cabangIndex) => {
-                  const rantingRows = groupedData[cabang]
-                    .map(
-                      (item, index) => `
-                      <tr>
-                        ${
-                          index === 0
-                            ? `<td rowspan="${groupedData[cabang].length}">${
-                                cabangIndex + 1
-                              }</td>`
-                            : ""
-                        }
-                        ${
-                          index === 0
-                            ? `<td rowspan="${groupedData[cabang].length}">${cabang}</td>`
-                            : ""
-                        }
-                        <td>${item.namaRanting || "-"}</td>
-                        <td>${item.unitKerja || "-"}</td>
-                        <td>${item.anggotaUnitKerja || 0}</td>
-                        <td>${item.jumlahAnggotaRanting || 0}</td>
-                        <td>${item.totalUnitKerja || 0}</td>
-                        <td>${item.totalAnggota || 0}</td>
-                      </tr>
-                    `
-                    )
-                    .join("");
-                  return rantingRows;
-                })
-                .join("")}
-            </tbody>
+            ${Object.keys(groupedData)
+              .map((cabang, cabangIndex) => {
+                let lastNamaRanting = null;
+                const rantingRows = groupedData[cabang]
+                  .map((item, index) => {
+                    let namaRanting =
+                      item.namaRanting !== lastNamaRanting
+                        ? item.namaRanting || "-"
+                        : "-";
+                    lastNamaRanting = item.namaRanting;
+
+                    return `
+            <tr>
+              ${
+                index === 0
+                  ? `<td rowspan="${groupedData[cabang].length}">${
+                      cabangIndex + 1
+                    }</td>`
+                  : ""
+              }
+              ${
+                index === 0
+                  ? `<td rowspan="${groupedData[cabang].length}">${cabang}</td>`
+                  : ""
+              }
+              <td>${namaRanting}</td>
+              <td>${item.unitKerja || "-"}</td>
+              <td>${item.anggotaUnitKerja || 0}</td>
+              <td>${item.jumlahAnggotaRanting || 0}</td>
+              <td>${item.totalUnitKerja || 0}</td>
+            </tr>
+          `;
+                  })
+                  .join("");
+                return rantingRows;
+              })
+              .join("")}
+          </tbody>
           </table>
         </body>
       </html>
@@ -662,7 +656,7 @@ const Page = () => {
             </nav>
             <main className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-4">
               <div className="mb-4">
-                <Label className="block flex-1 px-2">
+                <Label className="block flex-1">
                   <span className="text-gray-700 font-semibold">
                     Data Ranting
                   </span>
@@ -792,106 +786,107 @@ const Page = () => {
                     </div>
 
                     {/* Nama Unit Kerja */}
-                    <div
-                      ref={unitKerjaRef}
-                      className="relative w-full md:w-48 mt-4 sm:mt-0"
-                    >
-                      <Input
-                        type="text"
-                        placeholder="Pilih Unit Kerja"
-                        value={selectedUnitKerja}
-                        readOnly
-                        onFocus={() => {
-                          if (
-                            selectedRanting &&
-                            selectedCabang !== "Pilih Cabang"
-                          ) {
+                    <div className="mb-4">
+                      <label className="block text-gray-700 text-sm font-bold mb-1">
+                        Nama Unit Kerja
+                      </label>
+                      <div
+                        ref={unitKerjaRef}
+                        className="relative w-full md:w-48 mt-4 sm:mt-0"
+                      >
+                        <Input
+                          type="text"
+                          placeholder="Pilih Unit Kerja"
+                          value={selectedUnitKerja}
+                          readOnly
+                          onFocus={() => {
+                            if (
+                              selectedRanting &&
+                              selectedCabang !== "Pilih Cabang"
+                            ) {
+                              setShowDropdownUnitKerja(true);
+                              setFilteredUnitKerjaOptions(
+                                selectedCabang === "Pilih Cabang"
+                                  ? allUnitKerja
+                                  : allUnitKerja.filter(
+                                      (uk) => uk.cabang === selectedCabang
+                                    )
+                              );
+                            }
                             setShowDropdownUnitKerja(true);
-                            setFilteredUnitKerjaOptions(
-                              selectedCabang === "Pilih Cabang"
-                                ? allUnitKerja
-                                : allUnitKerja.filter(
-                                    (uk) => uk.cabang === selectedCabang
-                                  )
-                            );
-                          }
-                          setShowDropdownUnitKerja(true);
-                        }}
-                        className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
-                          !selectedRanting
-                            ? "cursor-not-allowed opacity-50"
-                            : ""
-                        }`}
-                        disabled={!selectedRanting}
-                      />
+                          }}
+                          className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                            !selectedRanting
+                              ? "cursor-not-allowed opacity-50"
+                              : ""
+                          }`}
+                          disabled={!selectedRanting}
+                        />
 
-                      {showDropdownUnitKerja && (
-                        <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
-                          <div className="p-1">
-                            <Input
-                              type="text"
-                              value={searchUnitKerja}
-                              onChange={handleUnitKerjaChange}
-                              placeholder="Cari Unit Kerja..."
-                              className="w-full border rounded py-2 px-3 mb-2"
-                            />
-                          </div>
-                          <ul className="max-h-44 overflow-y-auto -mt-3">
-                            <li
-                              className="p-2 cursor-pointer hover:bg-gray-100"
-                              onClick={() => handleUnitKerjaSelect({})}
-                            >
-                              Semua Unit Kerja
-                            </li>
-                            {filteredUnitKerjaOptions.map((item) => (
+                        {showDropdownUnitKerja && (
+                          <div className="absolute z-10 border rounded bg-white shadow-sm mt-1 w-full">
+                            <div className="p-1">
+                              <Input
+                                type="text"
+                                value={searchUnitKerja}
+                                onChange={handleUnitKerjaChange}
+                                placeholder="Cari Unit Kerja..."
+                                className="w-full border rounded py-2 px-3 mb-2"
+                              />
+                            </div>
+                            <ul className="max-h-44 overflow-y-auto -mt-3">
                               <li
-                                key={item.id}
                                 className="p-2 cursor-pointer hover:bg-gray-100"
-                                onClick={() => handleUnitKerjaSelect(item)}
+                                onClick={() => handleUnitKerjaSelect({})}
                               >
-                                {item.unitKerja}
+                                Semua Unit Kerja
                               </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                              {filteredUnitKerjaOptions.map((item) => (
+                                <li
+                                  key={item.id}
+                                  className="p-2 cursor-pointer hover:bg-gray-100"
+                                  onClick={() => handleUnitKerjaSelect(item)}
+                                >
+                                  {item.unitKerja}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   {/* Filter */}
-                  <div className="flex flex-wrap justify-between w-full md:w-auto space-y-4 md:space-y-0 md:space-x-4">
-                    <div className="flex items-center w-full md:w-auto space-x-4">
-                      <label htmlFor="entries" className="mr-2">
-                        Tampilkan:
-                      </label>
-                      <select
-                        id="entries"
-                        onChange={handleEntriesChange}
-                        className="shadow border rounded w-full md:w-20 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  <div className="flex flex-wrap justify-between w-full md:w-auto">
+                    <div className="mt-5 flex flex-wrap gap-4 justify-center md:justify-start">
+                      <Button
+                        className="px-8 w-full sm:w-auto bg-blue-500"
+                        onClick={handlePrint}
                       >
-                        <option value="10">10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                      </select>
+                        Cetak
+                      </Button>
+                      <Button
+                        className="px-8 w-full sm:w-auto"
+                        onClick={handleDownloadExcel}
+                      >
+                        Download
+                      </Button>
+                      <Button
+                        className="px-8 w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white"
+                        onClick={handleRekapRanting}
+                      >
+                        Rekap Ranting
+                      </Button>
+                      {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                        <Button
+                          className="px-8 w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white"
+                          onClick={handleRekapRanting}
+                        >
+                          Rekap Ranting All
+                        </Button>
+                      )}
                     </div>
-                    <Button
-                      className="px-8 mt-4 md:mt-0 bg-blue-500"
-                      onClick={handlePrint}
-                    >
-                      Cetak
-                    </Button>
-                    <Button
-                      className="px-8 mt-4 md:mt-0"
-                      onClick={handleDownloadExcel}
-                    >
-                      Download
-                    </Button>
-                    <Button
-                      className="px-8 mt-4 md:mt-0 bg-indigo-600 hover:bg-indigo-700 text-white"
-                      onClick={handleRekapRanting}
-                    >
-                      Rekap Ranting
-                    </Button>
                   </div>
                 </div>
               </div>
@@ -900,9 +895,11 @@ const Page = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead>
                     <tr className="bg-sky-100">
-                      <th className="p-2 md:p-3 border text-left">No</th>
-                      <th className="p-2 md:p-3 border text-left">Cabang</th>
-                      <th className="p-2 md:p-3 border hidden md:table-cell">
+                      <th className="p-2 md:p-3 border md:table-cell">No</th>
+                      <th className="p-2 md:p-3 border md:table-cell">
+                        Cabang
+                      </th>
+                      <th className="p-2 md:p-3 border md:table-cell">
                         Nama Ranting
                       </th>
                       <th className="p-2 md:p-3 border hidden md:table-cell">
@@ -920,9 +917,6 @@ const Page = () => {
                       <th className="p-2 md:p-3 border hidden md:table-cell">
                         Total Unit Kerja
                       </th>
-                      <th className="p-2 md:p-3 border hidden md:table-cell">
-                        Total Anggota
-                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -930,19 +924,23 @@ const Page = () => {
                       <>
                         {filteredData.map((item, index) => (
                           <tr className="bg-gray-100" key={index}>
-                            <td className="p-2 md:p-3 border text-center">
+                            <td className="p-2 md:p-3 border text-left align-top">
                               {index + 1 + currentPage * entries}
                             </td>
-                            <td className="p-2 md:p-3 border text-center">
+                            <td className="p-2 md:p-3 border text-left align-top">
                               {index === 0 ||
                               filteredData[index - 1].cabang !== item.cabang
                                 ? item.cabang
                                 : "-"}
                             </td>
-                            <td className="p-2 md:p-3 border hidden md:table-cell">
-                              {item.namaRanting || "-"}
+                            <td className="p-2 md:p-3 border md:table-cell text-left align-top">
+                              {index === 0 ||
+                              filteredData[index - 1].namaRanting !==
+                                item.namaRanting
+                                ? item.namaRanting
+                                : "-"}
                             </td>
-                            <td className="p-2 md:p-3 border hidden md:table-cell">
+                            <td className="p-2 md:p-3 border hidden md:table-cell text-left align-top">
                               {item.unitKerja || "-"}
                             </td>
                             <td
@@ -956,17 +954,14 @@ const Page = () => {
                                     .join("\n")
                                 : "-"}
                             </td>
-                            <td className="p-2 md:p-3 border hidden md:table-cell">
+                            <td className="p-2 md:p-3 border hidden md:table-cell text-left align-top">
                               {item.anggotaUnitKerja || "-"}
                             </td>
-                            <td className="p-2 md:p-3 border hidden md:table-cell">
+                            <td className="p-2 md:p-3 border hidden md:table-cell text-left align-top">
                               {item.jumlahAnggotaRanting || "-"}
                             </td>
-                            <td className="p-2 md:p-3 border hidden md:table-cell">
+                            <td className="p-2 md:p-3 border hidden md:table-cell text-left align-top">
                               {item.totalUnitKerja || "-"}
-                            </td>
-                            <td className="p-2 md:p-3 border hidden md:table-cell">
-                              {item.totalAnggota || "-"}
                             </td>
                           </tr>
                         ))}
@@ -993,12 +988,6 @@ const Page = () => {
                             {filteredData.reduce(
                               (total, item) =>
                                 total + (item.totalUnitKerja || 0),
-                              0
-                            )}
-                          </td>
-                          <td className="p-2 md:p-3 text-center">
-                            {filteredData.reduce(
-                              (total, item) => total + (item.totalAnggota || 0),
                               0
                             )}
                           </td>

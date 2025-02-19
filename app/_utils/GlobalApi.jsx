@@ -8,7 +8,6 @@ const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
 });
-
 // Konversi Gambar Dalam Format Base64
 const base64ToBlob = (base64, mime) => {
   const byteChars = atob(base64);
@@ -119,7 +118,8 @@ const getAllAnggota = async (
   unitKerja = null,
   keyword = null,
   statusKeanggotaan = null,
-  tingkatSekolah = null
+  tingkatSekolah = null,
+  statusPegawai = null
 ) => {
   try {
     const params = new URLSearchParams({
@@ -133,6 +133,7 @@ const getAllAnggota = async (
     if (statusKeanggotaan)
       params.append("statusKeanggotaan", statusKeanggotaan);
     if (tingkatSekolah) params.append("tingkatSekolah", tingkatSekolah);
+    if (statusPegawai) params.append("statusPegawai", statusPegawai);
 
     const response = await axiosClient.get(
       `/api/auth/users?${params.toString()}`
@@ -787,16 +788,19 @@ const getSaldoOrganisasi = async () => {
 const getPemasukanUangMasukById = async (id) => {
   try {
     const response = await axiosClient.get(`/api/uang-masuk-keluar/${id}`);
-    return response.data
+    return response.data;
   } catch (error) {
     console.error("Error fetching data by id:", error);
     throw error;
   }
-}
+};
 
 const editPemasukanUangMasuk = async (id, updatedFormValues) => {
   try {
-    const response = await axiosClient.put(`/api/uang-masuk-keluar/${id}`, updatedFormValues);
+    const response = await axiosClient.put(
+      `/api/uang-masuk-keluar/${id}`,
+      updatedFormValues
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching data by id:", error);
@@ -1026,7 +1030,10 @@ const createPembayaranSanduka = async (payload) => {
 
 const createSaldoAwal = async (saldoAwalRequest) => {
   try {
-    const response = await axiosClient.post("/api/uang-masuk-keluar/create-saldo-awal", saldoAwalRequest);
+    const response = await axiosClient.post(
+      "/api/uang-masuk-keluar/create-saldo-awal",
+      saldoAwalRequest
+    );
     return response.data;
   } catch (error) {
     console.error("Error creating saldo awal sanduka data:", error);
@@ -1439,7 +1446,6 @@ const getRantingSummary = async (
             anggotaUnitKerja: dataItem.jumlahAnggota,
             jumlahAnggotaRanting: dataItem.jumlahUnitKerja,
             totalUnitKerja: dataItem.totalUnitKerja,
-            totalAnggota: dataItem.totalAnggota,
           };
         }),
       };
@@ -1594,7 +1600,7 @@ const getAllUnitKerja = async (
     const params = {
       page,
       size,
-      ...(cabang && { cabang: encodeURIComponent(cabang) }),
+      ...(cabang && { cabang: cabang }),
       ...(unitKerja && { unitKerja: unitKerja }),
     };
     const response = await axiosClient.get(`/api/unit-kerja/all`, { params });
@@ -1826,7 +1832,7 @@ const createNamaRanting = async (namaRanting) => {
 
 const getNamaRantingCabang = () => axiosClient.get("/api/nama-ranting");
 const getNamaRantingByCabang = (cabang) => {
-  return axiosClient.get(`/api/nama-ranting/cabang/${cabang}`);
+  return axiosClient.get(`/api/nama-ranting/cabang`, { params: { cabang } });
 };
 
 const uploadFileRegister = async (formData) => {
