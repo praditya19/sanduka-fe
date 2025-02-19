@@ -1600,7 +1600,7 @@ const getAllUnitKerja = async (
     const params = {
       page,
       size,
-      ...(cabang && { cabang: encodeURIComponent(cabang) }),
+      ...(cabang && { cabang: cabang }),
       ...(unitKerja && { unitKerja: unitKerja }),
     };
     const response = await axiosClient.get(`/api/unit-kerja/all`, { params });
