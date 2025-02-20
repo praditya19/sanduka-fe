@@ -13,6 +13,7 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { ClipLoader } from "react-spinners";
+import { saveAs } from "file-saver";
 
 const Page = () => {
   const [entries, setEntries] = useState(10);
@@ -153,6 +154,7 @@ const Page = () => {
       fetchCabangData();
       fetchNamaRanting();
       fetchUnitKerjaData();
+
       const role = sessionStorage.getItem("role");
       const cabangFromSession = sessionStorage.getItem("cabang") || "";
       if (role === "ADMIN" && cabangFromSession) {
@@ -194,11 +196,6 @@ const Page = () => {
       </div>
     );
   }
-
-  const handleEntriesChange = (e) => {
-    setEntries(parseInt(e.target.value));
-    setCurrentPage(0);
-  };
 
   const handleCabangClick = () => {
     setFilteredCabangList(originalCabangList);
@@ -251,9 +248,12 @@ const Page = () => {
     const value = e.target.value.toLowerCase();
     setSearchUnitKerja(value);
 
-    const filteredOptions = allUnitKerja.filter((uk) =>
-      uk.unitKerja.toLowerCase().includes(value)
-    );
+    const filteredOptions = allUnitKerja.filter((uk) => {
+      return (
+        uk.cabang === selectedCabang &&
+        uk.unitKerja.toLowerCase().includes(value.toLowerCase())
+      );
+    });
 
     setFilteredUnitKerjaOptions(filteredOptions);
   };
@@ -621,6 +621,59 @@ const Page = () => {
     handleProcessingStatus(false);
   };
 
+  const handleRekapRantingAll = async () => {
+    try {
+      const response = await GlobalApi.getRekapRanting();
+      const data = response.data;
+
+      if (!Array.isArray(data)) {
+        return;
+      }
+
+      const totalRanting = data.reduce(
+        (sum, item) => sum + item.jumlahRanting,
+        0
+      );
+      const totalUnit = data.reduce((sum, item) => sum + item.jumlahUnit, 0);
+      const totalAnggota = data.reduce(
+        (sum, item) => sum + item.jumlahAnggota,
+        0
+      );
+
+      const dataExcel = data.map((item, index) => ({
+        NO: index + 1,
+        "CABANG SE-KABUPATEN JEPARA": item.cabang,
+        "JUM.RANTING": item.jumlahRanting,
+        "JUM.UNIT": item.jumlahUnit,
+        "JUM.ANGGOTA": item.jumlahAnggota,
+      }));
+
+      dataExcel.push({
+        NO: "TOTAL",
+        "CABANG SE-KABUPATEN JEPARA": "",
+        "JUM.RANTING": totalRanting,
+        "JUM.UNIT": totalUnit,
+        "JUM.ANGGOTA": totalAnggota,
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(dataExcel);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Ranting");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const file = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      saveAs(file, "Rekap_Ranting_All.xlsx");
+    } catch (error) {
+      console.error("Gagal mengunduh Excel:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
       <Toaster />
@@ -881,7 +934,7 @@ const Page = () => {
                       {sessionStorage.getItem("role") === "SUPER ADMIN" && (
                         <Button
                           className="px-8 w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white"
-                          onClick={handleRekapRanting}
+                          onClick={handleRekapRantingAll}
                         >
                           Rekap Ranting All
                         </Button>

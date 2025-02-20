@@ -60,6 +60,9 @@ const Page = () => {
   );
   const [buatNamaRanting, setBuatNamaRanting] = useState("");
   const [checkedUnitKerja, setCheckedUnitKerja] = useState([]);
+  const dropdownRef = useRef(null);
+  const dropdownNamaRantingRef = useRef(null);
+  const dropdownUnitKerja = useRef(null);
 
   const addRanting = async () => {
     if (!selectedRanting || !selectedCabang) {
@@ -527,6 +530,29 @@ const Page = () => {
     }
   }, [token, router, selectedCabang, filteredCabang]);
 
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowCabangDropdown(false);
+      } else if (
+        dropdownNamaRantingRef.current &&
+        !dropdownNamaRantingRef.current.contains(event.target)
+      ) {
+        setShowRantingDropdown(false);
+      } else if (
+        dropdownUnitKerja.current &&
+        !dropdownUnitKerja.current.contains(event.target)
+      ) {
+        setShowDropdownUnitKerja(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
@@ -595,8 +621,6 @@ const Page = () => {
   };
 
   const handleUnitKerjaChange = (e) => {
-    console.log(e.target.value);
-
     const value = e.target.value.toLowerCase();
     setSearchUnitKerja(value);
 
@@ -765,28 +789,28 @@ const Page = () => {
             <div className="container mx-auto p-4 md:p-6 bg-white shadow-lg rounded-lg mt-4">
               <div className="mb-2">
                 <h3 className="text-base font-bold mb-2">Tambah Ranting</h3>
-                <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="bg-white p-6 rounded-lg shadow-md w-full mx-auto">
                   {/* Kontainer Flex untuk Form */}
-                  <div className="flex flex-wrap gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6">
                     {/* Tambah Nama Cabang */}
-                    <div className="flex-1">
+                    <div className="w-full">
                       <label className="block text-gray-700 text-sm font-bold mb-1">
                         Nama Cabang
                       </label>
-                      <div className="flex items-center relative">
+                      <div className="relative w-full">
                         <Input
                           type="text"
                           value={selectedCabang}
                           readOnly
                           disabled={role === "ADMIN"}
                           onClick={handleCabangClick}
-                          className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none"
                           placeholder="Pilih Cabang"
                         />
                         {showCabangDropdown && (
                           <div
-                            className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full"
-                            style={{ top: "100%", left: 0 }}
+                            ref={dropdownRef}
+                            className="absolute z-50 w-full border rounded-lg bg-white shadow-sm mt-1"
                           >
                             <ul className="max-h-44 overflow-y-auto">
                               <li className="py-2 px-2">
@@ -795,7 +819,7 @@ const Page = () => {
                                   onChange={(e) =>
                                     handleCabangSearch(e.target.value)
                                   }
-                                  className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                                  className="w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none"
                                   placeholder="Cari atau ketik Cabang..."
                                   autoFocus
                                 />
@@ -831,17 +855,17 @@ const Page = () => {
                     </div>
 
                     {/* Tambah Nama Ranting */}
-                    <div className="flex-1">
+                    <div className="w-full">
                       <label className="block text-gray-700 text-sm font-bold mb-1">
                         Nama Ranting
                       </label>
-                      <div className="relative">
+                      <div className="relative w-full">
                         <Input
                           type="text"
                           value={selectedRanting}
                           readOnly
                           onClick={() => setShowRantingDropdown(true)}
-                          className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                          className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none ${
                             !selectedCabang
                               ? "cursor-not-allowed opacity-50"
                               : ""
@@ -850,8 +874,8 @@ const Page = () => {
                         />
                         {showRantingDropdown && selectedCabang && (
                           <div
-                            className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full"
-                            style={{ top: "100%", left: 0 }}
+                            ref={dropdownNamaRantingRef}
+                            className="absolute z-50 w-full border rounded-lg bg-white shadow-sm mt-1"
                           >
                             <ul className="max-h-44 overflow-y-auto">
                               <li className="py-2 px-2">
@@ -860,7 +884,7 @@ const Page = () => {
                                   onChange={(e) =>
                                     handleRantingSearch(e.target.value)
                                   }
-                                  className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                                  className="w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none"
                                   placeholder="Cari atau ketik Nama Ranting..."
                                   autoFocus
                                 />
@@ -870,7 +894,7 @@ const Page = () => {
                                 onClick={() =>
                                   handleSelectRanting({ namaRanting: "" })
                                 }
-                                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                                className="px-4 py-2 cursor-pointer hover:bg-gray-200 flex justify-between items-center"
                               >
                                 Pilih Nama Ranting
                               </li>
@@ -886,7 +910,7 @@ const Page = () => {
                                     {ranting.namaRanting}
                                   </span>
                                   <Button
-                                    className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
+                                    className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600"
                                     onClick={() =>
                                       handleRemoveRanting(ranting.id)
                                     }
@@ -902,14 +926,11 @@ const Page = () => {
                     </div>
 
                     {/* Tambah Unit Kerja */}
-                    <div className="flex-1">
+                    <div className="w-full">
                       <label className="block text-gray-700 text-sm font-bold mb-1">
                         Nama Unit Kerja
                       </label>
-                      <div
-                        ref={unitKerjaRef}
-                        className="relative w-full mt-4 sm:mt-0"
-                      >
+                      <div ref={unitKerjaRef} className="relative w-full">
                         <Input
                           type="text"
                           placeholder="Pilih Unit Kerja"
@@ -930,7 +951,7 @@ const Page = () => {
                               );
                             }
                           }}
-                          className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                          className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none ${
                             !selectedRanting
                               ? "cursor-not-allowed opacity-50"
                               : ""
@@ -940,19 +961,22 @@ const Page = () => {
 
                         {showDropdownUnitKerja &&
                           selectedCabang !== "Pilih Cabang" && (
-                            <div className="absolute z-10 border rounded bg-white shadow-lg mt-1 w-full max-w-full">
-                              <div className="p-2 w-full">
+                            <div
+                              ref={dropdownUnitKerja}
+                              className="absolute z-10 w-full border rounded bg-white shadow-lg mt-1"
+                            >
+                              <div className="p-2">
                                 <Input
                                   type="text"
                                   value={searchUnitKerja}
                                   onChange={handleUnitKerjaChange}
                                   placeholder="Cari Unit Kerja..."
-                                  className="w-full border rounded py-2 px-3 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                  className="w-full border rounded py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-300"
                                 />
                               </div>
                               <ul className="max-h-56 overflow-y-auto mt-1 rounded-md">
                                 <li
-                                  className="p-3 cursor-pointer hover:bg-gray-100 transition duration-150 ease-in-out"
+                                  className="p-3 cursor-pointer hover:bg-gray-100"
                                   onClick={() => handleUnitKerjaSelect({})}
                                 >
                                   Semua Unit Kerja
@@ -960,7 +984,7 @@ const Page = () => {
                                 {filteredUnitKerjaOptions.map((item) => (
                                   <li
                                     key={item.id}
-                                    className="p-3 cursor-pointer hover:bg-gray-100 transition duration-150 ease-in-out"
+                                    className="p-3 cursor-pointer hover:bg-gray-100"
                                     onClick={() => handleUnitKerjaSelect(item)}
                                   >
                                     {item.unitKerja}
@@ -973,10 +997,10 @@ const Page = () => {
                     </div>
 
                     {/* Tambah Ranting */}
-                    <div className="flex justify-end mt-6">
+                    <div className="w-full flex justify-end col-span-full">
                       <Button
                         type="button"
-                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition ease-in-out duration-150"
+                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
                         onClick={addRanting}
                       >
                         Tambah
@@ -1003,13 +1027,13 @@ const Page = () => {
                   </div>
                 </div>
 
-                <div className="relative mb-4 flex items-end gap-x-4">
+                <div className="relative mb-4 flex flex-wrap items-end gap-4 md:flex-nowrap">
                   {/* Input Search */}
-                  <div className="relative flex-grow">
+                  <div className="relative flex-grow min-w-[200px]">
                     <input
                       type="text"
                       placeholder="Search..."
-                      className="p-2 pl-10 border rounded w-full"
+                      className="p-2 pl-10 border rounded w-full focus:ring-2 focus:ring-blue-500"
                       onChange={handleSearchChange}
                     />
                     <FontAwesomeIcon
@@ -1019,33 +1043,30 @@ const Page = () => {
                   </div>
 
                   {/* Nama Cabang */}
-                  <div className="flex-grow">
+                  <div className="flex-grow min-w-[200px]">
                     <label className="block text-gray-700 text-sm font-bold mb-1">
                       Nama Cabang
                     </label>
-                    <div className="flex items-center relative">
+                    <div className="relative">
                       <Input
                         type="text"
                         value={filteredCabang}
                         readOnly
                         disabled={role === "ADMIN"}
                         onClick={handleFilteredCabangClick}
-                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                         placeholder="Pilih Cabang"
                       />
                       {showFilteredCabangDropdown && (
-                        <div
-                          className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full"
-                          style={{ top: "100%", left: 0 }}
-                        >
-                          <ul className="max-h-44 overflow-y-auto">
+                        <div className="absolute z-50 border rounded-lg bg-white shadow-md w-full max-h-44 overflow-y-auto">
+                          <ul>
                             <li className="py-2 px-2">
                               <Input
                                 type="text"
                                 onChange={(e) =>
                                   handleFilteredCabangSearch(e.target.value)
                                 }
-                                className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                                className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                                 placeholder="Cari atau ketik Cabang..."
                                 autoFocus
                               />
@@ -1081,7 +1102,7 @@ const Page = () => {
                   </div>
 
                   {/* Nama Ranting */}
-                  <div className="flex-grow">
+                  <div className="flex-grow min-w-[200px]">
                     <label className="block text-gray-700 text-sm font-bold mb-1">
                       Nama Ranting
                     </label>
@@ -1091,17 +1112,14 @@ const Page = () => {
                         value={filteredRanting}
                         readOnly
                         onClick={() => setShowFilteredRantingDropdown(true)}
-                        className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                        className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 ${
                           !filteredCabang ? "cursor-not-allowed opacity-50" : ""
                         }`}
                         placeholder="Pilih Nama Ranting"
                       />
                       {showFilteredRantingDropdown && filteredCabang && (
-                        <div
-                          className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full"
-                          style={{ top: "100%", left: 0 }}
-                        >
-                          <ul className="max-h-44 overflow-y-auto">
+                        <div className="absolute z-50 border rounded-lg bg-white shadow-md w-full max-h-44 overflow-y-auto">
+                          <ul>
                             <li className="py-2 px-2">
                               <Input
                                 type="text"
@@ -1260,18 +1278,20 @@ const Page = () => {
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
+                  <table className="w-full min-w-max divide-y divide-gray-200 text-sm md:text-base">
                     <thead>
                       <tr className="bg-gray-50">
-                        <th className="p-2 md:p-3 border">No</th>
-                        <th className="p-2 md:p-3 border ">Cabang</th>
-                        <th className="p-2 md:p-3 border hidden md:table-cell">
+                        <th className="p-2 md:p-3 border text-left">No</th>
+                        <th className="p-2 md:p-3 border text-left">Cabang</th>
+                        <th className="p-2 md:p-3 border sm:table-cell text-left">
                           Nama Ranting
                         </th>
-                        <th className="p-2 md:p-3 border hidden md:table-cell">
+                        <th className="p-2 md:p-3 border hidden md:table-cell text-left">
                           Unit Kerja
                         </th>
-                        <th className="p-2 border text-center">Action</th>
+                        <th className="p-2 md:p-3 border hidden text-center">
+                          Action
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1280,16 +1300,16 @@ const Page = () => {
                         filteredData.map((item, index) => (
                           <React.Fragment key={item.id}>
                             <tr className="bg-gray-100">
-                              <td className="p-2 md:p-3 border">
+                              <td className="p-2 md:p-3 border text-left">
                                 {index + 1 + currentPage * entries}
                               </td>
-                              <td className="p-2 md:p-3 border hidden md:table-cell">
+                              <td className="p-2 md:p-3 border text-left">
                                 {item.cabangList}
                               </td>
-                              <td className="p-2 md:p-3 border">
+                              <td className="p-2 md:p-3 border text-left">
                                 {item.namaRanting}
                               </td>
-                              <td className="p-2 md:p-3 border">
+                              <td className="p-2 md:p-3 border hidden md:table-cell">
                                 {item.unitKerja?.split(", ").map((uk, i) => {
                                   const [unitKerjaId, unitKerjaName] =
                                     uk.split(":");
@@ -1314,23 +1334,24 @@ const Page = () => {
                                         htmlFor={`unitKerja-${item.id}-${
                                           unitKerjaId || i
                                         }`}
+                                        className="whitespace-nowrap"
                                       >
-                                        {unitKerjaName || uk}{" "}
+                                        {unitKerjaName || uk}
                                       </label>
                                     </div>
                                   );
                                 })}
                               </td>
-                              <td className="p-2 border text-center">
-                                <div className="flex space-x-2 justify-center">
-                                  <Button
-                                    className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
+                              <td className="p-2 md:p-3 border hidden text-center">
+                                <div className="flex flex-wrap justify-center space-x-2">
+                                  <button
+                                    className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition duration-150"
                                     onClick={() =>
                                       handleDeleteAdminClick(item.namaRanting)
                                     }
                                   >
                                     <FontAwesomeIcon icon={faTrash} />
-                                  </Button>
+                                  </button>
                                 </div>
                               </td>
                             </tr>
@@ -1338,7 +1359,7 @@ const Page = () => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="7" className="p-4 text-center">
+                          <td colSpan="5" className="p-4 text-center">
                             Tidak Ada Data
                           </td>
                         </tr>
