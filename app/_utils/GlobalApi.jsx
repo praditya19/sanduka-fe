@@ -1880,6 +1880,8 @@ const deleteNamaRanting = async (id) => {
   }
 };
 
+const getRekapRanting = () => axiosClient.get("/api/ranting/summary");
+
 // Export all functions
 export default {
   registerUser,
@@ -2014,4 +2016,5 @@ export default {
   uploadFileRegister,
   deleteUnitKerjaRanting,
   deleteNamaRanting,
+  getRekapRanting,
 };
