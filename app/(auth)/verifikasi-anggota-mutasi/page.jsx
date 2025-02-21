@@ -1238,8 +1238,16 @@ const PopupDetail = ({
               <p>{selectedRow.npaPgri}</p>
             </div>
             <div>
-              <p className="font-medium text-gray-600">NIK:</p>
-              <p>{selectedRow.nik}</p>
+              <p className="font-medium text-gray-600">Tanggal Lahir:</p>
+              <p>
+                {new Intl.DateTimeFormat("id-ID", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })
+                  .format(new Date(selectedRow.tanggalLahir))
+                  .replace(/\//g, "-")}
+              </p>
             </div>
           </div>
 
