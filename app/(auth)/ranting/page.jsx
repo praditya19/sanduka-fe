@@ -11,7 +11,12 @@ import toast, { Toaster } from "react-hot-toast";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
-import { faMagnifyingGlass, faTrash } from "@fortawesome/free-solid-svg-icons";
+import {
+  faMagnifyingGlass,
+  faMinusCircle,
+  faPlusCircle,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ClipLoader } from "react-spinners";
 
@@ -61,8 +66,11 @@ const Page = () => {
   const [buatNamaRanting, setBuatNamaRanting] = useState("");
   const [checkedUnitKerja, setCheckedUnitKerja] = useState([]);
   const dropdownRef = useRef(null);
-  const dropdownNamaRantingRef = useRef(null);
-  const dropdownUnitKerja = useRef(null);
+  const [expandedRow, setExpandedRow] = useState(null);
+  const [isPopupDeleteVisible, setIsPopupDeleteVisible] = useState(false);
+  const [isPopupDeleteNamaRantingVisible, setIsPopupDeleteNamaRantingVisible] =
+    useState(false);
+  const [rantingToDelete, setRantingToDelete] = useState(null);
 
   const addRanting = async () => {
     if (!selectedRanting || !selectedCabang) {
@@ -534,16 +542,10 @@ const Page = () => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowCabangDropdown(false);
-      } else if (
-        dropdownNamaRantingRef.current &&
-        !dropdownNamaRantingRef.current.contains(event.target)
-      ) {
         setShowRantingDropdown(false);
-      } else if (
-        dropdownUnitKerja.current &&
-        !dropdownUnitKerja.current.contains(event.target)
-      ) {
         setShowDropdownUnitKerja(false);
+        setShowFilteredCabangDropdown(false);
+        setShowFilteredRantingDropdown(false);
       }
     }
 
@@ -634,13 +636,9 @@ const Page = () => {
     setFilteredUnitKerjaOptions(filteredOptions);
   };
 
-  const handleRemoveRanting = async (id) => {
-    try {
-      await GlobalApi.deleteNamaRanting(id);
-      setAllRantingList((prev) => prev.filter((ranting) => ranting.id !== id));
-    } catch (error) {
-      console.error("Gagal menghapus Nama Ranting", error);
-    }
+  const handleRemoveRanting = (id) => {
+    setRantingToDelete(id);
+    setIsPopupDeleteNamaRantingVisible(true);
   };
 
   const filteredData = namaRanting?.filter((item) => {
@@ -667,6 +665,7 @@ const Page = () => {
     } else {
       deleteRanting(deleteByNamaRanting);
     }
+    setIsPopupDeleteVisible(false);
   };
 
   const handleSelectRanting = (ranting) => {
@@ -750,6 +749,25 @@ const Page = () => {
       setShowNamaRantingCabangDropdown(false);
     } else {
       console.error("Role tidak memiliki akses ke opsi 'All'");
+    }
+  };
+
+  const toggleExpandRow = (index) => {
+    setExpandedRow(expandedRow === index ? null : index);
+  };
+
+  const confirmDeleteRanting = async () => {
+    if (rantingToDelete) {
+      try {
+        await GlobalApi.deleteNamaRanting(rantingToDelete);
+        setAllRantingList((prev) =>
+          prev.filter((ranting) => ranting.id !== rantingToDelete)
+        );
+      } catch (error) {
+        console.error("Gagal menghapus Nama Ranting", error);
+      }
+      setRantingToDelete(null);
+      setIsPopupDeleteNamaRantingVisible(false);
     }
   };
 
@@ -874,7 +892,7 @@ const Page = () => {
                         />
                         {showRantingDropdown && selectedCabang && (
                           <div
-                            ref={dropdownNamaRantingRef}
+                            ref={dropdownRef}
                             className="absolute z-50 w-full border rounded-lg bg-white shadow-sm mt-1"
                           >
                             <ul className="max-h-44 overflow-y-auto">
@@ -925,6 +943,33 @@ const Page = () => {
                       </div>
                     </div>
 
+                    {/* Popup Konfirmasi Hapus */}
+                    {isPopupDeleteNamaRantingVisible && (
+                      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 transition-opacity duration-300">
+                        <div className="bg-white p-6 rounded-2xl shadow-xl w-full sm:w-3/4 md:w-2/4 lg:w-1/3 transform transition-all duration-300 scale-95 sm:scale-100">
+                          <h2 className="text-lg font-semibold text-gray-800 text-center mb-4">
+                            Apakah Anda yakin ingin menghapus data ini?
+                          </h2>
+                          <div className="flex justify-center gap-4 mt-4">
+                            <button
+                              onClick={() =>
+                                setIsPopupDeleteNamaRantingVisible(false)
+                              }
+                              className="px-5 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-lg transition duration-200 shadow-sm"
+                            >
+                              Batal
+                            </button>
+                            <button
+                              onClick={confirmDeleteRanting}
+                              className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition duration-200 shadow-sm"
+                            >
+                              Ya, Saya Yakin
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Tambah Unit Kerja */}
                     <div className="w-full">
                       <label className="block text-gray-700 text-sm font-bold mb-1">
@@ -962,7 +1007,7 @@ const Page = () => {
                         {showDropdownUnitKerja &&
                           selectedCabang !== "Pilih Cabang" && (
                             <div
-                              ref={dropdownUnitKerja}
+                              ref={dropdownRef}
                               className="absolute z-10 w-full border rounded bg-white shadow-lg mt-1"
                             >
                               <div className="p-2">
@@ -1058,7 +1103,10 @@ const Page = () => {
                         placeholder="Pilih Cabang"
                       />
                       {showFilteredCabangDropdown && (
-                        <div className="absolute z-50 border rounded-lg bg-white shadow-md w-full max-h-44 overflow-y-auto">
+                        <div
+                          ref={dropdownRef}
+                          className="absolute z-50 border rounded-lg bg-white shadow-md w-full max-h-44 overflow-y-auto"
+                        >
                           <ul>
                             <li className="py-2 px-2">
                               <Input
@@ -1118,7 +1166,10 @@ const Page = () => {
                         placeholder="Pilih Nama Ranting"
                       />
                       {showFilteredRantingDropdown && filteredCabang && (
-                        <div className="absolute z-50 border rounded-lg bg-white shadow-md w-full max-h-44 overflow-y-auto">
+                        <div
+                          ref={dropdownRef}
+                          className="absolute z-50 border rounded-lg bg-white shadow-md w-full max-h-44 overflow-y-auto"
+                        >
                           <ul>
                             <li className="py-2 px-2">
                               <Input
@@ -1289,7 +1340,7 @@ const Page = () => {
                         <th className="p-2 md:p-3 border hidden md:table-cell text-left">
                           Unit Kerja
                         </th>
-                        <th className="p-2 md:p-3 border hidden text-center">
+                        <th className="p-2 md:p-3 border text-center">
                           Action
                         </th>
                       </tr>
@@ -1300,13 +1351,27 @@ const Page = () => {
                         filteredData.map((item, index) => (
                           <React.Fragment key={item.id}>
                             <tr className="bg-gray-100">
-                              <td className="p-2 md:p-3 border text-left">
-                                {index + 1 + currentPage * entries}
+                              <td className="p-2 md:p-3 border text-left align-top">
+                                <>
+                                  {index + 1 + currentPage * entries}
+                                  {isMobile && (
+                                    <FontAwesomeIcon
+                                      icon={
+                                        expandedRow === index
+                                          ? faMinusCircle
+                                          : faPlusCircle
+                                      }
+                                      className="text-blue-500 cursor-pointer ml-2"
+                                      size="lg"
+                                      onClick={() => toggleExpandRow(index)}
+                                    />
+                                  )}
+                                </>
                               </td>
-                              <td className="p-2 md:p-3 border text-left">
+                              <td className="p-2 md:p-3 border text-left align-top">
                                 {item.cabangList}
                               </td>
-                              <td className="p-2 md:p-3 border text-left">
+                              <td className="p-2 md:p-3 border text-left align-top">
                                 {item.namaRanting}
                               </td>
                               <td className="p-2 md:p-3 border hidden md:table-cell">
@@ -1342,19 +1407,117 @@ const Page = () => {
                                   );
                                 })}
                               </td>
-                              <td className="p-2 md:p-3 border hidden text-center">
+                              <td className="p-2 md:p-3 border text-center">
                                 <div className="flex flex-wrap justify-center space-x-2">
                                   <button
                                     className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition duration-150"
-                                    onClick={() =>
-                                      handleDeleteAdminClick(item.namaRanting)
-                                    }
+                                    onClick={() => {
+                                      item.id;
+                                      setIsPopupDeleteVisible(true);
+                                    }}
                                   >
                                     <FontAwesomeIcon icon={faTrash} />
                                   </button>
                                 </div>
                               </td>
+                              {isPopupDeleteVisible && (
+                                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 transition-opacity duration-300">
+                                  <div className="bg-white p-6 rounded-2xl shadow-xl w-full sm:w-3/4 md:w-2/4 lg:w-1/3 transform transition-all duration-300 scale-95 sm:scale-100">
+                                    <h2 className="text-lg font-semibold text-gray-800 text-center mb-4">
+                                      Apakah Anda yakin ingin menghapus data
+                                      ini?
+                                    </h2>
+                                    <div className="flex justify-center gap-4 mt-4">
+                                      <button
+                                        onClick={() =>
+                                          setIsPopupDeleteVisible(false)
+                                        }
+                                        className="px-5 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-lg transition duration-200 shadow-sm"
+                                      >
+                                        Batal
+                                      </button>
+                                      <button
+                                        onClick={() =>
+                                          handleDeleteAdminClick(
+                                            item.namaRanting
+                                          )
+                                        }
+                                        className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition duration-200 shadow-sm"
+                                      >
+                                        Ya, Saya Yakin
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                             </tr>
+                            {expandedRow === index && (
+                              <tr>
+                                <td
+                                  colSpan="9"
+                                  className="px-4 py-4 bg-gray-50"
+                                >
+                                  <div className="flex flex-col items-center space-y-4">
+                                    <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
+                                      <div className="text-left">
+                                        <h3 className="font-semibold">
+                                          Unit Kerja:
+                                        </h3>
+                                        {item.unitKerja
+                                          ?.split(", ")
+                                          .map((uk, i) => {
+                                            const [unitKerjaId, unitKerjaName] =
+                                              uk.split(":");
+                                            return (
+                                              <div
+                                                key={unitKerjaId || i}
+                                                className="flex items-center space-x-2"
+                                              >
+                                                <input
+                                                  type="checkbox"
+                                                  id={`unitKerja-${item.id}-${
+                                                    unitKerjaId || i
+                                                  }`}
+                                                  name={`unitKerja-${item.id}`}
+                                                  value={unitKerjaId}
+                                                  className="w-4 h-4"
+                                                  onChange={() =>
+                                                    handleCheckboxChange(
+                                                      unitKerjaId
+                                                    )
+                                                  }
+                                                />
+                                                <label
+                                                  htmlFor={`unitKerja-${
+                                                    item.id
+                                                  }-${unitKerjaId || i}`}
+                                                  className="whitespace-nowrap"
+                                                >
+                                                  {unitKerjaName || uk}
+                                                </label>
+                                              </div>
+                                            );
+                                          })}
+                                      </div>
+                                      <div>
+                                        <h3 className="font-semibold">
+                                          Action:
+                                        </h3>
+                                        <button
+                                          className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition duration-150"
+                                          onClick={() => {
+                                            item.id;
+                                            setIsPopupDeleteVisible(true);
+                                          }}
+                                        >
+                                          <FontAwesomeIcon icon={faTrash} />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
                           </React.Fragment>
                         ))
                       ) : (
