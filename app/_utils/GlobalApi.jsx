@@ -1747,6 +1747,7 @@ const createSidebarGallery = async (data) => {
   try {
     const formData = new FormData();
     formData.append("category", data.category);
+    formData.append("deskripsi", data.deskripsi);
     if (data.photo) {
       formData.append("photo", data.photo);
     }
@@ -1760,10 +1761,12 @@ const createSidebarGallery = async (data) => {
     throw error;
   }
 };
+
 const updateSidebarGallery = async (id, data) => {
   try {
     const formData = new FormData();
     formData.append("category", data.category);
+    formData.append("deskripsi", data.deskripsi);
     if (data.photo) {
       formData.append("photo", data.photo);
     }
