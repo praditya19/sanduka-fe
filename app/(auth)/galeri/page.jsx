@@ -80,37 +80,55 @@ const Page = () => {
     setSelectedFile(file);
   };
 
+  const handleEdit = (gallery) => {
+    setEditingId(gallery.id);
+    setDeskripsi(gallery.deskripsi);
+    setCategory(gallery.category);
+    setSelectedFile(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
+  
     try {
       const formData = new FormData();
       formData.append("deskripsi", deskripsi);
       formData.append("category", category);
+      
       if (selectedFile) {
         formData.append("photo", selectedFile);
       }
-
+  
       let newGallery;
       if (editingId) {
-        newGallery = await GlobalApi.updateSidebarGallery(editingId, formData);
+        const updateData = {
+          category: category,
+          deskripsi: deskripsi,
+          photo: selectedFile
+        };
+        
+        newGallery = await GlobalApi.updateSidebarGallery(editingId, updateData);
         setGalleries(prevGalleries =>
           prevGalleries.map(gallery =>
             gallery.id === editingId ? newGallery : gallery
           )
         );
       } else {
-        newGallery = await GlobalApi.createSidebarGallery(formData);
+        newGallery = await GlobalApi.createSidebarGallery({
+          category: category,
+          deskripsi: deskripsi,
+          photo: selectedFile
+        });
         setGalleries(prevGalleries => {
           const updatedGalleries = [...prevGalleries, newGallery];
-          const newItemIndex = updatedGalleries.length - 1;
+          const newItemIndex = updatedGalleries.length -1;
           const newItemPage = Math.floor(newItemIndex / itemsPerPage);
           setCurrentPage(newItemPage);
           return updatedGalleries;
         });
       }
-
+  
       setSelectedFile(null);
       setDeskripsi("");
       setCategory("NON EVENT");
@@ -124,13 +142,6 @@ const Page = () => {
       setIsLoading(false);
     }
   };
-
-  const handleEdit = (gallery) => {
-      setEditingId(gallery.id);
-      setDeskripsi(gallery.deskripsi);
-      setCategory(gallery.category);
-      setSelectedFile(null);
-    };
 
   const confirmDelete = async () => {
     if (galleryToDelete) {
