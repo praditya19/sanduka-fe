@@ -4,7 +4,7 @@ import Image from "next/image";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
-import { FaTimesCircle } from "react-icons/fa"; 
+import { FaTimesCircle } from "react-icons/fa";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -15,10 +15,32 @@ const GaleriKegiatan = () => {
   const [registrationStatus, setRegistrationStatus] = useState({});
   const [showPopup, setShowPopup] = useState(false);
   const [currentEvent, setCurrentEvent] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchGalleries();
+    fetchUserData();
   }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const userId = sessionStorage.getItem("userId");
+      const role = sessionStorage.getItem("role");
+
+      if (userId) {
+        let response;
+        if (role === "ADMIN" || role === "SUPER ADMIN") {
+          response = await GlobalApi.getAdminById(userId);
+        } else if (role === "USER") {
+          response = await GlobalApi.getUserById(userId);
+        }
+        setUserData(response);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
 
   const fetchGalleries = async () => {
     try {
@@ -57,7 +79,39 @@ const GaleriKegiatan = () => {
     const selectedEvent = galleries.find(item => item.id === itemId);
     setCurrentEvent(selectedEvent);
     setShowPopup(true);
-    
+  };
+
+  const handleSubmitRegistration = async () => {
+    if (!userData || !currentEvent || isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+
+      const pesertaEvent = {
+        namaLengkap: userData.namaLengkap || userData.nama,
+        npa: userData.npaPgri,
+        email: userData.email,
+        cabang: userData.cabang,
+        unitKerja: userData.unitKerja,
+        namaEvent: currentEvent.namaEvent
+      };
+
+      await GlobalApi.addPesertaEvent(pesertaEvent);
+
+      setRegistrationStatus(prev => ({
+        ...prev,
+        [currentEvent.id]: "Terdaftar"
+      }));
+
+      setShowPopup(false);
+      alert("Pendaftaran event berhasil!");
+
+    } catch (error) {
+      console.error("Error submitting registration:", error);
+      alert("Gagal mendaftar event. Silakan coba lagi.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const nonEventGalleries = galleries.filter(item => item.category !== 'EVENT');
@@ -98,7 +152,7 @@ const GaleriKegiatan = () => {
 
   const GallerySwiper = ({ items, title, showRegisterButton = false }) => {
     if (items.length === 0) return null;
-    
+
     return (
       <div className="mb-12">
         <h2 className="text-xl font-bold mb-6 text-center">{title}</h2>
@@ -125,7 +179,9 @@ const GaleriKegiatan = () => {
                 />
               </div>
               <div className="mt-4 text-center">
-                <p className="text-lg font-medium">{item.deskripsi}</p>
+                <p className="text-lg font-medium">
+                  {item.category === "EVENT" ? item.namaEvent : item.deskripsi}
+                </p>
                 {showRegisterButton && (
                   <div className="mt-3">
                     {registrationStatus[item.id] ? (
@@ -153,25 +209,67 @@ const GaleriKegiatan = () => {
 
   const Popup = () => {
     if (!showPopup) return null;
-  
+
     return (
       <div className="fixed inset-0 flex items-center justify-center z-50">
         <div className="absolute inset-0 bg-black opacity-50"></div>
-        <div className="relative bg-white rounded-lg p-6 shadow-xl z-10 w-80 text-center">
-          <button 
+        <div className="relative bg-white rounded-lg p-6 shadow-xl z-10 w-96 text-center">
+          <button
             onClick={() => setShowPopup(false)}
             className="absolute top-2 right-2 text-red-600 hover:text-red-800 transition-colors"
             aria-label="Close"
           >
             <FaTimesCircle size={24} />
           </button>
-          
-          <h3 className="text-xl font-bold mb-3">
-            Mendaftar {currentEvent?.deskripsi ? `${currentEvent.deskripsi}` : ''}
+
+          <h3 className="text-xl font-bold mb-4">
+            Mendaftar {currentEvent?.namaEvent ? `${currentEvent.namaEvent}` : ''}
           </h3>
-          <div className="bg-yellow-100 p-4 rounded-md mb-4">
-            <p className="text-yellow-800 font-medium text-lg">On Going</p>
+
+          <div className="space-y-3">
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-sm text-gray-600">Nama Lengkap</p>
+              <p className="text-gray-800 font-medium">
+                {userData?.namaLengkap || userData?.nama || "Loading..."}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-sm text-gray-600">NPA PGRI</p>
+              <p className="text-gray-800 font-medium">
+                {userData?.npaPgri || "Loading..."}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-sm text-gray-600">Email</p>
+              <p className="text-gray-800 font-medium">
+                {userData?.email || "Loading..."}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-sm text-gray-600">Cabang</p>
+              <p className="text-gray-800 font-medium">
+                {userData?.cabang || "Loading..."}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-3 rounded-md">
+              <p className="text-sm text-gray-600">Unit Kerja</p>
+              <p className="text-gray-800 font-medium">
+                {userData?.unitKerja || "Loading..."}
+              </p>
+            </div>
           </div>
+
+          <button
+            onClick={handleSubmitRegistration}
+            disabled={isSubmitting}
+            className="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors disabled:bg-blue-400"
+          >
+            {isSubmitting ? "Mendaftar..." : "Daftar Event"}
+          </button>
         </div>
       </div>
     );
@@ -184,12 +282,12 @@ const GaleriKegiatan = () => {
           <GallerySwiper items={nonEventGalleries} title="Galeri Kegiatan" />
         </div>
       </div>
-      
+
       <div id="eventSec" className="bg-gray-50 py-8 z-10">
         <div className="container mx-auto px-4 md:px-12 lg:px-24">
-          <GallerySwiper 
-            items={eventGalleries} 
-            title="Event" 
+          <GallerySwiper
+            items={eventGalleries}
+            title="Event"
             showRegisterButton={true}
           />
         </div>
