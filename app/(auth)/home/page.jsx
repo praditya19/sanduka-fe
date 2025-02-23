@@ -639,6 +639,8 @@ export default function IconGrid() {
                       className="object-cover rounded"
                       unoptimized={true}
                     />
+                    <div className="flex flex-col justify-center items-center text-center -space-y-4">
+                    <div className="flex items-center justify-center space-x-8">
                     <div className="flex flex-col items-center justify-center">
                       <span className="text-xs">Daspen:</span>
                       <div className="w-14 h-14 flex justify-center items-center text-xs -mt-4">
@@ -658,7 +660,10 @@ export default function IconGrid() {
                       <div className="w-14 h-14 flex justify-center items-center text-xs -mt-4">
                         {renderCheckmark(userData?.pesertaSanduka)}
                       </div>
-                    </div>
+                      </div>
+                      </div>
+                    <div className="text-left w-full text-xs">NIP : { userData?.nip }</div>
+                      </div>
                   </div>
                 )}
                 <div className="w-full border overflow-x-auto -mt-11">
@@ -728,42 +733,42 @@ export default function IconGrid() {
             ) : (
               <div className="w-full border">
                 {(role === "USER" || role === "ADMIN") && (
-                  <div className="flex space-x-5 mb-16 justify-center -mt-48">
-                    <Image
-                      src={
-                        fotoBase64
-                          ? `data:image/jpeg;base64,${fotoBase64}`
-                          : profileImageUrl
-                      }
-                      width={100}
-                      height={100}
-                      alt={`Foto User ${userData?.name}`}
-                      className="object-cover rounded"
-                      unoptimized={true}
-                    />
-                    <div className="flex justify-center space-x-8 mb-1 items-center text-center">
-                      <div className="flex items-center justify-center">
-                        <span className="text-lg">Daspen:</span>
-                        <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
-                          {renderCheckmark(userData?.pesertaDaspen)}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-center">
-                        <span className="text-lg">KTA Digital:</span>
-                        <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
-                          {renderCheckmark(userData?.pesertaKtaDigital)}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-center">
-                        <span className="text-lg">Sanduka:</span>
-                        <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
-                          {renderCheckmark(userData?.pesertaSanduka)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                 <div className="flex space-x-5 mb-16 justify-center -mt-48">
+                 <Image
+                   src={fotoBase64 ? `data:image/jpeg;base64,${fotoBase64}` : profileImageUrl}
+                   width={100}
+                   height={100}
+                   alt={`Foto User ${userData?.name}`}
+                   className="object-cover rounded"
+                   unoptimized={true}
+                 />
+                 <div className="flex flex-col justify-center items-center text-center -space-y-4">
+                   <div className="flex items-center justify-center space-x-8">
+                     <div className="flex items-center justify-center">
+                       <span className="text-lg">Daspen:</span>
+                       <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
+                         {renderCheckmark(userData?.pesertaDaspen)}
+                       </div>
+                     </div>
+               
+                     <div className="flex items-center justify-center">
+                       <span className="text-lg">KTA Digital:</span>
+                       <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
+                         {renderCheckmark(userData?.pesertaKtaDigital)}
+                       </div>
+                     </div>
+               
+                     <div className="flex items-center justify-center">
+                       <span className="text-lg">Sanduka:</span>
+                       <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
+                         {renderCheckmark(userData?.pesertaSanduka)}
+                       </div>
+                     </div>
+                   </div>
+                        <div className="text-left w-full">NIP : { userData?.nip }</div>
+                 </div>
+               </div>
+               
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 px-12 -mt-12">
