@@ -36,18 +36,16 @@ function Pemasukan() {
   const [cabangList, setCabangList] = useState([]);
   const [selectedBulan, setSelectedBulan] = useState("");
   const [selectedBulanName, setSelectedBulanName] = useState("");
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [totalItems, setTotalItems] = useState(0);
   const [checkedIds, setCheckedIds] = useState([]);
-  const [selectedTransactions, setSelectedTransactions] = useState([]);
   const startYear = 2020;
   const currentYear = new Date().getFullYear();
   const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
   const [isEditing, setIsEditing] = useState(false);
-  const [editId, setEditId] = useState(null);
   const [isSaldoAwalExist, setIsSaldoAwalExist] = useState(false);
+  const [saldoMap, setSaldoMap] = useState({});
+  const [totalSaldo, setTotalSaldo] = useState(0);
+  const [editId, setEditId] = useState(null);
+  const [allIds, setAllIds] = useState([]);
   const [formValues, setFormValues] = useState({
     tanggalTransaksi: "",
     posTransaksi: "",
@@ -184,12 +182,10 @@ function Pemasukan() {
           newSelectedYear
         );
         setTransactions(data);
-        console.log(data);
-  
-        // Check if Saldo Awal exists in the fetched data
-        const saldoAwalData = data.find(item => item.uraian === "Saldo Awal");
-        
-        // If Saldo Awal is found, set isSaldoAwalExist to true
+        // console.log(data);
+
+        const saldoAwalData = data.find((item) => item.uraian === "Saldo Awal");
+
         if (saldoAwalData) {
           setIsSaldoAwalExist(true);
         } else {
@@ -200,76 +196,141 @@ function Pemasukan() {
       console.error("Error fetching data:", error);
     }
   };
-  
+
   useEffect(() => {
     fetchData();
   }, [selectedBulan, newSelectedYear]);
 
-const createSaldoAwal = async () => {
-  try {
-    setIsLoading(true);
-    const today = new Date();
-    const sixteenthDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 16);
-    const formattedDate = sixteenthDayOfMonth.toISOString().split("T")[0];
+  useEffect(() => {
+    let tempSaldoMap = {};
+    let saldoSebelumnya = 0;
 
-    const prevMonth = today.getMonth() === 0 ? 11 : today.getMonth() - 1;
-    const prevYear = today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
+    // Iterasi transaksi untuk menghitung saldo
+    transactions.forEach((transaction, index) => {
+      let currentSaldo = 0;
 
-    const data = await GlobalApi.getTablePemasukanSanduka(prevMonth + 1, prevYear);
-    const saldoAwalData = data.find((item) => item.uraian === "Saldo Awal");
-    const lastData = data[data.length - 1];
+      if (transaction.uraian === "Saldo Awal") {
+        saldoSebelumnya = parseFloat(transaction.debet.replace(",", "")) || 0;
+        currentSaldo = saldoSebelumnya;
+      } else {
+        let debet = parseFloat(transaction.debet.replace(",", "")) || 0;
+        let kredit = parseFloat(transaction.kredit.replace(",", "")) || 0;
 
-    const debetSaldoAwal = parseFloat(saldoAwalData.debet) || 0;
-    const saldoAkhir = parseFloat(lastData.saldo) || 0;
-    const totalDebet = debetSaldoAwal + saldoAkhir;
+        currentSaldo = saldoSebelumnya + debet - kredit;
+      }
 
-    const saldoAwalRequest = {
-      tanggalTransaksi: formattedDate,
-      posTransaksi: "Saldo Awal",
-      masukKe: "Bank",
-      debet: totalDebet,
-      jenisPembayaran: "Sanduka",
-    };
+      tempSaldoMap[index] = currentSaldo;
+      saldoSebelumnya = currentSaldo;
+    });
 
-    console.log("Data yang akan dikirim:", saldoAwalRequest);
+    // Menyimpan hasil perhitungan saldo ke dalam state saldoMap
+    setSaldoMap(tempSaldoMap);
 
-    const responseSaldo = await GlobalApi.createSaldoAwal(saldoAwalRequest);
+    // Menghitung total saldo dari saldoMap
+    const calculatedTotalSaldo = Object.values(tempSaldoMap).reduce(
+      (total, currentSaldo) => total + currentSaldo,
+      0
+    );
 
-    console.log("Saldo Awal berhasil dibuat:", responseSaldo);
+    // Menyimpan total saldo ke dalam state totalSaldo
+    setTotalSaldo(calculatedTotalSaldo);
+  }, [transactions]); // Dependensi: hanya akan berjalan ketika transactions berubah
 
-    // Refresh the page after successful creation
-    window.location.reload();
-  } catch (error) {
-    console.error("Error saat membuat Saldo Awal:", error);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  // totalSaldo akan selalu berisi total dari saldo yang dihitung
+  // console.log("Total saldo yang dihitung:", totalSaldo);
 
-useEffect(() => {
-  const checkTime = () => {
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
+  const createSaldoAwal = async () => {
+    try {
+      setIsLoading(true);
+      const today = new Date();
+      const sixteenthDayOfMonth = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        16
+      );
+      const formattedDate = sixteenthDayOfMonth.toISOString().split("T")[0];
 
-    // Pastikan hanya dieksekusi jika saldo awal belum ada
-    if (currentHour === 7 && currentMinute === 10 && !isSaldoAwalExist) {
-      createSaldoAwal(); // Memanggil fungsi jika saldo awal belum ada
+      // Ambil bulan dan tahun sebelumnya
+      const prevMonth = today.getMonth() === 0 ? 11 : today.getMonth() - 1;
+      const prevYear =
+        today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
+
+      // Ambil data transaksi dari bulan sebelumnya
+      const prevTransactions = await GlobalApi.getTablePemasukanSanduka(
+        prevMonth + 1,
+        prevYear
+      );
+
+      // Perhitungan saldo berdasarkan transaksi bulan sebelumnya
+      let saldoMapPrev = {};
+      let saldoSebelumnya = 0;
+
+      prevTransactions.forEach((transaction, index) => {
+        let currentSaldo = 0;
+
+        if (transaction.uraian === "Saldo Awal") {
+          saldoSebelumnya = parseFloat(transaction.debet.replace(",", "")) || 0;
+          currentSaldo = saldoSebelumnya;
+        } else {
+          let debet = parseFloat(transaction.debet.replace(",", "")) || 0;
+          let kredit = parseFloat(transaction.kredit.replace(",", "")) || 0;
+
+          currentSaldo = saldoSebelumnya + debet - kredit;
+        }
+
+        saldoMapPrev[index] = currentSaldo;
+        saldoSebelumnya = currentSaldo;
+      });
+
+      const totalSaldoPrev = Object.values(saldoMapPrev).reduce(
+        (total, currentSaldo) => total + currentSaldo,
+        0
+      );
+
+      const saldoAwalRequest = {
+        tanggalTransaksi: formValues.tanggalTransaksi,
+        // tanggalTransaksi: formattedDate,
+        posTransaksi: "Saldo Awal",
+        masukKe: "Bank",
+        debet: totalSaldoPrev,
+        jenisPembayaran: "Sanduka",
+      };
+
+      const responseSaldo = await GlobalApi.createSaldoAwal(saldoAwalRequest);
+
+      // Refresh halaman setelah sukses
+      window.location.reload();
+    } catch (error) {
+      console.error("Error saat membuat Saldo Awal:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Cek waktu setiap detik
-  const intervalId = setInterval(checkTime, 1000);
+  useEffect(() => {
+    const checkTime = () => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
 
-  // Hentikan pengecekan setelah 1 menit (untuk menghindari pemeriksaan yang tidak perlu)
-  const timeoutId = setTimeout(() => clearInterval(intervalId), 60000);
+      // Pastikan hanya dieksekusi jika saldo awal belum ada
+      if (currentHour === 7 && currentMinute === 10 && !isSaldoAwalExist) {
+        createSaldoAwal(); // Memanggil fungsi jika saldo awal belum ada
+      }
+    };
 
-  return () => {
-    clearInterval(intervalId);
-    clearTimeout(timeoutId);
-  };
-}, [isSaldoAwalExist]);
-  
+    // Cek waktu setiap detik
+    const intervalId = setInterval(checkTime, 1000);
+
+    // Hentikan pengecekan setelah 1 menit (untuk menghindari pemeriksaan yang tidak perlu)
+    const timeoutId = setTimeout(() => clearInterval(intervalId), 60000);
+
+    return () => {
+      clearInterval(intervalId);
+      clearTimeout(timeoutId);
+    };
+  }, [isSaldoAwalExist]);
+
   const sortedTransactions = (() => {
     if (!transactions) return [];
 
@@ -700,14 +761,22 @@ useEffect(() => {
   };
 
   const handleGetEdit = async (id) => {
-    console.log("ID yang diklik:", id);
-    try {
-      const data = await GlobalApi.getPemasukanUangMasukById(id);
+    // console.log("ID yang diklik:", id);
 
+    try {
+      // Simpan ID yang diklik ke dalam state
+      setEditId(id);
+
+      // Ambil data berdasarkan ID
+      const data = await GlobalApi.getPemasukanUangMasukById(id);
+      // console.log("Data yang diambil:", data);
+
+      // Format tanggal transaksi
       const tanggalTransaksi = data.tanggalTransaksi
         ? data.tanggalTransaksi.split(", ")[1] || data.tanggalTransaksi
         : "";
 
+      // Persiapkan nilai untuk form
       const updatedFormValues = {
         noBukti: data.noBukti || "",
         tanggalTransaksi: tanggalTransaksi || "",
@@ -722,10 +791,66 @@ useEffect(() => {
         keterangan: data.posTransaksi || "",
       };
 
+      // Jika posTransaksi bukan "Saldo Awal", langsung tampilkan data tanpa pencarian tambahan
+      if (data.posTransaksi !== "Saldo Awal") {
+        // console.log("Bukan 'Saldo Awal', langsung menampilkan form data.");
+        setFormValues(updatedFormValues);
+        setIsEditing(true);
+        return;
+      }
+
+      // console.log(
+      //   "Mendeteksi uraian 'Saldo Awal', mengambil seluruh data terkait..."
+      // );
+
+      let allIds = [];
+      const startYear = 2021;
+      const startMonth = 4; // April (bulan dalam JavaScript mulai dari 0, jadi 4 = Mei)
+
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1; // getMonth() dimulai dari 0
+
+      // Looping dari April 2021 hingga bulan saat ini
+      for (let year = startYear; year <= currentYear; year++) {
+        let start = year === startYear ? startMonth : 1; // Jika tahun pertama, mulai dari April, sisanya dari Januari
+        let end = year === currentYear ? currentMonth : 12; // Jika tahun terakhir, hanya sampai bulan saat ini
+
+        for (let month = start; month <= end; month++) {
+          console.log(`Mengambil data bulan ${month} tahun ${year}...`);
+
+          try {
+            const allData = await GlobalApi.getTablePemasukanSanduka(
+              month,
+              year
+            );
+
+            // Filter data yang memiliki uraian "Saldo Awal"
+            const filteredData = allData.filter(
+              (item) => item.uraian === "Saldo Awal"
+            );
+
+            // Ambil semua ID dari hasil filter
+            const ids = filteredData.map((item) => item.id);
+            allIds = allIds.concat(ids);
+          } catch (error) {
+            console.error(
+              `Gagal mengambil data untuk bulan ${month} tahun ${year}:`,
+              error
+            );
+          }
+        }
+      }
+
+      // Simpan seluruh ID yang ditemukan ke dalam state
+      setAllIds(allIds);
+      console.log(
+        "Semua ID dengan uraian 'Saldo Awal' sejak April 2021:",
+        allIds
+      );
+
+      // Setelah mendapatkan ID yang sesuai, perbarui form
       setFormValues(updatedFormValues);
-
-      setEditId(id);
-
       setIsEditing(true);
     } catch (error) {
       console.error("Gagal mengambil data berdasarkan id:", error);
@@ -738,10 +863,9 @@ useEffect(() => {
       return;
     }
 
-    console.log("ID yang akan dikirim untuk edit:", editId);
-
     try {
       const data = await GlobalApi.getPemasukanUangMasukById(editId);
+      console.log("ID yang akan dikirim untuk edit:", data);
 
       const updatedFormValues = {
         noBukti: data.noBukti || "",
@@ -758,8 +882,6 @@ useEffect(() => {
         keterangan: "",
         jenisPembayaran: "Sanduka",
       };
-
-      console.log("Form Values yang akan dikirim:", updatedFormValues);
 
       setFormValues(updatedFormValues);
 
@@ -821,9 +943,12 @@ useEffect(() => {
           },
         }
       );
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+      if (data.posTransaksi === "Saldo Awal") {
+        console.log(
+          "Transaksi 'Saldo Awal' terdeteksi, memperbarui seluruh ID..."
+        );
+        await handleSubmitEditAll();
+      }
     } catch (error) {
       toast.error(
         <div
@@ -881,6 +1006,93 @@ useEffect(() => {
         }
       );
       console.error("Gagal mengedit data:", error);
+    }
+  };
+  const handleSubmitEditAll = async () => {
+    if (allIds.length === 0) {
+      console.error("Tidak ada ID yang dapat diperbarui");
+      return;
+    }
+
+    console.log("ID yang akan diperbarui:", allIds);
+
+    try {
+      const promises = allIds.map(async (id) => {
+        const data = await GlobalApi.getPemasukanUangMasukById(id);
+
+        const tanggalTransaksi = new Date(data.tanggalTransaksi);
+        const bulanTransaksi = tanggalTransaksi.getMonth() + 1;
+        const tahunTransaksi = tanggalTransaksi.getFullYear();
+
+        // console.log(`Memproses transaksi untuk ID: ${id}, Bulan: ${bulanTransaksi}, Tahun: ${tahunTransaksi}`);
+
+        const bulanSebelumnya = bulanTransaksi === 1 ? 12 : bulanTransaksi - 1;
+        const tahunSebelumnya =
+          bulanTransaksi === 1 ? tahunTransaksi - 1 : tahunTransaksi;
+
+        const allData = await GlobalApi.getTablePemasukanSanduka(
+          bulanSebelumnya,
+          tahunSebelumnya
+        );
+
+        let currentSaldo = 0;
+        let totalSaldoBulan = 0;
+        let totalSaldoBulanFinal = 0;
+
+        allData.forEach((transaction, index) => {
+          let debet = parseFloat(transaction.debet.replace(",", "")) || 0;
+          let kredit = parseFloat(transaction.kredit.replace(",", "")) || 0;
+
+          if (transaction.uraian === "Saldo Awal") {
+            currentSaldo = debet;
+          } else {
+            currentSaldo += debet - kredit;
+          }
+
+          totalSaldoBulan = currentSaldo;
+          totalSaldoBulanFinal += totalSaldoBulan;
+
+          // console.log(`Transaksi ke-${index + 1} - Saldo sementara bulan ${bulanSebelumnya} tahun ${tahunSebelumnya}: ${totalSaldoBulan}`);
+        });
+
+        // console.log(`Total saldo akhir per bulan ${bulanSebelumnya} tahun ${tahunSebelumnya}: ${totalSaldoBulanFinal}`);
+
+        const updatedFormValues = {
+          noBukti: data.noBukti || "",
+          tanggalTransaksi: data.tanggalTransaksi || "",
+          posTransaksi: data.posTransaksi || "",
+          masukKe: data.masukKe || "",
+          cabang: data.cabang || "",
+          bulan: bulanTransaksi || "",
+          debet: totalSaldoBulanFinal || 0,
+          kredit: "",
+          bulanSantunan: "",
+          yangMeninggal: "",
+          namaPenerima: "",
+          keterangan: "",
+          jenisPembayaran: "Sanduka",
+        };
+
+        console.log(
+          "Data yang akan dikirim untuk update ID:",
+          id,
+          updatedFormValues
+        );
+
+        return GlobalApi.editPemasukanUangMasuk(id, updatedFormValues);
+      });
+
+      await Promise.all(promises);
+
+      toast.success(
+        "Semua saldo awal berhasil dihitung! (Tidak dikirim ke database)"
+      );
+    } catch (error) {
+      toast.error("Gagal menghitung dan memperbarui saldo awal. Coba lagi!");
+      console.error(
+        "Gagal menghitung dan memperbarui semua saldo awal:",
+        error
+      );
     }
   };
 
@@ -1290,37 +1502,37 @@ useEffect(() => {
                   Reset
                 </Button>
                 <Button
-  className={`bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded transition duration-300 flex items-center justify-center`}
-  onClick={createSaldoAwal}
-  disabled={isLoading || isSaldoAwalExist}
->
-  {isLoading ? (
-    <div className="flex items-center">
-      <svg
-        className="animate-spin h-5 w-5 text-white mr-2"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        ></circle>
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8v8H4z"
-        ></path>
-      </svg>
-    </div>
-  ) : (
-    "Saldo Awal"
-  )}
-</Button>
+                  className={`bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded transition duration-300 flex items-center justify-center`}
+                  onClick={createSaldoAwal}
+                  disabled={isLoading || isSaldoAwalExist}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <svg
+                        className="animate-spin h-5 w-5 text-white mr-2"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        ></path>
+                      </svg>
+                    </div>
+                  ) : (
+                    "Saldo Awal"
+                  )}
+                </Button>
               </div>
             </div>
 
@@ -1444,7 +1656,16 @@ useEffect(() => {
                         </td>
                         <td className="px-6 py-4 text-sm">
                           {formatCurrency(
-                            parseFloat(transaction.debet.replace(",", "")) || 0
+                            transaction.uraian === "Saldo Awal"
+                              ? Number(newSelectedYear) === 2021 &&
+                                Number(selectedBulan) === 3
+                                ? parseFloat(
+                                    transaction.debet.replace(",", "")
+                                  ) || 0
+                                : 0 // Default 0 jika bukan Maret 2021
+                              : parseFloat(
+                                  transaction.debet.replace(",", "")
+                                ) || 0
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm">
@@ -1453,7 +1674,14 @@ useEffect(() => {
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          {formatCurrency(transaction.saldo || 0)}
+                          <td className="px-6 py-4 text-sm">
+                            {" "}
+                            {saldoMap[index]
+                              ? saldoMap[index].toLocaleString("id-ID", {
+                                  minimumFractionDigits: 0,
+                                })
+                              : 0}
+                          </td>
                         </td>
                         <td className="px-6 py-4 text-sm">
                           <div className="flex items-center space-x-2">
@@ -1523,10 +1751,22 @@ useEffect(() => {
                     <td className="px-6 py-4 text-sm">
                       {formatCurrency(
                         transactions.reduce((total, transaction) => {
-                          const debet = Math.floor(
-                            parseFloat(transaction.debet.replace(",")) || 0
-                          );
-                          return debet;
+                          const isSaldoAwal =
+                            transaction.uraian === "Saldo Awal";
+                          const isMaret2021 =
+                            Number(newSelectedYear) === 2021 &&
+                            Number(selectedBulan) === 3;
+
+                          // Hanya jumlahkan "Saldo Awal" jika Maret 2021, transaksi lain tetap dihitung normal
+                          const debet =
+                            isSaldoAwal && !isMaret2021
+                              ? 0
+                              : Math.floor(
+                                  parseFloat(transaction.debet.replace(",")) ||
+                                    0
+                                );
+
+                          return total + debet;
                         }, 0)
                       )}
                     </td>
@@ -1534,22 +1774,16 @@ useEffect(() => {
                       {formatCurrency(
                         transactions.reduce((total, transaction) => {
                           const kredit = Math.floor(
-                            parseFloat(transaction.kredit.replace(",")) || 0
+                            parseFloat(transaction.kredit.replace(",", "")) || 0
                           );
-                          return kredit;
+                          return total + kredit; // menambahkan kredit ke total
                         }, 0)
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      {formatCurrency(
-                        transactions.reduce((total, transaction) => {
-                          const saldo = parseFloat(
-                            transaction.saldo?.replace(",", "") || "0"
-                          );
-
-                          return total + Math.floor(saldo);
-                        }, 0)
-                      )}
+                      {totalSaldo.toLocaleString("id-ID", {
+                        minimumFractionDigits: 0,
+                      })}
                     </td>
                     <td className="px-6 py-4 text-sm"></td>
                   </tr>
