@@ -13,7 +13,8 @@ const Page = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [galleries, setGalleries] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [category, setCategory] = useState("");
+  const [deskripsi, setDeskripsi] = useState("");
+  const [category, setCategory] = useState("NON EVENT");
   const [editingId, setEditingId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
@@ -79,37 +80,58 @@ const Page = () => {
     setSelectedFile(file);
   };
 
+  const handleEdit = (gallery) => {
+    setEditingId(gallery.id);
+    setDeskripsi(gallery.deskripsi);
+    setCategory(gallery.category);
+    setSelectedFile(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
+  
     try {
-      const formData = {
-        category: category,
-        photo: selectedFile
-      };
-
+      const formData = new FormData();
+      formData.append("deskripsi", deskripsi);
+      formData.append("category", category);
+      
+      if (selectedFile) {
+        formData.append("photo", selectedFile);
+      }
+  
       let newGallery;
       if (editingId) {
-        newGallery = await GlobalApi.updateSidebarGallery(editingId, formData);
+        const updateData = {
+          category: category,
+          deskripsi: deskripsi,
+          photo: selectedFile
+        };
+        
+        newGallery = await GlobalApi.updateSidebarGallery(editingId, updateData);
         setGalleries(prevGalleries =>
           prevGalleries.map(gallery =>
             gallery.id === editingId ? newGallery : gallery
           )
         );
       } else {
-        newGallery = await GlobalApi.createSidebarGallery(formData);
+        newGallery = await GlobalApi.createSidebarGallery({
+          category: category,
+          deskripsi: deskripsi,
+          photo: selectedFile
+        });
         setGalleries(prevGalleries => {
           const updatedGalleries = [...prevGalleries, newGallery];
-          const newItemIndex = updatedGalleries.length - 1;
+          const newItemIndex = updatedGalleries.length -1;
           const newItemPage = Math.floor(newItemIndex / itemsPerPage);
           setCurrentPage(newItemPage);
           return updatedGalleries;
         });
       }
-
+  
       setSelectedFile(null);
-      setCategory("");
+      setDeskripsi("");
+      setCategory("NON EVENT");
       setEditingId(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -119,11 +141,6 @@ const Page = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleEdit = (gallery) => {
-    setEditingId(gallery.id);
-    setCategory(gallery.category);
   };
 
   const confirmDelete = async () => {
@@ -154,8 +171,9 @@ const Page = () => {
 
   const indexOfLastItem = (currentPage + 1) * itemsPerPage;
   const indexOfFirstItem = currentPage * itemsPerPage;
-  const currentItems = galleries.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(galleries.length / itemsPerPage);
+  const currentItems = galleries.filter(gallery => gallery.category !== 'EVENT').slice(indexOfFirstItem, indexOfLastItem);
+  const eventItems = galleries.filter(gallery => gallery.category === 'EVENT');
+  const totalPages = Math.ceil(galleries.filter(gallery => gallery.category !== 'EVENT').length / itemsPerPage);
 
   const DeleteConfirmationModal = () => {
     if (!isDeleteModalOpen) return null;
@@ -198,7 +216,7 @@ const Page = () => {
         <div className="relative w-full h-48 mb-2">
           <img
             src={`data:image/jpeg;base64,${gallery.photo}`}
-            alt={gallery.category}
+            alt={gallery.deskripsi}
             className="absolute inset-0 w-full h-full object-cover rounded"
             loading="eager"
             decoding="sync"
@@ -210,7 +228,7 @@ const Page = () => {
         </div>
       )}
       <div className="text-sm text-gray-600 mb-2">
-        {gallery.category}
+        {gallery.deskripsi}
       </div>
       <div className="mt-2 space-x-2">
         <button
@@ -317,12 +335,26 @@ const Page = () => {
               >
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-bold mb-2">
+                    Kategori
+                  </label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full p-2 border rounded"
+                    required
+                  >
+                    <option value="EVENT">EVENT</option>
+                    <option value="NON EVENT">NON EVENT</option>
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">
                     Keterangan
                   </label>
                   <input
                     type="text"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    value={deskripsi}
+                    onChange={(e) => setDeskripsi(e.target.value)}
                     className="w-full p-2 border rounded"
                     required
                   />
@@ -364,6 +396,15 @@ const Page = () => {
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
               />
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-md w-full mt-8">
+              <h2 className="text-xl font-bold mb-4">Event</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {eventItems.map((gallery) => (
+                  <GalleryItem key={gallery.id} gallery={gallery} />
+                ))}
+              </div>
             </div>
           </div>
         </div>
