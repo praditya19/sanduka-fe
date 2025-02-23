@@ -15,11 +15,16 @@ const Page = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [deskripsi, setDeskripsi] = useState("");
   const [category, setCategory] = useState("NON EVENT");
+  const [namaEvent, setNamaEvent] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [galleryToDelete, setGalleryToDelete] = useState(null);
+  const [isPesertaModalOpen, setIsPesertaModalOpen] = useState(false);
+  const [pesertaList, setPesertaList] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isLoadingPeserta, setIsLoadingPeserta] = useState(false);
   const fileInputRef = useRef(null);
   const itemsPerPage = 6;
 
@@ -84,30 +89,34 @@ const Page = () => {
     setEditingId(gallery.id);
     setDeskripsi(gallery.deskripsi);
     setCategory(gallery.category);
+    setNamaEvent(gallery.namaEvent || "");
     setSelectedFile(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-  
+
     try {
       const formData = new FormData();
       formData.append("deskripsi", deskripsi);
       formData.append("category", category);
-      
+      if (category === "EVENT") {
+        formData.append("namaEvent", namaEvent);
+      }
       if (selectedFile) {
         formData.append("photo", selectedFile);
       }
-  
+
       let newGallery;
       if (editingId) {
         const updateData = {
           category: category,
           deskripsi: deskripsi,
+          namaEvent: category === "EVENT" ? namaEvent : undefined,
           photo: selectedFile
         };
-        
+
         newGallery = await GlobalApi.updateSidebarGallery(editingId, updateData);
         setGalleries(prevGalleries =>
           prevGalleries.map(gallery =>
@@ -118,20 +127,22 @@ const Page = () => {
         newGallery = await GlobalApi.createSidebarGallery({
           category: category,
           deskripsi: deskripsi,
+          namaEvent: category === "EVENT" ? namaEvent : undefined,
           photo: selectedFile
         });
         setGalleries(prevGalleries => {
           const updatedGalleries = [...prevGalleries, newGallery];
-          const newItemIndex = updatedGalleries.length -1;
+          const newItemIndex = updatedGalleries.length - 1;
           const newItemPage = Math.floor(newItemIndex / itemsPerPage);
           setCurrentPage(newItemPage);
           return updatedGalleries;
         });
       }
-  
+
       setSelectedFile(null);
       setDeskripsi("");
       setCategory("NON EVENT");
+      setNamaEvent("");
       setEditingId(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -150,11 +161,11 @@ const Page = () => {
         setGalleries(prevGalleries => {
           const updatedGalleries = prevGalleries.filter(gallery => gallery.id !== galleryToDelete.id);
           const totalPages = Math.ceil(updatedGalleries.length / itemsPerPage);
-          
+
           if (currentPage >= totalPages && totalPages > 0) {
             setCurrentPage(totalPages - 1);
           }
-          
+
           return updatedGalleries;
         });
         setIsDeleteModalOpen(false);
@@ -210,6 +221,101 @@ const Page = () => {
     );
   };
 
+  const handlePesertaClick = async (gallery) => {
+    setSelectedEvent(gallery);
+    setIsPesertaModalOpen(true);
+    setIsLoadingPeserta(true);
+  
+    try {
+      const queryString = `namaEvent=${encodeURIComponent(gallery.namaEvent)}`;
+      const data = await GlobalApi.getAllPeserta(queryString);
+  
+      setPesertaList(data);
+    } catch (error) {
+      console.error("Error fetching peserta:", error);
+    } finally {
+      setIsLoadingPeserta(false);
+    }
+  };
+  
+
+  const PesertaModal = () => {
+    if (!isPesertaModalOpen) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className="bg-white rounded-lg shadow-xl w-[80%] max-h-[80vh] relative">
+          <button
+            onClick={() => setIsPesertaModalOpen(false)}
+            className="absolute top-3 right-3 text-gray-500 hover:text-red-700"
+          >
+            <FontAwesomeIcon icon={faTimesCircle} size="lg" />
+          </button>
+          <div className="p-6">
+            <h2 className="text-lg font-bold mb-4">
+              Daftar Peserta - {selectedEvent?.namaEvent}
+            </h2>
+            <div className="overflow-auto max-h-[60vh]">
+              {isLoadingPeserta ? (
+                <div className="flex justify-center items-center h-32">
+                  <ClipLoader color="#1E40AF" size={40} />
+                </div>
+              ) : (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Nama
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        NPA
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Cabang
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Unit Kerja
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {pesertaList.length > 0 ? (
+                      pesertaList.map((peserta, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {peserta.namaLengkap}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {peserta.npa}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {peserta.cabang}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {peserta.unitKerja}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="4"
+                          className="px-6 py-4 text-center text-sm text-gray-500"
+                        >
+                          Tidak ada data peserta
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const GalleryItem = ({ gallery }) => (
     <div className="border p-4 rounded">
       {gallery.photo && (
@@ -228,7 +334,7 @@ const Page = () => {
         </div>
       )}
       <div className="text-sm text-gray-600 mb-2">
-        {gallery.deskripsi}
+        {gallery.category === 'EVENT' ? gallery.namaEvent : gallery.deskripsi}
       </div>
       <div className="mt-2 space-x-2">
         <button
@@ -243,6 +349,14 @@ const Page = () => {
         >
           Hapus
         </button>
+        {gallery.category === 'EVENT' && (
+          <button
+            onClick={() => handlePesertaClick(gallery)}
+            className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+          >
+            Peserta
+          </button>
+        )}
       </div>
     </div>
   );
@@ -347,6 +461,20 @@ const Page = () => {
                     <option value="NON EVENT">NON EVENT</option>
                   </select>
                 </div>
+                {category === "EVENT" && (
+                  <div className="mb-4">
+                    <label className="block text-gray-700 text-sm font-bold mb-2">
+                      Nama Event
+                    </label>
+                    <input
+                      type="text"
+                      value={namaEvent}
+                      onChange={(e) => setNamaEvent(e.target.value)}
+                      className="w-full p-2 border rounded"
+                      required
+                    />
+                  </div>
+                )}
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-bold mb-2">
                     Keterangan
@@ -411,6 +539,7 @@ const Page = () => {
       </div>
 
       <DeleteConfirmationModal />
+      <PesertaModal />
     </div>
   );
 };

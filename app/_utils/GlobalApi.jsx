@@ -2,7 +2,7 @@ import axios from "axios";
 import { ReceiptEuro } from "lucide-react";
 
 const axiosClient = axios.create({
-  baseURL: "https://sanduka.my.id",
+  baseURL: "http://localhost:8080",
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -1747,6 +1747,7 @@ const createSidebarGallery = async (data) => {
     const formData = new FormData();
     formData.append("category", data.category);
     formData.append("deskripsi", data.deskripsi);
+    formData.append("namaEvent", data.namaEvent);
     if (data.photo) {
       formData.append("photo", data.photo);
     }
@@ -1766,6 +1767,7 @@ const updateSidebarGallery = async (id, data) => {
     const formData = new FormData();
     formData.append("category", data.category);
     formData.append("deskripsi", data.deskripsi);
+    formData.append("namaEvent", data.namaEvent);
     if (data.photo) {
       formData.append("photo", data.photo);
     }
@@ -1883,6 +1885,25 @@ const deleteNamaRanting = async (id) => {
 };
 
 const getRekapRanting = () => axiosClient.get("/api/ranting/summary");
+
+const addPesertaEvent = async (pesertaEvent) => {
+  try {
+    const response = await axiosClient.post("/api/event", pesertaEvent);
+    return response.data;
+  } catch (error) {
+    console.error("Error add peserta event:", error);
+    throw error;
+  }
+};
+
+const getAllPeserta = async (queryString = '') => {
+  try {
+    const response = await axiosClient.get(`/api/event${queryString ? `?${queryString}` : ''}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
 // Export all functions
 export default {
@@ -2019,4 +2040,6 @@ export default {
   deleteUnitKerjaRanting,
   deleteNamaRanting,
   getRekapRanting,
+  addPesertaEvent,
+  getAllPeserta,
 };
