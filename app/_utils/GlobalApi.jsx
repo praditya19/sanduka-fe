@@ -1742,6 +1742,7 @@ const getCekHistoryData = async (
   }
 };
 
+//Gallery and Event
 const createSidebarGallery = async (data) => {
   try {
     const formData = new FormData();
@@ -1886,6 +1887,7 @@ const deleteNamaRanting = async (id) => {
 
 const getRekapRanting = () => axiosClient.get("/api/ranting/summary");
 
+//Peserta Event
 const addPesertaEvent = async (pesertaEvent) => {
   try {
     const response = await axiosClient.post("/api/event", pesertaEvent);
