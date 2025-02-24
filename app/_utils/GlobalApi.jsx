@@ -1743,11 +1743,13 @@ const getCekHistoryData = async (
   }
 };
 
+//Gallery and Event
 const createSidebarGallery = async (data) => {
   try {
     const formData = new FormData();
     formData.append("category", data.category);
     formData.append("deskripsi", data.deskripsi);
+    formData.append("namaEvent", data.namaEvent);
     if (data.photo) {
       formData.append("photo", data.photo);
     }
@@ -1767,6 +1769,7 @@ const updateSidebarGallery = async (id, data) => {
     const formData = new FormData();
     formData.append("category", data.category);
     formData.append("deskripsi", data.deskripsi);
+    formData.append("namaEvent", data.namaEvent);
     if (data.photo) {
       formData.append("photo", data.photo);
     }
@@ -1884,6 +1887,26 @@ const deleteNamaRanting = async (id) => {
 };
 
 const getRekapRanting = () => axiosClient.get("/api/ranting/summary");
+
+//Peserta Event
+const addPesertaEvent = async (pesertaEvent) => {
+  try {
+    const response = await axiosClient.post("/api/event", pesertaEvent);
+    return response.data;
+  } catch (error) {
+    console.error("Error add peserta event:", error);
+    throw error;
+  }
+};
+
+const getAllPeserta = async (queryString = '') => {
+  try {
+    const response = await axiosClient.get(`/api/event${queryString ? `?${queryString}` : ''}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
 // Export all functions
 export default {
@@ -2020,4 +2043,6 @@ export default {
   deleteUnitKerjaRanting,
   deleteNamaRanting,
   getRekapRanting,
+  addPesertaEvent,
+  getAllPeserta,
 };
