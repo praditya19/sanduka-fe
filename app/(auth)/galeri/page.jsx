@@ -241,7 +241,90 @@ const Page = () => {
 
   const PesertaModal = () => {
     if (!isPesertaModalOpen) return null;
-
+  
+    const handlePrint = () => {
+      const printFrame = document.createElement('iframe');
+      printFrame.style.position = 'fixed';
+      printFrame.style.right = '0';
+      printFrame.style.bottom = '0';
+      printFrame.style.width = '0';
+      printFrame.style.height = '0';
+      printFrame.style.border = '0';
+      
+      document.body.appendChild(printFrame);
+      
+      const eventName = selectedEvent?.namaEvent || 'Event';
+      
+      const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Daftar Peserta - ${eventName}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { text-align: center; margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { 
+              padding: 8px; 
+              text-align: left; 
+              border: 1px solid #000; 
+            }
+            th { background-color: #f2f2f2; font-weight: bold; }
+            .print-header { margin-bottom: 20px; text-align: center; }
+            .table-container { margin-bottom: 30px; }
+            .footer { text-align: right; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="print-header">
+            <h1>Daftar Peserta - ${eventName}</h1>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Nama</th>
+                  <th>NPA</th>
+                  <th>Cabang</th>
+                  <th>Unit Kerja</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${pesertaList.map((peserta, index) => `
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td>${peserta.namaLengkap}</td>
+                    <td>${peserta.npa}</td>
+                    <td>${peserta.cabang}</td>
+                    <td>${peserta.unitKerja}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="footer">
+            <p>Total Peserta: ${pesertaList.length}</p>
+          </div>
+        </body>
+        </html>
+      `;
+      
+      const frameDoc = printFrame.contentWindow || printFrame.contentDocument.document || printFrame.contentDocument;
+      frameDoc.document.open();
+      frameDoc.document.write(printContent);
+      frameDoc.document.close();
+      
+      setTimeout(() => {
+        frameDoc.focus();
+        frameDoc.print();
+        
+        setTimeout(() => {
+          document.body.removeChild(printFrame);
+        }, 1000);
+      }, 500);
+    };
+  
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
         <div className="bg-white rounded-lg shadow-xl w-[80%] max-h-[80vh] relative">
@@ -252,9 +335,17 @@ const Page = () => {
             <FontAwesomeIcon icon={faTimesCircle} size="lg" />
           </button>
           <div className="p-6">
-            <h2 className="text-lg font-bold mb-4">
-              Daftar Peserta - {selectedEvent?.namaEvent}
-            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold">
+                Daftar Peserta - {selectedEvent?.namaEvent}
+              </h2>
+              <button
+                onClick={handlePrint}
+                className="bg-blue-500 text-white px-4 py-2 mr-3 rounded hover:bg-blue-600"
+              >
+                Cetak
+              </button>
+            </div>
             <div className="overflow-auto max-h-[60vh]">
               {isLoadingPeserta ? (
                 <div className="flex justify-center items-center h-32">
