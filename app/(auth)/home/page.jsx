@@ -662,7 +662,7 @@ export default function IconGrid() {
                       </div>
                       </div>
                       </div>
-                    <div className="text-left w-full text-xs">NIP : { userData?.nip }</div>
+                    <div className="text-left w-full text-[0.625rem] sm:text-xs md:text-xs font-medium">{ userData?.nip }</div>
                       </div>
                   </div>
                 )}
@@ -765,7 +765,7 @@ export default function IconGrid() {
                        </div>
                      </div>
                    </div>
-                        <div className="text-left w-full">NIP : { userData?.nip }</div>
+                        <div className="text-left w-full text-[0.625rem] sm:text-xs md:text-xs font-medium">{ userData?.nip }</div>
                  </div>
                </div>
                
