@@ -13,7 +13,10 @@ import toast, { Toaster } from "react-hot-toast";
 
 function Pemasukan() {
   const tableRef = useRef();
-  const [transactions, setTransactions] = useState([]);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const dropdownRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingId, setLoadingId] = useState(null);
   const bulanList = [
     { id: "01", angkaBulan: 0, namaBulan: "Januari" },
     { id: "02", angkaBulan: 1, namaBulan: "Februari" },
@@ -28,22 +31,38 @@ function Pemasukan() {
     { id: "11", angkaBulan: 10, namaBulan: "November" },
     { id: "12", angkaBulan: 11, namaBulan: "Desember" },
   ];
+  const [transactions, setTransactions] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
   const [cabangList, setCabangList] = useState([]);
   const [selectedBulan, setSelectedBulan] = useState("");
-  const currentYear = new Date().getFullYear();
+  const [selectedBulanName, setSelectedBulanName] = useState("");
+  const [checkedIds, setCheckedIds] = useState([]);
   const startYear = 2020;
+  const currentYear = new Date().getFullYear();
   const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaldoAwalExist, setIsSaldoAwalExist] = useState(false);
+  const [saldoMap, setSaldoMap] = useState({});
+  const [totalSaldo, setTotalSaldo] = useState(0);
+  const [editId, setEditId] = useState(null);
+  const [allIds, setAllIds] = useState([]);
   const [formValues, setFormValues] = useState({
-    // noBukti: "",
     tanggalTransaksi: "",
-    posPenerimaan: "",
-    jenisPenerimaan: "",
+    posTransaksi: "",
+    masukKe: "",
     cabang: "",
-    setoranBulan: "",
-    nominal: "",
+    bulan: "",
+    debet: "",
+    kredit: "",
+    bulanSantunan: "",
+    yangMeninggal: "",
+    namaPenerima: "",
     keterangan: "",
+    jenisPembayaran: "Sanduka",
+    totalAnggota: "",
+    checked: false,
+    totalAnggotaByAdmin: "",
+    totalSumbangan: "",
   });
 
   const handleChange = (e) => {
@@ -54,14 +73,355 @@ function Pemasukan() {
     }));
   };
 
-  const handleBulanChange = (bulanAngka) => {
-    setSelectedBulan(parseInt(bulanAngka)); 
+  useEffect(() => {
+    const currentMonthIndex = new Date().getMonth();
+    const currentBulan = bulanList.find(
+      (b) => b.angkaBulan === currentMonthIndex
+    );
+
+    if (currentBulan) {
+      setSelectedBulan(currentBulan.id);
+      setSelectedBulanName(currentBulan.namaBulan);
+    }
+  }, []);
+
+  const handleBulanChange = (e) => {
+    const selectedId = e.target.value;
+    setSelectedBulan(selectedId);
+
+    const bulan = bulanList.find((b) => b.id === selectedId);
+    setSelectedBulanName(bulan ? bulan.namaBulan : "");
   };
 
-  const handleYearChange = (e) => {
-    setNewSelectedYear(e.target.value);
-    setCurrentPage(1); 
+  useEffect(() => {
+    const currentMonth = new Date().getMonth();
+
+    const currentBulan = bulanList.find(
+      (bulan) => bulan.angkaBulan === currentMonth
+    );
+
+    if (currentBulan) {
+      setSelectedBulan(currentBulan.id);
+    }
+  }, []);
+
+  const printTable = () => {
+    // Menyiapkan nama bulan dan tahun untuk judul cetakan
+    const bulanNama = bulanList.find((bulan) => bulan.id === selectedBulan)?.namaBulan || '';
+    const tahunNama = newSelectedYear || '';
+  
+    // Membangun HTML tabel tanpa kolom Action
+    const tableHTMLWithoutActions = `
+      <table class="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
+        <thead class="text-sm text-black uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
+          <tr class="bg-gray-200 text-black text-center">
+            <th class="px-6 py-3 text-sm">No</th>
+            <th class="px-6 py-3 text-sm">Tgl Transaksi</th>
+            <th class="px-6 py-3 text-sm">No. Bukti</th>
+            <th class="px-6 py-3 text-sm">Uraian</th>
+            <th class="px-6 py-3 text-sm">Debet</th>
+            <th class="px-6 py-3 text-sm">Kredit</th>
+            <th class="px-6 py-3 text-sm">Saldo</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sortedTransactions
+            .filter((transaction) => transaction.tglTransaksi)
+            .map((transaction, index) => `
+              <tr class="border-b text-black text-center ${transaction.checked ? 'bg-gray-100' : 'hover:bg-gray-50'}">
+                <td class="px-6 py-4 text-sm">${index + 1}</td>
+                <td class="px-6 py-4 text-sm">${transaction.tglTransaksi}</td>
+                <td class="px-6 py-4 text-sm">${transaction.noBukti}</td>
+                <td class="px-6 py-4 text-sm">${transaction.uraian}</td>
+                <td class="px-6 py-4 text-sm">
+                  ${formatCurrency(
+                    transaction.uraian === "Saldo Awal"
+                      ? Number(newSelectedYear) === 2021 && Number(selectedBulan) === 3
+                        ? parseFloat(transaction.debet.replace(",", "")) || 0
+                        : 0
+                      : parseFloat(transaction.debet.replace(",", "")) || 0
+                  )}
+                </td>
+                <td class="px-6 py-4 text-sm">
+                  ${formatCurrency(parseFloat(transaction.kredit.replace(",", "")) || 0)}
+                </td>
+                <td class="px-6 py-4 text-sm">
+                  ${saldoMap[index] ? saldoMap[index].toLocaleString("id-ID", { minimumFractionDigits: 0 }) : 0}
+                </td>
+              </tr>
+            `).join('')}
+          <tr class="bg-gray-200 text-base text-black text-center font-bold">
+            <td class="px-6 py-4 text-left" colSpan="4">TOTAL</td>
+            <td class="px-6 py-4 text-sm">
+              ${formatCurrency(
+                transactions.reduce((total, transaction) => {
+                  const isSaldoAwal = transaction.uraian === "Saldo Awal";
+                  const isMaret2021 = Number(newSelectedYear) === 2021 && Number(selectedBulan) === 3;
+                  const debet = isSaldoAwal && !isMaret2021 ? 0 : Math.floor(parseFloat(transaction.debet.replace(",")) || 0);
+                  return total + debet;
+                }, 0)
+              )}
+            </td>
+            <td class="px-6 py-4 text-sm">
+              ${formatCurrency(
+                transactions.reduce((total, transaction) => {
+                  const kredit = Math.floor(parseFloat(transaction.kredit.replace(",", "")) || 0);
+                  return total + kredit;
+                }, 0)
+              )}
+            </td>
+            <td class="px-6 py-4 text-sm">
+              ${totalSaldo.toLocaleString("id-ID", { minimumFractionDigits: 0 })}
+            </td>
+            <td class="px-6 py-4 text-sm"></td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+  
+    // Membuka jendela baru untuk mencetak
+    const printWindow = window.open('', '_blank');
+    printWindow.document.open();
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Table Data Pemasukan Bulan ${bulanNama} Tahun ${tahunNama}</title>
+          <style>
+            /* Gaya CSS untuk cetakan */
+            @media print {
+              body {
+                margin: 0;
+                padding: 0;
+                background: white;
+                color: black;
+              }
+              table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+              }
+              th, td {
+                border: 1px solid black;
+                padding: 8px;
+                text-align: center;
+              }
+              .header-info {
+                margin-bottom: 20px;
+                font-size: 16px;
+                font-weight: bold;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          ${tableHTMLWithoutActions} <!-- Insert table without Action column into the print page -->
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+    printWindow.close();
+  };     
+
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setIsDropdownVisible(false);
+    }
   };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = (today.getMonth() + 1).toString().padStart(2, "0");
+    const day = today.getDate().toString().padStart(2, "0");
+
+    const formattedDate = `${year}-${month}-${day}`;
+
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      tanggalTransaksi: formattedDate,
+    }));
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      if (selectedBulan && newSelectedYear) {
+        const data = await GlobalApi.getTablePemasukanSanduka(
+          selectedBulan,
+          newSelectedYear
+        );
+        setTransactions(data);
+        // console.log(data);
+
+        const saldoAwalData = data.find((item) => item.uraian === "Saldo Awal");
+
+        if (saldoAwalData) {
+          setIsSaldoAwalExist(true);
+        } else {
+          setIsSaldoAwalExist(false);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedBulan, newSelectedYear]);
+
+  useEffect(() => {
+    let tempSaldoMap = {};
+    let saldoSebelumnya = 0;
+
+    // Iterasi transaksi untuk menghitung saldo
+    transactions.forEach((transaction, index) => {
+      let currentSaldo = 0;
+
+      if (transaction.uraian === "Saldo Awal") {
+        saldoSebelumnya = parseFloat(transaction.debet.replace(",", "")) || 0;
+        currentSaldo = saldoSebelumnya;
+      } else {
+        let debet = parseFloat(transaction.debet.replace(",", "")) || 0;
+        let kredit = parseFloat(transaction.kredit.replace(",", "")) || 0;
+
+        currentSaldo = saldoSebelumnya + debet - kredit;
+      }
+
+      tempSaldoMap[index] = currentSaldo;
+      saldoSebelumnya = currentSaldo;
+    });
+
+    // Menyimpan hasil perhitungan saldo ke dalam state saldoMap
+    setSaldoMap(tempSaldoMap);
+
+    // Menghitung total saldo dari saldoMap
+    const calculatedTotalSaldo = Object.values(tempSaldoMap).reduce(
+      (total, currentSaldo) => total + currentSaldo,
+      0
+    );
+
+    // Menyimpan total saldo ke dalam state totalSaldo
+    setTotalSaldo(calculatedTotalSaldo);
+  }, [transactions]); // Dependensi: hanya akan berjalan ketika transactions berubah
+
+  // totalSaldo akan selalu berisi total dari saldo yang dihitung
+  // console.log("Total saldo yang dihitung:", totalSaldo);
+
+  const createSaldoAwal = async () => {
+    try {
+      setIsLoading(true);
+      const today = new Date();
+      const sixteenthDayOfMonth = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        16
+      );
+      const formattedDate = sixteenthDayOfMonth.toISOString().split("T")[0];
+
+      // Ambil bulan dan tahun sebelumnya
+      const prevMonth = today.getMonth() === 0 ? 11 : today.getMonth() - 1;
+      const prevYear =
+        today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
+
+      // Ambil data transaksi dari bulan sebelumnya
+      const prevTransactions = await GlobalApi.getTablePemasukanSanduka(
+        prevMonth + 1,
+        prevYear
+      );
+
+      // Perhitungan saldo berdasarkan transaksi bulan sebelumnya
+      let saldoMapPrev = {};
+      let saldoSebelumnya = 0;
+
+      prevTransactions.forEach((transaction, index) => {
+        let currentSaldo = 0;
+
+        if (transaction.uraian === "Saldo Awal") {
+          saldoSebelumnya = parseFloat(transaction.debet.replace(",", "")) || 0;
+          currentSaldo = saldoSebelumnya;
+        } else {
+          let debet = parseFloat(transaction.debet.replace(",", "")) || 0;
+          let kredit = parseFloat(transaction.kredit.replace(",", "")) || 0;
+
+          currentSaldo = saldoSebelumnya + debet - kredit;
+        }
+
+        saldoMapPrev[index] = currentSaldo;
+        saldoSebelumnya = currentSaldo;
+      });
+
+      const totalSaldoPrev = Object.values(saldoMapPrev).reduce(
+        (total, currentSaldo) => total + currentSaldo,
+        0
+      );
+
+      const saldoAwalRequest = {
+        tanggalTransaksi: formValues.tanggalTransaksi,
+        // tanggalTransaksi: formattedDate,
+        posTransaksi: "Saldo Awal",
+        masukKe: "Bank",
+        debet: totalSaldoPrev,
+        jenisPembayaran: "Sanduka",
+      };
+
+      const responseSaldo = await GlobalApi.createSaldoAwal(saldoAwalRequest);
+
+      // Refresh halaman setelah sukses
+      window.location.reload();
+    } catch (error) {
+      console.error("Error saat membuat Saldo Awal:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const checkTime = () => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+
+      // Pastikan hanya dieksekusi jika saldo awal belum ada
+      if (currentHour === 7 && currentMinute === 10 && !isSaldoAwalExist) {
+        createSaldoAwal(); // Memanggil fungsi jika saldo awal belum ada
+      }
+    };
+
+    // Cek waktu setiap detik
+    const intervalId = setInterval(checkTime, 1000);
+
+    // Hentikan pengecekan setelah 1 menit (untuk menghindari pemeriksaan yang tidak perlu)
+    const timeoutId = setTimeout(() => clearInterval(intervalId), 60000);
+
+    return () => {
+      clearInterval(intervalId);
+      clearTimeout(timeoutId);
+    };
+  }, [isSaldoAwalExist]);
+
+  const sortedTransactions = (() => {
+    if (!transactions) return [];
+
+    const saldoAwal = transactions.find((t) => t.uraian === "Saldo Awal");
+    const otherTransactions = transactions.filter(
+      (t) => t.uraian !== "Saldo Awal"
+    );
+
+    return saldoAwal ? [saldoAwal, ...otherTransactions] : otherTransactions;
+  })();
+
+  const years = Array.from(
+    { length: currentYear - startYear + 1 },
+    (_, index) => startYear + index
+  );
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -74,113 +434,169 @@ function Pemasukan() {
     fetchCabangData();
   }, []);
 
-  const printTable = () => {
-    const printContent = tableRef.current;
-    const originalContent = document.body.innerHTML;
+  const handleSubmitAll = async (e) => {
+    e.preventDefault();
 
-    document.body.innerHTML = printContent.innerHTML;
-
-    window.print();
-
-    document.body.innerHTML = originalContent;
-    window.location.reload();
-  };
-
-  useEffect(() => {
-    const today = new Date();
-
-    const year = today.getFullYear(); 
-    const month = (today.getMonth() + 1).toString().padStart(2, "0"); 
-    const day = today.getDate().toString().padStart(2, "0"); 
-
-    const formattedDate = `${year}-${month}-${day}`;
-    setFormValues((prevValues) => ({
-      ...prevValues,
-      tanggalTransaksi: formattedDate, 
-    }));
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      if (selectedBulan && newSelectedYear) {
-        const data = await GlobalApi.getTablePemasukanSanduka(
-          selectedBulan,
-          newSelectedYear
-        );
-        setTransactions(data);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [selectedBulan, newSelectedYear]);
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentTransactions = transactions.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
-  const totalPages = Math.ceil(transactions.length / itemsPerPage);
-
-  const getVisiblePages = () => {
-    const pageRange = 2;
-    let start = Math.max(1, currentPage - pageRange);
-    let end = Math.min(totalPages, currentPage + pageRange);
-
-    const pages = [];
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  };
-
-  const getPaginatedTransactions = () => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return transactions.slice(startIndex, endIndex);
-  };
-
-  const years = Array.from(
-    { length: currentYear - startYear + 1 },
-    (_, index) => startYear + index
-  );
-
-  useEffect(() => {
-    const fetchCabangData = async () => {
-      try {
-        const response = await GlobalApi.getCabang();
-        setCabangList(response.data);
-      } catch (error) {
-        console.error("Error fetching cabang data:", error);
-      }
+    const requestData = {
+      uangMasukKeluar: {
+        ...formValues,
+      },
+      targetCabang: formValues.cabang,
     };
 
-    fetchCabangData();
-  }, []);
-
-  const [selectAll, setSelectAll] = useState(false);
+    try {
+      const response = await GlobalApi.sendSesuaiJumlahTarget(requestData);
+      if (response && response.data) {
+        toast.success(
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                width: "150px",
+                height: "150px",
+                color: "#06D001",
+                marginBottom: "16px",
+              }}
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+            </svg>
+            <h3
+              style={{
+                fontSize: "2rem",
+                display: "block",
+                marginBottom: "28px",
+              }}
+            >
+              Data berhasil dikirim!
+            </h3>
+          </div>,
+          {
+            icon: null,
+            duration: 2000,
+            style: {
+              marginTop: "12%",
+              fontSize: "1.75rem",
+              padding: "10px",
+              width: "80%",
+              maxWidth: "450px",
+              height: "50%",
+              maxHeight: "400px",
+              transform: "translate(-50%, -50%)",
+              textAlign: "center",
+              zIndex: 9999,
+              backgroundColor: "#fff",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            },
+          }
+        );
+      }
+    } catch (error) {
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Terjadi kesalahan saat mengirim data.
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // const dataToSend = {
+      //   // noBukti: formValues.noBukti,
+      //   tanggalTransaksi: formValues.tanggalTransaksi,
+      //   posTransaksi: formValues.posTransaksi,
+      //   masukKe: formValues.jenisPenerimaan,
+      //   cabang: formValues.cabang,
+      //   bulan: formValues.setoranBulan,
+      //   debet: formValues.nominal,
+      //   kredit: "",
+      //   bulanSantunan: formValues.bulanSantunan || "",
+      //   keterangan: formValues.keterangan,
+      //   jenisPembayaran: "Sanduka",
+      //   namaPenerima: formValues.namaPenerima,
+      //   yangMeninggal: "",
+      //   totalAnggota: formValues.totalAnggota,
+      //   totalSumbangan: formValues.totalSumbangan,
+      //   totalAnggotaByAdmin: formValues.totalAnggotaByAdmin,
+      // };
       const dataToSend = {
         // noBukti: formValues.noBukti,
         tanggalTransaksi: formValues.tanggalTransaksi,
-        posTransaksi: formValues.posPenerimaan,
+        posTransaksi: formValues.posTransaksi,
         masukKe: formValues.jenisPenerimaan,
         cabang: formValues.cabang,
         bulan: formValues.setoranBulan,
-        debet: "",
-        kredit: formValues.nominal,
-        bulanSantunan: formValues.setoranBulan,
+        debet: formValues.nominal,
+        kredit: "",
+        bulanSantunan: "",
         keterangan: formValues.keterangan,
-        jenisPembayaran: "Organisasi",
+        jenisPembayaran: "Sanduka",
         namaPenerima: "",
         yangMeninggal: "",
+        totalAnggota: formValues.totalAnggota,
+        totalSumbangan: formValues.totalSumbangan,
+        totalAnggotaByAdmin: formValues.totalAnggotaByAdmin,
       };
 
       const response = await GlobalApi.createPembayaranSanduka(dataToSend);
@@ -207,21 +623,25 @@ function Pemasukan() {
           >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          <h3
+            style={{
+              fontSize: "2rem",
+              display: "block",
+              marginBottom: "28px",
+            }}
           >
-Data berhasil dikirim!            </strong>
+            Data berhasil disimpan!
+          </h3>
         </div>,
         {
           icon: null,
-          autoClose: 4000,
-          duration: 4000,
+          duration: 2000,
           style: {
-            marginTop: "16%",
+            marginTop: "12%",
             fontSize: "1.75rem",
             padding: "10px",
             width: "80%",
-            maxWidth: "700px",
+            maxWidth: "450px",
             height: "50%",
             maxHeight: "400px",
             transform: "translate(-50%, -50%)",
@@ -233,15 +653,72 @@ Data berhasil dikirim!            </strong>
           },
         }
       );
+      setTimeout(() => {
+        window.location.reload();
+      }, 2500);
     } catch (error) {
-      toast.error(`Gagal menyimpan data: ${error.message}`);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+              color: "black",
+            }}
+          >
+            Gagal Menyimpan Data.
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     }
   };
 
   const handleReset = () => {
     setFormValues({
-      noBukti: "",
-      posPenerimaan: "",
+      // noBukti: "",
+      posTransaksi: "",
       jenisPenerimaan: "",
       cabang: "",
       setoranBulan: "",
@@ -251,24 +728,95 @@ Data berhasil dikirim!            </strong>
   };
 
   const handleCheck = (id) => {
-    setTransactions((prevTransactions) =>
-      prevTransactions.map((transaction) =>
-        transaction.id === id
-          ? { ...transaction, checked: !transaction.checked }
-          : transaction
-      )
-    );
+    setCheckedIds((prevCheckedIds) => {
+      if (prevCheckedIds.includes(id)) {
+        return prevCheckedIds.filter((checkedId) => checkedId !== id);
+      } else {
+        return [...prevCheckedIds, id];
+      }
+    });
   };
 
-  const handleSelectAll = (e) => {
-    const isChecked = e.target.checked;
-    setSelectAll(isChecked);
+  const handleSelectAll = () => {
+    const newSelectAll = !selectAll;
+    setSelectAll(newSelectAll);
+
+    const updatedCheckedIds = newSelectAll
+      ? transactions
+          .filter((transaction) => transaction.uraian !== "Saldo Awal")
+          .map((transaction) => transaction.id)
+      : [];
+
+    setCheckedIds(updatedCheckedIds);
+
     setTransactions((prevTransactions) =>
       prevTransactions.map((transaction) => ({
         ...transaction,
-        checked: isChecked,
+        checked: newSelectAll && transaction.uraian !== "Saldo Awal",
       }))
     );
+  };
+
+  const handleDeleteClick = async () => {
+    setIsLoading(true);
+
+    try {
+      for (const id of checkedIds) {
+        const response = await GlobalApi.hapusPemasukanUangMasuk(id);
+
+        if (response) {
+          setTransactions((prevTransactions) =>
+            prevTransactions.filter(
+              (transaction) => !checkedIds.includes(transaction.id)
+            )
+          );
+          setPaginatedTransactions((prevPaginatedTransactions) =>
+            prevPaginatedTransactions.filter(
+              (transaction) => !checkedIds.includes(transaction.id)
+            )
+          );
+
+          toast.success("Data berhasil dihapus!");
+        }
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      window.location.reload();
+    } catch (error) {
+      console.error("Gagal menghapus data dengan ID:", checkedIds, error);
+      toast.error("Terjadi kesalahan saat menghapus data.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteClickId = async (id) => {
+    setLoadingId(id);
+
+    try {
+      const response = await GlobalApi.hapusPemasukanUangMasuk(id);
+
+      if (response) {
+        setTransactions((prevTransactions) =>
+          prevTransactions.filter((transaction) => transaction.id !== id)
+        );
+        setPaginatedTransactions((prevPaginatedTransactions) =>
+          prevPaginatedTransactions.filter(
+            (transaction) => transaction.id !== id
+          )
+        );
+
+        toast.success("Data berhasil dihapus!");
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      window.location.reload();
+    } catch (error) {
+      console.error("Gagal menghapus data dengan ID:", id, error);
+      toast.error("Terjadi kesalahan saat menghapus data.");
+    } finally {
+      setLoadingId(null);
+    }
   };
 
   const parseNumber = (value) => {
@@ -288,62 +836,344 @@ Data berhasil dikirim!            </strong>
     }).format(value);
   };
 
-  const getBulanAngka = (bulanNama) => {
-    const bulanObj = bulanList.find((bulan) => bulan.namaBulan === bulanNama);
-    return bulanObj ? bulanObj.angkaBulan : null;
+  const handleGetEdit = async (id) => {
+    // console.log("ID yang diklik:", id);
+
+    try {
+      // Simpan ID yang diklik ke dalam state
+      setEditId(id);
+
+      // Ambil data berdasarkan ID
+      const data = await GlobalApi.getPemasukanUangMasukById(id);
+      // console.log("Data yang diambil:", data);
+
+      // Format tanggal transaksi
+      const tanggalTransaksi = data.tanggalTransaksi
+        ? data.tanggalTransaksi.split(", ")[1] || data.tanggalTransaksi
+        : "";
+
+      // Persiapkan nilai untuk form
+      const updatedFormValues = {
+        noBukti: data.noBukti || "",
+        tanggalTransaksi: tanggalTransaksi || "",
+        posTransaksi: data.posTransaksi || "",
+        jenisPenerimaan: data.masukKe || "",
+        cabang: data.cabang || "",
+        setoranBulan: data.bulan || "",
+        totalAnggota: data.totalAnggota || "",
+        nominal: data.debet || "",
+        totalSumbangan: data.totalSumbangan || "",
+        totalAnggotaByAdmin: data.totalAnggotaByAdmin || "",
+        keterangan: data.posTransaksi || "",
+      };
+
+      // Jika posTransaksi bukan "Saldo Awal", langsung tampilkan data tanpa pencarian tambahan
+      if (data.posTransaksi !== "Saldo Awal") {
+        // console.log("Bukan 'Saldo Awal', langsung menampilkan form data.");
+        setFormValues(updatedFormValues);
+        setIsEditing(true);
+        return;
+      }
+
+      // console.log(
+      //   "Mendeteksi uraian 'Saldo Awal', mengambil seluruh data terkait..."
+      // );
+
+      let allIds = [];
+      const startYear = 2021;
+      const startMonth = 4; // April (bulan dalam JavaScript mulai dari 0, jadi 4 = Mei)
+
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1; // getMonth() dimulai dari 0
+
+      // Looping dari April 2021 hingga bulan saat ini
+      for (let year = startYear; year <= currentYear; year++) {
+        let start = year === startYear ? startMonth : 1; // Jika tahun pertama, mulai dari April, sisanya dari Januari
+        let end = year === currentYear ? currentMonth : 12; // Jika tahun terakhir, hanya sampai bulan saat ini
+
+        for (let month = start; month <= end; month++) {
+          console.log(`Mengambil data bulan ${month} tahun ${year}...`);
+
+          try {
+            const allData = await GlobalApi.getTablePemasukanSanduka(
+              month,
+              year
+            );
+
+            // Filter data yang memiliki uraian "Saldo Awal"
+            const filteredData = allData.filter(
+              (item) => item.uraian === "Saldo Awal"
+            );
+
+            // Ambil semua ID dari hasil filter
+            const ids = filteredData.map((item) => item.id);
+            allIds = allIds.concat(ids);
+          } catch (error) {
+            console.error(
+              `Gagal mengambil data untuk bulan ${month} tahun ${year}:`,
+              error
+            );
+          }
+        }
+      }
+
+      // Simpan seluruh ID yang ditemukan ke dalam state
+      setAllIds(allIds);
+      console.log(
+        "Semua ID dengan uraian 'Saldo Awal' sejak April 2021:",
+        allIds
+      );
+
+      // Setelah mendapatkan ID yang sesuai, perbarui form
+      setFormValues(updatedFormValues);
+      setIsEditing(true);
+    } catch (error) {
+      console.error("Gagal mengambil data berdasarkan id:", error);
+    }
   };
-  useEffect(() => {
-    const tanggalStr = formValues.tanggalTransaksi;
 
-    if (!tanggalStr) {
+  const handleSubmitEdit = async () => {
+    if (!editId) {
+      console.error("ID belum ada, tidak bisa mengedit");
       return;
     }
 
-    const [dayPart, monthPart, yearPart] = tanggalStr.split(" ");
+    try {
+      const data = await GlobalApi.getPemasukanUangMasukById(editId);
+      console.log("ID yang akan dikirim untuk edit:", data);
 
-    const bulanId = getBulanAngka(monthPart);
+      const updatedFormValues = {
+        noBukti: data.noBukti || "",
+        tanggalTransaksi: formValues.tanggalTransaksi || "",
+        posTransaksi: formValues.posTransaksi || "",
+        masukKe: formValues.jenisPenerimaan || "",
+        cabang: formValues.cabang || "",
+        bulan: formValues.setoranBulan || "",
+        debet: formValues.nominal || "",
+        kredit: "",
+        bulanSantunan: "",
+        yangMeninggal: "",
+        namaPenerima: "",
+        keterangan: "",
+        jenisPembayaran: "Sanduka",
+      };
 
-    if (!bulanId) {
-      console.error("Bulan tidak valid:", monthPart);
+      setFormValues(updatedFormValues);
+
+      const response = await GlobalApi.editPemasukanUangMasuk(
+        editId,
+        updatedFormValues
+      );
+
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "2rem",
+              display: "block",
+              marginBottom: "28px",
+            }}
+          >
+            Data berhasil diupdate!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      if (data.posTransaksi === "Saldo Awal") {
+        console.log(
+          "Transaksi 'Saldo Awal' terdeteksi, memperbarui seluruh ID..."
+        );
+        await handleSubmitEditAll();
+      } else {
+        window.location.reload();
+      }
+    } catch (error) {
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
+          </svg>
+          <h3
+            style={{
+              color: "black",
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal mengupdate data. Coba lagi!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      console.error("Gagal mengedit data:", error);
+    }
+  };
+  const handleSubmitEditAll = async () => {
+    if (allIds.length === 0) {
+      console.error("Tidak ada ID yang dapat diperbarui");
       return;
     }
 
-    
-    const formattedDate = `${yearPart}-${bulanId}-${dayPart.padStart(2, "0")}`;
+    console.log("ID yang akan diperbarui:", allIds);
 
-    
-    setFormValues((prevValues) => ({
-      ...prevValues,
-      tanggalTransaksi: formattedDate,
-    }));
-  }, [formValues.tanggalTransaksi]);
+    try {
+      const promises = allIds.map(async (id) => {
+        const data = await GlobalApi.getPemasukanUangMasukById(id);
 
-  const totalBalance = transactions.reduce(
-    (acc, transaction) =>
-      acc +
-      (parseNumber(transaction.balance) === "-"
-        ? 0
-        : parseNumber(transaction.balance)),
-    0
-  );
+        const tanggalTransaksi = new Date(data.tanggalTransaksi);
+        const bulanTransaksi = tanggalTransaksi.getMonth() + 1;
+        const tahunTransaksi = tanggalTransaksi.getFullYear();
 
-  const totalDebit = transactions.reduce(
-    (acc, transaction) =>
-      acc +
-      (parseNumber(transaction.debit) === "-"
-        ? 0
-        : parseNumber(transaction.debit)),
-    0
-  );
+        // console.log(`Memproses transaksi untuk ID: ${id}, Bulan: ${bulanTransaksi}, Tahun: ${tahunTransaksi}`);
 
-  const totalCredit = transactions.reduce(
-    (acc, transaction) =>
-      acc +
-      (parseNumber(transaction.credit) === "-"
-        ? 0
-        : parseNumber(transaction.credit)),
-    0
-  );
+        const bulanSebelumnya = bulanTransaksi === 1 ? 12 : bulanTransaksi - 1;
+        const tahunSebelumnya =
+          bulanTransaksi === 1 ? tahunTransaksi - 1 : tahunTransaksi;
+
+        const allData = await GlobalApi.getTablePemasukanSanduka(
+          bulanSebelumnya,
+          tahunSebelumnya
+        );
+
+        let currentSaldo = 0;
+        let totalSaldoBulan = 0;
+        let totalSaldoBulanFinal = 0;
+
+        allData.forEach((transaction, index) => {
+          let debet = parseFloat(transaction.debet.replace(",", "")) || 0;
+          let kredit = parseFloat(transaction.kredit.replace(",", "")) || 0;
+
+          if (transaction.uraian === "Saldo Awal") {
+            currentSaldo = debet;
+          } else {
+            currentSaldo += debet - kredit;
+          }
+
+          totalSaldoBulan = currentSaldo;
+          totalSaldoBulanFinal += totalSaldoBulan;
+
+          // console.log(`Transaksi ke-${index + 1} - Saldo sementara bulan ${bulanSebelumnya} tahun ${tahunSebelumnya}: ${totalSaldoBulan}`);
+        });
+
+        // console.log(`Total saldo akhir per bulan ${bulanSebelumnya} tahun ${tahunSebelumnya}: ${totalSaldoBulanFinal}`);
+
+        const updatedFormValues = {
+          noBukti: data.noBukti || "",
+          tanggalTransaksi: data.tanggalTransaksi || "",
+          posTransaksi: data.posTransaksi || "",
+          masukKe: data.masukKe || "",
+          cabang: data.cabang || "",
+          bulan: bulanTransaksi || "",
+          debet: totalSaldoBulanFinal || 0,
+          kredit: "",
+          bulanSantunan: "",
+          yangMeninggal: "",
+          namaPenerima: "",
+          keterangan: "",
+          jenisPembayaran: "Sanduka",
+        };
+
+        console.log(
+          "Data yang akan dikirim untuk update ID:",
+          id,
+          updatedFormValues
+        );
+
+        return GlobalApi.editPemasukanUangMasuk(id, updatedFormValues);
+      });
+
+      await Promise.all(promises);
+
+      toast.success(
+        "Semua saldo awal berhasil dihitung! (Tidak dikirim ke database)"
+      );
+        window.location.reload();
+    } catch (error) {
+      toast.error("Gagal menghitung dan memperbarui saldo awal. Coba lagi!");
+      console.error(
+        "Gagal menghitung dan memperbarui semua saldo awal:",
+        error
+      );
+    }
+  };
 
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -382,7 +1212,6 @@ Data berhasil dikirim!            </strong>
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -390,14 +1219,13 @@ Data berhasil dikirim!            </strong>
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Pemasukan Organisasi</h1>
+              <h1 className="text-base">Pemasukan Sanduka</h1>
             </div>
           </div>
         </header>
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -405,7 +1233,7 @@ Data berhasil dikirim!            </strong>
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Pemasukan Organisasi</h1>
+              <h1 className="text-base">Pemasukan Sanduka</h1>
             </div>
           </div>
         </header>
@@ -438,20 +1266,20 @@ Data berhasil dikirim!            </strong>
               },
             }}
           />
-          <div className="container mx-auto p-6 mt-8">
+          <div className="container mx-auto p-6">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
               <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
-                POS PEMASUKAN
+                PEMASUKAN SANDUKA
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {/* <div className="flex flex-col">
-                  <label
+                  <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
                     htmlFor="noBukti"
                   >
                     No. Bukti
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="noBukti"
                     type="text"
@@ -471,57 +1299,38 @@ Data berhasil dikirim!            </strong>
                   <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="tanggalTransaksi"
-                    type="text"
+                    type="date"
                     name="tanggalTransaksi"
-                    value={(() => {
-                      const dateStr = formValues.tanggalTransaksi;
-                      if (!dateStr) return "";
-
-                      
-                      const [yearPart, monthPart, dayPart] = dateStr.split("-");
-
-                      
-                      const bulanObj = bulanList.find(
-                        (bulan) => bulan.id === monthPart
-                      );
-                      const namaBulan = bulanObj
-                        ? bulanObj.namaBulan
-                        : "Invalid Month";
-
-                      
-                      return `${parseInt(
-                        dayPart,
-                        10
-                      )} ${namaBulan} ${yearPart}`;
-                    })()}
-                    readOnly
+                    value={formValues.tanggalTransaksi || ""}
+                    onChange={handleChange}
                   />
                 </div>
 
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
-                    htmlFor="posPenerimaan"
+                    htmlFor="posTransaksi"
                   >
                     Pos Penerimaan
                   </Label>
                   <select
                     className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="posPenerimaan"
-                    name="posPenerimaan"
-                    value={formValues.posPenerimaan}
+                    id="posTransaksi"
+                    name="posTransaksi"
+                    value={formValues.posTransaksi || ""}
                     onChange={handleChange}
                   >
-                    <option value="">Pilih Pos Penerimaan</option>
-                    <option value="iuran pgri">Iuran PGRI</option>
-                    <option value="daspen">Daspen</option>
-                    <option value="derap">Derap</option>
-                    <option value="sewa gudung">Sewa Gudung</option>
-                    <option value="kalender">Kalender</option>
-                    <option value="lain-lain">Lain - lain</option>
-                    <option value="saldo awal">Saldo Awal</option>
+                    <option value="">Pilih Pos Penerima</option>
+                    <option value="Iuran PGRI">Iuran PGRI</option>
+                    <option value="Daspen">Daspen</option>
+                    <option value="Derap">Derap</option>
+                    <option value="Sewa Gudung">Sewa Gudung</option>
+                    <option value="Kalender">Kalender</option>
+                    <option value="Lain-Lain">Lain - lain</option>
+                    <option value="Saldo Awal">Saldo Awal</option>
                   </select>
                 </div>
+
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -541,28 +1350,105 @@ Data berhasil dikirim!            </strong>
                     <option value="Cash">Cash</option>
                   </select>
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col relative" ref={dropdownRef}>
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
                     htmlFor="cabang"
                   >
                     Cabang
                   </Label>
-                  <select
+
+                  <input
+                    type="text"
+                    placeholder="Cabang yang dipilih"
                     className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="cabang"
-                    name="cabang"
-                    value={formValues.cabang}
-                    onChange={handleChange}
-                  >
-                    <option value="">Pilih Cabang</option>
-                    {cabangList.map((cabang) => (
-                      <option key={cabang.id} value={cabang.kecamatan}>
-                        {cabang.kecamatan}
-                      </option>
-                    ))}
-                  </select>
+                    value={formValues.cabang || ""}
+                    readOnly
+                    onFocus={() => setIsDropdownVisible(true)}
+                  />
+
+                  {isDropdownVisible && (
+                    <div className="absolute top-full left-0 w-full z-10 mt-1 border bg-white shadow-lg rounded-b">
+                      <ul className="max-h-48 overflow-y-auto">
+                        <li className="py-2 px-4">
+                          <input
+                            type="text"
+                            placeholder="Cari Cabang..."
+                            className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            value={formValues.searchCabang || ""}
+                            autoFocus
+                            onChange={(e) => {
+                              const searchValue = e.target.value;
+                              setFormValues((prevValues) => ({
+                                ...prevValues,
+                                searchCabang: searchValue,
+                              }));
+                            }}
+                          />
+                        </li>
+
+                        <li className="py-2 px-4 hover:bg-blue-500 hover:text-white text-gray-500">
+                          <button
+                            onClick={() => {
+                              setFormValues((prevValues) => ({
+                                ...prevValues,
+                                cabang: "",
+                                searchCabang: "",
+                              }));
+                              setIsDropdownVisible(false);
+                            }}
+                          >
+                            Pilih Cabang
+                          </button>
+                        </li>
+
+                        <li className="py-2 px-4 hover:bg-blue-500 hover:text-white">
+                          <button
+                            onClick={() => {
+                              setFormValues((prevValues) => ({
+                                ...prevValues,
+                                cabang: "All",
+                                searchCabang: "All",
+                              }));
+                              setIsDropdownVisible(false);
+                            }}
+                          >
+                            Semua Cabang
+                          </button>
+                        </li>
+
+                        {cabangList
+                          .filter((cabang) =>
+                            cabang.kecamatan
+                              .toLowerCase()
+                              .includes(
+                                formValues.searchCabang?.toLowerCase() || ""
+                              )
+                          )
+                          .map((cabang) => (
+                            <li
+                              key={cabang.id}
+                              className="py-1 px-4 hover:bg-blue-500 hover:text-white"
+                            >
+                              <button
+                                onClick={() => {
+                                  setFormValues((prevValues) => ({
+                                    ...prevValues,
+                                    cabang: cabang.kecamatan,
+                                    searchCabang: "",
+                                  }));
+                                  setIsDropdownVisible(false);
+                                }}
+                              >
+                                {cabang.kecamatan}
+                              </button>
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
+
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -575,10 +1461,28 @@ Data berhasil dikirim!            </strong>
                     id="setoranBulan"
                     type="month"
                     name="setoranBulan"
-                    value={formValues.setoranBulan}
+                    value={formValues.setoranBulan || ""}
                     onChange={handleChange}
                   />
                 </div>
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="totalAnggota"
+                  >
+                    Total Anggota
+                  </Label>
+                  <Input
+                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="totalAnggota"
+                    type="number"
+                    name="totalAnggota"
+                    value={formValues.totalAnggota || ""}
+                    onChange={handleChange}
+                    disabled
+                  />
+                </div>
+
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -591,8 +1495,26 @@ Data berhasil dikirim!            </strong>
                     id="nominal"
                     type="number"
                     name="nominal"
-                    value={formValues.nominal}
+                    value={formValues.nominal || ""}
                     onChange={handleChange}
+                  />
+                </div>
+
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="totalSumbangan"
+                  >
+                    Total Sumbangan
+                  </Label>
+                  <Input
+                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="totalSumbangan"
+                    type="number"
+                    name="totalSumbangan"
+                    value={formValues.totalSumbangan || ""}
+                    onChange={handleChange}
+                    disabled
                   />
                 </div>
                 <div className="flex flex-col">
@@ -606,24 +1528,92 @@ Data berhasil dikirim!            </strong>
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="keterangan"
                     name="keterangan"
-                    value={formValues.keterangan}
+                    value={formValues.keterangan || ""}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="totalAnggotaByAdmin"
+                  >
+                    Total Anggota By Admin
+                  </Label>
+                  <Input
+                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="totalAnggotaByAdmin"
+                    type="totalAnggotaByAdmin"
+                    name="totalAnggotaByAdmin"
+                    value={formValues.totalAnggotaByAdmin || ""}
                     onChange={handleChange}
                   />
                 </div>
               </div>
-              <div className="flex items-center mt-6 justify-center">
+              <div className="flex items-center mt-6 justify-center gap-6">
                 <Button
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                  onClick={handleSubmit}
+                  className={`bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
+                    formValues.nominal ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                  onClick={handleSubmitAll}
+                  disabled={Boolean(formValues.nominal)}
                 >
-                  Simpan
+                  Sesuai Jumlah Target
                 </Button>
+                <div className="flex space-x-4">
+                  {!isEditing ? (
+                    <Button
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                      onClick={handleSubmit}
+                    >
+                      Simpan
+                    </Button>
+                  ) : (
+                    <Button
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                      onClick={handleSubmitEdit}
+                    >
+                      Edit
+                    </Button>
+                  )}
+                </div>
                 <Button
-                  className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-700 transition duration-150 ease-in-out ml-6"
+                  className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-700 transition duration-150 ease-in-out"
                   type="button"
                   onClick={handleReset}
                 >
                   Reset
+                </Button>
+                <Button
+                  className={`bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded transition duration-300 flex items-center justify-center`}
+                  onClick={createSaldoAwal}
+                  disabled={isLoading || isSaldoAwalExist}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <svg
+                        className="animate-spin h-5 w-5 text-white mr-2"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        ></path>
+                      </svg>
+                    </div>
+                  ) : (
+                    "Saldo Awal"
+                  )}
                 </Button>
               </div>
             </div>
@@ -634,11 +1624,11 @@ Data berhasil dikirim!            </strong>
                   <select
                     className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                     value={selectedBulan}
-                    onChange={(e) => handleBulanChange(e.target.value)}
+                    onChange={handleBulanChange}
                   >
                     <option value="">Pilih Bulan</option>
                     {bulanList.map((bulan) => (
-                      <option key={bulan.angkaBulan} value={bulan.angkaBulan}>
+                      <option key={bulan.angkaBulan} value={bulan.id}>
                         {bulan.namaBulan}
                       </option>
                     ))}
@@ -650,7 +1640,7 @@ Data berhasil dikirim!            </strong>
                     onChange={(e) => setNewSelectedYear(e.target.value)}
                   >
                     <option value="">Pilih Tahun</option>
-                    {/* Map through years array to create options */}
+
                     {years.map((year) => (
                       <option key={year} value={year}>
                         {year}
@@ -659,17 +1649,47 @@ Data berhasil dikirim!            </strong>
                   </select>
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-                  Transaksi {selectedBulan} {newSelectedYear}
+                  Transaksi {selectedBulanName} {newSelectedYear}
                 </h1>
                 <div className="flex justify-center space-x-4 mt-5 mr-10">
                   <Input
                     type="checkbox"
                     className="form-checkbox h-4 w-4 mt-3"
+                    checked={selectAll}
                     onChange={handleSelectAll}
                   />
-                  <Button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300">
-                    Hapus
-                  </Button>
+                  <button
+                    className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center`}
+                    onClick={handleDeleteClick}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <svg
+                          className="animate-spin h-5 w-5 text-white mr-2"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v8H4z"
+                          ></path>
+                        </svg>
+                      </div>
+                    ) : (
+                      "Hapus"
+                    )}
+                  </button>
                   <Button
                     className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300"
                     onClick={printTable}
@@ -695,10 +1715,11 @@ Data berhasil dikirim!            </strong>
                   </tr>
                 </thead>
                 <tbody>
-                  {currentTransactions.map((transaction, index) =>
-                    transaction.tglTransaksi ? (
+                  {sortedTransactions
+                    .filter((transaction) => transaction.tglTransaksi)
+                    .map((transaction, index) => (
                       <tr
-                        key={index}
+                        key={transaction.id}
                         className={`border-b text-black text-center ${
                           transaction.checked
                             ? "bg-gray-100"
@@ -717,16 +1738,32 @@ Data berhasil dikirim!            </strong>
                         </td>
                         <td className="px-6 py-4 text-sm">
                           {formatCurrency(
-                            parseFloat(transaction.debet.replace(",")) || 0
+                            transaction.uraian === "Saldo Awal"
+                              ? Number(newSelectedYear) === 2021 &&
+                                Number(selectedBulan) === 3
+                                ? parseFloat(
+                                    transaction.debet.replace(",", "")
+                                  ) || 0
+                                : 0
+                              : parseFloat(
+                                  transaction.debet.replace(",", "")
+                                ) || 0
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm">
                           {formatCurrency(
-                            parseFloat(transaction.kredit.replace(",")) || 0
+                            parseFloat(transaction.kredit.replace(",", "")) || 0
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          {formatCurrency(transaction.saldo || 0)}
+                          <td className="px-6 py-4 text-sm">
+                            {" "}
+                            {saldoMap[index]
+                              ? saldoMap[index].toLocaleString("id-ID", {
+                                  minimumFractionDigits: 0,
+                                })
+                              : 0}
+                          </td>
                         </td>
                         <td className="px-6 py-4 text-sm">
                           <div className="flex items-center space-x-2">
@@ -735,16 +1772,60 @@ Data berhasil dikirim!            </strong>
                               className="form-checkbox h-4 w-4"
                               checked={transaction.checked}
                               onChange={() => handleCheck(transaction.id)}
+                              // disabled={transaction.uraian === "Saldo Awal"}
                             />
-                            <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                            <Button
+                              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+                              onClick={() => handleGetEdit(transaction.id)}
+                            >
                               Edit
                             </Button>
+                            <button
+                              className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center ${
+                                transaction.uraian === "Saldo Awal"
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
+                              onClick={() =>
+                                handleDeleteClickId(transaction.id)
+                              }
+                              disabled={
+                                transaction.uraian === "Saldo Awal" ||
+                                loadingId === transaction.id
+                              }
+                            >
+                              {loadingId === transaction.id ? (
+                                <div className="flex items-center">
+                                  <svg
+                                    className="animate-spin h-5 w-5 text-white mr-2"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8v8H4z"
+                                    ></path>
+                                  </svg>
+                                </div>
+                              ) : (
+                                "Hapus"
+                              )}
+                            </button>
                           </div>
                         </td>
                       </tr>
-                    ) : null
-                  )}
-
+                    ))}
+                  {/* Baris Total */}
                   <tr className="bg-gray-200 text-base text-black text-center font-bold">
                     <td className="px-6 py-4 text-left" colSpan="4">
                       TOTAL
@@ -752,10 +1833,22 @@ Data berhasil dikirim!            </strong>
                     <td className="px-6 py-4 text-sm">
                       {formatCurrency(
                         transactions.reduce((total, transaction) => {
-                          const debet = Math.floor(
-                            parseFloat(transaction.debet.replace(",")) || 0
-                          );
-                          return debet;
+                          const isSaldoAwal =
+                            transaction.uraian === "Saldo Awal";
+                          const isMaret2021 =
+                            Number(newSelectedYear) === 2021 &&
+                            Number(selectedBulan) === 3;
+
+                          // Hanya jumlahkan "Saldo Awal" jika Maret 2021, transaksi lain tetap dihitung normal
+                          const debet =
+                            isSaldoAwal && !isMaret2021
+                              ? 0
+                              : Math.floor(
+                                  parseFloat(transaction.debet.replace(",")) ||
+                                    0
+                                );
+
+                          return total + debet;
                         }, 0)
                       )}
                     </td>
@@ -763,27 +1856,35 @@ Data berhasil dikirim!            </strong>
                       {formatCurrency(
                         transactions.reduce((total, transaction) => {
                           const kredit = Math.floor(
-                            parseFloat(transaction.kredit.replace(",")) || 0
+                            parseFloat(transaction.kredit.replace(",", "")) || 0
                           );
-                          return kredit;
+                          return total + kredit; // menambahkan kredit ke total
                         }, 0)
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      {formatCurrency(
-                        transactions.reduce((total, transaction) => {
-                          const saldo = Math.floor(
-                            parseFloat(transaction.saldo.replace(",")) || 0
-                          );
-                          return saldo;
-                        }, 0)
-                      )}
+                      {totalSaldo.toLocaleString("id-ID", {
+                        minimumFractionDigits: 0,
+                      })}
                     </td>
-
                     <td className="px-6 py-4 text-sm"></td>
                   </tr>
                 </tbody>
               </table>
+              <style jsx>{`
+                @media print {
+                  th:nth-child(8),
+                  td:nth-child(8) {
+                    display: none;
+                  }
+
+                  body {
+                    margin: 0;
+                    padding: 0;
+                    background: white;
+                  }
+                }
+              `}</style>
             </div>
           </div>
         </div>

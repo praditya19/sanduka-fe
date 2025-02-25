@@ -106,13 +106,86 @@ function Pemasukan() {
   }, []);
 
   const printTable = () => {
-    const tableHTML = tableRef.current.outerHTML;
-    const printWindow = window.open("", "_blank");
+    // Menyiapkan nama bulan dan tahun untuk judul cetakan
+    const bulanNama = bulanList.find((bulan) => bulan.id === selectedBulan)?.namaBulan || '';
+    const tahunNama = newSelectedYear || '';
+  
+    // Membangun HTML tabel tanpa kolom Action
+    const tableHTMLWithoutActions = `
+      <table class="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
+        <thead class="text-sm text-black uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
+          <tr class="bg-gray-200 text-black text-center">
+            <th class="px-6 py-3 text-sm">No</th>
+            <th class="px-6 py-3 text-sm">Tgl Transaksi</th>
+            <th class="px-6 py-3 text-sm">No. Bukti</th>
+            <th class="px-6 py-3 text-sm">Uraian</th>
+            <th class="px-6 py-3 text-sm">Debet</th>
+            <th class="px-6 py-3 text-sm">Kredit</th>
+            <th class="px-6 py-3 text-sm">Saldo</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sortedTransactions
+            .filter((transaction) => transaction.tglTransaksi)
+            .map((transaction, index) => `
+              <tr class="border-b text-black text-center ${transaction.checked ? 'bg-gray-100' : 'hover:bg-gray-50'}">
+                <td class="px-6 py-4 text-sm">${index + 1}</td>
+                <td class="px-6 py-4 text-sm">${transaction.tglTransaksi}</td>
+                <td class="px-6 py-4 text-sm">${transaction.noBukti}</td>
+                <td class="px-6 py-4 text-sm">${transaction.uraian}</td>
+                <td class="px-6 py-4 text-sm">
+                  ${formatCurrency(
+                    transaction.uraian === "Saldo Awal"
+                      ? Number(newSelectedYear) === 2021 && Number(selectedBulan) === 3
+                        ? parseFloat(transaction.debet.replace(",", "")) || 0
+                        : 0
+                      : parseFloat(transaction.debet.replace(",", "")) || 0
+                  )}
+                </td>
+                <td class="px-6 py-4 text-sm">
+                  ${formatCurrency(parseFloat(transaction.kredit.replace(",", "")) || 0)}
+                </td>
+                <td class="px-6 py-4 text-sm">
+                  ${saldoMap[index] ? saldoMap[index].toLocaleString("id-ID", { minimumFractionDigits: 0 }) : 0}
+                </td>
+              </tr>
+            `).join('')}
+          <tr class="bg-gray-200 text-base text-black text-center font-bold">
+            <td class="px-6 py-4 text-left" colSpan="4">TOTAL</td>
+            <td class="px-6 py-4 text-sm">
+              ${formatCurrency(
+                transactions.reduce((total, transaction) => {
+                  const isSaldoAwal = transaction.uraian === "Saldo Awal";
+                  const isMaret2021 = Number(newSelectedYear) === 2021 && Number(selectedBulan) === 3;
+                  const debet = isSaldoAwal && !isMaret2021 ? 0 : Math.floor(parseFloat(transaction.debet.replace(",")) || 0);
+                  return total + debet;
+                }, 0)
+              )}
+            </td>
+            <td class="px-6 py-4 text-sm">
+              ${formatCurrency(
+                transactions.reduce((total, transaction) => {
+                  const kredit = Math.floor(parseFloat(transaction.kredit.replace(",", "")) || 0);
+                  return total + kredit;
+                }, 0)
+              )}
+            </td>
+            <td class="px-6 py-4 text-sm">
+              ${totalSaldo.toLocaleString("id-ID", { minimumFractionDigits: 0 })}
+            </td>
+            <td class="px-6 py-4 text-sm"></td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+  
+    // Membuka jendela baru untuk mencetak
+    const printWindow = window.open('', '_blank');
     printWindow.document.open();
     printWindow.document.write(`
       <html>
         <head>
-          <title>Table Data Pemasukan</title>
+          <title>Table Data Pemasukan Bulan ${bulanNama} Tahun ${tahunNama}</title>
           <style>
             /* Gaya CSS untuk cetakan */
             @media print {
@@ -122,30 +195,33 @@ function Pemasukan() {
                 background: white;
                 color: black;
               }
-              th:nth-child(8), td:nth-child(8) {
-                display: none;
-              }
               table {
                 width: 100%;
                 border-collapse: collapse;
+                margin-top: 20px;
               }
               th, td {
                 border: 1px solid black;
                 padding: 8px;
                 text-align: center;
               }
+              .header-info {
+                margin-bottom: 20px;
+                font-size: 16px;
+                font-weight: bold;
+              }
             }
           </style>
         </head>
         <body>
-          ${tableHTML} <!-- Masukkan tabel ke dalam dokumen baru -->
+          ${tableHTMLWithoutActions} <!-- Insert table without Action column into the print page -->
         </body>
       </html>
     `);
     printWindow.document.close();
     printWindow.print();
     printWindow.close();
-  };
+  };     
 
   const handleClickOutside = (event) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -298,7 +374,6 @@ function Pemasukan() {
 
       const responseSaldo = await GlobalApi.createSaldoAwal(saldoAwalRequest);
 
-      // Refresh halaman setelah sukses
       window.location.reload();
     } catch (error) {
       console.error("Error saat membuat Saldo Awal:", error);
@@ -948,6 +1023,8 @@ function Pemasukan() {
           "Transaksi 'Saldo Awal' terdeteksi, memperbarui seluruh ID..."
         );
         await handleSubmitEditAll();
+      } else {
+        window.location.reload();
       }
     } catch (error) {
       toast.error(
@@ -1087,6 +1164,7 @@ function Pemasukan() {
       toast.success(
         "Semua saldo awal berhasil dihitung! (Tidak dikirim ke database)"
       );
+        window.location.reload();
     } catch (error) {
       toast.error("Gagal menghitung dan memperbarui saldo awal. Coba lagi!");
       console.error(
@@ -1662,7 +1740,7 @@ function Pemasukan() {
                                 ? parseFloat(
                                     transaction.debet.replace(",", "")
                                   ) || 0
-                                : 0 // Default 0 jika bukan Maret 2021
+                                : 0
                               : parseFloat(
                                   transaction.debet.replace(",", "")
                                 ) || 0
