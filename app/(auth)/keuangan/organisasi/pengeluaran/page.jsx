@@ -10,6 +10,9 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
+import { toPng } from "html-to-image";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 function Pengeluaran() {
   const tableRef = useRef();
@@ -28,14 +31,17 @@ function Pengeluaran() {
     { id: "11", angkaBulan: 10, namaBulan: "November" },
     { id: "12", angkaBulan: 11, namaBulan: "Desember" },
   ];
-  const [cabangList, setCabangList] = useState([]);
-  const currentYear = new Date().getFullYear();
   const startYear = 2020;
+  const currentYear = new Date().getFullYear();
   const [newSelectedYear, setNewSelectedYear] = useState(currentYear);
   const [selectedBulan, setSelectedBulan] = useState("");
+  const [selectedBulanName, setSelectedBulanName] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [formValues, setFormValues] = useState({
-    // noBukti: "",
+    noBukti: "",
     tanggalTransaksi: "",
+    posTransaksi: "",
     posPenerimaan: "",
     jenisPenerimaan: "",
     cabang: "",
@@ -44,76 +50,72 @@ function Pengeluaran() {
     bulanSantunan: "",
     yangMeninggal: "",
     namaPenerima: "",
+    jenisPembayaran: "Sanduka",
     keterangan: "",
+    terbilang: "",
+    tahun: "",
+    checked: false,
+    bulan: "",
   });
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [filteredNames, setFilteredNames] = useState([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const dropdownRef = useRef(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
-  const paginatedTransactions = transactions.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
+  const [isPopupVisible, setPopupVisible] = useState(false);
+  const [kwitansiData, setKwitansiData] = useState(null);
+  const [tanggal, setTanggal] = useState("");
+  const [bulan, setBulan] = useState("");
+  const [tahun, setTahun] = useState("");
+  const [allNames, setAllNames] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormValues((prevValues) => ({
-      ...prevValues,
-      [name]: value,
-    }));
-  };
+  const [isIframeVisible, setIsIframeVisible] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingId, setLoadingId] = useState(null);
+  const [checkedIds, setCheckedIds] = useState([]);
 
   const getBulanAngka = (bulanNama) => {
     const bulanObj = bulanList.find((bulan) => bulan.namaBulan === bulanNama);
     return bulanObj ? bulanObj.angkaBulan : null;
   };
+
   useEffect(() => {
-    const tanggalStr = formValues.tanggalTransaksi;
+    const tanggalStr = formValues.tanggalTransaksi || "";
 
-    if (!tanggalStr) {
-      return;
+    if (tanggalStr) {
+      const [tanggalPart, bulanPart, tahunPart] = tanggalStr.split("");
+
+      const bulanAngka = getBulanAngka(bulanPart);
+
+      setTanggal(parseInt(tanggalPart, 10));
+      setBulan(bulanAngka);
+      setTahun(parseInt(tahunPart, 10));
+    } else {
+      setTanggal(null);
+      setBulan(null);
+      setTahun(null);
     }
-
-    const [dayPart, monthPart, yearPart] = tanggalStr.split(" ");
-
-    const bulanId = getBulanAngka(monthPart);
-
-    if (!bulanId) {
-      console.error("Bulan tidak valid:", monthPart);
-      return;
-    }
-
-    const formattedDate = `${yearPart}-${bulanId}-${dayPart.padStart(2, "0")}`;
-
-    setFormValues((prevValues) => ({
-      ...prevValues,
-      tanggalTransaksi: formattedDate,
-    }));
   }, [formValues.tanggalTransaksi]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const dataToSend = {
-        // noBukti: formValues.noBukti,
-        tanggalTransaksi: formValues.tanggalTransaksi,
-        posTransaksi: formValues.posPenerimaan,
-        masukKe: formValues.jenisPenerimaan,
-        cabang: formValues.cabang,
-        bulan: formValues.setoranBulan,
-        debet: "",
-        kredit: formValues.nominal,
-        bulanSantunan: formValues.setoranBulan,
-        keterangan: formValues.keterangan,
-        jenisPembayaran: "Organisasi",
-        namaPenerima: "",
-        yangMeninggal: "",
-      };
 
+    const dataToSend = {
+      noBukti: formValues.noBukti,
+      tanggalTransaksi: formValues.tanggalTransaksi,
+      posTransaksi: formValues.posTransaksi,
+      masukKe: formValues.jenisPenerimaan,
+      cabang: formValues.cabang,
+      bulan: formValues.setoranBulan,
+      debet: "",
+      kredit: formValues.nominal,
+      bulanSantunan: formValues.bulanSantunan,
+      yangMeninggal: formValues.yangMeninggal,
+      namaPenerima: formValues.namaPenerima,
+      keterangan: formValues.keterangan,
+      jenisPembayaran: "Sanduka",
+    };
+    try {
       const response = await GlobalApi.createPembayaranSanduka(dataToSend);
       toast.success(
         <div
@@ -138,21 +140,25 @@ function Pengeluaran() {
           >
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
           </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+          <h3
+            style={{
+              fontSize: "2rem",
+              display: "block",
+              marginBottom: "28px",
+            }}
           >
-Data berhasil dikirim!            </strong>
+            Data berhasil dikirim!{" "}
+          </h3>
         </div>,
         {
           icon: null,
-          autoClose: 4000,
-          duration: 4000,
+          duration: 2000,
           style: {
-            marginTop: "16%",
+            marginTop: "12%",
             fontSize: "1.75rem",
             padding: "10px",
             width: "80%",
-            maxWidth: "700px",
+            maxWidth: "450px",
             height: "50%",
             maxHeight: "400px",
             transform: "translate(-50%, -50%)",
@@ -164,8 +170,65 @@ Data berhasil dikirim!            </strong>
           },
         }
       );
+      setTimeout(() => {
+        window.location.reload();
+      }, 200);
     } catch (error) {
-      toast.error(`Gagal menyimpan data: ${error.message}`);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
+          </svg>
+          <h3
+            style={{
+              color: "black",
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal Menyimpan Data.
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
     }
   };
 
@@ -187,83 +250,68 @@ Data berhasil dikirim!            </strong>
     fetchData();
   }, [selectedBulan, newSelectedYear]);
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentTransactions = transactions.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
-  const totalPages = Math.ceil(transactions.length / itemsPerPage);
+  const sortedTransactions = (() => {
+    if (!transactions) return [];
 
-  const getVisiblePages = () => {
-    const pageRange = 2;
-    let start = Math.max(1, currentPage - pageRange);
-    let end = Math.min(totalPages, currentPage + pageRange);
+    const saldoAwal = transactions.find((t) => t.uraian === "Saldo Awal");
+    const otherTransactions = transactions.filter(
+      (t) => t.uraian !== "Saldo Awal"
+    );
 
-    const pages = [];
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  };
+    return saldoAwal ? [saldoAwal, ...otherTransactions] : otherTransactions;
+  })();
 
   useEffect(() => {
     const today = new Date();
 
-    const year = today.getFullYear();
-    const month = (today.getMonth() + 1).toString().padStart(2, "0");
-    const day = today.getDate().toString().padStart(2, "0");
+    const options = { day: "numeric", month: "long", year: "numeric" };
+    const formattedDate = today.toLocaleDateString("id-ID", options);
 
-    const formattedDate = `${year}-${month}-${day}`;
     setFormValues((prevValues) => ({
       ...prevValues,
       tanggalTransaksi: formattedDate,
     }));
   }, []);
 
-  const handleBulanChange = (bulanAngka) => {
-    setSelectedBulan(parseInt(bulanAngka));
+  const handleBulanChange = (e) => {
+    const selectedId = e.target.value;
+    setSelectedBulan(selectedId);
+
+    const bulan = bulanList.find((b) => b.id === parseInt(selectedId));
+    setSelectedBulanName(bulan ? bulan.namaBulan : "");
   };
+
+  useEffect(() => {
+    const currentMonth = new Date().getMonth();
+
+    const currentBulan = bulanList.find(
+      (bulan) => bulan.angkaBulan === currentMonth
+    );
+
+    if (currentBulan) {
+      setSelectedBulan(currentBulan.id);
+    }
+  }, []);
 
   const years = Array.from(
     { length: currentYear - startYear + 1 },
     (_, index) => startYear + index
   );
 
-  useEffect(() => {
-    const fetchCabangData = async () => {
-      try {
-        const response = await GlobalApi.getCabang();
-        setCabangList(response.data);
-      } catch (error) {}
-    };
+  const handleSearch = (e) => {
+    const searchTerm = e.target.value.toLowerCase();
 
-    fetchCabangData();
-  }, []);
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      yangMeninggal: e.target.value,
+    }));
 
-  const handleSearch = async (e) => {
-    const value = e.target.value;
-    setFormValues((prevValues) => ({ ...prevValues, yangMeninggal: value }));
+    const filtered = allNames.filter((name) =>
+      name.namaLengkap.toLowerCase().includes(searchTerm)
+    );
 
-    if (value === "") {
-      setFilteredNames([]);
-      setIsDropdownVisible(false);
-      return;
-    }
-
-    try {
-      const response = await GlobalApi.searchUsers(value);
-      const allNames = response.data;
-
-      const filtered = allNames.filter((data) =>
-        data.namaLengkap.toLowerCase().includes(value.toLowerCase())
-      );
-
-      setFilteredNames(filtered);
-      setIsDropdownVisible(true);
-    } catch (error) {
-      console.error("Error fetching names:", error);
-    }
+    setFilteredNames(filtered);
+    setIsDropdownVisible(true);
   };
 
   const printTable = () => {
@@ -292,53 +340,310 @@ Data berhasil dikirim!            </strong>
     };
   }, []);
 
-  const handleSelectName = (selectedName) => {
-    setFormValues((prevFormValues) => ({
-      ...prevFormValues,
-      yangMeninggal: selectedName,
-    }));
-    setFilteredNames([]);
+  const handleResetForm = () => {
+    setFormValues({
+      tanggalTransaksi: "",
+      posPenerimaan: "",
+      tahun: "",
+      bulan: "",
+      yangMeninggal: "",
+      namaPenerima: "",
+      nominal: "",
+      terbilang: "",
+      keterangan: "",
+    });
   };
 
   const handleReset = () => {
     setFormValues({
-      noBukti: "",
+      tanggalTransaksi: "",
       posPenerimaan: "",
-      jenisPenerimaan: "",
-      cabang: "",
-      setoranBulan: "",
+      tahun: "",
+      bulan: "",
+      yangMeninggal: "",
+      namaPenerima: "",
       nominal: "",
+      terbilang: "",
       keterangan: "",
     });
   };
 
   const handleCheck = (id) => {
-    setTransactions((prevTransactions) =>
-      prevTransactions.map((transaction) =>
-        transaction.id === id
-          ? { ...transaction, checked: !transaction.checked }
-          : transaction
-      )
-    );
+    setCheckedIds((prevCheckedIds) => {
+      if (prevCheckedIds.includes(id)) {
+        return prevCheckedIds.filter((checkedId) => checkedId !== id);
+      } else {
+        return [...prevCheckedIds, id];
+      }
+    });
   };
 
-  const handleSelectAll = (e) => {
-    const isChecked = e.target.checked;
-    setSelectAll(isChecked);
+  const handleSelectAll = () => {
+    const newSelectAll = !selectAll;
+    setSelectAll(newSelectAll);
+
+    const updatedCheckedIds = newSelectAll
+      ? transactions
+          .filter((transaction) => transaction.uraian !== "Saldo Awal")
+          .map((transaction) => transaction.id)
+      : [];
+
+    setCheckedIds(updatedCheckedIds);
+
     setTransactions((prevTransactions) =>
       prevTransactions.map((transaction) => ({
         ...transaction,
-        checked: isChecked,
+        checked: newSelectAll && transaction.uraian !== "Saldo Awal",
       }))
     );
   };
 
-  const parseNumber = (value) => {
-    if (value === "" || isNaN(parseFloat(value))) {
-      return "-";
+  const handleDeleteClick = async () => {
+    setIsLoading(true);
+
+    try {
+      for (const id of checkedIds) {
+        const response = await GlobalApi.hapusPemasukanUangMasuk(id);
+
+        if (response) {
+          setTransactions((prevTransactions) =>
+            prevTransactions.filter(
+              (transaction) => !checkedIds.includes(transaction.id)
+            )
+          );
+          setPaginatedTransactions((prevPaginatedTransactions) =>
+            prevPaginatedTransactions.filter(
+              (transaction) => !checkedIds.includes(transaction.id)
+            )
+          );
+
+          toast.success("Data berhasil dihapus!");
+        }
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      window.location.reload();
+    } catch (error) {
+      console.error("Gagal menghapus data dengan ID:", checkedIds, error);
+      toast.error("Terjadi kesalahan saat menghapus data.");
+    } finally {
+      setIsLoading(false);
     }
-    const number = parseFloat(value.replace(/[^0-9.-]/g, ""));
-    return isNaN(number) ? "-" : number;
+  };
+
+  const handleDeleteClickId = async (id) => {
+    setLoadingId(id);
+
+    try {
+      const response = await GlobalApi.hapusPemasukanUangMasuk(id);
+
+      if (response) {
+        setTransactions((prevTransactions) =>
+          prevTransactions.filter((transaction) => transaction.id !== id)
+        );
+        setPaginatedTransactions((prevPaginatedTransactions) =>
+          prevPaginatedTransactions.filter(
+            (transaction) => transaction.id !== id
+          )
+        );
+
+        toast.success("Data berhasil dihapus!");
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      window.location.reload();
+    } catch (error) {
+      console.error("Gagal menghapus data dengan ID:", id, error);
+      toast.error("Terjadi kesalahan saat menghapus data.");
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  const handleGetEdit = async (id) => {
+    console.log("ID yang diklik:", id);
+    try {
+      const data = await GlobalApi.getPemasukanUangMasukById(id);
+
+      const tanggalTransaksi = data.tanggalTransaksi
+        ? data.tanggalTransaksi.split(", ")[1] || data.tanggalTransaksi
+        : "";
+
+      const updatedFormValues = {
+        noBukti: data.noBukti || "",
+        tanggalTransaksi: tanggalTransaksi || "",
+        posTransaksi: data.posTransaksi || "",
+        jenisPenerimaan: data.masukKe || "",
+        cabang: data.cabang || "",
+        setoranBulan: data.bulan || "",
+        totalAnggota: data.totalAnggota || "",
+        nominal:
+          data.debet?.trim() !== ""
+            ? parseFloat(data.debet)
+            : parseFloat(data.kredit) || 0,
+        totalSumbangan: data.totalSumbangan || "",
+        totalAnggotaByAdmin: data.totalAnggotaByAdmin || "",
+        keterangan: data.keterangan || "",
+      };
+
+      setFormValues(updatedFormValues);
+
+      setEditId(id);
+
+      setIsEditing(true);
+    } catch (error) {
+      console.error("Gagal mengambil data berdasarkan id:", error);
+    }
+  };
+
+  const handleSubmitEdit = async () => {
+    if (!editId) {
+      console.error("ID belum ada, tidak bisa mengedit");
+      return;
+    }
+
+    console.log("ID yang akan dikirim untuk edit:", editId);
+
+    try {
+      const data = await GlobalApi.getPemasukanUangMasukById(editId);
+
+      const updatedFormValues = {
+        noBukti: data.noBukti || "",
+        tanggalTransaksi: formValues.tanggalTransaksi || "",
+        posTransaksi: formValues.posTransaksi || "",
+        masukKe: formValues.jenisPenerimaan || "",
+        cabang: formValues.cabang || "",
+        bulan: formValues.setoranBulan || "",
+        debet: "",
+        kredit: formValues.nominal || "",
+        bulanSantunan: "",
+        yangMeninggal: "",
+        namaPenerima: "",
+        keterangan: formValues.keterangan || "",
+        jenisPembayaran: "Sanduka",
+      };
+
+      console.log("Form Values yang akan dikirim:", updatedFormValues);
+
+      setFormValues(updatedFormValues);
+
+      const response = await GlobalApi.editPemasukanUangMasuk(
+        editId,
+        updatedFormValues
+      );
+      toast.success(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "#06D001",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+          </svg>
+          <h3
+            style={{
+              fontSize: "2rem",
+              display: "block",
+              marginBottom: "28px",
+            }}
+          >
+            Data berhasil diupdate!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      console.error("Gagal mengedit data:", error);
+      toast.error(
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              width: "150px",
+              height: "150px",
+              color: "red",
+              marginBottom: "16px",
+            }}
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
+            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
+          </svg>
+          <h3
+            style={{
+              color: "black",
+              fontSize: "1.75rem",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            Gagal mengupdate data. Coba lagi!
+          </h3>
+        </div>,
+        {
+          icon: null,
+          duration: 2000,
+          style: {
+            marginTop: "12%",
+            fontSize: "1.75rem",
+            padding: "10px",
+            width: "80%",
+            maxWidth: "450px",
+            height: "50%",
+            maxHeight: "400px",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 9999,
+            backgroundColor: "#fff",
+            borderRadius: "8px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }
+      );
+    }
   };
 
   const formatCurrency = (value) => {
@@ -350,32 +655,318 @@ Data berhasil dikirim!            </strong>
     }).format(value);
   };
 
-  const totalBalance = transactions.reduce(
-    (acc, transaction) =>
-      acc +
-      (parseNumber(transaction.balance) === "-"
-        ? 0
-        : parseNumber(transaction.balance)),
-    0
-  );
+  const handleSelectName = async (name) => {
+    try {
+      setFormValues((prevValues) => ({
+        ...prevValues,
+        yangMeninggal: name.namaLengkap,
+      }));
 
-  const totalDebit = transactions.reduce(
-    (acc, transaction) =>
-      acc +
-      (parseNumber(transaction.debit) === "-"
-        ? 0
-        : parseNumber(transaction.debit)),
-    0
-  );
+      const userDataByName = await GlobalApi.searchUsersByName(
+        name.namaLengkap
+      );
 
-  const totalCredit = transactions.reduce(
-    (acc, transaction) =>
-      acc +
-      (parseNumber(transaction.credit) === "-"
-        ? 0
-        : parseNumber(transaction.credit)),
-    0
-  );
+      setIsDropdownVisible(false);
+    } catch (error) {
+      console.error("Error fetching user data by name:", error.message);
+    }
+  };
+
+  const handleChange = async (e) => {
+    const { name, value } = e.target;
+
+    setFormValues((prevValues) => {
+      const updatedValues = { ...prevValues };
+
+      if (name === "nominal") {
+        const numericValue = Number(value.replace(/\D/g, ""));
+
+        if (!isNaN(numericValue)) {
+          updatedValues.nominal = numericValue;
+          updatedValues.terbilang = convertToTerbilangWithRupiah(numericValue);
+        } else {
+          updatedValues.nominal = "";
+          updatedValues.terbilang = "";
+        }
+      } else {
+        updatedValues[name] = value;
+      }
+
+      return updatedValues;
+    });
+
+    if (name === "tahun" || name === "bulan") {
+      const year = name === "tahun" ? value : formValues.tahun;
+      const month = name === "bulan" ? value : formValues.bulan;
+
+      if (year && month) {
+        try {
+          const data = await GlobalApi.getNamaKwitansi(year, month);
+          setAllNames(data);
+          setFilteredNames(data);
+          setIsDropdownVisible(true);
+        } catch (error) {
+          console.error("Error fetching deceased users:", error);
+        }
+      }
+    }
+  };
+  const capitalizeFirstLetter = (text) => {
+    if (typeof text !== "string" || !text) return "";
+    return text
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+  const convertToTerbilang = (number) => {
+    const satuan = [
+      "",
+      "satu",
+      "dua",
+      "tiga",
+      "empat",
+      "lima",
+      "enam",
+      "tujuh",
+      "delapan",
+      "sembilan",
+    ];
+    const belasan = [
+      "sepuluh",
+      "sebelas",
+      "dua belas",
+      "tiga belas",
+      "empat belas",
+      "lima belas",
+      "enam belas",
+      "tujuh belas",
+      "delapan belas",
+      "sembilan belas",
+    ];
+
+    const ribuan = "ribu";
+    const jutaan = "juta";
+    const miliaran = "miliar";
+    const rupiah = "rupiah";
+
+    if (number < 10) return satuan[number];
+    if (number < 20) return belasan[number - 10];
+    if (number < 100)
+      return `${satuan[Math.floor(number / 10)]} puluh ${
+        satuan[number % 10]
+      }`.trim();
+
+    if (number < 1000)
+      return `${satuan[Math.floor(number / 100)]} ratus ${convertToTerbilang(
+        number % 100
+      )}`.trim();
+
+    if (number < 1000000)
+      return `${convertToTerbilang(
+        Math.floor(number / 1000)
+      )} ${ribuan} ${convertToTerbilang(number % 1000)}`.trim();
+
+    if (number < 1000000000)
+      return `${convertToTerbilang(
+        Math.floor(number / 1000000)
+      )} ${jutaan} ${convertToTerbilang(number % 1000000)}`.trim();
+
+    if (number < 1000000000000)
+      return `${convertToTerbilang(
+        Math.floor(number / 1000000000)
+      )} ${miliaran} ${convertToTerbilang(number % 1000000000)}`.trim();
+
+    return "Jumlah terlalu besar";
+  };
+  const convertToTerbilangWithRupiah = (number) => {
+    if (isNaN(number) || number <= 0) return "";
+    const terbilang = convertToTerbilang(number);
+    return `${capitalizeFirstLetter(terbilang)} Rupiah`.trim();
+  };
+
+  const handleKwitansiClick = async () => {
+    const generateKwitansi = async () => {
+      try {
+        const selectedName = formValues.yangMeninggal;
+
+        if (!selectedName) {
+          console.error("Nama yang meninggal belum diisi.");
+          return;
+        }
+
+        const userDataList = await GlobalApi.searchUsersByName(selectedName);
+
+        if (!userDataList.data || !userDataList.data.users.length) {
+          console.error("Tidak ditemukan pengguna dengan nama:", selectedName);
+          return;
+        }
+
+        const userData = userDataList.data.users[0];
+
+        const formatDate = (dateArray, separator = "-") => {
+          if (!Array.isArray(dateArray) || dateArray.length !== 3) {
+            return "Tanggal tidak valid";
+          }
+          const [year, month, day] = dateArray;
+          return `${year}${separator}${String(month).padStart(
+            2,
+            "0"
+          )}${separator}${String(day).padStart(2, "0")}`;
+        };
+
+        const calculateAge = (tanggalLahir) => {
+          const today = new Date();
+          const birthDate = new Date(
+            tanggalLahir[0],
+            tanggalLahir[1] - 1,
+            tanggalLahir[2]
+          );
+
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          const dayDiff = today.getDate() - birthDate.getDate();
+
+          if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+            age--;
+          }
+
+          return age;
+        };
+
+        // const dataPelaporan = formatDate(userData.tanggalPelaporan);
+        const tanggalMeninggal = formatDate(userData.waktuMeninggalTerlapor);
+        const umur = calculateAge(userData.tanggalLahir);
+        const mulaiJadiAnggotaPgri = formatDate(userData.mulaiJadiAnggotaPgri);
+
+        const generateData = {
+          noBukti: formValues.noBukti,
+          dataPelaporan: formValues.tanggalTransaksi,
+          // dataPelaporan,
+          nama: userData.namaLengkap,
+          tanggalMeninggal,
+          umur,
+          dataDukung: userData.unitKerja,
+          alamat: userData.alamat,
+          nomorHp: userData.nomorHp,
+          sejakMenjadiAnggota: mulaiJadiAnggotaPgri,
+          jabatan: userData.jabatan,
+          terbilang: formValues.terbilang,
+          // nominal: formValues.nominal,
+          nominal: "2.500.000",
+          menyerahkan: sessionStorage.getItem("nama"),
+          penerima: formValues.namaPenerima,
+        };
+
+        const htmlContent = generateKwitansiHTML(generateData);
+
+        const blob = new Blob([htmlContent], { type: "text/html" });
+        const blobUrl = URL.createObjectURL(blob);
+
+        setKwitansiData(blobUrl);
+      } catch (error) {
+        console.error("Error:", error.message);
+      }
+    };
+
+    await generateKwitansi();
+  };
+
+  const handleKwitansiDownload = async (type) => {
+    try {
+      const iframe = document.querySelector("iframe");
+      if (!iframe) {
+        console.error("Iframe tidak ditemukan");
+        return;
+      }
+
+      const iframeDocument =
+        iframe.contentDocument || iframe.contentWindow.document;
+      const kwitansiElement = iframeDocument.body;
+
+      if (type === "pdf") {
+        const pdf = new jsPDF("p", "mm", "a4");
+        const width = pdf.internal.pageSize.getWidth();
+        const height = pdf.internal.pageSize.getHeight();
+
+        const imageData = await toPng(kwitansiElement);
+
+        pdf.addImage(imageData, "PNG", 0, 0, width, height);
+        pdf.save("kwitansi.pdf");
+      } else if (type === "image") {
+        const imageData = await toPng(kwitansiElement);
+
+        const link = document.createElement("a");
+        link.href = imageData;
+        link.download = "kwitansi.png";
+        link.click();
+      }
+    } catch (error) {
+      console.error("Error saat mengunduh kwitansi:", error);
+    }
+  };
+  const handleKwitansiDownloadPDF = async () => {
+    const iframe = document.querySelector("iframe");
+    if (!iframe) {
+      console.error("Iframe tidak ditemukan");
+      return;
+    }
+
+    const iframeDocument =
+      iframe.contentDocument || iframe.contentWindow.document;
+    const kwitansiElement = iframeDocument.body;
+
+    try {
+      const canvas = await html2canvas(kwitansiElement, {
+        scale: 2,
+        useCORS: true,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+
+      const pdf = new jsPDF("l", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save("kwitansi_landscape.pdf");
+    } catch (error) {
+      console.error("Error saat mengonversi ke PDF:", error);
+    }
+  };
+  const handleKwitansiDownloadPNG = async () => {
+    const iframe = document.querySelector("iframe");
+    if (!iframe) {
+      console.error("Iframe tidak ditemukan");
+      return;
+    }
+
+    const iframeDocument =
+      iframe.contentDocument || iframe.contentWindow.document;
+    const kwitansiElement = iframeDocument.body;
+
+    try {
+      const canvas = await html2canvas(kwitansiElement, {
+        scale: 2,
+        useCORS: true,
+        scrollX: 0,
+        scrollY: 0,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+
+      const link = document.createElement("a");
+      link.href = imgData;
+      link.download = "kwitansi.png";
+      link.click();
+    } catch (error) {
+      console.error("Error saat mengunduh gambar:", error);
+    }
+  };
+
+  const handleCloseIframe = () => {
+    setIsIframeVisible(false);
+    handleResetForm();
+  };
 
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -409,12 +1000,169 @@ Data berhasil dikirim!            </strong>
     };
   }, []);
 
+  const generateKwitansiHTML = (data) => {
+    const template = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kwitansi</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #fff;
+    }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+    }
+    .left-header p, .right-header img {
+        margin: 0;
+    }
+    .title {
+        font-size: 20px;
+        font-weight: bold;
+        text-align: center;
+    }
+    .info, .footer {
+        width: 100%;
+        margin-top: 20px;
+    }
+    .info td{
+        padding: 10px;
+        vertical-align: top;
+        border: 1px solid #ccc;
+    }
+    .nominal {
+        font-weight: bold;
+        background-color: #000;
+        color: white;
+        text-align: center;
+    }
+    .terbilang {
+        font-weight: bold;
+        color: black;
+        text-align: center;
+    }
+    .signature {
+        margin-top: 40px;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+    .signature div {
+        text-align: center;
+        width: 30%;
+    }
+    .footer {
+        font-size: 12px;
+        text-align: center;
+    }
+
+    .data-meninggal {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .data-item {
+        width: 22%;
+    }
+
+    .data-item p {
+  margin: 4px 0; /* Mengurangi jarak antar paragraf */
+  line-height: 1.4; /* Menyesuaikan jarak antar teks */
+}
+  
+    @media (max-width: 600px) {
+      .data-meninggal {
+        flex-direction: column;
+      }
+      .data-item {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="left-header">
+    <p>Nomor Transaksi: ${data.noBukti}</p>
+    <p>Tanggal Transaksi: ${data.dataPelaporan}</p>
+  </div>
+  <div class="title">TANDA TERIMA</div>
+  <div class="right-header">
+    <img src="https://sanduka-fe.vercel.app/_next/image?url=%2Fsanduka.png&amp;w=256&amp;q=75" alt="SANDUKA Logo" style="height: 50px;" />
+  </div>
+</div>
+
+<div class="data-meninggal">
+  <div class="data-item">
+    <p>Data Meninggal</p>
+    <p><strong>${data.nama}</strong></p>
+            <p>${data.umur} Tahun</p>
+            <p>${data.alamat}</p>
+            <p>${data.nomorHp}</p>
+  </div>
+  <div class="data-item">
+    <p>Data Dukung</p>
+     <p><strong>${data.dataDukung}</strong></p>
+            <p>${data.jabatan}</p>
+            <p>Sejak Menjadi Anggota</p>
+            <p>${data.sejakMenjadiAnggota}</p>
+  </div>
+  <div class="data-item">
+    <p>Data Pelaporan</p>
+    <p><strong>${data.dataPelaporan}</strong></p>
+            <p><strong>Tanggal Meninggal:</strong> ${data.tanggalMeninggal}</p>
+  </div>
+</div>
+
+<table class="info">
+  <tr>
+    <td class="nominal">Terbilang</td>
+    <td class="nominal">Nominal</td>
+  </tr>
+  <tr>
+    <td class="terbilang"><strong>${data.terbilang}</strong></td>
+            <td class="terbilang"><strong>Rp ${data.nominal}</strong></td>
+  </tr>
+</table>
+
+<div class="signature">
+  <div>
+    <p>Yang Menyerahkan,</p>
+
+  </div>
+  <div>
+  ................., ..................
+    <p>Penerima,</p>
+  
+  </div>
+</div>
+
+<footer>
+  <table class="footer">
+    <tr>
+      <td>Sekretariat PGRI: <br /> Jalan Bata Putih VI, Kelurahan Demaan, Kecamatan Jepara, Kabupaten Jepara, Jawa Tengah, Telp/Fax : 0291 592479, email : pgrijepara@gmail.com</td>
+    </tr>
+  </table>
+</footer>
+</body>
+</html>
+
+    `;
+    return template;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -422,14 +1170,13 @@ Data berhasil dikirim!            </strong>
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Pengeluaran Organisasi</h1>
+              <h1 className="text-base">Pengeluaran Sanduka</h1>
             </div>
           </div>
         </header>
       ) : (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
-            {/* Back Button and Title */}
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faArrowLeft}
@@ -437,7 +1184,7 @@ Data berhasil dikirim!            </strong>
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Pengeluaran Organisasi</h1>
+              <h1 className="text-base">Pengeluaran Sanduka</h1>
             </div>
           </div>
         </header>
@@ -470,10 +1217,10 @@ Data berhasil dikirim!            </strong>
               },
             }}
           />
-          <div className="container mx-auto p-6 mt-8">
+          <div className="container mx-auto p-6">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
               <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
-                POS PENGELUARAN
+                PENGELUARAN SANDUKA
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {/* <div className="flex flex-col">
@@ -502,29 +1249,13 @@ Data berhasil dikirim!            </strong>
                   <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="tanggalTransaksi"
-                    type="text"
+                    type="date"
                     name="tanggalTransaksi"
-                    value={(() => {
-                      const dateStr = formValues.tanggalTransaksi;
-                      if (!dateStr) return "";
-
-                      const [yearPart, monthPart, dayPart] = dateStr.split("-");
-
-                      const bulanObj = bulanList.find(
-                        (bulan) => bulan.id === monthPart
-                      );
-                      const namaBulan = bulanObj
-                        ? bulanObj.namaBulan
-                        : "Invalid Month";
-
-                      return `${parseInt(
-                        dayPart,
-                        10
-                      )} ${namaBulan} ${yearPart}`;
-                    })()}
-                    readOnly
+                    value={formValues.tanggalTransaksi || ""}
+                    onChange={handleChange}
                   />
                 </div>
+
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
@@ -553,59 +1284,146 @@ Data berhasil dikirim!            </strong>
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
-                    htmlFor="jenisPenerimaan"
+                    htmlFor="posTransaksi"
                   >
-                    Jenis Penerimaan
+                    Pos Pengeluaran
                   </Label>
                   <select
                     className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="jenisPenerimaan"
-                    name="jenisPenerimaan"
-                    value={formValues.jenisPenerimaan}
+                    id="posTransaksi"
+                    name="posTransaksi"
+                    value={formValues.posTransaksi}
                     onChange={handleChange}
                   >
-                    <option value="">Pilih Jenis Penerimaan</option>
-                    <option value="Bank">Bank</option>
-                    <option value="Cash">Cash</option>
+                    <option value="">Pilih</option>
+                    <option value="Listrik">Listrik</option>
+                    <option value="telpondaninternet">
+                      Telepon dan Internet
+                    </option>
+                    <option value="PDAM">PDAM</option>
+                    <option value="ATK">ATK</option>
+                    <option value="lain-lain">Lain - lain</option>
                   </select>
                 </div>
+
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
                     htmlFor="cabang"
                   >
-                    Cabang
+                    Data Sanduka
                   </Label>
                   <select
-                    className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="cabang"
-                    name="cabang"
-                    value={formValues.cabang}
+                    className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-5"
+                    id="tahun"
+                    name="tahun"
+                    value={formValues.tahun}
                     onChange={handleChange}
                   >
-                    <option value="">Pilih Cabang</option>
-                    {cabangList.map((cabang) => (
-                      <option key={cabang.id} value={cabang.kecamatan}>
-                        {cabang.kecamatan}
+                    <option value="">Tahun Lapor</option>
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
                       </option>
                     ))}
                   </select>
-                </div>
-                <div className="flex flex-col">
-                  <Label
-                    className="block text-gray-700 text-sm font-semibold mb-2"
-                    htmlFor="setoranBulan"
-                  >
-                    Setoran Bulan
-                  </Label>
-                  <Input
-                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="setoranBulan"
-                    type="month"
-                    name="setoranBulan"
-                    value={formValues.setoranBulan}
+                  <select
+                    className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-5"
+                    id="bulan"
+                    name="bulan"
+                    value={formValues.bulan}
                     onChange={handleChange}
-                  />
+                  >
+                    <option>Bulan Lapor</option>
+                    {bulanList.map((bulan) => (
+                      <option key={bulan.angkaBulan} value={bulan.id}>
+                        {bulan.namaBulan}
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="relative" ref={dropdownRef}>
+                    <input
+                      type="text"
+                      className="mb-5 w-full shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      id="yangMeninggal"
+                      name="yangMeninggal"
+                      value={formValues.yangMeninggal}
+                      onChange={(e) => {
+                        handleSearch(e);
+                      }}
+                      onFocus={() => {
+                        if (filteredNames.length > 0) {
+                          setIsDropdownVisible(true);
+                        }
+                      }}
+                      placeholder="Cari nama yang meninggal"
+                    />
+
+                    {/* Dropdown */}
+                    {filteredNames.length > 0 && isDropdownVisible && (
+                      <ul className="absolute z-10 shadow-lg bg-white border border-gray-300 rounded-md w-full max-h-48 overflow-y-auto -mt-3">
+                        {filteredNames.map((name) => (
+                          <li
+                            key={name.id}
+                            className="px-4 py-2 hover:bg-blue-100 cursor-pointer"
+                            onClick={() => handleSelectName(name)}
+                          >
+                            {name.namaLengkap}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className="flex flex-col">
+                    <Label
+                      className="block text-gray-700 text-sm font-semibold mb-2"
+                      htmlFor="jenisPenerimaan"
+                    >
+                      Nama Penerima
+                    </Label>
+                    <Input
+                      className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      id="namaPenerima"
+                      type="text"
+                      name="namaPenerima"
+                      value={formValues.namaPenerima}
+                      onChange={handleChange}
+                    />
+                    {/* <Button className="mt-2" onClick={handleKwitansiClick}>
+                      Kwitansi
+                    </Button> */}
+                    {isPopupVisible && (
+                      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                        <div className="bg-white rounded-lg p-6 w-3/4 max-w-lg">
+                          <h2 className="text-xl font-bold mb-4">Kwitansi</h2>
+
+                          {kwitansiData ? (
+                            <div className="flex justify-center">
+                              <img
+                                src={kwitansiData}
+                                alt="Gambar Kwitansi"
+                                className="w-full max-h-96 object-contain"
+                              />
+                            </div>
+                          ) : (
+                            <p>Gambar kwitansi tidak tersedia.</p>
+                          )}
+
+                          <button
+                            className="mt-4 bg-teal-500 text-white py-2 px-4 rounded"
+                            onClick={() => {
+                              setPopupVisible(false);
+                              URL.revokeObjectURL(kwitansiData);
+                              setKwitansiData(null);
+                            }}
+                          >
+                            Tutup
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-col">
                   <Label
@@ -619,33 +1437,85 @@ Data berhasil dikirim!            </strong>
                     id="nominal"
                     type="number"
                     name="nominal"
-                    value={formValues.nominal}
+                    value={formValues.nominal || ""}
                     onChange={handleChange}
                   />
-                </div>
-                <div className="flex flex-col">
-                  <Label
-                    className="block text-gray-700 text-sm font-semibold mb-2"
-                    htmlFor="keterangan"
-                  >
-                    Keterangan
-                  </Label>
-                  <Textarea
-                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="keterangan"
-                    name="keterangan"
-                    value={formValues.keterangan}
-                    onChange={handleChange}
-                  />
+
+                  <div className="flex flex-col mt-5">
+                    <Label
+                      className="block text-gray-700 text-sm font-semibold mb-2"
+                      htmlFor="terbilang"
+                    >
+                      Terbilang
+                    </Label>
+                    <Textarea
+                      className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-24"
+                      id="terbilang"
+                      name="terbilang"
+                      value={formValues.terbilang}
+                      readOnly
+                    />
+                  </div>
+                  <div className="flex flex-col mt-5">
+                    <Label
+                      className="block text-gray-700 text-sm font-semibold mb-2"
+                      htmlFor="keterangan"
+                    >
+                      Keterangan
+                    </Label>
+                    <Textarea
+                      className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-24"
+                      id="keterangan"
+                      name="keterangan"
+                      value={formValues.keterangan}
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
               </div>
+              <div>
+                {isIframeVisible && kwitansiData && (
+                  <div className="relative mb-4 text-right">
+                    <iframe src={kwitansiData} className="w-full h-[600px]" />
+                    <button
+                      onClick={() => handleKwitansiDownloadPDF("pdf")}
+                      className="ml-4 text-blue-500 underline"
+                    >
+                      Unduh Kwitansi (PDF)
+                    </button>
+                    <button
+                      onClick={() => handleKwitansiDownloadPNG("image")}
+                      className="ml-4 text-blue-500 underline"
+                    >
+                      Unduh Kwitansi (PNG)
+                    </button>
+                    <button
+                      onClick={handleCloseIframe}
+                      className="ml-4 bg-red-500 text-white rounded-md py-2 px-3"
+                    >
+                      Tutup
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="flex items-center mt-6 justify-center">
-                <Button
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                  onClick={handleSubmit}
-                >
-                  Simpan
-                </Button>
+                <div className="flex space-x-4">
+                  {!isEditing ? (
+                    <Button
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                      onClick={handleSubmit}
+                    >
+                      Simpan
+                    </Button>
+                  ) : (
+                    <Button
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                      onClick={handleSubmitEdit}
+                    >
+                      Edit
+                    </Button>
+                  )}
+                </div>
                 <Button
                   className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-700 transition duration-150 ease-in-out ml-6"
                   type="button"
@@ -662,11 +1532,11 @@ Data berhasil dikirim!            </strong>
                   <select
                     className="shadow-lg border rounded w-1/2 sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
                     value={selectedBulan}
-                    onChange={(e) => handleBulanChange(e.target.value)}
+                    onChange={handleBulanChange}
                   >
                     <option value="">Pilih Bulan</option>
                     {bulanList.map((bulan) => (
-                      <option key={bulan.angkaBulan} value={bulan.angkaBulan}>
+                      <option key={bulan.angkaBulan} value={bulan.id}>
                         {bulan.namaBulan}
                       </option>
                     ))}
@@ -678,7 +1548,7 @@ Data berhasil dikirim!            </strong>
                     onChange={(e) => setNewSelectedYear(e.target.value)}
                   >
                     <option value="">Pilih Tahun</option>
-                    {/* Map through years array to create options */}
+
                     {years.map((year) => (
                       <option key={year} value={year}>
                         {year}
@@ -687,19 +1557,50 @@ Data berhasil dikirim!            </strong>
                   </select>
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-                  Transaksi Juli 2024
+                  Transaksi {selectedBulanName} {newSelectedYear}
                 </h1>
                 <div className="flex justify-center space-x-4 mt-5 mr-10">
                   <Input
                     type="checkbox"
                     className="form-checkbox h-4 w-4 mt-3"
-                    checked={selectAll}
                     onChange={handleSelectAll}
                   />
-                  <Button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300">
-                    Hapus
-                  </Button>
-                  <Button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                  <button
+                    className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center`}
+                    onClick={handleDeleteClick}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <svg
+                          className="animate-spin h-5 w-5 text-white mr-2"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v8H4z"
+                          ></path>
+                        </svg>
+                      </div>
+                    ) : (
+                      "Hapus"
+                    )}
+                  </button>
+                  <Button
+                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+                    onClick={printTable}
+                  >
                     Cetak
                   </Button>
                 </div>
@@ -721,7 +1622,7 @@ Data berhasil dikirim!            </strong>
                   </tr>
                 </thead>
                 <tbody>
-                  {currentTransactions.map((transaction, index) =>
+                  {sortedTransactions.map((transaction, index) =>
                     transaction.tglTransaksi ? (
                       <tr
                         key={index}
@@ -761,10 +1662,55 @@ Data berhasil dikirim!            </strong>
                               className="form-checkbox h-4 w-4"
                               checked={transaction.checked}
                               onChange={() => handleCheck(transaction.id)}
+                              disabled={transaction.uraian === "Saldo Awal"}
                             />
-                            <Button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">
+                            <Button
+                              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+                              onClick={() => handleGetEdit(transaction.id)}
+                            >
                               Edit
                             </Button>
+                            <button
+                              className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center ${
+                                transaction.uraian === "Saldo Awal"
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
+                              onClick={() =>
+                                handleDeleteClickId(transaction.id)
+                              }
+                              disabled={
+                                transaction.uraian === "Saldo Awal" ||
+                                loadingId === transaction.id
+                              }
+                            >
+                              {loadingId === transaction.id ? (
+                                <div className="flex items-center">
+                                  <svg
+                                    className="animate-spin h-5 w-5 text-white mr-2"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8v8H4z"
+                                    ></path>
+                                  </svg>
+                                </div>
+                              ) : (
+                                "Hapus"
+                              )}
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -798,10 +1744,11 @@ Data berhasil dikirim!            </strong>
                     <td className="px-6 py-4 text-sm">
                       {formatCurrency(
                         transactions.reduce((total, transaction) => {
-                          const saldo = Math.floor(
-                            parseFloat(transaction.saldo.replace(",")) || 0
+                          const saldo = parseFloat(
+                            transaction.saldo?.replace(",", "") || "0"
                           );
-                          return saldo;
+
+                          return total + Math.floor(saldo);
                         }, 0)
                       )}
                     </td>
@@ -810,51 +1757,6 @@ Data berhasil dikirim!            </strong>
                   </tr>
                 </tbody>
               </table>
-            </div>
-            <div className="flex justify-center mt-4 gap-1">
-              <button
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-              >
-                First
-              </button>
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-              >
-                Prev
-              </button>
-              {getVisiblePages().map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-3 py-1 border rounded text-sm ${
-                    page === currentPage
-                      ? "bg-blue-500 text-white"
-                      : "bg-white hover:bg-gray-50"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-              >
-                Next
-              </button>
-              <button
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-              >
-                Last
-              </button>
             </div>
           </div>
         </div>
