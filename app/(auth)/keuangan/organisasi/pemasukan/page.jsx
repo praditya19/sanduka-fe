@@ -58,7 +58,7 @@ function Pemasukan() {
     yangMeninggal: "",
     namaPenerima: "",
     keterangan: "",
-    jenisPembayaran: "Sanduka",
+    jenisPembayaran: "Organisasi",
     totalAnggota: "",
     checked: false,
     totalAnggotaByAdmin: "",
@@ -107,9 +107,10 @@ function Pemasukan() {
 
   const printTable = () => {
     // Menyiapkan nama bulan dan tahun untuk judul cetakan
-    const bulanNama = bulanList.find((bulan) => bulan.id === selectedBulan)?.namaBulan || '';
-    const tahunNama = newSelectedYear || '';
-  
+    const bulanNama =
+      bulanList.find((bulan) => bulan.id === selectedBulan)?.namaBulan || "";
+    const tahunNama = newSelectedYear || "";
+
     // Membangun HTML tabel tanpa kolom Action
     const tableHTMLWithoutActions = `
       <table class="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -127,8 +128,11 @@ function Pemasukan() {
         <tbody>
           ${sortedTransactions
             .filter((transaction) => transaction.tglTransaksi)
-            .map((transaction, index) => `
-              <tr class="border-b text-black text-center ${transaction.checked ? 'bg-gray-100' : 'hover:bg-gray-50'}">
+            .map(
+              (transaction, index) => `
+              <tr class="border-b text-black text-center ${
+                transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
+              }">
                 <td class="px-6 py-4 text-sm">${index + 1}</td>
                 <td class="px-6 py-4 text-sm">${transaction.tglTransaksi}</td>
                 <td class="px-6 py-4 text-sm">${transaction.noBukti}</td>
@@ -136,28 +140,46 @@ function Pemasukan() {
                 <td class="px-6 py-4 text-sm">
                   ${formatCurrency(
                     transaction.uraian === "Saldo Awal"
-                      ? Number(newSelectedYear) === 2021 && Number(selectedBulan) === 3
+                      ? Number(newSelectedYear) === 2021 &&
+                        Number(selectedBulan) === 3
                         ? parseFloat(transaction.debet.replace(",", "")) || 0
                         : 0
                       : parseFloat(transaction.debet.replace(",", "")) || 0
                   )}
                 </td>
                 <td class="px-6 py-4 text-sm">
-                  ${formatCurrency(parseFloat(transaction.kredit.replace(",", "")) || 0)}
+                  ${formatCurrency(
+                    parseFloat(transaction.kredit.replace(",", "")) || 0
+                  )}
                 </td>
                 <td class="px-6 py-4 text-sm">
-                  ${saldoMap[index] ? saldoMap[index].toLocaleString("id-ID", { minimumFractionDigits: 0 }) : 0}
+                  ${
+                    saldoMap[index]
+                      ? saldoMap[index].toLocaleString("id-ID", {
+                          minimumFractionDigits: 0,
+                        })
+                      : 0
+                  }
                 </td>
               </tr>
-            `).join('')}
+            `
+            )
+            .join("")}
           <tr class="bg-gray-200 text-base text-black text-center font-bold">
             <td class="px-6 py-4 text-left" colSpan="4">TOTAL</td>
             <td class="px-6 py-4 text-sm">
               ${formatCurrency(
                 transactions.reduce((total, transaction) => {
                   const isSaldoAwal = transaction.uraian === "Saldo Awal";
-                  const isMaret2021 = Number(newSelectedYear) === 2021 && Number(selectedBulan) === 3;
-                  const debet = isSaldoAwal && !isMaret2021 ? 0 : Math.floor(parseFloat(transaction.debet.replace(",")) || 0);
+                  const isMaret2021 =
+                    Number(newSelectedYear) === 2021 &&
+                    Number(selectedBulan) === 3;
+                  const debet =
+                    isSaldoAwal && !isMaret2021
+                      ? 0
+                      : Math.floor(
+                          parseFloat(transaction.debet.replace(",")) || 0
+                        );
                   return total + debet;
                 }, 0)
               )}
@@ -165,22 +187,26 @@ function Pemasukan() {
             <td class="px-6 py-4 text-sm">
               ${formatCurrency(
                 transactions.reduce((total, transaction) => {
-                  const kredit = Math.floor(parseFloat(transaction.kredit.replace(",", "")) || 0);
+                  const kredit = Math.floor(
+                    parseFloat(transaction.kredit.replace(",", "")) || 0
+                  );
                   return total + kredit;
                 }, 0)
               )}
             </td>
             <td class="px-6 py-4 text-sm">
-              ${totalSaldo.toLocaleString("id-ID", { minimumFractionDigits: 0 })}
+              ${totalSaldo.toLocaleString("id-ID", {
+                minimumFractionDigits: 0,
+              })}
             </td>
             <td class="px-6 py-4 text-sm"></td>
           </tr>
         </tbody>
       </table>
     `;
-  
+
     // Membuka jendela baru untuk mencetak
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     printWindow.document.open();
     printWindow.document.write(`
       <html>
@@ -221,7 +247,7 @@ function Pemasukan() {
     printWindow.document.close();
     printWindow.print();
     printWindow.close();
-  };     
+  };
 
   const handleClickOutside = (event) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -369,7 +395,7 @@ function Pemasukan() {
         posTransaksi: "Saldo Awal",
         masukKe: "Bank",
         debet: totalSaldoPrev,
-        jenisPembayaran: "Sanduka",
+        jenisPembayaran: "Organisasi",
       };
 
       const responseSaldo = await GlobalApi.createSaldoAwal(saldoAwalRequest);
@@ -591,7 +617,7 @@ function Pemasukan() {
         kredit: "",
         bulanSantunan: "",
         keterangan: formValues.keterangan,
-        jenisPembayaran: "Sanduka",
+        jenisPembayaran: "Organisasi",
         namaPenerima: "",
         yangMeninggal: "",
         totalAnggota: formValues.totalAnggota,
@@ -956,7 +982,7 @@ function Pemasukan() {
         yangMeninggal: "",
         namaPenerima: "",
         keterangan: "",
-        jenisPembayaran: "Sanduka",
+        jenisPembayaran: "Organisasi",
       };
 
       setFormValues(updatedFormValues);
@@ -1148,7 +1174,7 @@ function Pemasukan() {
           yangMeninggal: "",
           namaPenerima: "",
           keterangan: "",
-          jenisPembayaran: "Sanduka",
+          jenisPembayaran: "Organisasi",
         };
 
         console.log(
@@ -1165,7 +1191,7 @@ function Pemasukan() {
       toast.success(
         "Semua saldo awal berhasil dihitung! (Tidak dikirim ke database)"
       );
-        window.location.reload();
+      window.location.reload();
     } catch (error) {
       toast.error("Gagal menghitung dan memperbarui saldo awal. Coba lagi!");
       console.error(
@@ -1219,7 +1245,7 @@ function Pemasukan() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Pemasukan Sanduka</h1>
+              <h1 className="text-base">Pemasukan Organisasi</h1>
             </div>
           </div>
         </header>
@@ -1233,7 +1259,7 @@ function Pemasukan() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Pemasukan Sanduka</h1>
+              <h1 className="text-base">Pemasukan Organisasi</h1>
             </div>
           </div>
         </header>
@@ -1269,7 +1295,7 @@ function Pemasukan() {
           <div className="container mx-auto p-6">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
               <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
-                PEMASUKAN SANDUKA
+                POS PEMASUKAN
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {/* <div className="flex flex-col">

@@ -73,6 +73,8 @@ function Pengeluaran() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingId, setLoadingId] = useState(null);
   const [checkedIds, setCheckedIds] = useState([]);
+  const [saldoMap, setSaldoMap] = useState({});
+  const [totalSaldo, setTotalSaldo] = useState(0);
 
   const getBulanAngka = (bulanNama) => {
     const bulanObj = bulanList.find((bulan) => bulan.namaBulan === bulanNama);
@@ -250,6 +252,41 @@ function Pengeluaran() {
     fetchData();
   }, [selectedBulan, newSelectedYear]);
 
+  useEffect(() => {
+    let tempSaldoMap = {};
+    let saldoSebelumnya = 0;
+
+    // Iterasi transaksi untuk menghitung saldo
+    transactions.forEach((transaction, index) => {
+      let currentSaldo = 0;
+
+      if (transaction.uraian === "Saldo Awal") {
+        saldoSebelumnya = parseFloat(transaction.debet.replace(",", "")) || 0;
+        currentSaldo = saldoSebelumnya;
+      } else {
+        let debet = parseFloat(transaction.debet.replace(",", "")) || 0;
+        let kredit = parseFloat(transaction.kredit.replace(",", "")) || 0;
+
+        currentSaldo = saldoSebelumnya + debet - kredit;
+      }
+
+      tempSaldoMap[index] = currentSaldo;
+      saldoSebelumnya = currentSaldo;
+    });
+
+    // Menyimpan hasil perhitungan saldo ke dalam state saldoMap
+    setSaldoMap(tempSaldoMap);
+
+    // Menghitung total saldo dari saldoMap
+    const calculatedTotalSaldo = Object.values(tempSaldoMap).reduce(
+      (total, currentSaldo) => total + currentSaldo,
+      0
+    );
+
+    // Menyimpan total saldo ke dalam state totalSaldo
+    setTotalSaldo(calculatedTotalSaldo);
+  }, [transactions]);
+
   const sortedTransactions = (() => {
     if (!transactions) return [];
 
@@ -271,6 +308,18 @@ function Pengeluaran() {
       ...prevValues,
       tanggalTransaksi: formattedDate,
     }));
+  }, []);
+
+  useEffect(() => {
+    const currentMonthIndex = new Date().getMonth();
+    const currentBulan = bulanList.find(
+      (b) => b.angkaBulan === currentMonthIndex
+    );
+
+    if (currentBulan) {
+      setSelectedBulan(currentBulan.id);
+      setSelectedBulanName(currentBulan.namaBulan);
+    }
   }, []);
 
   const handleBulanChange = (e) => {
@@ -315,15 +364,146 @@ function Pengeluaran() {
   };
 
   const printTable = () => {
-    const printContent = tableRef.current;
-    const originalContent = document.body.innerHTML;
+    const bulanNama =
+      bulanList.find((bulan) => bulan.id === selectedBulan)?.namaBulan || "";
+    const tahunNama = newSelectedYear || "";
 
-    document.body.innerHTML = printContent.innerHTML;
+    // Membangun HTML tabel tanpa kolom Action
+    const tableHTMLWithoutActions = `
+      <table class="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
+        <thead class="text-sm text-black uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
+          <tr class="bg-gray-200 text-black text-center">
+            <th class="px-6 py-3 text-sm">No</th>
+            <th class="px-6 py-3 text-sm">Tgl Transaksi</th>
+            <th class="px-6 py-3 text-sm">No. Bukti</th>
+            <th class="px-6 py-3 text-sm">Uraian</th>
+            <th class="px-6 py-3 text-sm">Debet</th>
+            <th class="px-6 py-3 text-sm">Kredit</th>
+            <th class="px-6 py-3 text-sm">Saldo</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sortedTransactions
+            .filter((transaction) => transaction.tglTransaksi)
+            .map(
+              (transaction, index) => `
+              <tr class="border-b text-black text-center ${
+                transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
+              }">
+                <td class="px-6 py-4 text-sm">${index + 1}</td>
+                <td class="px-6 py-4 text-sm">${transaction.tglTransaksi}</td>
+                <td class="px-6 py-4 text-sm">${transaction.noBukti}</td>
+                <td class="px-6 py-4 text-sm">${transaction.uraian}</td>
+                <td class="px-6 py-4 text-sm">
+                  ${formatCurrency(
+                    transaction.uraian === "Saldo Awal"
+                      ? Number(newSelectedYear) === 2021 &&
+                        Number(selectedBulan) === 3
+                        ? parseFloat(transaction.debet.replace(",", "")) || 0
+                        : 0
+                      : parseFloat(transaction.debet.replace(",", "")) || 0
+                  )}
+                </td>
+                <td class="px-6 py-4 text-sm">
+                  ${formatCurrency(
+                    parseFloat(transaction.kredit.replace(",", "")) || 0
+                  )}
+                </td>
+                <td class="px-6 py-4 text-sm">
+                  ${
+                    saldoMap[index]
+                      ? saldoMap[index].toLocaleString("id-ID", {
+                          minimumFractionDigits: 0,
+                        })
+                      : 0
+                  }
+                </td>
+              </tr>
+            `
+            )
+            .join("")}
+          <tr class="bg-gray-200 text-base text-black text-center font-bold">
+            <td class="px-6 py-4 text-left" colSpan="4">TOTAL</td>
+            <td class="px-6 py-4 text-sm">
+              ${formatCurrency(
+                transactions.reduce((total, transaction) => {
+                  const isSaldoAwal = transaction.uraian === "Saldo Awal";
+                  const isMaret2021 =
+                    Number(newSelectedYear) === 2021 &&
+                    Number(selectedBulan) === 3;
+                  const debet =
+                    isSaldoAwal && !isMaret2021
+                      ? 0
+                      : Math.floor(
+                          parseFloat(transaction.debet.replace(",")) || 0
+                        );
+                  return total + debet;
+                }, 0)
+              )}
+            </td>
+            <td class="px-6 py-4 text-sm">
+              ${formatCurrency(
+                transactions.reduce((total, transaction) => {
+                  const kredit = Math.floor(
+                    parseFloat(transaction.kredit.replace(",", "")) || 0
+                  );
+                  return total + kredit;
+                }, 0)
+              )}
+            </td>
+            <td class="px-6 py-4 text-sm">
+              ${totalSaldo.toLocaleString("id-ID", {
+                minimumFractionDigits: 0,
+              })}
+            </td>
+            <td class="px-6 py-4 text-sm"></td>
+          </tr>
+        </tbody>
+      </table>
+    `;
 
-    window.print();
-
-    document.body.innerHTML = originalContent;
-    window.location.reload();
+    // Membuka jendela baru untuk mencetak
+    const printWindow = window.open("", "_blank");
+    printWindow.document.open();
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Table Data Pemasukan Bulan ${bulanNama} Tahun ${tahunNama}</title>
+          <style>
+            /* Gaya CSS untuk cetakan */
+            @media print {
+              body {
+                margin: 0;
+                padding: 0;
+                background: white;
+                color: black;
+              }
+              table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+              }
+              th, td {
+                border: 1px solid black;
+                padding: 8px;
+                text-align: center;
+              }
+              .header-info {
+                margin-bottom: 20px;
+                font-size: 16px;
+                font-weight: bold;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          ${tableHTMLWithoutActions} <!-- Insert table without Action column into the print page -->
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+    printWindow.close();
   };
 
   useEffect(() => {
@@ -1170,7 +1350,7 @@ function Pengeluaran() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Pengeluaran Sanduka</h1>
+              <h1 className="text-base">Pengeluaran Organisasi</h1>
             </div>
           </div>
         </header>
@@ -1184,7 +1364,7 @@ function Pengeluaran() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Pengeluaran Sanduka</h1>
+              <h1 className="text-base">Pengeluaran Organisasi</h1>
             </div>
           </div>
         </header>
@@ -1220,7 +1400,7 @@ function Pengeluaran() {
           <div className="container mx-auto p-6">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
               <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
-                PENGELUARAN SANDUKA
+                Pengeluaran Organisasi
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {/* <div className="flex flex-col">
@@ -1259,31 +1439,6 @@ function Pengeluaran() {
                 <div className="flex flex-col">
                   <Label
                     className="block text-gray-700 text-sm font-semibold mb-2"
-                    htmlFor="posPenerimaan"
-                  >
-                    Pos Pengeluaran
-                  </Label>
-                  <select
-                    className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="posPenerimaan"
-                    name="posPenerimaan"
-                    value={formValues.posPenerimaan}
-                    onChange={handleChange}
-                  >
-                    <option value="">Pilih Pos Penerimaan</option>
-                    <option value="listrik">Listrik</option>
-                    <option value="telpondaninternet">
-                      Telepon dan Internet
-                    </option>
-                    <option value="PDAM">PDAM</option>
-                    <option value="ATK">ATK</option>
-                    <option value="lain-lain">Lain - lain</option>
-                    <option value="saldo awal">Saldo Awal</option>
-                  </select>
-                </div>
-                <div className="flex flex-col">
-                  <Label
-                    className="block text-gray-700 text-sm font-semibold mb-2"
                     htmlFor="posTransaksi"
                   >
                     Pos Pengeluaran
@@ -1311,7 +1466,7 @@ function Pengeluaran() {
                     className="block text-gray-700 text-sm font-semibold mb-2"
                     htmlFor="cabang"
                   >
-                    Data Sanduka
+                    Data Organisasi
                   </Label>
                   <select
                     className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-5"
@@ -1622,10 +1777,11 @@ function Pengeluaran() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedTransactions.map((transaction, index) =>
-                    transaction.tglTransaksi ? (
+                  {sortedTransactions
+                    .filter((transaction) => transaction.tglTransaksi)
+                    .map((transaction, index) => (
                       <tr
-                        key={index}
+                        key={transaction.id}
                         className={`border-b text-black text-center ${
                           transaction.checked
                             ? "bg-gray-100"
@@ -1644,16 +1800,32 @@ function Pengeluaran() {
                         </td>
                         <td className="px-6 py-4 text-sm">
                           {formatCurrency(
-                            parseFloat(transaction.debet.replace(",")) || 0
+                            transaction.uraian === "Saldo Awal"
+                              ? Number(newSelectedYear) === 2021 &&
+                                Number(selectedBulan) === 3
+                                ? parseFloat(
+                                    transaction.debet.replace(",", "")
+                                  ) || 0
+                                : 0
+                              : parseFloat(
+                                  transaction.debet.replace(",", "")
+                                ) || 0
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm">
                           {formatCurrency(
-                            parseFloat(transaction.kredit.replace(",")) || 0
+                            parseFloat(transaction.kredit.replace(",", "")) || 0
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          {formatCurrency(transaction.saldo || 0)}
+                          <td className="px-6 py-4 text-sm">
+                            {" "}
+                            {saldoMap[index]
+                              ? saldoMap[index].toLocaleString("id-ID", {
+                                  minimumFractionDigits: 0,
+                                })
+                              : 0}
+                          </td>
                         </td>
                         <td className="px-6 py-4 text-sm">
                           <div className="flex items-center space-x-2">
@@ -1662,7 +1834,7 @@ function Pengeluaran() {
                               className="form-checkbox h-4 w-4"
                               checked={transaction.checked}
                               onChange={() => handleCheck(transaction.id)}
-                              disabled={transaction.uraian === "Saldo Awal"}
+                              // disabled={transaction.uraian === "Saldo Awal"}
                             />
                             <Button
                               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
@@ -1714,9 +1886,8 @@ function Pengeluaran() {
                           </div>
                         </td>
                       </tr>
-                    ) : null
-                  )}
-
+                    ))}
+                  {/* Baris Total */}
                   <tr className="bg-gray-200 text-base text-black text-center font-bold">
                     <td className="px-6 py-4 text-left" colSpan="4">
                       TOTAL
@@ -1724,10 +1895,22 @@ function Pengeluaran() {
                     <td className="px-6 py-4 text-sm">
                       {formatCurrency(
                         transactions.reduce((total, transaction) => {
-                          const debet = Math.floor(
-                            parseFloat(transaction.debet.replace(",")) || 0
-                          );
-                          return debet;
+                          const isSaldoAwal =
+                            transaction.uraian === "Saldo Awal";
+                          const isMaret2021 =
+                            Number(newSelectedYear) === 2021 &&
+                            Number(selectedBulan) === 3;
+
+                          // Hanya jumlahkan "Saldo Awal" jika Maret 2021, transaksi lain tetap dihitung normal
+                          const debet =
+                            isSaldoAwal && !isMaret2021
+                              ? 0
+                              : Math.floor(
+                                  parseFloat(transaction.debet.replace(",")) ||
+                                    0
+                                );
+
+                          return total + debet;
                         }, 0)
                       )}
                     </td>
@@ -1735,28 +1918,35 @@ function Pengeluaran() {
                       {formatCurrency(
                         transactions.reduce((total, transaction) => {
                           const kredit = Math.floor(
-                            parseFloat(transaction.kredit.replace(",")) || 0
+                            parseFloat(transaction.kredit.replace(",", "")) || 0
                           );
-                          return kredit;
+                          return total + kredit; // menambahkan kredit ke total
                         }, 0)
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      {formatCurrency(
-                        transactions.reduce((total, transaction) => {
-                          const saldo = parseFloat(
-                            transaction.saldo?.replace(",", "") || "0"
-                          );
-
-                          return total + Math.floor(saldo);
-                        }, 0)
-                      )}
+                      {totalSaldo.toLocaleString("id-ID", {
+                        minimumFractionDigits: 0,
+                      })}
                     </td>
-
                     <td className="px-6 py-4 text-sm"></td>
                   </tr>
                 </tbody>
               </table>
+              <style jsx>{`
+                @media print {
+                  th:nth-child(8),
+                  td:nth-child(8) {
+                    display: none;
+                  }
+
+                  body {
+                    margin: 0;
+                    padding: 0;
+                    background: white;
+                  }
+                }
+              `}</style>
             </div>
           </div>
         </div>
