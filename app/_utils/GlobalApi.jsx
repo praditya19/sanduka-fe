@@ -1008,10 +1008,10 @@ const getNoBukti = async () => {
     throw error;
   }
 };
-const getTablePemasukanSanduka = async (month, year) => {
+const getTablePemasukanSanduka = async (month, year, jenisPembayaran) => {
   try {
     const response = await axiosClient.get(
-      `/api/uang-masuk-keluar/tabel?month=${month}&year=${year}`
+      `/api/uang-masuk-keluar/tabel?month=${month}&year=${year}&jenisPembayaran=${jenisPembayaran}`
     );
     return response.data;
   } catch (error) {
