@@ -14,16 +14,21 @@ import HeaderMobile from "@/app/_components/HeaderMobile";
 import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "@/app/AuthContext";
 import { useRouter } from "next/navigation";
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 export default function PengaduanPage() {
   const { register, handleSubmit, reset } = useForm();
-  // const [pengaduanList, setPengaduanList] = useState([]);
+  const [pengaduanList, setPengaduanList] = useState([]);
   const [modalType, setModalType] = useState(null);
   const [buktiFoto, setBuktiFoto] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { token } = useAuth();
   const router = useRouter();
+  const [userRole, setUserRole] = useState("");
+  const [userNpa, setUserNpa] = useState("");
+  const [userCabang, setUserCabang] = useState("");
 
   const [selectedPengaduan, setSelectedPengaduan] = useState(null);
   const [message, setMessage] = useState("");
@@ -35,76 +40,97 @@ export default function PengaduanPage() {
 
   const handleSendMessage = () => {
     if (message.trim() === "") return;
-    setChatHistory([...chatHistory, { sender: "admin", message }]);
+    setChatHistory([...chatHistory, { sender: "user", message }]);
     setMessage("");
   };
-  const pengaduanList = [
-    {
-      id: 1,
-      kategori: "Sampah di jalan",
-      deskripsi:
-        "Terdapat tumpukan sampah di sepanjang jalan desa yang mengganggu kenyamanan warga.",
-      response: "Sudah dijadwalkan untuk diambil besok pagi.",
-    },
-    {
-      id: 2,
-      kategori: "Kerusakan jalan",
-      deskripsi:
-        "Jalan utama desa rusak parah, banyak lubang yang membahayakan pengendara.",
-      response: "Laporan sedang diproses oleh tim perbaikan.",
-    },
-    {
-      id: 3,
-      kategori: "Kebersihan lingkungan",
-      deskripsi:
-        "Beberapa saluran air tersumbat oleh sampah, menyebabkan genangan air di musim hujan.",
-      response: "Proses pembersihan saluran air sedang dilakukan.",
-    },
-    {
-      id: 4,
-      kategori: "Pencurian",
-      deskripsi:
-        "Terjadi pencurian di rumah warga pada malam hari, barang berharga hilang.",
-      response: "Polisi sedang melakukan penyelidikan.",
-    },
-    {
-      id: 5,
-      kategori: "Gangguan listrik",
-      deskripsi:
-        "Sering terjadi pemadaman listrik yang tidak terjadwal di beberapa kawasan desa.",
-      response: "Tim PLN sedang melakukan perbaikan jaringan.",
-    },
-  ];
 
   useEffect(() => {
-    if (!token) router.push("/sign-in");
-    else {
+    if (!token) {
+      router.push("/sign-in");
+    } else {
+      const role = sessionStorage.getItem("role") || "";
+      const npa = sessionStorage.getItem("npa") || "";
+      const cabang = sessionStorage.getItem("cabang") || "";
+
+      setUserRole(role);
+      setUserNpa(npa);
+      setUserCabang(cabang);
+
       const handleResize = () => setIsMobile(window.innerWidth <= 768);
       window.addEventListener("resize", handleResize);
       return () => window.removeEventListener("resize", handleResize);
     }
   }, [token, router]);
 
-  const onSubmit = (data) => {
-    const npa = sessionStorage.getItem("npa");
-    const nama = sessionStorage.getItem("nama");
-    const cabang = sessionStorage.getItem("cabang");
-    const unitKerja = sessionStorage.getItem("unit_kerja");
+  useEffect(() => {
+    if (modalType === "respon") {
+      fetchPengaduanList();
+    }
+  }, [modalType]);
 
-    const newPengaduan = {
-      ...data,
-      status: "Menunggu Respon",
-      response: "",
-      npa,
-      nama,
-      cabang,
-      unitKerja,
-    };
+  const fetchPengaduanList = async () => {
+    try {
+      setLoading(true);
+      const response = await GlobalApi.getAllPengaduan();
 
-    setPengaduanList([newPengaduan, ...pengaduanList]);
-    reset();
-    setModalType(null);
-    toast.success("Pengaduan berhasil dikirim!");
+      let filteredPengaduan = [];
+
+      if (userRole === "SUPER ADMIN") {
+        filteredPengaduan = response;
+      } else if (userRole === "ADMIN") {
+        filteredPengaduan = response.filter(
+          (pengaduan) => pengaduan.cabang === userCabang
+        );
+      } else {
+        filteredPengaduan = response.filter(
+          (pengaduan) => pengaduan.npa === userNpa
+        );
+      }
+
+      setPengaduanList(filteredPengaduan);
+    } catch (error) {
+      console.error("Error fetching pengaduan:", error);
+      toast.error("Gagal memuat daftar pengaduan");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const onSubmit = async (data) => {
+    try {
+      setLoading(true);
+
+      const npa = sessionStorage.getItem("npa");
+      const namaLengkap = sessionStorage.getItem("nama");
+      const email = sessionStorage.getItem("email") || "";
+      const cabang = sessionStorage.getItem("cabang");
+      const unitKerja = sessionStorage.getItem("unitKerja");
+
+      const pengaduanData = {
+        namaLengkap,
+        email,
+        npa,
+        cabang,
+        unitKerja,
+        category: data.kategori,
+        keterangan: data.deskripsi,
+        bukti: data.buktiFoto ? data.buktiFoto[0] : null
+      };
+
+      const response = await GlobalApi.createPengaduan(pengaduanData);
+
+      reset();
+      setBuktiFoto(null);
+      setModalType(null);
+      toast.success("Pengaduan berhasil dikirim!");
+
+    } catch (error) {
+      console.error("Error submitting pengaduan:", error);
+      toast.error("Gagal mengirim pengaduan. Silakan coba lagi.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleSidebar = () => {
@@ -121,9 +147,8 @@ export default function PengaduanPage() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <h2 className="text-3xl font-bold text-center mt-8 text-gray-800">
             Pengaduan Anggota
@@ -150,10 +175,11 @@ export default function PengaduanPage() {
           {/* Modal */}
           {modalType && (
             <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm animate-fade-in">
-              <div className="bg-white p-6 rounded-lg shadow-xl h-[80vh] w-[90vw] mx-auto relative">
+              <div className="bg-white p-6 mt-10 rounded-lg shadow-xl h-[86vh] w-[90vw] mx-auto relative overflow-hidden">
                 <button
                   onClick={() => setModalType(null)}
                   className="absolute top-3 right-3 text-gray-500 hover:text-red-500 transition"
+                  disabled={loading}
                 >
                   <FontAwesomeIcon icon={faTimes} className="text-xl" />
                 </button>
@@ -167,9 +193,10 @@ export default function PengaduanPage() {
                       className="space-y-4"
                     >
                       <select
-                        {...register("kategori")}
+                        {...register("kategori", { required: true })}
                         className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                       >
+                        <option value="">Pilih Kategori</option>
                         <option value="Pengaduan">Pengaduan</option>
                         <option value="Kritikan">Kritikan</option>
                         <option value="Permohonan Bantuan">
@@ -178,7 +205,7 @@ export default function PengaduanPage() {
                       </select>
 
                       <textarea
-                        {...register("deskripsi")}
+                        {...register("deskripsi", { required: true })}
                         className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                         rows="4"
                         required
@@ -212,16 +239,17 @@ export default function PengaduanPage() {
                           <img
                             src={buktiFoto}
                             alt="Bukti Pengaduan"
-                            className="w-full h-40 object-cover rounded-lg mt-2"
+                            className="w-full max-h-40 object-contain rounded-lg mt-2"
                           />
                         </div>
                       )}
 
                       <button
                         type="submit"
-                        className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+                        disabled={loading}
+                        className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-400"
                       >
-                        Kirim
+                        {loading ? "Mengirim..." : "Kirim"}
                       </button>
                     </form>
                   </>
@@ -230,9 +258,11 @@ export default function PengaduanPage() {
                     {/* Sidebar Pengaduan */}
                     <div className="w-1/3 p-4 bg-gray-100 overflow-y-auto">
                       <h3 className="text-2xl font-semibold mb-4 text-center">
-                        Respon Pengaduan
+                        {userRole === "ADMIN" ? "Pengaduan Cabang" : "Pengaduan Saya"}
                       </h3>
-                      {pengaduanList.length === 0 ? (
+                      {loading ? (
+                        <p className="text-center">Memuat data...</p>
+                      ) : pengaduanList.length === 0 ? (
                         <p className="text-gray-500 text-center">
                           Belum ada pengaduan.
                         </p>
@@ -245,16 +275,23 @@ export default function PengaduanPage() {
                               onClick={() => handlePengaduanClick(pengaduan)}
                             >
                               <h4 className="font-bold text-lg text-gray-800">
-                                {pengaduan.kategori}
+                                {pengaduan.category}
                               </h4>
                               <p className="text-gray-600">
-                                {pengaduan.deskripsi}
+                                {pengaduan.keterangan.length > 50
+                                  ? `${pengaduan.keterangan.substring(0, 50)}...`
+                                  : pengaduan.keterangan}
                               </p>
-                              <p className="text-sm text-blue-600 mt-2">
-                                {pengaduan.response
-                                  ? `Respon: ${pengaduan.response}`
-                                  : "Menunggu respon..."}
-                              </p>
+                              <div className="flex justify-between mt-2">
+                                <p className="text-sm text-blue-600">
+                                  {pengaduan.status || "Menunggu respon..."}
+                                </p>
+                                {userRole === "ADMIN" && (
+                                  <p className="text-sm text-gray-500">
+                                    NPA: {pengaduan.npa}
+                                  </p>
+                                )}
+                              </div>
                             </li>
                           ))}
                         </ul>
@@ -267,25 +304,49 @@ export default function PengaduanPage() {
                         <div className="flex flex-col h-full">
                           <div className="flex-1 overflow-y-auto p-4 bg-gray-50 rounded-lg mb-4">
                             <h4 className="text-xl font-semibold mb-4">
-                              {selectedPengaduan.kategori}
+                              {selectedPengaduan.category}
                             </h4>
                             <div className="space-y-4">
+                              {/* Display pengaduan details */}
+                              <div className="bg-white p-4 rounded-lg shadow-sm">
+                                {userRole === "ADMIN" && (
+                                  <div className="mb-3 pb-2 border-b">
+                                    <p><strong>Pengirim:</strong> {selectedPengaduan.namaLengkap}</p>
+                                    <p><strong>NPA:</strong> {selectedPengaduan.npa}</p>
+                                    <p><strong>Unit Kerja:</strong> {selectedPengaduan.unitKerja}</p>
+                                  </div>
+                                )}
+
+                                <p><strong>Deskripsi:</strong> {selectedPengaduan.keterangan}</p>
+                                <p className="mt-2"><strong>Status:</strong> {selectedPengaduan.status || "Menunggu respon"}</p>
+
+                                {/* Display bukti if available */}
+                                {selectedPengaduan.bukti && (
+                                  <div className="mt-3">
+                                    <p><strong>Bukti:</strong></p>
+                                    <img
+                                      src={`data:image/*;base64,${selectedPengaduan.bukti}`}
+                                      alt="Bukti Pengaduan"
+                                      className="mt-2 max-w-xs rounded-lg"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+
                               {/* Chat History */}
                               {chatHistory.map((chat, index) => (
                                 <div
                                   key={index}
-                                  className={`flex ${
-                                    chat.sender === "admin"
-                                      ? "justify-end"
-                                      : "justify-start"
-                                  }`}
+                                  className={`flex ${chat.sender === "user"
+                                    ? "justify-end"
+                                    : "justify-start"
+                                    }`}
                                 >
                                   <div
-                                    className={`max-w-xs p-2 rounded-lg ${
-                                      chat.sender === "admin"
-                                        ? "bg-blue-500 text-white"
-                                        : "bg-gray-300"
-                                    }`}
+                                    className={`max-w-xs p-3 rounded-lg ${chat.sender === "user"
+                                      ? "bg-blue-500 text-white"
+                                      : "bg-gray-300"
+                                      }`}
                                   >
                                     {chat.message}
                                   </div>
@@ -311,8 +372,8 @@ export default function PengaduanPage() {
                           </div>
                         </div>
                       ) : (
-                        <p className="text-center text-gray-500">
-                          Pilih pengaduan untuk mulai chat.
+                        <p className="text-center text-gray-500 p-4">
+                          Pilih pengaduan untuk melihat detail.
                         </p>
                       )}
                     </div>
