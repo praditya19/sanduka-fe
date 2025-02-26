@@ -280,7 +280,8 @@ function Pemasukan() {
       if (selectedBulan && newSelectedYear) {
         const data = await GlobalApi.getTablePemasukanSanduka(
           selectedBulan,
-          newSelectedYear
+          newSelectedYear,
+          "Sanduka"
         );
         setTransactions(data);
         // console.log(data);
@@ -306,7 +307,6 @@ function Pemasukan() {
     let tempSaldoMap = {};
     let saldoSebelumnya = 0;
 
-    // Iterasi transaksi untuk menghitung saldo
     transactions.forEach((transaction, index) => {
       let currentSaldo = 0;
 
@@ -324,18 +324,30 @@ function Pemasukan() {
       saldoSebelumnya = currentSaldo;
     });
 
-    // Menyimpan hasil perhitungan saldo ke dalam state saldoMap
     setSaldoMap(tempSaldoMap);
 
-    // Menghitung total saldo dari saldoMap
-    const calculatedTotalSaldo = Object.values(tempSaldoMap).reduce(
-      (total, currentSaldo) => total + currentSaldo,
-      0
-    );
+    const calculatedTotalSaldo =
+      transactions.reduce((total, transaction) => {
+        const isSaldoAwal = transaction.uraian === "Saldo Awal";
+        const isMaret2021 =
+          Number(newSelectedYear) === 2021 && Number(selectedBulan) === 3;
 
-    // Menyimpan total saldo ke dalam state totalSaldo
+        const debet =
+          isSaldoAwal && !isMaret2021
+            ? 0
+            : Math.floor(parseFloat(transaction.debet.replace(",", "")) || 0);
+
+        return total + debet;
+      }, 0) -
+      transactions.reduce((total, transaction) => {
+        const kredit = Math.floor(
+          parseFloat(transaction.kredit.replace(",", "")) || 0
+        );
+        return total + kredit;
+      }, 0);
+
     setTotalSaldo(calculatedTotalSaldo);
-  }, [transactions]); // Dependensi: hanya akan berjalan ketika transactions berubah
+  }, [transactions]);
 
   // totalSaldo akan selalu berisi total dari saldo yang dihitung
   // console.log("Total saldo yang dihitung:", totalSaldo);
@@ -343,61 +355,72 @@ function Pemasukan() {
   const createSaldoAwal = async () => {
     try {
       setIsLoading(true);
-      const today = new Date();
-      const sixteenthDayOfMonth = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        16
+
+      const selectedDate = formValues.tanggalTransaksi
+        ? new Date(formValues.tanggalTransaksi)
+        : new Date();
+
+      const selectedYear = selectedDate.getFullYear();
+      const selectedMonth = selectedDate.getMonth();
+
+      const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
+      const prevYear = selectedMonth === 0 ? selectedYear - 1 : selectedYear;
+
+      console.log(
+        `Tanggal transaksi yang dipilih: ${
+          selectedDate.toISOString().split("T")[0]
+        }`
       );
-      const formattedDate = sixteenthDayOfMonth.toISOString().split("T")[0];
+      console.log(
+        `Mengambil data transaksi dari bulan: ${
+          prevMonth + 1
+        }, tahun: ${prevYear}`
+      );
 
-      // Ambil bulan dan tahun sebelumnya
-      const prevMonth = today.getMonth() === 0 ? 11 : today.getMonth() - 1;
-      const prevYear =
-        today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
-
-      // Ambil data transaksi dari bulan sebelumnya
       const prevTransactions = await GlobalApi.getTablePemasukanSanduka(
         prevMonth + 1,
-        prevYear
+        prevYear,
+        "Sanduka"
       );
 
-      // Perhitungan saldo berdasarkan transaksi bulan sebelumnya
-      let saldoMapPrev = {};
-      let saldoSebelumnya = 0;
+      console.log("Transaksi bulan sebelumnya:", prevTransactions);
 
-      prevTransactions.forEach((transaction, index) => {
-        let currentSaldo = 0;
+      const totalDebet = prevTransactions.reduce((total, transaction) => {
+        const debet = Math.floor(
+          parseFloat(transaction.debet.replace(",", "")) || 0
+        );
+        return total + debet;
+      }, 0);
 
-        if (transaction.uraian === "Saldo Awal") {
-          saldoSebelumnya = parseFloat(transaction.debet.replace(",", "")) || 0;
-          currentSaldo = saldoSebelumnya;
-        } else {
-          let debet = parseFloat(transaction.debet.replace(",", "")) || 0;
-          let kredit = parseFloat(transaction.kredit.replace(",", "")) || 0;
+      const totalKredit = prevTransactions.reduce((total, transaction) => {
+        const kredit = Math.floor(
+          parseFloat(transaction.kredit.replace(",", "")) || 0
+        );
+        return total + kredit;
+      }, 0);
 
-          currentSaldo = saldoSebelumnya + debet - kredit;
-        }
+      const totalSaldoPrev = totalDebet - totalKredit;
 
-        saldoMapPrev[index] = currentSaldo;
-        saldoSebelumnya = currentSaldo;
-      });
-
-      const totalSaldoPrev = Object.values(saldoMapPrev).reduce(
-        (total, currentSaldo) => total + currentSaldo,
-        0
+      console.log(`Total Debet: ${totalDebet}`);
+      console.log(`Total Kredit: ${totalKredit}`);
+      console.log(
+        `Saldo Awal yang dihitung (Debet - Kredit): ${totalSaldoPrev}`
       );
 
+      // Buat request untuk saldo awal
       const saldoAwalRequest = {
-        tanggalTransaksi: formValues.tanggalTransaksi,
-        // tanggalTransaksi: formattedDate,
+        tanggalTransaksi:
+          formValues.tanggalTransaksi ||
+          selectedDate.toISOString().split("T")[0],
         posTransaksi: "Saldo Awal",
         masukKe: "Bank",
         debet: totalSaldoPrev,
         jenisPembayaran: "Sanduka",
       };
 
-      const responseSaldo = await GlobalApi.createSaldoAwal(saldoAwalRequest);
+      console.log("Data yang akan dikirim untuk Saldo Awal:", saldoAwalRequest);
+
+      await GlobalApi.createSaldoAwal(saldoAwalRequest);
 
       window.location.reload();
     } catch (error) {
@@ -1851,6 +1874,7 @@ function Pemasukan() {
                     <td className="px-6 py-4 text-left" colSpan="4">
                       TOTAL
                     </td>
+
                     <td className="px-6 py-4 text-sm">
                       {formatCurrency(
                         transactions.reduce((total, transaction) => {
@@ -1883,6 +1907,7 @@ function Pemasukan() {
                         }, 0)
                       )}
                     </td>
+
                     <td className="px-6 py-4 text-sm">
                       {totalSaldo.toLocaleString("id-ID", {
                         minimumFractionDigits: 0,
