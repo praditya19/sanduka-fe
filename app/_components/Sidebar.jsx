@@ -125,12 +125,12 @@ const icons = [
     href: "/galeri",
     color: "text-green-700",
   },
-  // {
-  //   icon: faExclamationCircle,
-  //   label: "Pengaduan",
-  //   href: "/pengaduan",
-  //   color: "text-red-700",
-  // },
+  {
+    icon: faExclamationCircle,
+    label: "Pengaduan",
+    href: "/pengaduan",
+    color: "text-red-700",
+  },
 ];
 
 export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
@@ -169,11 +169,12 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
         "Bantuan",
         "Data Anggota",
         "History data",
+        "Pengaduan",
       ].includes(item.label);
     } else if (role === "SUPER ADMIN") {
-      return true; // SUPER ADMIN melihat semua menu
+      return true;
     } else {
-      return item.label !== "Galeri"; // Selain SUPER ADMIN, menu "Galeri" disembunyikan
+      return item.label !== "Galeri";
     }
   });
 
