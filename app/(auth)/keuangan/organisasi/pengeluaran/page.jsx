@@ -50,7 +50,7 @@ function Pengeluaran() {
     bulanSantunan: "",
     yangMeninggal: "",
     namaPenerima: "",
-    jenisPembayaran: "Sanduka",
+    jenisPembayaran: "Organisasi",
     keterangan: "",
     terbilang: "",
     tahun: "",
@@ -115,7 +115,7 @@ function Pengeluaran() {
       yangMeninggal: formValues.yangMeninggal,
       namaPenerima: formValues.namaPenerima,
       keterangan: formValues.keterangan,
-      jenisPembayaran: "Sanduka",
+      jenisPembayaran: "Organisasi",
     };
     try {
       const response = await GlobalApi.createPembayaranSanduka(dataToSend);
@@ -699,7 +699,7 @@ function Pengeluaran() {
         yangMeninggal: "",
         namaPenerima: "",
         keterangan: formValues.keterangan || "",
-        jenisPembayaran: "Sanduka",
+        jenisPembayaran: "Organisasi",
       };
 
       console.log("Form Values yang akan dikirim:", updatedFormValues);

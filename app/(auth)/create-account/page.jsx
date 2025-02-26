@@ -190,25 +190,24 @@ const Page = () => {
         if (response?.id) {
           setNpaMessage(
             <span style={{ color: "green" }}>
-              "NPA Sudah Terdaftar, silakan login di sini{" "}
+              Data Sudah Terdaftar Silakan{" "}
               <a
                 href="/sign-in"
                 style={{ textDecoration: "underline", color: "blue" }}
               >
-                LOGIN
+                Login
               </a>
-              "
             </span>
           );
         }
       } catch (error) {
         if (error.response?.status === 404) {
-          setNpaMessage("NPA tidak ditemukan. Silakan lanjutkan registrasi.");
+          setNpaMessage(<span style={{ color: "green" }}>Silakan Lanjutkan Pendaftaran Sanduka.</span>);
         } else {
           console.error("Error saat mengecek NPA:", error.message);
-          setNpaMessage("NPA tidak ditemukan. Silakan lanjutkan registrasi.");
+          setNpaMessage(<span style={{ color: "green" }}>Silakan Lanjutkan Pendaftaran Sanduka.</span>);
         }
-      }
+      }      
     }
   };
 

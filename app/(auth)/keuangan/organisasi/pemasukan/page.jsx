@@ -599,7 +599,7 @@ function Pemasukan() {
       //   kredit: "",
       //   bulanSantunan: formValues.bulanSantunan || "",
       //   keterangan: formValues.keterangan,
-      //   jenisPembayaran: "Sanduka",
+      //   jenisPembayaran: "Organisasi",
       //   namaPenerima: formValues.namaPenerima,
       //   yangMeninggal: "",
       //   totalAnggota: formValues.totalAnggota,
