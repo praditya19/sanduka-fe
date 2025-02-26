@@ -1400,7 +1400,7 @@ function Pengeluaran() {
           <div className="container mx-auto p-6">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
               <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
-                Pengeluaran Organisasi
+                PENGELUARAN ORGANISASI
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {/* <div className="flex flex-col">
