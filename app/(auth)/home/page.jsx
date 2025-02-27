@@ -49,9 +49,7 @@ const MapComponent = dynamic(
     ssr: false,
   }
 );
-
 export default function IconGrid() {
-  const [loader, setLoader] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { token } = useAuth();
@@ -60,7 +58,6 @@ export default function IconGrid() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const itemsPerPage = 5;
   const [anggotaMeninggal, setAnggotaMeninggal] = useState([]);
-  const [detailedUserData, setDetailedUserData] = useState([]);
   const [userData, setUserData] = useState(null);
   const [role, setRole] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(null);
@@ -563,7 +560,7 @@ export default function IconGrid() {
             icon: faUser,
             label: "Detail Anggota",
             href: "/anggota/detail-anggota",
-            color: "text-blue-600 hover:text-blue-800",
+            color: "text-blue-500",
             bgHover: "hover:bg-blue-100",
             iconColor: "text-blue-600",
           })
@@ -607,252 +604,176 @@ export default function IconGrid() {
       : icons.filter((item) => item.label !== "Galeri");
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
+    <div className="min-h-screen flex flex-col bg-white">
+      {/* Header */}
       {isMobile ? <HeaderMobile /> : <HeaderHome />}
-      <div>
+
+      <div className="flex-1">
+        {/* Sidebar */}
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-        <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
+        <main
+          className={`transition-all duration-300 ease-in-out ${
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <div className="flex-1 mt-[3.1%]">
-            <img
-              src="https://img.pikbest.com/backgrounds/20190905/gray-and-white-color-geometric-abstract-background-v_1547232jpg!sw800"
-              alt="Deskripsi gambar"
-              className="w-full h-52  object-cover"
-            />
-          </div>
-          <div className="flex-1 ">
-            {isMobile ? (
-              <>
-                {(role === "USER" || role === "ADMIN") && (
-                  <div className="flex justify-center mb-14 -mt-40 items-center text-center overflow-x-hidden max-w-full gap-6">
-                    <Image
-                      src={
-                        fotoBase64
-                          ? `data:image/jpeg;base64,${fotoBase64}`
-                          : profileImageUrl
-                      }
-                      width={80}
-                      height={80}
-                      alt={`Foto User ${userData?.name}`}
-                      className="object-cover rounded"
-                      unoptimized={true}
-                    />
-                    <div className="flex flex-col justify-center items-center text-center -space-y-4">
-                    <div className="flex items-center justify-center space-x-8">
-                    <div className="flex flex-col items-center justify-center">
-                      <span className="text-xs">Daspen:</span>
-                      <div className="w-14 h-14 flex justify-center items-center text-xs -mt-4">
-                        {renderCheckmark(userData?.pesertaDaspen)}
-                      </div>
-                    </div>
+          {/* Hero Banner */}
+          <div className="relative">
+            <div className="h-48 md:h-64 overflow-hidden">
+              <img
+                src="/banner_fix.jpeg"
+                alt="Banner background"
+                className="w-full h-full object-cover object-center"
+              />
+            </div>
 
-                    <div className="flex flex-col items-center justify-center">
-                      <span className="text-xs">KTA Digital:</span>
-                      <div className="w-14 h-14 flex justify-center items-center text-xs -mt-4">
-                        {renderCheckmark(userData?.pesertaKtaDigital)}
-                      </div>
+            {/* Profile Section */}
+            {(role === "USER" || role === "ADMIN") && (
+              <div className="relative mx-auto -mt-32 mb-12 px-4 max-w-md">
+                <div className="bg-white rounded-xl shadow-lg p-4 flex flex-col items-center gap-4 transition-all duration-300 hover:shadow-xl">
+                  {/* User Photo */}
+                  <div className="relative flex-shrink-0">
+                    <div className="h-16 w-16 md:h-20 md:w-20 overflow-hidden border-2 border-gray-300 shadow-sm ml-5">
+                      <Image
+                        src={
+                          fotoBase64
+                            ? `data:image/jpeg;base64,${fotoBase64}`
+                            : profileImageUrl
+                        }
+                        width={80}
+                        height={80}
+                        alt={`Foto User ${userData?.name}`}
+                        className="object-cover w-full h-full"
+                        unoptimized={true}
+                      />
                     </div>
-
-                    <div className="flex flex-col items-center justify-center">
-                      <span className="text-xs">Sanduka:</span>
-                      <div className="w-14 h-14 flex justify-center items-center text-xs -mt-4">
-                        {renderCheckmark(userData?.pesertaSanduka)}
-                      </div>
-                      </div>
-                      </div>
-                    <div className="text-left w-full text-[0.625rem] sm:text-xs md:text-xs font-medium">{ userData?.nip }</div>
-                      </div>
+                    {/* User Details */}
+                    <div>
+                      <h2 className="text-lg md:text-xl font-semibold text-gray-800">
+                        {userData?.namaLengkap}
+                      </h2>
+                      <p className="text-xs text-gray-500 font-medium text-center">
+                        {userData?.npaPgri}
+                      </p>
+                      <p className="text-xs text-gray-500 font-medium text-center">
+                        {userData?.nip}
+                      </p>
+                    </div>
                   </div>
-                )}
-                <div className="w-full border overflow-x-auto -mt-11">
-                  <div className="flex space-x-2 px-1">
-                    <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 flex-shrink-0 w-40">
-                      <div>
-                        <p className="text-sm font-bold text-gray-800">
-                          Lapor Meninggal
-                        </p>
-                        <p className="text-xs font-semibold text-gray-500 uppercase">
-                          {jumlahMeninggal} Orang
-                        </p>
-                        <p className="text-sm text-red-500 font-medium mt-1">
-                          <span className="mr-1">
-                            {new Date().toLocaleDateString("id-ID", {
-                              day: "2-digit",
-                              month: "long",
-                              year: "numeric",
-                            })}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
 
-                    <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 flex-shrink-0 w-40">
-                      <div>
-                        <p className="text-sm font-bold text-gray-800">
-                          Sanduka Diberikan
-                        </p>
-                        <p className="text-xs font-semibold text-gray-500 uppercase">
-                          {jumlahSantunan} Orang
-                        </p>
-                        <p className="text-sm text-green-500 font-medium mt-1">
-                          <span className="mr-1">
-                            2020 -{" "}
-                            {new Date().toLocaleDateString("id-ID", {
-                              month: "long",
-                              year: "numeric",
-                            })}
+                  {/* User Info */}
+                  <div className="flex flex-col items-center text-center flex-1 gap-2 -mt-3">
+                    {/* Membership Status */}
+                    <div className="grid grid-cols-3 gap-3 w-full max-w-xs">
+                      {[
+                        { label: "Daspen", value: userData?.pesertaDaspen },
+                        {
+                          label: "KTA Digital",
+                          value: userData?.pesertaKtaDigital,
+                        },
+                        { label: "Sanduka", value: userData?.pesertaSanduka },
+                      ].map((item, index) => (
+                        <div key={index} className="flex flex-col items-center">
+                          <span className="text-xs font-medium text-gray-600">
+                            {item.label}
                           </span>
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 flex-shrink-0 w-40">
-                      <div>
-                        <p className="text-sm font-bold text-gray-800">
-                          Total Santunan
-                        </p>
-                        <p className="text-xs font-semibold text-gray-500 uppercase">
-                          {formattedAmount}
-                        </p>
-                        <p className="text-sm text-green-500 font-medium mt-1">
-                          <span className="mr-1">
-                            2020 -{" "}
-                            {new Date().toLocaleDateString("id-ID", {
-                              month: "long",
-                              year: "numeric",
-                            })}
-                          </span>
-                        </p>
-                      </div>
+                          <div className="mt-1 w-8 h-8 flex justify-center items-center bg-gray-100 rounded-full shadow-sm">
+                            {renderCheckmark(item.value)}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
-              </>
-            ) : (
-              <div className="w-full border">
-                {(role === "USER" || role === "ADMIN") && (
-                 <div className="flex space-x-5 mb-16 justify-center -mt-48">
-                 <Image
-                   src={fotoBase64 ? `data:image/jpeg;base64,${fotoBase64}` : profileImageUrl}
-                   width={100}
-                   height={100}
-                   alt={`Foto User ${userData?.name}`}
-                   className="object-cover rounded"
-                   unoptimized={true}
-                 />
-                 <div className="flex flex-col justify-center items-center text-center -space-y-4">
-                   <div className="flex items-center justify-center space-x-8">
-                     <div className="flex items-center justify-center">
-                       <span className="text-lg">Daspen:</span>
-                       <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
-                         {renderCheckmark(userData?.pesertaDaspen)}
-                       </div>
-                     </div>
-               
-                     <div className="flex items-center justify-center">
-                       <span className="text-lg">KTA Digital:</span>
-                       <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
-                         {renderCheckmark(userData?.pesertaKtaDigital)}
-                       </div>
-                     </div>
-               
-                     <div className="flex items-center justify-center">
-                       <span className="text-lg">Sanduka:</span>
-                       <div className="w-14 h-14 flex ml-2 justify-center items-center text-2xl">
-                         {renderCheckmark(userData?.pesertaSanduka)}
-                       </div>
-                     </div>
-                   </div>
-                        <div className="text-left w-full text-[0.625rem] sm:text-xs md:text-xs font-medium">{ userData?.nip }</div>
-                 </div>
-               </div>
-               
-                )}
+              </div>
+            )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 px-12 -mt-12">
-                  <div className="bg-white p-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105">
+            {/* Stats Cards */}
+            {!isMobile && (
+              <div className="px-4 mx-auto max-w-6xl -mt-10 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Card 1 */}
+                  <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-xl font-bold text-gray-800 -mt-1">
+                        <h3 className="text-lg font-bold text-gray-800">
                           Lapor Meninggal
-                        </p>
-                        <p className="text-xs font-semibold text-gray-500 uppercase mt-1">
-                          {jumlahMeninggal} Orang
-                        </p>
-                        <p className="text-sm text-red-500 font-medium mt-1">
-                          <span className="mr-1">
-                            {new Date().toLocaleDateString("id-ID", {
-                              day: "2-digit",
-                              month: "long",
-                              year: "numeric",
-                            })}
+                        </h3>
+                        <p className="text-2xl font-bold text-red-600 mt-2">
+                          {jumlahMeninggal}{" "}
+                          <span className="text-sm font-medium text-gray-500">
+                            Orang
                           </span>
                         </p>
+                        <p className="text-xs text-gray-500 mt-2">
+                          {new Date().toLocaleDateString("id-ID", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </p>
                       </div>
-                      <div className="flex-shrink-0 bg-red-500 rounded-full p-2 mt-0">
+                      <div className="bg-red-100 p-3 rounded-full">
                         <FontAwesomeIcon
                           icon={faBullhorn}
-                          className="text-white text-xl"
+                          className="text-red-600 text-xl"
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105">
+                  {/* Card 2 */}
+                  <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-xl font-bold text-gray-800 -mt-1">
+                        <h3 className="text-lg font-bold text-gray-800">
                           Sanduka Diberikan
-                        </p>
-                        <p className="text-xs font-semibold text-gray-500 uppercase mt-1">
-                          {jumlahSantunan} Orang
-                        </p>
-                        <p className="text-sm text-green-500 font-medium mt-1">
-                          <span className="mr-1">
-                            2020 -{" "}
-                            {new Date().toLocaleDateString("id-ID", {
-                              month: "long",
-                              year: "numeric",
-                            })}
+                        </h3>
+                        <p className="text-2xl font-bold text-orange-600 mt-2">
+                          {jumlahSantunan}{" "}
+                          <span className="text-sm font-medium text-gray-500">
+                            Orang
                           </span>
                         </p>
+                        <p className="text-xs text-gray-500 mt-2">
+                          2020 -{" "}
+                          {new Date().toLocaleDateString("id-ID", {
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </p>
                       </div>
-                      <div className="flex-shrink-0 bg-orange-500 rounded-full p-2 mt-0">
+                      <div className="bg-orange-100 p-3 rounded-full">
                         <FontAwesomeIcon
                           icon={faUser}
-                          className="text-white text-xl"
+                          className="text-orange-600 text-xl"
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-white p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 h-24">
+                  {/* Card 3 */}
+                  <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-xl font-bold text-gray-800 -mt-1">
+                        <h3 className="text-lg font-bold text-gray-800">
                           Total Santunan
-                        </p>
-                        <p className="text-xs font-semibold text-gray-500 uppercase mt-1">
+                        </h3>
+                        <p className="text-2xl font-bold text-green-600 mt-2">
                           {formattedAmount}
                         </p>
-                        <p className="text-sm text-green-500 font-medium mt-1">
-                          <span className="mr-1">
-                            2020 -{" "}
-                            {new Date().toLocaleDateString("id-ID", {
-                              month: "long",
-                              year: "numeric",
-                            })}
-                          </span>
+                        <p className="text-xs text-gray-500 mt-2">
+                          2020 -{" "}
+                          {new Date().toLocaleDateString("id-ID", {
+                            month: "long",
+                            year: "numeric",
+                          })}
                         </p>
                       </div>
-                      <div className="flex-shrink-0 bg-yellow-500 rounded-full p-2 mt-0">
+                      <div className="bg-green-100 p-3 rounded-full">
                         <FontAwesomeIcon
                           icon={faMoneyBill}
-                          className="text-white text-xl"
+                          className="text-green-600 text-xl"
                         />
                       </div>
                     </div>
@@ -862,174 +783,204 @@ export default function IconGrid() {
             )}
           </div>
 
-          <div className="px-6 mt-5 sm:px-12 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-2">
-            {filteredIcons.map((item, index) => (
-              <div key={index} className="relative">
-                <div
-                  onClick={(e) => handleMainMenuClick(e, index, item.href)}
-                  className="flex flex-col items-center cursor-pointer transition duration-300 transform hover:scale-105 hover:shadow-xl p-7 sm:p-4 sm:bg-white sm:rounded-lg sm:shadow-lg lg:p-4 lg:bg-transparent lg:shadow-none"
-                >
-                  <FontAwesomeIcon
-                    icon={item.icon}
-                    size="2x"
-                    className={`mb-2 ${item.color}`}
-                  />
-                  <span className="text-xs font-normal text-gray-700 text-center whitespace-nowrap">
-                    {item.label}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div
-          className={` flex flex-col items-center my-4 ${
-            isSidebarOpen ? "ml-32" : "ml-0"
-          }`}
-        >
-          <hr className="mt-2 border-gray-300 w-full" />
-          <h5 className="text-lg sm:text-xl font-semibold text-gray-800 mt-4 text-center">
-            Anggota Meninggal Bulan Ini
-          </h5>
-        </div>
-
-        <div
-          className={`w-full flex justify-center items-center relative mb-16 sm:mb-4 ${
-            isSidebarOpen ? "ml-32" : "ml-0"
-          }`}
-        >
-          {isMobile ? (
-            <MobileDeceasedScroll
-              sortedData={sortedData}
-              formatDate={formatDate}
-            />
-          ) : (
-            <>
-              <button
-                onClick={handlePrev}
-                className="hidden text-red-500 lg:block absolute left-32 top-1/2 transform -translate-y-1/2 z-10 bg-gray-100 p-2 rounded-full shadow-md hover:bg-gray-300"
-              >
-                <FontAwesomeIcon icon={faChevronLeft} />
-              </button>
-
-              <div className="flex mx-auto sm:mx-44 space-x-4 overflow-x-auto w-full px-4 lg:px-0 lg:grid lg:grid-cols-5 lg:gap-4 lg:overflow-hidden">
-                {sortedData &&
-                  sortedData
-                    .slice(currentIndex, currentIndex + itemsPerPage)
-                    .map((currentData, index) => (
-                      <div key={index} className="mb-3 max-w-xs">
-                        {/* Gradient Header */}
-                        <div className="bg-gradient-to-r from-blue-400 to-blue-800 p-2 text-center rounded-lg mb-2 relative">
-                          <div className="flex justify-center mb-1">
-                            <Image
-                              src={
-                                fotoMeninggal[index]
-                                  ? `data:image/jpeg;base64,${fotoMeninggal[index]}`
-                                  : profileImageUrl
-                              }
-                              width={80}
-                              height={80}
-                              alt={`Foto User ${currentData.namaLengkap}`}
-                              className="object-cover rounded"
-                              unoptimized={true}
-                            />
-                          </div>
-                          <h2 className="text-sm font-bold text-white mb-0.5">
-                            {currentData.namaLengkap}
-                          </h2>
-                          <p className="text-xs font-medium text-white">
-                            Meninggal{" "}
-                            {formatDate(currentData.waktuMeninggalTerlapor)}
-                          </p>
-                        </div>
-
-                        {/* Detailed Information */}
-                        <div className="text-center text-gray-700 mb-2 -mt-2">
-                          <p className="text-xs">
-                            {currentData.npaPgri || "N/A"}
-                          </p>
-                          <p className="text-xs">
-                            {currentData.tempatLahir},{" "}
-                            {formatDate(currentData.tanggalLahir)}
-                          </p>
-                          <p className="text-xs">{currentData.jabatan}</p>
-                          <p className="text-xs">{currentData.unitKerja}</p>
-                          <p className="text-xs">{currentData.cabang}</p>
-                          <p className="text-xs">{currentData.alamat}</p>
-                        </div>
-
-                        {/* Notes */}
-                        <p className="text-center text-gray-600 mb-1 text-xs font-medium">
-                          Catatan: {currentData.keteranganTerlapor}
-                        </p>
-
-                        {/* Action Buttons */}
-                        <div className="flex justify-around mb-2 gap-1">
-                          <button className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-0.5 px-2 rounded-full transition duration-300">
-                            <FontAwesomeIcon
-                              icon={faLocation}
-                              className="mr-1"
-                            />{" "}
-                            Lokasi
-                          </button>
-                        </div>
-
-                        {/* Reporter Section */}
-                        <div className="bg-blue-700 text-white text-xs font-medium py-1 px-3 rounded-full text-center flex items-center justify-center mb-2">
-                          <FontAwesomeIcon icon={faBullhorn} className="mr-1" />{" "}
-                          PELAPOR
-                        </div>
-                        <p className="text-center text-gray-600 mt-1 text-xs">
-                          {formatDate(currentData.tanggalPelaporan)},{" "}
-                          {currentData.jamLapor}
-                        </p>
-                        <p className="text-center text-gray-600 text-xs">
-                          {currentData.namaPelapor || "N/A"}
-                        </p>
-                        <p className="text-center text-gray-600 text-xs">
-                          📞 {currentData.nomorHpPelapor || "N/A"}
-                        </p>
+          {/* Menu Icons */}
+          <div className="px-4 mx-auto max-w-6xl mb-12">
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">
+                Menu Utama
+              </h3>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-4">
+                {filteredIcons.map((item, index) => (
+                  <div key={index} className="relative">
+                    <div
+                      onClick={(e) => handleMainMenuClick(e, index, item.href)}
+                      className="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer"
+                    >
+                      <div
+                        className={`w-14 h-14 ${
+                          item.color.includes("text-")
+                            ? item.color.replace("text-", "bg-") + "/10"
+                            : "bg-gray-100"
+                        } rounded-full flex items-center justify-center mb-3 shadow-sm`}
+                      >
+                        <FontAwesomeIcon
+                          icon={item.icon}
+                          className={`${item.color} text-2xl`}
+                        />
                       </div>
-                    ))}
+                      <span className="text-sm font-medium text-gray-700 text-center">
+                        {item.label}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Deceased Members Section */}
+          <div className="px-4 mx-auto max-w-6xl mb-12">
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-gray-800">
+                  Anggota Meninggal Bulan Ini
+                </h3>
+
+                {!isMobile && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handlePrev}
+                      className="text-gray-600 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition"
+                    >
+                      <FontAwesomeIcon icon={faChevronLeft} />
+                    </button>
+                    <button
+                      onClick={handleNext}
+                      className="text-gray-600 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition"
+                    >
+                      <FontAwesomeIcon icon={faChevronRight} />
+                    </button>
+                  </div>
+                )}
               </div>
 
-              <button
-                onClick={handleNext}
-                className="hidden text-red-500 lg:block absolute right-32 top-1/2 transform -translate-y-1/2 z-10 bg-gray-100 p-2 rounded-full shadow-md hover:bg-gray-300"
-              >
-                <FontAwesomeIcon icon={faChevronRight} />
-              </button>
-            </>
-          )}
-        </div>
+              {isMobile ? (
+                <MobileDeceasedScroll
+                  sortedData={sortedData}
+                  formatDate={formatDate}
+                />
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                  {sortedData &&
+                    sortedData
+                      .slice(currentIndex, currentIndex + itemsPerPage)
+                      .map((currentData, index) => (
+                        <div
+                          key={index}
+                          className="border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-md"
+                        >
+                          {/* Header */}
+                          <div className="bg-gradient-to-r from-blue-500 to-blue-700 p-4 text-center">
+                            <div className="mx-auto w-20 h-20 rounded-full overflow-hidden border-2 border-white mb-3">
+                              <Image
+                                src={
+                                  fotoMeninggal[index]
+                                    ? `data:image/jpeg;base64,${fotoMeninggal[index]}`
+                                    : profileImageUrl
+                                }
+                                width={80}
+                                height={80}
+                                alt={`Foto ${currentData.namaLengkap}`}
+                                className="object-cover w-full h-full"
+                                unoptimized={true}
+                              />
+                            </div>
+                            <h2 className="text-white font-bold truncate">
+                              {currentData.namaLengkap}
+                            </h2>
+                            <p className="text-xs text-blue-100 mt-1">
+                              Meninggal{" "}
+                              {formatDate(currentData.waktuMeninggalTerlapor)}
+                            </p>
+                          </div>
 
-        <div
-          className={`relative transition-all duration-300 ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          } z-10`}
-        >
-          <GaleriKegiatan />
-        </div>
+                          {/* Info */}
+                          <div className="p-4">
+                            <div className="text-xs text-gray-600 space-y-1 mb-3">
+                              <p>
+                                <span className="font-medium">NPA:</span>{" "}
+                                {currentData.npaPgri || "N/A"}
+                              </p>
+                              <p>
+                                <span className="font-medium">TTL:</span>{" "}
+                                {currentData.tempatLahir},{" "}
+                                {formatDate(currentData.tanggalLahir)}
+                              </p>
+                              <p>
+                                <span className="font-medium">Jabatan:</span>{" "}
+                                {currentData.jabatan}
+                              </p>
+                              <p>
+                                <span className="font-medium">Unit:</span>{" "}
+                                {currentData.unitKerja}
+                              </p>
+                              <p>
+                                <span className="font-medium">Cabang:</span>{" "}
+                                {currentData.cabang}
+                              </p>
+                            </div>
 
-        <div
-          className={`transition-all duration-300 ${
-            isSidebarOpen ? "w-[calc(100%-258px)] ml-64" : "w-full ml-0"
-          } z-10`}
-        >
-          <h2 className="text-2xl font-semibold text-gray-800 ml-2">
-            Maps Lokasi Rumah
-          </h2>
-          <p className="ml-2 text-blue-600">
-            Anda Bisa Menyesuaikan Lokasi Dengan Menggeser Posisi Maps Sesuai
-            Dengan Lokasi yang Sesuai Melalui Menu Edit Anggota
-          </p>
-          {latitude && longitude && (
-            <div className={`mt-8`}>
-              <MapComponent latitude={latitude} longitude={longitude} />
+                            <div className="text-xs text-gray-600 border-t border-dashed border-gray-200 pt-2 mt-2">
+                              <p className="font-medium">Catatan:</p>
+                              <p className="italic">
+                                {currentData.keteranganTerlapor}
+                              </p>
+                            </div>
+
+                            <div className="mt-4">
+                              <button className="w-full bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-1.5 px-3 rounded-full transition">
+                                <FontAwesomeIcon
+                                  icon={faLocation}
+                                  className="mr-1.5"
+                                />{" "}
+                                Lihat Lokasi
+                              </button>
+                            </div>
+
+                            <div className="bg-blue-50 rounded-lg p-3 mt-4">
+                              <div className="flex items-center justify-center mb-2">
+                                <span className="bg-blue-600 text-white text-xs py-1 px-3 rounded-full">
+                                  <FontAwesomeIcon
+                                    icon={faBullhorn}
+                                    className="mr-1"
+                                  />{" "}
+                                  PELAPOR
+                                </span>
+                              </div>
+                              <div className="text-xs text-gray-600 text-center">
+                                <p>
+                                  {formatDate(currentData.tanggalPelaporan)},{" "}
+                                  {currentData.jamLapor}
+                                </p>
+                                <p className="font-medium mt-1">
+                                  {currentData.namaPelapor || "N/A"}
+                                </p>
+                                <p>📞 {currentData.nomorHpPelapor || "N/A"}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+
+          {/* Gallery Section */}
+          <div className="px-4 mx-auto max-w-6xl mb-12">
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <GaleriKegiatan />
+            </div>
+          </div>
+
+          {/* Map Section */}
+          <div className="px-4 mx-auto max-w-6xl mb-12">
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-2">
+                Maps Lokasi Rumah
+              </h2>
+              <p className="text-sm text-blue-600 mb-6">
+                Anda bisa menyesuaikan lokasi dengan menggeser posisi maps
+                sesuai dengan lokasi yang tepat melalui Menu Edit Anggota
+              </p>
+              {latitude && longitude && (
+                <div className="h-80 md:h-96 rounded-lg overflow-hidden border border-gray-200">
+                  <MapComponent latitude={latitude} longitude={longitude} />
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
       </div>
 
       {isMobile && <FooterMobile />}
