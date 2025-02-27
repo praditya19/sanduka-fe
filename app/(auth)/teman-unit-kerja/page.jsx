@@ -277,7 +277,7 @@ const TemanUnitKerja = () => {
                       </div>
 
                       <div className="flex w-full items-center">
-                        <div className="flex-shrink-0 w-1/3 flex justify-center">
+                        <div className="flex-shrink-0 w-1/3 flex justify-center self-start">
                           <Image
                             src={base64Image}
                             width={80}
@@ -287,7 +287,7 @@ const TemanUnitKerja = () => {
                                 ? "Anggota Foto"
                                 : `Fallback Image: ${profileImageUrl}`
                             }
-                            className="rounded-full border-2 border-gray-200 max-w-[80px] max-h-[80px]"
+                            className=" border-2 border-gray-200 max-w-[80px] max-h-[80px]"
                           />
                         </div>
 

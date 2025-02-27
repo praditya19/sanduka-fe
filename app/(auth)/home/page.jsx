@@ -849,9 +849,6 @@ export default function IconGrid() {
           {/* Menu Icons */}
           <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">
-                Menu Utama
-              </h3>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-4">
                 {filteredIcons.map((item, index) => (
                   <div key={index} className="relative">
@@ -1021,7 +1018,7 @@ export default function IconGrid() {
 
           {/* Gallery Section */}
           <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
-            <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 w-full max-w-md sm:max-w-full">
               <GaleriKegiatan />
             </div>
           </div>
