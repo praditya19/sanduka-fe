@@ -363,7 +363,7 @@ export default function IconGrid() {
         console.error("Error saat mendapatkan data user:", error);
         setLoading(false);
       }
-    };   
+    };
 
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -454,63 +454,65 @@ export default function IconGrid() {
     }
     return null;
   };
-  
+
   const handleDaspenRegistration = async () => {
     const userId = sessionStorage.getItem("userId");
     if (!userId) {
       console.error("ID tidak ditemukan di sessionStorage");
       return;
     }
-  
+
     try {
       // Mengambil data pengguna berdasarkan userId
       const response = await GlobalApi.getUserById(userId);
       const nip = response?.nip;
-  
+
       if (!nip) {
         console.error("NIP tidak ditemukan.");
         return;
       }
-  
+
       // Menampilkan NIP yang diambil
       console.log("NIP yang diambil: ", nip);
-  
+
       // Verifikasi NIP dengan getFileByNip
       const nipData = await GlobalApi.getFileByNip(nip);
-  
+
       // Menampilkan NIP yang dibandingkan
       console.log("NIP yang dibandingkan: ", nipData?.nip);
-  
+
       if (nipData?.verifikasi === true) {
         console.log("NIP valid, data sudah terverifikasi.");
-  
+
         // Mengambil data berdasarkan NIP menggunakan GlobalApi.getByNIP
         const data = await GlobalApi.getByNIP(nip);
         console.log("Data yang diambil berdasarkan NIP: ", data);
-  
+
         // Menyimpan data yang diambil ke dalam state
         setData(data);
-  
+
         // Pastikan data telah diterima sebelum lanjutkan update
         if (data) {
           console.log("Data yang akan diupdate: ", data);
-  
+
           // Gunakan userId yang ada untuk update data
           const idToUse = userId;
-  
+
           // Mengirim data yang ingin diupdate
           const updateResponse = await GlobalApi.updateRegisUser(idToUse, data);
-          
+
           console.log("Respon dari API setelah update: ", updateResponse);
-  
-          } else {
+        } else {
           console.error("Data tidak ditemukan untuk diperbarui.");
         }
       } else {
         console.error("NIP tidak terverifikasi.");
       }
     } catch (error) {
-      console.error("Error saat mendapatkan data user atau memverifikasi NIP:", error);
+      console.error(
+        "Error saat mendapatkan data user atau memverifikasi NIP:",
+        error
+      );
     }
   };
 
@@ -693,8 +695,8 @@ export default function IconGrid() {
               <div className="relative mx-auto -mt-32 mb-12 px-4 max-w-md">
                 <div className="bg-white rounded-xl shadow-lg p-4 flex flex-col items-center gap-4 transition-all duration-300 hover:shadow-xl">
                   {/* User Photo */}
-                  <div className="relative flex-shrink-0">
-                    <div className="h-16 w-16 md:h-20 md:w-20 overflow-hidden border-2 border-gray-300 shadow-sm ml-5">
+                  <div className="flex flex-col items-center">
+                    <div className="h-16 w-16 md:h-20 md:w-20 flex items-center justify-center">
                       <Image
                         src={
                           fotoBase64
@@ -704,19 +706,19 @@ export default function IconGrid() {
                         width={80}
                         height={80}
                         alt={`Foto User ${userData?.name}`}
-                        className="object-cover w-full h-full"
+                        className="object-contain w-full h-full"
                         unoptimized={true}
                       />
                     </div>
                     {/* User Details */}
-                    <div>
+                    <div className="text-center mt-2">
                       <h2 className="text-lg md:text-xl font-semibold text-gray-800">
                         {userData?.namaLengkap}
                       </h2>
-                      <p className="text-xs text-gray-500 font-medium text-center">
+                      <p className="text-xs text-gray-500 font-medium">
                         {userData?.npaPgri}
                       </p>
-                      <p className="text-xs text-gray-500 font-medium text-center">
+                      <p className="text-xs text-gray-500 font-medium">
                         {userData?.nip}
                       </p>
                     </div>
@@ -845,7 +847,7 @@ export default function IconGrid() {
           </div>
 
           {/* Menu Icons */}
-          <div className="px-4 mx-auto max-w-6xl mb-12">
+          <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-6">
               <h3 className="text-lg font-bold text-gray-800 mb-4">
                 Menu Utama
@@ -880,8 +882,8 @@ export default function IconGrid() {
           </div>
 
           {/* Deceased Members Section */}
-          <div className="px-4 mx-auto max-w-6xl mb-12">
-            <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
+            <div className="bg-white rounded-xl p-6">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-bold text-gray-800">
                   Anggota Meninggal Bulan Ini
@@ -1018,21 +1020,21 @@ export default function IconGrid() {
           </div>
 
           {/* Gallery Section */}
-          <div className="px-4 mx-auto max-w-6xl mb-12">
+          <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-6">
               <GaleriKegiatan />
             </div>
           </div>
 
           {/* Map Section */}
-          <div className="px-4 mx-auto max-w-6xl mb-12">
+          <div className="px-4 mx-auto max-w-6xl mb-12 -mt-10">
             <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-xl font-bold text-gray-800 mb-2">
                 Maps Lokasi Rumah
               </h2>
               <p className="text-sm text-blue-600 mb-6">
-                Anda bisa menyesuaikan lokasi dengan menggeser posisi maps
-                sesuai dengan lokasi yang tepat melalui Menu Edit Anggota
+                Anda dapat menyesuaikan lokasi dengan menggeser maps melalui
+                Menu Edit Anggota
               </p>
               {latitude && longitude && (
                 <div className="h-80 md:h-96 rounded-lg overflow-hidden border border-gray-200">
