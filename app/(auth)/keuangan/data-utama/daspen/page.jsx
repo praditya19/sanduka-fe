@@ -9,10 +9,83 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 
 const PROVINSI_PERCENTAGE = 0.895;
 const CABANG_PERCENTAGE = 0.065;
 const KABUPATEN_PERCENTAGE = 0.04;
+
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function Daspen() {
   const dropdownRef = useRef(null);
@@ -57,6 +130,7 @@ export default function Daspen() {
   const [newSelectedYear, setNewSelectedYear] = useState(
     new Date().getFullYear()
   );
+  const [notification, setNotification] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -269,111 +343,15 @@ export default function Daspen() {
     try {
       const id = 4;
       const result = await GlobalApi.updateIuranData(id, payload);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Data berhasil diperbarui!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          autoClose: 4000,
-          duration: 4000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Data Berhasil Diperbarui!`
+      });
     } catch (error) {
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <strong
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Gagal Memperbarui Data.
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 5000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Gagal Memperbarui Data!`
+      });
     }
   };
 
@@ -400,114 +378,18 @@ export default function Daspen() {
 
     try {
       await GlobalApi.createTargetDaspen(payload);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Data berhasil disimpan!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          autoClose: 4000,
-          duration: 4000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Data Berhasil Disimpan!`
+      });
       await fetchData();
       handleReset();
     } catch (error) {
       console.error("Error creating data target daspen:", error);
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <strong
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Gagal Menyimpan Data.
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 5000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Gagal Menyimpan Data!`
+      });
     }
   };
 
@@ -596,30 +478,16 @@ export default function Daspen() {
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
-          <Toaster
-            toastOptions={{
-              style: {
-                fontSize: "1.25rem",
-                padding: "16px",
-              },
-              success: {
-                style: {
-                  background: "white",
-                  color: "black",
-                },
-              },
-              error: {
-                style: {
-                  background: "#f44336",
-                  color: "#fff",
-                },
-              },
-            }}
-          />
+          {notification && (
+            <NotificationPopup
+              type={notification.type}
+              message={notification.message}
+              onClose={() => setNotification(null)}
+            />
+          )}
           <div className="p-4 bg-gray-50 rounded-lg shadow-lg ">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="bg-white p-6 rounded-lg shadow-md">
@@ -1183,19 +1051,17 @@ export default function Daspen() {
                       return (
                         <tr
                           key={index}
-                          className={`transition duration-200 ease-in-out ${
-                            isJumlahRow ? "bg-gray-300" : ""
-                          }`}
+                          className={`transition duration-200 ease-in-out ${isJumlahRow ? "bg-gray-300" : ""
+                            }`}
                         >
                           <td className="border px-6 py-4 text-center text-sm text-black">
                             {!isJumlahRow ? index + 1 : ""}
                           </td>
                           <td
-                            className={`border px-6 py-4 text-center text-sm ${
-                              isJumlahRow
+                            className={`border px-6 py-4 text-center text-sm ${isJumlahRow
                                 ? "text-gray-700 font-bold"
                                 : "text-black"
-                            }`}
+                              }`}
                           >
                             {row["Cabang/Khusus"] || "-"}
                           </td>
