@@ -24,10 +24,83 @@ import {
   AiOutlineEyeInvisible,
   AiOutlineWarning,
 } from "react-icons/ai";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 
 const MapComponent = dynamic(() => import("../../_components/MapComponent"), {
   ssr: false,
 });
+
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Page = () => {
   const [latitude, setLatitude] = useState(0);
@@ -76,6 +149,7 @@ const Page = () => {
   const [isSubmitClicked, setIsSubmitClicked] = useState(false);
   const [isValid, setIsValid] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   const updateUnitKerja = (kecamatan) => {
     const filteredUnitKerja = unitKerja.filter((item) => {
@@ -166,17 +240,28 @@ const Page = () => {
           setLatitude(position.coords.latitude);
           setLongitude(position.coords.longitude);
           setLoading(false);
+          setNotification({
+            type: 'success',
+            message: `Lokasi berhasil didapatkan: (${position.coords.latitude}, ${position.coords.longitude})`
+          });
         },
         () => {
-          toast.error("Gagal mendapatkan lokasi.");
+          setNotification({
+            type: 'error',
+            message: `Gagal mendapatkan lokasi`
+          });
           setLoading(false);
         }
       );
     } else {
-      toast.error("Geolocation tidak tersedia di perangkat Anda.");
+      setNotification({
+        type: 'error',
+        message: `Geolocation tidak tersedia di perangkat Anda`
+      });
       setLoading(false);
     }
   };
+
 
   const handleNpaChange = async (e) => {
     const npaValue = e.target.value;
@@ -207,7 +292,7 @@ const Page = () => {
           console.error("Error saat mengecek NPA:", error.message);
           setNpaMessage(<span style={{ color: "green" }}>Silakan Lanjutkan Pendaftaran Sanduka.</span>);
         }
-      }      
+      }
     }
   };
 
@@ -330,7 +415,10 @@ const Page = () => {
           .replace(/([A-Z])/g, " $1") // Menambahkan spasi sebelum huruf kapital
           .replace(/^./, (str) => str.toUpperCase()); // Mengubah huruf pertama menjadi kapital
 
-        toast.error(`${formattedField} wajib diisi.`);
+        setNotification({
+          type: 'error',
+          message: `${formattedField} wajib diisi.`
+        });
 
         if (formRefs[field]?.current) {
           formRefs[field].current.scrollIntoView({
@@ -513,59 +601,21 @@ const Page = () => {
 
     try {
       const apiResponse = await GlobalApi.registerUser(finalData);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "48px",
-              height: "48px",
-              color: "#06D001",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Selamat Anda Berhasil Mendaftar Di New Sanduka
-          </strong>
-          <span style={{ fontSize: "1.75rem" }}>
-            Anda Berhasil Mendaftar Menjadi Anggota Sanduka
-          </span>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          autoClose: 3000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: (
+          <>
+            <strong
+              style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
+            >
+              Selamat Anda Berhasil Mendaftar Di New Sanduka
+            </strong>
+            <span style={{ fontSize: "1.75rem" }}>
+              Anda Berhasil Mendaftar Menjadi Anggota Sanduka
+            </span>
+          </>
+        )
+      });
 
       // Hanya arahkan ke halaman berikutnya jika berhasil
       setTimeout(() => {
@@ -579,61 +629,10 @@ const Page = () => {
       // Untuk error lainnya, tampilkan toast error dan tetap di halaman
       const errorMessage =
         error.response?.data || "Terjadi kesalahan saat registrasi.";
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <strong
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Anda Belum Berhasil Mendaftar.
-          </strong>
-          <span style={{ fontSize: "1.75rem" }}>{errorMessage}</span>
-        </div>,
-        {
-          icon: null,
-          duration: 5000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: `Anda Belum Berhasil Mendaftar`
+      });
     }
   };
 
@@ -653,63 +652,99 @@ const Page = () => {
 
   const nextStep = () => {
     if (!selectedFile) {
-      toast.error("Harap unggah gambar sebelum melanjutkan.");
+      setNotification({
+        type: 'error',
+        message: `Harap unggah foto sebelum melanjutkan`
+      });
       return;
     }
 
     const validFormats = ["image/jpeg", "image/png", "image/jpg"];
     if (!validFormats.includes(selectedFile.type)) {
-      toast.error(
-        "Format file tidak didukung. Harap unggah file jpg, jpeg, atau png."
-      );
+      setNotification({
+        type: 'error',
+        message: `Format file tidak didukung. Harap unggah file jpg, jpeg, atau png.`
+      });
       return;
     }
 
     const email = watch("email");
     if (!email) {
-      toast.error("Email harus diisi.");
+      setNotification({
+        type: 'error',
+        message: `Email harus diisi.`
+      });
       return;
     }
 
     const password = watch("password");
     if (!password) {
-      toast.error("password harus diisi.");
+      setNotification({
+        type: 'error',
+        message: `Password harus diisi.`
+      });
       return;
     }
 
     const npaPgri = watch("npaPgri");
     if (!npaPgri) {
-      toast.error("npaPgri harus diisi.");
+      setNotification({
+        type: 'error',
+        message: `NPA PGRI harus diisi.`
+      });
       return;
     }
 
     const nip = watch("nip");
     if (!nip) {
-      toast.error("nip harus diisi.");
+      setNotification({
+        type: 'error',
+        message: `NIP harus diisi.`
+      });
       return;
     }
 
     const nik = watch("nik");
     if (!nik) {
-      toast.error("nik harus diisi.");
+      setNotification({
+        type: 'error',
+        message: `NIK harus diisi.`
+      });
       return;
     }
 
     const namaLengkap = watch("namaLengkap");
     if (!namaLengkap) {
-      toast.error("nama Lengkap harus diisi.");
+      setNotification({
+        type: 'error',
+        message: `Nama Lengkap harus diisi.`
+      });
       return;
     }
 
     const tempatLahir = watch("tempatLahir");
     if (!tempatLahir) {
-      toast.error("tempatLahir harus diisi.");
+      setNotification({
+        type: 'error',
+        message: `Tempat Lahir harus diisi.`
+      });
       return;
     }
 
     const tanggalLahir = watch("tanggalLahir");
     if (!tanggalLahir) {
-      toast.error("tanggalLahir harus diisi.");
+      setNotification({
+        type: 'error',
+        message: `Tanggal Lahir harus diisi`
+      });
+      return;
+    }
+
+    if (!latitude || !longitude) {
+      setNotification({
+        type: 'error',
+        message: `Harap Get Location terlebih dahulu.`
+      });
       return;
     }
 
@@ -718,7 +753,10 @@ const Page = () => {
         behavior: "smooth",
         block: "center",
       });
-      toast.error("Jenis kelamin harus diisi.");
+      setNotification({
+        type: 'error',
+        message: `Jenis Kelamin harus diisi`
+      });
       return;
     }
 
@@ -727,7 +765,10 @@ const Page = () => {
         behavior: "smooth",
         block: "center",
       });
-      toast.error("Agama harus diisi.");
+      setNotification({
+        type: 'error',
+        message: `Agama harus diisi.`
+      });
       return;
     }
 
@@ -736,19 +777,28 @@ const Page = () => {
         behavior: "smooth",
         block: "center",
       });
-      toast.error("Golongan darah harus diisi.");
+      setNotification({
+        type: 'error',
+        message: `Golongan darah harus diisi.`
+      });
       return;
     }
 
     const kodePos = watch("kodePos");
     if (!kodePos) {
-      toast.error("kodePos harus diisi.");
+      setNotification({
+        type: 'error',
+        message: `Kode Pos harus diisi.`
+      });
       return;
     }
 
     const nomorHp = watch("nomorHp");
     if (!nomorHp) {
-      toast.error("nomorHp harus diisi.");
+      setNotification({
+        type: 'error',
+        message: `Nomor HP harus diisi.`
+      });
       return;
     }
 
@@ -807,12 +857,11 @@ const Page = () => {
       <div className="w-full mx-auto overflow-x-auto">
         <div className="flex flex-row items-center justify-start space-x-2 sm:space-x-4 mb-2 whitespace-nowrap">
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
-              step === 1
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
-            // onClick={() => handleNavigation(1)}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 1
+              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+              }`}
+          // onClick={() => handleNavigation(1)}
           >
             1. SYARAT & KETENTUAN
           </div>
@@ -820,11 +869,10 @@ const Page = () => {
           <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
-              step === 2
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 2
+              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+              }`}
             onClick={() => handleNavigation(2)}
           >
             2. DATA PRIBADI
@@ -833,11 +881,10 @@ const Page = () => {
           <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
-              step === 3
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 3
+              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+              }`}
             onClick={() => handleNavigation(3)}
           >
             3. DATA PEKERJAAN
@@ -846,12 +893,11 @@ const Page = () => {
           <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
-              step === 4
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
-            // onClick={() => handleNavigation(4)}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 4
+              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+              }`}
+          // onClick={() => handleNavigation(4)}
           >
             4. MENUNGGU VERIFIKASI ADMIN
           </div>
@@ -859,49 +905,24 @@ const Page = () => {
           <hr className="border-t-2 border-gray-600 w-6 mx-2 sm:w-24 md:w-32 flex-shrink-0" />
 
           <div
-            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${
-              step === 5
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-            }`}
-            // onClick={() => handleNavigation(5)}
+            className={`py-2 px-4 rounded-full transition duration-300 text-sm flex-shrink-0 ${step === 5
+              ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+              : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+              }`}
+          // onClick={() => handleNavigation(5)}
           >
             5. SELESAI
           </div>
         </div>
       </div>
       <div className="container mx-auto max-w-screen-lg sm:max-w-full md:max-w-screen-lg px-4">
-        <Toaster
-          toastOptions={{
-            style: {
-              marginTop: "16%",
-              fontSize: "1.75rem",
-              padding: "10px",
-              width: "80%",
-              maxWidth: "700px",
-              height: "50%",
-              maxHeight: "400px",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 9999,
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            },
-            success: {
-              style: {
-                background: "white",
-                color: "black",
-              },
-            },
-            error: {
-              style: {
-                background: "white",
-                color: "black",
-              },
-            },
-          }}
-        />
+        {notification && (
+          <NotificationPopup
+            type={notification.type}
+            message={notification.message}
+            onClose={() => setNotification(null)}
+          />
+        )}
 
         {step === 2 && (
           <div>
@@ -1151,11 +1172,10 @@ const Page = () => {
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger
-                          className={`border ${
-                            errors.jenisKelamin
-                              ? "border-red-500"
-                              : "border-teal-500"
-                          } focus:ring-teal-500`}
+                          className={`border ${errors.jenisKelamin
+                            ? "border-red-500"
+                            : "border-teal-500"
+                            } focus:ring-teal-500`}
                         >
                           <SelectValue placeholder="Pilih Jenis Kelamin" />
                         </SelectTrigger>
@@ -1191,9 +1211,8 @@ const Page = () => {
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger
-                          className={`border ${
-                            errors.agama ? "border-red-500" : "border-teal-500"
-                          } focus:ring-teal-500`}
+                          className={`border ${errors.agama ? "border-red-500" : "border-teal-500"
+                            } focus:ring-teal-500`}
                         >
                           <SelectValue placeholder="Pilih Agama" />
                         </SelectTrigger>
@@ -1234,11 +1253,10 @@ const Page = () => {
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger
-                          className={`border ${
-                            errors.golonganDarah
-                              ? "border-red-500"
-                              : "border-teal-500"
-                          } focus:ring-teal-500`}
+                          className={`border ${errors.golonganDarah
+                            ? "border-red-500"
+                            : "border-teal-500"
+                            } focus:ring-teal-500`}
                         >
                           <SelectValue placeholder="Pilih Golongan Darah" />
                         </SelectTrigger>
@@ -1918,10 +1936,21 @@ const Page = () => {
                       });
 
                       if (isValid) {
-                        alert("Form sudah lengkap!");
+                        setNotification({
+                          type: "success",
+                          message: "Form sudah lengkap!",
+                        });
+                      } else {
+                        setNotification({
+                          type: "error",
+                          message: "Form masih ada yang belum valid!",
+                        });
                       }
                     } else {
-                      alert("Klik Submit terlebih dahulu!");
+                      setNotification({
+                        type: "error",
+                        message: "Klik Submit terlebih dahulu!",
+                      });
                     }
                   }}
                   className="text-white bg-red-500 hover:bg-red-600 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
@@ -1932,45 +1961,46 @@ const Page = () => {
                 </Button>
 
                 <Button
-  type="submit"
-  onClick={onSubmit}
-  className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
-  disabled={isLoading}  // Disable the button while loading
->
-  {isLoading ? (
-    <div className="flex items-center">
-      <svg
-        className="animate-spin h-5 w-5 text-white mr-2"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        ></circle>
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8v8H4z"
-        ></path>
-      </svg>
-      Loading...
-    </div>
-  ) : (
-    "Submit"
-  )}
-</Button>
+                  type="submit"
+                  onClick={onSubmit}
+                  className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
+                  disabled={isLoading}  // Disable the button while loading
+                >
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <svg
+                        className="animate-spin h-5 w-5 text-white mr-2"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        ></path>
+                      </svg>
+                      Loading...
+                    </div>
+                  ) : (
+                    "Submit"
+                  )}
+                </Button>
               </div>
             </form>
           </div>
-        )}
-      </div>
-    </div>
+        )
+        }
+      </div >
+    </div >
   );
 };
 

@@ -32,6 +32,7 @@ const MapComponent = ({ latitude, longitude, onPositionChange }) => {
   return (
     <div className="mt-8">
       <MapContainer
+        key={`${latitude}-${longitude}`} // Tambahkan key untuk memaksa re-render
         center={position}
         zoom={13}
         style={{ height: "400px", width: "100%" }}

@@ -22,6 +22,7 @@ import { AiOutlineInfoCircle } from "react-icons/ai";
 import { useRouter } from "next/navigation";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import HeaderMenu from "@/app/_components/HeaderMenu";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 
 const MapComponent = dynamic(
   () => import("../../../_components/MapComponent"),
@@ -29,6 +30,78 @@ const MapComponent = dynamic(
     ssr: false,
   }
 );
+
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Page = () => {
   const router = useRouter();
@@ -155,6 +228,7 @@ const Page = () => {
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
   const [errorFields, setErrorFields] = useState({});
+  const [notification, setNotification] = useState(null);
 
   // const handleChange = (index, e) => {
   //   const { value } = e.target;
@@ -483,14 +557,9 @@ const Page = () => {
     if (emptyFields.length > 0) {
       const firstEmptyField = emptyFields[0];
 
-      toast.error(`Field ${firstEmptyField.name} wajib diisi!`, {
-        position: "top-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
+      setNotification({
+        type: 'error',
+        message: `Field ${firstEmptyField.name} wajib diisi!`
       });
 
       const element = document.getElementById(firstEmptyField.id);
@@ -588,67 +657,20 @@ const Page = () => {
 
     if (!email) {
       console.error("Email tidak boleh kosong!");
-      toast.error("Email wajib diisi sebelum melanjutkan.");
+      setNotification({
+        type: 'error',
+        message: `Email wajib diisi sebelum melanjutkan!`
+      });
       return;
     }
 
     try {
       const response = await GlobalApi.updateUserById(id, formData);
       await handleCreateHistory();
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "2rem",
-              display: "block",
-              marginBottom: "28px",
-            }}
-          >
-            Data berhasil diperbarui!
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Data berhasil diperbarui!`
+      });
       sessionStorage.removeItem("anggotaId");
       setTimeout(() => {
         const role = sessionStorage.getItem("role");
@@ -661,60 +683,10 @@ const Page = () => {
       }, 3000);
     } catch (error) {
       console.error("Gagal mengupdate data:", error);
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Terjadi kesalahan saat mengupdate data.
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: `Terjadi kesalahan saat mengupdate data`
+      });
     }
   };
 
@@ -726,229 +698,35 @@ const Page = () => {
       const idToUse = userId || anggotaId;
 
       if (!idToUse) {
-        toast.error(
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                width: "150px",
-                height: "150px",
-                color: "red",
-                marginBottom: "16px",
-              }}
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-            </svg>
-            <strong
-              style={{
-                fontSize: "1.75rem",
-                display: "block",
-                marginBottom: "8px",
-              }}
-            >
-              ID tidak ditemukan.
-            </strong>
-          </div>,
-          {
-            icon: null,
-            duration: 2000,
-            style: {
-              marginTop: "12%",
-              fontSize: "1.75rem",
-              padding: "10px",
-              width: "80%",
-              maxWidth: "450px",
-              height: "50%",
-              maxHeight: "400px",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 9999,
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            },
-          }
-        );
+        setNotification({
+          type: 'error',
+          message: `ID tidak ditemukan!`
+        });
         return;
       }
 
       const nipData = await GlobalApi.getFileByNip(nip);
       if (nipData?.verifikasi === true) {
-        toast.success(
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                width: "48px",
-                height: "48px",
-                color: "#FFA500",
-                marginBottom: "16px",
-              }}
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 15c-.55 0-1-.45-1-1v-6c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1zm0-10c-.83 0-1.5-.67-1.5-1.5S11.17 4 12 4s1.5.67 1.5 1.5S12.83 7 12 7z" />
-            </svg>
-            <strong
-              style={{
-                fontSize: "1.75rem",
-                display: "block",
-                marginBottom: "8px",
-              }}
-            >
-              Data Anda Sudah Tersingkronisasi
-            </strong>
-          </div>,
-          {
-            icon: null,
-            duration: 2000,
-            style: {
-              marginTop: "12%",
-              fontSize: "1.75rem",
-              padding: "10px",
-              width: "80%",
-              maxWidth: "450px",
-              height: "50%",
-              maxHeight: "400px",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 9999,
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            },
-          }
-        );
+        setNotification({
+          type: 'success',
+          message: `Data Anda sudah Tersingkronisasi!`
+        });
         handleClosePopup();
         return;
       }
 
       const response = await GlobalApi.updateRegisUser(idToUse, data);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "48px",
-              height: "48px",
-              color: "#06D001",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Data berhasil disinkronkan!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Data Berhasil disinkronkan!`
+      });
       handleClosePopup();
     } catch (error) {
       console.error("Error saat mengirim data:", error);
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <strong
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Terjadi kesalahan saat mengirim data.
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: `Terjadi kesalahan saat mengirim data. Silahkan coba lagi.`
+      });
     }
   };
 
@@ -1002,60 +780,14 @@ const Page = () => {
 
     if (emptyFields.length > 0) {
       const firstEmptyField = emptyFields[0];
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
+      setNotification({
+        type: 'error',
+        message: (
+          <>
             Harap isi form {firstEmptyField.fieldName}!
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+          </>
+        )
+      });
       const newErrorFields = {};
       emptyFields.forEach(({ fieldName }) => {
         newErrorFields[fieldName] = true;
@@ -1106,110 +838,16 @@ const Page = () => {
       const data = await GlobalApi.getByNIP(nip);
       setData(data);
       setIsPopupVisible(true);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "48px",
-              height: "48px",
-              color: "#06D001",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Data ditemukan!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Data ditemukan!`
+      });
     } catch (error) {
       console.error("Gagal mengambil data NIP:", error);
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <strong
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Data NIP tidak ada, Silahkan Hubungi Admin.
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Data NIP tidak ada. Silahkan hubungi admin!`
+      });
     }
   };
 
@@ -1382,7 +1020,7 @@ const Page = () => {
     fetchGolonganJabatan();
   }, []);
 
-  useEffect(() => {}, [golonganJabatan]);
+  useEffect(() => { }, [golonganJabatan]);
 
   useEffect(() => {
     const fetchUnitKerja = async () => {
@@ -1474,56 +1112,30 @@ const Page = () => {
     <div className="w-full mx-auto px-4 py-6 bg-slate-200">
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div className="container mx-auto max-w-screen-lg sm:max-w-full md:max-w-screen-lg px-4">
-        <Toaster
-          toastOptions={{
-            style: {
-              marginTop: "16%",
-              fontSize: "1.75rem",
-              padding: "10px",
-              width: "80%",
-              maxWidth: "700px",
-              height: "50%",
-              maxHeight: "400px",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 9999,
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            },
-            success: {
-              style: {
-                background: "white",
-                color: "black",
-              },
-            },
-            error: {
-              style: {
-                background: "white",
-                color: "black",
-              },
-            },
-          }}
-        />
+        {notification && (
+          <NotificationPopup
+            type={notification.type}
+            message={notification.message}
+            onClose={() => setNotification(null)}
+          />
+        )}
         <div className="w-full mt-12">
           {/* Tabs Navigation */}
           <div className="flex flex-row space-x-4 mb-2 justify-center sm:justify-start">
             <div
-              className={`py-2 px-4 rounded-full transition duration-300 text-xs sm:text-sm md:text-base ${
-                step === 1
-                  ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                  : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-              }`}
+              className={`py-2 px-4 rounded-full transition duration-300 text-xs sm:text-sm md:text-base ${step === 1
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+                }`}
               onClick={() => setStep(1)}
             >
               I. DATA PRIBADI
             </div>
             <div
-              className={`py-2 px-4 rounded-full transition duration-300 text-xs sm:text-sm md:text-base ${
-                step === 2
-                  ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                  : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-              }`}
+              className={`py-2 px-4 rounded-full transition duration-300 text-xs sm:text-sm md:text-base ${step === 2
+                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+                }`}
               onClick={() => setStep(2)}
             >
               II. DATA PEKERJAAN
@@ -1582,9 +1194,8 @@ const Page = () => {
                       defaultValue={email}
                       render={({ field: { onChange, value } }) => (
                         <Input
-                          className={`border-teal-500 ${
-                            errorFields.email ? "border-red-500" : ""
-                          }`}
+                          className={`border-teal-500 ${errorFields.email ? "border-red-500" : ""
+                            }`}
                           type="email"
                           id="email"
                           placeholder="Email"
@@ -1616,9 +1227,8 @@ const Page = () => {
                       placeholder="contoh: Kat45and!"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className={`border-teal-500 ${
-                        errorFields.email ? "border-red-500" : ""
-                      }`}
+                      className={`border-teal-500 ${errorFields.email ? "border-red-500" : ""
+                        }`}
                     />
 
                     {isPasswordInfoOpen && (
@@ -1661,9 +1271,8 @@ const Page = () => {
                       value={npaPgri}
                       onChange={(e) => setNpaPgri(e.target.value)}
                       maxLength={11}
-                      className={`border-teal-500 ${
-                        errorFields.npaPgri ? "border-red-500" : ""
-                      }`}
+                      className={`border-teal-500 ${errorFields.npaPgri ? "border-red-500" : ""
+                        }`}
                     />
                   </div>
 
@@ -1680,9 +1289,8 @@ const Page = () => {
                       placeholder="Nomor Induk Pendidik (NIP)"
                       value={nip}
                       onChange={(e) => setNip(e.target.value)}
-                      className={`border-teal-500 ${
-                        errorFields.nip ? "border-red-500" : ""
-                      }`}
+                      className={`border-teal-500 ${errorFields.nip ? "border-red-500" : ""
+                        }`}
                     />
                     <Button
                       type="button"
@@ -1768,9 +1376,8 @@ const Page = () => {
                       placeholder="16 Digit"
                       value={nik}
                       onChange={(e) => setNik(e.target.value)}
-                      className={`border-teal-500 ${
-                        errorFields.nik ? "border-red-500" : ""
-                      }`}
+                      className={`border-teal-500 ${errorFields.nik ? "border-red-500" : ""
+                        }`}
                     />
                   </div>
                   <div className="w-full">
@@ -1786,9 +1393,8 @@ const Page = () => {
                       placeholder="Sesuai Dengan KTP"
                       value={namaLengkap}
                       onChange={(e) => setNamaLengkap(e.target.value)}
-                      className={`border-teal-500 ${
-                        errorFields.namaLengkap ? "border-red-500" : ""
-                      }`}
+                      className={`border-teal-500 ${errorFields.namaLengkap ? "border-red-500" : ""
+                        }`}
                     />
                   </div>
                 </div>
@@ -1804,9 +1410,8 @@ const Page = () => {
                       placeholder="Tempat Kelahiran"
                       value={tempatLahir}
                       onChange={(e) => setTempatLahir(e.target.value)}
-                      className={`border-teal-500 ${
-                        errorFields.tempatLahir ? "border-red-500" : ""
-                      }`}
+                      className={`border-teal-500 ${errorFields.tempatLahir ? "border-red-500" : ""
+                        }`}
                     />
                   </div>
 
@@ -1820,11 +1425,10 @@ const Page = () => {
                       defaultValue={formattedTanggalLahir}
                       render={({ field: { onChange, value } }) => (
                         <Input
-                          className={`border-teal-500 ${
-                            errorFields.formattedTanggalLahir
-                              ? "border-red-500"
-                              : ""
-                          }`}
+                          className={`border-teal-500 ${errorFields.formattedTanggalLahir
+                            ? "border-red-500"
+                            : ""
+                            }`}
                           type="date"
                           id="tanggalLahir"
                           value={value || formattedTanggalLahir}
@@ -1857,9 +1461,8 @@ const Page = () => {
                           }}
                         >
                           <SelectTrigger
-                            className={`border-teal-500 ${
-                              errorFields.jenisKelamin ? "border-red-500" : ""
-                            }`}
+                            className={`border-teal-500 ${errorFields.jenisKelamin ? "border-red-500" : ""
+                              }`}
                           >
                             <SelectValue placeholder="Pilih Jenis Kelamin" />
                           </SelectTrigger>
@@ -1894,9 +1497,8 @@ const Page = () => {
                           }}
                         >
                           <SelectTrigger
-                            className={`border-teal-500 ${
-                              errorFields.agama ? "border-red-500" : ""
-                            }`}
+                            className={`border-teal-500 ${errorFields.agama ? "border-red-500" : ""
+                              }`}
                           >
                             <SelectValue placeholder="Pilih Agama" />
                           </SelectTrigger>
@@ -1935,9 +1537,8 @@ const Page = () => {
                           }}
                         >
                           <SelectTrigger
-                            className={`border-teal-500 ${
-                              errorFields.golonganDarah ? "border-red-500" : ""
-                            }`}
+                            className={`border-teal-500 ${errorFields.golonganDarah ? "border-red-500" : ""
+                              }`}
                           >
                             <SelectValue placeholder="Pilih Golongan Darah" />
                           </SelectTrigger>
@@ -1969,9 +1570,8 @@ const Page = () => {
                             placeholder="JL. RT.  RW.  Desa, Kecamatan, Kabupaten"
                             value={alamat}
                             onChange={(e) => setAlamat(e.target.value)}
-                            className={`border-teal-500 ${
-                              errorFields.alamat ? "border-red-500" : ""
-                            }`}
+                            className={`border-teal-500 ${errorFields.alamat ? "border-red-500" : ""
+                              }`}
                           />
                         )}
                       />
@@ -2027,9 +1627,8 @@ const Page = () => {
                       placeholder="Nomor Handphone Aktif"
                       value={nomorHp}
                       onChange={(e) => setNomorHp(e.target.value)}
-                      className={`border-teal-500 ${
-                        errorFields.nomorHp ? "border-red-500" : ""
-                      }`}
+                      className={`border-teal-500 ${errorFields.nomorHp ? "border-red-500" : ""
+                        }`}
                     />
                   </div>
                 </div>
@@ -2045,9 +1644,8 @@ const Page = () => {
                       placeholder=" Nama Suami/Istri"
                       value={namaSuamiIstri}
                       onChange={(e) => setNamaSuamiIstri(e.target.value)}
-                      className={`border-teal-500 ${
-                        errorFields.namaSuamiIstri ? "border-red-500" : ""
-                      }`}
+                      className={`border-teal-500 ${errorFields.namaSuamiIstri ? "border-red-500" : ""
+                        }`}
                     />
                   </div>
                   <div className="w-full">
@@ -2151,9 +1749,8 @@ const Page = () => {
                       <div className="relative">
                         <Input
                           type="text"
-                          className={`border-teal-500 ${
-                            errorFields.cabang ? "border-red-500" : ""
-                          } rounded-lg p-2 bg-white shadow-sm w-full`}
+                          className={`border-teal-500 ${errorFields.cabang ? "border-red-500" : ""
+                            } rounded-lg p-2 bg-white shadow-sm w-full`}
                           placeholder="Pilih Cabang"
                           value={selectedCabang || ""}
                           readOnly
@@ -2218,9 +1815,8 @@ const Page = () => {
                       <div className="relative">
                         <Input
                           type="text"
-                          className={`border-teal-500 rounded-lg p-2 bg-white shadow-sm w-full ${
-                            errorFields.unitKerja ? "border-red-500" : ""
-                          }`}
+                          className={`border-teal-500 rounded-lg p-2 bg-white shadow-sm w-full ${errorFields.unitKerja ? "border-red-500" : ""
+                            }`}
                           placeholder="Pilih Unit Kerja"
                           value={selectedUnitKerja || ""}
                           readOnly
@@ -2256,7 +1852,7 @@ const Page = () => {
                             {/* List hasil pencarian */}
                             <ul className="max-h-48 overflow-y-auto">
                               {filteredUnitKerja &&
-                              filteredUnitKerja.length > 0 ? (
+                                filteredUnitKerja.length > 0 ? (
                                 filteredUnitKerja.map((item) => (
                                   <li
                                     key={item.id}
@@ -2299,9 +1895,8 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${
-                            errorFields?.jabatan ? "border-red-500" : ""
-                          }`}
+                          className={`border-teal-500 ${errorFields?.jabatan ? "border-red-500" : ""
+                            }`}
                         >
                           <SelectValue placeholder="Pilih Jabatan" />
                         </SelectTrigger>
@@ -2336,9 +1931,8 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${
-                            errorFields.tingkatSekolah ? "border-red-500" : ""
-                          }`}
+                          className={`border-teal-500 ${errorFields.tingkatSekolah ? "border-red-500" : ""
+                            }`}
                         >
                           <SelectValue placeholder="Pilih Jenjang Sekolah" />
                         </SelectTrigger>
@@ -2384,9 +1978,8 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${
-                            errorFields.statusSekolah ? "border-red-500" : ""
-                          }`}
+                          className={`border-teal-500 ${errorFields.statusSekolah ? "border-red-500" : ""
+                            }`}
                         >
                           <SelectValue placeholder="Pilih Status Sekolah" />
                         </SelectTrigger>
@@ -2417,9 +2010,8 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${
-                            errorFields.statusPegawai ? "border-red-500" : ""
-                          }`}
+                          className={`border-teal-500 ${errorFields.statusPegawai ? "border-red-500" : ""
+                            }`}
                         >
                           <SelectValue placeholder="Pilih Status Pegawai" />
                         </SelectTrigger>
@@ -2446,9 +2038,8 @@ const Page = () => {
                     defaultValue={formattedTahunDiangkat || ""}
                     render={({ field: { onChange, value } }) => (
                       <Input
-                        className={`border-teal-500 ${
-                          errorFields.tahunDiangkat ? "border-red-500" : ""
-                        }`}
+                        className={`border-teal-500 ${errorFields.tahunDiangkat ? "border-red-500" : ""
+                          }`}
                         type="date"
                         id="tahunDiangkat"
                         value={value || tahunDiangkat || ""}
@@ -2479,9 +2070,8 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${
-                            errorFields.pangkatGolongan ? "border-red-500" : ""
-                          }`}
+                          className={`border-teal-500 ${errorFields.pangkatGolongan ? "border-red-500" : ""
+                            }`}
                         >
                           <SelectValue placeholder="Pilih Golongan" />
                         </SelectTrigger>
@@ -2517,11 +2107,10 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${
-                            errorFields.pendidikanTerakhir
-                              ? "border-red-500"
-                              : ""
-                          }`}
+                          className={`border-teal-500 ${errorFields.pendidikanTerakhir
+                            ? "border-red-500"
+                            : ""
+                            }`}
                         >
                           <SelectValue placeholder="Pilih Pendidikan" />
                         </SelectTrigger>
@@ -2557,11 +2146,10 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${
-                            errorFields.sertifikatPendidik
-                              ? "border-red-500"
-                              : ""
-                          }`}
+                          className={`border-teal-500 ${errorFields.sertifikatPendidik
+                            ? "border-red-500"
+                            : ""
+                            }`}
                         >
                           <SelectValue placeholder="Sertifikat" />
                         </SelectTrigger>
@@ -2597,9 +2185,8 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${
-                            errorFields.kategoriDaspen ? "border-red-500" : ""
-                          }`}
+                          className={`border-teal-500 ${errorFields.kategoriDaspen ? "border-red-500" : ""
+                            }`}
                         >
                           <SelectValue placeholder="Pilih Kategori Daspen" />
                         </SelectTrigger>
@@ -2635,11 +2222,10 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${
-                            errorFields.valueGolonganJabatan
-                              ? "border-red-500"
-                              : ""
-                          }`}
+                          className={`border-teal-500 ${errorFields.valueGolonganJabatan
+                            ? "border-red-500"
+                            : ""
+                            }`}
                         >
                           <SelectValue placeholder="Pilih Golongan Jabatan" />
                         </SelectTrigger>
@@ -2679,9 +2265,8 @@ const Page = () => {
                     defaultValue={mengajar}
                     render={({ field: { onChange, value } }) => (
                       <Input
-                        className={`border-teal-500 ${
-                          errorFields.mengajar ? "border-red-500" : ""
-                        }`}
+                        className={`border-teal-500 ${errorFields.mengajar ? "border-red-500" : ""
+                          }`}
                         type="text"
                         id="mengajar"
                         placeholder="Mengajar"
@@ -2872,60 +2457,14 @@ const Page = () => {
                       );
                       if (emptyFields.length > 0) {
                         const firstEmptyField = emptyFields[0];
-                        toast.error(
-                          <div
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              textAlign: "center",
-                            }}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              style={{
-                                width: "150px",
-                                height: "150px",
-                                color: "red",
-                                marginBottom: "16px",
-                              }}
-                              fill="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-                              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
-                            </svg>
-                            <h3
-                              style={{
-                                fontSize: "1.75rem",
-                                display: "block",
-                                marginBottom: "8px",
-                              }}
-                            >
+                        setNotification({
+                          type: 'error',
+                          message: (
+                            <>
                               Harap isi form {firstEmptyField.name}!
-                            </h3>
-                          </div>,
-                          {
-                            icon: null,
-                            duration: 2000,
-                            style: {
-                              marginTop: "12%",
-                              fontSize: "1.75rem",
-                              padding: "10px",
-                              width: "80%",
-                              maxWidth: "450px",
-                              height: "50%",
-                              maxHeight: "400px",
-                              transform: "translate(-50%, -50%)",
-                              textAlign: "center",
-                              zIndex: 9999,
-                              backgroundColor: "#fff",
-                              borderRadius: "8px",
-                              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                            },
-                          }
-                        );
+                            </>
+                          )
+                        });
                         const element = document.getElementById(
                           firstEmptyField.id
                         );
@@ -2937,59 +2476,10 @@ const Page = () => {
                           element.focus();
                         }
                       } else {
-                        toast.success(
-                          <div
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              textAlign: "center",
-                            }}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              style={{
-                                width: "150px",
-                                height: "150px",
-                                color: "#06D001",
-                                marginBottom: "16px",
-                              }}
-                              fill="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-                            </svg>
-                            <h3
-                              style={{
-                                fontSize: "2rem",
-                                display: "block",
-                                marginBottom: "28px",
-                              }}
-                            >
-                              Semua field sudah terisi!
-                            </h3>
-                          </div>,
-                          {
-                            icon: null,
-                            duration: 2000,
-                            style: {
-                              marginTop: "12%",
-                              fontSize: "1.75rem",
-                              padding: "10px",
-                              width: "80%",
-                              maxWidth: "450px",
-                              height: "50%",
-                              maxHeight: "400px",
-                              transform: "translate(-50%, -50%)",
-                              textAlign: "center",
-                              zIndex: 9999,
-                              backgroundColor: "#fff",
-                              borderRadius: "8px",
-                              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                            },
-                          }
-                        );
+                        setNotification({
+                          type: 'success',
+                          message: `Semua field sudah terisi!`
+                        });
                       }
                     }}
                     className="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
