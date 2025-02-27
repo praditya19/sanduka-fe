@@ -7,9 +7,57 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { ClipLoader } from "react-spinners";
-import $ from "jquery";
-import "summernote/dist/summernote-lite.min.css";
-import "summernote/dist/summernote-lite.min.js";
+import dynamic from "next/dynamic";
+
+// Create a dynamic component for Summernote to ensure it only loads on client
+const SummernoteEditor = dynamic(
+  () => {
+    return Promise.all([
+      import("jquery").then((mod) => mod.default), // Ambil default jQuery
+      import("summernote/dist/summernote-lite.min.css"),
+      import("summernote/dist/summernote-lite.min.js"),
+    ]).then(([jQuery]) => {
+      window.jQuery = jQuery;
+      window.$ = jQuery;
+
+      console.log("jQuery loaded:", window.jQuery); // Debugging statement
+
+      return ({ value, onChange, height }) => {
+        const editorRef = useRef(null);
+
+        useEffect(() => {
+          const $ = window.jQuery; // Ambil jQuery dari window
+
+          console.log("jQuery in useEffect:", $); // Debugging statement
+
+          if ($ && editorRef.current) {
+            $(editorRef.current).summernote({
+              height: height || 300,
+              callbacks: {
+                onChange: function (contents) {
+                  onChange(contents);
+                },
+              },
+            });
+
+            if (value) {
+              $(editorRef.current).summernote("code", value);
+            }
+
+            return () => {
+              $(editorRef.current).summernote("destroy");
+            };
+          } else {
+            console.error("jQuery or editorRef is not available");
+          }
+        }, []);
+
+        return <textarea ref={editorRef} />;
+      };
+    });
+  },
+  { ssr: false }
+);
 
 const Page = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -46,47 +94,11 @@ const Page = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Initialize Summernote
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      // Inisialisasi Summernote hanya di browser
-      $("#summernote").summernote({
-        height: 300,
-        callbacks: {
-          onChange: function (contents) {
-            setDeskripsi(contents);
-          },
-        },
-      });
+  // We no longer need the Summernote initialization useEffect since
+  // it's now handled by our dynamic component
 
-      return () => {
-        // Hancurkan Summernote saat komponen dibongkar
-        $("#summernote").summernote("destroy");
-      };
-    }
-  }, []);
-
-  // Update Summernote content when editing
-  useEffect(() => {
-    if (
-      editingId &&
-      typeof window !== "undefined" &&
-      $("#summernote").data("summernote")
-    ) {
-      // Only set content when editing ID changes, not on every render
-      const currentContent = $("#summernote").summernote("code");
-      if (currentContent !== deskripsi) {
-        $("#summernote").summernote("code", deskripsi);
-      }
-    } else if (
-      !editingId &&
-      typeof window !== "undefined" &&
-      $("#summernote").data("summernote")
-    ) {
-      // Clear content when not editing
-      $("#summernote").summernote("code", "");
-    }
-  }, [editingId]);
+  // Update the editor content when editing - now handled by passing
+  // value to SummernoteEditor component
 
   useEffect(() => {
     const totalPages = Math.ceil(galleries.length / itemsPerPage);
@@ -136,13 +148,6 @@ const Page = () => {
     setCategory(gallery.category);
     setNamaEvent(gallery.namaEvent || "");
     setSelectedFile(null);
-
-    // Ensure Summernote is updated with the content
-    setTimeout(() => {
-      if (typeof window !== "undefined") {
-        $("#summernote").summernote("code", gallery.deskripsi);
-      }
-    }, 100);
   };
 
   const handleSubmit = async (e) => {
@@ -202,11 +207,6 @@ const Page = () => {
       setEditingId(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
-      }
-
-      // Reset Summernote
-      if (typeof window !== "undefined") {
-        $("#summernote").summernote("code", "");
       }
     } catch (error) {
       console.error("Error saving gallery:", error);
@@ -648,12 +648,14 @@ const Page = () => {
                   <label className="block text-gray-700 text-sm font-bold mb-2">
                     Keterangan
                   </label>
-                  <textarea
-                    id="summernote"
-                    className="w-full p-2 border rounded"
-                    rows="5"
-                    required
-                  />
+                  {/* Use the dynamic Summernote component instead */}
+                  {typeof window !== "undefined" && (
+                    <SummernoteEditor
+                      value={deskripsi}
+                      onChange={setDeskripsi}
+                      height={300}
+                    />
+                  )}
                 </div>
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-bold mb-2">
