@@ -48,7 +48,8 @@ const Page = () => {
 
   // Initialize Summernote
   useEffect(() => {
-    if (typeof window !== "undefined" && !$("#summernote").data("summernote")) {
+    if (typeof window !== "undefined") {
+      // Inisialisasi Summernote hanya di browser
       $("#summernote").summernote({
         height: 300,
         callbacks: {
@@ -57,16 +58,12 @@ const Page = () => {
           },
         },
       });
-    }
 
-    return () => {
-      if (
-        typeof window !== "undefined" &&
-        $("#summernote").data("summernote")
-      ) {
+      return () => {
+        // Hancurkan Summernote saat komponen dibongkar
         $("#summernote").summernote("destroy");
-      }
-    };
+      };
+    }
   }, []);
 
   // Update Summernote content when editing
