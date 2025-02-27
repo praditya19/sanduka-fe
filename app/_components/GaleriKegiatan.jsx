@@ -62,16 +62,16 @@ const NotificationPopup = ({ type, message, onClose }) => {
         >
           <FaTimesCircle size={24} />
         </button>
-        
+
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-bounce">
             {getIcon()}
           </div>
-          
+
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
             {type === 'success' ? 'Berhasil!' : 'Gagal!'}
           </h3>
-          
+
           <p className={`${getTextColor()} text-center`}>
             {message}
           </p>
@@ -91,6 +91,8 @@ const GaleriKegiatan = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [eventParticipants, setEventParticipants] = useState([]);
   const [notification, setNotification] = useState(null);
+  const [jabatan, setJabatan] = useState("");
+  const [jabatanError, setJabatanError] = useState("");
 
   useEffect(() => {
     fetchGalleries();
@@ -111,7 +113,7 @@ const GaleriKegiatan = () => {
     if (userData && eventParticipants.length > 0 && galleries.length > 0) {
       const userNpa = userData.npaPgri;
       const newRegistrationStatus = {};
-      
+
       galleries.forEach(event => {
         if (event.category === 'EVENT') {
           const isRegistered = eventParticipants.some(
@@ -120,7 +122,7 @@ const GaleriKegiatan = () => {
           newRegistrationStatus[event.id] = isRegistered ? "Sudah Terdaftar" : null;
         }
       });
-      
+
       setRegistrationStatus(newRegistrationStatus);
     }
   }, [userData, eventParticipants, galleries]);
@@ -180,11 +182,30 @@ const GaleriKegiatan = () => {
   const handleRegister = (itemId) => {
     const selectedEvent = galleries.find(item => item.id === itemId);
     setCurrentEvent(selectedEvent);
+    setJabatan("");
+    setJabatanError("");
     setShowPopup(true);
+  };
+
+  const validateForm = () => {
+    let isValid = true;
+
+    if (!jabatan.trim()) {
+      setJabatanError("Jabatan organisasi wajib diisi");
+      isValid = false;
+    } else {
+      setJabatanError("");
+    }
+
+    return isValid;
   };
 
   const handleSubmitRegistration = async () => {
     if (!userData || !currentEvent || isSubmitting) return;
+
+    if (!validateForm()) {
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -195,16 +216,18 @@ const GaleriKegiatan = () => {
         email: userData.email,
         cabang: userData.cabang,
         unitKerja: userData.unitKerja,
+        jabatan: jabatan.trim(), // Use manually entered jabatan value
+        nomorHp: userData.nomorHp,
         namaEvent: currentEvent.namaEvent
       };
 
       await GlobalApi.addPesertaEvent(pesertaEvent);
-      
+
       setRegistrationStatus(prev => ({
         ...prev,
         [currentEvent.id]: "Sudah Terdaftar"
       }));
-      
+
       await fetchEventParticipants();
 
       setShowPopup(false);
@@ -292,7 +315,7 @@ const GaleriKegiatan = () => {
                 <p className="text-lg font-medium">
                   {item.category === "EVENT" ? item.namaEvent : item.deskripsi}
                 </p>
-                {showRegisterButton && (
+                {showRegisterButton && userData?.role === "USER" && (
                   <div className="mt-3">
                     {registrationStatus[item.id] ? (
                       <div className="inline-block px-6 py-2 bg-yellow-500 text-white rounded-md font-medium">
@@ -323,7 +346,7 @@ const GaleriKegiatan = () => {
     return (
       <div className="fixed inset-0 flex items-center justify-center z-50">
         <div className="absolute inset-0 bg-black opacity-50"></div>
-        <div className="relative bg-white rounded-lg p-6 shadow-xl z-10 w-96 transform transition-all duration-300 ease-in-out">
+        <div className="relative bg-white rounded-lg p-6 shadow-xl z-10 w-[32rem] transform transition-all duration-300 ease-in-out">
           <button
             onClick={() => setShowPopup(false)}
             className="absolute top-2 right-2 text-red-600 hover:text-red-800 transition-colors"
@@ -336,7 +359,7 @@ const GaleriKegiatan = () => {
             Mendaftar {currentEvent?.namaEvent ? `${currentEvent.namaEvent}` : ''}
           </h3>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-4">
             <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors">
               <p className="text-sm text-gray-600">Nama Lengkap</p>
               <p className="text-gray-800 font-medium">
@@ -370,6 +393,31 @@ const GaleriKegiatan = () => {
               <p className="text-gray-800 font-medium">
                 {userData?.unitKerja || "Loading..."}
               </p>
+            </div>
+
+            <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors">
+              <p className="text-sm text-gray-600">Nomor HP</p>
+              <p className="text-gray-800 font-medium">
+                {userData?.nomorHp || "Loading..."}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors col-span-2">
+              <label className="text-sm text-gray-600" htmlFor="jabatan">
+                Jabatan Organisasi <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="jabatan"
+                type="text"
+                value={jabatan}
+                onChange={(e) => setJabatan(e.target.value)}
+                placeholder="Masukkan jabatan organisasi"
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              {jabatanError && (
+                <p className="text-red-500 text-sm mt-1">{jabatanError}</p>
+              )}
             </div>
           </div>
 

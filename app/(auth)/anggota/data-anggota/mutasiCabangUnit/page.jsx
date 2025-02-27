@@ -9,6 +9,91 @@ import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+
+// New component for mutation notification
+const MutationNotification = ({ type, message, details, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-4xl mb-3" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-4xl mb-3" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={20} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-3">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Mutasi Berhasil!' : 'Mutasi Gagal!'}
+          </h3>
+
+          <p className={`${getTextColor()} text-center text-lg`}>
+            {message}
+          </p>
+          
+          {details && (
+            <div className="mt-3 w-full">
+              {Object.entries(details).map(([key, value]) => (
+                <div key={key} className="flex justify-between border-t border-gray-200 pt-2 mt-2">
+                  <span className="font-medium">{key}:</span>
+                  <span>{value}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const page = () => {
   const router = useRouter();
@@ -19,6 +104,8 @@ const page = () => {
   const [filteredUnitKerjaOptions, setFilteredUnitKerjaOptions] = useState([]);
 
   const [isPopupVisible, setIsPopupVisible] = useState(false);
+  // State for new notification component
+  const [notification, setNotification] = useState(null);
 
   const [userData, setUserData] = useState(null);
   const [cabang, setCabang] = useState("");
@@ -124,10 +211,9 @@ const page = () => {
   };
 
   const handleConfirmSave = async () => {
-    const role = sessionStorage.getItem("role"); // Ambil role dari sessionStorage
+    const role = sessionStorage.getItem("role");
     let idAnggota;
 
-    // Tentukan ID berdasarkan role
     if (role === "ADMIN" || role === "SUPER ADMIN") {
       idAnggota = sessionStorage.getItem("anggotaId");
     } else if (role === "USER") {
@@ -136,13 +222,21 @@ const page = () => {
 
     if (!idAnggota) {
       console.error("ID tidak ditemukan. Periksa role atau sessionStorage.");
-      alert("ID anggota tidak valid. Silakan login ulang.");
+      setNotification({
+        type: 'error',
+        message: 'ID anggota tidak valid. Silakan login ulang.',
+        details: null
+      });
       return;
     }
 
     if (!cabang || !selectedUnitKerja) {
       console.error("Cabang atau Unit Kerja tidak boleh kosong");
-      alert("Silakan pilih Cabang dan Unit Kerja sebelum menyimpan.");
+      setNotification({
+        type: 'error',
+        message: 'Silakan pilih Cabang dan Unit Kerja sebelum menyimpan.',
+        details: null
+      });
       setIsPopupVisible(false);
       return;
     }
@@ -154,64 +248,16 @@ const page = () => {
         selectedUnitKerja
       );
 
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-               marginTop: "14px"
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.25rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            {`Mutasi Berhasil!`}
-          </h3>
-          <span style={{ fontSize: "1.25rem", marginBottom:"14px" }}>
-            <div>{`Cabang: ${cabang}`}</div>
-            <div>{`Unit Kerja: ${selectedUnitKerja}`}</div>
-          </span>
-        </div>,
-       {
-        icon: null,
-        duration: 4000,
-        style: {
-          marginTop: "12%",
-          fontSize: "1.75rem",
-          padding: "10px",
-          width: "80%",
-          maxWidth: "450px",
-          height: "50%",
-          maxHeight: "400px",
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          zIndex: 9999,
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      }
-      );
+      // Show the new notification component
+      setNotification({
+        type: 'success',
+        message: 'Anda telah berhasil pindah cabang dan unit kerja.',
+        details: {
+          'Cabang': cabang,
+          'Unit Kerja': selectedUnitKerja
+        }
+      });
+
       handleCreateHistory();
       setShowDropdownCabangUnit(false);
       setIsDropdownVisible(false);
@@ -221,20 +267,19 @@ const page = () => {
       }, 4000);
     } catch (error) {
       console.error("Error saat memutasikan anggota:", error);
-      console.error("Response data:", error.response?.data);
-
-      toast.error(
-        `Terjadi kesalahan: ${
-          error?.response?.data?.message || "Silakan coba lagi."
-        }`
-      );
+      
+      setNotification({
+        type: 'error',
+        message: `Terjadi kesalahan: ${error?.response?.data?.message || "Silakan coba lagi."}`,
+        details: null
+      });
     } finally {
       setIsPopupVisible(false);
     }
   };
 
   const handleCancelSave = () => {
-    setIsPopupVisible(false); // Tutup popup jika user membatalkan
+    setIsPopupVisible(false);
   };
 
   const handleCreateHistory = async () => {
@@ -273,7 +318,11 @@ const page = () => {
       await GlobalApi.createHistoryData(historyData);
     } catch (error) {
       console.error("Failed to create history data:", error);
-      toast.error("Gagal menyimpan riwayat mutasi");
+      setNotification({
+        type: 'error',
+        message: "Gagal menyimpan riwayat mutasi",
+        details: null
+      });
     }
   };
 
@@ -288,6 +337,7 @@ const page = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+  
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -320,6 +370,8 @@ const page = () => {
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 px-4">
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      
+      {/* This is the original Toaster that you can remove or keep as fallback */}
       <Toaster
         toastOptions={{
           style: {
@@ -351,6 +403,17 @@ const page = () => {
           },
         }}
       />
+      
+      {/* Add the new notification component */}
+      {notification && (
+        <MutationNotification
+          type={notification.type}
+          message={notification.message}
+          details={notification.details}
+          onClose={() => setNotification(null)}
+        />
+      )}
+      
       <div className="bg-white p-4 rounded shadow-lg w-full sm:w-3/4 md:w-2/4 lg:w-2/5 ">
         <h2 className="text-lg font-bold">MUTASI</h2>
 

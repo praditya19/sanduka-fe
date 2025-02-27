@@ -20,33 +20,91 @@ import toast, { Toaster } from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
 import { AiOutlineInfoCircle } from "react-icons/ai";
 import { useRouter } from "next/navigation";
-import HeaderMobile from "@/app/_components/HeaderMobile";
-import HeaderMenu from "@/app/_components/HeaderMenu";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 
-const MapComponent = dynamic(
-    () => import("../../../_components/MapComponent"),
-    {
-        ssr: false,
-    }
-);
+const NotificationPopup = ({ type, message, onClose }) => {
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            onClose();
+        }, 3000);
+
+        return () => clearTimeout(timer);
+    }, [onClose]);
+
+    const getBgColor = () => {
+        switch (type) {
+            case 'success':
+                return 'bg-green-100';
+            case 'error':
+                return 'bg-red-100';
+            default:
+                return 'bg-blue-100';
+        }
+    };
+
+    const getIcon = () => {
+        switch (type) {
+            case 'success':
+                return <FaCheckCircle className="text-green-500 text-3xl" />;
+            case 'error':
+                return <FaExclamationCircle className="text-red-500 text-3xl" />;
+            default:
+                return null;
+        }
+    };
+
+    const getTextColor = () => {
+        switch (type) {
+            case 'success':
+                return 'text-green-800';
+            case 'error':
+                return 'text-red-800';
+            default:
+                return 'text-blue-800';
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+            <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+            <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+                <button
+                    onClick={onClose}
+                    className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+                    aria-label="Close"
+                >
+                    <FaTimesCircle size={24} />
+                </button>
+
+                <div className="flex flex-col items-center space-y-4">
+                    <div className="animate-bounce">
+                        {getIcon()}
+                    </div>
+
+                    <h3 className={`text-xl font-bold ${getTextColor()}`}>
+                        {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+                    </h3>
+
+                    <div className={`${getTextColor()} text-center`}>
+                        {message}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const Page = () => {
     const router = useRouter();
     const { control, setValue } = useForm();
     const searchParams = useSearchParams();
     const id = searchParams.get("id");
-    const [latitude, setLatitude] = useState("");
-    const [longitude, setLongitude] = useState("");
     const [isClient, setIsClient] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [step, setStep] = useState(1);
     const [selectedFile, setSelectedFile] = useState(null);
     const [cabang, setCabang] = useState([]);
     const [jabatan, setJabatan] = useState([]);
     const [golonganJabatan, setGolonganJabatan] = useState([]);
-    const [valueGolonganJabatan, setValueGolonganJabatan] = useState("");
-
-    const [valueKategoriDaspen, setValueKategoriDaspen] = useState("");
     const [role, setRole] = useState(null);
     const [isValidRole, setIsValidRole] = useState(false);
 
@@ -55,8 +113,6 @@ const Page = () => {
     const [query, setQuery] = useState("");
     const [showDropdown, setShowDropdown] = useState(false);
     const [base64String, setBase64String] = useState("");
-    const [selectedUnitKerja, setSelectedUnitKerja] = useState("");
-    const [queryUnitKerja, setQueryUnitKerja] = useState("");
     const [showDropdownUnitKerja, setShowDropdownUnitKerja] = useState(false);
     const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
     const [today, setToday] = useState("");
@@ -70,23 +126,14 @@ const Page = () => {
     const [nip, setNip] = useState("");
     const [nik, setNik] = useState("");
     const [nama, setNama] = useState("");
-    const [tempatLahir, setTempatLahir] = useState("");
-    const [jenisKelamin, setJenisKelamin] = useState("");
-    const [kodePos, setKodePos] = useState("");
     const [nomorHp, setNomorHp] = useState("");
-    const [namaSuamiIstri, setNamaSuamiIstri] = useState("");
-    const [namaAnak, setNamaAnak] = useState([]);
     const [mulaiJadiAnggotaPgri, setMulaiJadiAnggotaPgri] = useState([]);
-    const [mengajar, setMengajar] = useState("");
     const [isMobile, setIsMobile] = useState(false);
     const [valueJabatan, setValueJabatan] = useState("");
     const [fotoBase64, setFotoBase64] = useState("");
     const [preview, setPreview] = useState(null);
 
     const [error, setError] = useState("");
-    const [pesertaSanduka, setPesertaSanduka] = useState(false);
-    const [pesertaDaspen, setPesertaDaspen] = useState(false);
-    const [pesertaKtaDigital, setPesertaKtaDigital] = useState(false);
     const jabatanList = [
         { id: 1, jabatan: "Guru" },
         { id: 2, jabatan: "Kepala Sekolah" },
@@ -126,6 +173,7 @@ const Page = () => {
     const cabangRef = useRef(null);
     const unitKerjaRef = useRef(null);
     const [errorFields, setErrorFields] = useState({});
+    const [notification, setNotification] = useState(null);
 
     const getAdminById = async () => {
         const userId = sessionStorage.getItem("userId");
@@ -166,7 +214,10 @@ const Page = () => {
             }
         } catch (error) {
             console.error("Error Saat Mendapatkan Data:", error);
-            toast.error("Gagal mengambil data pengguna");
+            setNotification({
+                type: 'error',
+                message: `Gagal Mengambil Data Pengguna`
+            });
         }
     };
 
@@ -195,7 +246,10 @@ const Page = () => {
 
         if (!npaPgri || !selectedCabang || !namaFromSession) {
             console.error("Data tidak lengkap untuk membuat history");
-            toast.error("Data tidak lengkap untuk membuat history");
+            setNotification({
+                type: 'error',
+                message: `Data tidak lengkap untuk membuat history`
+            });
             return;
         }
 
@@ -207,11 +261,11 @@ const Page = () => {
             nama: namaFromSession,
             cabang: selectedCabang,
             uraian: "Edit Data",
-            masuk: "-", 
-            keluar: "-", 
+            masuk: "-",
+            keluar: "-",
             bulan,
             tahun,
-            cabang_ke_2: "-", 
+            cabang_ke_2: "-",
             user: namaFromSession,
         };
 
@@ -269,54 +323,10 @@ const Page = () => {
             const response = await GlobalApi.updateAdminById(userId, formData);
             await handleCreateHistory();
 
-            toast.success(
-                <div style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    textAlign: "center",
-                }}>
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                        style={{
-                            width: "150px",
-                            height: "150px",
-                            color: "#06D001",
-                            marginBottom: "16px",
-                            marginTop: "14px",
-                        }}
-                        fill="currentColor"
-                        viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-                    </svg>
-                    <h3 style={{
-                        fontSize: "2rem",
-                        display: "block",
-                        marginBottom: "28px",
-                    }}>
-                        Data berhasil diperbarui!
-                    </h3>
-                </div>,
-                {
-                    icon: null,
-                    duration: 4000,
-                    style: {
-                        marginTop: "12%",
-                        fontSize: "1.75rem",
-                        padding: "10px",
-                        width: "80%",
-                        maxWidth: "450px",
-                        height: "50%",
-                        maxHeight: "400px",
-                        transform: "translate(-50%, -50%)",
-                        textAlign: "center",
-                        zIndex: 9999,
-                        backgroundColor: "#fff",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                    },
-                }
-            );
+            setNotification({
+                type: 'success',
+                message: `Data Berhasil Diperbarui!`
+            });
 
             sessionStorage.setItem('nama', nama || originalData.nama);
             sessionStorage.setItem('email', email || originalData.email);
@@ -329,54 +339,10 @@ const Page = () => {
         } catch (error) {
             console.error("Gagal mengupdate data:", error);
 
-            toast.error(
-                <div style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    textAlign: "center",
-                }}>
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                        style={{
-                            width: "150px",
-                            height: "150px",
-                            color: "red",
-                            marginBottom: "16px",
-                        }}
-                        fill="currentColor"
-                        viewBox="0 0 24 24">
-                        <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-                        <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-                    </svg>
-                    <h3 style={{
-                        fontSize: "1.75rem",
-                        display: "block",
-                        marginBottom: "8px",
-                    }}>
-                        Gagal memperbarui data
-                    </h3>
-                </div>,
-                {
-                    icon: null,
-                    duration: 4000,
-                    style: {
-                        marginTop: "12%",
-                        fontSize: "1.75rem",
-                        padding: "10px",
-                        width: "80%",
-                        maxWidth: "450px",
-                        height: "50%",
-                        maxHeight: "400px",
-                        transform: "translate(-50%, -50%)",
-                        textAlign: "center",
-                        zIndex: 9999,
-                        backgroundColor: "#fff",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-                    },
-                }
-            );
+            setNotification({
+                type: 'error',
+                message: `Gagal Memperbarui Data!`
+            });
         }
     };
 
@@ -627,7 +593,13 @@ const Page = () => {
     return (
         <div className="w-full mx-auto px-4 py-6 bg-slate-200">
             <div className="container mx-auto max-w-screen-lg px-4">
-                <Toaster />
+                {notification && (
+                    <NotificationPopup
+                        type={notification.type}
+                        message={notification.message}
+                        onClose={() => setNotification(null)}
+                    />
+                )}
                 <form onSubmit={onSubmit} className="bg-white p-4 sm:p-8 rounded-lg shadow-lg">
                     <div className="w-full flex flex-col items-center mb-6">
                         <Image
