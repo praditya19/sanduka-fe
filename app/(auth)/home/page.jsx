@@ -58,14 +58,6 @@ export default function IconGrid() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const itemsPerPage = 5;
   const [anggotaMeninggal, setAnggotaMeninggal] = useState([]);
-<<<<<<< HEAD
-  const [detailedUserData, setDetailedUserData] = useState([]);
-  const [kategoriDaspen, setKategoriDaspen] = useState("");
-  const [daspenData, setDaspenData] = useState(null);
-  const [isPopupDaspen, setIsPopupDaspen] = useState(false);
-  const [data, setData] = useState(null);
-=======
->>>>>>> fbac47295f28c1001218e93bc07effecf78b23fa
   const [userData, setUserData] = useState(null);
   const [role, setRole] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(null);
