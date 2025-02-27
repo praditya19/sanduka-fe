@@ -54,7 +54,7 @@ const NotificationPopup = ({ type, message, onClose }) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
       <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-full max-w-xs sm:max-w-sm md:max-w-md mx-4 text-center transform transition-all duration-300 ease-in-out`}>
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -216,7 +216,7 @@ const GaleriKegiatan = () => {
         email: userData.email,
         cabang: userData.cabang,
         unitKerja: userData.unitKerja,
-        jabatan: jabatan.trim(), // Use manually entered jabatan value
+        jabatan: jabatan.trim(),
         nomorHp: userData.nomorHp,
         namaEvent: currentEvent.namaEvent
       };
@@ -256,11 +256,11 @@ const GaleriKegiatan = () => {
         <div className="bg-gray-100 py-12">
           <div className="container mx-auto px-4 md:px-12 lg:px-24">
             <h2 className="text-xl font-bold mb-6 text-center">Galeri Kegiatan</h2>
-            <div className="flex justify-center items-center space-x-4">
+            <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4">
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="animate-pulse bg-gray-300 rounded-lg w-[400px] h-[200px]"
+                  className="animate-pulse bg-gray-300 rounded-lg w-full md:w-[400px] h-[200px]"
                 />
               ))}
             </div>
@@ -269,11 +269,11 @@ const GaleriKegiatan = () => {
         <div className="bg-gray-50 py-12">
           <div className="container mx-auto px-4 md:px-12 lg:px-24">
             <h2 className="text-xl font-bold mb-6 text-center">Event</h2>
-            <div className="flex justify-center items-center space-x-4">
+            <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4">
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="animate-pulse bg-gray-300 rounded-lg w-[400px] h-[200px]"
+                  className="animate-pulse bg-gray-300 rounded-lg w-full md:w-[400px] h-[200px]"
                 />
               ))}
             </div>
@@ -282,6 +282,29 @@ const GaleriKegiatan = () => {
       </>
     );
   }
+
+  // Convert URLs to clickable links in HTML content
+  const processHTML = (htmlContent) => {
+    if (!htmlContent) return '';
+
+    // This regex matches URLs starting with http://, https://, or www.
+    const urlRegex = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/g;
+
+    // Replace URLs with anchor tags
+    const processedContent = htmlContent.replace(urlRegex, (url) => {
+      // Add http:// prefix to URLs starting with www.
+      const href = url.startsWith('www.') ? `http://${url}` : url;
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${url}</a>`;
+    });
+
+    return processedContent;
+  };
+
+  // Helper function to safely render HTML content
+  const renderHTML = (htmlContent) => {
+    const processedContent = processHTML(htmlContent);
+    return { __html: processedContent };
+  };
 
   const GallerySwiper = ({ items, title, showRegisterButton = false }) => {
     if (items.length === 0) return null;
@@ -293,28 +316,41 @@ const GaleriKegiatan = () => {
           modules={[Navigation, Pagination, Autoplay]}
           spaceBetween={30}
           slidesPerView={1}
-          navigation
+          // navigation
           pagination={{ clickable: true }}
           autoplay={{ delay: 3000, disableOnInteraction: false }}
           className="w-full"
         >
           {items.map((item) => (
             <SwiperSlide key={item.id} className="flex flex-col items-center">
-              <div className="relative w-full h-[300px] md:h-[400px] lg:h-[500px]">
+              <div className="relative w-full aspect-[4/3] sm:aspect-[16/9] md:aspect-[16/9] overflow-hidden rounded-lg shadow-md">
                 <Image
                   src={item.imageUrl}
-                  alt={item.deskripsi}
+                  alt={item.deskripsi || "Gallery image"}
                   fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  className="rounded-lg shadow-md object-cover"
+                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 80vw, 70vw"
+                  className="object-contain sm:object-cover"
                   priority
-                  quality={100}
+                  quality={80}
                 />
               </div>
-              <div className="mt-4 text-center">
-                <p className="text-lg font-medium">
-                  {item.category === "EVENT" ? item.namaEvent : item.deskripsi}
-                </p>
+              <div className="mt-4 text-center w-full px-2 sm:px-4 md:px-8">
+                {item.category === "EVENT" ? (
+                  <div>
+                    <p className="text-lg font-medium">{item.namaEvent}</p>
+                    {/* Render HTML content safely with justified text */}
+                    <div
+                      className="text-gray-600 mt-1 prose max-w-none text-justify sm:text-left md:text-justify"
+                      dangerouslySetInnerHTML={renderHTML(item.deskripsi)}
+                    ></div>
+                  </div>
+                ) : (
+                  // Render HTML content safely for non-events too
+                  <div
+                    className="text-lg font-medium prose max-w-none"
+                    dangerouslySetInnerHTML={renderHTML(item.deskripsi)}
+                  ></div>
+                )}
                 {showRegisterButton && userData?.role === "USER" && (
                   <div className="mt-3">
                     {registrationStatus[item.id] ? (
@@ -344,9 +380,9 @@ const GaleriKegiatan = () => {
     if (!showPopup) return null;
 
     return (
-      <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="fixed inset-0 flex items-center justify-center z-[1000]">
         <div className="absolute inset-0 bg-black opacity-50"></div>
-        <div className="relative bg-white rounded-lg p-6 shadow-xl z-10 w-[32rem] transform transition-all duration-300 ease-in-out">
+        <div className="relative bg-white rounded-lg p-4 sm:p-6 shadow-xl z-[1001] w-full max-w-xs sm:max-w-md md:max-w-lg mx-4 transform transition-all duration-300 ease-in-out">
           <button
             onClick={() => setShowPopup(false)}
             className="absolute top-2 right-2 text-red-600 hover:text-red-800 transition-colors"
@@ -359,7 +395,7 @@ const GaleriKegiatan = () => {
             Mendaftar {currentEvent?.namaEvent ? `${currentEvent.namaEvent}` : ''}
           </h3>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors">
               <p className="text-sm text-gray-600">Nama Lengkap</p>
               <p className="text-gray-800 font-medium">
@@ -402,16 +438,16 @@ const GaleriKegiatan = () => {
               </p>
             </div>
 
-            <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors col-span-2">
+            <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors col-span-1 sm:col-span-2">
               <label className="text-sm text-gray-600" htmlFor="jabatan">
-                Jabatan Organisasi <span className="text-red-500">*</span>
+                Jabatan Organisasi PGRI <span className="text-red-500">*</span>
               </label>
               <input
                 id="jabatan"
                 type="text"
                 value={jabatan}
                 onChange={(e) => setJabatan(e.target.value)}
-                placeholder="Masukkan jabatan organisasi"
+                placeholder="Masukkan jabatan organisasi PGRI"
                 className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />

@@ -7,6 +7,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { ClipLoader } from "react-spinners";
+import $ from 'jquery';
+import 'summernote/dist/summernote-lite.min.css';
+import 'summernote/dist/summernote-lite.min.js';
 
 const Page = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -42,6 +45,40 @@ const Page = () => {
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Initialize Summernote
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !$('#summernote').data('summernote')) {
+      $('#summernote').summernote({
+        height: 300,
+        callbacks: {
+          onChange: function (contents) {
+            setDeskripsi(contents);
+          }
+        }
+      });
+    }
+
+    return () => {
+      if (typeof window !== 'undefined' && $('#summernote').data('summernote')) {
+        $('#summernote').summernote('destroy');
+      }
+    };
+  }, []);
+
+  // Update Summernote content when editing
+useEffect(() => {
+  if (editingId && typeof window !== 'undefined' && $('#summernote').data('summernote')) {
+    // Only set content when editing ID changes, not on every render
+    const currentContent = $('#summernote').summernote('code');
+    if (currentContent !== deskripsi) {
+      $('#summernote').summernote('code', deskripsi);
+    }
+  } else if (!editingId && typeof window !== 'undefined' && $('#summernote').data('summernote')) {
+    // Clear content when not editing
+    $('#summernote').summernote('code', '');
+  }
+}, [editingId]); 
 
   useEffect(() => {
     const totalPages = Math.ceil(galleries.length / itemsPerPage);
@@ -91,6 +128,13 @@ const Page = () => {
     setCategory(gallery.category);
     setNamaEvent(gallery.namaEvent || "");
     setSelectedFile(null);
+
+    // Ensure Summernote is updated with the content
+    setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        $('#summernote').summernote('code', gallery.deskripsi);
+      }
+    }, 100);
   };
 
   const handleSubmit = async (e) => {
@@ -139,6 +183,7 @@ const Page = () => {
         });
       }
 
+      // Reset form
       setSelectedFile(null);
       setDeskripsi("");
       setCategory("NON EVENT");
@@ -146,6 +191,11 @@ const Page = () => {
       setEditingId(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
+      }
+
+      // Reset Summernote
+      if (typeof window !== 'undefined') {
+        $('#summernote').summernote('code', '');
       }
     } catch (error) {
       console.error("Error saving gallery:", error);
@@ -225,11 +275,11 @@ const Page = () => {
     setSelectedEvent(gallery);
     setIsPesertaModalOpen(true);
     setIsLoadingPeserta(true);
-  
+
     try {
       const queryString = `namaEvent=${encodeURIComponent(gallery.namaEvent)}`;
       const data = await GlobalApi.getAllPeserta(queryString);
-  
+
       setPesertaList(data);
     } catch (error) {
       console.error("Error fetching peserta:", error);
@@ -237,11 +287,10 @@ const Page = () => {
       setIsLoadingPeserta(false);
     }
   };
-  
 
   const PesertaModal = () => {
     if (!isPesertaModalOpen) return null;
-  
+
     const handlePrint = () => {
       const printFrame = document.createElement('iframe');
       printFrame.style.position = 'fixed';
@@ -250,11 +299,11 @@ const Page = () => {
       printFrame.style.width = '0';
       printFrame.style.height = '0';
       printFrame.style.border = '0';
-      
+
       document.body.appendChild(printFrame);
-      
+
       const eventName = selectedEvent?.namaEvent || 'Event';
-      
+
       const printContent = `
         <!DOCTYPE html>
         <html>
@@ -309,22 +358,22 @@ const Page = () => {
         </body>
         </html>
       `;
-      
+
       const frameDoc = printFrame.contentWindow || printFrame.contentDocument.document || printFrame.contentDocument;
       frameDoc.document.open();
       frameDoc.document.write(printContent);
       frameDoc.document.close();
-      
+
       setTimeout(() => {
         frameDoc.focus();
         frameDoc.print();
-        
+
         setTimeout(() => {
           document.body.removeChild(printFrame);
         }, 1000);
       }, 500);
     };
-  
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
         <div className="bg-white rounded-lg shadow-xl w-[80%] max-h-[80vh] relative">
@@ -493,11 +542,10 @@ const Page = () => {
           <button
             key={page}
             onClick={() => onPageChange(page - 1)}
-            className={`px-3 py-1 border rounded text-sm ${
-              page - 1 === currentPage
+            className={`px-3 py-1 border rounded text-sm ${page - 1 === currentPage
                 ? "bg-blue-500 text-white"
                 : "bg-white hover:bg-gray-50"
-            }`}
+              }`}
           >
             {page}
           </button>
@@ -528,9 +576,8 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="w-full p-6">
             <div className="mt-10 mb-8">
@@ -570,11 +617,10 @@ const Page = () => {
                   <label className="block text-gray-700 text-sm font-bold mb-2">
                     Keterangan
                   </label>
-                  <input
-                    type="text"
-                    value={deskripsi}
-                    onChange={(e) => setDeskripsi(e.target.value)}
+                  <textarea
+                    id="summernote"
                     className="w-full p-2 border rounded"
+                    rows="5"
                     required
                   />
                 </div>
