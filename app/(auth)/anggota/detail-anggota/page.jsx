@@ -376,161 +376,275 @@ const DetailAnggota = () => {
           Cetak
         </Button>
       </div>
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mt-20">
-        <div className="w-full lg:w-[210px] lg:flex-shrink-0">
-          <div className="flex flex-col sm:flex-row lg:flex-col gap-6">
-            <div className="w-[200px] mx-auto sm:mx-0">
-              <div className="bg-red-600 w-full aspect-square mb-4 flex justify-center items-center">
+      <div className="max-w-5xl mx-auto bg-white shadow-xl rounded-lg overflow-hidden">
+        {/* Header Section with Banner */}
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 lg:p-6">
+          {!isMobile && (
+            <div className="text-center">
+              <h1 className="text-xl lg:text-2xl font-bold mb-1">
+                Data Anggota
+              </h1>
+              <h2 className="text-lg lg:text-xl font-serif">
+                {anggotaData.namaLengkap}
+              </h2>
+              <p className="text-base lg:text-lg italic text-blue-100">
+                {anggotaData.jabatan}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col lg:flex-row p-4 lg:p-6">
+          {/* Left Sidebar */}
+          <div className="w-full lg:w-[250px] lg:border-r lg:pr-6">
+            {/* Profile Photo - Reduced negative margin for mobile */}
+            <div className="flex justify-center">
+              <div className="w-[180px] h-[225px] md:w-[200px] md:h-[250px] overflow-hidden rounded-lg shadow-md border-4 border-white relative -mt-10 md:-mt-16 bg-white">
                 {anggotaData.foto ? (
                   <img
                     src={`data:image/png;base64,${fotoBase64}`}
                     alt="Profile"
-                    className="object-cover w-[200px] h-[250px]"
+                    className="object-cover w-full h-full"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gray-200 flex justify-center items-center text-center text-white">
-                    No Image Available
+                  <div className="w-full h-full bg-gray-200 flex justify-center items-center text-gray-500">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-16 w-16 md:h-20 md:w-20"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
                   </div>
                 )}
               </div>
-
-              {isMobile ? (
-                <>
-                  <h2 className="text-xl lg:text-xl font-serif mb-3 text-center">
-                    {anggotaData.namaLengkap}
-                  </h2>
-                  <h3 className="text-xl lg:text-xl text-rose-500 text-center">
-                    {anggotaData.jabatan}
-                  </h3>
-                </>
-              ) : null}
             </div>
 
-            <div className="flex-1 space-y-3 text-base">
-              <div className="flex items-center gap-2">
-                <span>📞</span>
-                <span className="break-all">{anggotaData.nomorHp}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span>✉️</span>
-                <span className="break-all">{anggotaData.email}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span>📍</span>
-                <span className="break-all">{anggotaData.alamat}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 lg:mt-8 text-base">
-            <div className="bg-neutral-500 text-white py-2 px-4 mb-6 pb-2">
-              <h2>DATA PRIBADI</h2>
-            </div>
-            <ul className="list-none space-y-2 ml-3">
-              {personalData.map((item, index) => (
-                <li key={index} className="break-words">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="mt-6 lg:mt-8 text-base">
-            <div className="bg-neutral-500 text-white py-2 px-4 mb-6 pb-2">
-              <h2>DATA KEANGGOTAAN</h2>
-            </div>
-            <div className="space-y-2 ml-3">
-              {membershipData.map((item, index) => (
-                <div key={index} className="break-words">
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 text-base">
-          {!isMobile ? (
-            <>
-              <div className="text-center lg:text-left mb-6">
-                <h1 className="text-3xl lg:text-4xl mb-2">Data Anggota</h1>
-                <h2 className="text-2xl lg:text-3xl font-serif mb-3">
+            {/* Mobile Name Display - Improved text sizing */}
+            {isMobile && (
+              <div className="text-center mt-4 mb-5">
+                <h2 className="text-base md:text-lg font-serif font-bold">
                   {anggotaData.namaLengkap}
                 </h2>
-                <h3 className="text-lg lg:text-xl text-rose-500">
+                <h3 className="text-sm md:text-base text-rose-500">
                   {anggotaData.jabatan}
                 </h3>
               </div>
-            </>
-          ) : null}
-          <div className="mb-6 mt-16">
-            <div className="bg-neutral-500 text-white py-2 px-4 mb-6 pb-2">
-              <h2>DATA TUGAS</h2>
-            </div>
-            <div className="space-y-4 ml-3">
-              {jobData.map((item, index) => (
-                <div key={index} className="break-words">
-                  {item}
+            )}
+
+            {/* Contact Information */}
+            <div className="mt-5 bg-gray-50 p-3 md:p-4 rounded-lg shadow-sm text-sm md:text-base">
+              <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                <div className="bg-blue-100 p-1.5 md:p-2 rounded-full text-blue-600 flex-shrink-0">
+                  <span className="text-base md:text-lg">📞</span>
                 </div>
-              ))}
+                <span className="break-all">{anggotaData.nomorHp}</span>
+              </div>
+              <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                <div className="bg-blue-100 p-1.5 md:p-2 rounded-full text-blue-600 flex-shrink-0">
+                  <span className="text-base md:text-lg">✉️</span>
+                </div>
+                <span className="break-all">{anggotaData.email}</span>
+              </div>
+              <div className="flex items-start gap-2 md:gap-3">
+                <div className="bg-blue-100 p-1.5 md:p-2 rounded-full text-blue-600 flex-shrink-0 mt-0.5">
+                  <span className="text-base md:text-lg">📍</span>
+                </div>
+                <span className="break-all">{anggotaData.alamat}</span>
+              </div>
+            </div>
+
+            {/* Personal Data */}
+            <div className="mt-5">
+              <div className="bg-blue-600 text-white py-1.5 px-3 md:py-2 md:px-4 rounded-t-lg font-medium text-sm md:text-base">
+                <h2>DATA PRIBADI</h2>
+              </div>
+              <div className="bg-white border border-t-0 border-gray-200 p-3 md:p-4 rounded-b-lg shadow-sm text-sm md:text-base">
+                <ul className="list-none space-y-1.5 md:space-y-2">
+                  {personalData.map((item, index) => (
+                    <li key={index} className="break-words flex items-start">
+                      <span className="text-blue-600 mr-2 flex-shrink-0">
+                        •
+                      </span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Membership Data */}
+            <div className="mt-5">
+              <div className="bg-blue-600 text-white py-1.5 px-3 md:py-2 md:px-4 rounded-t-lg font-medium text-sm md:text-base">
+                <h2>DATA KEANGGOTAAN</h2>
+              </div>
+              <div className="bg-white border border-t-0 border-gray-200 p-3 md:p-4 rounded-b-lg shadow-sm text-sm md:text-base">
+                {membershipData.map((item, index) => (
+                  <div
+                    key={index}
+                    className="break-words mb-1.5 md:mb-2 flex items-start"
+                  >
+                    <span className="text-blue-600 mr-2 flex-shrink-0">•</span>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="mt-6 text-base">
-            <div className="bg-neutral-500 text-white py-2 px-4 mb-6 pb-2">
-              <h2>DATA PENDIDIKAN</h2>
-            </div>
-            <div className="space-y-4 ml-3">
-              <div className="break-words">
-                <span>Pendidikan Terakhir:</span>{" "}
-                {anggotaData.pendidikanTerakhir}
+          {/* Main Content */}
+          <div className="lg:flex-1 lg:pl-6 mt-6 lg:mt-0">
+            {/* Job Data */}
+            <div className="mb-6">
+              <div className="bg-blue-600 text-white py-1.5 px-3 md:py-2 md:px-4 rounded-t-lg font-medium flex items-center text-sm md:text-base">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 md:h-5 md:w-5 mr-1.5 md:mr-2 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+                <h2>DATA TUGAS</h2>
               </div>
-              <div className="break-words">
-                <span>Sertifikat Pendidik:</span>{" "}
-                {anggotaData.sertifikatPendidik}
+              <div className="bg-white border border-t-0 border-gray-200 p-3 md:p-4 rounded-b-lg shadow-sm text-sm md:text-base">
+                {jobData.map((item, index) => (
+                  <div
+                    key={index}
+                    className="break-words mb-3 md:mb-4 bg-gray-50 p-2.5 md:p-3 rounded border-l-3 md:border-l-4 border-blue-400"
+                  >
+                    {item}
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
 
-          <div className="mt-6 text-base mb-6">
-            <div className="bg-neutral-500 text-white py-2 px-4 mb-6 pb-2">
-              <h2>DATA KELUARGA</h2>
+            {/* Education Data */}
+            <div className="mb-6">
+              <div className="bg-blue-600 text-white py-1.5 px-3 md:py-2 md:px-4 rounded-t-lg font-medium flex items-center text-sm md:text-base">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 md:h-5 md:w-5 mr-1.5 md:mr-2 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                  <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
+                  />
+                </svg>
+                <h2>DATA PENDIDIKAN</h2>
+              </div>
+              <div className="bg-white border border-t-0 border-gray-200 p-3 md:p-4 rounded-b-lg shadow-sm text-sm md:text-base">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                  <div className="break-words bg-gray-50 p-2.5 md:p-3 rounded border-l-3 md:border-l-4 border-blue-400">
+                    <div className="font-medium text-blue-700 mb-1">
+                      Pendidikan Terakhir
+                    </div>
+                    <div>{anggotaData.pendidikanTerakhir || "-"}</div>
+                  </div>
+                  <div className="break-words bg-gray-50 p-2.5 md:p-3 rounded border-l-3 md:border-l-4 border-blue-400">
+                    <div className="font-medium text-blue-700 mb-1">
+                      Sertifikat Pendidik
+                    </div>
+                    <div>{anggotaData.sertifikatPendidik || "-"}</div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="space-y-4 ml-3">
-              {familyData.map((item, index) => (
-                <div key={index} className="break-words">
-                  {index === 1 ? (
-                    <>
-                      <div>{item.split("\n")[0]}</div>
-                      <div>
-                        {Array.isArray(anggotaData.namaAnak) &&
-                        anggotaData.namaAnak.length > 0
-                          ? anggotaData.namaAnak.map((anak, anakIndex) => {
+
+            {/* Family Data */}
+            <div className="mb-6">
+              <div className="bg-blue-600 text-white py-1.5 px-3 md:py-2 md:px-4 rounded-t-lg font-medium flex items-center text-sm md:text-base">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 md:h-5 md:w-5 mr-1.5 md:mr-2 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+                <h2>DATA KELUARGA</h2>
+              </div>
+              <div className="bg-white border border-t-0 border-gray-200 p-3 md:p-4 rounded-b-lg shadow-sm text-sm md:text-base">
+                {familyData.map((item, index) => (
+                  <div key={index} className="break-words mb-3 md:mb-4">
+                    {index === 1 ? (
+                      <div className="bg-gray-50 p-2.5 md:p-3 rounded border-l-3 md:border-l-4 border-blue-400">
+                        <div className="font-medium text-blue-700 mb-1 md:mb-2">
+                          {item.split("\n")[0]}
+                        </div>
+                        <div className="pl-2 md:pl-4">
+                          {Array.isArray(anggotaData.namaAnak) &&
+                          anggotaData.namaAnak.length > 0 ? (
+                            anggotaData.namaAnak.map((anak, anakIndex) => {
                               if (typeof anak === "string") {
-                                // Periksa apakah anak adalah array JSON yang terpisah dengan koma
                                 let cleanedAnak = anak
                                   .replace(/\[|\]|\"/g, "")
-                                  .trim(); // Menghapus tanda [] dan ""
+                                  .trim();
                                 if (cleanedAnak) {
                                   return (
-                                    <div key={anakIndex}>
-                                      {anakIndex + 1}. {cleanedAnak}
+                                    <div
+                                      key={anakIndex}
+                                      className="flex items-center my-1 text-sm md:text-base"
+                                    >
+                                      <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-2 text-xs md:text-sm flex-shrink-0">
+                                        {anakIndex + 1}
+                                      </div>
+                                      <span className="break-words">
+                                        {cleanedAnak}
+                                      </span>
                                     </div>
                                   );
                                 }
                               }
-                              return null; // Menghindari menampilkan data yang tidak valid
+                              return null;
                             })
-                          : "-"}
+                          ) : (
+                            <div className="text-gray-500 italic">-</div>
+                          )}
+                        </div>
                       </div>
-                    </>
-                  ) : (
-                    <div>{item}</div>
-                  )}
-                </div>
-              ))}
+                    ) : (
+                      <div className="bg-gray-50 p-2.5 md:p-3 rounded border-l-3 md:border-l-4 border-blue-400">
+                        {item}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* Footer */}
+        <div className="bg-gray-50 p-3 md:p-4 text-center text-gray-500 text-xs md:text-sm border-t">
+          © {new Date().getFullYear()} - Data Anggota - Semua informasi bersifat
+          rahasia
         </div>
       </div>
     </div>
