@@ -516,7 +516,7 @@ export default function IconGrid() {
       );
     }
   };
-  
+
   const MobileDeceasedScroll = ({ sortedData, formatDate }) => {
     return (
       <div className="w-full overflow-x-auto pb-4 mb-16">
@@ -654,7 +654,6 @@ export default function IconGrid() {
               "Detail Anggota",
               "Edit Anggota",
               "Mutasi",
-              "History data",
               "Daspen",
               "Ketentuan",
               "Bantuan",
