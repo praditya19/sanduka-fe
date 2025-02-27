@@ -70,6 +70,7 @@ export default function IconGrid() {
   const [fotoBase64, setFotoBase64] = useState(null);
   const [fotoMeninggal, setFotoMeninggal] = useState([]);
   const profileImageUrl = "/profile.png";
+  const [data, setData] = useState(null);
   const icons = [
     { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
     {
@@ -363,7 +364,7 @@ export default function IconGrid() {
         console.error("Error saat mendapatkan data user:", error);
         setLoading(false);
       }
-    };   
+    };
 
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -454,7 +455,7 @@ export default function IconGrid() {
     }
     return null;
   };
-  
+
   const handleDaspenRegistration = async () => {
     const userId = sessionStorage.getItem("userId");
     if (!userId) {
@@ -472,48 +473,46 @@ export default function IconGrid() {
         return;
       }
   
-      // Menampilkan NIP yang diambil
-      console.log("NIP yang diambil: ", nip);
-  
       // Verifikasi NIP dengan getFileByNip
       const nipData = await GlobalApi.getFileByNip(nip);
-  
-      // Menampilkan NIP yang dibandingkan
       console.log("NIP yang dibandingkan: ", nipData?.nip);
+      console.log("Hasil verifikasi NIP: ", nipData?.verifikasi);
   
       if (nipData?.verifikasi === true) {
         console.log("NIP valid, data sudah terverifikasi.");
   
-        // Mengambil data berdasarkan NIP menggunakan GlobalApi.getByNIP
-        const data = await GlobalApi.getByNIP(nip);
-        console.log("Data yang diambil berdasarkan NIP: ", data);
+        // Ambil data berdasarkan NIP menggunakan GlobalApi.getByNIP
+        const dataDaspen = await GlobalApi.getByNIP(nip);
+        console.log("Data yang diambil berdasarkan NIP: ", dataDaspen);
   
         // Menyimpan data yang diambil ke dalam state
-        setData(data);
+        setData(dataDaspen);
   
         // Pastikan data telah diterima sebelum lanjutkan update
-        if (data) {
-          console.log("Data yang akan diupdate: ", data);
+        if (dataDaspen) {
+          console.log("Data yang akan diupdate: ", dataDaspen);
   
-          // Gunakan userId yang ada untuk update data
-          const idToUse = userId;
+          // Menampilkan ID yang digunakan untuk update
+          console.log("ID yang digunakan untuk mengupdate data: ", userId);
   
-          // Mengirim data yang ingin diupdate
-          const updateResponse = await GlobalApi.updateRegisUser(idToUse, data);
-          
-          console.log("Respon dari API setelah update: ", updateResponse);
+          // Panggil fungsi updateRegisUser untuk memperbarui data
+          await GlobalApi.updateRegisUser(userId, dataDaspen);
   
-          } else {
+          console.log("Data berhasil diperbarui.");
+        } else {
           console.error("Data tidak ditemukan untuk diperbarui.");
         }
       } else {
         console.error("NIP tidak terverifikasi.");
       }
     } catch (error) {
-      console.error("Error saat mendapatkan data user atau memverifikasi NIP:", error);
+      console.error(
+        "Error saat mendapatkan data user atau memverifikasi NIP:",
+        error
+      );
     }
   };
-
+  
   const MobileDeceasedScroll = ({ sortedData, formatDate }) => {
     return (
       <div className="w-full overflow-x-auto pb-4 mb-16">

@@ -67,10 +67,19 @@ function Pemasukan() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormValues((prevValues) => ({
-      ...prevValues,
-      [name]: value,
-    }));
+  
+    if (name === "nominal") {
+      const numericValue = value.replace(/[^\d]/g, ''); // Menghapus semua karakter non-angka
+      setFormValues((prevValues) => ({
+        ...prevValues,
+        [name]: numericValue,
+      }));
+    } else {
+      setFormValues((prevValues) => ({
+        ...prevValues,
+        [name]: value,
+      }));
+    }
   };
 
   useEffect(() => {
@@ -281,7 +290,8 @@ function Pemasukan() {
       if (selectedBulan && newSelectedYear) {
         const data = await GlobalApi.getTablePemasukanSanduka(
           selectedBulan,
-          newSelectedYear
+          newSelectedYear,
+          "Organisasi"
         );
         setTransactions(data);
         // console.log(data);
@@ -588,44 +598,44 @@ function Pemasukan() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // const dataToSend = {
-      //   // noBukti: formValues.noBukti,
-      //   tanggalTransaksi: formValues.tanggalTransaksi,
-      //   posTransaksi: formValues.posTransaksi,
-      //   masukKe: formValues.jenisPenerimaan,
-      //   cabang: formValues.cabang,
-      //   bulan: formValues.setoranBulan,
-      //   debet: formValues.nominal,
-      //   kredit: "",
-      //   bulanSantunan: formValues.bulanSantunan || "",
-      //   keterangan: formValues.keterangan,
-      //   jenisPembayaran: "Organisasi",
-      //   namaPenerima: formValues.namaPenerima,
-      //   yangMeninggal: "",
-      //   totalAnggota: formValues.totalAnggota,
-      //   totalSumbangan: formValues.totalSumbangan,
-      //   totalAnggotaByAdmin: formValues.totalAnggotaByAdmin,
-      // };
-      const dataToSend = {
-        // noBukti: formValues.noBukti,
-        tanggalTransaksi: formValues.tanggalTransaksi,
-        posTransaksi: formValues.posTransaksi,
-        masukKe: formValues.jenisPenerimaan,
-        cabang: formValues.cabang,
-        bulan: formValues.setoranBulan,
-        debet: formValues.nominal,
-        kredit: "",
-        bulanSantunan: "",
-        keterangan: formValues.keterangan,
-        jenisPembayaran: "Organisasi",
-        namaPenerima: "",
-        yangMeninggal: "",
-        totalAnggota: formValues.totalAnggota,
-        totalSumbangan: formValues.totalSumbangan,
-        totalAnggotaByAdmin: formValues.totalAnggotaByAdmin,
-      };
-
-      const response = await GlobalApi.createPembayaranSanduka(dataToSend);
+      let dataToSend;
+  
+      // Cek jika posTransaksi adalah 'Saldo Awal'
+      if (formValues.posTransaksi === "Saldo Awal") {
+        dataToSend = {
+          tanggalTransaksi: formValues.tanggalTransaksi,
+          posTransaksi: "Saldo Awal", // Menggunakan "Saldo Awal" secara eksplisit
+          masukKe: formValues.jenisPenerimaan, // Bisa disesuaikan
+          debet: formValues.nominal, 
+          jenisPembayaran: "Organisasi", 
+        };
+  
+        // Memanggil API createSaldoAwal
+        const response = await GlobalApi.createSaldoAwal(dataToSend);
+      } else {
+        // Kondisi default jika bukan 'Saldo Awal'
+        dataToSend = {
+          tanggalTransaksi: formValues.tanggalTransaksi,
+          posTransaksi: formValues.posTransaksi,
+          masukKe: formValues.jenisPenerimaan,
+          cabang: formValues.cabang,
+          bulan: formValues.setoranBulan,
+          debet: formValues.nominal,
+          kredit: "",
+          bulanSantunan: "",
+          keterangan: formValues.keterangan,
+          jenisPembayaran: "Organisasi",
+          namaPenerima: "",
+          yangMeninggal: "",
+          totalAnggota: formValues.totalAnggota,
+          totalSumbangan: formValues.totalSumbangan,
+          totalAnggotaByAdmin: formValues.totalAnggotaByAdmin,
+        };
+  
+        // Memanggil API createPembayaranSanduka
+        const response = await GlobalApi.createPembayaranSanduka(dataToSend);
+      }
+  
       toast.success(
         <div
           style={{
@@ -679,6 +689,7 @@ function Pemasukan() {
           },
         }
       );
+  
       setTimeout(() => {
         window.location.reload();
       }, 2500);
@@ -739,7 +750,7 @@ function Pemasukan() {
         }
       );
     }
-  };
+  };  
 
   const handleReset = () => {
     setFormValues({
@@ -1050,9 +1061,8 @@ function Pemasukan() {
           "Transaksi 'Saldo Awal' terdeteksi, memperbarui seluruh ID..."
         );
         await handleSubmitEditAll();
-      } else {
-        window.location.reload();
       }
+      window.location.reload();
     } catch (error) {
       toast.error(
         <div
@@ -1516,14 +1526,14 @@ function Pemasukan() {
                   >
                     Nominal
                   </Label>
-                  <Input
-                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="nominal"
-                    type="number"
-                    name="nominal"
-                    value={formValues.nominal || ""}
-                    onChange={handleChange}
-                  />
+                 <Input
+                   className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                   id="nominal"
+                   type="text"
+                   name="nominal"
+                   value={formatCurrency(formValues.nominal || '')}
+                   onChange={handleChange}
+                 />
                 </div>
 
                 <div className="flex flex-col">
@@ -1726,192 +1736,198 @@ function Pemasukan() {
               </div>
             </div>
 
-            <div ref={tableRef} className="overflow-x-auto">
-              <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                <thead className="text-sm text-black uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
-                  <tr className="bg-gray-200 text-black text-center">
-                    <th className="px-6 py-3 text-sm">No</th>
-                    <th className="px-6 py-3 text-sm">Tgl Transaksi</th>
-                    <th className="px-6 py-3 text-sm">No. Bukti</th>
-                    <th className="px-6 py-3 text-sm">Uraian</th>
-                    <th className="px-6 py-3 text-sm">Debet</th>
-                    <th className="px-6 py-3 text-sm">Kredit</th>
-                    <th className="px-6 py-3 text-sm">Saldo</th>
-                    <th className="px-6 py-3 text-sm">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedTransactions
-                    .filter((transaction) => transaction.tglTransaksi)
-                    .map((transaction, index) => (
-                      <tr
-                        key={transaction.id}
-                        className={`border-b text-black text-center ${
-                          transaction.checked
-                            ? "bg-gray-100"
-                            : "hover:bg-gray-50"
-                        }`}
-                      >
-                        <td className="px-6 py-4 text-sm">{index + 1}</td>
-                        <td className="px-6 py-4 text-sm">
-                          {transaction.tglTransaksi}
-                        </td>
-                        <td className="px-6 py-4 text-sm">
-                          {transaction.noBukti}
-                        </td>
-                        <td className="px-6 py-4 text-sm">
-                          {transaction.uraian}
-                        </td>
-                        <td className="px-6 py-4 text-sm">
-                          {formatCurrency(
-                            transaction.uraian === "Saldo Awal"
-                              ? Number(newSelectedYear) === 2021 &&
-                                Number(selectedBulan) === 3
-                                ? parseFloat(
-                                    transaction.debet.replace(",", "")
-                                  ) || 0
-                                : 0
-                              : parseFloat(
-                                  transaction.debet.replace(",", "")
-                                ) || 0
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-sm">
-                          {formatCurrency(
-                            parseFloat(transaction.kredit.replace(",", "")) || 0
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-sm">
-                          <td className="px-6 py-4 text-sm">
-                            {" "}
-                            {saldoMap[index]
-                              ? saldoMap[index].toLocaleString("id-ID", {
-                                  minimumFractionDigits: 0,
-                                })
-                              : 0}
-                          </td>
-                        </td>
-                        <td className="px-6 py-4 text-sm">
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              type="checkbox"
-                              className="form-checkbox h-4 w-4"
-                              checked={transaction.checked}
-                              onChange={() => handleCheck(transaction.id)}
-                              // disabled={transaction.uraian === "Saldo Awal"}
-                            />
-                            <Button
-                              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
-                              onClick={() => handleGetEdit(transaction.id)}
-                            >
-                              Edit
-                            </Button>
-                            <button
-                              className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center ${
-                                transaction.uraian === "Saldo Awal"
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              }`}
-                              onClick={() =>
-                                handleDeleteClickId(transaction.id)
-                              }
-                              disabled={
-                                transaction.uraian === "Saldo Awal" ||
-                                loadingId === transaction.id
-                              }
-                            >
-                              {loadingId === transaction.id ? (
-                                <div className="flex items-center">
-                                  <svg
-                                    className="animate-spin h-5 w-5 text-white mr-2"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
+             <div ref={tableRef} className="overflow-x-auto">
+                          <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                            <thead className="text-sm text-black uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
+                              <tr className="bg-gray-200 text-black text-center">
+                                <th className="px-6 py-3 text-sm">No</th>
+                                <th className="px-6 py-3 text-sm">Tgl Transaksi</th>
+                                <th className="px-6 py-3 text-sm">No. Bukti</th>
+                                <th className="px-6 py-3 text-sm">Uraian</th>
+                                <th className="px-6 py-3 text-sm">Debet</th>
+                                <th className="px-6 py-3 text-sm">Kredit</th>
+                                <th className="px-6 py-3 text-sm">Saldo</th>
+                                <th className="px-6 py-3 text-sm">Action</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {sortedTransactions
+                                .filter((transaction) => transaction.tglTransaksi)
+                                .map((transaction, index) => (
+                                  <tr
+                                    key={transaction.id}
+                                    className={`border-b text-black text-center ${
+                                      transaction.checked
+                                        ? "bg-gray-100"
+                                        : "hover:bg-gray-50"
+                                    }`}
                                   >
-                                    <circle
-                                      className="opacity-25"
-                                      cx="12"
-                                      cy="12"
-                                      r="10"
-                                      stroke="currentColor"
-                                      strokeWidth="4"
-                                    ></circle>
-                                    <path
-                                      className="opacity-75"
-                                      fill="currentColor"
-                                      d="M4 12a8 8 0 018-8v8H4z"
-                                    ></path>
-                                  </svg>
-                                </div>
-                              ) : (
-                                "Hapus"
-                              )}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  {/* Baris Total */}
-                  <tr className="bg-gray-200 text-base text-black text-center font-bold">
-                    <td className="px-6 py-4 text-left" colSpan="4">
-                      TOTAL
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      {formatCurrency(
-                        transactions.reduce((total, transaction) => {
-                          const isSaldoAwal =
-                            transaction.uraian === "Saldo Awal";
-                          const isMaret2021 =
-                            Number(newSelectedYear) === 2021 &&
-                            Number(selectedBulan) === 3;
-
-                          // Hanya jumlahkan "Saldo Awal" jika Maret 2021, transaksi lain tetap dihitung normal
-                          const debet =
-                            isSaldoAwal && !isMaret2021
-                              ? 0
-                              : Math.floor(
-                                  parseFloat(transaction.debet.replace(",")) ||
-                                    0
-                                );
-
-                          return total + debet;
-                        }, 0)
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      {formatCurrency(
-                        transactions.reduce((total, transaction) => {
-                          const kredit = Math.floor(
-                            parseFloat(transaction.kredit.replace(",", "")) || 0
-                          );
-                          return total + kredit; // menambahkan kredit ke total
-                        }, 0)
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      {totalSaldo.toLocaleString("id-ID", {
-                        minimumFractionDigits: 0,
-                      })}
-                    </td>
-                    <td className="px-6 py-4 text-sm"></td>
-                  </tr>
-                </tbody>
-              </table>
-              <style jsx>{`
-                @media print {
-                  th:nth-child(8),
-                  td:nth-child(8) {
-                    display: none;
-                  }
-
-                  body {
-                    margin: 0;
-                    padding: 0;
-                    background: white;
-                  }
-                }
-              `}</style>
-            </div>
+                                    <td className="px-6 py-4 text-sm">{index + 1}</td>
+                                    <td className="px-6 py-4 text-sm">
+                                      {transaction.tglTransaksi}
+                                    </td>
+                                    <td className="px-6 py-4 text-sm">
+                                      {transaction.noBukti}
+                                    </td>
+                                    <td className="px-6 py-4 text-sm">
+                                      {transaction.uraian}
+                                    </td>
+                                    <td className="px-6 py-4 text-sm">
+                                      {/* {formatCurrency(
+                                        transaction.uraian === "Saldo Awal"
+                                          ? Number(newSelectedYear) === 2021 &&
+                                            Number(selectedBulan) === 3
+                                            ? parseFloat(
+                                                transaction.debet.replace(",", "")
+                                              ) || 0
+                                            : 0
+                                          : parseFloat(
+                                              transaction.debet.replace(",", "")
+                                            ) || 0
+                                      )} */}
+                                      {formatCurrency(
+                                        parseFloat(transaction.debet.replace(",", "")) || 0
+                                      )}
+                                    </td>
+                                    <td className="px-6 py-4 text-sm">
+                                      {formatCurrency(
+                                        parseFloat(transaction.kredit.replace(",", "")) || 0
+                                      )}
+                                    </td>
+                                    <td className="px-6 py-4 text-sm">
+                                      {saldoMap[index]
+                                        ? formatCurrency(saldoMap[index])
+                                        : formatCurrency(0)}
+                                    </td>
+                                    <td className="px-6 py-4 text-sm">
+                                      <div className="flex items-center space-x-2">
+                                        <Input
+                                          type="checkbox"
+                                          className="form-checkbox h-4 w-4"
+                                          checked={transaction.checked}
+                                          onChange={() => handleCheck(transaction.id)}
+                                          // disabled={transaction.uraian === "Saldo Awal"}
+                                        />
+                                        <Button
+                                          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+                                          onClick={() => handleGetEdit(transaction.id)}
+                                        >
+                                          Edit
+                                        </Button>
+                                        <button
+                                          className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center ${
+                                            transaction.uraian === "Saldo Awal"
+                                              ? "opacity-50 cursor-not-allowed"
+                                              : ""
+                                          }`}
+                                          onClick={() =>
+                                            handleDeleteClickId(transaction.id)
+                                          }
+                                          disabled={
+                                            transaction.uraian === "Saldo Awal" ||
+                                            loadingId === transaction.id
+                                          }
+                                        >
+                                          {loadingId === transaction.id ? (
+                                            <div className="flex items-center">
+                                              <svg
+                                                className="animate-spin h-5 w-5 text-white mr-2"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                              >
+                                                <circle
+                                                  className="opacity-25"
+                                                  cx="12"
+                                                  cy="12"
+                                                  r="10"
+                                                  stroke="currentColor"
+                                                  strokeWidth="4"
+                                                ></circle>
+                                                <path
+                                                  className="opacity-75"
+                                                  fill="currentColor"
+                                                  d="M4 12a8 8 0 018-8v8H4z"
+                                                ></path>
+                                              </svg>
+                                            </div>
+                                          ) : (
+                                            "Hapus"
+                                          )}
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              {/* Baris Total */}
+                              <tr className="bg-gray-200 text-base text-black text-center font-bold">
+                                <td className="px-6 py-4 text-left" colSpan="4">
+                                  TOTAL
+                                </td>
+            
+                                <td className="px-6 py-4 text-sm">
+                                  {/* {formatCurrency(
+                                    transactions.reduce((total, transaction) => {
+                                      const isSaldoAwal =
+                                        transaction.uraian === "Saldo Awal";
+                                      const isMaret2021 =
+                                        Number(newSelectedYear) === 2021 &&
+                                        Number(selectedBulan) === 3;
+            
+                                      // Hanya jumlahkan "Saldo Awal" jika Maret 2021, transaksi lain tetap dihitung normal
+                                      const debet =
+                                        isSaldoAwal && !isMaret2021
+                                          ? 0
+                                          : Math.floor(
+                                              parseFloat(transaction.debet.replace(",")) ||
+                                                0
+                                            );
+            
+                                      return total + debet;
+                                    }, 0)
+                                  )} */}
+                                  {formatCurrency(
+                                    transactions.reduce((total, transaction) => {
+                                      const debet = Math.floor(
+                                        parseFloat(transaction.debet.replace(",", "")) || 0
+                                      );
+                                      return total + debet;
+                                    }, 0)
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 text-sm">
+                                  {formatCurrency(
+                                    transactions.reduce((total, transaction) => {
+                                      const kredit = Math.floor(
+                                        parseFloat(transaction.kredit.replace(",", "")) || 0
+                                      );
+                                      return total + kredit;
+                                    }, 0)
+                                  )}
+                                </td>
+            
+                                <td className="px-6 py-4 text-sm">
+                                  {formatCurrency(totalSaldo)}
+                                </td>
+                                <td className="px-6 py-4 text-sm"></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <style jsx>{`
+                            @media print {
+                              th:nth-child(8),
+                              td:nth-child(8) {
+                                display: none;
+                              }
+            
+                              body {
+                                margin: 0;
+                                padding: 0;
+                                background: white;
+                              }
+                            }
+                          `}</style>
+                        </div>
           </div>
         </div>
       </div>
