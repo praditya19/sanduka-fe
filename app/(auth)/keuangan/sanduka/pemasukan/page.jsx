@@ -67,10 +67,20 @@ function Pemasukan() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormValues((prevValues) => ({
-      ...prevValues,
-      [name]: value,
-    }));
+  
+    // Cek apakah input yang dimasukkan adalah untuk nominal dan pastikan hanya angka yang diterima
+    if (name === "nominal") {
+      const numericValue = value.replace(/[^\d]/g, ''); // Menghapus semua karakter non-angka
+      setFormValues((prevValues) => ({
+        ...prevValues,
+        [name]: numericValue,
+      }));
+    } else {
+      setFormValues((prevValues) => ({
+        ...prevValues,
+        [name]: value,
+      }));
+    }
   };
 
   useEffect(() => {
@@ -1538,13 +1548,13 @@ function Pemasukan() {
                     Nominal
                   </Label>
                   <Input
-                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="nominal"
-                    type="number"
-                    name="nominal"
-                    value={formValues.nominal || ""}
-                    onChange={handleChange}
-                  />
+  className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  id="nominal"
+  type="text"
+  name="nominal"
+  value={formatCurrency(formValues.nominal || '')}
+  onChange={handleChange}
+/>
                 </div>
 
                 <div className="flex flex-col">

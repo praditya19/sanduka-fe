@@ -239,7 +239,8 @@ function Pengeluaran() {
       if (selectedBulan && newSelectedYear) {
         const data = await GlobalApi.getTablePemasukanSanduka(
           selectedBulan,
-          newSelectedYear
+          newSelectedYear,
+          "Sanduka"
         );
         setTransactions(data);
       }
@@ -854,13 +855,13 @@ function Pengeluaran() {
 
   const handleChange = async (e) => {
     const { name, value } = e.target;
-
+  
     setFormValues((prevValues) => {
       const updatedValues = { ...prevValues };
-
+  
       if (name === "nominal") {
         const numericValue = Number(value.replace(/\D/g, ""));
-
+  
         if (!isNaN(numericValue)) {
           updatedValues.nominal = numericValue;
           updatedValues.terbilang = convertToTerbilangWithRupiah(numericValue);
@@ -871,14 +872,35 @@ function Pengeluaran() {
       } else {
         updatedValues[name] = value;
       }
-
+  
       return updatedValues;
     });
-
+  
+    // Cek jika yang dipilih adalah "Operasional 15%"
+    if (name === "posTransaksi" && value === "Operasional 15%") {
+      // Menghitung total debet
+      const totalDebet = transactions.reduce((total, transaction) => {
+        const debet = Math.floor(parseFloat(transaction.debet.replace(",", "")) || 0);
+        return total + debet;
+      }, 0);
+  
+      // Menghitung 15% dari total debet
+      const operasional15 = totalDebet * 0.15;
+  
+      // Memperbarui nilai nominal di form
+      setFormValues((prevValues) => ({
+        ...prevValues,
+        nominal: operasional15, // Memasukkan hasil 15% ke nominal
+      }));
+  
+      // Munculkan hasilnya ke console
+      console.log(`Total Debet: ${formatCurrency(totalDebet)}, 15% dari total Debet: ${formatCurrency(operasional15)}`);
+    }
+  
     if (name === "tahun" || name === "bulan") {
       const year = name === "tahun" ? value : formValues.tahun;
       const month = name === "bulan" ? value : formValues.bulan;
-
+  
       if (year && month) {
         try {
           const data = await GlobalApi.getNamaKwitansi(year, month);
@@ -891,6 +913,7 @@ function Pengeluaran() {
       }
     }
   };
+  
   const capitalizeFirstLetter = (text) => {
     if (typeof text !== "string" || !text) return "";
     return text
@@ -1587,9 +1610,9 @@ function Pengeluaran() {
                   <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="nominal"
-                    type="number"
+                    type="text"
                     name="nominal"
-                    value={formValues.nominal || ""}
+                    value={formatCurrency(formValues.nominal || "")}
                     onChange={handleChange}
                   />
 
@@ -1796,17 +1819,20 @@ function Pengeluaran() {
                           {transaction.uraian}
                         </td>
                         <td className="px-6 py-4 text-sm">
+                          {/* {formatCurrency(
+                                       transaction.uraian === "Saldo Awal"
+                                         ? Number(newSelectedYear) === 2021 &&
+                                           Number(selectedBulan) === 3
+                                           ? parseFloat(
+                                               transaction.debet.replace(",", "")
+                                             ) || 0
+                                           : 0
+                                         : parseFloat(
+                                             transaction.debet.replace(",", "")
+                                           ) || 0
+                                     )} */}
                           {formatCurrency(
-                            transaction.uraian === "Saldo Awal"
-                              ? Number(newSelectedYear) === 2021 &&
-                                Number(selectedBulan) === 3
-                                ? parseFloat(
-                                    transaction.debet.replace(",", "")
-                                  ) || 0
-                                : 0
-                              : parseFloat(
-                                  transaction.debet.replace(",", "")
-                                ) || 0
+                            parseFloat(transaction.debet.replace(",", "")) || 0
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm">
@@ -1815,14 +1841,9 @@ function Pengeluaran() {
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          <td className="px-6 py-4 text-sm">
-                            {" "}
-                            {saldoMap[index]
-                              ? saldoMap[index].toLocaleString("id-ID", {
-                                  minimumFractionDigits: 0,
-                                })
-                              : 0}
-                          </td>
+                          {saldoMap[index]
+                            ? formatCurrency(saldoMap[index])
+                            : formatCurrency(0)}
                         </td>
                         <td className="px-6 py-4 text-sm">
                           <div className="flex items-center space-x-2">
@@ -1889,24 +1910,33 @@ function Pengeluaran() {
                     <td className="px-6 py-4 text-left" colSpan="4">
                       TOTAL
                     </td>
+
                     <td className="px-6 py-4 text-sm">
+                      {/* {formatCurrency(
+                                   transactions.reduce((total, transaction) => {
+                                     const isSaldoAwal =
+                                       transaction.uraian === "Saldo Awal";
+                                     const isMaret2021 =
+                                       Number(newSelectedYear) === 2021 &&
+                                       Number(selectedBulan) === 3;
+           
+                                     // Hanya jumlahkan "Saldo Awal" jika Maret 2021, transaksi lain tetap dihitung normal
+                                     const debet =
+                                       isSaldoAwal && !isMaret2021
+                                         ? 0
+                                         : Math.floor(
+                                             parseFloat(transaction.debet.replace(",")) ||
+                                               0
+                                           );
+           
+                                     return total + debet;
+                                   }, 0)
+                                 )} */}
                       {formatCurrency(
                         transactions.reduce((total, transaction) => {
-                          const isSaldoAwal =
-                            transaction.uraian === "Saldo Awal";
-                          const isMaret2021 =
-                            Number(newSelectedYear) === 2021 &&
-                            Number(selectedBulan) === 3;
-
-                          // Hanya jumlahkan "Saldo Awal" jika Maret 2021, transaksi lain tetap dihitung normal
-                          const debet =
-                            isSaldoAwal && !isMaret2021
-                              ? 0
-                              : Math.floor(
-                                  parseFloat(transaction.debet.replace(",")) ||
-                                    0
-                                );
-
+                          const debet = Math.floor(
+                            parseFloat(transaction.debet.replace(",", "")) || 0
+                          );
                           return total + debet;
                         }, 0)
                       )}
@@ -1917,14 +1947,13 @@ function Pengeluaran() {
                           const kredit = Math.floor(
                             parseFloat(transaction.kredit.replace(",", "")) || 0
                           );
-                          return total + kredit; // menambahkan kredit ke total
+                          return total + kredit;
                         }, 0)
                       )}
                     </td>
+
                     <td className="px-6 py-4 text-sm">
-                      {totalSaldo.toLocaleString("id-ID", {
-                        minimumFractionDigits: 0,
-                      })}
+                      {formatCurrency(totalSaldo)}
                     </td>
                     <td className="px-6 py-4 text-sm"></td>
                   </tr>
