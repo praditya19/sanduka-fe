@@ -240,18 +240,18 @@ const Page = () => {
           setLatitude(position.coords.latitude);
           setLongitude(position.coords.longitude);
           setLoading(false);
-          setNotification({
-            type: 'success',
-            message: `Lokasi berhasil didapatkan: (${position.coords.latitude}, ${position.coords.longitude})`
-          });
+          // setNotification({
+          //   type: 'success',
+          //   message: `Lokasi berhasil didapatkan: (${position.coords.latitude}, ${position.coords.longitude})`
+          // });
         },
-        () => {
-          setNotification({
-            type: 'error',
-            message: `Gagal mendapatkan lokasi`
-          });
-          setLoading(false);
-        }
+        // () => {
+        //   setNotification({
+        //     type: 'error',
+        //     message: `Gagal mendapatkan lokasi`
+        //   });
+        //   setLoading(false);
+        // }
       );
     } else {
       setNotification({
@@ -606,10 +606,9 @@ const Page = () => {
         message: (
           <>
             <strong
-              style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
             >
               Selamat Anda Berhasil Mendaftar Di New Sanduka
-            </strong>
+            </strong> <br/>
             <span style={{ fontSize: "1.75rem" }}>
               Anda Berhasil Mendaftar Menjadi Anggota Sanduka
             </span>

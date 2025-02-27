@@ -282,7 +282,59 @@ const Page = () => {
           <div className="w-full p-4 container shadow-lg rounded-lg mt-12">
             <div className="rounded-md flex flex-col py-4">
               <div className="container px-2">
-                <div className="w-full flex items-center justify-between mb-4">
+                {/* Mobile Filters */}
+                <div className="md:hidden mb-4">
+                  <div className="bg-white p-3 rounded-lg shadow-sm mb-3 border border-gray-200">
+                    <select
+                      value={selectedCabang}
+                      onChange={(e) => setSelectedCabang(e.target.value)}
+                      className="p-2 border rounded w-full mb-2"
+                    >
+                      <option value="">Semua Cabang</option>
+                      {cabangOptions.map((option) => (
+                        <option key={option.id} value={option.kecamatan}>
+                          {option.kecamatan}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={selectedMonth}
+                      onChange={(e) => setSelectedMonth(e.target.value)}
+                      className="p-2 border rounded w-full mb-2"
+                    >
+                      <option value="">Pilih Bulan</option>
+                      {bulanOptions.map((bulan) => (
+                        <option key={bulan.angkaBulan} value={bulan.angkaBulan}>
+                          {bulan.namaBulan}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(e.target.value)}
+                      className="p-2 border rounded w-full mb-2"
+                    >
+                      <option value="">Pilih Tahun</option>
+                      {years.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <button
+                    onClick={handlePrint}
+                    className="p-2 px-4 bg-blue-500 text-white rounded w-full"
+                  >
+                    Cetak
+                  </button>
+                </div>
+
+                {/* Desktop Filters */}
+                <div className="hidden md:flex w-full items-center justify-between mb-4">
                   <div className="flex w-2/3 space-x-2">
                     <select
                       value={selectedCabang}
@@ -331,6 +383,7 @@ const Page = () => {
                     Cetak
                   </button>
                 </div>
+                
                 <table className="w-full table-auto mb-8">
                   <thead className="p-2 md:p-3 border bg-green-300">
                     <tr>
@@ -400,20 +453,6 @@ const Page = () => {
                               <div>
                                 <div>{item.nama ?? "-"}</div>
                                 <div>{item.npa ?? "-"}</div>
-                                {/* <div>
-                                  {item.npaDetail.tempatLahir ?? "-"}{" "}
-                                  {item.npaDetail.tanggalLahir
-                                    ? formatDate(item.npaDetail.tanggalLahir)
-                                    : "-"}
-                                </div>
-                                <div>{item.npaDetail.jabatan ?? "-"}</div>
-                                <div>{item.npaDetail.unitKerja ?? "-"}</div>
-                                <div>
-                                  {item.npaDetail.tanggalLahir
-                                    ? calculateAge(item.npaDetail.tanggalLahir)
-                                    : "-"}{" "}
-                                  Tahun
-                                </div> */}
                               </div>
                             </td>
                             <td className="text-center border hidden lg:table-cell px-4 py-4 w-[150px]">
