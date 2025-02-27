@@ -239,7 +239,8 @@ function Pengeluaran() {
       if (selectedBulan && newSelectedYear) {
         const data = await GlobalApi.getTablePemasukanSanduka(
           selectedBulan,
-          newSelectedYear
+          newSelectedYear,
+          "Organisasi"
         );
         setTransactions(data);
       }
@@ -1590,9 +1591,9 @@ function Pengeluaran() {
                   <Input
                     className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     id="nominal"
-                    type="number"
+                    type="text"
                     name="nominal"
-                    value={formValues.nominal || ""}
+                    value={formatCurrency(formValues.nominal || "")}
                     onChange={handleChange}
                   />
 
@@ -1799,17 +1800,20 @@ function Pengeluaran() {
                           {transaction.uraian}
                         </td>
                         <td className="px-6 py-4 text-sm">
+                          {/* {formatCurrency(
+                                                 transaction.uraian === "Saldo Awal"
+                                                   ? Number(newSelectedYear) === 2021 &&
+                                                     Number(selectedBulan) === 3
+                                                     ? parseFloat(
+                                                         transaction.debet.replace(",", "")
+                                                       ) || 0
+                                                     : 0
+                                                   : parseFloat(
+                                                       transaction.debet.replace(",", "")
+                                                     ) || 0
+                                               )} */}
                           {formatCurrency(
-                            transaction.uraian === "Saldo Awal"
-                              ? Number(newSelectedYear) === 2021 &&
-                                Number(selectedBulan) === 3
-                                ? parseFloat(
-                                    transaction.debet.replace(",", "")
-                                  ) || 0
-                                : 0
-                              : parseFloat(
-                                  transaction.debet.replace(",", "")
-                                ) || 0
+                            parseFloat(transaction.debet.replace(",", "")) || 0
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm">
@@ -1818,14 +1822,9 @@ function Pengeluaran() {
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          <td className="px-6 py-4 text-sm">
-                            {" "}
-                            {saldoMap[index]
-                              ? saldoMap[index].toLocaleString("id-ID", {
-                                  minimumFractionDigits: 0,
-                                })
-                              : 0}
-                          </td>
+                          {saldoMap[index]
+                            ? formatCurrency(saldoMap[index])
+                            : formatCurrency(0)}
                         </td>
                         <td className="px-6 py-4 text-sm">
                           <div className="flex items-center space-x-2">
@@ -1892,24 +1891,33 @@ function Pengeluaran() {
                     <td className="px-6 py-4 text-left" colSpan="4">
                       TOTAL
                     </td>
+
                     <td className="px-6 py-4 text-sm">
+                      {/* {formatCurrency(
+                                             transactions.reduce((total, transaction) => {
+                                               const isSaldoAwal =
+                                                 transaction.uraian === "Saldo Awal";
+                                               const isMaret2021 =
+                                                 Number(newSelectedYear) === 2021 &&
+                                                 Number(selectedBulan) === 3;
+                     
+                                               // Hanya jumlahkan "Saldo Awal" jika Maret 2021, transaksi lain tetap dihitung normal
+                                               const debet =
+                                                 isSaldoAwal && !isMaret2021
+                                                   ? 0
+                                                   : Math.floor(
+                                                       parseFloat(transaction.debet.replace(",")) ||
+                                                         0
+                                                     );
+                     
+                                               return total + debet;
+                                             }, 0)
+                                           )} */}
                       {formatCurrency(
                         transactions.reduce((total, transaction) => {
-                          const isSaldoAwal =
-                            transaction.uraian === "Saldo Awal";
-                          const isMaret2021 =
-                            Number(newSelectedYear) === 2021 &&
-                            Number(selectedBulan) === 3;
-
-                          // Hanya jumlahkan "Saldo Awal" jika Maret 2021, transaksi lain tetap dihitung normal
-                          const debet =
-                            isSaldoAwal && !isMaret2021
-                              ? 0
-                              : Math.floor(
-                                  parseFloat(transaction.debet.replace(",")) ||
-                                    0
-                                );
-
+                          const debet = Math.floor(
+                            parseFloat(transaction.debet.replace(",", "")) || 0
+                          );
                           return total + debet;
                         }, 0)
                       )}
@@ -1920,14 +1928,13 @@ function Pengeluaran() {
                           const kredit = Math.floor(
                             parseFloat(transaction.kredit.replace(",", "")) || 0
                           );
-                          return total + kredit; // menambahkan kredit ke total
+                          return total + kredit;
                         }, 0)
                       )}
                     </td>
+
                     <td className="px-6 py-4 text-sm">
-                      {totalSaldo.toLocaleString("id-ID", {
-                        minimumFractionDigits: 0,
-                      })}
+                      {formatCurrency(totalSaldo)}
                     </td>
                     <td className="px-6 py-4 text-sm"></td>
                   </tr>

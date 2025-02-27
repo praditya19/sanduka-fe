@@ -70,6 +70,7 @@ export default function IconGrid() {
   const [fotoBase64, setFotoBase64] = useState(null);
   const [fotoMeninggal, setFotoMeninggal] = useState([]);
   const profileImageUrl = "/profile.png";
+  const [data, setData] = useState(null);
   const icons = [
     { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
     {
@@ -515,7 +516,7 @@ export default function IconGrid() {
       );
     }
   };
-
+  
   const MobileDeceasedScroll = ({ sortedData, formatDate }) => {
     return (
       <div className="w-full overflow-x-auto pb-4 mb-16">
