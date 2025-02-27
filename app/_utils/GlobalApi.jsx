@@ -1908,6 +1908,66 @@ const getAllPeserta = async (queryString = '') => {
   }
 };
 
+// Pengaduan
+const createPengaduan = async (data) => {
+  try {
+    const formData = new FormData();
+    
+    const pengaduanObj = {
+      namaLengkap: data.namaLengkap,
+      email: data.email,
+      npa: data.npa,
+      cabang: data.cabang,
+      unitKerja: data.unitKerja,
+      category: data.category,
+      keterangan: data.keterangan
+    };
+    
+    formData.append("pengaduan", JSON.stringify(pengaduanObj));
+    
+    if (data.bukti) {
+      formData.append("bukti", data.bukti);
+    }
+    
+    const response = await axiosClient.post("/api/pengaduan", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const getAllPengaduan = async (filters = {}) => {
+  try {
+    const { category, cabang, unitKerja } = filters;
+    
+    let queryParams = new URLSearchParams();
+    if (category) queryParams.append("category", category);
+    if (cabang) queryParams.append("cabang", cabang);
+    if (unitKerja) queryParams.append("unitKerja", unitKerja);
+    
+    const queryString = queryParams.toString();
+    const url = `/api/pengaduan${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await axiosClient.get(url);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const getPengaduanById = async (id) => {
+  try {
+    const response = await axiosClient.get(`/api/pengaduan/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -2045,4 +2105,7 @@ export default {
   getRekapRanting,
   addPesertaEvent,
   getAllPeserta,
+  createPengaduan,
+  getAllPengaduan,
+  getPengaduanById,
 };

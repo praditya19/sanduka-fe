@@ -169,11 +169,12 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
         "Bantuan",
         "Data Anggota",
         "History data",
+        // "Pengaduan",
       ].includes(item.label);
     } else if (role === "SUPER ADMIN") {
-      return true; // SUPER ADMIN melihat semua menu
+      return true;
     } else {
-      return item.label !== "Galeri"; // Selain SUPER ADMIN, menu "Galeri" disembunyikan
+      return item.label !== "Galeri";
     }
   });
 

@@ -58,6 +58,7 @@ function SignIn() {
       sessionStorage.setItem("cabang", response.cabang);
       sessionStorage.setItem("nama", response.namaLengkap);
       sessionStorage.setItem("role", response.role);
+      sessionStorage.setItem("email", response.email);
       sessionStorage.setItem("npa", response.npaPgri || "Tidak diketahui");
       sessionStorage.setItem(
         "unitKerja",

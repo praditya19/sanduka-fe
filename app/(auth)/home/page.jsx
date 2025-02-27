@@ -556,6 +556,7 @@ export default function IconGrid() {
               "Ketentuan",
               "Bantuan",
               "History data",
+              // "Pengaduan",
             ].includes(item.label)
           )
           .concat({
@@ -597,6 +598,7 @@ export default function IconGrid() {
               "Ketentuan",
               "Bantuan",
               "Teman Unit",
+              // "Pengaduan",
             ];
             return order.indexOf(a.label) - order.indexOf(b.label);
           })
