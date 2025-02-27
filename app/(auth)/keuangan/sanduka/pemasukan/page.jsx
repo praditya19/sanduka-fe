@@ -328,14 +328,13 @@ function Pemasukan() {
 
     const calculatedTotalSaldo =
       transactions.reduce((total, transaction) => {
-        const isSaldoAwal = transaction.uraian === "Saldo Awal";
-        const isMaret2021 =
-          Number(newSelectedYear) === 2021 && Number(selectedBulan) === 3;
+        // Langsung hitung debet tanpa kondisi khusus
+        const debet = Math.floor(
+          parseFloat(transaction.debet.replace(",", "")) || 0
+        );
 
-        const debet =
-          isSaldoAwal && !isMaret2021
-            ? 0
-            : Math.floor(parseFloat(transaction.debet.replace(",", "")) || 0);
+        // Log debet setiap transaksi untuk debug
+        console.log(`Debet (transaksi ${transaction.id}): ${debet}`);
 
         return total + debet;
       }, 0) -
@@ -343,14 +342,18 @@ function Pemasukan() {
         const kredit = Math.floor(
           parseFloat(transaction.kredit.replace(",", "")) || 0
         );
+
+        // Log kredit setiap transaksi untuk debug
+        console.log(`Kredit (transaksi ${transaction.id}): ${kredit}`);
+
         return total + kredit;
       }, 0);
 
+    // Log total saldo yang dihitung
+    console.log(`Calculated Total Saldo: ${calculatedTotalSaldo}`);
+
     setTotalSaldo(calculatedTotalSaldo);
   }, [transactions]);
-
-  // totalSaldo akan selalu berisi total dari saldo yang dihitung
-  // console.log("Total saldo yang dihitung:", totalSaldo);
 
   const createSaldoAwal = async () => {
     try {
@@ -1781,7 +1784,7 @@ function Pemasukan() {
                           {transaction.uraian}
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          {formatCurrency(
+                          {/* {formatCurrency(
                             transaction.uraian === "Saldo Awal"
                               ? Number(newSelectedYear) === 2021 &&
                                 Number(selectedBulan) === 3
@@ -1792,6 +1795,9 @@ function Pemasukan() {
                               : parseFloat(
                                   transaction.debet.replace(",", "")
                                 ) || 0
+                          )} */}
+                          {formatCurrency(
+                            parseFloat(transaction.debet.replace(",", "")) || 0
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm">
@@ -1800,14 +1806,9 @@ function Pemasukan() {
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm">
-                          <td className="px-6 py-4 text-sm">
-                            {" "}
-                            {saldoMap[index]
-                              ? saldoMap[index].toLocaleString("id-ID", {
-                                  minimumFractionDigits: 0,
-                                })
-                              : 0}
-                          </td>
+                          {saldoMap[index]
+                            ? formatCurrency(saldoMap[index])
+                            : formatCurrency(0)}
                         </td>
                         <td className="px-6 py-4 text-sm">
                           <div className="flex items-center space-x-2">
@@ -1876,7 +1877,7 @@ function Pemasukan() {
                     </td>
 
                     <td className="px-6 py-4 text-sm">
-                      {formatCurrency(
+                      {/* {formatCurrency(
                         transactions.reduce((total, transaction) => {
                           const isSaldoAwal =
                             transaction.uraian === "Saldo Awal";
@@ -1895,6 +1896,14 @@ function Pemasukan() {
 
                           return total + debet;
                         }, 0)
+                      )} */}
+                      {formatCurrency(
+                        transactions.reduce((total, transaction) => {
+                          const debet = Math.floor(
+                            parseFloat(transaction.debet.replace(",", "")) || 0
+                          );
+                          return total + debet;
+                        }, 0)
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm">
@@ -1903,15 +1912,13 @@ function Pemasukan() {
                           const kredit = Math.floor(
                             parseFloat(transaction.kredit.replace(",", "")) || 0
                           );
-                          return total + kredit; // menambahkan kredit ke total
+                          return total + kredit;
                         }, 0)
                       )}
                     </td>
 
                     <td className="px-6 py-4 text-sm">
-                      {totalSaldo.toLocaleString("id-ID", {
-                        minimumFractionDigits: 0,
-                      })}
+                      {formatCurrency(totalSaldo)}
                     </td>
                     <td className="px-6 py-4 text-sm"></td>
                   </tr>
