@@ -7,9 +7,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { ClipLoader } from "react-spinners";
-import $ from 'jquery';
-import 'summernote/dist/summernote-lite.min.css';
-import 'summernote/dist/summernote-lite.min.js';
+import $ from "jquery";
+import "summernote/dist/summernote-lite.css";
+import "summernote/dist/summernote-lite.js";
+
 
 const Page = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -48,20 +49,25 @@ const Page = () => {
 
   // Initialize Summernote
   useEffect(() => {
-    if (typeof window !== 'undefined' && !$('#summernote').data('summernote')) {
-      $('#summernote').summernote({
-        height: 300,
-        callbacks: {
-          onChange: function (contents) {
-            setDeskripsi(contents);
-          }
-        }
-      });
+    if (typeof window !== "undefined") {
+      // Ensure jQuery is available
+      if ($) {
+        $("#summernote").summernote({
+          height: 300,
+          callbacks: {
+            onChange: function (contents) {
+              setDeskripsi(contents);
+            },
+          },
+        });
+      } else {
+        console.error("jQuery is not loaded");
+      }
     }
-
+  
     return () => {
-      if (typeof window !== 'undefined' && $('#summernote').data('summernote')) {
-        $('#summernote').summernote('destroy');
+      if ($("#summernote").data("summernote")) {
+        $("#summernote").summernote("destroy");
       }
     };
   }, []);
