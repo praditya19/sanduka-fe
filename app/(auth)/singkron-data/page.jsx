@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
+import { faMinusCircle, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 import { FaTrash } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -50,6 +51,7 @@ const SyncData = () => {
   const [searchNama, setSearchNama] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
+  const [expandedRow, setExpandedRow] = useState(null);
 
   useEffect(() => {
     const storedRole = sessionStorage.getItem("role");
@@ -562,82 +564,199 @@ const SyncData = () => {
         {paginatedData.map((item, index) => {
           const actualIndex = (currentPage - 1) * itemsPerPage + index + 1;
           return (
-            <tr
-              key={item.id || index}
-              className={`bg-white border-b ${
-                index % 2 === 0 ? "bg-gray-50" : "bg-white"
-              } hover:bg-gray-200 transition duration-150`}
-            >
-              <td className="py-4 px-6">{actualIndex}</td>
-              <td className="py-4 px-6">{item.cabang}</td>
-              <td className="py-4 px-6">{item.unitKerja}</td>
-              {!isMobile && (
-                <>
-                  <td className="py-4 px-6">{item.namaAnggota}</td>
-                  <td className="py-4 px-6">{item.npa ? item.npa : "-"}</td>
-                  <td className="py-4 px-6">{item.nip}</td>
-                  <td className="py-4 px-6">
-                    <span
-                      className={`inline-block px-2 py-1 rounded ${
-                        item.dataKtaDigital
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {item.dataKtaDigital ? "YES" : "NO"}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6">
-                    <span
-                      className={`inline-block px-2 py-1 rounded ${
-                        item.dataDaspen
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {item.dataDaspen ? "YES" : "NO"}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6">
-                    {item.verifikasi === null ? (
-                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
-                        Belum Sinkronisasi
-                      </span>
-                    ) : item.verifikasi === true ? (
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
-                        Sudah Sinkronisasi
-                      </span>
-                    ) : (
-                      ""
+            <React.Fragment key={item.id || index}>
+              <tr
+                className={`bg-white border-b ${
+                  index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                } hover:bg-gray-200 transition duration-150`}
+              >
+                <td className="py-4 px-6">
+                  <div className="flex items-center justify-between">
+                    <span>{actualIndex}</span>
+                    {isMobile && (
+                      <FontAwesomeIcon
+                        icon={
+                          expandedRow === actualIndex
+                            ? faMinusCircle
+                            : faPlusCircle
+                        }
+                        className="text-blue-500 cursor-pointer ml-2"
+                        size="lg"
+                        onClick={() => toggleExpandRow(actualIndex)}
+                      />
                     )}
+                  </div>
+                </td>
+                <td className="py-4 px-6">{item.cabang}</td>
+                <td className="py-4 px-6">{item.unitKerja}</td>
+                {!isMobile && (
+                  <>
+                    <td className="py-4 px-6">{item.namaAnggota}</td>
+                    <td className="py-4 px-6">{item.npa || "-"}</td>
+                    <td className="py-4 px-6">{item.nip}</td>
+                    <td className="py-4 px-6">
+                      <span
+                        className={`inline-block px-2 py-1 rounded ${
+                          item.dataKtaDigital
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {item.dataKtaDigital ? "YES" : "NO"}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span
+                        className={`inline-block px-2 py-1 rounded ${
+                          item.dataDaspen
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {item.dataDaspen ? "YES" : "NO"}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      {item.verifikasi === null ? (
+                        <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
+                          Belum Sinkronisasi
+                        </span>
+                      ) : item.verifikasi ? (
+                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
+                          Sudah Sinkronisasi
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </td>
+                    <td className="py-4 px-6">
+                      <button
+                        onClick={() =>
+                          window.open(`https://wa.me/${item.nomorHp}`, "_blank")
+                        }
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
+                      >
+                        <FontAwesomeIcon icon={faWhatsapp} size="lg" />
+                      </button>
+                    </td>
+                    <td className="py-4 px-6">
+                      <Button
+                        className="bg-red-500 p-2 border rounded-md"
+                        title="Hapus"
+                        type="button"
+                        onClick={() => handleDeleteClick(item.id)}
+                      >
+                        <FaTrash className="w-4 h-4" />
+                      </Button>
+                    </td>
+                  </>
+                )}
+              </tr>
+              {expandedRow === actualIndex && (
+                <tr>
+                  <td colSpan="9" className="px-4 py-4 bg-gray-50">
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
+                        <div className="text-left">
+                          <h3 className="font-semibold">Nama:</h3>
+                          <p>{item.namaAnggota}</p>
+                        </div>
+                        <div className="text-left">
+                          <h3 className="font-semibold">Npa:</h3>
+                          <p>{item.npa || "-"}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
+                        <div className="text-left">
+                          <h3 className="font-semibold">Nip:</h3>
+                          <p>{item.nip}</p>
+                        </div>
+                        <div className="text-left">
+                          <h3 className="font-semibold">Data Kta Digital:</h3>
+                          <p
+                            className={`inline-block px-2 py-1 rounded ${
+                              item.dataKtaDigital
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {item.dataKtaDigital ? "YES" : "NO"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
+                        <div className="text-left">
+                          <h3 className="font-semibold">Nip:</h3>
+                          <p>{item.nip}</p>
+                        </div>
+                        <div className="text-left">
+                          <h3 className="font-semibold">Data Daspen:</h3>
+                          <p
+                            className={`inline-block px-2 py-1 rounded ${
+                              item.dataDaspen
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {item.dataDaspen ? "YES" : "NO"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
+                        <div className="text-left">
+                          <h3 className="font-semibold">Keterangan:</h3>
+                          <p>
+                            {item.verifikasi === null ? (
+                              <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
+                                Belum Sinkronisasi
+                              </span>
+                            ) : item.verifikasi ? (
+                              <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
+                                Sudah Sinkronisasi
+                              </span>
+                            ) : (
+                              ""
+                            )}
+                          </p>
+                        </div>
+                        <div className="text-left">
+                          <h3 className="font-semibold">Action:</h3>
+                          <div className="text-left flex items-center gap-2">
+                            <button
+                              onClick={() =>
+                                window.open(
+                                  `https://wa.me/${item.nomorHp}`,
+                                  "_blank"
+                                )
+                              }
+                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
+                            >
+                              <FontAwesomeIcon icon={faWhatsapp} size="lg" />
+                            </button>
+                            <Button
+                              className="bg-red-500 p-2 border rounded-md"
+                              title="Hapus"
+                              type="button"
+                              onClick={() => handleDeleteClick(item.id)}
+                            >
+                              <FaTrash className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </td>
-                  <td className="py-4 px-6">
-                    <button
-                      onClick={() =>
-                        window.open(`https://wa.me/${item.nomorHp}`, "_blank")
-                      }
-                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
-                    >
-                      <FontAwesomeIcon icon={faWhatsapp} size="lg" />
-                    </button>
-                  </td>
-                  <td>
-                    <Button
-                      className="bg-red-500 p-2 border rounded-md"
-                      title="Hapus"
-                      type="button"
-                      onClick={() => handleDeleteClick(item.id)}
-                    >
-                      <FaTrash className="w-4 h-4" />
-                    </Button>
-                  </td>
-                </>
+                </tr>
               )}
-            </tr>
+            </React.Fragment>
           );
         })}
       </tbody>
     );
+  };
+
+  const toggleExpandRow = (index) => {
+    setExpandedRow(expandedRow === index ? null : index);
   };
 
   useEffect(() => {

@@ -1009,8 +1009,24 @@ const DataTable = ({
                             <p>{item.namaLengkap}</p>
                           </div>
                           <div className="text-left">
+                            <h3 className="font-semibold">Email:</h3>
+                            <p>{item.email}</p>
+                          </div>
+                          <div className="text-left">
                             <h3 className="font-semibold">NPA PGRI:</h3>
                             <p>{item.npaPgri}</p>
+                          </div>
+                          <div className="text-left">
+                            <h3 className="font-semibold">Tanggal Lahir:</h3>
+                            <p>
+                              {new Intl.DateTimeFormat("id-ID", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                              })
+                                .format(new Date(item.tanggalLahir))
+                                .replace(/\//g, "-")}
+                            </p>
                           </div>
                           <div className="text-left">
                             <h3 className="font-semibold">Cabang:</h3>
