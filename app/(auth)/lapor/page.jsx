@@ -13,6 +13,7 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 import Link from "next/link";
 import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 
 const FormStep1 = ({
   formData,
@@ -419,9 +420,8 @@ const FormStep1 = ({
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="flex justify-center bg-red-600 py-2 rounded-b-lg shadow-md sm:mt-14 mt-12 sm:-mb-5 -mb-10">
             <h1 className="text-xl font-semibold text-white">Pelaporan</h1>
@@ -743,6 +743,8 @@ const Resume = ({
   onSubmit,
   selectedId,
   onFormDataUpdate,
+  notification,
+  onNotificationClose,
 }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -864,41 +866,16 @@ const Resume = ({
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
-          <Toaster
-            toastOptions={{
-              style: {
-                marginTop: "16%",
-                fontSize: "1.75rem",
-                padding: "10px",
-                width: "80%",
-                maxWidth: "700px",
-                height: "50%",
-                maxHeight: "400px",
-                transform: "translate(-50%, -50%)",
-                textAlign: "center",
-                zIndex: 9999,
-                backgroundColor: "#fff",
-                borderRadius: "8px",
-                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-              },
-              success: {
-                style: {
-                  background: "white",
-                  color: "black",
-                },
-              },
-              error: {
-                style: {
-                  background: "white",
-                  color: "black",
-                },
-              },
-            }}
-          />
+          {notification && (
+            <NotificationPopup
+              type={notification.type}
+              message={notification.message}
+              onClose={onNotificationClose}
+            />
+          )}
           <div className="bg-gray-300 pt-9">
             <div className="relative max-w-xl mx-auto bg-white shadow-lg rounded-2xl overflow-hidden my-4 border border-gray-300">
               <div className="flex flex-col items-center gap-4 bg-gray-50 p-4 rounded-lg shadow-lg">
@@ -945,11 +922,10 @@ const Resume = ({
                     <Label className="block text-sm font-medium text-center">
                       No HP:{" "}
                       <Link
-                        href={`https://wa.me/${
-                          formData?.nomorHp?.startsWith("+62")
-                            ? formData.nomorHp.replace("+62", "62")
-                            : formData?.nomorHp || ""
-                        }`}
+                        href={`https://wa.me/${formData?.nomorHp?.startsWith("+62")
+                          ? formData.nomorHp.replace("+62", "62")
+                          : formData?.nomorHp || ""
+                          }`}
                         className="text-blue-500"
                       >
                         {formatPhoneNumber(formData.nomorHp)} (WhatsApp)
@@ -993,24 +969,23 @@ const Resume = ({
                     <Label className="block text-sm font-medium text-center">
                       No HP:{" "}
                       <Link
-                        href={`https://wa.me/${
-                          pelaporData?.nomorHp || pelaporData?.nohp
-                            ? (
-                                pelaporData.nomorHp || pelaporData.nohp
-                              ).startsWith("0")
-                              ? "62" +
-                                (
-                                  pelaporData.nomorHp || pelaporData.nohp
-                                ).substring(1)
-                              : (
-                                  pelaporData.nomorHp || pelaporData.nohp
-                                ).startsWith("+62")
+                        href={`https://wa.me/${pelaporData?.nomorHp || pelaporData?.nohp
+                          ? (
+                            pelaporData.nomorHp || pelaporData.nohp
+                          ).startsWith("0")
+                            ? "62" +
+                            (
+                              pelaporData.nomorHp || pelaporData.nohp
+                            ).substring(1)
+                            : (
+                              pelaporData.nomorHp || pelaporData.nohp
+                            ).startsWith("+62")
                               ? (
-                                  pelaporData.nomorHp || pelaporData.nohp
-                                ).replace("+62", "62")
+                                pelaporData.nomorHp || pelaporData.nohp
+                              ).replace("+62", "62")
                               : pelaporData.nomorHp || pelaporData.nohp
-                            : ""
-                        }`}
+                          : ""
+                          }`}
                         className="text-blue-500"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -1049,6 +1024,78 @@ const Resume = ({
   );
 };
 
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Page = () => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -1067,6 +1114,12 @@ const Page = () => {
     jabatan: "",
     nomorHp: "",
   });
+  const [notification, setNotification] = useState(null);
+
+  // Add a handler to clear notifications
+  const handleNotificationClose = () => {
+    setNotification(null);
+  };
 
   const handleNext = (memberId) => {
     setSelectedMemberId(memberId);
@@ -1107,59 +1160,10 @@ const Page = () => {
       sessionStorage.setItem("idTerlaporList", JSON.stringify(idList));
       sessionStorage.setItem("npaTerlaporList", JSON.stringify(npaList));
 
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "2rem",
-              display: "block",
-              marginBottom: "28px",
-            }}
-          >
-            Laporan Berhasil!
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Laporan Berhasil`
+      });
 
       setTimeout(() => {
         window.location.href = "/home";
@@ -1167,60 +1171,10 @@ const Page = () => {
     } catch (error) {
       console.error("Error saat menambahkan laporan:", error);
 
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Gagal menambahkan laporan.
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: 'Gagal menambahkan laporan!'
+      });
     }
   };
 
@@ -1237,13 +1191,23 @@ const Page = () => {
 
   return (
     <div>
+      {/* Add notification to Form step 1 */}
       {step === 1 && (
-        <FormStep1
-          formData={formData}
-          setFormData={setFormData}
-          onNext={handleNext}
-          setPelaporData={setPelaporData}
-        />
+        <>
+          {notification && (
+            <NotificationPopup
+              type={notification.type}
+              message={notification.message}
+              onClose={handleNotificationClose}
+            />
+          )}
+          <FormStep1
+            formData={formData}
+            setFormData={setFormData}
+            onNext={handleNext}
+            setPelaporData={setPelaporData}
+          />
+        </>
       )}
       {step === 2 && (
         <Resume
@@ -1254,6 +1218,8 @@ const Page = () => {
           onSubmit={handleSubmit}
           selectedId={selectedMemberId}
           onFormDataUpdate={handleFormDataUpdate}
+          notification={notification}
+          onNotificationClose={handleNotificationClose}
         />
       )}
     </div>
