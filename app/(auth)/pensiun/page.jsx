@@ -552,55 +552,61 @@ const Page = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+    <div className="min-h-screen bg-gray-50">
       <Toaster
         toastOptions={{
           style: {
             marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
+            fontSize: "1.25rem",
+            padding: "16px",
+            width: "90%",
+            maxWidth: "500px",
             textAlign: "center",
             zIndex: 9999,
             backgroundColor: "#fff",
             borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
           },
           success: {
             style: {
               background: "white",
-              color: "black",
+              color: "#10b981",
+              border: "1px solid #10b981",
             },
           },
           error: {
             style: {
-              background: "#f44336",
-              color: "#fff",
+              background: "white",
+              color: "#ef4444",
+              border: "1px solid #ef4444",
             },
           },
         }}
       />
+
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
-      <div>
+
+      <div className="flex">
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-        <div
+        <main
           className={`flex-1 transition-all duration-300 ease-in-out ${
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <div className="min-h-screen bg-gray-100 p-4">
-            <div className="w-full flex flex-wrap items-center justify-between mb-4 mt-16 gap-4">
-              <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
+          <div className="p-4 md:p-6 pt-20">
+            <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6">
+              <h1 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4">
+                Data Anggota Pensiun
+              </h1>
+
+              {/* Filters Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 {/* Filter Cabang */}
-                <div className="w-full sm:w-1/4 flex flex-col items-start relative">
+                <div className="relative">
                   <label
                     htmlFor="cabangInput"
-                    className="text-sm font-medium mb-1"
+                    className="text-sm font-medium text-gray-600 mb-1 block"
                   >
                     Pilih Cabang
                   </label>
@@ -626,7 +632,7 @@ const Page = () => {
                     sessionStorage.getItem("role") === "SUPER ADMIN" && (
                       <div
                         id="dropdownCabang"
-                        className="absolute z-10 border rounded-lg bg-white shadow-sm mt-[27%] w-full"
+                        className="absolute z-10 border rounded-lg bg-white shadow-md mt-1 w-full"
                       >
                         <ul className="max-h-44 overflow-y-auto">
                           <li className="py-2 px-2">
@@ -676,10 +682,10 @@ const Page = () => {
                 </div>
 
                 {/* Filter Bulan */}
-                <div className="w-full sm:w-1/4 flex flex-col">
+                <div>
                   <label
                     htmlFor="bulanInput"
-                    className="text-sm font-medium mb-1"
+                    className="text-sm font-medium text-gray-600 mb-1 block"
                   >
                     Pilih Bulan
                   </label>
@@ -687,7 +693,7 @@ const Page = () => {
                     id="bulanInput"
                     value={selectedMonth}
                     onChange={handleMonthChange}
-                    className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
+                    className="p-2 border rounded-lg w-full bg-white shadow-sm"
                   >
                     <option value="">Pilih Bulan</option>
                     {bulanOptions.map((bulan) => (
@@ -699,10 +705,10 @@ const Page = () => {
                 </div>
 
                 {/* Filter Tahun */}
-                <div className="w-full sm:w-1/4 flex flex-col">
+                <div>
                   <label
                     htmlFor="tahunInput"
-                    className="text-sm font-medium mb-1"
+                    className="text-sm font-medium text-gray-600 mb-1 block"
                   >
                     Pilih Tahun
                   </label>
@@ -710,7 +716,7 @@ const Page = () => {
                     id="tahunInput"
                     value={selectedYear}
                     onChange={handleYearChange}
-                    className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
+                    className="p-2 border rounded-lg w-full bg-white shadow-sm"
                   >
                     <option value="">Pilih Tahun</option>
                     {yearOptions.map((year) => (
@@ -722,34 +728,65 @@ const Page = () => {
                 </div>
 
                 {/* Filter Cari */}
-                <div className="w-full md:w-1/4 flex flex-col">
+                <div>
                   <label
                     htmlFor="searchInput"
-                    className="text-sm font-medium mb-1"
+                    className="text-sm font-medium text-gray-600 mb-1 block"
                   >
                     Cari Anggota
                   </label>
-                  <input
-                    id="searchInput"
-                    type="text"
-                    placeholder="Cari ..."
-                    value={searchText}
-                    onChange={handleSearchChange}
-                    className="p-2 border rounded w-full sm:w-1/3 md:w-auto"
-                  />
+                  <div className="relative">
+                    <input
+                      id="searchInput"
+                      type="text"
+                      placeholder="Cari nama, NPA..."
+                      value={searchText}
+                      onChange={handleSearchChange}
+                      className="p-2 pl-8 border rounded-lg w-full bg-white shadow-sm"
+                    />
+                    <span className="absolute left-2 top-2 text-gray-400">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-between">
-                <span>Jumlah Anggota: {filteredPensiunList.length} Orang</span>
-              </div>
+              {/* Summary and Actions */}
+              <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg flex items-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span className="font-medium">
+                    Jumlah Anggota: {filteredPensiunList.length} Orang
+                  </span>
+                </div>
 
-              <div className="w-full flex justify-center gap-2 md:w-auto">
                 <button
-                  className={`bg-blue-500 text-white px-4 py-2 rounded flex items-center justify-center ${
-                    isLoading
-                      ? "opacity-70 cursor-not-allowed"
-                      : "hover:bg-blue-700"
+                  className={`bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center transition-colors ${
+                    isLoading ? "opacity-70 cursor-not-allowed" : ""
                   }`}
                   onClick={() =>
                     !isLoading &&
@@ -763,7 +800,7 @@ const Page = () => {
                 >
                   {isLoading ? (
                     <svg
-                      className="animate-spin h-5 w-5 text-white"
+                      className="animate-spin h-5 w-5 text-white mr-2"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -783,317 +820,446 @@ const Page = () => {
                       ></path>
                     </svg>
                   ) : (
-                    "Download Excel"
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                      />
+                    </svg>
                   )}
+                  Download Excel
                 </button>
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white mt-4">
-                <thead className="bg-teal-700 text-white ">
-                  <tr>
-                    <th className="py-2 px-3 text-center">No.</th>
-                    <th className="py-2 px-3 text-center">Foto</th>
-                    <th className="py-2 px-3 text-center hidden lg:table-cell">
-                      Prediksi Pensiun
-                    </th>
-                    <th className="py-2 px-3 text-center">Data Anggota</th>
-                    <th className="py-2 px-3 text-center hidden lg:table-cell">
-                      Keanggotaan
-                    </th>
-                    <th className="py-2 px-3 text-center hidden lg:table-cell">
-                      Aksi
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td colSpan="8" className="text-center py-4">
-                        <ClipLoader color="#3498db" size={50} />
-                      </td>
-                    </tr>
-                  ) : (
-                    currentItems.map((pensiun, index) => (
-                      <>
-                        <tr key={pensiun.id} className="border-t">
-                          <td className="py-2 px-3 text-center">
-                            {startNumber + index + 1}
-                            <Button
-                              className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden"
-                              onClick={() => handleExpand(index)}
-                            >
-                              {expandedIndex === index ? (
-                                <FaMinusCircle />
-                              ) : (
-                                <FaPlusCircle />
-                              )}
-                            </Button>
-                          </td>
-                          <td className="py-2 px-3 text-center">
-                            <Image
-                              src={
-                                fotoBase64[index]
-                                  ? `data:image/jpeg;base64,${fotoBase64[index]}`
-                                  : profileImageUrl
+            {/* Data Table */}
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              {loading ? (
+                <div className="flex justify-center items-center py-16">
+                  <ClipLoader color="#3498db" size={50} />
+                  <span className="ml-4 text-gray-600">
+                    Memuat data anggota...
+                  </span>
+                </div>
+              ) : filteredPensiunList.length === 0 ? (
+                <div className="text-center py-16">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-16 w-16 mx-auto text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <p className="text-gray-500 mt-4">
+                    Tidak ada data anggota yang ditemukan
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                      <thead>
+                        <tr className="bg-teal-700 text-white">
+                          <th className="py-3 px-4 text-center">No.</th>
+                          <th className="py-3 px-4 text-center">Foto</th>
+                          <th className="py-3 px-4 text-center hidden lg:table-cell">
+                            Prediksi Pensiun
+                          </th>
+                          <th className="py-3 px-4 text-left">Data Anggota</th>
+                          <th className="py-3 px-4 text-left hidden lg:table-cell">
+                            Keanggotaan
+                          </th>
+                          <th className="py-3 px-4 text-center">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currentItems.map((pensiun, index) => (
+                          <React.Fragment key={pensiun.id}>
+                            <tr
+                              className={
+                                index % 2 === 0 ? "bg-white" : "bg-gray-50"
                               }
-                              width={50}
-                              height={50}
-                              alt="Anggota Foto"
-                              className="object-cover"
-                              unoptimized={true}
-                            />
-                          </td>
-                          <td className="py-2 px-3 text-center hidden lg:table-cell">
-                            {formatDate(pensiun.prediksiPensiun)}
-                          </td>
-                          <td className="py-2 px-3 text-center">
-                            <div>{pensiun.namaLengkap}</div>
-                            <div>{pensiun.npa}</div>
-                            <div>
-                              {pensiun.tempatLahir},{" "}
-                              {formatDate(pensiun.tanggalLahir)}
-                            </div>
-                            <div>{pensiun.cabang}</div>
-                          </td>
-                          <td className="py-2 px-3 text-center hidden lg:table-cell">
-                            <div>{pensiun.jabatan}</div>
-                            <div>{pensiun.unitKerja}</div>
-                            <div>Usia: {pensiun.usia}</div>
-                            <div>
-                              {" "}
-                              {pensiun.keterangan === null
-                                ? pensiun.status === "Segera"
-                                  ? "Segera"
-                                  : "Aktif"
-                                : "Aktif"}
-                            </div>
-                          </td>
-                          <td className="py-2 px-3 text-center hidden lg:table-cell">
-                            <div className="flex items-center justify-center space-x-2">
-                              <button
-                                type="button"
-                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                onClick={() => handlePopup(pensiun.npa)}
-                              >
-                                Pensiun
-                              </button>
-                              <button
-                                type="button"
-                                className=" text-white bg-green-500 hover:text-green-600 p-2 rounded-lg"
-                                onClick={() => handleWhatsApp(pensiun.nomorHp)}
-                              >
-                                <FaWhatsapp className="h-6 w-6" />
-                              </button>
-                            </div>
-                            {popupVisible && (
-                              <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex justify-center items-center z-50">
-                                <div className="bg-white rounded-lg p-6 w-2/5 text-center shadow-lg">
-                                  <h2 className="text-lg font-semibold text-gray-800">
-                                    Apakah Anda yakin ?
-                                  </h2>
-                                  <p className="text-gray-600 mt-2 mb-4">
-                                    Apakah Anda yakin untuk mengubah anggota
-                                    menjadi pensiun?
-                                  </p>
-                                  <div className="flex justify-center gap-4">
-                                    <button
-                                      onClick={handleCancelKeluar}
-                                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
-                                    >
-                                      Batal
-                                    </button>
-                                    <button
-                                      onClick={handlePensiunAnggota}
-                                      className="bg-teal-500 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition duration-200"
-                                    >
-                                      Ya, Saya Yakin
-                                    </button>
+                            >
+                              <td className="py-3 px-4 text-center">
+                                {startNumber + index + 1}
+                                <Button
+                                  className="text-blue-500 bg-transparent hover:bg-transparent lg:hidden ml-2"
+                                  onClick={() => handleExpand(index)}
+                                >
+                                  {expandedIndex === index ? (
+                                    <FaMinusCircle />
+                                  ) : (
+                                    <FaPlusCircle />
+                                  )}
+                                </Button>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <div className="flex justify-center">
+                                  <div className="w-12 h-12 relative overflow-hidden rounded-full border-2 border-teal-600">
+                                    <Image
+                                      src={
+                                        fotoBase64[index]
+                                          ? `data:image/jpeg;base64,${fotoBase64[index]}`
+                                          : profileImageUrl
+                                      }
+                                      layout="fill"
+                                      objectFit="cover"
+                                      alt="Anggota Foto"
+                                      unoptimized={true}
+                                    />
                                   </div>
                                 </div>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                        {expandedIndex === index && (
-                          <tr className="bg-gray-100 lg:hidden">
-                            <td
-                              colSpan="3"
-                              className="py-2 px-3 text-sm border-t"
-                            >
-                              <div>
-                                <strong>Prediksi Pensiun:</strong>{" "}
-                                {formatDate(pensiun.prediksiPensiun)}
-                              </div>
-                              <div>
-                                <strong>Keanggotaan:</strong> {pensiun.jabatan},{" "}
-                                {pensiun.unitKerja}
-                              </div>
-                              <div>
-                                <strong>Usia:</strong> {pensiun.usia}
-                              </div>
-                              <div>
-                                <strong>Cabang ke-2:</strong> {pensiun.cabang}
-                              </div>
-                              <div>
-                                <strong>Status:</strong> {pensiun.status}
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <button
-                                  type="button"
-                                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                  onClick={() => handlePopup(pensiun.npa)}
+                              </td>
+                              <td className="py-3 px-4 text-center hidden lg:table-cell">
+                                <span className="bg-orange-100 text-orange-800 py-1 px-2 rounded-full text-sm">
+                                  {formatDate(pensiun.prediksiPensiun)}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="font-medium text-gray-800">
+                                  {pensiun.namaLengkap}
+                                </div>
+                                <div className="text-gray-600 text-sm">
+                                  NPA: {pensiun.npa}
+                                </div>
+                                <div className="text-gray-600 text-sm">
+                                  {pensiun.tempatLahir},{" "}
+                                  {formatDate(pensiun.tanggalLahir)}
+                                </div>
+                                <div className="text-gray-600 text-sm">
+                                  Cabang: {pensiun.cabang}
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 hidden lg:table-cell">
+                                <div className="font-medium">
+                                  {pensiun.jabatan}
+                                </div>
+                                <div className="text-gray-600 text-sm">
+                                  {pensiun.unitKerja}
+                                </div>
+                                <div className="text-gray-600 text-sm">
+                                  Usia: {pensiun.usia} tahun
+                                </div>
+                                <div className="mt-1">
+                                  <span
+                                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                      pensiun.status === "Segera"
+                                        ? "bg-red-100 text-red-800"
+                                        : "bg-green-100 text-green-800"
+                                    }`}
+                                  >
+                                    {pensiun.keterangan === null
+                                      ? pensiun.status === "Segera"
+                                        ? "Segera Pensiun"
+                                        : "Aktif"
+                                      : "Aktif"}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <div className="flex items-center justify-center space-x-2">
+                                  <button
+                                    type="button"
+                                    className="bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 transition-colors text-sm flex items-center"
+                                    onClick={() => handlePopup(pensiun.npa)}
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      className="h-4 w-4 mr-1"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"
+                                      />
+                                    </svg>
+                                    Pensiun
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition-colors"
+                                    onClick={() =>
+                                      handleWhatsApp(pensiun.nomorHp)
+                                    }
+                                  >
+                                    <FaWhatsapp className="h-5 w-5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                            {expandedIndex === index && (
+                              <tr className="bg-gray-100 lg:hidden">
+                                <td
+                                  colSpan="4"
+                                  className="py-3 px-4 text-sm border-t"
                                 >
-                                  Pensiun
-                                </button>
-                                <button
-                                  type="button"
-                                  className="flex items-center text-green-500 hover:text-green-600"
-                                  onClick={() =>
-                                    handleWhatsApp(pensiun.nomorHp)
-                                  }
-                                >
-                                  <FaWhatsapp className="h-6 w-6 mr-2" />
-                                </button>
-                              </div>
-                              {popupVisible && (
-                                <div className="fixed inset-0 bg-gray-900 bg-opacity-30 flex justify-center items-center z-50">
-                                  <div className="bg-white rounded-lg p-6 w-4/5 sm:w-2/5 md:w-1/3 text-center shadow-lg">
-                                    <h2 className="text-lg font-semibold text-gray-800">
-                                      Apakah Anda yakin ?
-                                    </h2>
-                                    <p className="text-gray-600 mt-2 mb-4">
-                                      Apakah Anda yakin untuk mengubah anggota
-                                      menjadi pensiun?
-                                    </p>
-                                    <div className="flex justify-center gap-4">
+                                  <div className="grid grid-cols-1 gap-2">
+                                    <div className="bg-white p-3 rounded-lg shadow-sm">
+                                      <div className="text-teal-700 font-medium mb-1">
+                                        Prediksi Pensiun
+                                      </div>
+                                      <div>
+                                        {formatDate(pensiun.prediksiPensiun)}
+                                      </div>
+                                    </div>
+
+                                    <div className="bg-white p-3 rounded-lg shadow-sm">
+                                      <div className="text-teal-700 font-medium mb-1">
+                                        Keanggotaan
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">
+                                          Jabatan:
+                                        </span>{" "}
+                                        {pensiun.jabatan}
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">
+                                          Unit Kerja:
+                                        </span>{" "}
+                                        {pensiun.unitKerja}
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">
+                                          Usia:
+                                        </span>{" "}
+                                        {pensiun.usia} tahun
+                                      </div>
+                                      <div className="mt-1">
+                                        <span
+                                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                            pensiun.status === "Segera"
+                                              ? "bg-red-100 text-red-800"
+                                              : "bg-green-100 text-green-800"
+                                          }`}
+                                        >
+                                          {pensiun.keterangan === null
+                                            ? pensiun.status === "Segera"
+                                              ? "Segera Pensiun"
+                                              : "Aktif"
+                                            : "Aktif"}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center space-x-2 mt-2">
                                       <button
-                                        onClick={handleCancelKeluar}
-                                        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
+                                        type="button"
+                                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex-1 flex items-center justify-center"
+                                        onClick={() => handlePopup(pensiun.npa)}
                                       >
-                                        Batal
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          className="h-4 w-4 mr-1"
+                                          fill="none"
+                                          viewBox="0 0 24 24"
+                                          stroke="currentColor"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"
+                                          />
+                                        </svg>
+                                        Pensiun
                                       </button>
                                       <button
-                                        onClick={handlePensiunAnggota}
-                                        className="bg-teal-500 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition duration-200"
+                                        type="button"
+                                        className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition-colors"
+                                        onClick={() =>
+                                          handleWhatsApp(pensiun.nomorHp)
+                                        }
                                       >
-                                        Ya, Saya Yakin
+                                        <FaWhatsapp className="h-6 w-6" />
                                       </button>
                                     </div>
                                   </div>
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        )}
-                      </>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {/* Pagination Controls */}
-            <div className="flex flex-wrap justify-center mt-4 gap-2">
-              <button
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-              >
-                First
-              </button>
-              <button
-                onClick={handlePreviousPage}
-                disabled={currentPage === 1}
-                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-              >
-                Prev
-              </button>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
-              {getVisiblePages().map((page) => (
-                <button
-                  key={page}
-                  onClick={() => handlePageClick(page)}
-                  className={`px-3 py-1 border rounded text-sm ${
-                    page === currentPage
-                      ? "bg-blue-500 text-white"
-                      : "bg-white hover:bg-gray-50"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
+                  {/* Pagination Controls */}
+                  <div className="p-4 border-t">
+                    <div className="flex flex-wrap justify-center gap-2">
+                      <button
+                        onClick={() => setCurrentPage(1)}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 mr-1"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                          />
+                        </svg>
+                        First
+                      </button>
+                      <button
+                        onClick={handlePreviousPage}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 mr-1"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 19l-7-7 7-7"
+                          />
+                        </svg>
+                        Prev
+                      </button>
 
-              {totalPages > 3 && currentPage < totalPages - 3 && (
-                <span className="px-2">...</span>
+                      {getVisiblePages().map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => handlePageClick(page)}
+                          className={`px-3 py-1 border rounded-md text-sm ${
+                            page === currentPage
+                              ? "bg-teal-600 text-white border-teal-600"
+                              : "bg-white hover:bg-gray-50"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+
+                      {totalPages > 3 && currentPage < totalPages - 3 && (
+                        <span className="px-2 py-1">...</span>
+                      )}
+
+                      <button
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
+                      >
+                        Next
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 ml-1"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
+                      >
+                        Last
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 ml-1"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 5l7 7-7 7M5 5l7 7-7 7"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </>
               )}
+            </div>
+          </div>
+        </main>
+      </div>
 
+      {/* Confirmation Modal */}
+      {popupVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-6 w-11/12 max-w-md text-center shadow-xl transform transition-all">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-16 w-16 mx-auto text-yellow-500 mb-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+              Konfirmasi Pensiun
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Apakah Anda yakin untuk mengubah status anggota menjadi pensiun?
+              Tindakan ini tidak dapat dibatalkan.
+            </p>
+            <div className="flex justify-center gap-4">
               <button
-                onClick={handleNextPage}
-                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                onClick={handleCancelKeluar}
+                className="bg-gray-200 text-gray-800 px-5 py-2 rounded-lg hover:bg-gray-300 transition duration-200 font-medium"
               >
-                Next
+                Batal
               </button>
               <button
-                onClick={() => setCurrentPage(totalPages)}
-                className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                onClick={handlePensiunAnggota}
+                className="bg-teal-600 text-white px-5 py-2 rounded-lg hover:bg-teal-700 transition duration-200 font-medium"
               >
-                Last
+                Ya, Saya Yakin
               </button>
             </div>
-
-            {/* {filteredPensiunList.length > 0 && (
-                <div className="flex justify-center mt-4 gap-1">
-                  <button
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    First
-                  </button>
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Prev
-                  </button>
-                  {getVisiblePages().map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 border rounded text-sm ${
-                        page === currentPage
-                          ? "bg-blue-500 text-white"
-                          : "bg-white hover:bg-gray-50"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Next
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Last
-                  </button>
-                </div>
-              )} */}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
