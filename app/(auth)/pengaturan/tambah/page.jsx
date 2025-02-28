@@ -12,6 +12,79 @@ import { useAuth } from "@/app/AuthContext";
 import toast, { Toaster } from "react-hot-toast";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import Link from "next/link";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Page = () => {
   const [entries, setEntries] = useState(10);
@@ -26,6 +99,7 @@ const Page = () => {
   const router = useRouter();
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
     if (!token) router.push("/sign-in");
@@ -55,7 +129,10 @@ const Page = () => {
 
   const addCabang = async () => {
     if (!newCabang) {
-      toast.error("Cabang tidak boleh kosong.");
+      setNotification({
+        type: 'error',
+        message: `Cabang tidak boleh kosong!`
+      });
       return;
     }
     try {
@@ -65,119 +142,30 @@ const Page = () => {
         idKecamatan: parseInt(idKecamatan, 10),
       };
       const response = await GlobalApi.addCabang(payload);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Cabang Berhasil Ditambahkan!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Cabang Berhasil Ditambahkan!`
+      });
       setTimeout(() => {
         window.location.reload();
       }, 4000);
       setNewCabang("");
       setIdKecamatan(idKecamatan + 1);
     } catch (error) {
-      toast.error("Gagal menambahkan Cabang. Coba lagi nanti.");
+      setNotification({
+        type: 'error',
+        message: `Gagal menambahkan cabang!. Coba lagi nanti.`
+      });
     }
   };
 
   const deleteCabang = async (idCabang) => {
     try {
       const response = await GlobalApi.deleteCabang(idCabang);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Cabang Berhasil Dihapus!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Cabang Berhasil Dihapus!`
+      });
       setTimeout(() => {
         window.location.reload();
       }, 4000);
@@ -209,13 +197,13 @@ const Page = () => {
   const startIndex = (currentPage - 1) * entries;
   const filteredData = Array.isArray(data)
     ? data.filter((item) => {
-        const kabupaten = item.kabupaten || "";
-        const cabang = item.cabang || "";
-        return (
-          kabupaten.toLowerCase().includes(searchQuery) ||
-          cabang.toLowerCase().includes(searchQuery)
-        );
-      })
+      const kabupaten = item.kabupaten || "";
+      const cabang = item.cabang || "";
+      return (
+        kabupaten.toLowerCase().includes(searchQuery) ||
+        cabang.toLowerCase().includes(searchQuery)
+      );
+    })
     : [];
 
   const selectedData = filteredData.slice(startIndex, startIndex + entries);
@@ -229,15 +217,20 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6 mt-4 sm:mt-0 ml-4 sm:ml-0">
-      <Toaster />
+      {notification && (
+        <NotificationPopup
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div className="flex flex-col md:flex-row">
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <main className="min-h-screen bg-gray-50 p-4 md:p-6">
             <nav className=" mt-6">

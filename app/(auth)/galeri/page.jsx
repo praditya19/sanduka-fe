@@ -7,6 +7,57 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { ClipLoader } from "react-spinners";
+import dynamic from "next/dynamic";
+
+// Create a dynamic component for Summernote to ensure it only loads on client
+const SummernoteEditor = dynamic(
+  () => {
+    return Promise.all([
+      import("jquery").then((mod) => mod.default), // Ambil default jQuery
+      import("summernote/dist/summernote-lite.min.css"),
+      import("summernote/dist/summernote-lite.min.js"),
+    ]).then(([jQuery]) => {
+      window.jQuery = jQuery;
+      window.$ = jQuery;
+
+      console.log("jQuery loaded:", window.jQuery); // Debugging statement
+
+      return ({ value, onChange, height }) => {
+        const editorRef = useRef(null);
+
+        useEffect(() => {
+          const $ = window.jQuery; // Ambil jQuery dari window
+
+          console.log("jQuery in useEffect:", $); // Debugging statement
+
+          if ($ && editorRef.current) {
+            $(editorRef.current).summernote({
+              height: height || 300,
+              callbacks: {
+                onChange: function (contents) {
+                  onChange(contents);
+                },
+              },
+            });
+
+            if (value) {
+              $(editorRef.current).summernote("code", value);
+            }
+
+            return () => {
+              $(editorRef.current).summernote("destroy");
+            };
+          } else {
+            console.error("jQuery or editorRef is not available");
+          }
+        }, []);
+
+        return <textarea ref={editorRef} />;
+      };
+    });
+  },
+  { ssr: false }
+);
 
 const Page = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -42,6 +93,12 @@ const Page = () => {
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // We no longer need the Summernote initialization useEffect since
+  // it's now handled by our dynamic component
+
+  // Update the editor content when editing - now handled by passing
+  // value to SummernoteEditor component
 
   useEffect(() => {
     const totalPages = Math.ceil(galleries.length / itemsPerPage);
@@ -114,12 +171,15 @@ const Page = () => {
           category: category,
           deskripsi: deskripsi,
           namaEvent: category === "EVENT" ? namaEvent : undefined,
-          photo: selectedFile
+          photo: selectedFile,
         };
 
-        newGallery = await GlobalApi.updateSidebarGallery(editingId, updateData);
-        setGalleries(prevGalleries =>
-          prevGalleries.map(gallery =>
+        newGallery = await GlobalApi.updateSidebarGallery(
+          editingId,
+          updateData
+        );
+        setGalleries((prevGalleries) =>
+          prevGalleries.map((gallery) =>
             gallery.id === editingId ? newGallery : gallery
           )
         );
@@ -128,9 +188,9 @@ const Page = () => {
           category: category,
           deskripsi: deskripsi,
           namaEvent: category === "EVENT" ? namaEvent : undefined,
-          photo: selectedFile
+          photo: selectedFile,
         });
-        setGalleries(prevGalleries => {
+        setGalleries((prevGalleries) => {
           const updatedGalleries = [...prevGalleries, newGallery];
           const newItemIndex = updatedGalleries.length - 1;
           const newItemPage = Math.floor(newItemIndex / itemsPerPage);
@@ -139,13 +199,14 @@ const Page = () => {
         });
       }
 
+      // Reset form
       setSelectedFile(null);
       setDeskripsi("");
       setCategory("NON EVENT");
       setNamaEvent("");
       setEditingId(null);
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     } catch (error) {
       console.error("Error saving gallery:", error);
@@ -158,8 +219,10 @@ const Page = () => {
     if (galleryToDelete) {
       try {
         await GlobalApi.deleteSidebarGallery(galleryToDelete.id);
-        setGalleries(prevGalleries => {
-          const updatedGalleries = prevGalleries.filter(gallery => gallery.id !== galleryToDelete.id);
+        setGalleries((prevGalleries) => {
+          const updatedGalleries = prevGalleries.filter(
+            (gallery) => gallery.id !== galleryToDelete.id
+          );
           const totalPages = Math.ceil(updatedGalleries.length / itemsPerPage);
 
           if (currentPage >= totalPages && totalPages > 0) {
@@ -182,9 +245,16 @@ const Page = () => {
 
   const indexOfLastItem = (currentPage + 1) * itemsPerPage;
   const indexOfFirstItem = currentPage * itemsPerPage;
-  const currentItems = galleries.filter(gallery => gallery.category !== 'EVENT').slice(indexOfFirstItem, indexOfLastItem);
-  const eventItems = galleries.filter(gallery => gallery.category === 'EVENT');
-  const totalPages = Math.ceil(galleries.filter(gallery => gallery.category !== 'EVENT').length / itemsPerPage);
+  const currentItems = galleries
+    .filter((gallery) => gallery.category !== "EVENT")
+    .slice(indexOfFirstItem, indexOfLastItem);
+  const eventItems = galleries.filter(
+    (gallery) => gallery.category === "EVENT"
+  );
+  const totalPages = Math.ceil(
+    galleries.filter((gallery) => gallery.category !== "EVENT").length /
+      itemsPerPage
+  );
 
   const DeleteConfirmationModal = () => {
     if (!isDeleteModalOpen) return null;
@@ -225,11 +295,11 @@ const Page = () => {
     setSelectedEvent(gallery);
     setIsPesertaModalOpen(true);
     setIsLoadingPeserta(true);
-  
+
     try {
       const queryString = `namaEvent=${encodeURIComponent(gallery.namaEvent)}`;
       const data = await GlobalApi.getAllPeserta(queryString);
-  
+
       setPesertaList(data);
     } catch (error) {
       console.error("Error fetching peserta:", error);
@@ -237,24 +307,23 @@ const Page = () => {
       setIsLoadingPeserta(false);
     }
   };
-  
 
   const PesertaModal = () => {
     if (!isPesertaModalOpen) return null;
-  
+
     const handlePrint = () => {
-      const printFrame = document.createElement('iframe');
-      printFrame.style.position = 'fixed';
-      printFrame.style.right = '0';
-      printFrame.style.bottom = '0';
-      printFrame.style.width = '0';
-      printFrame.style.height = '0';
-      printFrame.style.border = '0';
-      
+      const printFrame = document.createElement("iframe");
+      printFrame.style.position = "fixed";
+      printFrame.style.right = "0";
+      printFrame.style.bottom = "0";
+      printFrame.style.width = "0";
+      printFrame.style.height = "0";
+      printFrame.style.border = "0";
+
       document.body.appendChild(printFrame);
-      
-      const eventName = selectedEvent?.namaEvent || 'Event';
-      
+
+      const eventName = selectedEvent?.namaEvent || "Event";
+
       const printContent = `
         <!DOCTYPE html>
         <html>
@@ -291,7 +360,9 @@ const Page = () => {
                 </tr>
               </thead>
               <tbody>
-                ${pesertaList.map((peserta, index) => `
+                ${pesertaList
+                  .map(
+                    (peserta, index) => `
                   <tr>
                     <td>${index + 1}</td>
                     <td>${peserta.namaLengkap}</td>
@@ -299,7 +370,9 @@ const Page = () => {
                     <td>${peserta.cabang}</td>
                     <td>${peserta.unitKerja}</td>
                   </tr>
-                `).join('')}
+                `
+                  )
+                  .join("")}
               </tbody>
             </table>
           </div>
@@ -309,22 +382,25 @@ const Page = () => {
         </body>
         </html>
       `;
-      
-      const frameDoc = printFrame.contentWindow || printFrame.contentDocument.document || printFrame.contentDocument;
+
+      const frameDoc =
+        printFrame.contentWindow ||
+        printFrame.contentDocument.document ||
+        printFrame.contentDocument;
       frameDoc.document.open();
       frameDoc.document.write(printContent);
       frameDoc.document.close();
-      
+
       setTimeout(() => {
         frameDoc.focus();
         frameDoc.print();
-        
+
         setTimeout(() => {
           document.body.removeChild(printFrame);
         }, 1000);
       }, 500);
     };
-  
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
         <div className="bg-white rounded-lg shadow-xl w-[80%] max-h-[80vh] relative">
@@ -419,13 +495,13 @@ const Page = () => {
             decoding="sync"
             onError={(e) => {
               e.target.onerror = null;
-              e.target.src = '/placeholder-image.jpg';
+              e.target.src = "/placeholder-image.jpg";
             }}
           />
         </div>
       )}
       <div className="text-sm text-gray-600 mb-2">
-        {gallery.category === 'EVENT' ? gallery.namaEvent : gallery.deskripsi}
+        {gallery.category === "EVENT" ? gallery.namaEvent : gallery.deskripsi}
       </div>
       <div className="mt-2 space-x-2">
         <button
@@ -440,7 +516,7 @@ const Page = () => {
         >
           Hapus
         </button>
-        {gallery.category === 'EVENT' && (
+        {gallery.category === "EVENT" && (
           <button
             onClick={() => handlePesertaClick(gallery)}
             className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
@@ -504,7 +580,9 @@ const Page = () => {
         ))}
 
         <button
-          onClick={() => onPageChange(Math.min(currentPage + 1, totalPages - 1))}
+          onClick={() =>
+            onPageChange(Math.min(currentPage + 1, totalPages - 1))
+          }
           disabled={currentPage === totalPages - 1}
           className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
         >
@@ -570,13 +648,14 @@ const Page = () => {
                   <label className="block text-gray-700 text-sm font-bold mb-2">
                     Keterangan
                   </label>
-                  <input
-                    type="text"
-                    value={deskripsi}
-                    onChange={(e) => setDeskripsi(e.target.value)}
-                    className="w-full p-2 border rounded"
-                    required
-                  />
+                  {/* Use the dynamic Summernote component instead */}
+                  {typeof window !== "undefined" && (
+                    <SummernoteEditor
+                      value={deskripsi}
+                      onChange={setDeskripsi}
+                      height={300}
+                    />
+                  )}
                 </div>
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-bold mb-2">
