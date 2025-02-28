@@ -596,7 +596,7 @@ const Page = () => {
         >
           <div className="p-4 md:p-6 pt-20">
             <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6">
-              <h1 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4">
+              <h1 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4 mt-5">
                 Data Anggota Pensiun
               </h1>
 
