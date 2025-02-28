@@ -12,6 +12,79 @@ import { Input } from "@/components/ui/input";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { Label } from "@/components/ui/label";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AddUnitForm = () => {
   const [entries, setEntries] = useState(10);
@@ -44,6 +117,7 @@ const AddUnitForm = () => {
   const { token } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState(null);
 
   const fetchCabang = async () => {
     try {
@@ -79,56 +153,10 @@ const AddUnitForm = () => {
   const deleteUnitKerja = async (id) => {
     try {
       const response = await GlobalApi.deleteUnitKerja(id);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Unit Kerja Berhasil Dihapus!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Unit Kerja berhasil dihapus!`
+      });
       setTimeout(() => {
         window.location.reload();
       }, 4000);
@@ -234,61 +262,18 @@ const AddUnitForm = () => {
       setSelectedCabang("");
       setUnitKerja("");
 
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Unit Kerja Berhasil Ditambahkan!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Unit Kerja berhasil ditambahkan!`
+      });
       setTimeout(() => {
         window.location.reload();
       }, 4000);
     } catch (error) {
-      toast.error("Gagal menambahkan Unit Kerja. Coba lagi nanti.");
+      setNotification({
+        type: 'success',
+        message: `Gagal menambahkan unit kerja. Coba lagi nanti!`
+      });
     }
   };
 
@@ -352,34 +337,20 @@ const AddUnitForm = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6 mt-4 sm:mt-0 ml-4 sm:ml-0">
-      <Toaster
-        toastOptions={{
-          style: {
-            fontSize: "1.25rem",
-            padding: "16px",
-          },
-          success: {
-            style: {
-              background: "white",
-              color: "black",
-            },
-          },
-          error: {
-            style: {
-              background: "#f44336", // Warna background merah untuk pesan error
-              color: "#fff",
-            },
-          },
-        }}
-      />
+      {notification && (
+        <NotificationPopup
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
             <nav className="mt-6">
@@ -582,8 +553,8 @@ const AddUnitForm = () => {
                               selectedCabangFiltered === "Pilih Cabang"
                                 ? allUnitKerjaFiltered
                                 : allUnitKerjaFiltered.filter(
-                                    (uk) => uk.cabang === selectedCabangFiltered
-                                  )
+                                  (uk) => uk.cabang === selectedCabangFiltered
+                                )
                             );
                           }}
                           className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -656,9 +627,8 @@ const AddUnitForm = () => {
                 <div className="flex flex-wrap justify-center md:justify-end space-x-2">
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
-                    className={`px-3 py-1 border text-sm rounded ${
-                      currentPage === 0 ? "bg-gray-300" : "bg-white"
-                    }`}
+                    className={`px-3 py-1 border text-sm rounded ${currentPage === 0 ? "bg-gray-300" : "bg-white"
+                      }`}
                     disabled={currentPage === 0}
                   >
                     Previous
@@ -674,11 +644,10 @@ const AddUnitForm = () => {
                         <button
                           key={index}
                           onClick={() => handlePageChange(index)}
-                          className={`px-3 py-1 border text-sm rounded ${
-                            currentPage === index
+                          className={`px-3 py-1 border text-sm rounded ${currentPage === index
                               ? "bg-blue-500 text-white"
                               : "bg-white"
-                          }`}
+                            }`}
                         >
                           {index + 1}
                         </button>
@@ -699,11 +668,10 @@ const AddUnitForm = () => {
 
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
-                    className={`px-3 py-1 border text-sm rounded ${
-                      currentPage === totalPages - 1
+                    className={`px-3 py-1 border text-sm rounded ${currentPage === totalPages - 1
                         ? "bg-gray-300"
                         : "bg-white"
-                    }`}
+                      }`}
                     disabled={currentPage === totalPages - 1}
                   >
                     Next

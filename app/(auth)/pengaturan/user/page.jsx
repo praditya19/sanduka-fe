@@ -20,12 +20,85 @@ import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 
 const phoneNumberForLink = (phoneNumber) => {
   const formatted = phoneNumber.startsWith("08")
     ? `+62${phoneNumber.substring(1)}`
     : phoneNumber;
   return encodeURIComponent(formatted);
+};
+
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const Page = () => {
@@ -54,6 +127,7 @@ const Page = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [query, setQuery] = useState("");
   const dropdownRef = useRef(null);
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -106,8 +180,8 @@ const Page = () => {
 
   const filteredOptions = query
     ? cabang.filter((item) =>
-        item.kecamatan.toLowerCase().includes(query.toLowerCase())
-      )
+      item.kecamatan.toLowerCase().includes(query.toLowerCase())
+    )
     : cabang;
 
   const handleCabangChange = (item) => {
@@ -167,56 +241,10 @@ const Page = () => {
   const deleteAdmin = async (idAdmin) => {
     try {
       const response = await GlobalApi.deleteAdmin(idAdmin);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Admin Berhasil Dihapus!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Admin berhasil dihapus!`,
+      });
       setTimeout(() => {
         window.location.reload();
       }, 4000);
@@ -321,114 +349,18 @@ const Page = () => {
 
     try {
       const result = await GlobalApi.createAdmin(updatedAdminData);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Admin Berhasil Ditambahkan!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Admin berhasil ditambahkan!`,
+      });
       setTimeout(() => {
         window.location.reload();
       }, 3000);
     } catch (error) {
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            {error.response.data}
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: `Gagal menambahkan admin!`,
+      });
     }
   };
 
@@ -452,15 +384,20 @@ const Page = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      <Toaster />
+      {notification && (
+        <NotificationPopup
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
             <nav className="ml-6 mt-12">
@@ -599,36 +536,36 @@ const Page = () => {
                               </td>
                               {sessionStorage.getItem("role") ===
                                 "SUPER ADMIN" && (
-                                <td className="p-2 md:p-3 border hidden md:table-cell text-center">
-                                  <span
-                                    className="text-gray-800 font-medium cursor-pointer hover:text-blue-500 transition duration-300"
-                                    onClick={() =>
-                                      setShowPassword(!showPassword)
-                                    }
-                                  >
-                                    {showPassword
-                                      ? item.passwordNew
+                                  <td className="p-2 md:p-3 border hidden md:table-cell text-center">
+                                    <span
+                                      className="text-gray-800 font-medium cursor-pointer hover:text-blue-500 transition duration-300"
+                                      onClick={() =>
+                                        setShowPassword(!showPassword)
+                                      }
+                                    >
+                                      {showPassword
                                         ? item.passwordNew
-                                        : "-"
-                                      : "*****"}
-                                  </span>
-                                </td>
-                              )}
+                                          ? item.passwordNew
+                                          : "-"
+                                        : "*****"}
+                                    </span>
+                                  </td>
+                                )}
                               <td className="p-2 border text-center">
                                 <div className="flex space-x-2 justify-center">
                                   {!isMobile ? (
                                     <>
                                       {sessionStorage.getItem("role") ===
                                         "SUPER ADMIN" && (
-                                        <Button
-                                          className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
-                                          onClick={() =>
-                                            handleDeleteAdminClick(item.id)
-                                          }
-                                        >
-                                          <FontAwesomeIcon icon={faTrash} />
-                                        </Button>
-                                      )}
+                                          <Button
+                                            className="bg-red-500 text-white px-2 py-2 rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 transition ease-in-out duration-150"
+                                            onClick={() =>
+                                              handleDeleteAdminClick(item.id)
+                                            }
+                                          >
+                                            <FontAwesomeIcon icon={faTrash} />
+                                          </Button>
+                                        )}
                                       <Link
                                         href={`https://wa.me/${phoneNumberForLink(
                                           item.noHp
@@ -677,20 +614,20 @@ const Page = () => {
                                       </p>
                                       {sessionStorage.getItem("role") ===
                                         "SUPER ADMIN" && (
-                                        <p>
-                                          <strong>Password:</strong>{" "}
-                                          <span
-                                            className="cursor-pointer text-blue-500 hover:text-blue-700 transition duration-300"
-                                            onClick={() =>
-                                              setShowPassword(!showPassword)
-                                            }
-                                          >
-                                            {showPassword
-                                              ? item.passwordNew || "-"
-                                              : "*****"}
-                                          </span>
-                                        </p>
-                                      )}
+                                          <p>
+                                            <strong>Password:</strong>{" "}
+                                            <span
+                                              className="cursor-pointer text-blue-500 hover:text-blue-700 transition duration-300"
+                                              onClick={() =>
+                                                setShowPassword(!showPassword)
+                                              }
+                                            >
+                                              {showPassword
+                                                ? item.passwordNew || "-"
+                                                : "*****"}
+                                            </span>
+                                          </p>
+                                        )}
 
                                       <div className="flex flex-col space-y-2 mt-4">
                                         <strong className="text-lg font-semibold">
@@ -748,9 +685,8 @@ const Page = () => {
                 <div className="flex flex-wrap justify-center md:justify-end space-x-2">
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
-                    className={`px-3 py-1 border text-sm rounded ${
-                      currentPage === 0 ? "bg-gray-300" : "bg-white"
-                    }`}
+                    className={`px-3 py-1 border text-sm rounded ${currentPage === 0 ? "bg-gray-300" : "bg-white"
+                      }`}
                     disabled={currentPage === 0}
                   >
                     Previous
@@ -766,11 +702,10 @@ const Page = () => {
                         <button
                           key={index}
                           onClick={() => handlePageChange(index)}
-                          className={`px-3 py-1 border text-sm rounded ${
-                            currentPage === index
-                              ? "bg-blue-500 text-white"
-                              : "bg-white"
-                          }`}
+                          className={`px-3 py-1 border text-sm rounded ${currentPage === index
+                            ? "bg-blue-500 text-white"
+                            : "bg-white"
+                            }`}
                         >
                           {index + 1}
                         </button>
@@ -791,11 +726,10 @@ const Page = () => {
 
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
-                    className={`px-3 py-1 border text-sm rounded ${
-                      currentPage === totalPages - 1
-                        ? "bg-gray-300"
-                        : "bg-white"
-                    }`}
+                    className={`px-3 py-1 border text-sm rounded ${currentPage === totalPages - 1
+                      ? "bg-gray-300"
+                      : "bg-white"
+                      }`}
                     disabled={currentPage === totalPages - 1}
                   >
                     Next
@@ -1012,9 +946,8 @@ const Page = () => {
                                       setEditablePassword(e.target.value);
                                       setPasswordError("");
                                     }}
-                                    className={`border rounded w-full p-2 text-black bg-white ${
-                                      passwordError ? "border-red-500" : ""
-                                    }`}
+                                    className={`border rounded w-full p-2 text-black bg-white ${passwordError ? "border-red-500" : ""
+                                      }`}
                                     placeholder="Masukkan password"
                                     required
                                   />
