@@ -8,6 +8,79 @@ import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
 import { Input } from "@/components/ui/input";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Page = () => {
   const dropdownRef = useRef(null);
@@ -29,6 +102,7 @@ const Page = () => {
   const [filteredCabangList, setFilteredCabangList] = useState(cabangList);
   const [isPopupVisible, setPopupVisible] = useState(false);
   const [kwitansiData, setKwitansiData] = useState(null);
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
     const fetchDataDiterima = async () => {
@@ -215,13 +289,19 @@ const Page = () => {
 
     if (!file) {
       console.error("Tidak ada file yang dipilih.");
-      toast.error("Tidak ada file yang dipilih.");
+      setNotification({
+        type: 'error',
+        message: `Tidak ada file yang dipilih.`
+      });
       return;
     }
 
     if (!id || !npaPgri) {
       console.error("ID atau NPA PGRI tidak ditemukan.");
-      toast.error("ID atau NPA PGRI tidak ditemukan.");
+      setNotification({
+        type: 'error',
+        message: `ID atau NPA PGRI tidak ditemukan.`
+      });
       return;
     }
 
@@ -236,10 +316,16 @@ const Page = () => {
       );
       console.log("Response Upload Kwitansi:", response);
 
-      toast.success("File berhasil diupload");
+      setNotification({
+        type: 'success',
+        message: `File berhasil diupload.`
+      });
     } catch (error) {
       console.error("Gagal mengupload file kwitansi:", error);
-      toast.error("Gagal mengupload file");
+      setNotification({
+        type: 'success',
+        message: `Gagal mengupload file!`
+      });
     }
   };
 
@@ -360,27 +446,13 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      <Toaster
-        toastOptions={{
-          style: {
-            marginTop: "1%",
-            fontSize: "1.25rem",
-            padding: "16px",
-          },
-          success: {
-            style: {
-              background: "white",
-              color: "black",
-            },
-          },
-          error: {
-            style: {
-              background: "white",
-              color: "black",
-            },
-          },
-        }}
-      />
+      {notification && (
+        <NotificationPopup
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">
@@ -414,9 +486,8 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
             <div className="bg-teal-700 p-4 flex flex-col sm:flex-row items-center justify-between mt-5">
@@ -429,9 +500,8 @@ const Page = () => {
                 </button>
               </div>
               <div
-                className={` top-0 right-0 w-64 bg-teal-700 p-4 space-y-2 sm:space-y-0 sm:space-x-2 items-center sm:flex ${
-                  showFilters ? "block" : "hidden"
-                } sm:relative sm:w-auto sm:p-0 sm:bg-transparent`}
+                className={` top-0 right-0 w-64 bg-teal-700 p-4 space-y-2 sm:space-y-0 sm:space-x-2 items-center sm:flex ${showFilters ? "block" : "hidden"
+                  } sm:relative sm:w-auto sm:p-0 sm:bg-transparent`}
               >
                 <div className="relative w-full sm:w-auto" ref={dropdownRef}>
                   {/* Input for displaying the selected branch */}
@@ -549,7 +619,7 @@ const Page = () => {
                 </thead>
                 <tbody>
                   {Array.isArray(displayedDataLapor) &&
-                  displayedDataLapor.length > 0 ? (
+                    displayedDataLapor.length > 0 ? (
                     displayedDataLapor.map((item, index) => (
                       <tr key={index} className="border-t text-sm">
                         <td className="py-2 px-3 text-center text-sm">

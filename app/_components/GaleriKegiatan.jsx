@@ -316,36 +316,50 @@ const GaleriKegiatan = () => {
           modules={[Navigation, Pagination, Autoplay]}
           spaceBetween={30}
           slidesPerView={1}
-          // navigation
           pagination={{ clickable: true }}
           autoplay={{ delay: 3000, disableOnInteraction: false }}
           className="w-full"
         >
           {items.map((item) => (
             <SwiperSlide key={item.id} className="flex flex-col items-center">
-              <div className="relative w-full aspect-[4/3] sm:aspect-[16/9] md:aspect-[16/9] overflow-hidden rounded-lg shadow-md">
-                <Image
-                  src={item.imageUrl}
-                  alt={item.deskripsi || "Gallery image"}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 80vw, 70vw"
-                  className="object-contain sm:object-cover"
-                  priority
-                  quality={80}
-                />
+              {/* Improved image container with better background */}
+              <div className="relative w-full rounded-lg shadow-md bg-white flex justify-center">
+                {/* Fixed height container with better responsive handling */}
+                <div className="w-full" style={{
+                  height: "0",
+                  paddingBottom: "56.25%", // 16:9 aspect ratio
+                  position: "relative"
+                }}>
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.deskripsi || "Gallery image"}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 80vw, 70vw"
+                    className="object-contain rounded-lg" // Added rounded corners
+                    priority={true}
+                    quality={90} // Increased quality
+                    style={{
+                      maxHeight: "100%",
+                      maxWidth: "100%"
+                    }}
+                    onError={(e) => {
+                      // Fallback for failed images
+                      e.currentTarget.src = '/placeholder-image.jpg'; // Create a placeholder image
+                      e.currentTarget.className = 'object-cover'; // Switch to cover if placeholder
+                    }}
+                  />
+                </div>
               </div>
               <div className="mt-4 text-center w-full px-2 sm:px-4 md:px-8">
                 {item.category === "EVENT" ? (
                   <div>
                     <p className="text-lg font-medium">{item.namaEvent}</p>
-                    {/* Render HTML content safely with justified text */}
                     <div
                       className="text-gray-600 mt-1 prose max-w-none text-justify sm:text-left md:text-justify"
                       dangerouslySetInnerHTML={renderHTML(item.deskripsi)}
                     ></div>
                   </div>
                 ) : (
-                  // Render HTML content safely for non-events too
                   <div
                     className="text-lg font-medium prose max-w-none"
                     dangerouslySetInnerHTML={renderHTML(item.deskripsi)}

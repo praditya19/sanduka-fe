@@ -20,15 +20,11 @@ const SummernoteEditor = dynamic(
       window.jQuery = jQuery;
       window.$ = jQuery;
 
-      console.log("jQuery loaded:", window.jQuery); // Debugging statement
-
       return ({ value, onChange, height }) => {
         const editorRef = useRef(null);
 
         useEffect(() => {
           const $ = window.jQuery; // Ambil jQuery dari window
-
-          console.log("jQuery in useEffect:", $); // Debugging statement
 
           if ($ && editorRef.current) {
             $(editorRef.current).summernote({
@@ -77,6 +73,7 @@ const Page = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isLoadingPeserta, setIsLoadingPeserta] = useState(false);
   const fileInputRef = useRef(null);
+  const formRef = useRef(null);
   const itemsPerPage = 6;
 
   const handleResize = () => {
@@ -93,12 +90,6 @@ const Page = () => {
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  // We no longer need the Summernote initialization useEffect since
-  // it's now handled by our dynamic component
-
-  // Update the editor content when editing - now handled by passing
-  // value to SummernoteEditor component
 
   useEffect(() => {
     const totalPages = Math.ceil(galleries.length / itemsPerPage);
@@ -148,6 +139,31 @@ const Page = () => {
     setCategory(gallery.category);
     setNamaEvent(gallery.namaEvent || "");
     setSelectedFile(null);
+
+    // Manually set the Summernote editor content if it's initialized
+    setTimeout(() => {
+      if (window.jQuery && window.jQuery('.note-editable').length) {
+        window.jQuery('.note-editable').html(gallery.deskripsi);
+      }
+    }, 100);
+  };
+
+  const resetForm = () => {
+    setSelectedFile(null);
+    setDeskripsi("");
+    setCategory("NON EVENT");
+    setNamaEvent("");
+    setEditingId(null);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+
+    // Reset Summernote editor content
+    if (window.jQuery && window.jQuery('.note-editable').length) {
+      window.jQuery('.note-editable').html("");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -199,17 +215,13 @@ const Page = () => {
         });
       }
 
-      // Reset form
-      setSelectedFile(null);
-      setDeskripsi("");
-      setCategory("NON EVENT");
-      setNamaEvent("");
-      setEditingId(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      // Explicitly reset form after successful submission
+      resetForm();
+
     } catch (error) {
       console.error("Error saving gallery:", error);
+      // Show error message to user
+      alert("Terjadi kesalahan saat menyimpan data. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
     }
@@ -253,7 +265,7 @@ const Page = () => {
   );
   const totalPages = Math.ceil(
     galleries.filter((gallery) => gallery.category !== "EVENT").length /
-      itemsPerPage
+    itemsPerPage
   );
 
   const DeleteConfirmationModal = () => {
@@ -361,8 +373,8 @@ const Page = () => {
               </thead>
               <tbody>
                 ${pesertaList
-                  .map(
-                    (peserta, index) => `
+          .map(
+            (peserta, index) => `
                   <tr>
                     <td>${index + 1}</td>
                     <td>${peserta.namaLengkap}</td>
@@ -371,8 +383,8 @@ const Page = () => {
                     <td>${peserta.unitKerja}</td>
                   </tr>
                 `
-                  )
-                  .join("")}
+          )
+          .join("")}
               </tbody>
             </table>
           </div>
@@ -483,50 +495,144 @@ const Page = () => {
     );
   };
 
-  const GalleryItem = ({ gallery }) => (
-    <div className="border p-4 rounded">
-      {gallery.photo && (
-        <div className="relative w-full h-48 mb-2">
-          <img
-            src={`data:image/jpeg;base64,${gallery.photo}`}
-            alt={gallery.deskripsi}
-            className="absolute inset-0 w-full h-full object-cover rounded"
-            loading="eager"
-            decoding="sync"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = "/placeholder-image.jpg";
-            }}
-          />
-        </div>
-      )}
-      <div className="text-sm text-gray-600 mb-2">
-        {gallery.category === "EVENT" ? gallery.namaEvent : gallery.deskripsi}
-      </div>
-      <div className="mt-2 space-x-2">
-        <button
-          onClick={() => handleEdit(gallery)}
-          className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-        >
-          Edit
-        </button>
-        <button
-          onClick={() => handleDeleteClick(gallery)}
-          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-        >
-          Hapus
-        </button>
-        {gallery.category === "EVENT" && (
-          <button
-            onClick={() => handlePesertaClick(gallery)}
-            className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-          >
-            Peserta
-          </button>
+  const GalleryItem = ({ gallery }) => {
+    const [expanded, setExpanded] = useState(false);
+  
+    const parseHTML = (htmlContent) => {
+      if (!htmlContent) return "";
+  
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = htmlContent;
+  
+      const textNodes = [];
+      const walk = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT, null, false);
+  
+      let node;
+      while ((node = walk.nextNode())) {
+        textNodes.push(node);
+      }
+  
+      const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
+  
+      textNodes.forEach((textNode) => {
+        const parent = textNode.parentNode;
+        if (parent.nodeName.toLowerCase() === "a") return;
+  
+        const content = textNode.textContent;
+        const parts = content.split(urlRegex);
+  
+        if (parts.length > 1) {
+          const fragment = document.createDocumentFragment();
+          let i = 0;
+  
+          content.replace(urlRegex, (url) => {
+            if (parts[i]) {
+              fragment.appendChild(document.createTextNode(parts[i]));
+            }
+            i += 3;
+  
+            const href = url.startsWith("www.") ? `https://${url}` : url;
+            const link = document.createElement("a");
+            link.href = href;
+            link.textContent = url;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.className = "text-blue-600 hover:underline";
+            fragment.appendChild(link);
+  
+            return url;
+          });
+  
+          if (parts[parts.length - 1]) {
+            fragment.appendChild(document.createTextNode(parts[parts.length - 1]));
+          }
+  
+          parent.replaceChild(fragment, textNode);
+        }
+      });
+  
+      return tempDiv.innerHTML;
+    };
+  
+    const MAX_LENGTH = 200;
+    const deskripsi = gallery.deskripsi || "";
+    const isLong = deskripsi.length > MAX_LENGTH;
+    const displayedText = expanded ? deskripsi : deskripsi.slice(0, MAX_LENGTH) + (isLong ? "..." : "");
+  
+    return (
+      <div className="border p-4 rounded">
+        {gallery.photo && (
+          <div className="relative w-full h-48 mb-2">
+            <img
+              src={`data:image/jpeg;base64,${gallery.photo}`}
+              alt={deskripsi}
+              className="absolute inset-0 w-full h-full object-cover rounded"
+              loading="eager"
+              decoding="sync"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "/placeholder-image.jpg";
+              }}
+            />
+          </div>
         )}
+  
+        <div className="mb-3">
+          {gallery.category === "EVENT" ? (
+            <>
+              <h3 className="text-center font-bold text-base mb-2">{gallery.namaEvent}</h3>
+              <div className="text-sm text-gray-600 description-content">
+                <span dangerouslySetInnerHTML={{ __html: parseHTML(displayedText) }} />
+                {isLong && (
+                  <button
+                    onClick={() => setExpanded(!expanded)}
+                    className="text-blue-500 ml-2 hover:underline"
+                  >
+                    {expanded ? "Tampilkan lebih sedikit" : "Tampilkan lebih banyak"}
+                  </button>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="text-sm text-gray-600 description-content">
+              <span dangerouslySetInnerHTML={{ __html: parseHTML(displayedText) }} />
+              {isLong && (
+                <button
+                  onClick={() => setExpanded(!expanded)}
+                  className="text-blue-500 ml-2 hover:underline"
+                >
+                  {expanded ? "Tampilkan lebih sedikit" : "Tampilkan lebih banyak"}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+  
+        <div className="mt-2 space-x-2">
+          <button
+            onClick={() => handleEdit(gallery)}
+            className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDeleteClick(gallery)}
+            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+          >
+            Hapus
+          </button>
+          {gallery.category === "EVENT" && (
+            <button
+              onClick={() => handlePesertaClick(gallery)}
+              className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+            >
+              Peserta
+            </button>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     const getVisiblePages = () => {
@@ -569,11 +675,10 @@ const Page = () => {
           <button
             key={page}
             onClick={() => onPageChange(page - 1)}
-            className={`px-3 py-1 border rounded text-sm ${
-              page - 1 === currentPage
-                ? "bg-blue-500 text-white"
-                : "bg-white hover:bg-gray-50"
-            }`}
+            className={`px-3 py-1 border rounded text-sm ${page - 1 === currentPage
+              ? "bg-blue-500 text-white"
+              : "bg-white hover:bg-gray-50"
+              }`}
           >
             {page}
           </button>
@@ -606,13 +711,13 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="w-full p-6">
             <div className="mt-10 mb-8">
               <form
+                ref={formRef}
                 onSubmit={handleSubmit}
                 className="bg-white p-6 rounded-lg shadow-md w-full"
               >
@@ -648,7 +753,7 @@ const Page = () => {
                   <label className="block text-gray-700 text-sm font-bold mb-2">
                     Keterangan
                   </label>
-                  {/* Use the dynamic Summernote component instead */}
+                  {/* Use the dynamic Summernote component */}
                   {typeof window !== "undefined" && (
                     <SummernoteEditor
                       value={deskripsi}
@@ -671,13 +776,23 @@ const Page = () => {
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
-                >
-                  {isLoading ? "Menyimpan..." : editingId ? "Update" : "Upload"}
-                </button>
+                <div className="flex space-x-4">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
+                  >
+                    {isLoading ? "Menyimpan..." : editingId ? "Update" : "Upload"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                  >
+                    Batal
+                  </button>
+                </div>
               </form>
             </div>
 
