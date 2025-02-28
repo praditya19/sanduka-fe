@@ -22,7 +22,11 @@ import { AiOutlineInfoCircle } from "react-icons/ai";
 import { useRouter } from "next/navigation";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import HeaderMenu from "@/app/_components/HeaderMenu";
-import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaTimesCircle,
+  FaCheckCircle,
+  FaExclamationCircle,
+} from "react-icons/fa";
 
 const MapComponent = dynamic(
   () => import("../../../_components/MapComponent"),
@@ -42,20 +46,20 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
       default:
-        return 'bg-blue-100';
+        return "bg-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case 'error':
+      case "error":
         return <FaExclamationCircle className="text-red-500 text-3xl" />;
       default:
         return null;
@@ -64,19 +68,24 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
       default:
-        return 'text-blue-800';
+        return "text-blue-800";
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -86,17 +95,13 @@ const NotificationPopup = ({ type, message, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
+          <div className="animate-bounce">{getIcon()}</div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+            {type === "success" ? "Berhasil!" : "Gagal!"}
           </h3>
 
-          <div className={`${getTextColor()} text-center`}>
-            {message}
-          </div>
+          <div className={`${getTextColor()} text-center`}>{message}</div>
         </div>
       </div>
     </div>
@@ -558,8 +563,8 @@ const Page = () => {
       const firstEmptyField = emptyFields[0];
 
       setNotification({
-        type: 'error',
-        message: `Field ${firstEmptyField.name} wajib diisi!`
+        type: "error",
+        message: `Field ${firstEmptyField.name} wajib diisi!`,
       });
 
       const element = document.getElementById(firstEmptyField.id);
@@ -658,8 +663,8 @@ const Page = () => {
     if (!email) {
       console.error("Email tidak boleh kosong!");
       setNotification({
-        type: 'error',
-        message: `Email wajib diisi sebelum melanjutkan!`
+        type: "error",
+        message: `Email wajib diisi sebelum melanjutkan!`,
       });
       return;
     }
@@ -668,8 +673,8 @@ const Page = () => {
       const response = await GlobalApi.updateUserById(id, formData);
       await handleCreateHistory();
       setNotification({
-        type: 'success',
-        message: `Data berhasil diperbarui!`
+        type: "success",
+        message: `Data berhasil diperbarui!`,
       });
       sessionStorage.removeItem("anggotaId");
       setTimeout(() => {
@@ -684,8 +689,8 @@ const Page = () => {
     } catch (error) {
       console.error("Gagal mengupdate data:", error);
       setNotification({
-        type: 'error',
-        message: `Terjadi kesalahan saat mengupdate data`
+        type: "error",
+        message: `Terjadi kesalahan saat mengupdate data`,
       });
     }
   };
@@ -699,8 +704,8 @@ const Page = () => {
 
       if (!idToUse) {
         setNotification({
-          type: 'error',
-          message: `ID tidak ditemukan!`
+          type: "error",
+          message: `ID tidak ditemukan!`,
         });
         return;
       }
@@ -708,8 +713,8 @@ const Page = () => {
       const nipData = await GlobalApi.getFileByNip(nip);
       if (nipData?.verifikasi === true) {
         setNotification({
-          type: 'success',
-          message: `Data Anda sudah Tersingkronisasi!`
+          type: "success",
+          message: `Data Anda sudah Tersingkronisasi!`,
         });
         handleClosePopup();
         return;
@@ -717,15 +722,15 @@ const Page = () => {
 
       const response = await GlobalApi.updateRegisUser(idToUse, data);
       setNotification({
-        type: 'success',
-        message: `Data Berhasil disinkronkan!`
+        type: "success",
+        message: `Data Berhasil disinkronkan!`,
       });
       handleClosePopup();
     } catch (error) {
       console.error("Error saat mengirim data:", error);
       setNotification({
-        type: 'error',
-        message: `Terjadi kesalahan saat mengirim data. Silahkan coba lagi.`
+        type: "error",
+        message: `Terjadi kesalahan saat mengirim data. Silahkan coba lagi.`,
       });
     }
   };
@@ -781,12 +786,8 @@ const Page = () => {
     if (emptyFields.length > 0) {
       const firstEmptyField = emptyFields[0];
       setNotification({
-        type: 'error',
-        message: (
-          <>
-            Harap isi form {firstEmptyField.fieldName}!
-          </>
-        )
+        type: "error",
+        message: <>Harap isi form {firstEmptyField.fieldName}!</>,
       });
       const newErrorFields = {};
       emptyFields.forEach(({ fieldName }) => {
@@ -839,14 +840,14 @@ const Page = () => {
       setData(data);
       setIsPopupVisible(true);
       setNotification({
-        type: 'success',
-        message: `Data ditemukan!`
+        type: "success",
+        message: `Data ditemukan!`,
       });
     } catch (error) {
       console.error("Gagal mengambil data NIP:", error);
       setNotification({
-        type: 'success',
-        message: `Data NIP tidak ada. Silahkan hubungi admin!`
+        type: "error",
+        message: `Data NIP tidak ada. Silahkan hubungi admin!`,
       });
     }
   };
@@ -1020,7 +1021,7 @@ const Page = () => {
     fetchGolonganJabatan();
   }, []);
 
-  useEffect(() => { }, [golonganJabatan]);
+  useEffect(() => {}, [golonganJabatan]);
 
   useEffect(() => {
     const fetchUnitKerja = async () => {
@@ -1123,19 +1124,21 @@ const Page = () => {
           {/* Tabs Navigation */}
           <div className="flex flex-row space-x-4 mb-2 justify-center sm:justify-start">
             <div
-              className={`py-2 px-4 rounded-full transition duration-300 text-xs sm:text-sm md:text-base ${step === 1
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-                }`}
+              className={`py-2 px-4 rounded-full transition duration-300 text-xs sm:text-sm md:text-base ${
+                step === 1
+                  ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                  : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+              }`}
               onClick={() => setStep(1)}
             >
               I. DATA PRIBADI
             </div>
             <div
-              className={`py-2 px-4 rounded-full transition duration-300 text-xs sm:text-sm md:text-base ${step === 2
-                ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
-                }`}
+              className={`py-2 px-4 rounded-full transition duration-300 text-xs sm:text-sm md:text-base ${
+                step === 2
+                  ? "bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-lg transform scale-105"
+                  : "bg-gray-200 text-gray-600 hover:bg-gray-300 cursor-pointer"
+              }`}
               onClick={() => setStep(2)}
             >
               II. DATA PEKERJAAN
@@ -1194,8 +1197,9 @@ const Page = () => {
                       defaultValue={email}
                       render={({ field: { onChange, value } }) => (
                         <Input
-                          className={`border-teal-500 ${errorFields.email ? "border-red-500" : ""
-                            }`}
+                          className={`border-teal-500 ${
+                            errorFields.email ? "border-red-500" : ""
+                          }`}
                           type="email"
                           id="email"
                           placeholder="Email"
@@ -1227,8 +1231,9 @@ const Page = () => {
                       placeholder="contoh: Kat45and!"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className={`border-teal-500 ${errorFields.email ? "border-red-500" : ""
-                        }`}
+                      className={`border-teal-500 ${
+                        errorFields.email ? "border-red-500" : ""
+                      }`}
                     />
 
                     {isPasswordInfoOpen && (
@@ -1271,8 +1276,9 @@ const Page = () => {
                       value={npaPgri}
                       onChange={(e) => setNpaPgri(e.target.value)}
                       maxLength={11}
-                      className={`border-teal-500 ${errorFields.npaPgri ? "border-red-500" : ""
-                        }`}
+                      className={`border-teal-500 ${
+                        errorFields.npaPgri ? "border-red-500" : ""
+                      }`}
                     />
                   </div>
 
@@ -1289,8 +1295,9 @@ const Page = () => {
                       placeholder="Nomor Induk Pendidik (NIP)"
                       value={nip}
                       onChange={(e) => setNip(e.target.value)}
-                      className={`border-teal-500 ${errorFields.nip ? "border-red-500" : ""
-                        }`}
+                      className={`border-teal-500 ${
+                        errorFields.nip ? "border-red-500" : ""
+                      }`}
                     />
                     <Button
                       type="button"
@@ -1376,8 +1383,9 @@ const Page = () => {
                       placeholder="16 Digit"
                       value={nik}
                       onChange={(e) => setNik(e.target.value)}
-                      className={`border-teal-500 ${errorFields.nik ? "border-red-500" : ""
-                        }`}
+                      className={`border-teal-500 ${
+                        errorFields.nik ? "border-red-500" : ""
+                      }`}
                     />
                   </div>
                   <div className="w-full">
@@ -1393,8 +1401,9 @@ const Page = () => {
                       placeholder="Sesuai Dengan KTP"
                       value={namaLengkap}
                       onChange={(e) => setNamaLengkap(e.target.value)}
-                      className={`border-teal-500 ${errorFields.namaLengkap ? "border-red-500" : ""
-                        }`}
+                      className={`border-teal-500 ${
+                        errorFields.namaLengkap ? "border-red-500" : ""
+                      }`}
                     />
                   </div>
                 </div>
@@ -1410,8 +1419,9 @@ const Page = () => {
                       placeholder="Tempat Kelahiran"
                       value={tempatLahir}
                       onChange={(e) => setTempatLahir(e.target.value)}
-                      className={`border-teal-500 ${errorFields.tempatLahir ? "border-red-500" : ""
-                        }`}
+                      className={`border-teal-500 ${
+                        errorFields.tempatLahir ? "border-red-500" : ""
+                      }`}
                     />
                   </div>
 
@@ -1425,10 +1435,11 @@ const Page = () => {
                       defaultValue={formattedTanggalLahir}
                       render={({ field: { onChange, value } }) => (
                         <Input
-                          className={`border-teal-500 ${errorFields.formattedTanggalLahir
-                            ? "border-red-500"
-                            : ""
-                            }`}
+                          className={`border-teal-500 ${
+                            errorFields.formattedTanggalLahir
+                              ? "border-red-500"
+                              : ""
+                          }`}
                           type="date"
                           id="tanggalLahir"
                           value={value || formattedTanggalLahir}
@@ -1461,8 +1472,9 @@ const Page = () => {
                           }}
                         >
                           <SelectTrigger
-                            className={`border-teal-500 ${errorFields.jenisKelamin ? "border-red-500" : ""
-                              }`}
+                            className={`border-teal-500 ${
+                              errorFields.jenisKelamin ? "border-red-500" : ""
+                            }`}
                           >
                             <SelectValue placeholder="Pilih Jenis Kelamin" />
                           </SelectTrigger>
@@ -1497,8 +1509,9 @@ const Page = () => {
                           }}
                         >
                           <SelectTrigger
-                            className={`border-teal-500 ${errorFields.agama ? "border-red-500" : ""
-                              }`}
+                            className={`border-teal-500 ${
+                              errorFields.agama ? "border-red-500" : ""
+                            }`}
                           >
                             <SelectValue placeholder="Pilih Agama" />
                           </SelectTrigger>
@@ -1537,8 +1550,9 @@ const Page = () => {
                           }}
                         >
                           <SelectTrigger
-                            className={`border-teal-500 ${errorFields.golonganDarah ? "border-red-500" : ""
-                              }`}
+                            className={`border-teal-500 ${
+                              errorFields.golonganDarah ? "border-red-500" : ""
+                            }`}
                           >
                             <SelectValue placeholder="Pilih Golongan Darah" />
                           </SelectTrigger>
@@ -1570,8 +1584,9 @@ const Page = () => {
                             placeholder="JL. RT.  RW.  Desa, Kecamatan, Kabupaten"
                             value={alamat}
                             onChange={(e) => setAlamat(e.target.value)}
-                            className={`border-teal-500 ${errorFields.alamat ? "border-red-500" : ""
-                              }`}
+                            className={`border-teal-500 ${
+                              errorFields.alamat ? "border-red-500" : ""
+                            }`}
                           />
                         )}
                       />
@@ -1627,8 +1642,9 @@ const Page = () => {
                       placeholder="Nomor Handphone Aktif"
                       value={nomorHp}
                       onChange={(e) => setNomorHp(e.target.value)}
-                      className={`border-teal-500 ${errorFields.nomorHp ? "border-red-500" : ""
-                        }`}
+                      className={`border-teal-500 ${
+                        errorFields.nomorHp ? "border-red-500" : ""
+                      }`}
                     />
                   </div>
                 </div>
@@ -1644,8 +1660,9 @@ const Page = () => {
                       placeholder=" Nama Suami/Istri"
                       value={namaSuamiIstri}
                       onChange={(e) => setNamaSuamiIstri(e.target.value)}
-                      className={`border-teal-500 ${errorFields.namaSuamiIstri ? "border-red-500" : ""
-                        }`}
+                      className={`border-teal-500 ${
+                        errorFields.namaSuamiIstri ? "border-red-500" : ""
+                      }`}
                     />
                   </div>
                   <div className="w-full">
@@ -1749,8 +1766,9 @@ const Page = () => {
                       <div className="relative">
                         <Input
                           type="text"
-                          className={`border-teal-500 ${errorFields.cabang ? "border-red-500" : ""
-                            } rounded-lg p-2 bg-white shadow-sm w-full`}
+                          className={`border-teal-500 ${
+                            errorFields.cabang ? "border-red-500" : ""
+                          } rounded-lg p-2 bg-white shadow-sm w-full`}
                           placeholder="Pilih Cabang"
                           value={selectedCabang || ""}
                           readOnly
@@ -1815,8 +1833,9 @@ const Page = () => {
                       <div className="relative">
                         <Input
                           type="text"
-                          className={`border-teal-500 rounded-lg p-2 bg-white shadow-sm w-full ${errorFields.unitKerja ? "border-red-500" : ""
-                            }`}
+                          className={`border-teal-500 rounded-lg p-2 bg-white shadow-sm w-full ${
+                            errorFields.unitKerja ? "border-red-500" : ""
+                          }`}
                           placeholder="Pilih Unit Kerja"
                           value={selectedUnitKerja || ""}
                           readOnly
@@ -1852,7 +1871,7 @@ const Page = () => {
                             {/* List hasil pencarian */}
                             <ul className="max-h-48 overflow-y-auto">
                               {filteredUnitKerja &&
-                                filteredUnitKerja.length > 0 ? (
+                              filteredUnitKerja.length > 0 ? (
                                 filteredUnitKerja.map((item) => (
                                   <li
                                     key={item.id}
@@ -1895,8 +1914,9 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${errorFields?.jabatan ? "border-red-500" : ""
-                            }`}
+                          className={`border-teal-500 ${
+                            errorFields?.jabatan ? "border-red-500" : ""
+                          }`}
                         >
                           <SelectValue placeholder="Pilih Jabatan" />
                         </SelectTrigger>
@@ -1931,8 +1951,9 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${errorFields.tingkatSekolah ? "border-red-500" : ""
-                            }`}
+                          className={`border-teal-500 ${
+                            errorFields.tingkatSekolah ? "border-red-500" : ""
+                          }`}
                         >
                           <SelectValue placeholder="Pilih Jenjang Sekolah" />
                         </SelectTrigger>
@@ -1942,12 +1963,8 @@ const Page = () => {
                             <SelectItem value="TK_RA">TK/RA</SelectItem>
                             <SelectItem value="SD_MI">SD/MI</SelectItem>
                             <SelectItem value="SMP_MTS">SMP/MTS</SelectItem>
-                            <SelectItem value="SMA_MA">
-                              SMA/MA
-                            </SelectItem>
-                            <SelectItem value="SMK">
-                              SMK
-                            </SelectItem>
+                            <SelectItem value="SMA_MA">SMA/MA</SelectItem>
+                            <SelectItem value="SMK">SMK</SelectItem>
                             <SelectItem value="SEKOLAH_LUAR_BIASA">
                               SEKOLAH LUAR BIASA
                             </SelectItem>
@@ -1978,8 +1995,9 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${errorFields.statusSekolah ? "border-red-500" : ""
-                            }`}
+                          className={`border-teal-500 ${
+                            errorFields.statusSekolah ? "border-red-500" : ""
+                          }`}
                         >
                           <SelectValue placeholder="Pilih Status Sekolah" />
                         </SelectTrigger>
@@ -2010,8 +2028,9 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${errorFields.statusPegawai ? "border-red-500" : ""
-                            }`}
+                          className={`border-teal-500 ${
+                            errorFields.statusPegawai ? "border-red-500" : ""
+                          }`}
                         >
                           <SelectValue placeholder="Pilih Status Pegawai" />
                         </SelectTrigger>
@@ -2038,8 +2057,9 @@ const Page = () => {
                     defaultValue={formattedTahunDiangkat || ""}
                     render={({ field: { onChange, value } }) => (
                       <Input
-                        className={`border-teal-500 ${errorFields.tahunDiangkat ? "border-red-500" : ""
-                          }`}
+                        className={`border-teal-500 ${
+                          errorFields.tahunDiangkat ? "border-red-500" : ""
+                        }`}
                         type="date"
                         id="tahunDiangkat"
                         value={value || tahunDiangkat || ""}
@@ -2070,8 +2090,9 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${errorFields.pangkatGolongan ? "border-red-500" : ""
-                            }`}
+                          className={`border-teal-500 ${
+                            errorFields.pangkatGolongan ? "border-red-500" : ""
+                          }`}
                         >
                           <SelectValue placeholder="Pilih Golongan" />
                         </SelectTrigger>
@@ -2107,10 +2128,11 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${errorFields.pendidikanTerakhir
-                            ? "border-red-500"
-                            : ""
-                            }`}
+                          className={`border-teal-500 ${
+                            errorFields.pendidikanTerakhir
+                              ? "border-red-500"
+                              : ""
+                          }`}
                         >
                           <SelectValue placeholder="Pilih Pendidikan" />
                         </SelectTrigger>
@@ -2146,10 +2168,11 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${errorFields.sertifikatPendidik
-                            ? "border-red-500"
-                            : ""
-                            }`}
+                          className={`border-teal-500 ${
+                            errorFields.sertifikatPendidik
+                              ? "border-red-500"
+                              : ""
+                          }`}
                         >
                           <SelectValue placeholder="Sertifikat" />
                         </SelectTrigger>
@@ -2185,8 +2208,9 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${errorFields.kategoriDaspen ? "border-red-500" : ""
-                            }`}
+                          className={`border-teal-500 ${
+                            errorFields.kategoriDaspen ? "border-red-500" : ""
+                          }`}
                         >
                           <SelectValue placeholder="Pilih Kategori Daspen" />
                         </SelectTrigger>
@@ -2222,10 +2246,11 @@ const Page = () => {
                         }}
                       >
                         <SelectTrigger
-                          className={`border-teal-500 ${errorFields.valueGolonganJabatan
-                            ? "border-red-500"
-                            : ""
-                            }`}
+                          className={`border-teal-500 ${
+                            errorFields.valueGolonganJabatan
+                              ? "border-red-500"
+                              : ""
+                          }`}
                         >
                           <SelectValue placeholder="Pilih Golongan Jabatan" />
                         </SelectTrigger>
@@ -2265,8 +2290,9 @@ const Page = () => {
                     defaultValue={mengajar}
                     render={({ field: { onChange, value } }) => (
                       <Input
-                        className={`border-teal-500 ${errorFields.mengajar ? "border-red-500" : ""
-                          }`}
+                        className={`border-teal-500 ${
+                          errorFields.mengajar ? "border-red-500" : ""
+                        }`}
                         type="text"
                         id="mengajar"
                         placeholder="Mengajar"
@@ -2458,12 +2484,8 @@ const Page = () => {
                       if (emptyFields.length > 0) {
                         const firstEmptyField = emptyFields[0];
                         setNotification({
-                          type: 'error',
-                          message: (
-                            <>
-                              Harap isi form {firstEmptyField.name}!
-                            </>
-                          )
+                          type: "error",
+                          message: <>Harap isi form {firstEmptyField.name}!</>,
                         });
                         const element = document.getElementById(
                           firstEmptyField.id
@@ -2477,8 +2499,8 @@ const Page = () => {
                         }
                       } else {
                         setNotification({
-                          type: 'success',
-                          message: `Semua field sudah terisi!`
+                          type: "success",
+                          message: `Semua field sudah terisi!`,
                         });
                       }
                     }}

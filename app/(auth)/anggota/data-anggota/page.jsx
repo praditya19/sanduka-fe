@@ -8,6 +8,7 @@ import {
   faTimesCircle,
   faPlusCircle,
   faMinusCircle,
+  faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import Modal from "react-modal";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
@@ -69,8 +70,8 @@ const DataAnggota = () => {
     keyword = null,
     statusKeanggotaan = "Aktif"
   ) => {
-    setLoading(true);  // Menambahkan set loading ke true sebelum mulai fetch data
-    
+    setLoading(true); // Menambahkan set loading ke true sebelum mulai fetch data
+
     try {
       const response = await GlobalApi.getAllAnggota(
         page,
@@ -107,12 +108,12 @@ const DataAnggota = () => {
       setFotoBase64(fotoBase64Array);
       setTotalPages(response.totalPages || 0);
       setTotalElements(response.totalElements || 0);
-      
-      setLoading(false);  // Set loading ke false setelah data berhasil diambil
+
+      setLoading(false); // Set loading ke false setelah data berhasil diambil
       return fetchedData || [];
     } catch (error) {
       console.error("Error fetching anggota data:", error);
-      setLoading(false);  // Set loading ke false jika terjadi error
+      setLoading(false); // Set loading ke false jika terjadi error
     }
   };
 
@@ -920,10 +921,21 @@ const DataTable = ({
   const [kategoriDaspen, setKategoriDaspen] = useState("");
   const [daspenData, setDaspenData] = useState(null);
   const [isKategoriChanged, setIsKategoriChanged] = useState(false);
+  const [loadingButton, setLoadingButton] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
   const [previousKategoriDaspen, setPreviousKategoriDaspen] =
     useState(kategoriDaspen);
   const profileImageUrl = "/profile.png";
   const router = useRouter();
+
+  const handleOpenPopup = () => {
+    setIsPopupVisible(true);
+  };
+
+  const handleClosePopup = () => {
+    setIsPopupVisible(false);
+  };
 
   const handleConfirmChange = async () => {
     const anggotaId = sessionStorage.getItem("anggotaId");
@@ -1730,6 +1742,59 @@ const DataTable = ({
     }
   };
 
+  const handleSync = async () => {
+    try {
+      setLoadingButton(true); // Menandakan bahwa proses sedang berlangsung
+
+      // Ambil userId dari sessionStorage
+      const userId = sessionStorage.getItem("userId");
+      if (!userId) {
+        toast.error("User ID tidak ditemukan!");
+        setLoadingButton(false); // Matikan loading button
+        return;
+      }
+
+      // Mengambil data pengguna berdasarkan userId
+      const userData = await GlobalApi.getUserById(userId);
+      if (!userData || !userData.nip) {
+        toast.error("NIP tidak ditemukan!");
+        setLoadingButton(false); // Matikan loading button
+        return;
+      }
+
+      // Menyimpan NIP yang diperoleh ke dalam state nip
+      const nip = userData.nip;
+
+      // Mengecek data berdasarkan NIP
+      const data = await GlobalApi.getByNIP(nip);
+      if (!data) {
+        toast.error("Data dengan NIP ini tidak ditemukan!");
+        setLoadingButton(false); // Matikan loading button
+        return;
+      }
+
+      // Mengecek apakah data sudah disinkronkan
+      const nipData = await GlobalApi.getFileByNip(nip);
+      if (nipData?.verifikasi === true) {
+        toast.success("Data Anda sudah Tersinkronisasi!");
+        setLoadingButton(false); // Matikan loading button
+        return;
+      }
+
+      // Melakukan sinkronisasi data pengguna
+      const response = await GlobalApi.updateRegisUser(userId, data);
+
+      // Menampilkan notifikasi setelah data berhasil disinkronkan
+      toast.success("Data Berhasil disinkronkan!");
+      window.location.reload();
+    } catch (error) {
+      console.error("Error saat mengirim data:", error);
+      toast.error("Terjadi kesalahan saat mengirim data. Silahkan coba lagi.");
+    } finally {
+      setLoadingButton(false); // Menonaktifkan loading button setelah selesai
+    }
+  };
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -2425,13 +2490,88 @@ const DataTable = ({
                                           <p className="text-sm mr-1">
                                             Link Website:
                                           </p>
-                                          <Link
+                                          <a
                                             href="https://www.dansetjateng.org/"
-                                            className="text-blue-400"
+                                            className="bg-teal-500 text-white px-2 py-1 rounded-md text-sm hover:bg-teal-600 transform hover:scale-105 transition-all duration-300"
                                             target="_blank"
+                                            rel="noopener noreferrer"
                                           >
                                             www.dansetjateng.org
-                                          </Link>
+                                          </a>
+                                        </div>
+                                        <div>
+                                          <div className="flex items-center space-x-2">
+                                            <button
+                                              onClick={handleSync}
+                                              className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transform hover:scale-105 transition-all duration-300"
+                                              disabled={loadingButton}
+                                            >
+                                              {loadingButton
+                                                ? "Sinkronisasi..."
+                                                : "Sinkron"}
+                                            </button>
+                                            <FontAwesomeIcon
+                                              icon={faInfoCircle}
+                                              className="w-6 h-6 text-blue-500 cursor-pointer hover:text-blue-600"
+                                              onClick={handleOpenPopup} // Menampilkan popup saat diklik
+                                            />
+                                          </div>
+
+                                          {/* Menampilkan status error atau success */}
+                                          {error && (
+                                            <p className="text-red-500 text-sm mt-2">
+                                              {error}
+                                            </p>
+                                          )}
+                                          {success && (
+                                            <p className="text-green-500 text-sm mt-2">
+                                              {success}
+                                            </p>
+                                          )}
+
+                                          {/* Popup informasi */}
+                                          {isPopupVisible && (
+                                            <div className="fixed inset-0 flex justify-center items-center z-50">
+                                              <div className="bg-white rounded-lg p-6 w-11/12 max-w-md text-center shadow-xl transform transition-all">
+                                                <svg
+                                                  xmlns="http://www.w3.org/2000/svg"
+                                                  className="h-16 w-16 mx-auto text-yellow-500 mb-4"
+                                                  fill="none"
+                                                  viewBox="0 0 24 24"
+                                                  stroke="currentColor"
+                                                >
+                                                  <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                                  />
+                                                </svg>
+                                                <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                                                  Informasi Sinkronisasi{" "}
+                                                </h2>
+                                                <p className="text-gray-600 mb-6">
+                                                  Data yang Anda akses melalui
+                                                  sistem kami tidak langsung
+                                                  tersinkronisasi dengan
+                                                  database DASPEN Jawa Tengah.
+                                                  Data yang ditampilkan
+                                                  merupakan hasil identifikasi
+                                                  berdasarkan Nomor Induk
+                                                  Pegawai (NIP) dan Tanggal
+                                                  Lahir yang Anda input.
+                                                </p>
+                                                <div className="flex justify-center gap-4">
+                                                  <button
+                                                    onClick={handleClosePopup}
+                                                    className="bg-red-500 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition duration-200 font-medium"
+                                                  >
+                                                    Tutup
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )}
                                         </div>
                                       </div>
                                     </div>
@@ -2815,13 +2955,88 @@ const DataTable = ({
                                             <p className="text-sm mr-1">
                                               Link Website:
                                             </p>
-                                            <Link
+                                            <a
                                               href="https://www.dansetjateng.org/"
-                                              className="text-blue-400"
+                                              className="bg-teal-500 text-white px-2 py-1 rounded-md text-sm hover:bg-teal-600 transform hover:scale-105 transition-all duration-300"
                                               target="_blank"
+                                              rel="noopener noreferrer"
                                             >
                                               www.dansetjateng.org
-                                            </Link>
+                                            </a>
+                                          </div>
+                                          <div>
+                                            <div className="flex items-center space-x-2">
+                                              <button
+                                                onClick={handleSync}
+                                                className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transform hover:scale-105 transition-all duration-300"
+                                                disabled={loadingButton}
+                                              >
+                                                {loadingButton
+                                                  ? "Sinkronisasi..."
+                                                  : "Sinkron"}
+                                              </button>
+                                              <FontAwesomeIcon
+                                                icon={faInfoCircle}
+                                                className="w-6 h-6 text-blue-500 cursor-pointer hover:text-blue-600"
+                                                onClick={handleOpenPopup} // Menampilkan popup saat diklik
+                                              />
+                                            </div>
+
+                                            {/* Menampilkan status error atau success */}
+                                            {error && (
+                                              <p className="text-red-500 text-sm mt-2">
+                                                {error}
+                                              </p>
+                                            )}
+                                            {success && (
+                                              <p className="text-green-500 text-sm mt-2">
+                                                {success}
+                                              </p>
+                                            )}
+
+                                            {/* Popup informasi */}
+                                            {isPopupVisible && (
+                                              <div className="fixed inset-0 flex justify-center items-center z-50">
+                                                <div className="bg-white rounded-lg p-6 w-11/12 max-w-md text-center shadow-xl transform transition-all">
+                                                  <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    className="h-16 w-16 mx-auto text-yellow-500 mb-4"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                  >
+                                                    <path
+                                                      strokeLinecap="round"
+                                                      strokeLinejoin="round"
+                                                      strokeWidth={2}
+                                                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                                    />
+                                                  </svg>
+                                                  <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                                                    Informasi Sinkronisasi{" "}
+                                                  </h2>
+                                                  <p className="text-gray-600 mb-6">
+                                                    Data yang Anda akses melalui
+                                                    sistem kami tidak langsung
+                                                    tersinkronisasi dengan
+                                                    database DASPEN Jawa Tengah.
+                                                    Data yang ditampilkan
+                                                    merupakan hasil identifikasi
+                                                    berdasarkan Nomor Induk
+                                                    Pegawai (NIP) dan Tanggal
+                                                    Lahir yang Anda input.
+                                                  </p>
+                                                  <div className="flex justify-center gap-4">
+                                                    <button
+                                                      onClick={handleClosePopup}
+                                                      className="bg-red-500 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition duration-200 font-medium"
+                                                    >
+                                                      Tutup
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            )}
                                           </div>
                                         </div>
                                       </div>

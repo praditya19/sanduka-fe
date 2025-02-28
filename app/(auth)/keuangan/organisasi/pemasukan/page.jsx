@@ -46,6 +46,8 @@ function Pemasukan() {
   const [totalSaldo, setTotalSaldo] = useState(0);
   const [editId, setEditId] = useState(null);
   const [allIds, setAllIds] = useState([]);
+  const [totalIuran, setTotalIuran] = useState(0);
+  const [totalPerhitungan, setTotalPerhitungan] = useState(0);
   const [formValues, setFormValues] = useState({
     tanggalTransaksi: "",
     posTransaksi: "",
@@ -63,13 +65,13 @@ function Pemasukan() {
     checked: false,
     totalAnggotaByAdmin: "",
     totalSumbangan: "",
-  });
+  }); 
 
-  const handleChange = (e) => {
+  const handleChange = async (e) => {
     const { name, value } = e.target;
   
     if (name === "nominal") {
-      const numericValue = value.replace(/[^\d]/g, ''); // Menghapus semua karakter non-angka
+      const numericValue = value.replace(/[^\d]/g, "");
       setFormValues((prevValues) => ({
         ...prevValues,
         [name]: numericValue,
@@ -79,9 +81,55 @@ function Pemasukan() {
         ...prevValues,
         [name]: value,
       }));
+  
+      // Jika yang dipilih adalah "Iuran PGRI"
+      if (name === "posTransaksi" && value === "Iuran PGRI") {
+        try {
+          const response = await GlobalApi.getDefaultIuranById(2);
+  
+          // Hitung totalIuran dari response yang didapat
+          const total =
+            parseInt(response.pb) +
+            parseInt(response.propinsi) +
+            parseInt(response.kabupaten) +
+            parseInt(response.cabang);
+  
+          // Update state totalIuran dengan total yang sudah dihitung
+          setTotalIuran(total);
+          console.log("Total Iuran PGRI:", total);
+  
+          // Setelah mendapatkan total, hitung dengan totalAnggotaByAdmin
+          if (formValues.totalAnggotaByAdmin) {
+            const anggota = parseInt(formValues.totalAnggotaByAdmin) || 0;
+            const totalPerhitungan = total * anggota;
+            setTotalPerhitungan(totalPerhitungan);  // Menyimpan hasil perhitungan di state
+  
+            // Update nilai nominal dengan totalPerhitungan
+            setFormValues((prevValues) => ({
+              ...prevValues,
+              nominal: totalPerhitungan,  // Menyimpan hasil perhitungan ke input nominal
+            }));
+          }
+        } catch (error) {
+          console.error("Gagal mengambil data iuran:", error);
+        }
+      }
+  
+      // Jika terjadi perubahan pada input totalAnggotaByAdmin
+      if (name === "totalAnggotaByAdmin") {
+        const anggota = parseInt(value) || 0;
+        const totalPerhitungan = totalIuran * anggota;
+        setTotalPerhitungan(totalPerhitungan);  // Update totalPerhitungan saat input berubah
+  
+        // Update nilai nominal dengan totalPerhitungan
+        setFormValues((prevValues) => ({
+          ...prevValues,
+          nominal: totalPerhitungan,  // Menyimpan hasil perhitungan ke input nominal
+        }));
+      }
     }
-  };
-
+  };  
+  
   useEffect(() => {
     const currentMonthIndex = new Date().getMonth();
     const currentBulan = bulanList.find(
@@ -750,7 +798,7 @@ function Pemasukan() {
         }
       );
     }
-  };  
+  }; 
 
   const handleReset = () => {
     setFormValues({
@@ -1526,14 +1574,14 @@ function Pemasukan() {
                   >
                     Nominal
                   </Label>
-                 <Input
-                   className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                   id="nominal"
-                   type="text"
-                   name="nominal"
-                   value={formatCurrency(formValues.nominal || '')}
-                   onChange={handleChange}
-                 />
+                  <Input
+  className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+  id="nominal"
+  type="text"
+  name="nominal"
+  value={formatCurrency(formValues.nominal || '')}  // Menampilkan nilai nominal yang sudah diformat
+  onChange={handleChange}
+/>
                 </div>
 
                 <div className="flex flex-col">

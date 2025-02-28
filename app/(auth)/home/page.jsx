@@ -30,6 +30,7 @@ import {
   faUserPen,
   faImage,
   faExclamationCircle,
+  faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
@@ -42,6 +43,7 @@ import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import { useRouter } from "next/navigation";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import toast, { Toaster } from "react-hot-toast";
 import dynamic from "next/dynamic";
 const MapComponent = dynamic(
   () => import("../../_components/MapComponent.jsx"),
@@ -69,8 +71,12 @@ export default function IconGrid() {
   const [formattedAmount, setFormattedAmount] = useState("");
   const [fotoBase64, setFotoBase64] = useState(null);
   const [fotoMeninggal, setFotoMeninggal] = useState([]);
+  const [popupVisible, setPopupVisible] = useState(false);
   const profileImageUrl = "/profile.png";
   const [data, setData] = useState(null);
+  const [loadingButton, setLoadingButton] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
   const icons = [
     { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
     {
@@ -445,78 +451,96 @@ export default function IconGrid() {
       value === "TIDAK"
     ) {
       return (
-        <button
-          className="inline-flex items-center px-2 py-0.5 rounded text-[0.625rem] sm:text-xs md:text-xs font-medium bg-red-500 text-white sm:whitespace-normal whitespace-nowrap"
-          onClick={() => handleDaspenRegistration()} // Menangani klik button
-        >
-          Belum Terdaftar
-        </button>
+        <div className="inline-flex items-center space-x-2">
+          {/* Tombol "Belum Terdaftar" sejajar dengan teks */}
+          <div className="flex items-center">
+            <FontAwesomeIcon
+              icon={faInfoCircle}
+              className="w-6 h-6 text-blue-500 cursor-pointer hover:text-blue-600 mr-2"
+              onClick={handleOpenPopup} // Menampilkan popup saat diklik
+            />{" "}
+            <button
+              className="inline-flex items-center px-2 py-0.5 rounded text-[0.625rem] sm:text-xs md:text-xs font-medium bg-red-500 text-white sm:whitespace-normal whitespace-nowrap"
+              onClick={() => handleSync()}
+            >
+              Belum Terdaftar
+            </button>
+          </div>
+
+          {/* Ikon informasi di sebelah kanan tombol */}
+          <FontAwesomeIcon
+            icon={faInfoCircle}
+            className="w-6 h-6 text-white ml-2"
+            onClick={handleOpenPopup} // Menampilkan popup saat diklik
+          />
+        </div>
       );
     }
     return null;
   };
 
-  const handleDaspenRegistration = async () => {
-    const userId = sessionStorage.getItem("userId");
-    if (!userId) {
-      console.error("ID tidak ditemukan di sessionStorage");
-      return;
-    }
+  const handleOpenPopup = () => {
+    setPopupVisible(true);
+  };
 
+  const handleClosePopup = () => {
+    setPopupVisible(false);
+  };
+
+  const handleSync = async () => {
     try {
-      // Mengambil data pengguna berdasarkan userId
-      const response = await GlobalApi.getUserById(userId);
-      const nip = response?.nip;
+      setLoadingButton(true);
 
-      if (!nip) {
-        console.error("NIP tidak ditemukan.");
+      // Ambil userId dari sessionStorage
+      const userId = sessionStorage.getItem("userId");
+      if (!userId) {
+        toast.error("User ID tidak ditemukan!");
+        setLoadingButton(false); // Matikan loading button
         return;
       }
 
-      // Menampilkan NIP yang diambil
-      console.log("NIP yang diambil: ", nip);
-
-      // Verifikasi NIP dengan getFileByNip
-      const nipData = await GlobalApi.getFileByNip(nip);
-
-      // Menampilkan NIP yang dibandingkan
-      console.log("NIP yang dibandingkan: ", nipData?.nip);
-
-      if (nipData?.verifikasi === true) {
-        console.log("NIP valid, data sudah terverifikasi.");
-
-        // Mengambil data berdasarkan NIP menggunakan GlobalApi.getByNIP
-        const data = await GlobalApi.getByNIP(nip);
-        console.log("Data yang diambil berdasarkan NIP: ", data);
-
-        // Menyimpan data yang diambil ke dalam state
-        setData(data);
-
-        // Pastikan data telah diterima sebelum lanjutkan update
-        if (data) {
-          console.log("Data yang akan diupdate: ", data);
-
-          // Gunakan userId yang ada untuk update data
-          const idToUse = userId;
-
-          // Mengirim data yang ingin diupdate
-          const updateResponse = await GlobalApi.updateRegisUser(idToUse, data);
-
-          console.log("Respon dari API setelah update: ", updateResponse);
-        } else {
-          console.error("Data tidak ditemukan untuk diperbarui.");
-        }
-      } else {
-        console.error("NIP tidak terverifikasi.");
+      // Mengambil data pengguna berdasarkan userId
+      const userData = await GlobalApi.getUserById(userId);
+      if (!userData || !userData.nip) {
+        toast.error("NIP tidak ditemukan!");
+        setLoadingButton(false); // Matikan loading button
+        return;
       }
+
+      // Menyimpan NIP yang diperoleh ke dalam state nip
+      const nip = userData.nip;
+
+      // Mengecek data berdasarkan NIP
+      const data = await GlobalApi.getByNIP(nip);
+      if (!data) {
+        toast.error("Data dengan NIP ini tidak ditemukan!");
+        setLoadingButton(false); // Matikan loading button
+        return;
+      }
+
+      // Mengecek apakah data sudah disinkronkan
+      const nipData = await GlobalApi.getFileByNip(nip);
+      if (nipData?.verifikasi === true) {
+        toast.success("Data Anda sudah Tersinkronisasi!");
+        setLoadingButton(false); // Matikan loading button
+        return;
+      }
+
+      // Melakukan sinkronisasi data pengguna
+      const response = await GlobalApi.updateRegisUser(userId, data);
+
+      // Menampilkan notifikasi setelah data berhasil disinkronkan
+      toast.success("Data Berhasil disinkronkan!");
+      window.location.reload();
     } catch (error) {
-      console.error(
-        "Error saat mendapatkan data user atau memverifikasi NIP:",
-        error
-      );
+      console.error("Error saat mengirim data:", error);
+      toast.error("Nip tidak sesuai");
+      // toast.error("Nip atau tanggal lahir tidak sesuai dengan data Dansetjateng.org.");
+    } finally {
+      setLoadingButton(false); // Menonaktifkan loading button setelah selesai
     }
   };
-  
+
   const MobileDeceasedScroll = ({ sortedData, formatDate }) => {
     return (
       <div className="w-full overflow-x-auto pb-4 mb-16">
@@ -681,6 +705,26 @@ export default function IconGrid() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
+          <Toaster
+            toastOptions={{
+              style: {
+                fontSize: "1.25rem",
+                padding: "16px",
+              },
+              success: {
+                style: {
+                  background: "white",
+                  color: "black",
+                },
+              },
+              error: {
+                style: {
+                  background: "#f44336",
+                  color: "#fff",
+                },
+              },
+            }}
+          />
           {/* Hero Banner */}
           <div className="relative">
             <div className="h-48 md:h-64 overflow-hidden">
@@ -743,6 +787,45 @@ export default function IconGrid() {
                           </span>
                           <div className="mt-1 w-8 h-8 flex justify-center items-center bg-gray-100 rounded-full shadow-sm">
                             {renderCheckmark(item.value)}
+                            {popupVisible && (
+                              <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
+                                <div className="bg-white rounded-lg p-6 w-11/12 max-w-md text-center shadow-xl transform transition-all">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-16 w-16 mx-auto text-yellow-500 mb-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                    />
+                                  </svg>
+                                  <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                                    Informasi Sinkronisasi{" "}
+                                  </h2>
+                                  <p className="text-gray-600 mb-6">
+                                    Data yang Anda akses melalui sistem kami
+                                    tidak langsung tersinkronisasi dengan
+                                    database DASPEN Jawa Tengah. Data yang
+                                    ditampilkan merupakan hasil identifikasi
+                                    berdasarkan Nomor Induk Pegawai (NIP) dan
+                                    Tanggal Lahir yang Anda input.
+                                  </p>
+                                  <div className="flex justify-center gap-4">
+                                    <button
+                                      onClick={handleClosePopup}
+                                      className="bg-red-500 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition duration-200 font-medium"
+                                    >
+                                      Tutup
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
