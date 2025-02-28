@@ -2508,7 +2508,7 @@ const DataTable = ({
                                             >
                                               {loadingButton
                                                 ? "Sinkronisasi..."
-                                                : "Sinkron"}
+                                                : "Sinkronisasi"}
                                             </button>
                                             <FontAwesomeIcon
                                               icon={faInfoCircle}
@@ -2973,7 +2973,7 @@ const DataTable = ({
                                               >
                                                 {loadingButton
                                                   ? "Sinkronisasi..."
-                                                  : "Sinkron"}
+                                                  : "Sinkronisasi"}
                                               </button>
                                               <FontAwesomeIcon
                                                 icon={faInfoCircle}
