@@ -12,6 +12,7 @@ import {
   faUserPlus,
   faUserMinus,
   faUsers,
+  faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 import Seldata from "../statistik/Seldata/page";
 import { useRouter } from "next/navigation";
@@ -266,7 +267,25 @@ const Page = () => {
     printWindow.document.write("</thead>");
     printWindow.document.write('<tbody class="divide-y divide-gray-200">');
 
+    let totalDataLalu = 0,
+      totalBaru = 0,
+      totalPensiun = 0,
+      totalMeninggal = 0,
+      totalKeluarAnggota = 0,
+      totalMasuk = 0,
+      totalKeluar = 0,
+      totalDataSekarang = 0;
+
     tableData.forEach((item, index) => {
+      totalDataLalu += item.dataLalu;
+      totalBaru += item.baru;
+      totalPensiun += item.pensiun;
+      totalMeninggal += item.meninggal;
+      totalKeluarAnggota += item.keluarAnggota;
+      totalMasuk += item.pindahCabangMasuk;
+      totalKeluar += item.pindahCabangKeluar;
+      totalDataSekarang += item.dataSekarang;
+
       printWindow.document.write("<tr>");
       printWindow.document.write(`<td>${index + 1}</td>`);
       printWindow.document.write(`<td>${item.cabang}</td>`);
@@ -280,6 +299,21 @@ const Page = () => {
       printWindow.document.write(`<td>${item.dataSekarang}</td>`);
       printWindow.document.write("</tr>");
     });
+
+    // Menambahkan baris total
+    printWindow.document.write(
+      "<tr style='font-weight: bold; background-color: #f8f8f8;'>"
+    );
+    printWindow.document.write("<td colspan='2'>Total</td>");
+    printWindow.document.write(`<td>${totalDataLalu}</td>`);
+    printWindow.document.write(`<td>${totalBaru}</td>`);
+    printWindow.document.write(`<td>${totalPensiun}</td>`);
+    printWindow.document.write(`<td>${totalMeninggal}</td>`);
+    printWindow.document.write(`<td>${totalKeluarAnggota}</td>`);
+    printWindow.document.write(`<td>${totalMasuk}</td>`);
+    printWindow.document.write(`<td>${totalKeluar}</td>`);
+    printWindow.document.write(`<td>${totalDataSekarang}</td>`);
+    printWindow.document.write("</tr>");
 
     printWindow.document.write("</tbody>");
     printWindow.document.write("</table>");
@@ -340,83 +374,124 @@ const Page = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50 p-2 md:p-6">
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
-      <div>
-        <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-        <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
-        >
-          <div className="w-full p-4 container shadow-lg rounded-lg mt-5">
-            <div className="rounded-md flex flex-col py-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex">
+          {/* Sidebar with transition */}
+          <Sidebar
+            isSidebarOpen={isSidebarOpen}
+            toggleSidebar={toggleSidebar}
+          />
+
+          {/* Main content area with smooth transition */}
+          <div
+            className={`flex-1 transition-all duration-300 ease-in-out ${
+              isSidebarOpen ? "ml-0 md:ml-64" : "ml-0"
+            }`}
+          >
+            <div className="w-full p-4 bg-white shadow-xl rounded-xl mt-5 border border-gray-100">
+              {/* Stats Cards Section */}
               <div className="container px-2">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                  <div className="flex items-center bg-white shadow-md rounded-lg p-2 sm:p-4">
-                    <div className="flex flex-col items-center justify-center relative">
-                      <div className="flex items-center justify-center bg-blue-100 rounded-full w-8 h-8 sm:w-12 sm:h-12 mt-4">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">
+                  Ringkasan Anggota
+                </h2>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                  {/* Anggota Masuk Card */}
+                  <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-l-4 border-blue-500">
+                    <div className="flex p-4 items-center">
+                      <div className="flex items-center justify-center bg-blue-100 rounded-full w-14 h-14">
                         <FontAwesomeIcon
                           icon={faUserPlus}
-                          className="text-blue-600 w-4 h-4 sm:w-6 sm:h-6"
+                          className="text-blue-600 w-6 h-6"
                         />
                       </div>
+                      <div className="ml-4">
+                        <div className="text-2xl font-bold text-gray-800">
+                          {anggotaMasuk}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Anggota Masuk
+                        </div>
+                      </div>
                     </div>
-                    <div className="ml-2 sm:ml-4">
-                      <div className="text-base sm:text-base font-semibold text-gray-800">
-                        {anggotaMasuk}
-                      </div>
-                      <div className="text-xs sm:text-sm text-gray-500">
-                        Anggota Masuk
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center bg-white shadow-md rounded-lg p-2 sm:p-4">
-                    <div className="flex items-center justify-center bg-red-100 rounded-full w-8 h-8 sm:w-12 sm:h-12">
-                      <FontAwesomeIcon
-                        icon={faUserMinus}
-                        className="text-red-600 w-4 h-4 sm:w-6 sm:h-6"
-                      />
-                    </div>
-                    <div className="ml-2 sm:ml-4">
-                      <div className="text-base sm:text-base font-semibold text-gray-800">
-                        {anggotaKeluar}
-                      </div>
-                      <div className="text-xs sm:text-sm text-gray-500">
-                        Anggota Keluar
-                      </div>
+                    <div className="bg-blue-50 px-4 py-2">
+                      <span className="text-xs text-blue-700">
+                        +{anggotaMasuk} bulan ini
+                      </span>
                     </div>
                   </div>
-                  <div className="flex items-center bg-white shadow-md rounded-lg p-2 sm:p-4">
-                    <div className="flex items-center justify-center bg-green-100 rounded-full w-8 h-8 sm:w-12 sm:h-12">
-                      <FontAwesomeIcon
-                        icon={faUsers}
-                        className="text-green-600 w-4 h-4 sm:w-6 sm:h-6"
-                      />
+
+                  {/* Anggota Keluar Card */}
+                  <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-l-4 border-red-500">
+                    <div className="flex p-4 items-center">
+                      <div className="flex items-center justify-center bg-red-100 rounded-full w-14 h-14">
+                        <FontAwesomeIcon
+                          icon={faUserMinus}
+                          className="text-red-600 w-6 h-6"
+                        />
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-2xl font-bold text-gray-800">
+                          {anggotaKeluar}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Anggota Keluar
+                        </div>
+                      </div>
                     </div>
-                    <div className="ml-2 sm:ml-4">
-                      <div className="text-base sm:text-base font-semibold text-gray-800">
-                        {totalAnggota}
+                    <div className="bg-red-50 px-4 py-2">
+                      <span className="text-xs text-red-700">
+                        -{anggotaKeluar} bulan ini
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Total Anggota Card */}
+                  <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border-l-4 border-green-500">
+                    <div className="flex p-4 items-center">
+                      <div className="flex items-center justify-center bg-green-100 rounded-full w-14 h-14">
+                        <FontAwesomeIcon
+                          icon={faUsers}
+                          className="text-green-600 w-6 h-6"
+                        />
                       </div>
-                      <div className="text-xs sm:text-sm text-gray-500">
-                        Total Anggota
+                      <div className="ml-4">
+                        <div className="text-2xl font-bold text-gray-800">
+                          {totalAnggota}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Total Anggota
+                        </div>
                       </div>
+                    </div>
+                    <div className="bg-green-50 px-4 py-2">
+                      <span className="text-xs text-green-700">
+                        Total keseluruhan
+                      </span>
                     </div>
                   </div>
                 </div>
-                <div className="w-full flex flex-col md:flex-row md:items-center md:justify-between mb-4 space-y-4 md:space-y-0">
-                  <div className="w-full grid grid-cols-1 gap-4 md:flex md:space-x-4">
-                    <div
-                      className="relative w-full md:w-auto"
-                      ref={dropdownRef}
-                    >
+
+                {/* Filters and Controls Section */}
+                <div className="w-full bg-white p-4 rounded-xl shadow-md mb-6">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                    Filter Data
+                  </h3>
+                  <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {/* Cabang Dropdown */}
+                    <div className="relative w-full" ref={dropdownRef}>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Cabang
+                      </label>
                       <Input
                         type="text"
                         placeholder="Cabang terpilih"
                         value={selectedCabang}
                         readOnly={role === "ADMIN"}
-                        className={`p-2 border border-gray-300 rounded-md w-full ${
+                        className={`p-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                           role === "ADMIN"
                             ? "bg-gray-100 cursor-not-allowed"
                             : ""
@@ -424,7 +499,7 @@ const Page = () => {
                         onClick={handleCabangClick}
                       />
                       {showDropdown && (
-                        <div className="absolute z-10 border rounded-lg bg-white shadow-sm w-full mt-1">
+                        <div className="absolute z-10 border rounded-lg bg-white shadow-lg w-full mt-1">
                           <ul className="max-h-44 overflow-y-auto">
                             <li className="py-2 px-2">
                               <Input
@@ -432,12 +507,12 @@ const Page = () => {
                                 placeholder="Cari atau ketik Cabang..."
                                 value={searchTerm}
                                 onChange={handleInputChange}
-                                className="p-2 border-b border-gray-300 w-full"
+                                className="p-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500"
                                 autoFocus
                               />
                             </li>
                             <li
-                              className="p-2 hover:bg-blue-100 cursor-pointer text-gray-700"
+                              className="p-2 hover:bg-blue-50 cursor-pointer text-gray-700 transition-colors duration-150"
                               onClick={() => handleOptionClick(null)}
                             >
                               Pilih Cabang
@@ -446,7 +521,7 @@ const Page = () => {
                               filteredOptions.map((option, index) => (
                                 <li
                                   key={index}
-                                  className="p-2 hover:bg-blue-100 cursor-pointer"
+                                  className="p-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150"
                                   onClick={() => handleOptionClick(option)}
                                 >
                                   {option.kecamatan}
@@ -462,271 +537,320 @@ const Page = () => {
                       )}
                     </div>
 
-                    <select
-                      onChange={handleBulanChange}
-                      value={selectedBulan}
-                      className="p-2 border border-gray-300 rounded-md w-full md:w-40"
-                    >
-                      {Array.isArray(bulanOptions) &&
-                        bulanOptions.map((bulan) => (
-                          <option key={bulan.id} value={bulan.id}>
-                            {bulan.namaBulan}
+                    {/* Bulan Dropdown */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Bulan
+                      </label>
+                      <select
+                        onChange={handleBulanChange}
+                        value={selectedBulan}
+                        className="p-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        {Array.isArray(bulanOptions) &&
+                          bulanOptions.map((bulan) => (
+                            <option key={bulan.id} value={bulan.id}>
+                              {bulan.namaBulan}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+
+                    {/* Tahun Dropdown */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Tahun
+                      </label>
+                      <select
+                        value={selectedTahun}
+                        onChange={handleTahunChange}
+                        className="p-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Pilih Tahun</option>
+                        {tahunOptions.map((tahun) => (
+                          <option key={tahun} value={tahun}>
+                            {tahun}
                           </option>
                         ))}
-                    </select>
+                      </select>
+                    </div>
 
-                    <select
-                      value={selectedTahun}
-                      onChange={handleTahunChange}
-                      className="p-2 border border-gray-300 rounded-md w-full md:w-40"
-                    >
-                      <option value="">Pilih Tahun</option>
-                      {tahunOptions.map((tahun) => (
-                        <option key={tahun} value={tahun}>
-                          {tahun}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="w-full md:w-auto">
-                    <button
-                      onClick={handlePrint}
-                      className="w-full md:w-auto px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
-                    >
-                      Cetak
-                    </button>
+                    {/* Print Button */}
+                    <div className="flex items-end">
+                      <button
+                        onClick={handlePrint}
+                        className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-300 flex items-center justify-center"
+                      >
+                        <FontAwesomeIcon icon={handlePrint} className="mr-2" />
+                        Cetak Laporan
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="table-auto w-full border-collapse border border-gray-300 text-sm">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th
-                          rowSpan="2"
-                          className="border border-gray-300 p-2 text-center font-bold uppercase bg-teal-700 text-white"
-                        >
-                          No
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                        >
-                          Cabang
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                        >
-                          Data Lalu
-                        </th>
-                        <th
-                          colSpan="4"
-                          className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                        >
-                          Mutasi
-                        </th>
-                        <th
-                          colSpan="2"
-                          className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                        >
-                          Pindah Cabang
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white"
-                        >
-                          Data Sekarang
-                        </th>
-                      </tr>
-                      <tr>
-                        <th className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                          Baru
-                        </th>
-                        <th className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                          Pensiun
-                        </th>
-                        <th className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                          Meninggal
-                        </th>
-                        <th className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                          Keluar Anggota
-                        </th>
-                        <th className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                          Masuk
-                        </th>
-                        <th className="border border-gray-300 p-2 text-xs text-center font-bold uppercase bg-teal-700 text-white">
-                          Keluar
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {Array.isArray(tableData) && tableData.length > 0 ? (
-                        tableData.map((item, index) => (
-                          <tr
-                            key={index}
-                            className={
-                              index % 2 === 0 ? "bg-gray-100" : "bg-white"
-                            }
+                {/* Table Section with Card style */}
+                <div className="bg-white rounded-xl shadow-md p-4 overflow-hidden">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                    Data Mutasi Anggota
+                  </h3>
+
+                  <div className="overflow-x-auto">
+                    <table className="table-auto w-full border-collapse text-sm">
+                      <thead>
+                        <tr>
+                          <th
+                            rowSpan="2"
+                            className="border border-gray-300 p-2 text-center font-bold bg-teal-700 text-white sticky top-0"
                           >
-                            <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                              {index + 1}
-                            </td>
-                            <td className="border border-gray-300 p-2 text-xs">
-                              {item.cabang}
-                            </td>
-                            <td className="border border-gray-300 p-2 text-xs text-center">
-                              {item.dataLalu}
-                            </td>
-                            <td className="border border-gray-300 p-2 text-xs text-center">
-                              {item.baru}
-                            </td>
-                            <td className="border border-gray-300 p-2 text-xs text-center">
-                              {item.pensiun}
-                            </td>
-                            <td className="border border-gray-300 p-2 text-xs text-center">
-                              {item.meninggal}
-                            </td>
-                            <td className="border border-gray-300 p-2 text-xs text-center">
-                              {item.keluarAnggota}
-                            </td>
-                            <td className="border border-gray-300 p-2 text-xs text-center">
-                              {item.pindahCabangMasuk}
-                            </td>
-                            <td className="border border-gray-300 p-2 text-xs text-center">
-                              {item.pindahCabangKeluar}
-                            </td>
-                            <td className="border border-gray-300 p-2 text-xs text-center">
-                              {item.dataSekarang}
+                            No
+                          </th>
+                          <th
+                            rowSpan="2"
+                            className="border border-gray-300 p-2 text-xs text-center font-bold bg-teal-700 text-white sticky top-0"
+                          >
+                            Cabang
+                          </th>
+                          <th
+                            rowSpan="2"
+                            className="border border-gray-300 p-2 text-xs text-center font-bold bg-teal-700 text-white sticky top-0"
+                          >
+                            Data Lalu
+                          </th>
+                          <th
+                            colSpan="4"
+                            className="border border-gray-300 p-2 text-xs text-center font-bold bg-teal-700 text-white sticky top-0"
+                          >
+                            Mutasi
+                          </th>
+                          <th
+                            colSpan="2"
+                            className="border border-gray-300 p-2 text-xs text-center font-bold bg-teal-700 text-white sticky top-0"
+                          >
+                            Pindah Cabang
+                          </th>
+                          <th
+                            rowSpan="2"
+                            className="border border-gray-300 p-2 text-xs text-center font-bold bg-teal-700 text-white sticky top-0"
+                          >
+                            Data Sekarang
+                          </th>
+                        </tr>
+                        <tr>
+                          <th className="border border-gray-300 p-2 text-xs text-center font-bold bg-teal-600 text-white sticky top-0">
+                            Baru
+                          </th>
+                          <th className="border border-gray-300 p-2 text-xs text-center font-bold bg-teal-600 text-white sticky top-0">
+                            Pensiun
+                          </th>
+                          <th className="border border-gray-300 p-2 text-xs text-center font-bold bg-teal-600 text-white sticky top-0">
+                            Meninggal
+                          </th>
+                          <th className="border border-gray-300 p-2 text-xs text-center font-bold bg-teal-600 text-white sticky top-0">
+                            Keluar Anggota
+                          </th>
+                          <th className="border border-gray-300 p-2 text-xs text-center font-bold bg-teal-600 text-white sticky top-0">
+                            Masuk
+                          </th>
+                          <th className="border border-gray-300 p-2 text-xs text-center font-bold bg-teal-600 text-white sticky top-0">
+                            Keluar
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {Array.isArray(tableData) && tableData.length > 0 ? (
+                          tableData.map((item, index) => (
+                            <tr
+                              key={index}
+                              className={`hover:bg-gray-50 transition-colors duration-150 ${
+                                index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                              }`}
+                            >
+                              <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                                {index + 1}
+                              </td>
+                              <td className="border border-gray-200 p-2 text-xs">
+                                {item.cabang}
+                              </td>
+                              <td className="border border-gray-200 p-2 text-xs text-center">
+                                {item.dataLalu}
+                              </td>
+                              <td className="border border-gray-200 p-2 text-xs text-center">
+                                <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                                  {item.baru}
+                                </span>
+                              </td>
+                              <td className="border border-gray-200 p-2 text-xs text-center">
+                                <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">
+                                  {item.pensiun}
+                                </span>
+                              </td>
+                              <td className="border border-gray-200 p-2 text-xs text-center">
+                                <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full">
+                                  {item.meninggal}
+                                </span>
+                              </td>
+                              <td className="border border-gray-200 p-2 text-xs text-center">
+                                <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full">
+                                  {item.keluarAnggota}
+                                </span>
+                              </td>
+                              <td className="border border-gray-200 p-2 text-xs text-center">
+                                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                                  {item.pindahCabangMasuk}
+                                </span>
+                              </td>
+                              <td className="border border-gray-200 p-2 text-xs text-center">
+                                <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full">
+                                  {item.pindahCabangKeluar}
+                                </span>
+                              </td>
+                              <td className="border border-gray-200 p-2 text-xs text-center font-bold">
+                                {item.dataSekarang}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td
+                              colSpan="11"
+                              className="px-6 py-8 text-center text-gray-500 text-sm bg-gray-50"
+                            >
+                              <div className="flex flex-col items-center justify-center">
+                                <FontAwesomeIcon
+                                  icon={faSearch}
+                                  className="text-gray-400 text-3xl mb-2"
+                                />
+                                <p>Tidak ada data tersedia</p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  Coba ubah filter pencarian
+                                </p>
+                              </div>
                             </td>
                           </tr>
-                        ))
-                      ) : (
-                        <tr>
+                        )}
+
+                        {/* Baris total dengan highlight */}
+                        <tr className="font-bold bg-teal-50">
                           <td
-                            colSpan="11"
-                            className="px-6 py-4 text-center text-gray-500 text-sm"
+                            className="px-4 py-3 text-center font-bold text-teal-800"
+                            colSpan={2}
                           >
-                            No data available
+                            Total
+                          </td>
+                          <td className="border border-gray-200 p-2 text-xs text-center font-bold text-teal-800">
+                            {tableData.reduce(
+                              (acc, item) => acc + item.dataLalu,
+                              0
+                            )}
+                          </td>
+                          <td className="border border-gray-200 p-2 text-xs text-center font-bold text-teal-800">
+                            {tableData.reduce(
+                              (acc, item) => acc + item.baru,
+                              0
+                            )}
+                          </td>
+                          <td className="border border-gray-200 p-2 text-xs text-center font-bold text-teal-800">
+                            {tableData.reduce(
+                              (acc, item) => acc + item.pensiun,
+                              0
+                            )}
+                          </td>
+                          <td className="border border-gray-200 p-2 text-xs text-center font-bold text-teal-800">
+                            {tableData.reduce(
+                              (acc, item) => acc + item.meninggal,
+                              0
+                            )}
+                          </td>
+                          <td className="border border-gray-200 p-2 text-xs text-center font-bold text-teal-800">
+                            {tableData.reduce(
+                              (acc, item) => acc + item.keluarAnggota,
+                              0
+                            )}
+                          </td>
+                          <td className="border border-gray-200 p-2 text-xs text-center font-bold text-teal-800">
+                            {tableData.reduce(
+                              (acc, item) => acc + item.pindahCabangMasuk,
+                              0
+                            )}
+                          </td>
+                          <td className="border border-gray-200 p-2 text-xs text-center font-bold text-teal-800">
+                            {tableData.reduce(
+                              (acc, item) => acc + item.pindahCabangKeluar,
+                              0
+                            )}
+                          </td>
+                          <td className="border border-gray-200 p-2 text-xs text-center font-bold text-teal-800">
+                            {tableData.reduce(
+                              (acc, item) => acc + item.dataSekarang,
+                              0
+                            )}
                           </td>
                         </tr>
-                      )}
-
-                      {/* Baris total */}
-                      <tr className="font-bold">
-                        <td
-                          className="px-4 py-2 text-center font-bold"
-                          colSpan={2}
-                        >
-                          Total
-                        </td>
-                        <td className="border border-gray-300 p-2 text-xs text-center">
-                          {tableData.reduce(
-                            (acc, item) => acc + item.dataLalu,
-                            0
-                          )}
-                        </td>
-                        <td className="border border-gray-300 p-2 text-xs text-center">
-                          {tableData.reduce((acc, item) => acc + item.baru, 0)}
-                        </td>
-                        <td className="border border-gray-300 p-2 text-xs text-center">
-                          {tableData.reduce(
-                            (acc, item) => acc + item.pensiun,
-                            0
-                          )}
-                        </td>
-                        <td className="border border-gray-300 p-2 text-xs text-center">
-                          {tableData.reduce(
-                            (acc, item) => acc + item.meninggal,
-                            0
-                          )}
-                        </td>
-                        <td className="border border-gray-300 p-2 text-xs text-center">
-                          {tableData.reduce(
-                            (acc, item) => acc + item.keluarAnggota,
-                            0
-                          )}
-                        </td>
-                        <td className="border border-gray-300 p-2 text-xs text-center">
-                          {tableData.reduce(
-                            (acc, item) => acc + item.pindahCabangMasuk,
-                            0
-                          )}
-                        </td>
-                        <td className="border border-gray-300 p-2 text-xs text-center">
-                          {tableData.reduce(
-                            (acc, item) => acc + item.pindahCabangKeluar,
-                            0
-                          )}
-                        </td>
-                        <td className="border border-gray-300 p-2 text-xs text-center">
-                          {tableData.reduce(
-                            (acc, item) => acc + item.dataSekarang,
-                            0
-                          )}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                {/* {tableData.length > itemsPerPage && (
-                  <div className="flex justify-center mt-4 gap-1">
-                    <button
-                      onClick={() => setCurrentPage(1)}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                    >
-                      First
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                    >
-                      Prev
-                    </button>
-
-                    {getVisiblePages().map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1 border rounded text-sm ${page === currentPage
-                            ? "bg-blue-500 text-white"
-                            : "bg-white hover:bg-gray-50"
-                          }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
-
-                    <button
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                      }
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                    >
-                      Next
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage(totalPages)}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                    >
-                      Last
-                    </button>
+                      </tbody>
+                    </table>
                   </div>
-                )} */}
+
+                  {/* Pagination can be uncommented and styled if needed */}
+                  {/* {tableData.length > itemsPerPage && (
+                <div className="flex justify-center mt-6 gap-1">
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    First
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Prev
+                  </button>
+
+                  {getVisiblePages().map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 border rounded-md text-sm ${page === currentPage
+                          ? "bg-blue-500 text-white"
+                          : "bg-white hover:bg-gray-50"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Next
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
+                  >
+                    Last
+                  </button>
+                </div>
+              )} */}
+                </div>
+
+                <div className="my-6 border-t border-gray-200"></div>
+
+                {/* Seldata component with card style */}
+                <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+                  <Seldata />
+                </div>
               </div>
             </div>
-            <div
-              style={{ borderTop: "1px solid #ccc", margin: "20px 0" }}
-            ></div>
-            <Seldata />
           </div>
         </div>
-        
       </div>
     </div>
   );
