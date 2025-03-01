@@ -6,29 +6,50 @@ import Flowchart from "./_components/Flowchart";
 import GaleriKegiatan from "./_components/GaleriKegiatan";
 import Header from "./_components/Header";
 import Footer from "./_components/Footer";
-import Tentang from "./_components/Tentang";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import GlobalApi from "./_utils/GlobalApi";
 
 export default function Home() {
-  const [isPopupVisible, setIsPopupVisible] = useState(true);
-  const closePopup = () => setIsPopupVisible(false);
-
+  const [isPopupVisible, setIsPopupVisible] = useState(false); 
+  const [infoGallery, setInfoGallery] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+
   useEffect(() => {
     if (router.pathname !== "/") {
       router.push("/");
     }
+
+    fetchInfoGallery();
   }, [router]);
+
+  const fetchInfoGallery = async () => {
+    try {
+      setIsLoading(true);
+      const data = await GlobalApi.getSidebarGalleryByCategory("INFO");
+
+      if (data.length > 0) {
+        setInfoGallery(data[0]);
+        setIsPopupVisible(true);
+      }
+    } catch (error) {
+      console.error("Error fetching INFO gallery:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogin = () => {
     router.push("/sign-in");
   };
 
+  const closePopup = () => setIsPopupVisible(false);
+
   return (
     <div>
       {/* Popup Section */}
-      {isPopupVisible && (
+      {isPopupVisible && infoGallery && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
           <div className="relative p-6 w-11/12 max-w-lg text-center">
             <button
@@ -39,13 +60,32 @@ export default function Home() {
             </button>
 
             <div className="relative">
-              <Image
-                className="w-full h-auto max-h-80 rounded-lg"
-                src={"/gif_hal_depan.gif"}
-                alt="Popup"
-                width={110}
-                height={110}
-              />
+              {isLoading ? (
+                <div className="w-full h-80 bg-gray-200 animate-pulse rounded-lg flex items-center justify-center">
+                  <p className="text-gray-500">Loading...</p>
+                </div>
+              ) : infoGallery && infoGallery.photo ? (
+                <div className="relative w-full max-h-80">
+                  <Image
+                    src={`data:image/jpeg;base64,${infoGallery.photo}`}
+                    alt={infoGallery.deskripsi || "Info Image"}
+                    width={800} 
+                    height={600} 
+                    className="w-full h-auto max-h-80 rounded-lg"
+                    priority 
+                  />
+                </div>
+              ) : (
+                <Image
+                  className="w-full h-auto max-h-80 rounded-lg"
+                  src={"/gif_hal_depan.gif"}
+                  alt="Default Popup"
+                  width={800} 
+                  height={600} 
+                  priority 
+                />
+              )}
+
               <button
                 className="absolute bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
                 style={{
@@ -56,7 +96,7 @@ export default function Home() {
                 }}
                 onClick={handleLogin}
               >
-                Update Data
+                Selengkapnya
               </button>
             </div>
           </div>

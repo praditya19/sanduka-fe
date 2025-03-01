@@ -41,7 +41,7 @@ const Page = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState(null);
-
+  const [totalAnggota, setTotalAnggota] = useState(0); // State untuk menyimpan jumlah total anggota
   const router = useRouter();
   const { token } = useAuth();
   const [popupVisible, setPopupVisible] = useState(false);
@@ -50,20 +50,15 @@ const Page = () => {
   const [fotoBase64, setFotoBase64] = useState("");
   const profileImageUrl = "/profile.png";
 
-  const fetchPensiunData = async (
-    page,
-    size = 10,
-    cabang = "",
-    searchText = ""
-  ) => {
+  const fetchPensiunData = async (page, size = 10, cabang = "", searchText = "", month = "", year = "") => {
     setLoading(true);
     try {
       const fetchedData = await GlobalApi.getAllPensiun(
         page,
         size,
         cabang,
-        null,
-        null,
+        month,
+        year,
         searchText
       );
 
@@ -86,13 +81,10 @@ const Page = () => {
 
         setFotoBase64(fotoBase64Array);
 
-        setPensiunList((prevList) =>
-          page === 0
-            ? fetchedData.data.content
-            : [...prevList, ...fetchedData.data.content]
-        );
+        setPensiunList(fetchedData.data.content);
         setTotalPages(fetchedData.data.totalPages || 0);
         setHasMore(fetchedData.data.content.length > 0);
+        setTotalAnggota(fetchedData.data.totalElements || 0);
       }
     } catch (err) {
       setError(err.message);
@@ -104,7 +96,8 @@ const Page = () => {
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchText(value);
-    fetchPensiunData(0, 10, selectedCabang, value);
+    setCurrentPage(1); 
+    fetchPensiunData(0, 10, selectedCabang, value, selectedMonth, selectedYear);
   };
 
   useEffect(() => {
@@ -127,8 +120,8 @@ const Page = () => {
   }, [searchText, pensiunList]);
 
   useEffect(() => {
-    fetchPensiunData(0, 10, selectedCabang);
-  }, [selectedCabang]);
+    fetchPensiunData(0, itemsPerPage, selectedCabang, searchText, selectedMonth, selectedYear);
+  }, [selectedCabang, selectedMonth, selectedYear]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -138,22 +131,16 @@ const Page = () => {
       : filteredPensiunList;
 
   const handleNextPage = () => {
-    if (indexOfLastItem < pensiunList.length) {
+    if (currentPage < totalPages) {
       setCurrentPage((prevPage) => prevPage + 1);
-    } else if (hasMore) {
-      fetchPensiunData(
-        currentPage,
-        10,
-        selectedCabang,
-        selectedMonth,
-        selectedYear
-      );
+      fetchPensiunData(currentPage + 1, itemsPerPage, selectedCabang, searchText, selectedMonth, selectedYear);
     }
   };
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage((prevPage) => prevPage - 1);
+      fetchPensiunData(currentPage - 1, itemsPerPage, selectedCabang, searchText, selectedMonth, selectedYear);
     }
   };
 
@@ -175,17 +162,7 @@ const Page = () => {
   const handlePageClick = async (pageNumber) => {
     if (pageNumber !== currentPage) {
       setCurrentPage(pageNumber);
-      if (!fetchedPages.includes(pageNumber)) {
-        fetchPensiunData(
-          pageNumber - 1,
-          10,
-          selectedCabang,
-          selectedMonth,
-          selectedYear,
-          searchText
-        );
-        setFetchedPages([...fetchedPages, pageNumber]);
-      }
+      fetchPensiunData(pageNumber - 1, itemsPerPage, selectedCabang, searchText, selectedMonth, selectedYear);
     }
   };
 
@@ -194,7 +171,7 @@ const Page = () => {
     setQueryCabang("");
     setShowDropdownCabang(false);
     setCurrentPage(1);
-    fetchPensiunData(0, 10, cabang.kecamatan || "");
+    fetchPensiunData(0, itemsPerPage, cabang.kecamatan || "", searchText, selectedMonth, selectedYear);
   };
 
   useEffect(() => {
@@ -264,17 +241,42 @@ const Page = () => {
   const handleMonthChange = (event) => {
     const month = event.target.value;
     setSelectedMonth(month);
-    applyFilters(month, selectedYear);
+    setCurrentPage(1);
+    fetchPensiunData(0, itemsPerPage, selectedCabang, searchText, month, selectedYear);
   };
 
   const handleYearChange = (event) => {
     const year = event.target.value;
     setSelectedYear(year);
-    applyFilters(selectedMonth, year);
+    setCurrentPage(1);
+    fetchPensiunData(0, itemsPerPage, selectedCabang, searchText, selectedMonth, year);
   };
 
   useEffect(() => {
     applyFilters("", "");
+  }, []);
+
+  useEffect(() => {
+    fetchPensiunData(0, itemsPerPage, "");
+
+    const role = sessionStorage.getItem("role");
+    if (role === "ADMIN") {
+      const cabang = sessionStorage.getItem("cabang");
+      setSelectedCabang(cabang || "");
+    } else if (role === "SUPER ADMIN") {
+      const fetchCabang = async () => {
+        try {
+          const response = await GlobalApi.getCabang();
+          const sortedCabang = response.data.sort((a, b) =>
+            a.kecamatan.localeCompare(b.kecamatan)
+          );
+          setCabangOptions(sortedCabang || []);
+        } catch (error) {
+          console.error("Error fetching cabang data:", error);
+        }
+      };
+      fetchCabang();
+    }
   }, []);
 
   const handleDownloadExcel = async (cabang, bulan, tahun) => {
@@ -287,16 +289,16 @@ const Page = () => {
         bulan,
         tahun
       );
-
+  
       const jsonData = Array.isArray(response.data.content)
         ? response.data.content
         : [];
-
+  
       if (jsonData.length === 0) {
         alert("Tidak ada data untuk diunduh.");
         return;
       }
-
+  
       const filteredData = jsonData.map((row, index) => ({
         "No.": index + 1,
         "Prediksi Pensiun": formatDate(row.prediksiPensiun),
@@ -316,12 +318,12 @@ const Page = () => {
             : "Aktif",
         "Nomor HP": row.nomorHp || "-",
       }));
-
+  
       const worksheet = XLSX.utils.json_to_sheet(filteredData);
-
+  
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Data Pensiun");
-
+  
       XLSX.writeFile(workbook, `data_pensiun_${tahun}_${bulan || "all"}.xlsx`);
     } catch (error) {
       console.error("Gagal mendownload data:", error);
@@ -590,9 +592,8 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <main
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="p-4 md:p-6 pt-20">
             <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6">
@@ -614,7 +615,7 @@ const Page = () => {
                     id="cabangInput"
                     type="text"
                     className="border rounded-lg p-2 w-full bg-white shadow-sm cursor-pointer"
-                    placeholder={selectedCabang || "Pilih Cabang"}
+                    placeholder={selectedCabang || "Tampil Semua"}
                     value={
                       sessionStorage.getItem("role") === "SUPER ADMIN"
                         ? selectedCabang
@@ -643,8 +644,7 @@ const Page = () => {
                               value={queryCabang}
                               onChange={(e) => {
                                 const value = e.target.value;
-                                if (value.trim().length > 0)
-                                  setQueryCabang(value);
+                                if (value.trim().length > 0) setQueryCabang(value);
                               }}
                               autoFocus
                             />
@@ -780,14 +780,13 @@ const Page = () => {
                     />
                   </svg>
                   <span className="font-medium">
-                    Jumlah Anggota: {filteredPensiunList.length} Orang
+                    Jumlah Anggota: {totalAnggota} Orang {/* Tampilkan totalAnggota */}
                   </span>
                 </div>
 
                 <button
-                  className={`bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center transition-colors ${
-                    isLoading ? "opacity-70 cursor-not-allowed" : ""
-                  }`}
+                  className={`bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center transition-colors ${isLoading ? "opacity-70 cursor-not-allowed" : ""
+                    }`}
                   onClick={() =>
                     !isLoading &&
                     handleDownloadExcel(
@@ -957,11 +956,10 @@ const Page = () => {
                                 </div>
                                 <div className="mt-1">
                                   <span
-                                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                      pensiun.status === "Segera"
-                                        ? "bg-red-100 text-red-800"
-                                        : "bg-green-100 text-green-800"
-                                    }`}
+                                    className={`px-2 py-1 rounded-full text-xs font-medium ${pensiun.status === "Segera"
+                                      ? "bg-red-100 text-red-800"
+                                      : "bg-green-100 text-green-800"
+                                      }`}
                                   >
                                     {pensiun.keterangan === null
                                       ? pensiun.status === "Segera"
@@ -1046,11 +1044,10 @@ const Page = () => {
                                       </div>
                                       <div className="mt-1">
                                         <span
-                                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                            pensiun.status === "Segera"
-                                              ? "bg-red-100 text-red-800"
-                                              : "bg-green-100 text-green-800"
-                                          }`}
+                                          className={`px-2 py-1 rounded-full text-xs font-medium ${pensiun.status === "Segera"
+                                            ? "bg-red-100 text-red-800"
+                                            : "bg-green-100 text-green-800"
+                                            }`}
                                         >
                                           {pensiun.keterangan === null
                                             ? pensiun.status === "Segera"
@@ -1107,7 +1104,7 @@ const Page = () => {
                   <div className="p-4 border-t">
                     <div className="flex flex-wrap justify-center gap-2">
                       <button
-                        onClick={() => setCurrentPage(1)}
+                        onClick={() => handlePageClick(1)}
                         disabled={currentPage === 1}
                         className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
                       >
@@ -1153,11 +1150,10 @@ const Page = () => {
                         <button
                           key={page}
                           onClick={() => handlePageClick(page)}
-                          className={`px-3 py-1 border rounded-md text-sm ${
-                            page === currentPage
-                              ? "bg-teal-600 text-white border-teal-600"
-                              : "bg-white hover:bg-gray-50"
-                          }`}
+                          className={`px-3 py-1 border rounded-md text-sm ${page === currentPage
+                            ? "bg-teal-600 text-white border-teal-600"
+                            : "bg-white hover:bg-gray-50"
+                            }`}
                         >
                           {page}
                         </button>
@@ -1189,7 +1185,7 @@ const Page = () => {
                         </svg>
                       </button>
                       <button
-                        onClick={() => setCurrentPage(totalPages)}
+                        onClick={() => handlePageClick(totalPages)}
                         disabled={currentPage === totalPages}
                         className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
                       >
