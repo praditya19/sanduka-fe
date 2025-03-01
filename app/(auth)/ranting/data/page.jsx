@@ -313,6 +313,10 @@ const Page = () => {
       (total, item) => total + (item.totalUnitKerja || 0),
       0
     );
+    const totalJumlahRanting = filteredData.reduce(
+      (total, item) => total + (item.jumlahRanting || 0),
+      0
+    );
     const totalJumlahAnggotaRanting = filteredData.reduce(
       (total, item) => total + (item.jumlahAnggotaRanting || 0),
       0
@@ -366,8 +370,9 @@ const Page = () => {
             th:nth-child(4), td:nth-child(4) { width: 12%; } /* Unit Kerja */
             th:nth-child(5), td:nth-child(5) { width: 30%; text-align: left; } /* Nama Anggota */
             th:nth-child(6), td:nth-child(6) { width: 10%; } /* Anggota Unit Kerja */
-            th:nth-child(7), td:nth-child(7) { width: 10%; } /* Jumlah Anggota Ranting */
-            th:nth-child(8), td:nth-child(8) { width: 10%; } /* Total Unit Kerja */
+            th:nth-child(7), td:nth-child(7) { width: 10%; } /* Jumlah Ranting */
+            th:nth-child(8), td:nth-child(8) { width: 10%; } /* Jumlah Anggota Ranting */
+            th:nth-child(9), td:nth-child(9) { width: 10%; } /* Total Unit Kerja */
             @media print {
               body {
                 width: auto;
@@ -387,6 +392,7 @@ const Page = () => {
                 <th>Unit Kerja</th>
                 <th>Nama Anggota</th>
                 <th>Anggota Unit Kerja</th>
+                <th>Jumlah Ranting</th>
                 <th>Jumlah Anggota Ranting</th>
                 <th>Total Unit Kerja</th>
               </tr>
@@ -420,6 +426,7 @@ const Page = () => {
                         }
                       </td>
                       <td>${item.anggotaUnitKerja || 0}</td>
+                      <td>${item.jumlahRanting || 0}</td>
                       <td>${item.jumlahAnggotaRanting || 0}</td>
                       <td>${item.totalUnitKerja || 0}</td>
                     </tr>
@@ -434,6 +441,7 @@ const Page = () => {
                 <td>-</td>
                 <td>-</td>
                 <td>${totalAnggotaUnitKerja}</td>
+                <td>${totalJumlahRanting}</td>
                 <td>${totalJumlahAnggotaRanting}</td>
                 <td>${totalUnitKerja}</td>
               </tr>
@@ -473,8 +481,9 @@ const Page = () => {
             .join("\n")
         : "-",
       "Anggota Unit Kerja": item.anggotaUnitKerja || 0,
-      "Total Unit Kerja": item.totalUnitKerja || 0,
+      "Jumlah Ranting": item.jumlahRanting,
       "Jumlah Anggota Ranting": item.jumlahAnggotaRanting,
+      "Total Unit Kerja": item.totalUnitKerja || 0,
     }));
 
     const totalAnggotaUnitKerja = filteredData.reduce(
@@ -483,6 +492,10 @@ const Page = () => {
     );
     const totalUnitKerja = filteredData.reduce(
       (total, item) => total + (item.totalUnitKerja || 0),
+      0
+    );
+    const totalJumlahRanting = filteredData.reduce(
+      (total, item) => total + (item.jumlahRanting || 0),
       0
     );
     const totalJumlahAnggotaRanting = filteredData.reduce(
@@ -498,6 +511,7 @@ const Page = () => {
       "Nama Anggota": "-",
       "Anggota Unit Kerja": totalAnggotaUnitKerja,
       "Total Unit Kerja": totalUnitKerja,
+      "Jumlah Ranting": totalJumlahRanting,
       "Jumlah Anggota Ranting": totalJumlahAnggotaRanting,
     });
 
@@ -564,8 +578,9 @@ const Page = () => {
             th:nth-child(3), td:nth-child(3) { width: 15%; }/* Nama Ranting */
             th:nth-child(4), td:nth-child(4) { width: 15%; }/* Unit Kerja */
             th:nth-child(5), td:nth-child(5) { width: 10%; }/* Anggota Unit Kerja */
-            th:nth-child(6), td:nth-child(6) { width: 10%; }/* Jumlah Anggota Ranting */
-            th:nth-child(7), td:nth-child(7) { width: 10%; }/* Total Unit Kerja */
+            th:nth-child(6), td:nth-child(6) { width: 10%; }/* Jumlah Ranting */
+            th:nth-child(7), td:nth-child(7) { width: 10%; }/* Jumlah Anggota Ranting */
+            th:nth-child(8), td:nth-child(8) { width: 10%; }/* Total Unit Kerja */
             @media print {
               body {
                 width: auto;
@@ -584,6 +599,7 @@ const Page = () => {
                 <th>Nama Ranting</th>
                 <th>Unit Kerja</th>
                 <th>Anggota Unit Kerja</th>
+                <th>Jumlah Ranting</th>
                 <th>Jumlah Anggota Ranting</th>
                 <th>Total Unit Kerja</th>
               </tr>
@@ -617,6 +633,7 @@ const Page = () => {
               <td>${namaRanting}</td>
               <td>${item.unitKerja || "-"}</td>
               <td>${item.anggotaUnitKerja || 0}</td>
+              <td>${item.jumlahRanting || 0}</td>
               <td>${item.jumlahAnggotaRanting || 0}</td>
               <td>${item.totalUnitKerja || 0}</td>
             </tr>
@@ -989,6 +1006,9 @@ const Page = () => {
                         Jumlah Ranting
                       </th>
                       <th className="p-2 md:p-3 border md:table-cell">
+                        Total Anggota Ranting
+                      </th>
+                      <th className="p-2 md:p-3 border md:table-cell">
                         Total Unit Kerja
                       </th>
                     </tr>
@@ -1043,6 +1063,9 @@ const Page = () => {
                               </td>
                               <td className="p-2 md:p-3 border md:table-cell text-center align-top">
                                 {item.anggotaUnitKerja || "-"}
+                              </td>
+                              <td className="p-2 md:p-3 border md:table-cell text-center align-top">
+                                {item.jumlahRanting || "-"}
                               </td>
                               <td className="p-2 md:p-3 border md:table-cell text-center align-top">
                                 {item.jumlahAnggotaRanting || "-"}
@@ -1105,6 +1128,13 @@ const Page = () => {
                               <td className="p-2 md:p-3 text-center">
                                 {filteredData.reduce(
                                   (total, item) =>
+                                    total + (item.jumlahRanting || 0),
+                                  0
+                                )}
+                              </td>
+                              <td className="p-2 md:p-3 text-center">
+                                {filteredData.reduce(
+                                  (total, item) =>
                                     total + (item.jumlahAnggotaRanting || 0),
                                   0
                                 )}
@@ -1130,6 +1160,13 @@ const Page = () => {
                                 {filteredData.reduce(
                                   (total, item) =>
                                     total + (item.anggotaUnitKerja || 0),
+                                  0
+                                )}
+                              </td>
+                              <td className="p-2 md:p-3 text-center">
+                                {filteredData.reduce(
+                                  (total, item) =>
+                                    total + (item.jumlahRanting || 0),
                                   0
                                 )}
                               </td>

@@ -1439,13 +1439,16 @@ const getRantingSummary = async (
     if (Array.isArray(data)) {
       return {
         content: data.map((dataItem) => {
+          console.log(dataItem);
+
           return {
             cabang: dataItem.cabang,
             namaRanting: dataItem.namaRanting,
             unitKerja: dataItem.unitKerja,
             namaAnggota: processNamaAnggota(dataItem.namaAnggota),
             anggotaUnitKerja: dataItem.jumlahAnggota,
-            jumlahAnggotaRanting: dataItem.jumlahUnitKerja,
+            jumlahRanting: dataItem.jumlahUnitKerja,
+            jumlahAnggotaRanting: dataItem.jumlahAnggotaRanting,
             totalUnitKerja: dataItem.totalUnitKerja,
           };
         }),
@@ -1899,9 +1902,11 @@ const addPesertaEvent = async (pesertaEvent) => {
   }
 };
 
-const getAllPeserta = async (queryString = '') => {
+const getAllPeserta = async (queryString = "") => {
   try {
-    const response = await axiosClient.get(`/api/event${queryString ? `?${queryString}` : ''}`);
+    const response = await axiosClient.get(
+      `/api/event${queryString ? `?${queryString}` : ""}`
+    );
     return response.data;
   } catch (error) {
     throw error;
@@ -1912,7 +1917,7 @@ const getAllPeserta = async (queryString = '') => {
 const createPengaduan = async (data) => {
   try {
     const formData = new FormData();
-    
+
     const pengaduanObj = {
       namaLengkap: data.namaLengkap,
       email: data.email,
@@ -1920,15 +1925,15 @@ const createPengaduan = async (data) => {
       cabang: data.cabang,
       unitKerja: data.unitKerja,
       category: data.category,
-      keterangan: data.keterangan
+      keterangan: data.keterangan,
     };
-    
+
     formData.append("pengaduan", JSON.stringify(pengaduanObj));
-    
+
     if (data.bukti) {
       formData.append("bukti", data.bukti);
     }
-    
+
     const response = await axiosClient.post("/api/pengaduan", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
@@ -1943,15 +1948,15 @@ const createPengaduan = async (data) => {
 const getAllPengaduan = async (filters = {}) => {
   try {
     const { category, cabang, unitKerja } = filters;
-    
+
     let queryParams = new URLSearchParams();
     if (category) queryParams.append("category", category);
     if (cabang) queryParams.append("cabang", cabang);
     if (unitKerja) queryParams.append("unitKerja", unitKerja);
-    
+
     const queryString = queryParams.toString();
-    const url = `/api/pengaduan${queryString ? `?${queryString}` : ''}`;
-    
+    const url = `/api/pengaduan${queryString ? `?${queryString}` : ""}`;
+
     const response = await axiosClient.get(url);
     return response.data;
   } catch (error) {
