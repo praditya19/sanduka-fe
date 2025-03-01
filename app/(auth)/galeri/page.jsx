@@ -9,11 +9,10 @@ import GlobalApi from "@/app/_utils/GlobalApi";
 import { ClipLoader } from "react-spinners";
 import dynamic from "next/dynamic";
 
-// Create a dynamic component for Summernote to ensure it only loads on client
 const SummernoteEditor = dynamic(
   () => {
     return Promise.all([
-      import("jquery").then((mod) => mod.default), // Ambil default jQuery
+      import("jquery").then((mod) => mod.default), 
       import("summernote/dist/summernote-lite.min.css"),
       import("summernote/dist/summernote-lite.min.js"),
     ]).then(([jQuery]) => {
@@ -24,7 +23,7 @@ const SummernoteEditor = dynamic(
         const editorRef = useRef(null);
 
         useEffect(() => {
-          const $ = window.jQuery; // Ambil jQuery dari window
+          const $ = window.jQuery; 
 
           if ($ && editorRef.current) {
             $(editorRef.current).summernote({
@@ -140,7 +139,6 @@ const Page = () => {
     setNamaEvent(gallery.namaEvent || "");
     setSelectedFile(null);
 
-    // Manually set the Summernote editor content if it's initialized
     setTimeout(() => {
       if (window.jQuery && window.jQuery('.note-editable').length) {
         window.jQuery('.note-editable').html(gallery.deskripsi);
@@ -155,12 +153,10 @@ const Page = () => {
     setNamaEvent("");
     setEditingId(null);
 
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
 
-    // Reset Summernote editor content
     if (window.jQuery && window.jQuery('.note-editable').length) {
       window.jQuery('.note-editable').html("");
     }
@@ -215,12 +211,10 @@ const Page = () => {
         });
       }
 
-      // Explicitly reset form after successful submission
       resetForm();
 
     } catch (error) {
       console.error("Error saving gallery:", error);
-      // Show error message to user
       alert("Terjadi kesalahan saat menyimpan data. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
@@ -258,13 +252,13 @@ const Page = () => {
   const indexOfLastItem = (currentPage + 1) * itemsPerPage;
   const indexOfFirstItem = currentPage * itemsPerPage;
   const currentItems = galleries
-    .filter((gallery) => gallery.category !== "EVENT")
+    .filter((gallery) => gallery.category === "NON EVENT")
     .slice(indexOfFirstItem, indexOfLastItem);
   const eventItems = galleries.filter(
     (gallery) => gallery.category === "EVENT"
   );
   const totalPages = Math.ceil(
-    galleries.filter((gallery) => gallery.category !== "EVENT").length /
+    galleries.filter((gallery) => gallery.category === "NON EVENT").length /
     itemsPerPage
   );
 
@@ -369,6 +363,8 @@ const Page = () => {
                   <th>NPA</th>
                   <th>Cabang</th>
                   <th>Unit Kerja</th>
+                  <th>Nomor HP</th>
+                  <th>Jabatan Organisasi</th>
                 </tr>
               </thead>
               <tbody>
@@ -381,6 +377,8 @@ const Page = () => {
                     <td>${peserta.npa}</td>
                     <td>${peserta.cabang}</td>
                     <td>${peserta.unitKerja}</td>
+                    <td>${peserta.nomorHp}</td>
+                    <td>${peserta.jabatan}</td>
                   </tr>
                 `
           )
@@ -455,6 +453,12 @@ const Page = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Unit Kerja
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Nomor HP
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Jabatan Organisasi
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -472,6 +476,12 @@ const Page = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {peserta.unitKerja}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {peserta.nomorHp}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {peserta.jabatan}
                           </td>
                         </tr>
                       ))
@@ -497,40 +507,40 @@ const Page = () => {
 
   const GalleryItem = ({ gallery }) => {
     const [expanded, setExpanded] = useState(false);
-  
+
     const parseHTML = (htmlContent) => {
       if (!htmlContent) return "";
-  
+
       const tempDiv = document.createElement("div");
       tempDiv.innerHTML = htmlContent;
-  
+
       const textNodes = [];
       const walk = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT, null, false);
-  
+
       let node;
       while ((node = walk.nextNode())) {
         textNodes.push(node);
       }
-  
+
       const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
-  
+
       textNodes.forEach((textNode) => {
         const parent = textNode.parentNode;
         if (parent.nodeName.toLowerCase() === "a") return;
-  
+
         const content = textNode.textContent;
         const parts = content.split(urlRegex);
-  
+
         if (parts.length > 1) {
           const fragment = document.createDocumentFragment();
           let i = 0;
-  
+
           content.replace(urlRegex, (url) => {
             if (parts[i]) {
               fragment.appendChild(document.createTextNode(parts[i]));
             }
             i += 3;
-  
+
             const href = url.startsWith("www.") ? `https://${url}` : url;
             const link = document.createElement("a");
             link.href = href;
@@ -539,26 +549,26 @@ const Page = () => {
             link.rel = "noopener noreferrer";
             link.className = "text-blue-600 hover:underline";
             fragment.appendChild(link);
-  
+
             return url;
           });
-  
+
           if (parts[parts.length - 1]) {
             fragment.appendChild(document.createTextNode(parts[parts.length - 1]));
           }
-  
+
           parent.replaceChild(fragment, textNode);
         }
       });
-  
+
       return tempDiv.innerHTML;
     };
-  
+
     const MAX_LENGTH = 200;
     const deskripsi = gallery.deskripsi || "";
     const isLong = deskripsi.length > MAX_LENGTH;
     const displayedText = expanded ? deskripsi : deskripsi.slice(0, MAX_LENGTH) + (isLong ? "..." : "");
-  
+
     return (
       <div className="border p-4 rounded">
         {gallery.photo && (
@@ -576,7 +586,7 @@ const Page = () => {
             />
           </div>
         )}
-  
+
         <div className="mb-3">
           {gallery.category === "EVENT" ? (
             <>
@@ -607,7 +617,7 @@ const Page = () => {
             </div>
           )}
         </div>
-  
+
         <div className="mt-2 space-x-2">
           <button
             onClick={() => handleEdit(gallery)}
@@ -733,6 +743,7 @@ const Page = () => {
                   >
                     <option value="EVENT">EVENT</option>
                     <option value="NON EVENT">NON EVENT</option>
+                    <option value="INFO">INFO</option>
                   </select>
                 </div>
                 {category === "EVENT" && (
@@ -817,6 +828,17 @@ const Page = () => {
                 {eventItems.map((gallery) => (
                   <GalleryItem key={gallery.id} gallery={gallery} />
                 ))}
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-md w-full mt-8">
+              <h2 className="text-xl font-bold mb-4">Info</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {galleries
+                  .filter((gallery) => gallery.category === "INFO")
+                  .map((gallery) => (
+                    <GalleryItem key={gallery.id} gallery={gallery} />
+                  ))}
               </div>
             </div>
           </div>
