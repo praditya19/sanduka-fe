@@ -27,6 +27,9 @@ import {
   FaTimes,
   FaUserCheck,
   FaWhatsapp,
+  FaCheckCircle,
+  FaExclamationCircle,
+  FaTimesCircle,
 } from "react-icons/fa";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -1482,57 +1485,30 @@ const DataTable = ({
           setIsPopupDaspen(false);
 
           toast.success(
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                textAlign: "center",
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                style={{
-                  width: "150px",
-                  height: "150px",
-                  color: "#06D001",
-                  marginBottom: "16px",
-                  marginTop: "14px",
-                }}
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-              </svg>
-              <h3
-                style={{
-                  fontSize: "2rem",
-                  display: "block",
-                  marginBottom: "28px",
-                }}
-              >
+            <div className="flex flex-col items-center space-y-4">
+              <div className="animate-bounce">
+                <FaCheckCircle className="text-green-500 text-5xl" />
+              </div>
+              <h4 className="text-xl font-bold text-green-800">Berhasil!</h4>
+              <div className="text-green-800 text-center">
                 Kategori Daspen Berhasil Diupdate!
-              </h3>
+              </div>
             </div>,
             {
               icon: null,
-              duration: 4000,
+              duration: 3000,
               style: {
-                marginTop: "12%",
-                fontSize: "1.75rem",
-                padding: "10px",
-                width: "80%",
-                maxWidth: "450px",
-                height: "50%",
-                maxHeight: "400px",
-                transform: "translate(-50%, -50%)",
-                textAlign: "center",
-                zIndex: 9999,
-                backgroundColor: "#fff",
-                borderRadius: "8px",
-                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                background: "rgb(220, 252, 231)",  // bg-green-100
+                borderRadius: "0.5rem",
+                padding: "2rem",
+                width: "24rem",
+                maxWidth: "90%",
+                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+                position: "relative",
+                zIndex: 50
               },
+              closeButton: true,
+              closeOnClick: true
             }
           );
         } else {
@@ -1541,57 +1517,30 @@ const DataTable = ({
       } catch (error) {
         console.error("Terjadi kesalahan:", error);
         toast.error(
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                width: "150px",
-                height: "150px",
-                color: "red",
-                marginBottom: "16px",
-              }}
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
-            </svg>
-            <h3
-              style={{
-                fontSize: "1.75rem",
-                display: "block",
-                marginBottom: "8px",
-              }}
-            >
+          <div className="flex flex-col items-center space-y-4">
+            <div className="animate-bounce">
+              <FaExclamationCircle className="text-red-500 text-5xl" />
+            </div>
+            <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
+            <div className="text-red-800 text-center">
               Gagal memperbarui data. Periksa kembali input.
-            </h3>
+            </div>
           </div>,
           {
             icon: null,
-            duration: 4000,
+            duration: 3000,
             style: {
-              marginTop: "12%",
-              fontSize: "1.75rem",
-              padding: "10px",
-              width: "80%",
-              maxWidth: "450px",
-              height: "50%",
-              maxHeight: "400px",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 9999,
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              background: "rgb(254, 226, 226)",  // bg-red-100
+              borderRadius: "0.5rem",
+              padding: "2rem",
+              width: "24rem",
+              maxWidth: "90%",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+              position: "relative",
+              zIndex: 50
             },
+            closeButton: true,
+            closeOnClick: true
           }
         );
       }
@@ -1622,54 +1571,30 @@ const DataTable = ({
             }
           } else {
             toast.error(
-              <div style={{ textAlign: "center" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    textAlign: "center",
-                  }}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{
-                      width: "150px",
-                      height: "150px",
-                      color: "red",
-                      marginBottom: "16px",
-                    }}
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-                    <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-                  </svg>
+              <div className="flex flex-col items-center space-y-4">
+                <div className="animate-bounce">
+                  <FaExclamationCircle className="text-red-500 text-5xl" />
                 </div>
-
-                <h3 style={{ fontSize: "1.75rem", display: "block" }}>
-                  NIP tidak ditemukan, silahkan melakukan sinkronisasi dahulu.
-                </h3>
+                <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
+                <div className="text-red-800 text-center">
+                  NIP tidak ditemukan. Silahkan sinkronisasi dulu.
+                </div>
               </div>,
               {
                 icon: null,
-                duration: 2000,
+                duration: 3000,
                 style: {
-                  marginTop: "12%",
-                  fontSize: "1.75rem",
-                  padding: "10px",
-                  width: "80%",
-                  maxWidth: "450px",
-                  height: "50%",
-                  maxHeight: "400px",
-                  transform: "translate(-50%, -50%)",
-                  textAlign: "center",
-                  zIndex: 9999,
-                  backgroundColor: "#fff",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                  background: "rgb(254, 226, 226)",  // bg-red-100
+                  borderRadius: "0.5rem",
+                  padding: "2rem",
+                  width: "24rem",
+                  maxWidth: "90%",
+                  boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+                  position: "relative",
+                  zIndex: 50
                 },
+                closeButton: true,
+                closeOnClick: true
               }
             );
           }
@@ -1679,37 +1604,30 @@ const DataTable = ({
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error(
-          <div style={{ textAlign: "center" }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                marginBottom: "8px",
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                style={{ width: "48px", height: "48px", color: "red" }}
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-                <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-              </svg>
+          <div className="flex flex-col items-center space-y-4">
+            <div className="animate-bounce">
+              <FaExclamationCircle className="text-red-500 text-5xl" />
             </div>
-
-            <h3 style={{ fontSize: "1.75rem", display: "block" }}>
-              NIP tidak ditemukan, silahkan melakukan sinkronisasi dahulu.
-            </h3>
+            <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
+            <div className="text-red-800 text-center">
+              NIP tidak ditemukan. Silahkan sinkronisasi dulu.
+            </div>
           </div>,
           {
-            icon: false,
-            duration: 2000,
+            icon: null,
+            duration: 3000,
             style: {
-              borderRadius: "10px",
-              background: "white",
-              padding: "16px",
+              background: "rgb(254, 226, 226)",  // bg-red-100
+              borderRadius: "0.5rem",
+              padding: "2rem",
+              width: "24rem",
+              maxWidth: "90%",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+              position: "relative",
+              zIndex: 50
             },
+            closeButton: true,
+            closeOnClick: true
           }
         );
       }
@@ -1725,53 +1643,30 @@ const DataTable = ({
       await GlobalApi.pensiunAnggota(anggotaId);
       setPopupVisible(false);
       toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <h3
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Anggota berhasil Pensiun!
-          </h3>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            <FaCheckCircle className="text-green-500 text-5xl" />
+          </div>
+          <h4 className="text-xl font-bold text-green-800">Berhasil!</h4>
+          <div className="text-green-800 text-center">
+            Anggota berhasil dipensiunkan.
+          </div>
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 3000,
           style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            background: "rgb(220, 252, 231)",  // bg-green-100
+            borderRadius: "0.5rem",
+            padding: "2rem",
+            width: "24rem",
+            maxWidth: "90%",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            position: "relative",
+            zIndex: 50
           },
+          closeButton: true,
+          closeOnClick: true
         }
       );
       setTimeout(() => {
@@ -1779,57 +1674,30 @@ const DataTable = ({
       }, 3000);
     } catch (error) {
       toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Gagal pensiun anggota.
-          </h3>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            <FaExclamationCircle className="text-red-500 text-5xl" />
+          </div>
+          <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
+          <div className="text-red-800 text-center">
+            Gagal pensiunkan anggota.
+          </div>
         </div>,
         {
           icon: null,
-          duration: 4000,
+          duration: 3000,
           style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            background: "rgb(254, 226, 226)",  // bg-red-100
+            borderRadius: "0.5rem",
+            padding: "2rem",
+            width: "24rem",
+            maxWidth: "90%",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            position: "relative",
+            zIndex: 50
           },
+          closeButton: true,
+          closeOnClick: true
         }
       );
       setTimeout(() => {
@@ -1851,57 +1719,30 @@ const DataTable = ({
 
       if (!anggotaId) {
         toast.error(
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                width: "150px",
-                height: "150px",
-                color: "red",
-                marginBottom: "16px",
-              }}
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-            </svg>
-            <h3
-              style={{
-                fontSize: "1.75rem",
-                display: "block",
-                marginBottom: "8px",
-              }}
-            >
-              ID Anggota tidak ditemukan.
-            </h3>
+          <div className="flex flex-col items-center space-y-4">
+            <div className="animate-bounce">
+              <FaExclamationCircle className="text-red-500 text-5xl" />
+            </div>
+            <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
+            <div className="text-red-800 text-center">
+              ID anggota tidak ditemukan.
+            </div>
           </div>,
           {
             icon: null,
-            duration: 2000,
+            duration: 3000,
             style: {
-              marginTop: "12%",
-              fontSize: "1.75rem",
-              padding: "10px",
-              width: "80%",
-              maxWidth: "450px",
-              height: "50%",
-              maxHeight: "400px",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 9999,
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              background: "rgb(254, 226, 226)",  // bg-red-100
+              borderRadius: "0.5rem",
+              padding: "2rem",
+              width: "24rem",
+              maxWidth: "90%",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+              position: "relative",
+              zIndex: 50
             },
+            closeButton: true,
+            closeOnClick: true
           }
         );
         return;
@@ -1910,53 +1751,30 @@ const DataTable = ({
       const result = await GlobalApi.keluarAnggota(anggotaId);
 
       toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <h3
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Data Anggota Berhasil Dihapus!
-          </h3>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            <FaCheckCircle className="text-green-500 text-5xl" />
+          </div>
+          <h4 className="text-xl font-bold text-green-800">Berhasil!</h4>
+          <div className="text-green-800 text-center">
+            Data Anggota Berhasil Dihapus.
+          </div>
         </div>,
         {
           icon: null,
-          duration: 2000,
+          duration: 3000,
           style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            background: "rgb(220, 252, 231)",  // bg-green-100
+            borderRadius: "0.5rem",
+            padding: "2rem",
+            width: "24rem",
+            maxWidth: "90%",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            position: "relative",
+            zIndex: 50
           },
+          closeButton: true,
+          closeOnClick: true
         }
       );
 
@@ -1970,57 +1788,30 @@ const DataTable = ({
     } catch (error) {
       console.error("Gagal Menghapus Data:", error);
       toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Gagal pensiun anggota.
-          </h3>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            <FaExclamationCircle className="text-red-500 text-5xl" />
+          </div>
+          <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
+          <div className="text-red-800 text-center">
+            Gagal menghapus data anggota. Silahkan coba lagi.
+          </div>
         </div>,
         {
           icon: null,
-          duration: 2000,
+          duration: 3000,
           style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            background: "rgb(254, 226, 226)",  // bg-red-100
+            borderRadius: "0.5rem",
+            padding: "2rem",
+            width: "24rem",
+            maxWidth: "90%",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            position: "relative",
+            zIndex: 50
           },
+          closeButton: true,
+          closeOnClick: true
         }
       );
     }
@@ -2032,57 +1823,30 @@ const DataTable = ({
 
       if (!anggotaId) {
         toast.error(
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                width: "150px",
-                height: "150px",
-                color: "red",
-                marginBottom: "16px",
-              }}
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-            </svg>
-            <h3
-              style={{
-                fontSize: "1.75rem",
-                display: "block",
-                marginBottom: "8px",
-              }}
-            >
-              ID Anggota tidak ditemukan.
-            </h3>
+          <div className="flex flex-col items-center space-y-4">
+            <div className="animate-bounce">
+              <FaExclamationCircle className="text-red-500 text-5xl" />
+            </div>
+            <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
+            <div className="text-red-800 text-center">
+              ID anggota tidak ditemukan.
+            </div>
           </div>,
           {
             icon: null,
-            duration: 2000,
+            duration: 3000,
             style: {
-              marginTop: "12%",
-              fontSize: "1.75rem",
-              padding: "10px",
-              width: "80%",
-              maxWidth: "450px",
-              height: "50%",
-              maxHeight: "400px",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 9999,
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              background: "rgb(254, 226, 226)",  // bg-red-100
+              borderRadius: "0.5rem",
+              padding: "2rem",
+              width: "24rem",
+              maxWidth: "90%",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+              position: "relative",
+              zIndex: 50
             },
+            closeButton: true,
+            closeOnClick: true
           }
         );
         return;
@@ -2091,53 +1855,30 @@ const DataTable = ({
       const result = await GlobalApi.deleteUser(anggotaId);
 
       toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <h3
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Data Anggota Berhasil Dihapus!
-          </h3>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            <FaCheckCircle className="text-green-500 text-5xl" />
+          </div>
+          <h4 className="text-xl font-bold text-green-800">Berhasil!</h4>
+          <div className="text-green-800 text-center">
+            Data Anggota Berhasil Dihapus.
+          </div>
         </div>,
         {
           icon: null,
-          duration: 2000,
+          duration: 3000,
           style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            background: "rgb(220, 252, 231)",  // bg-green-100
+            borderRadius: "0.5rem",
+            padding: "2rem",
+            width: "24rem",
+            maxWidth: "90%",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            position: "relative",
+            zIndex: 50
           },
+          closeButton: true,
+          closeOnClick: true
         }
       );
 
@@ -2151,57 +1892,30 @@ const DataTable = ({
     } catch (error) {
       console.error("Gagal Menghapus Data:", error);
       toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Gagal pensiun anggota.
-          </h3>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            <FaExclamationCircle className="text-red-500 text-5xl" />
+          </div>
+          <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
+          <div className="text-red-800 text-center">
+            Gagal menghapus data anggota. Silahkan coba lagi.
+          </div>
         </div>,
         {
           icon: null,
-          duration: 2000,
+          duration: 3000,
           style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            background: "rgb(254, 226, 226)",  // bg-red-100
+            borderRadius: "0.5rem",
+            padding: "2rem",
+            width: "24rem",
+            maxWidth: "90%",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            position: "relative",
+            zIndex: 50
           },
+          closeButton: true,
+          closeOnClick: true
         }
       );
     }
@@ -2254,53 +1968,30 @@ const DataTable = ({
 
       const response = await GlobalApi.activasiUser(anggotaId);
       toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <h3
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Anggota Berhasil Diaktifkan!
-          </h3>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            <FaCheckCircle className="text-green-500 text-5xl" />
+          </div>
+          <h4 className="text-xl font-bold text-green-800">Berhasil!</h4>
+          <div className="text-green-800 text-center">
+            Anggota Berhasil Diaktifkan.
+          </div>
         </div>,
         {
           icon: null,
-          duration: 2000,
+          duration: 3000,
           style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            background: "rgb(220, 252, 231)",  // bg-green-100
+            borderRadius: "0.5rem",
+            padding: "2rem",
+            width: "24rem",
+            maxWidth: "90%",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            position: "relative",
+            zIndex: 50
           },
+          closeButton: true,
+          closeOnClick: true
         }
       );
       setTimeout(() => {
@@ -2309,57 +2000,30 @@ const DataTable = ({
     } catch (error) {
       console.error("Error fetching cabang:", error);
       toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Anggota Gagal Diaktifkan.
-          </h3>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            <FaExclamationCircle className="text-red-500 text-5xl" />
+          </div>
+          <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
+          <div className="text-red-800 text-center">
+            Anggota gagal diaktifkan.
+          </div>
         </div>,
         {
           icon: null,
-          duration: 5000,
+          duration: 3000,
           style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            background: "rgb(254, 226, 226)",  // bg-red-100
+            borderRadius: "0.5rem",
+            padding: "2rem",
+            width: "24rem",
+            maxWidth: "90%",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            position: "relative",
+            zIndex: 50
           },
+          closeButton: true,
+          closeOnClick: true
         }
       );
     }

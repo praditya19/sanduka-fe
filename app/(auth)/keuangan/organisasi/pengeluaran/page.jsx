@@ -7,12 +7,85 @@ import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 function Pengeluaran() {
   const tableRef = useRef();
@@ -75,6 +148,7 @@ function Pengeluaran() {
   const [checkedIds, setCheckedIds] = useState([]);
   const [saldoMap, setSaldoMap] = useState({});
   const [totalSaldo, setTotalSaldo] = useState(0);
+  const [notification, setNotification] = useState(null);
 
   const getBulanAngka = (bulanNama) => {
     const bulanObj = bulanList.find((bulan) => bulan.namaBulan === bulanNama);
@@ -119,118 +193,18 @@ function Pengeluaran() {
     };
     try {
       const response = await GlobalApi.createPembayaranSanduka(dataToSend);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "2rem",
-              display: "block",
-              marginBottom: "28px",
-            }}
-          >
-            Data berhasil dikirim!{" "}
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Data berhasil dikirim!`,
+      });
       setTimeout(() => {
         window.location.reload();
       }, 200);
     } catch (error) {
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              color: "black",
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Gagal Menyimpan Data.
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: `Gagal menyimpan data!`,
+      });
     }
   };
 
@@ -385,77 +359,75 @@ function Pengeluaran() {
         </thead>
         <tbody>
           ${sortedTransactions
-            .filter((transaction) => transaction.tglTransaksi)
-            .map(
-              (transaction, index) => `
-              <tr class="border-b text-black text-center ${
-                transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
-              }">
+        .filter((transaction) => transaction.tglTransaksi)
+        .map(
+          (transaction, index) => `
+              <tr class="border-b text-black text-center ${transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
+            }">
                 <td class="px-6 py-4 text-sm">${index + 1}</td>
                 <td class="px-6 py-4 text-sm">${transaction.tglTransaksi}</td>
                 <td class="px-6 py-4 text-sm">${transaction.noBukti}</td>
                 <td class="px-6 py-4 text-sm">${transaction.uraian}</td>
                 <td class="px-6 py-4 text-sm">
                   ${formatCurrency(
-                    transaction.uraian === "Saldo Awal"
-                      ? Number(newSelectedYear) === 2021 &&
-                        Number(selectedBulan) === 3
-                        ? parseFloat(transaction.debet.replace(",", "")) || 0
-                        : 0
-                      : parseFloat(transaction.debet.replace(",", "")) || 0
-                  )}
+              transaction.uraian === "Saldo Awal"
+                ? Number(newSelectedYear) === 2021 &&
+                  Number(selectedBulan) === 3
+                  ? parseFloat(transaction.debet.replace(",", "")) || 0
+                  : 0
+                : parseFloat(transaction.debet.replace(",", "")) || 0
+            )}
                 </td>
                 <td class="px-6 py-4 text-sm">
                   ${formatCurrency(
-                    parseFloat(transaction.kredit.replace(",", "")) || 0
-                  )}
+              parseFloat(transaction.kredit.replace(",", "")) || 0
+            )}
                 </td>
                 <td class="px-6 py-4 text-sm">
-                  ${
-                    saldoMap[index]
-                      ? saldoMap[index].toLocaleString("id-ID", {
-                          minimumFractionDigits: 0,
-                        })
-                      : 0
-                  }
+                  ${saldoMap[index]
+              ? saldoMap[index].toLocaleString("id-ID", {
+                minimumFractionDigits: 0,
+              })
+              : 0
+            }
                 </td>
               </tr>
             `
-            )
-            .join("")}
+        )
+        .join("")}
           <tr class="bg-gray-200 text-base text-black text-center font-bold">
             <td class="px-6 py-4 text-left" colSpan="4">TOTAL</td>
             <td class="px-6 py-4 text-sm">
               ${formatCurrency(
-                transactions.reduce((total, transaction) => {
-                  const isSaldoAwal = transaction.uraian === "Saldo Awal";
-                  const isMaret2021 =
-                    Number(newSelectedYear) === 2021 &&
-                    Number(selectedBulan) === 3;
-                  const debet =
-                    isSaldoAwal && !isMaret2021
-                      ? 0
-                      : Math.floor(
-                          parseFloat(transaction.debet.replace(",")) || 0
-                        );
-                  return total + debet;
-                }, 0)
-              )}
+          transactions.reduce((total, transaction) => {
+            const isSaldoAwal = transaction.uraian === "Saldo Awal";
+            const isMaret2021 =
+              Number(newSelectedYear) === 2021 &&
+              Number(selectedBulan) === 3;
+            const debet =
+              isSaldoAwal && !isMaret2021
+                ? 0
+                : Math.floor(
+                  parseFloat(transaction.debet.replace(",")) || 0
+                );
+            return total + debet;
+          }, 0)
+        )}
             </td>
             <td class="px-6 py-4 text-sm">
               ${formatCurrency(
-                transactions.reduce((total, transaction) => {
-                  const kredit = Math.floor(
-                    parseFloat(transaction.kredit.replace(",", "")) || 0
-                  );
-                  return total + kredit;
-                }, 0)
-              )}
+          transactions.reduce((total, transaction) => {
+            const kredit = Math.floor(
+              parseFloat(transaction.kredit.replace(",", "")) || 0
+            );
+            return total + kredit;
+          }, 0)
+        )}
             </td>
             <td class="px-6 py-4 text-sm">
               ${totalSaldo.toLocaleString("id-ID", {
-                minimumFractionDigits: 0,
-              })}
+          minimumFractionDigits: 0,
+        })}
             </td>
             <td class="px-6 py-4 text-sm"></td>
           </tr>
@@ -565,8 +537,8 @@ function Pengeluaran() {
 
     const updatedCheckedIds = newSelectAll
       ? transactions
-          .filter((transaction) => transaction.uraian !== "Saldo Awal")
-          .map((transaction) => transaction.id)
+        .filter((transaction) => transaction.uraian !== "Saldo Awal")
+        .map((transaction) => transaction.id)
       : [];
 
     setCheckedIds(updatedCheckedIds);
@@ -598,7 +570,10 @@ function Pengeluaran() {
             )
           );
 
-          toast.success("Data berhasil dihapus!");
+          setNotification({
+            type: 'success',
+            message: `Data berhasil dihapus!`,
+          });
         }
       }
 
@@ -606,7 +581,10 @@ function Pengeluaran() {
       window.location.reload();
     } catch (error) {
       console.error("Gagal menghapus data dengan ID:", checkedIds, error);
-      toast.error("Terjadi kesalahan saat menghapus data.");
+      setNotification({
+        type: 'error',
+        message: `Terjadi kesalahan saat menghapus data.`,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -628,13 +606,19 @@ function Pengeluaran() {
           )
         );
 
-        toast.success("Data berhasil dihapus!");
+        setNotification({
+          type: 'success',
+          message: `Data berhasil dihapus!`,
+        });
       }
       await new Promise((resolve) => setTimeout(resolve, 1000));
       window.location.reload();
     } catch (error) {
       console.error("Gagal menghapus data dengan ID:", id, error);
-      toast.error("Terjadi kesalahan saat menghapus data.");
+      setNotification({
+        type: 'error',
+        message: `Terjadi kesalahan saat menghapus data.`,
+      });
     } finally {
       setLoadingId(null);
     }
@@ -711,119 +695,19 @@ function Pengeluaran() {
         editId,
         updatedFormValues
       );
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "2rem",
-              display: "block",
-              marginBottom: "28px",
-            }}
-          >
-            Data berhasil diupdate!
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Data berhasil diupdate!`,
+      });
       setTimeout(() => {
         window.location.reload();
       }, 2000);
     } catch (error) {
       console.error("Gagal mengedit data:", error);
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              color: "black",
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Gagal mengupdate data. Coba lagi!
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Gagal mengupdate data!`,
+      });
     }
   };
 
@@ -933,9 +817,8 @@ function Pengeluaran() {
     if (number < 10) return satuan[number];
     if (number < 20) return belasan[number - 10];
     if (number < 100)
-      return `${satuan[Math.floor(number / 10)]} puluh ${
-        satuan[number % 10]
-      }`.trim();
+      return `${satuan[Math.floor(number / 10)]} puluh ${satuan[number % 10]
+        }`.trim();
 
     if (number < 1000)
       return `${satuan[Math.floor(number / 100)]} ratus ${convertToTerbilang(
@@ -1374,30 +1257,16 @@ function Pengeluaran() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
-          <Toaster
-            toastOptions={{
-              style: {
-                fontSize: "1.25rem",
-                padding: "16px",
-              },
-              success: {
-                style: {
-                  background: "white",
-                  color: "black",
-                },
-              },
-              error: {
-                style: {
-                  background: "#f44336",
-                  color: "#fff",
-                },
-              },
-            }}
-          />
+          {notification && (
+            <NotificationPopup
+              type={notification.type}
+              message={notification.message}
+              onClose={() => setNotification(null)}
+            />
+          )}
           <div className="container mx-auto p-6">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
               <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
@@ -1783,11 +1652,10 @@ function Pengeluaran() {
                     .map((transaction, index) => (
                       <tr
                         key={transaction.id}
-                        className={`border-b text-black text-center ${
-                          transaction.checked
+                        className={`border-b text-black text-center ${transaction.checked
                             ? "bg-gray-100"
                             : "hover:bg-gray-50"
-                        }`}
+                          }`}
                       >
                         <td className="px-6 py-4 text-sm">{index + 1}</td>
                         <td className="px-6 py-4 text-sm">
@@ -1833,7 +1701,7 @@ function Pengeluaran() {
                               className="form-checkbox h-4 w-4"
                               checked={transaction.checked}
                               onChange={() => handleCheck(transaction.id)}
-                              // disabled={transaction.uraian === "Saldo Awal"}
+                            // disabled={transaction.uraian === "Saldo Awal"}
                             />
                             <Button
                               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
@@ -1842,11 +1710,10 @@ function Pengeluaran() {
                               Edit
                             </Button>
                             <button
-                              className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center ${
-                                transaction.uraian === "Saldo Awal"
+                              className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center ${transaction.uraian === "Saldo Awal"
                                   ? "opacity-50 cursor-not-allowed"
                                   : ""
-                              }`}
+                                }`}
                               onClick={() =>
                                 handleDeleteClickId(transaction.id)
                               }

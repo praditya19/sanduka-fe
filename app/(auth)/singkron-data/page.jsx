@@ -7,11 +7,84 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Input } from "@/components/ui/input";
 import toast, { Toaster } from "react-hot-toast";
 import Modal from "react-modal";
+
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-[9999]">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-[9999] w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const SyncData = () => {
   const [cabangList, setCabangList] = useState([]);
@@ -52,6 +125,7 @@ const SyncData = () => {
   const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
   const [expandedRow, setExpandedRow] = useState(null);
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
     const storedRole = sessionStorage.getItem("role");
@@ -368,129 +442,25 @@ const SyncData = () => {
 
       try {
         const response = await GlobalApi.uploadFile(dataToSend);
-        toast.success(
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                width: "150px",
-                height: "150px",
-                color: "#06D001",
-                marginBottom: "16px",
-                marginTop: "14px",
-              }}
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-            </svg>
-            <h3
-              style={{
-                fontSize: "2rem",
-                display: "block",
-                marginBottom: "28px",
-              }}
-            >
-              File Berhasil Dikirim!
-            </h3>
-          </div>,
-          {
-            icon: null,
-            duration: 4000,
-            style: {
-              marginTop: "12%",
-              fontSize: "1.75rem",
-              padding: "10px",
-              width: "80%",
-              maxWidth: "450px",
-              height: "50%",
-              maxHeight: "400px",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 9999,
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            },
-          }
-        );
+        setNotification({
+          type: 'success',
+          message: `File berhasil dikirim!`,
+        });
       } catch (error) {
         setIsUploading(false);
-        toast.error(
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                width: "150px",
-                height: "150px",
-                color: "#D0011B",
-                marginBottom: "16px",
-                marginTop: "14px",
-              }}
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-            </svg>
-            <h3
-              style={{
-                fontSize: "2rem",
-                display: "block",
-                marginBottom: "28px",
-              }}
-            >
-              File Gagal Dikirim!
-            </h3>
-          </div>,
-          {
-            icon: null,
-            duration: 4000,
-            style: {
-              marginTop: "12%",
-              fontSize: "1.75rem",
-              padding: "10px",
-              width: "80%",
-              maxWidth: "450px",
-              height: "50%",
-              maxHeight: "400px",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 9999,
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            },
-          }
-        );
+        setNotification({
+          type: 'error',
+          message: `File Gagal dikirim!`,
+        });
         console.error(
           "Error submitting data:",
           error.response?.data || error.message
         );
       }
     } else {
-      toast.error("Format file tidak sesuai. Harap unggah file Excel!", {
-        duration: 3000,
-        style: {
-          fontSize: "1rem",
-          backgroundColor: "#D0011B",
-          color: "#fff",
-        },
+      setNotification({
+        type: 'error',
+        message: `Format file tidak sesuai. Harap upload file Excel!.`,
       });
     }
 
@@ -831,115 +801,19 @@ const SyncData = () => {
   const handleDeleteClick = async (id) => {
     try {
       if (!id) {
-        toast.error(
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                width: "48px",
-                height: "48px",
-                color: "red",
-                marginBottom: "16px",
-              }}
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-              <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-            </svg>
-            <strong
-              style={{
-                fontSize: "1.75rem",
-                display: "block",
-                marginBottom: "8px",
-              }}
-            >
-              Id tidak ditemukan.
-            </strong>
-          </div>,
-          {
-            icon: null,
-            duration: 2000,
-            style: {
-              marginTop: "16%",
-              fontSize: "1.75rem",
-              padding: "10px",
-              width: "80%",
-              maxWidth: "700px",
-              height: "50%",
-              maxHeight: "400px",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 9999,
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            },
-          }
-        );
+        setNotification({
+          type: 'error',
+          message: `Id tidak ditemukan!`,
+        });
         return;
       }
 
       const result = await GlobalApi.deleteFiles(id);
 
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            File Berhasil Dihapus!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          autoClose: 3000,
-          duration: 3000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `File berhasil dihapus!`,
+      });
 
       setTimeout(() => {
         window.location.reload();
@@ -949,61 +823,10 @@ const SyncData = () => {
         setIsPopupVisible(false);
       }, 3000);
     } catch (error) {
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "48px",
-              height: "48px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <strong
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Gagal Menghapus Data.
-          </strong>
-        </div>,
-        {
-          icon: null,
-          autoClose: 3000,
-          duration: 3000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Gagal menghapus file!`,
+      });
     }
   };
 
@@ -1039,37 +862,13 @@ const SyncData = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      <Toaster
-        toastOptions={{
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-          success: {
-            style: {
-              background: "white",
-              color: "black",
-            },
-          },
-          error: {
-            style: {
-              background: "white",
-              color: "black",
-            },
-          },
-        }}
-      />
+      {notification && (
+        <NotificationPopup
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
       {isMobile ? (
         <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
           <div className="container mx-auto flex items-center justify-between">

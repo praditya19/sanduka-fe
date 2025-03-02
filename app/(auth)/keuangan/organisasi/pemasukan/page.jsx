@@ -7,9 +7,82 @@ import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
+
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 function Pemasukan() {
   const tableRef = useRef();
@@ -48,6 +121,7 @@ function Pemasukan() {
   const [allIds, setAllIds] = useState([]);
   const [totalIuran, setTotalIuran] = useState(0);
   const [totalPerhitungan, setTotalPerhitungan] = useState(0);
+  const [notification, setNotification] = useState(null);
   const [formValues, setFormValues] = useState({
     tanggalTransaksi: "",
     posTransaksi: "",
@@ -65,11 +139,11 @@ function Pemasukan() {
     checked: false,
     totalAnggotaByAdmin: "",
     totalSumbangan: "",
-  }); 
+  });
 
   const handleChange = async (e) => {
     const { name, value } = e.target;
-  
+
     if (name === "nominal") {
       const numericValue = value.replace(/[^\d]/g, "");
       setFormValues((prevValues) => ({
@@ -81,29 +155,29 @@ function Pemasukan() {
         ...prevValues,
         [name]: value,
       }));
-  
+
       // Jika yang dipilih adalah "Iuran PGRI"
       if (name === "posTransaksi" && value === "Iuran PGRI") {
         try {
           const response = await GlobalApi.getDefaultIuranById(2);
-  
+
           // Hitung totalIuran dari response yang didapat
           const total =
             parseInt(response.pb) +
             parseInt(response.propinsi) +
             parseInt(response.kabupaten) +
             parseInt(response.cabang);
-  
+
           // Update state totalIuran dengan total yang sudah dihitung
           setTotalIuran(total);
           console.log("Total Iuran PGRI:", total);
-  
+
           // Setelah mendapatkan total, hitung dengan totalAnggotaByAdmin
           if (formValues.totalAnggotaByAdmin) {
             const anggota = parseInt(formValues.totalAnggotaByAdmin) || 0;
             const totalPerhitungan = total * anggota;
             setTotalPerhitungan(totalPerhitungan);  // Menyimpan hasil perhitungan di state
-  
+
             // Update nilai nominal dengan totalPerhitungan
             setFormValues((prevValues) => ({
               ...prevValues,
@@ -114,13 +188,13 @@ function Pemasukan() {
           console.error("Gagal mengambil data iuran:", error);
         }
       }
-  
+
       // Jika terjadi perubahan pada input totalAnggotaByAdmin
       if (name === "totalAnggotaByAdmin") {
         const anggota = parseInt(value) || 0;
         const totalPerhitungan = totalIuran * anggota;
         setTotalPerhitungan(totalPerhitungan);  // Update totalPerhitungan saat input berubah
-  
+
         // Update nilai nominal dengan totalPerhitungan
         setFormValues((prevValues) => ({
           ...prevValues,
@@ -128,8 +202,8 @@ function Pemasukan() {
         }));
       }
     }
-  };  
-  
+  };
+
   useEffect(() => {
     const currentMonthIndex = new Date().getMonth();
     const currentBulan = bulanList.find(
@@ -184,77 +258,75 @@ function Pemasukan() {
         </thead>
         <tbody>
           ${sortedTransactions
-            .filter((transaction) => transaction.tglTransaksi)
-            .map(
-              (transaction, index) => `
-              <tr class="border-b text-black text-center ${
-                transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
-              }">
+        .filter((transaction) => transaction.tglTransaksi)
+        .map(
+          (transaction, index) => `
+              <tr class="border-b text-black text-center ${transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
+            }">
                 <td class="px-6 py-4 text-sm">${index + 1}</td>
                 <td class="px-6 py-4 text-sm">${transaction.tglTransaksi}</td>
                 <td class="px-6 py-4 text-sm">${transaction.noBukti}</td>
                 <td class="px-6 py-4 text-sm">${transaction.uraian}</td>
                 <td class="px-6 py-4 text-sm">
                   ${formatCurrency(
-                    transaction.uraian === "Saldo Awal"
-                      ? Number(newSelectedYear) === 2021 &&
-                        Number(selectedBulan) === 3
-                        ? parseFloat(transaction.debet.replace(",", "")) || 0
-                        : 0
-                      : parseFloat(transaction.debet.replace(",", "")) || 0
-                  )}
+              transaction.uraian === "Saldo Awal"
+                ? Number(newSelectedYear) === 2021 &&
+                  Number(selectedBulan) === 3
+                  ? parseFloat(transaction.debet.replace(",", "")) || 0
+                  : 0
+                : parseFloat(transaction.debet.replace(",", "")) || 0
+            )}
                 </td>
                 <td class="px-6 py-4 text-sm">
                   ${formatCurrency(
-                    parseFloat(transaction.kredit.replace(",", "")) || 0
-                  )}
+              parseFloat(transaction.kredit.replace(",", "")) || 0
+            )}
                 </td>
                 <td class="px-6 py-4 text-sm">
-                  ${
-                    saldoMap[index]
-                      ? saldoMap[index].toLocaleString("id-ID", {
-                          minimumFractionDigits: 0,
-                        })
-                      : 0
-                  }
+                  ${saldoMap[index]
+              ? saldoMap[index].toLocaleString("id-ID", {
+                minimumFractionDigits: 0,
+              })
+              : 0
+            }
                 </td>
               </tr>
             `
-            )
-            .join("")}
+        )
+        .join("")}
           <tr class="bg-gray-200 text-base text-black text-center font-bold">
             <td class="px-6 py-4 text-left" colSpan="4">TOTAL</td>
             <td class="px-6 py-4 text-sm">
               ${formatCurrency(
-                transactions.reduce((total, transaction) => {
-                  const isSaldoAwal = transaction.uraian === "Saldo Awal";
-                  const isMaret2021 =
-                    Number(newSelectedYear) === 2021 &&
-                    Number(selectedBulan) === 3;
-                  const debet =
-                    isSaldoAwal && !isMaret2021
-                      ? 0
-                      : Math.floor(
-                          parseFloat(transaction.debet.replace(",")) || 0
-                        );
-                  return total + debet;
-                }, 0)
-              )}
+          transactions.reduce((total, transaction) => {
+            const isSaldoAwal = transaction.uraian === "Saldo Awal";
+            const isMaret2021 =
+              Number(newSelectedYear) === 2021 &&
+              Number(selectedBulan) === 3;
+            const debet =
+              isSaldoAwal && !isMaret2021
+                ? 0
+                : Math.floor(
+                  parseFloat(transaction.debet.replace(",")) || 0
+                );
+            return total + debet;
+          }, 0)
+        )}
             </td>
             <td class="px-6 py-4 text-sm">
               ${formatCurrency(
-                transactions.reduce((total, transaction) => {
-                  const kredit = Math.floor(
-                    parseFloat(transaction.kredit.replace(",", "")) || 0
-                  );
-                  return total + kredit;
-                }, 0)
-              )}
+          transactions.reduce((total, transaction) => {
+            const kredit = Math.floor(
+              parseFloat(transaction.kredit.replace(",", "")) || 0
+            );
+            return total + kredit;
+          }, 0)
+        )}
             </td>
             <td class="px-6 py-4 text-sm">
               ${totalSaldo.toLocaleString("id-ID", {
-                minimumFractionDigits: 0,
-              })}
+          minimumFractionDigits: 0,
+        })}
             </td>
             <td class="px-6 py-4 text-sm"></td>
           </tr>
@@ -512,7 +584,7 @@ function Pemasukan() {
       try {
         const response = await GlobalApi.getCabang();
         setCabangList(response.data);
-      } catch (error) {}
+      } catch (error) { }
     };
 
     fetchCabangData();
@@ -531,115 +603,16 @@ function Pemasukan() {
     try {
       const response = await GlobalApi.sendSesuaiJumlahTarget(requestData);
       if (response && response.data) {
-        toast.success(
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                width: "150px",
-                height: "150px",
-                color: "#06D001",
-                marginBottom: "16px",
-              }}
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-            </svg>
-            <h3
-              style={{
-                fontSize: "2rem",
-                display: "block",
-                marginBottom: "28px",
-              }}
-            >
-              Data berhasil dikirim!
-            </h3>
-          </div>,
-          {
-            icon: null,
-            duration: 2000,
-            style: {
-              marginTop: "12%",
-              fontSize: "1.75rem",
-              padding: "10px",
-              width: "80%",
-              maxWidth: "450px",
-              height: "50%",
-              maxHeight: "400px",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              zIndex: 9999,
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-            },
-          }
-        );
+        setNotification({
+          type: 'success',
+          message: `Data berhasil dikirim!`,
+        });
       }
     } catch (error) {
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Terjadi kesalahan saat mengirim data.
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: `Terjadi kesalahan saat mengirim data.`,
+      });
     }
   };
 
@@ -647,17 +620,17 @@ function Pemasukan() {
     e.preventDefault();
     try {
       let dataToSend;
-  
+
       // Cek jika posTransaksi adalah 'Saldo Awal'
       if (formValues.posTransaksi === "Saldo Awal") {
         dataToSend = {
           tanggalTransaksi: formValues.tanggalTransaksi,
           posTransaksi: "Saldo Awal", // Menggunakan "Saldo Awal" secara eksplisit
           masukKe: formValues.jenisPenerimaan, // Bisa disesuaikan
-          debet: formValues.nominal, 
-          jenisPembayaran: "Organisasi", 
+          debet: formValues.nominal,
+          jenisPembayaran: "Organisasi",
         };
-  
+
         // Memanggil API createSaldoAwal
         const response = await GlobalApi.createSaldoAwal(dataToSend);
       } else {
@@ -679,126 +652,26 @@ function Pemasukan() {
           totalSumbangan: formValues.totalSumbangan,
           totalAnggotaByAdmin: formValues.totalAnggotaByAdmin,
         };
-  
+
         // Memanggil API createPembayaranSanduka
         const response = await GlobalApi.createPembayaranSanduka(dataToSend);
       }
-  
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "2rem",
-              display: "block",
-              marginBottom: "28px",
-            }}
-          >
-            Data berhasil disimpan!
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
-  
+
+      setNotification({
+        type: 'success',
+        message: `Data berhasil disimpan!`,
+      });
+
       setTimeout(() => {
         window.location.reload();
       }, 2500);
     } catch (error) {
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-              color: "black",
-            }}
-          >
-            Gagal Menyimpan Data.
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: `Gagal menyimpan data!`,
+      });
     }
-  }; 
+  };
 
   const handleReset = () => {
     setFormValues({
@@ -828,8 +701,8 @@ function Pemasukan() {
 
     const updatedCheckedIds = newSelectAll
       ? transactions
-          .filter((transaction) => transaction.uraian !== "Saldo Awal")
-          .map((transaction) => transaction.id)
+        .filter((transaction) => transaction.uraian !== "Saldo Awal")
+        .map((transaction) => transaction.id)
       : [];
 
     setCheckedIds(updatedCheckedIds);
@@ -861,7 +734,10 @@ function Pemasukan() {
             )
           );
 
-          toast.success("Data berhasil dihapus!");
+          setNotification({
+            type: 'success',
+            message: `Data berhasil dihapus!`,
+          });
         }
       }
 
@@ -869,7 +745,10 @@ function Pemasukan() {
       window.location.reload();
     } catch (error) {
       console.error("Gagal menghapus data dengan ID:", checkedIds, error);
-      toast.error("Terjadi kesalahan saat menghapus data.");
+      setNotification({
+        type: 'error',
+        message: `Terjadi kesalahan saat menghapus data.`,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -891,14 +770,20 @@ function Pemasukan() {
           )
         );
 
-        toast.success("Data berhasil dihapus!");
+        setNotification({
+          type: 'success',
+          message: `Data berhasil dihapus!`,
+        });
       }
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
       window.location.reload();
     } catch (error) {
       console.error("Gagal menghapus data dengan ID:", id, error);
-      toast.error("Terjadi kesalahan saat menghapus data.");
+      setNotification({
+        type: 'error',
+        message: `Terjadi kesalahan saat menghapus data.`,
+      });
     } finally {
       setLoadingId(null);
     }
@@ -1051,59 +936,10 @@ function Pemasukan() {
         updatedFormValues
       );
 
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "2rem",
-              display: "block",
-              marginBottom: "28px",
-            }}
-          >
-            Data berhasil diupdate!
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Data berhasil diupdate!`,
+      });
       if (data.posTransaksi === "Saldo Awal") {
         console.log(
           "Transaksi 'Saldo Awal' terdeteksi, memperbarui seluruh ID..."
@@ -1112,61 +948,10 @@ function Pemasukan() {
       }
       window.location.reload();
     } catch (error) {
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              color: "black",
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Gagal mengupdate data. Coba lagi!
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: `Gagal mengupdate data. Coba lagi!`,
+      });
       console.error("Gagal mengedit data:", error);
     }
   };
@@ -1246,12 +1031,16 @@ function Pemasukan() {
 
       await Promise.all(promises);
 
-      toast.success(
-        "Semua saldo awal berhasil dihitung! (Tidak dikirim ke database)"
-      );
+      setNotification({
+        type: 'success',
+        message: `Semua saldo awal berhasil dihitung! (Tidak dikirim ke database)`
+      });
       window.location.reload();
     } catch (error) {
-      toast.error("Gagal menghitung dan memperbarui saldo awal. Coba lagi!");
+      setNotification({
+        type: 'error',
+        message: `Gagal menghitung dan memperbarui saldo awal. Coba lagi!`,
+      });
       console.error(
         "Gagal menghitung dan memperbarui semua saldo awal:",
         error
@@ -1326,34 +1115,20 @@ function Pemasukan() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
-          <Toaster
-            toastOptions={{
-              style: {
-                fontSize: "1.25rem",
-                padding: "16px",
-              },
-              success: {
-                style: {
-                  background: "white",
-                  color: "black",
-                },
-              },
-              error: {
-                style: {
-                  background: "#f44336",
-                  color: "#fff",
-                },
-              },
-            }}
-          />
+          {notification && (
+            <NotificationPopup
+              type={notification.type}
+              message={notification.message}
+              onClose={() => setNotification(null)}
+            />
+          )}
           <div className="container mx-auto p-6">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
               <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
-                 PEMASUKAN ORGANISASI
+                PEMASUKAN ORGANISASI
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {/* <div className="flex flex-col">
@@ -1575,13 +1350,13 @@ function Pemasukan() {
                     Nominal
                   </Label>
                   <Input
-  className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-  id="nominal"
-  type="text"
-  name="nominal"
-  value={formatCurrency(formValues.nominal || '')}  // Menampilkan nilai nominal yang sudah diformat
-  onChange={handleChange}
-/>
+                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    id="nominal"
+                    type="text"
+                    name="nominal"
+                    value={formatCurrency(formValues.nominal || '')}  // Menampilkan nilai nominal yang sudah diformat
+                    onChange={handleChange}
+                  />
                 </div>
 
                 <div className="flex flex-col">
@@ -1635,9 +1410,8 @@ function Pemasukan() {
               </div>
               <div className="flex items-center mt-6 justify-center gap-6">
                 <Button
-                  className={`bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
-                    formValues.nominal ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  className={`bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${formValues.nominal ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                   onClick={handleSubmitAll}
                   disabled={Boolean(formValues.nominal)}
                 >
@@ -1784,44 +1558,43 @@ function Pemasukan() {
               </div>
             </div>
 
-             <div ref={tableRef} className="overflow-x-auto">
-                          <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                            <thead className="text-sm text-black uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
-                              <tr className="bg-gray-200 text-black text-center">
-                                <th className="px-6 py-3 text-sm">No</th>
-                                <th className="px-6 py-3 text-sm">Tgl Transaksi</th>
-                                <th className="px-6 py-3 text-sm">No. Bukti</th>
-                                <th className="px-6 py-3 text-sm">Uraian</th>
-                                <th className="px-6 py-3 text-sm">Debet</th>
-                                <th className="px-6 py-3 text-sm">Kredit</th>
-                                <th className="px-6 py-3 text-sm">Saldo</th>
-                                <th className="px-6 py-3 text-sm">Action</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {sortedTransactions
-                                .filter((transaction) => transaction.tglTransaksi)
-                                .map((transaction, index) => (
-                                  <tr
-                                    key={transaction.id}
-                                    className={`border-b text-black text-center ${
-                                      transaction.checked
-                                        ? "bg-gray-100"
-                                        : "hover:bg-gray-50"
-                                    }`}
-                                  >
-                                    <td className="px-6 py-4 text-sm">{index + 1}</td>
-                                    <td className="px-6 py-4 text-sm">
-                                      {transaction.tglTransaksi}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm">
-                                      {transaction.noBukti}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm">
-                                      {transaction.uraian}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm">
-                                      {/* {formatCurrency(
+            <div ref={tableRef} className="overflow-x-auto">
+              <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead className="text-sm text-black uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
+                  <tr className="bg-gray-200 text-black text-center">
+                    <th className="px-6 py-3 text-sm">No</th>
+                    <th className="px-6 py-3 text-sm">Tgl Transaksi</th>
+                    <th className="px-6 py-3 text-sm">No. Bukti</th>
+                    <th className="px-6 py-3 text-sm">Uraian</th>
+                    <th className="px-6 py-3 text-sm">Debet</th>
+                    <th className="px-6 py-3 text-sm">Kredit</th>
+                    <th className="px-6 py-3 text-sm">Saldo</th>
+                    <th className="px-6 py-3 text-sm">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedTransactions
+                    .filter((transaction) => transaction.tglTransaksi)
+                    .map((transaction, index) => (
+                      <tr
+                        key={transaction.id}
+                        className={`border-b text-black text-center ${transaction.checked
+                            ? "bg-gray-100"
+                            : "hover:bg-gray-50"
+                          }`}
+                      >
+                        <td className="px-6 py-4 text-sm">{index + 1}</td>
+                        <td className="px-6 py-4 text-sm">
+                          {transaction.tglTransaksi}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {transaction.noBukti}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {transaction.uraian}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {/* {formatCurrency(
                                         transaction.uraian === "Saldo Awal"
                                           ? Number(newSelectedYear) === 2021 &&
                                             Number(selectedBulan) === 3
@@ -1833,88 +1606,87 @@ function Pemasukan() {
                                               transaction.debet.replace(",", "")
                                             ) || 0
                                       )} */}
-                                      {formatCurrency(
-                                        parseFloat(transaction.debet.replace(",", "")) || 0
-                                      )}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm">
-                                      {formatCurrency(
-                                        parseFloat(transaction.kredit.replace(",", "")) || 0
-                                      )}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm">
-                                      {saldoMap[index]
-                                        ? formatCurrency(saldoMap[index])
-                                        : formatCurrency(0)}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm">
-                                      <div className="flex items-center space-x-2">
-                                        <Input
-                                          type="checkbox"
-                                          className="form-checkbox h-4 w-4"
-                                          checked={transaction.checked}
-                                          onChange={() => handleCheck(transaction.id)}
-                                          // disabled={transaction.uraian === "Saldo Awal"}
-                                        />
-                                        <Button
-                                          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
-                                          onClick={() => handleGetEdit(transaction.id)}
-                                        >
-                                          Edit
-                                        </Button>
-                                        <button
-                                          className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center ${
-                                            transaction.uraian === "Saldo Awal"
-                                              ? "opacity-50 cursor-not-allowed"
-                                              : ""
-                                          }`}
-                                          onClick={() =>
-                                            handleDeleteClickId(transaction.id)
-                                          }
-                                          disabled={
-                                            transaction.uraian === "Saldo Awal" ||
-                                            loadingId === transaction.id
-                                          }
-                                        >
-                                          {loadingId === transaction.id ? (
-                                            <div className="flex items-center">
-                                              <svg
-                                                className="animate-spin h-5 w-5 text-white mr-2"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                              >
-                                                <circle
-                                                  className="opacity-25"
-                                                  cx="12"
-                                                  cy="12"
-                                                  r="10"
-                                                  stroke="currentColor"
-                                                  strokeWidth="4"
-                                                ></circle>
-                                                <path
-                                                  className="opacity-75"
-                                                  fill="currentColor"
-                                                  d="M4 12a8 8 0 018-8v8H4z"
-                                                ></path>
-                                              </svg>
-                                            </div>
-                                          ) : (
-                                            "Hapus"
-                                          )}
-                                        </button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))}
-                              {/* Baris Total */}
-                              <tr className="bg-gray-200 text-base text-black text-center font-bold">
-                                <td className="px-6 py-4 text-left" colSpan="4">
-                                  TOTAL
-                                </td>
-            
-                                <td className="px-6 py-4 text-sm">
-                                  {/* {formatCurrency(
+                          {formatCurrency(
+                            parseFloat(transaction.debet.replace(",", "")) || 0
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {formatCurrency(
+                            parseFloat(transaction.kredit.replace(",", "")) || 0
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          {saldoMap[index]
+                            ? formatCurrency(saldoMap[index])
+                            : formatCurrency(0)}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              type="checkbox"
+                              className="form-checkbox h-4 w-4"
+                              checked={transaction.checked}
+                              onChange={() => handleCheck(transaction.id)}
+                            // disabled={transaction.uraian === "Saldo Awal"}
+                            />
+                            <Button
+                              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+                              onClick={() => handleGetEdit(transaction.id)}
+                            >
+                              Edit
+                            </Button>
+                            <button
+                              className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center ${transaction.uraian === "Saldo Awal"
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                                }`}
+                              onClick={() =>
+                                handleDeleteClickId(transaction.id)
+                              }
+                              disabled={
+                                transaction.uraian === "Saldo Awal" ||
+                                loadingId === transaction.id
+                              }
+                            >
+                              {loadingId === transaction.id ? (
+                                <div className="flex items-center">
+                                  <svg
+                                    className="animate-spin h-5 w-5 text-white mr-2"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8v8H4z"
+                                    ></path>
+                                  </svg>
+                                </div>
+                              ) : (
+                                "Hapus"
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  {/* Baris Total */}
+                  <tr className="bg-gray-200 text-base text-black text-center font-bold">
+                    <td className="px-6 py-4 text-left" colSpan="4">
+                      TOTAL
+                    </td>
+
+                    <td className="px-6 py-4 text-sm">
+                      {/* {formatCurrency(
                                     transactions.reduce((total, transaction) => {
                                       const isSaldoAwal =
                                         transaction.uraian === "Saldo Awal";
@@ -1934,34 +1706,34 @@ function Pemasukan() {
                                       return total + debet;
                                     }, 0)
                                   )} */}
-                                  {formatCurrency(
-                                    transactions.reduce((total, transaction) => {
-                                      const debet = Math.floor(
-                                        parseFloat(transaction.debet.replace(",", "")) || 0
-                                      );
-                                      return total + debet;
-                                    }, 0)
-                                  )}
-                                </td>
-                                <td className="px-6 py-4 text-sm">
-                                  {formatCurrency(
-                                    transactions.reduce((total, transaction) => {
-                                      const kredit = Math.floor(
-                                        parseFloat(transaction.kredit.replace(",", "")) || 0
-                                      );
-                                      return total + kredit;
-                                    }, 0)
-                                  )}
-                                </td>
-            
-                                <td className="px-6 py-4 text-sm">
-                                  {formatCurrency(totalSaldo)}
-                                </td>
-                                <td className="px-6 py-4 text-sm"></td>
-                              </tr>
-                            </tbody>
-                          </table>
-                          <style jsx>{`
+                      {formatCurrency(
+                        transactions.reduce((total, transaction) => {
+                          const debet = Math.floor(
+                            parseFloat(transaction.debet.replace(",", "")) || 0
+                          );
+                          return total + debet;
+                        }, 0)
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      {formatCurrency(
+                        transactions.reduce((total, transaction) => {
+                          const kredit = Math.floor(
+                            parseFloat(transaction.kredit.replace(",", "")) || 0
+                          );
+                          return total + kredit;
+                        }, 0)
+                      )}
+                    </td>
+
+                    <td className="px-6 py-4 text-sm">
+                      {formatCurrency(totalSaldo)}
+                    </td>
+                    <td className="px-6 py-4 text-sm"></td>
+                  </tr>
+                </tbody>
+              </table>
+              <style jsx>{`
                             @media print {
                               th:nth-child(8),
                               td:nth-child(8) {
@@ -1975,7 +1747,7 @@ function Pemasukan() {
                               }
                             }
                           `}</style>
-                        </div>
+            </div>
           </div>
         </div>
       </div>

@@ -6,7 +6,7 @@ import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import { FaPlusCircle, FaMinusCircle, FaWhatsapp } from "react-icons/fa";
+import { FaPlusCircle, FaMinusCircle, FaWhatsapp, FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import toast, { Toaster } from "react-hot-toast";
 import { saveAs } from "file-saver";
@@ -14,6 +14,78 @@ import * as XLSX from "xlsx";
 import { ClipLoader } from "react-spinners";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
+
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Page = () => {
   // baru
@@ -35,6 +107,7 @@ const Page = () => {
   const [searchText, setSearchText] = useState("");
   const [filteredPensiunList, setFilteredPensiunList] = useState([]);
   const [isFiltered, setIsFiltered] = useState(false);
+  const [notification, setNotification] = useState(null);
   const [fetchedPages, setFetchedPages] = useState([]);
   const itemsPerPage = 10;
   // end
@@ -428,116 +501,20 @@ const Page = () => {
       await GlobalApi.pensiunAnggota(idPensiun);
       setPopupVisible(false);
 
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Anggota berhasil Pensiun!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Anggota berhasil dipensiunkan.`,
+      });
 
       setTimeout(() => {
         window.location.reload();
       }, 2000);
     } catch (error) {
       console.error("Gagal pensiun anggota:", error);
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <strong
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Anggota Gagal Pensiun.
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 5000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: `Anggota gagal dipensiunkan.`,
+      });
     }
   };
 
@@ -555,36 +532,13 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Toaster
-        toastOptions={{
-          style: {
-            marginTop: "16%",
-            fontSize: "1.25rem",
-            padding: "16px",
-            width: "90%",
-            maxWidth: "500px",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-          },
-          success: {
-            style: {
-              background: "white",
-              color: "#10b981",
-              border: "1px solid #10b981",
-            },
-          },
-          error: {
-            style: {
-              background: "white",
-              color: "#ef4444",
-              border: "1px solid #ef4444",
-            },
-          },
-        }}
-      />
+      {notification && (
+        <NotificationPopup
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
 
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
 

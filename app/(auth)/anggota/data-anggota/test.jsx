@@ -27,9 +27,9 @@ import {
   FaExclamationTriangle,
   FaTimes,
   FaWhatsapp,
+  FaTimesCircle,
   FaCheckCircle,
   FaExclamationCircle,
-  FaTimesCircle,
 } from "react-icons/fa";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -40,6 +40,78 @@ const MapComponent = dynamic(
     ssr: false,
   }
 );
+
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const DataAnggota = () => {
   const [selectedRow, setSelectedRow] = useState(null);
@@ -64,6 +136,7 @@ const DataAnggota = () => {
   const [role, setRole] = useState("");
   const [totalElements, setTotalElements] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   const fetchDataAnggota = async (
     page = 0,
@@ -370,8 +443,9 @@ const DataAnggota = () => {
           </head>
           <body>
             <div class="title">Data Anggota Cabang ${selectedCabang}</div>
-            <div class="subtitle">Jumlah Anggota: ${filteredDataForPrint.length
-        }</div>
+            <div class="subtitle">Jumlah Anggota: ${
+              filteredDataForPrint.length
+            }</div>
             <table>
               <thead>
                 <tr class="header-row">
@@ -385,47 +459,51 @@ const DataAnggota = () => {
               </thead>
               <tbody>
                 ${filteredDataForPrint
-          .map(
-            (item, index) => `
+                  .map(
+                    (item, index) => `
                       <tr>
                         <td>${index + 1}</td>
                          <td>
                           <div>${item.cabang},</div>
                           <div>${item.unitKerja}</div>
                         </td>
-                        <td>${item.foto
-                ? `<img src="data:image/png;base64,${item.foto}" alt="foto" width="50" height="50"/>`
-                : ""
-              }</td>
+                        <td>${
+                          item.foto
+                            ? `<img src="data:image/png;base64,${item.foto}" alt="foto" width="50" height="50"/>`
+                            : ""
+                        }</td>
                         <td>
                           <div class="font-bold">${item.namaLengkap}</div>
                           <div>${item.npaPgri}</div>
                         </td>
                         <td>
-                          <div>${formatDate(item.tanggalLahir)} ${item.nip
-              },</div>
+                          <div>${formatDate(item.tanggalLahir)} ${
+                      item.nip
+                    },</div>
                            <div>${item.jabatan}</div>
                           <div>${formatRetirementDate(
-                item.prediksiPensiun
-              )}</div>
+                            item.prediksiPensiun
+                          )}</div>
                         </td>
                        
                         <td>
-                          <div>${item.statusKeanggotaan
-                ? item.statusKeanggotaan
-                : "-"
-              }</div>
+                          <div>${
+                            item.statusKeanggotaan
+                              ? item.statusKeanggotaan
+                              : "-"
+                          }</div>
                            <div>
-  ${item.updatedAt
-                ? `${item.updatedAt[2]}-${item.updatedAt[1]}-${item.updatedAt[0]}`
-                : "-"
-              }
+  ${
+    item.updatedAt
+      ? `${item.updatedAt[2]}-${item.updatedAt[1]}-${item.updatedAt[0]}`
+      : "-"
+  }
 </div>
                         </td>
                       </tr>
                     `
-          )
-          .join("")}
+                  )
+                  .join("")}
               </tbody>
             </table>
           </body>
@@ -447,43 +525,20 @@ const DataAnggota = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      <Toaster
-        toastOptions={{
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-          success: {
-            style: {
-              background: "white",
-              color: "black",
-            },
-          },
-          error: {
-            style: {
-              background: "white",
-              color: "black",
-            },
-          },
-        }}
-      />
+      {notification && (
+        <NotificationPopup
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="container mx-auto p-4 md:p-6">
             <FilterSection
@@ -799,7 +854,7 @@ const DropdownUnitKerja = ({
     .filter((option) =>
       selectedCabang
         ? option.cabang.trim().toLowerCase() ===
-        selectedCabang.trim().toLowerCase()
+          selectedCabang.trim().toLowerCase()
         : true
     )
     .filter((option) =>
@@ -834,8 +889,9 @@ const DropdownUnitKerja = ({
       <label className="block mb-2 font-semibold text-gray-800">{label}</label>
       <input
         type="text"
-        className={`border rounded-lg p-2 w-full bg-white shadow-sm ${!selectedCabang ? "bg-gray-200 cursor-not-allowed" : ""
-          }`}
+        className={`border rounded-lg p-2 w-full bg-white shadow-sm ${
+          !selectedCabang ? "bg-gray-200 cursor-not-allowed" : ""
+        }`}
         placeholder={
           !selectedCabang ? "Pilih cabang terlebih dahulu" : `Pilih ${label}`
         }
@@ -920,6 +976,7 @@ const DataTable = ({
   const [loadingButton, setLoadingButton] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [notification, setNotification] = useState(null);
   const [previousKategoriDaspen, setPreviousKategoriDaspen] =
     useState(kategoriDaspen);
   const profileImageUrl = "/profile.png";
@@ -1012,65 +1069,19 @@ const DataTable = ({
           setIsKategoriChanged(false);
           setIsPopupDaspen(false);
 
-          toast.success(
-            <div className="flex flex-col items-center space-y-4">
-              <div className="animate-bounce">
-                <FaCheckCircle className="text-green-500 text-5xl" />
-              </div>
-              <h4 className="text-xl font-bold text-green-800">Berhasil!</h4>
-              <div className="text-green-800 text-center">
-                Kategori Daspen Berhasil Diupdate!
-              </div>
-            </div>,
-            {
-              icon: null,
-              duration: 3000,
-              style: {
-                background: "rgb(220, 252, 231)",  // bg-green-100
-                borderRadius: "0.5rem",
-                padding: "2rem",
-                width: "24rem",
-                maxWidth: "90%",
-                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-                position: "relative",
-                zIndex: 50
-              },
-              closeButton: true,
-              closeOnClick: true
-            }
-          );
+          setNotification({
+            type: 'success',
+            message: `Kategori Daspen berhasil diupdate!`,
+          });
         } else {
           console.log("Data pengguna tidak ditemukan.");
         }
       } catch (error) {
         console.error("Terjadi kesalahan:", error);
-        toast.error(
-          <div className="flex flex-col items-center space-y-4">
-            <div className="animate-bounce">
-              <FaExclamationCircle className="text-red-500 text-5xl" />
-            </div>
-            <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
-            <div className="text-red-800 text-center">
-              Gagal memperbarui data. Periksa kembali input.
-            </div>
-          </div>,
-          {
-            icon: null,
-            duration: 3000,
-            style: {
-              background: "rgb(254, 226, 226)",  // bg-red-100
-              borderRadius: "0.5rem",
-              padding: "2rem",
-              width: "24rem",
-              maxWidth: "90%",
-              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-              position: "relative",
-              zIndex: 50
-            },
-            closeButton: true,
-            closeOnClick: true
-          }
-        );
+        setNotification({
+          type: 'error',
+          message: `Gagal memperbarui data. Periksa kembali input!`,
+        });
       }
     } else {
       console.log("Anggota ID tidak ditemukan di sessionStorage");
@@ -1098,66 +1109,20 @@ const DataTable = ({
               console.log("File tidak ditemukan untuk NIP:", nip);
             }
           } else {
-            toast.error(
-              <div className="flex flex-col items-center space-y-4">
-                <div className="animate-bounce">
-                  <FaExclamationCircle className="text-red-500 text-5xl" />
-                </div>
-                <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
-                <div className="text-red-800 text-center">
-                  NIP tidak ditemukan. Silahkan sinkronisasi dulu.
-                </div>
-              </div>,
-              {
-                icon: null,
-                duration: 3000,
-                style: {
-                  background: "rgb(254, 226, 226)",  // bg-red-100
-                  borderRadius: "0.5rem",
-                  padding: "2rem",
-                  width: "24rem",
-                  maxWidth: "90%",
-                  boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-                  position: "relative",
-                  zIndex: 50
-                },
-                closeButton: true,
-                closeOnClick: true
-              }
-            );
+            setNotification({
+              type: 'error',
+              message: `NIP tidak ditemukan. Silahkan melakukan sinkronisasi dahulu!`,
+            });
           }
         } else {
           console.log("Data anggota tidak ditemukan");
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-        toast.error(
-          <div className="flex flex-col items-center space-y-4">
-            <div className="animate-bounce">
-              <FaExclamationCircle className="text-red-500 text-5xl" />
-            </div>
-            <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
-            <div className="text-red-800 text-center">
-              NIP tidak ditemukan. Silahkan sinkronisasi dulu.
-            </div>
-          </div>,
-          {
-            icon: null,
-            duration: 3000,
-            style: {
-              background: "rgb(254, 226, 226)",  // bg-red-100
-              borderRadius: "0.5rem",
-              padding: "2rem",
-              width: "24rem",
-              maxWidth: "90%",
-              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-              position: "relative",
-              zIndex: 50
-            },
-            closeButton: true,
-            closeOnClick: true
-          }
-        );
+        setNotification({
+          type: 'error',
+          message: `NIP tidak ditemukan. Silahkan melakukan sinkronisasi dahulu!`,
+        });
       }
     } else {
       console.log("Anggota ID tidak ditemukan di sessionStorage");
@@ -1170,64 +1135,18 @@ const DataTable = ({
 
       await GlobalApi.pensiunAnggota(anggotaId);
       setPopupVisible(false);
-      toast.success(
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            <FaCheckCircle className="text-green-500 text-5xl" />
-          </div>
-          <h4 className="text-xl font-bold text-green-800">Berhasil!</h4>
-          <div className="text-green-800 text-center">
-            Anggota berhasil dipensiunkan.
-          </div>
-        </div>,
-        {
-          icon: null,
-          duration: 3000,
-          style: {
-            background: "rgb(220, 252, 231)",  // bg-green-100
-            borderRadius: "0.5rem",
-            padding: "2rem",
-            width: "24rem",
-            maxWidth: "90%",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-            position: "relative",
-            zIndex: 50
-          },
-          closeButton: true,
-          closeOnClick: true
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Anggota berhasil dipensiunkan!`,
+      });
       setTimeout(() => {
         window.location.reload();
       }, 3000);
     } catch (error) {
-      toast.error(
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            <FaExclamationCircle className="text-red-500 text-5xl" />
-          </div>
-          <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
-          <div className="text-red-800 text-center">
-            Gagal pensiunkan anggota.
-          </div>
-        </div>,
-        {
-          icon: null,
-          duration: 3000,
-          style: {
-            background: "rgb(254, 226, 226)",  // bg-red-100
-            borderRadius: "0.5rem",
-            padding: "2rem",
-            width: "24rem",
-            maxWidth: "90%",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-            position: "relative",
-            zIndex: 50
-          },
-          closeButton: true,
-          closeOnClick: true
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: `Gagal pensiunkan anggota!`,
+      });
       setTimeout(() => {
         window.location.reload();
       }, 3000);
@@ -1246,65 +1165,19 @@ const DataTable = ({
       const anggotaId = sessionStorage.getItem("anggotaId");
 
       if (!anggotaId) {
-        toast.error(
-          <div className="flex flex-col items-center space-y-4">
-            <div className="animate-bounce">
-              <FaExclamationCircle className="text-red-500 text-5xl" />
-            </div>
-            <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
-            <div className="text-red-800 text-center">
-              ID anggota tidak ditemukan.
-            </div>
-          </div>,
-          {
-            icon: null,
-            duration: 3000,
-            style: {
-              background: "rgb(254, 226, 226)",  // bg-red-100
-              borderRadius: "0.5rem",
-              padding: "2rem",
-              width: "24rem",
-              maxWidth: "90%",
-              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-              position: "relative",
-              zIndex: 50
-            },
-            closeButton: true,
-            closeOnClick: true
-          }
-        );
+        setNotification({
+          type: 'error',
+          message: `ID Anggota tidak ditemukan!`,
+        });
         return;
       }
 
       const result = await GlobalApi.keluarAnggota(anggotaId);
 
-      toast.success(
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            <FaCheckCircle className="text-green-500 text-5xl" />
-          </div>
-          <h4 className="text-xl font-bold text-green-800">Berhasil!</h4>
-          <div className="text-green-800 text-center">
-            Data anggota berhasil dihapus.
-          </div>
-        </div>,
-        {
-          icon: null,
-          duration: 3000,
-          style: {
-            background: "rgb(220, 252, 231)",  // bg-green-100
-            borderRadius: "0.5rem",
-            padding: "2rem",
-            width: "24rem",
-            maxWidth: "90%",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-            position: "relative",
-            zIndex: 50
-          },
-          closeButton: true,
-          closeOnClick: true
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Data anggota berhasil dihapus!`,
+      });
 
       setTimeout(() => {
         window.location.reload();
@@ -1315,33 +1188,10 @@ const DataTable = ({
       }, 2000);
     } catch (error) {
       console.error("Gagal Menghapus Data:", error);
-      toast.error(
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            <FaExclamationCircle className="text-red-500 text-5xl" />
-          </div>
-          <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
-          <div className="text-red-800 text-center">
-            Gagal menghapus data anggota.
-          </div>
-        </div>,
-        {
-          icon: null,
-          duration: 3000,
-          style: {
-            background: "rgb(254, 226, 226)",  // bg-red-100
-            borderRadius: "0.5rem",
-            padding: "2rem",
-            width: "24rem",
-            maxWidth: "90%",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-            position: "relative",
-            zIndex: 50
-          },
-          closeButton: true,
-          closeOnClick: true
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: `Gagal menghapus data anggota!`,
+      });
     }
   };
 
@@ -1350,65 +1200,19 @@ const DataTable = ({
       const anggotaId = sessionStorage.getItem("anggotaId");
 
       if (!anggotaId) {
-        toast.error(
-          <div className="flex flex-col items-center space-y-4">
-            <div className="animate-bounce">
-              <FaExclamationCircle className="text-red-500 text-5xl" />
-            </div>
-            <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
-            <div className="text-red-800 text-center">
-              ID anggota tidak ditemukan.
-            </div>
-          </div>,
-          {
-            icon: null,
-            duration: 3000,
-            style: {
-              background: "rgb(254, 226, 226)",  // bg-red-100
-              borderRadius: "0.5rem",
-              padding: "2rem",
-              width: "24rem",
-              maxWidth: "90%",
-              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-              position: "relative",
-              zIndex: 50
-            },
-            closeButton: true,
-            closeOnClick: true
-          }
-        );
+        setNotification({
+          type: 'error',
+          message: `ID Anggota tidak ditemukan!`,
+        });
         return;
       }
 
       const result = await GlobalApi.deleteUser(anggotaId);
 
-      toast.success(
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            <FaCheckCircle className="text-green-500 text-5xl" />
-          </div>
-          <h4 className="text-xl font-bold text-green-800">Berhasil!</h4>
-          <div className="text-green-800 text-center">
-            Data Anggota Berhasil Dihapus!
-          </div>
-        </div>,
-        {
-          icon: null,
-          duration: 3000,
-          style: {
-            background: "rgb(220, 252, 231)",  // bg-green-100
-            borderRadius: "0.5rem",
-            padding: "2rem",
-            width: "24rem",
-            maxWidth: "90%",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-            position: "relative",
-            zIndex: 50
-          },
-          closeButton: true,
-          closeOnClick: true
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Data anggota berhasil dihapus!`,
+      });
 
       setTimeout(() => {
         window.location.reload();
@@ -1419,33 +1223,10 @@ const DataTable = ({
       }, 2000);
     } catch (error) {
       console.error("Gagal Menghapus Data:", error);
-      toast.error(
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            <FaExclamationCircle className="text-red-500 text-5xl" />
-          </div>
-          <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
-          <div className="text-red-800 text-center">
-            Gagal pensiunkan anggota.
-          </div>
-        </div>,
-        {
-          icon: null,
-          duration: 3000,
-          style: {
-            background: "rgb(254, 226, 226)",  // bg-red-100
-            borderRadius: "0.5rem",
-            padding: "2rem",
-            width: "24rem",
-            maxWidth: "90%",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-            position: "relative",
-            zIndex: 50
-          },
-          closeButton: true,
-          closeOnClick: true
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: `Gagal menghapus data anggota!`,
+      });
     }
   };
 
@@ -1456,7 +1237,10 @@ const DataTable = ({
       // Ambil userId dari sessionStorage
       const userId = sessionStorage.getItem("userId");
       if (!userId) {
-        toast.error("User ID tidak ditemukan!");
+        setNotification({
+          type: 'error',
+          message: `User ID tidak ditemukan!`,
+        });
         setLoadingButton(false); // Matikan loading button
         return;
       }
@@ -1464,7 +1248,10 @@ const DataTable = ({
       // Mengambil data pengguna berdasarkan userId
       const userData = await GlobalApi.getUserById(userId);
       if (!userData || !userData.nip) {
-        toast.error("NIP tidak ditemukan!");
+        setNotification({
+          type: 'error',
+          message: `NIP tidak ditemukan!`,
+        });
         setLoadingButton(false); // Matikan loading button
         return;
       }
@@ -1475,7 +1262,10 @@ const DataTable = ({
       // Mengecek data berdasarkan NIP
       const data = await GlobalApi.getByNIP(nip);
       if (!data) {
-        toast.error("Data dengan NIP ini tidak ditemukan!");
+        setNotification({
+          type: 'error',
+          message: `Data dengan NIP ini tidak ditemukan!`,
+        });
         setLoadingButton(false); // Matikan loading button
         return;
       }
@@ -1483,7 +1273,10 @@ const DataTable = ({
       // Mengecek apakah data sudah disinkronkan
       const nipData = await GlobalApi.getFileByNip(nip);
       if (nipData?.verifikasi === true) {
-        toast.success("Data Anda sudah Tersinkronisasi!");
+        setNotification({
+          type: 'success',
+          message: `Data anda sudah tersinkronisasi!`,
+        });
         setLoadingButton(false); // Matikan loading button
         return;
       }
@@ -1492,11 +1285,17 @@ const DataTable = ({
       const response = await GlobalApi.updateRegisUser(userId, data);
 
       // Menampilkan notifikasi setelah data berhasil disinkronkan
-      toast.success("Data Berhasil disinkronkan!");
+      setNotification({
+        type: 'success',
+        message: `Data berhasil disinkronkan!`,
+      });
       window.location.reload();
     } catch (error) {
       console.error("Error saat mengirim data:", error);
-      toast.error("Terjadi kesalahan saat mengirim data. Silahkan coba lagi.");
+      setNotification({
+        type: 'error',
+        message: `Terjadi kesalahan saat mengirim data. Silahkan coba lagi!`,
+      });
     } finally {
       setLoadingButton(false); // Menonaktifkan loading button setelah selesai
     }
@@ -1548,65 +1347,19 @@ const DataTable = ({
       console.log(anggotaId);
 
       const response = await GlobalApi.activasiUser(anggotaId);
-      toast.success(
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            <FaCheckCircle className="text-green-500 text-5xl" />
-          </div>
-          <h4 className="text-xl font-bold text-green-800">Berhasil!</h4>
-          <div className="text-green-800 text-center">
-            Anggota Berhasil Diaktifkan.
-          </div>
-        </div>,
-        {
-          icon: null,
-          duration: 3000,
-          style: {
-            background: "rgb(220, 252, 231)",  // bg-green-100
-            borderRadius: "0.5rem",
-            padding: "2rem",
-            width: "24rem",
-            maxWidth: "90%",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-            position: "relative",
-            zIndex: 50
-          },
-          closeButton: true,
-          closeOnClick: true
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Anggota berhasil diaktifkan!`,
+      });
       setTimeout(() => {
         window.location.reload();
       }, 4000);
     } catch (error) {
       console.error("Error fetching cabang:", error);
-      toast.error(
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            <FaExclamationCircle className="text-red-500 text-5xl" />
-          </div>
-          <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
-          <div className="text-red-800 text-center">
-            Anggota Gagal Diaktifkan.
-          </div>
-        </div>,
-        {
-          icon: null,
-          duration: 3000,
-          style: {
-            background: "rgb(254, 226, 226)",  // bg-red-100
-            borderRadius: "0.5rem",
-            padding: "2rem",
-            width: "24rem",
-            maxWidth: "90%",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-            position: "relative",
-            zIndex: 50
-          },
-          closeButton: true,
-          closeOnClick: true
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Anggota gagal diaktifkan!`,
+      });
     }
   };
 
@@ -1761,10 +1514,11 @@ const DataTable = ({
                       <div className="text-sm">{item.npaPgri}</div>
                       <div className="text-sm">{item.jabatan}</div>
                       <div
-                        className={`text-sm p-1 inline-block ${item.nip && item.nip !== "0"
+                        className={`text-sm p-1 inline-block ${
+                          item.nip && item.nip !== "0"
                             ? "bg-green-500 text-white rounded-full px-3"
                             : "bg-red-500 text-white rounded-full px-3"
-                          }`}
+                        }`}
                       >
                         {item.nip && item.nip !== "0"
                           ? item.nip
@@ -1795,17 +1549,17 @@ const DataTable = ({
                             Anggota:{" "}
                             {item.tahunDiangkat
                               ? (() => {
-                                const date = new Date(item.tahunDiangkat);
-                                const day = String(date.getDate()).padStart(
-                                  2,
-                                  "0"
-                                );
-                                const month = String(
-                                  date.getMonth() + 1
-                                ).padStart(2, "0");
-                                const year = date.getFullYear();
-                                return `${day}-${month}-${year}`;
-                              })()
+                                  const date = new Date(item.tahunDiangkat);
+                                  const day = String(date.getDate()).padStart(
+                                    2,
+                                    "0"
+                                  );
+                                  const month = String(
+                                    date.getMonth() + 1
+                                  ).padStart(2, "0");
+                                  const year = date.getFullYear();
+                                  return `${day}-${month}-${year}`;
+                                })()
                               : "-"}
                           </div>
 
@@ -1813,10 +1567,11 @@ const DataTable = ({
                         </td>
                         <td className="py-2 px-4 border w-36 text-center ">
                           <div
-                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${item.status === "BUKAN ANGGOTA"
+                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${
+                              item.status === "BUKAN ANGGOTA"
                                 ? "bg-red-200 text-red-900"
                                 : "bg-green-200 text-green-900"
-                              }`}
+                            }`}
                           >
                             {item.statusKeanggotaan}
                           </div>
@@ -1894,7 +1649,7 @@ const DataTable = ({
                                 </Button>
 
                                 {sessionStorage.getItem("role") ===
-                                  "SUPER ADMIN" ? (
+                                "SUPER ADMIN" ? (
                                   <Button
                                     className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
                                     onClick={() => {
@@ -2046,14 +1801,14 @@ const DataTable = ({
                                         <p>
                                           {daspenData.tanggalLahir
                                             ? new Intl.DateTimeFormat("id-ID", {
-                                              day: "2-digit",
-                                              month: "long",
-                                              year: "numeric",
-                                            }).format(
-                                              new Date(
-                                                daspenData.tanggalLahir
+                                                day: "2-digit",
+                                                month: "long",
+                                                year: "numeric",
+                                              }).format(
+                                                new Date(
+                                                  daspenData.tanggalLahir
+                                                )
                                               )
-                                            )
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2078,14 +1833,14 @@ const DataTable = ({
                                         <p>
                                           {daspenData.mulaiJadiAnggotaDaspen
                                             ? new Intl.DateTimeFormat("id-ID", {
-                                              day: "2-digit",
-                                              month: "long",
-                                              year: "numeric",
-                                            }).format(
-                                              new Date(
-                                                daspenData.mulaiJadiAnggotaDaspen
+                                                day: "2-digit",
+                                                month: "long",
+                                                year: "numeric",
+                                              }).format(
+                                                new Date(
+                                                  daspenData.mulaiJadiAnggotaDaspen
+                                                )
                                               )
-                                            )
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2104,23 +1859,23 @@ const DataTable = ({
                                         <p>
                                           {daspenData.prediksiPensiun
                                             ? (() => {
-                                              const prediksiPensiunDate =
-                                                new Date(
-                                                  daspenData.prediksiPensiun
+                                                const prediksiPensiunDate =
+                                                  new Date(
+                                                    daspenData.prediksiPensiun
+                                                  );
+                                                prediksiPensiunDate.setMonth(
+                                                  prediksiPensiunDate.getMonth() +
+                                                    1
                                                 );
-                                              prediksiPensiunDate.setMonth(
-                                                prediksiPensiunDate.getMonth() +
-                                                1
-                                              );
-                                              return new Intl.DateTimeFormat(
-                                                "id-ID",
-                                                {
-                                                  day: "2-digit",
-                                                  month: "long",
-                                                  year: "numeric",
-                                                }
-                                              ).format(prediksiPensiunDate);
-                                            })()
+                                                return new Intl.DateTimeFormat(
+                                                  "id-ID",
+                                                  {
+                                                    day: "2-digit",
+                                                    month: "long",
+                                                    year: "numeric",
+                                                  }
+                                                ).format(prediksiPensiunDate);
+                                              })()
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2131,9 +1886,9 @@ const DataTable = ({
                                         <p>
                                           {daspenData.sumbangan
                                             ? new Intl.NumberFormat("id-ID", {
-                                              style: "currency",
-                                              currency: "IDR",
-                                            }).format(daspenData.sumbangan)
+                                                style: "currency",
+                                                currency: "IDR",
+                                              }).format(daspenData.sumbangan)
                                             : "Tidak tersedia"}
                                         </p>
                                       </div>
@@ -2246,23 +2001,23 @@ const DataTable = ({
                             {["SUPER ADMIN", "ADMIN"].includes(
                               sessionStorage.getItem("role")
                             ) && (
-                                <div className="flex justify-center">
-                                  <Button
-                                    type="button"
-                                    className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
-                                    title="Detail Anggota"
-                                    onClick={() => {
-                                      sessionStorage.setItem(
-                                        "anggotaId",
-                                        item.id
-                                      );
-                                      handleDetailAnggota();
-                                    }}
-                                  >
-                                    Detail Anggota
-                                  </Button>
-                                </div>
-                              )}
+                              <div className="flex justify-center">
+                                <Button
+                                  type="button"
+                                  className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
+                                  title="Detail Anggota"
+                                  onClick={() => {
+                                    sessionStorage.setItem(
+                                      "anggotaId",
+                                      item.id
+                                    );
+                                    handleDetailAnggota();
+                                  }}
+                                >
+                                  Detail Anggota
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </td>
                       </>
@@ -2297,16 +2052,16 @@ const DataTable = ({
                                 Anggota:{" "}
                                 {item.tahunDiangkat
                                   ? (() => {
-                                    const date = new Date(item.tahunDiangkat);
-                                    const day = String(
-                                      date.getDate()
-                                    ).padStart(2, "0");
-                                    const month = String(
-                                      date.getMonth() + 1
-                                    ).padStart(2, "0");
-                                    const year = date.getFullYear();
-                                    return `${day}-${month}-${year}`;
-                                  })()
+                                      const date = new Date(item.tahunDiangkat);
+                                      const day = String(
+                                        date.getDate()
+                                      ).padStart(2, "0");
+                                      const month = String(
+                                        date.getMonth() + 1
+                                      ).padStart(2, "0");
+                                      const year = date.getFullYear();
+                                      return `${day}-${month}-${year}`;
+                                    })()
                                   : "-"}
                               </div>
 
@@ -2337,7 +2092,7 @@ const DataTable = ({
 
                               {sessionStorage.getItem("role") ===
                                 "SUPER ADMIN" ||
-                                sessionStorage.getItem("role") === "ADMIN" ? (
+                              sessionStorage.getItem("role") === "ADMIN" ? (
                                 <Button
                                   className="text-white bg-cyan-500 hover:bg-cyan-600 p-2 border rounded-md"
                                   title="Mutasi"
@@ -2362,7 +2117,7 @@ const DataTable = ({
                               )}
 
                               {sessionStorage.getItem("role") ===
-                                "SUPER ADMIN" ? (
+                              "SUPER ADMIN" ? (
                                 <Button
                                   className="text-white bg-red-500 hover:bg-red-600 p-2 border rounded-md"
                                   onClick={() => {
@@ -2505,17 +2260,17 @@ const DataTable = ({
                                           <p>
                                             {daspenData.tanggalLahir
                                               ? new Intl.DateTimeFormat(
-                                                "id-ID",
-                                                {
-                                                  day: "2-digit",
-                                                  month: "long",
-                                                  year: "numeric",
-                                                }
-                                              ).format(
-                                                new Date(
-                                                  daspenData.tanggalLahir
+                                                  "id-ID",
+                                                  {
+                                                    day: "2-digit",
+                                                    month: "long",
+                                                    year: "numeric",
+                                                  }
+                                                ).format(
+                                                  new Date(
+                                                    daspenData.tanggalLahir
+                                                  )
                                                 )
-                                              )
                                               : "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -2540,17 +2295,17 @@ const DataTable = ({
                                           <p>
                                             {daspenData.mulaiJadiAnggotaDaspen
                                               ? new Intl.DateTimeFormat(
-                                                "id-ID",
-                                                {
-                                                  day: "2-digit",
-                                                  month: "long",
-                                                  year: "numeric",
-                                                }
-                                              ).format(
-                                                new Date(
-                                                  daspenData.mulaiJadiAnggotaDaspen
+                                                  "id-ID",
+                                                  {
+                                                    day: "2-digit",
+                                                    month: "long",
+                                                    year: "numeric",
+                                                  }
+                                                ).format(
+                                                  new Date(
+                                                    daspenData.mulaiJadiAnggotaDaspen
+                                                  )
                                                 )
-                                              )
                                               : "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -2569,23 +2324,23 @@ const DataTable = ({
                                           <p>
                                             {daspenData.prediksiPensiun
                                               ? (() => {
-                                                const prediksiPensiunDate =
-                                                  new Date(
-                                                    daspenData.prediksiPensiun
+                                                  const prediksiPensiunDate =
+                                                    new Date(
+                                                      daspenData.prediksiPensiun
+                                                    );
+                                                  prediksiPensiunDate.setMonth(
+                                                    prediksiPensiunDate.getMonth() +
+                                                      1
                                                   );
-                                                prediksiPensiunDate.setMonth(
-                                                  prediksiPensiunDate.getMonth() +
-                                                  1
-                                                );
-                                                return new Intl.DateTimeFormat(
-                                                  "id-ID",
-                                                  {
-                                                    day: "2-digit",
-                                                    month: "long",
-                                                    year: "numeric",
-                                                  }
-                                                ).format(prediksiPensiunDate);
-                                              })()
+                                                  return new Intl.DateTimeFormat(
+                                                    "id-ID",
+                                                    {
+                                                      day: "2-digit",
+                                                      month: "long",
+                                                      year: "numeric",
+                                                    }
+                                                  ).format(prediksiPensiunDate);
+                                                })()
                                               : "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -2596,9 +2351,9 @@ const DataTable = ({
                                           <p>
                                             {daspenData.sumbangan
                                               ? new Intl.NumberFormat("id-ID", {
-                                                style: "currency",
-                                                currency: "IDR",
-                                              }).format(daspenData.sumbangan)
+                                                  style: "currency",
+                                                  currency: "IDR",
+                                                }).format(daspenData.sumbangan)
                                               : "Tidak tersedia"}
                                           </p>
                                         </div>
@@ -2711,23 +2466,23 @@ const DataTable = ({
                               {["SUPER ADMIN", "ADMIN"].includes(
                                 sessionStorage.getItem("role")
                               ) && (
-                                  <div className="flex justify-center">
-                                    <Button
-                                      type="button"
-                                      className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
-                                      title="Detail Anggota"
-                                      onClick={() => {
-                                        sessionStorage.setItem(
-                                          "anggotaId",
-                                          item.id
-                                        );
-                                        handleDetailAnggota();
-                                      }}
-                                    >
-                                      Detail Anggota
-                                    </Button>
-                                  </div>
-                                )}
+                                <div className="flex justify-center">
+                                  <Button
+                                    type="button"
+                                    className="bg-gradient-to-r from-green-500 to-green-400 hover:from-green-600 hover:to-green-500 text-white p-2 border-none rounded-md shadow-md transition-all duration-200 ease-in-out flex items-center gap-2"
+                                    title="Detail Anggota"
+                                    onClick={() => {
+                                      sessionStorage.setItem(
+                                        "anggotaId",
+                                        item.id
+                                      );
+                                      handleDetailAnggota();
+                                    }}
+                                  >
+                                    Detail Anggota
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           </div>
                           <div className="text-center mt-4 w-full">
@@ -3155,10 +2910,11 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         <button
           key={page}
           onClick={() => onPageChange(page - 1)}
-          className={`px-3 py-1 border rounded text-sm ${page - 1 === currentPage
+          className={`px-3 py-1 border rounded text-sm ${
+            page - 1 === currentPage
               ? "bg-blue-500 text-white"
               : "bg-white hover:bg-gray-50"
-            }`}
+          }`}
         >
           {page}
         </button>
