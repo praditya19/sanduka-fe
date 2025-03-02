@@ -33,6 +33,7 @@ import {
   faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import HeaderMobile from "@/app/_components/HeaderMobile";
@@ -51,6 +52,78 @@ const MapComponent = dynamic(
     ssr: false,
   }
 );
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function IconGrid() {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -73,6 +146,7 @@ export default function IconGrid() {
   const [fotoMeninggal, setFotoMeninggal] = useState([]);
   const [popupVisible, setPopupVisible] = useState(false);
   const profileImageUrl = "/profile.png";
+  const [notification, setNotification] = useState(null);
   const [data, setData] = useState(null);
   const [loadingButton, setLoadingButton] = useState(false);
   const [error, setError] = useState(null);
@@ -494,7 +568,10 @@ export default function IconGrid() {
       // Ambil userId dari sessionStorage
       const userId = sessionStorage.getItem("userId");
       if (!userId) {
-        toast.error("User ID tidak ditemukan!");
+        setNotification({
+          type: 'error',
+          message: `User ID tidak ditemukan!`,
+        });
         setLoadingButton(false); // Matikan loading button
         return;
       }
@@ -502,7 +579,10 @@ export default function IconGrid() {
       // Mengambil data pengguna berdasarkan userId
       const userData = await GlobalApi.getUserById(userId);
       if (!userData || !userData.nip) {
-        toast.error("NIP tidak ditemukan!");
+        setNotification({
+          type: 'error',
+          message: `NIP tidak ditemukan!`,
+        });
         setLoadingButton(false); // Matikan loading button
         return;
       }
@@ -513,7 +593,10 @@ export default function IconGrid() {
       // Mengecek data berdasarkan NIP
       const data = await GlobalApi.getByNIP(nip);
       if (!data) {
-        toast.error("Data dengan NIP ini tidak ditemukan!");
+        setNotification({
+          type: 'error',
+          message: `Data NIP ini tidak ditemukan!`,
+        });
         setLoadingButton(false); // Matikan loading button
         return;
       }
@@ -521,7 +604,10 @@ export default function IconGrid() {
       // Mengecek apakah data sudah disinkronkan
       const nipData = await GlobalApi.getFileByNip(nip);
       if (nipData?.verifikasi === true) {
-        toast.success("Data Anda sudah Tersinkronisasi!");
+        setNotification({
+          type: 'success',
+          message: `Data anda sudah tersinkronisasi!`
+        });
         setLoadingButton(false); // Matikan loading button
         return;
       }
@@ -530,12 +616,21 @@ export default function IconGrid() {
       const response = await GlobalApi.updateRegisUser(userId, data);
 
       // Menampilkan notifikasi setelah data berhasil disinkronkan
-      toast.success("Data Berhasil disinkronkan!");
+      setNotification({
+        type: 'success',
+        message: `Data berhasil disinkronkan!`,
+      });
       window.location.reload();
     } catch (error) {
       console.error("Error saat mengirim data:", error);
-      toast.error("Nip tidak sesuai");
-      // toast.error("Nip atau tanggal lahir tidak sesuai dengan data Dansetjateng.org.");
+      setNotification({
+        type: 'error',
+        message: `NIP tidak sesuai!`
+      });
+      // setNotification({
+      //   type: 'error',
+      //   message: `Nip atau tanggal lahir tidak sesuai dengan data Dansetjateng.org.`
+      // });
     } finally {
       setLoadingButton(false); // Menonaktifkan loading button setelah selesai
     }
@@ -634,61 +729,61 @@ export default function IconGrid() {
   const filteredIcons =
     role === "USER"
       ? icons
-          .filter((item) =>
-            [
-              "Lapor",
-              "Teman Unit",
-              "Ketentuan",
-              "Bantuan",
-              "History data",
-              // "Pengaduan",
-            ].includes(item.label)
-          )
-          .concat({
-            icon: faUser,
-            label: "Detail Anggota",
-            href: "/anggota/detail-anggota",
-            color: "text-blue-500",
-            bgHover: "hover:bg-blue-100",
-            iconColor: "text-blue-600",
-          })
-          .concat({
-            icon: faUserPen,
-            label: "Edit Anggota",
-            href: "/anggota/edit-anggota",
-            color: "text-orange-500",
-            bgHover: "hover:bg-blue-100",
-            iconColor: "text-blue-600",
-          })
-          .concat({
-            icon: faRightLeft,
-            label: "Mutasi",
-            href: "/anggota/data-anggota/mutasiCabangUnit",
-            color: "text-cyan-500",
-          })
-          .concat({
-            icon: faFileAlt,
-            label: "Daspen",
-            href: "/daspen",
-            color: "text-teal-700",
-          })
-          .sort((a, b) => {
-            const order = [
-              "Lapor",
-              "Detail Anggota",
-              "Edit Anggota",
-              "Mutasi",
-              "Daspen",
-              "Ketentuan",
-              "Bantuan",
-              "Teman Unit",
-              // "Pengaduan",
-            ];
-            return order.indexOf(a.label) - order.indexOf(b.label);
-          })
+        .filter((item) =>
+          [
+            "Lapor",
+            "Teman Unit",
+            "Ketentuan",
+            "Bantuan",
+            "History data",
+            // "Pengaduan",
+          ].includes(item.label)
+        )
+        .concat({
+          icon: faUser,
+          label: "Detail Anggota",
+          href: "/anggota/detail-anggota",
+          color: "text-blue-500",
+          bgHover: "hover:bg-blue-100",
+          iconColor: "text-blue-600",
+        })
+        .concat({
+          icon: faUserPen,
+          label: "Edit Anggota",
+          href: "/anggota/edit-anggota",
+          color: "text-orange-500",
+          bgHover: "hover:bg-blue-100",
+          iconColor: "text-blue-600",
+        })
+        .concat({
+          icon: faRightLeft,
+          label: "Mutasi",
+          href: "/anggota/data-anggota/mutasiCabangUnit",
+          color: "text-cyan-500",
+        })
+        .concat({
+          icon: faFileAlt,
+          label: "Daspen",
+          href: "/daspen",
+          color: "text-teal-700",
+        })
+        .sort((a, b) => {
+          const order = [
+            "Lapor",
+            "Detail Anggota",
+            "Edit Anggota",
+            "Mutasi",
+            "Daspen",
+            "Ketentuan",
+            "Bantuan",
+            "Teman Unit",
+            // "Pengaduan",
+          ];
+          return order.indexOf(a.label) - order.indexOf(b.label);
+        })
       : role === "SUPER ADMIN"
-      ? icons
-      : icons.filter((item) => item.label !== "Galeri");
+        ? icons
+        : icons.filter((item) => item.label !== "Galeri");
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -700,30 +795,16 @@ export default function IconGrid() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <main
-          className={`transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
-          <Toaster
-            toastOptions={{
-              style: {
-                fontSize: "1.25rem",
-                padding: "16px",
-              },
-              success: {
-                style: {
-                  background: "white",
-                  color: "black",
-                },
-              },
-              error: {
-                style: {
-                  background: "#f44336",
-                  color: "#fff",
-                },
-              },
-            }}
-          />
+          {notification && (
+            <NotificationPopup
+              type={notification.type}
+              message={notification.message}
+              onClose={() => setNotification(null)}
+            />
+          )}
           {/* Hero Banner */}
           <div className="relative">
             <div className="h-48 md:h-64 overflow-hidden">
@@ -940,11 +1021,10 @@ export default function IconGrid() {
                       className="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer"
                     >
                       <div
-                        className={`w-14 h-14 ${
-                          item.color.includes("text-")
+                        className={`w-14 h-14 ${item.color.includes("text-")
                             ? item.color.replace("text-", "bg-") + "/10"
                             : "bg-gray-100"
-                        } rounded-full flex items-center justify-center mb-3 shadow-sm`}
+                          } rounded-full flex items-center justify-center mb-3 shadow-sm`}
                       >
                         <FontAwesomeIcon
                           icon={item.icon}

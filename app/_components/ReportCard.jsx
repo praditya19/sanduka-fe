@@ -6,9 +6,82 @@ import {
   faCheck,
   faLocation,
 } from "@fortawesome/free-solid-svg-icons";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import React, { useState, useEffect } from "react";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
+
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function ReportCard() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -16,6 +89,7 @@ export default function ReportCard() {
   const [laporan, setLaporan] = useState(null);
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -184,116 +258,20 @@ export default function ReportCard() {
       console.log(
         "idTerlaporList dan npaTerlaporList telah diperbarui di sessionStorage"
       );
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <h3
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Laporan berhasil dibatalkan!
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Laporan berhasil dibatalkan`
+      });
       setLaporan(null);
       setTimeout(() => {
         window.location.href = "/home";
       }, 2000);
     } catch (error) {
       console.error("Gagal menghapus laporan:", error);
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Gagal Membatalkan Laporan.
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: `Gagal menghapus laporan`
+      });
     }
   };
 
@@ -307,60 +285,10 @@ export default function ReportCard() {
       console.error(
         "ID Terlapor atau NPA Terlapor tidak ditemukan di sessionStorage"
       );
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1 2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Data ID atau NPA tidak valid
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 2000,
-          style: {
-            marginTop: "16%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "700px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: `Data ID atau NPA tidak ditemukan`
+      });
       return;
     }
 
@@ -395,60 +323,10 @@ export default function ReportCard() {
 
         try {
           await GlobalApi.verifikasiLaporanById(laporanId, newTanggalSantunan);
-          toast.success(
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                textAlign: "center",
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                style={{
-                  width: "150px",
-                  height: "150px",
-                  color: "#06D001",
-                  marginBottom: "16px",
-                  marginTop: "14px",
-                }}
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-              </svg>
-              <h3
-                style={{
-                  fontSize: "2rem",
-                  display: "block",
-                  marginBottom: "8px",
-                }}
-              >
-                Data berhasil Terkonfirmasi!
-              </h3>
-            </div>,
-            {
-              icon: null,
-              duration: 4000,
-              style: {
-                marginTop: "12%",
-                fontSize: "1.75rem",
-                padding: "10px",
-                width: "80%",
-                maxWidth: "450px",
-                height: "50%",
-                maxHeight: "400px",
-                transform: "translate(-50%, -50%)",
-                textAlign: "center",
-                zIndex: 9999,
-                backgroundColor: "#fff",
-                borderRadius: "8px",
-                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-              },
-            }
-          );
+          setNotification({
+            type: 'success',
+            message: `Data berhasil dikonfirmasi`
+          });
 
           const updatedIdTerlaporList = idTerlaporList.filter(
             (_, index) => index !== currentIndex
@@ -474,60 +352,10 @@ export default function ReportCard() {
           }, 2000);
         } catch (error) {
           console.error("Terjadi kesalahan saat verifikasi:", error);
-          toast.error(
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                textAlign: "center",
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                style={{
-                  width: "150px",
-                  height: "150px",
-                  color: "red",
-                  marginBottom: "16px",
-                }}
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-                <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
-              </svg>
-              <h3
-                style={{
-                  fontSize: "1.75rem",
-                  display: "block",
-                  marginBottom: "8px",
-                }}
-              >
-                Gagal Mengkonfirmasi.
-              </h3>
-            </div>,
-            {
-              icon: null,
-              duration: 2000,
-              style: {
-                marginTop: "12%",
-                fontSize: "1.75rem",
-                padding: "10px",
-                width: "80%",
-                maxWidth: "450px",
-                height: "50%",
-                maxHeight: "400px",
-                transform: "translate(-50%, -50%)",
-                textAlign: "center",
-                zIndex: 9999,
-                backgroundColor: "#fff",
-                borderRadius: "8px",
-                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-              },
-            }
-          );
+          setNotification({
+            type: 'success',
+            message: `Gagal mengkonfirmasi data`
+          });
         }
       } else {
         console.error("ID atau NPA tidak cocok, verifikasi dibatalkan");
@@ -586,34 +414,20 @@ export default function ReportCard() {
 
   return (
     <div className="relative max-w-sm mx-auto bg-white shadow-lg rounded-2xl overflow-hidden my-4 border border-gray-300">
-      <Toaster
-        toastOptions={{
-          style: {
-            fontSize: "1.25rem",
-            padding: "16px",
-          },
-          success: {
-            style: {
-              background: "white",
-              color: "black",
-            },
-          },
-          error: {
-            style: {
-              background: "#f44336",
-              color: "#fff",
-            },
-          },
-        }}
-      />
+      {notification && (
+        <NotificationPopup
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
       <div className="relative overflow-hidden">
         <div className="absolute bottom-0 left-0 w-full flex justify-center space-x-2 py-2">
           {dataList.map((_, index) => (
             <button
               key={index}
-              className={`w-3 h-3 rounded-full ${
-                currentSlide === index ? "bg-blue-500" : "bg-gray-400"
-              }`}
+              className={`w-3 h-3 rounded-full ${currentSlide === index ? "bg-blue-500" : "bg-gray-400"
+                }`}
               onClick={() => setCurrentSlide(index)}
             />
           ))}
@@ -661,11 +475,10 @@ export default function ReportCard() {
             <FontAwesomeIcon icon={faLocation} className="mr-2" /> Lokasi
           </button>
           <button
-            className={`${
-              ["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
+            className={`${["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
                 ? "bg-red-600 hover:bg-red-700"
                 : "bg-gray-400 cursor-not-allowed"
-            } text-white font-medium py-1 px-3 rounded-full transition duration-300`}
+              } text-white font-medium py-1 px-3 rounded-full transition duration-300`}
             onClick={handleBatalClick}
             disabled={
               !["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
@@ -674,11 +487,10 @@ export default function ReportCard() {
             <FontAwesomeIcon icon={faCancel} className="mr-2" /> Batal
           </button>
           <button
-            className={`${
-              ["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
+            className={`${["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))
                 ? "bg-purple-600 hover:bg-purple-700"
                 : "bg-gray-400 cursor-not-allowed"
-            } text-white font-medium py-1 px-3 rounded-full transition duration-300`}
+              } text-white font-medium py-1 px-3 rounded-full transition duration-300`}
             onClick={handleVerifikasiClick}
             disabled={
               !["ADMIN", "SUPER ADMIN"].includes(sessionStorage.getItem("role"))

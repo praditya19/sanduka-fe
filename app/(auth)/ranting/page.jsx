@@ -17,8 +17,81 @@ import {
   faPlusCircle,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ClipLoader } from "react-spinners";
+
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Page = () => {
   const [entries, setEntries] = useState(10);
@@ -63,6 +136,7 @@ const Page = () => {
   const [originalTambahRantingList, setOriginalTambahRantingList] = useState(
     []
   );
+  const [notification, setNotification] = useState(null);
   const [buatNamaRanting, setBuatNamaRanting] = useState("");
   const [checkedUnitKerja, setCheckedUnitKerja] = useState([]);
   const dropdownRef = useRef(null);
@@ -74,7 +148,10 @@ const Page = () => {
 
   const addRanting = async () => {
     if (!selectedRanting || !selectedCabang) {
-      toast.error("Harap lengkapi Nama Ranting dan Cabang!");
+      setNotification({
+        type: 'error',
+        message: `Harap lengkapi nama ranting dan cabang!`,
+      });
       return;
     }
     try {
@@ -85,56 +162,10 @@ const Page = () => {
       };
       const response = await GlobalApi.createRanting(rantingData);
 
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Ranting berhasil ditambahkan!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Ranting berhasil ditambahkan!`,
+      });
       setSelectedRanting("");
       setSelectedCabang("");
       setSelectedUnitKerja("");
@@ -142,67 +173,20 @@ const Page = () => {
         window.location.reload();
       }, 4000);
     } catch (error) {
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Gagal menambahkan ranting. Coba lagi.
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: `Gagal menambahkan ranting. Coba lagi.`,
+      });
       console.error("Error adding ranting:", error);
     }
   };
 
   const addNamaRanting = async () => {
     if (!buatNamaRanting || !selectedNamaRantingCabang) {
-      toast.error("Harap lengkapi Nama Ranting dan Cabang!");
+      setNotification({
+        type: 'error',
+        message: `Hara lengkapi nama ranting dan cabang!`,
+      });
       return;
     }
 
@@ -213,116 +197,20 @@ const Page = () => {
       };
       const response = await GlobalApi.createNamaRanting(namaRanting);
 
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Nama Ranting berhasil ditambahkan!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Nama Ranting berhasil ditambahkan!`,
+      });
       setBuatNamaRanting("");
       setSelectedNamaRantingCabang("");
       setTimeout(() => {
         window.location.reload();
       }, 4000);
     } catch (error) {
-      toast.error(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "red",
-              marginBottom: "16px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19.414 4.586L4.586 19.414a2 2 0 1 1-2.828-2.828L16.586 4.586a2 2 0 1 1 2.828 2.828z" />
-            <path d="M4.586 4.586l14.828 14.828a2 2 0 1 1-2.828 2.828L1.758 7.414a2 2 0 1 1-2.828-2.828z" />
-          </svg>
-          <h3
-            style={{
-              fontSize: "1.75rem",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            Gagal Menambahkan Nama Ranting. Coba lagi.
-          </h3>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'error',
+        message: `Gagal menambahkan nama ranting. Coba lagi.`,
+      });
       console.error("Error adding ranting:", error);
     }
   };
@@ -361,56 +249,10 @@ const Page = () => {
   const deleteRanting = async (namaRanting) => {
     try {
       const response = await GlobalApi.deleteRanting(namaRanting);
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Ranting Berhasil Dihapus!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Ranting berhasil dihapus!`,
+      });
       setTimeout(() => {
         window.location.reload();
       }, 4000);
@@ -421,7 +263,10 @@ const Page = () => {
 
   const deleteUnitKerjaRanting = async () => {
     if (checkedUnitKerja.length === 0) {
-      toast.error("Pilih minimal satu Unit Kerja untuk dihapus.");
+      setNotification({
+        type: 'error',
+        message: `Pilih setidaknya satu unit kerja untuk dihapus!`,
+      });
       return;
     }
 
@@ -429,63 +274,20 @@ const Page = () => {
       const unitKerjaIds = checkedUnitKerja.map((item) => item.unitKerjaId); // Ambil hanya ID
       await GlobalApi.deleteUnitKerjaRanting(unitKerjaIds);
 
-      toast.success(
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              width: "150px",
-              height: "150px",
-              color: "#06D001",
-              marginBottom: "16px",
-              marginTop: "14px",
-            }}
-            fill="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15L6 13l1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          <strong
-            style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}
-          >
-            Unit Kerja Berhasil Dihapus!
-          </strong>
-        </div>,
-        {
-          icon: null,
-          duration: 4000,
-          style: {
-            marginTop: "12%",
-            fontSize: "1.75rem",
-            padding: "10px",
-            width: "80%",
-            maxWidth: "450px",
-            height: "50%",
-            maxHeight: "400px",
-            transform: "translate(-50%, -50%)",
-            textAlign: "center",
-            zIndex: 9999,
-            backgroundColor: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }
-      );
+      setNotification({
+        type: 'success',
+        message: `Unit kerja berhasil dihapus!`,
+      });
       setTimeout(() => {
         window.location.reload();
       }, 4000);
       setCheckedUnitKerja([]);
     } catch (error) {
       console.error("Error menghapus unit kerja:", error);
-      toast.error("Gagal menghapus unit kerja. Silakan coba lagi.");
+      setNotification({
+        type: 'error',
+        message: `Gagal menghapus unit kerja. Coba lagi.`,
+      });
     }
   };
 
@@ -773,15 +575,20 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6 mt-4 sm:mt-0 ml-4 sm:ml-0">
-      <Toaster />
+      {notification && (
+        <NotificationPopup
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div className="flex flex-col md:flex-row">
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <main className="min-h-screen bg-gray-50 p-4 md:p-6">
             <nav className=" mt-6">
@@ -853,7 +660,7 @@ const Page = () => {
                               </li>
                               {[
                                 ...(sessionStorage.getItem("role") ===
-                                "SUPER ADMIN"
+                                  "SUPER ADMIN"
                                   ? [{ id: "All", kecamatan: "All" }]
                                   : []),
                                 ...filteredCabangList,
@@ -883,11 +690,10 @@ const Page = () => {
                           value={selectedRanting}
                           readOnly
                           onClick={() => setShowRantingDropdown(true)}
-                          className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none ${
-                            !selectedCabang
+                          className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none ${!selectedCabang
                               ? "cursor-not-allowed opacity-50"
                               : ""
-                          }`}
+                            }`}
                           placeholder="Pilih Nama Ranting"
                         />
                         {showRantingDropdown && selectedCabang && (
@@ -991,16 +797,15 @@ const Page = () => {
                                 selectedCabang === "Pilih Cabang"
                                   ? allUnitKerja
                                   : allUnitKerja.filter(
-                                      (uk) => uk.cabang === selectedCabang
-                                    )
+                                    (uk) => uk.cabang === selectedCabang
+                                  )
                               );
                             }
                           }}
-                          className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none ${
-                            !selectedRanting
+                          className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none ${!selectedRanting
                               ? "cursor-not-allowed opacity-50"
                               : ""
-                          }`}
+                            }`}
                           disabled={!selectedRanting}
                         />
 
@@ -1130,7 +935,7 @@ const Page = () => {
                             </li>
                             {[
                               ...(sessionStorage.getItem("role") ===
-                              "SUPER ADMIN"
+                                "SUPER ADMIN"
                                 ? [{ id: "All", kecamatan: "All" }]
                                 : []),
                               ...filteredCabangList,
@@ -1160,9 +965,8 @@ const Page = () => {
                         value={filteredRanting}
                         readOnly
                         onClick={() => setShowFilteredRantingDropdown(true)}
-                        className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 ${
-                          !filteredCabang ? "cursor-not-allowed opacity-50" : ""
-                        }`}
+                        className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 ${!filteredCabang ? "cursor-not-allowed opacity-50" : ""
+                          }`}
                         placeholder="Pilih Nama Ranting"
                       />
                       {showFilteredRantingDropdown && filteredCabang && (
@@ -1271,7 +1075,7 @@ const Page = () => {
                                   </li>
                                   {[
                                     ...(sessionStorage.getItem("role") ===
-                                    "SUPER ADMIN"
+                                      "SUPER ADMIN"
                                       ? [{ id: "All", kecamatan: "All" }]
                                       : []),
                                     ...filteredNamaRantingCabangList,
@@ -1347,7 +1151,7 @@ const Page = () => {
                     </thead>
                     <tbody>
                       {Array.isArray(filteredData) &&
-                      filteredData.length > 0 ? (
+                        filteredData.length > 0 ? (
                         filteredData.map((item, index) => (
                           <React.Fragment key={item.id}>
                             <tr className="bg-gray-100">
@@ -1385,9 +1189,8 @@ const Page = () => {
                                     >
                                       <input
                                         type="checkbox"
-                                        id={`unitKerja-${item.id}-${
-                                          unitKerjaId || i
-                                        }`}
+                                        id={`unitKerja-${item.id}-${unitKerjaId || i
+                                          }`}
                                         name={`unitKerja-${item.id}`}
                                         value={unitKerjaId}
                                         className="w-4 h-4"
@@ -1396,9 +1199,8 @@ const Page = () => {
                                         }
                                       />
                                       <label
-                                        htmlFor={`unitKerja-${item.id}-${
-                                          unitKerjaId || i
-                                        }`}
+                                        htmlFor={`unitKerja-${item.id}-${unitKerjaId || i
+                                          }`}
                                         className="whitespace-nowrap"
                                       >
                                         {unitKerjaName || uk}
@@ -1475,9 +1277,8 @@ const Page = () => {
                                               >
                                                 <input
                                                   type="checkbox"
-                                                  id={`unitKerja-${item.id}-${
-                                                    unitKerjaId || i
-                                                  }`}
+                                                  id={`unitKerja-${item.id}-${unitKerjaId || i
+                                                    }`}
                                                   name={`unitKerja-${item.id}`}
                                                   value={unitKerjaId}
                                                   className="w-4 h-4"
@@ -1488,9 +1289,8 @@ const Page = () => {
                                                   }
                                                 />
                                                 <label
-                                                  htmlFor={`unitKerja-${
-                                                    item.id
-                                                  }-${unitKerjaId || i}`}
+                                                  htmlFor={`unitKerja-${item.id
+                                                    }-${unitKerjaId || i}`}
                                                   className="whitespace-nowrap"
                                                 >
                                                   {unitKerjaName || uk}

@@ -40,11 +40,47 @@ export default function Home() {
     }
   };
 
+  const extractUrl = (text) => {
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = text;
+    const cleanText = tempDiv.textContent || tempDiv.innerText || "";
+    
+    const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/i;
+    const match = cleanText.match(urlRegex);
+    
+    if (match) {
+      let url = match[0];
+      if (url.startsWith('www.')) {
+        url = 'https://' + url;
+      }
+      return url;
+    }
+    return null;
+  };
+
+  const hasUrl = (text) => {
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = text;
+    const cleanText = tempDiv.textContent || tempDiv.innerText || "";
+    
+    const urlRegex = /https?:\/\/|www\./i;
+    return urlRegex.test(cleanText);
+  };
+
   const handleLogin = () => {
+    if (infoGallery?.deskripsi) {
+      const url = extractUrl(infoGallery.deskripsi);
+      if (url) {
+        window.open(url, "_blank");
+        return;
+      }
+    }
     router.push("/sign-in");
   };
 
   const closePopup = () => setIsPopupVisible(false);
+
+  const showButton = infoGallery?.deskripsi && hasUrl(infoGallery.deskripsi);
 
   return (
     <div>
@@ -86,18 +122,20 @@ export default function Home() {
                 />
               )}
 
-              <button
-                className="absolute bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
-                style={{
-                  top: "85%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  zIndex: 10,
-                }}
-                onClick={handleLogin}
-              >
-                Selengkapnya
-              </button>
+              {showButton && (
+                <button
+                  className="absolute bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+                  style={{
+                    top: "85%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    zIndex: 10,
+                  }}
+                  onClick={handleLogin}
+                >
+                  Selengkapnya
+                </button>
+              )}
             </div>
           </div>
         </div>

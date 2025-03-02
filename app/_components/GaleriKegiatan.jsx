@@ -179,9 +179,20 @@ const GaleriKegiatan = () => {
     };
   }, [galleries]);
 
-  const handleRegister = (itemId) => {
+  const handleRegister = async (itemId) => {
     const selectedEvent = galleries.find(item => item.id === itemId);
     setCurrentEvent(selectedEvent);
+    
+    try {
+      const userId = sessionStorage.getItem("userId");
+      if (userId) {
+        const userDataDaftar = await GlobalApi.getUserById(userId);
+        setUserData(userDataDaftar);
+      }
+    } catch (error) {
+      console.error("Error refreshing user data:", error);
+    }
+    
     setJabatan("");
     setJabatanError("");
     setShowPopup(true);
@@ -201,7 +212,7 @@ const GaleriKegiatan = () => {
   };
 
   const handleSubmitRegistration = async () => {
-    if (!userData || !currentEvent || isSubmitting) return;
+    if (!currentEvent || isSubmitting) return;
 
     if (!validateForm()) {
       return;
@@ -209,15 +220,26 @@ const GaleriKegiatan = () => {
 
     try {
       setIsSubmitting(true);
+      
+      const userId = sessionStorage.getItem("userId");
+      if (!userId) {
+        throw new Error("User ID not found");
+      }
+      
+      const userDataDaftar = await GlobalApi.getUserById(userId);
+      
+      if (!userDataDaftar) {
+        throw new Error("Could not retrieve user data");
+      }
 
       const pesertaEvent = {
-        namaLengkap: userData.namaLengkap || userData.nama,
-        npa: userData.npaPgri,
-        email: userData.email,
-        cabang: userData.cabang,
-        unitKerja: userData.unitKerja,
+        namaLengkap: userDataDaftar.namaLengkap || userDataDaftar.nama,
+        npa: userDataDaftar.npaPgri,
+        email: userDataDaftar.email,
+        cabang: userDataDaftar.cabang,
+        unitKerja: userDataDaftar.unitKerja,
         jabatan: jabatan.trim(),
-        nomorHp: userData.nomorHp,
+        nomorHp: userDataDaftar.nomorHp,
         namaEvent: currentEvent.namaEvent
       };
 
@@ -283,16 +305,12 @@ const GaleriKegiatan = () => {
     );
   }
 
-  // Convert URLs to clickable links in HTML content
   const processHTML = (htmlContent) => {
     if (!htmlContent) return '';
 
-    // This regex matches URLs starting with http://, https://, or www.
     const urlRegex = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/g;
 
-    // Replace URLs with anchor tags
     const processedContent = htmlContent.replace(urlRegex, (url) => {
-      // Add http:// prefix to URLs starting with www.
       const href = url.startsWith('www.') ? `http://${url}` : url;
       return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${url}</a>`;
     });
@@ -300,7 +318,6 @@ const GaleriKegiatan = () => {
     return processedContent;
   };
 
-  // Helper function to safely render HTML content
   const renderHTML = (htmlContent) => {
     const processedContent = processHTML(htmlContent);
     return { __html: processedContent };
@@ -327,7 +344,7 @@ const GaleriKegiatan = () => {
                 {/* Fixed height container with better responsive handling */}
                 <div className="w-full" style={{
                   height: "0",
-                  paddingBottom: "56.25%", // 16:9 aspect ratio
+                  paddingBottom: "56.25%",
                   position: "relative"
                 }}>
                   <Image
@@ -335,17 +352,16 @@ const GaleriKegiatan = () => {
                     alt={item.deskripsi || "Gallery image"}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 80vw, 70vw"
-                    className="object-contain rounded-lg" // Added rounded corners
+                    className="object-contain rounded-lg"
                     priority={true}
-                    quality={90} // Increased quality
+                    quality={90} 
                     style={{
                       maxHeight: "100%",
                       maxWidth: "100%"
                     }}
                     onError={(e) => {
-                      // Fallback for failed images
-                      e.currentTarget.src = '/placeholder-image.jpg'; // Create a placeholder image
-                      e.currentTarget.className = 'object-cover'; // Switch to cover if placeholder
+                      e.currentTarget.src = '/placeholder-image.jpg';
+                      e.currentTarget.className = 'object-cover';
                     }}
                   />
                 </div>
@@ -406,7 +422,7 @@ const GaleriKegiatan = () => {
           </button>
 
           <h3 className="text-xl font-bold mb-4 text-center">
-            Mendaftar {currentEvent?.namaEvent ? `${currentEvent.namaEvent}` : ''}
+            Mendaftar Event {currentEvent?.namaEvent ? `${currentEvent.namaEvent}` : ''}
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
