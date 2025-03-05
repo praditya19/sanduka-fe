@@ -254,7 +254,7 @@ function SignIn() {
           </Button>
 
           <p className="mt-4 text-sm text-center text-gray-600">
-            Belum teregestrasi?
+            Belum teregistrasi?
             <Link
               href={"/create-account/syarat-ketentuan"}
               className="text-blue-500 ml-1 hover:underline"
