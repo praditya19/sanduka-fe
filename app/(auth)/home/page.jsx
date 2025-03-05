@@ -250,12 +250,12 @@ export default function IconGrid() {
       href: "/galeri",
       color: "text-green-600",
     },
-    // {
-    //   icon: faExclamationCircle,
-    //   label: "Pengaduan",
-    //   href: "/pengaduan",
-    //   color: "text-red-700",
-    // },
+    {
+      icon: faExclamationCircle,
+      label: "Pengaduan",
+      href: "/pengaduan",
+      color: "text-red-700",
+    },
   ];
   const sortByDate = (data) => {
     return [...data].sort((a, b) => {
@@ -736,7 +736,7 @@ export default function IconGrid() {
             "Ketentuan",
             "Bantuan",
             "History data",
-            // "Pengaduan",
+            "Pengaduan",
           ].includes(item.label)
         )
         .concat({
@@ -777,7 +777,7 @@ export default function IconGrid() {
             "Ketentuan",
             "Bantuan",
             "Teman Unit",
-            // "Pengaduan",
+            "Pengaduan",
           ];
           return order.indexOf(a.label) - order.indexOf(b.label);
         })

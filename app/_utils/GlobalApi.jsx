@@ -1973,6 +1973,24 @@ const getPengaduanById = async (id) => {
   }
 };
 
+const createResponPengaduan = async (data) => {
+  try {
+    const response = await axiosClient.post("/api/respon-pengaduan", data);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const getResponPengaduanByPengaduanId = async (pengaduanId) => {
+  try {
+    const response = await axiosClient.get(`/api/respon-pengaduan/pengaduan/${pengaduanId}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -2113,4 +2131,6 @@ export default {
   createPengaduan,
   getAllPengaduan,
   getPengaduanById,
+  createResponPengaduan,
+  getResponPengaduanByPengaduanId,
 };
