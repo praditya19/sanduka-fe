@@ -91,7 +91,7 @@ const NotificationPopup = ({ type, message, onClose }) => {
 };
 
 export default function PengaduanPage() {
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, setValue, watch } = useForm();
   const [pengaduanList, setPengaduanList] = useState([]);
   const [modalType, setModalType] = useState(null);
   const [buktiFoto, setBuktiFoto] = useState(null);
@@ -114,6 +114,7 @@ export default function PengaduanPage() {
   const [responses, setResponses] = useState([]);
   const [isMobileView, setIsMobileView] = useState(false);
   const [isMobileChat, setIsMobileChat] = useState(false);
+  const selectedCategory = watch("kategori");
 
   useEffect(() => {
     const handleResize = () => {
@@ -290,7 +291,7 @@ export default function PengaduanPage() {
                   ? 'bg-green-100 text-green-800'
                   : 'bg-yellow-100 text-yellow-800'
                   }`}>
-                  {selectedPengaduan.status || "Menunggu respon"}
+                  {/* {selectedPengaduan.status || "Menunggu respon"} */}
                 </span>
               </div>
 
@@ -416,6 +417,107 @@ export default function PengaduanPage() {
     );
   };
 
+  const renderPengaduanForm = () => {
+    const categories = [
+      { value: "Pengaduan", icon: "📋", color: "bg-blue-500" },
+      { value: "Kritikan", icon: "🗣️", color: "bg-green-500" },
+      { value: "Permohonan Bantuan", icon: "🤝", color: "bg-purple-500" }
+    ];
+
+    return (
+      <>
+        <h3 className="text-2xl font-semibold mb-4 text-center">
+          Buat Pengaduan
+        </h3>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Category Selection as Buttons */}
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            {categories.map((category) => (
+              <button
+                key={category.value}
+                type="button"
+                onClick={() => setValue("kategori", category.value)}
+                className={`
+                  flex flex-col items-center justify-center p-4 rounded-lg 
+                  transition-all duration-300 
+                  ${selectedCategory === category.value
+                    ? `${category.color} text-white scale-105 shadow-lg`
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
+                `}
+              >
+                <span className="text-3xl mb-2">{category.icon}</span>
+                <span className="text-sm font-medium text-center">
+                  {category.value}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Hidden input for form validation */}
+          <input
+            type="hidden"
+            {...register("kategori", {
+              required: "Silakan pilih kategori pengaduan"
+            })}
+          />
+
+          <textarea
+            {...register("deskripsi", { required: true })}
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            rows="4"
+            required
+            placeholder="Tulis pengaduan Anda..."
+          ></textarea>
+
+          {/* Input untuk unggah foto */}
+          <input
+            type="file"
+            accept="image/*"
+            {...register("buktiFoto")}
+            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  setBuktiFoto(reader.result);
+                };
+                reader.readAsDataURL(file);
+              }
+            }}
+          />
+
+          {/* Pratinjau foto yang diunggah */}
+          {buktiFoto && (
+            <div className="mt-2">
+              <p className="text-sm text-gray-500">
+                Pratinjau Foto:
+              </p>
+              <img
+                src={buktiFoto}
+                alt="Bukti Pengaduan"
+                className="w-full max-h-40 object-contain rounded-lg mt-2"
+              />
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading || !selectedCategory}
+            className={`
+              w-full py-2 rounded-lg transition 
+              ${selectedCategory
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-gray-400 text-gray-200 cursor-not-allowed'}
+            `}
+          >
+            {loading ? "Mengirim..." : "Kirim"}
+          </button>
+        </form>
+      </>
+    );
+  };
+
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
@@ -445,16 +547,20 @@ export default function PengaduanPage() {
       setLoading(true);
       const response = await GlobalApi.getAllPengaduan();
 
+      const sortedResponse = response.sort((a, b) =>
+        new Date(...b.createdAt) - new Date(...a.createdAt)
+      );
+
       let filteredPengaduan = [];
 
       if (userRole === "SUPER ADMIN") {
-        filteredPengaduan = response;
+        filteredPengaduan = sortedResponse;
       } else if (userRole === "ADMIN") {
-        filteredPengaduan = response.filter(
+        filteredPengaduan = sortedResponse.filter(
           (pengaduan) => pengaduan.cabang === userCabang
         );
       } else {
-        filteredPengaduan = response.filter(
+        filteredPengaduan = sortedResponse.filter(
           (pengaduan) => pengaduan.npa === userNpa
         );
       }
@@ -470,7 +576,6 @@ export default function PengaduanPage() {
       setLoading(false);
     }
   };
-
 
   const onSubmit = async (data) => {
     try {
@@ -528,7 +633,11 @@ export default function PengaduanPage() {
           {/* Sidebar Pengaduan */}
           <div className="w-1/3 p-4 bg-gray-100 overflow-y-auto">
             <h3 className="text-2xl font-semibold mb-4 text-center">
-              {userRole === "ADMIN" ? "Pengaduan Cabang" : "Pengaduan Saya"}
+              {userRole === "SUPER ADMIN"
+                ? "Pengaduan Anggota"
+                : userRole === "ADMIN"
+                  ? "Pengaduan Cabang"
+                  : "Pengaduan Saya"}
             </h3>
             {loading ? (
               <p className="text-center">Memuat data...</p>
@@ -554,7 +663,7 @@ export default function PengaduanPage() {
                     </p>
                     <div className="flex justify-between mt-2">
                       <p className="text-sm text-blue-600">
-                        {pengaduan.status || "Menunggu respon..."}
+                        {/* {pengaduan.status || "Menunggu respon..."} */}
                       </p>
                       {userRole === "ADMIN" && (
                         <p className="text-sm text-gray-500">
@@ -583,7 +692,11 @@ export default function PengaduanPage() {
         {!isMobileChat ? (
           <div className="p-4 overflow-y-auto">
             <h3 className="text-2xl font-semibold mb-4 text-center">
-              {userRole === "ADMIN" ? "Pengaduan Cabang" : "Pengaduan Saya"}
+              {userRole === "SUPER ADMIN"
+                ? "Pengaduan Anggota"
+                : userRole === "ADMIN"
+                  ? "Pengaduan Cabang"
+                  : "Pengaduan Saya"}
             </h3>
             {loading ? (
               <p className="text-center">Memuat data...</p>
@@ -609,7 +722,7 @@ export default function PengaduanPage() {
                     </p>
                     <div className="flex justify-between mt-2">
                       <p className="text-sm text-blue-600">
-                        {pengaduan.status || "Menunggu respon..."}
+                        {/* {pengaduan.status || "Menunggu respon..."} */}
                       </p>
                       {userRole === "ADMIN" && (
                         <p className="text-sm text-gray-500">
@@ -647,7 +760,7 @@ export default function PengaduanPage() {
           className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
             }`}
         >
-          <h2 className="text-3xl font-bold text-center mt-10 text-gray-800">
+          <h2 className="text-3xl font-bold text-center mt-12 text-gray-800">
             Pengaduan Anggota
           </h2>
 
@@ -655,23 +768,43 @@ export default function PengaduanPage() {
           <div className="grid grid-cols-2 gap-6 mt-6 max-w-md mx-auto">
             <div
               onClick={() => setModalType("pengaduan")}
-              className="p-6 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-xl shadow-lg cursor-pointer text-center hover:scale-105 transition-transform"
+              className="p-6 bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-2xl shadow-xl cursor-pointer text-center 
+    hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden
+    before:absolute before:inset-0 before:bg-black before:opacity-0 
+    hover:before:opacity-10 before:transition-opacity"
             >
-              <FontAwesomeIcon icon={faPaperPlane} className="text-4xl mb-2" />
-              <p className="text-lg font-medium">Ajukan Pengaduan</p>
+              <div className="relative z-10">
+                <FontAwesomeIcon
+                  icon={faPaperPlane}
+                  className="text-4xl mb-3 transition-transform group-hover:rotate-12"
+                />
+                <p className="text-lg font-bold">Ajukan Pengaduan</p>
+                <p className="text-sm opacity-75 mt-1">Sampaikan keluhan atau permasalahan Anda</p>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
             </div>
             <div
               onClick={() => setModalType("respon")}
-              className="p-6 bg-gradient-to-r from-green-500 to-green-700 text-white rounded-xl shadow-lg cursor-pointer text-center hover:scale-105 transition-transform"
+              className="p-6 bg-gradient-to-br from-green-600 to-green-800 text-white rounded-2xl shadow-xl cursor-pointer text-center 
+    hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden
+    before:absolute before:inset-0 before:bg-black before:opacity-0 
+    hover:before:opacity-10 before:transition-opacity"
             >
-              <FontAwesomeIcon icon={faComments} className="text-4xl mb-2" />
-              <p className="text-lg font-medium">Lihat Respon</p>
+              <div className="relative z-10">
+                <FontAwesomeIcon
+                  icon={faComments}
+                  className="text-4xl mb-3 transition-transform group-hover:rotate-12"
+                />
+                <p className="text-lg font-bold">Lihat Respon</p>
+                <p className="text-sm opacity-75 mt-1">Pantau status dan respon pengaduan Anda</p>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
             </div>
           </div>
 
           {/* Modal */}
           {modalType && (
-            <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm animate-fade-in">
+            <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm animate-fade-in z-[100]">
               <div className="bg-white p-6 mt-10 rounded-lg shadow-xl h-[86vh] w-[90vw] mx-auto relative overflow-hidden">
                 <button
                   onClick={() => {
@@ -683,79 +816,7 @@ export default function PengaduanPage() {
                 >
                   <FontAwesomeIcon icon={faTimes} className="text-xl" />
                 </button>
-                {modalType === "pengaduan" ? (
-                  <>
-                    <h3 className="text-2xl font-semibold mb-4 text-center">
-                      Buat Pengaduan
-                    </h3>
-                    <form
-                      onSubmit={handleSubmit(onSubmit)}
-                      className="space-y-4"
-                    >
-                      <select
-                        {...register("kategori", { required: true })}
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Pilih Kategori</option>
-                        <option value="Pengaduan">Pengaduan</option>
-                        <option value="Kritikan">Kritikan</option>
-                        <option value="Permohonan Bantuan">
-                          Permohonan Bantuan
-                        </option>
-                      </select>
-
-                      <textarea
-                        {...register("deskripsi", { required: true })}
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                        rows="4"
-                        required
-                        placeholder="Tulis pengaduan Anda..."
-                      ></textarea>
-
-                      {/* Input untuk unggah foto */}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        {...register("buktiFoto")}
-                        className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = () => {
-                              setBuktiFoto(reader.result);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                      />
-
-                      {/* Pratinjau foto yang diunggah */}
-                      {buktiFoto && (
-                        <div className="mt-2">
-                          <p className="text-sm text-gray-500">
-                            Pratinjau Foto:
-                          </p>
-                          <img
-                            src={buktiFoto}
-                            alt="Bukti Pengaduan"
-                            className="w-full max-h-40 object-contain rounded-lg mt-2"
-                          />
-                        </div>
-                      )}
-
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-400"
-                      >
-                        {loading ? "Mengirim..." : "Kirim"}
-                      </button>
-                    </form>
-                  </>
-                ) : (
-                  renderResponModal()
-                )}
+                {modalType === "pengaduan" ? renderPengaduanForm() : renderResponModal()}
               </div>
             </div>
           )}
