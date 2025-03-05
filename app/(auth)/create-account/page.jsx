@@ -379,19 +379,19 @@ const Page = () => {
     const newNamesAnak = [...namaAnak];
     newNamesAnak[index] = event.target.value;
     setNamaAnak(newNamesAnak);
-    setValue("namaAnak", newNamesAnak); // Sinkronkan dengan React Hook Form
+    setValue("namaAnak", newNamesAnak); 
   };
 
   const handleAddInput = () => {
     const newNamesAnak = [...namaAnak, ""];
     setNamaAnak(newNamesAnak);
-    setValue("namaAnak", newNamesAnak); // Sinkronkan dengan React Hook Form
+    setValue("namaAnak", newNamesAnak); 
   };
 
   const handleRemoveInput = (index) => {
     const newNamesAnak = namaAnak.filter((_, i) => i !== index);
     setNamaAnak(newNamesAnak);
-    setValue("namaAnak", newNamesAnak); // Sinkronkan dengan React Hook Form
+    setValue("namaAnak", newNamesAnak); 
   };
 
   const {
@@ -405,15 +405,27 @@ const Page = () => {
     defaultValues: {},
   });
 
+  const handleNamaLengkapChange = (e) => {
+    let input = e.target.value;
+
+    const parts = input.split(/([.,])/);
+
+    parts[0] = parts[0].toUpperCase();
+
+    const formattedInput = parts.join('');
+
+    setValue("namaLengkap", formattedInput);
+  };
+
   const validateForm = (errors, formRefs) => {
     let isValid = true;
 
     for (const field in errors) {
       if (errors[field]) {
-        // Mengubah nama field menjadi huruf besar pada awal kata
+  
         const formattedField = field
-          .replace(/([A-Z])/g, " $1") // Menambahkan spasi sebelum huruf kapital
-          .replace(/^./, (str) => str.toUpperCase()); // Mengubah huruf pertama menjadi kapital
+          .replace(/([A-Z])/g, " $1") 
+          .replace(/^./, (str) => str.toUpperCase()); 
 
         setNotification({
           type: 'error',
@@ -524,18 +536,18 @@ const Page = () => {
 
     let dateObj;
     if (Array.isArray(dateInput)) {
-      // Jika input adalah array [yyyy, MM, dd]
+      
       const [year, month, day] = dateInput;
-      dateObj = new Date(year, month - 1, day); // Bulan dikurangi 1 karena index bulan dimulai dari 0
+      dateObj = new Date(year, month - 1, day); 
     } else if (typeof dateInput === "string") {
-      // Jika input adalah string (misalnya "2024-12-19")
+      
       dateObj = new Date(dateInput);
     } else {
-      return null; // Format tidak valid
+      return null; 
     }
 
     const day = dateObj.getDate().toString().padStart(2, "0");
-    const month = bulanList[dateObj.getMonth()]; // Nama bulan
+    const month = bulanList[dateObj.getMonth()]; 
     const year = dateObj.getFullYear();
 
     return `${day} ${month} ${year}`;
@@ -549,7 +561,7 @@ const Page = () => {
     const cleanBase64 = base64String.split(",")[1] || base64String;
 
     const formattedTanggalLahir = response.tanggalLahir
-      ? new Date(response.tanggalLahir).toISOString().split("T")[0] // Format ke yyyy-MM-dd
+      ? new Date(response.tanggalLahir).toISOString().split("T")[0] 
       : null;
     const formattedTahunDiangkat = response.tahunDiangkat
       ? new Date(response.tahunDiangkat).toISOString().split("T")[0]
@@ -616,16 +628,14 @@ const Page = () => {
         )
       });
 
-      // Hanya arahkan ke halaman berikutnya jika berhasil
       setTimeout(() => {
         router.push("/tunggu-admin");
-      }, 4000);
+      }, 2000);
     } catch (error) {
       if (error.response?.status === 500) {
         return;
       }
 
-      // Untuk error lainnya, tampilkan toast error dan tetap di halaman
       const errorMessage =
         error.response?.data || "Terjadi kesalahan saat registrasi.";
       setNotification({
@@ -1108,6 +1118,7 @@ const Page = () => {
                     id="namaLengkap"
                     placeholder="Sesuai Dengan KTP"
                     {...register("namaLengkap", { required: true })}
+                    onChange={handleNamaLengkapChange}
                     className="border-teal-500"
                   />
                   {errors.namaLengkap && (
@@ -1963,35 +1974,8 @@ const Page = () => {
                   type="submit"
                   onClick={onSubmit}
                   className="text-white bg-teal-500 hover:bg-teal-600 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mb-2"
-                  disabled={isLoading}  // Disable the button while loading
                 >
-                  {isLoading ? (
-                    <div className="flex items-center">
-                      <svg
-                        className="animate-spin h-5 w-5 text-white mr-2"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8v8H4z"
-                        ></path>
-                      </svg>
-                      Loading...
-                    </div>
-                  ) : (
-                    "Submit"
-                  )}
+                 Submit
                 </Button>
               </div>
             </form>
