@@ -8,6 +8,10 @@ import {
   faComments,
   faTimes,
   faArrowLeft,
+  faChartBar,
+  faTrash,
+  faEye,
+  faPrint,
 } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "@/app/_components/Sidebar";
 import HeaderMenu from "@/app/_components/HeaderMenu";
@@ -115,6 +119,11 @@ export default function PengaduanPage() {
   const [isMobileView, setIsMobileView] = useState(false);
   const [isMobileChat, setIsMobileChat] = useState(false);
   const selectedCategory = watch("kategori");
+  const [rekapPengaduan, setRekapPengaduan] = useState([]);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [pengaduanToDelete, setPengaduanToDelete] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [responsesMap, setResponsesMap] = useState({});
 
   useEffect(() => {
     const handleResize = () => {
@@ -143,6 +152,22 @@ export default function PengaduanPage() {
         type: 'error',
         message: 'Gagal memuat respon'
       });
+    }
+  };
+
+  const fetchRekapPengaduan = async () => {
+    try {
+      setLoading(true);
+      const response = await GlobalApi.getAllRekapPengaduan();
+      setRekapPengaduan(response);
+    } catch (error) {
+      console.error("Error fetching rekap pengaduan:", error);
+      setNotification({
+        type: 'error',
+        message: 'Gagal memuat data rekap pengaduan'
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -530,6 +555,10 @@ export default function PengaduanPage() {
       setUserNpa(npa);
       setUserCabang(cabang);
 
+      if (role === "SUPER ADMIN" || role === "ADMIN") {
+        fetchRekapPengaduan();
+      }
+
       const handleResize = () => setIsMobile(window.innerWidth <= 768);
       window.addEventListener("resize", handleResize);
       return () => window.removeEventListener("resize", handleResize);
@@ -619,6 +648,249 @@ export default function PengaduanPage() {
     }
   };
 
+  const fetchResponsesForPengaduan = async (pengaduanId) => {
+    try {
+      const responses = await GlobalApi.getResponPengaduanByPengaduanId(pengaduanId);
+      setResponsesMap(prev => ({ ...prev, [pengaduanId]: responses }));
+    } catch (error) {
+      console.error("Error fetching responses:", error);
+    }
+  };
+
+  useEffect(() => {
+    rekapPengaduan.forEach(pengaduan => {
+      fetchResponsesForPengaduan(pengaduan.id);
+    });
+  }, [rekapPengaduan]);
+
+  const renderRekapPengaduan = () => {
+    return (
+      <div className="h-[74vh] overflow-y-auto">
+        {/* Header dengan tombol panah kiri */}
+        <div className="flex justify-between items-center mb-4">
+          <button
+            onClick={() => setModalType("respon")}
+            className="text-gray-500 hover:text-blue-600 transition-colors flex items-center"
+          >
+            <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
+          </button>
+          <h3 className="text-2xl font-semibold text-center flex-grow">
+            Rekapitulasi Pengaduan
+          </h3>
+          <button
+            onClick={handlePrint}
+            className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md flex items-center"
+            disabled={isLoading || rekapPengaduan.length === 0}
+          >
+            <FontAwesomeIcon icon={faPrint} className="mr-2" />
+            {isLoading ? "Mencetak..." : "Cetak"}
+          </button>
+        </div>
+  
+        {loading ? (
+          <p className="text-center">Memuat data rekap...</p>
+        ) : rekapPengaduan.length === 0 ? (
+          <p className="text-center text-gray-500">Belum ada data rekap pengaduan</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white rounded-lg overflow-hidden">
+              <thead className="bg-blue-600 text-white">
+                <tr>
+                  <th className="py-3 px-4 text-left">Kategori</th>
+                  <th className="py-3 px-4 text-left">Cabang</th>
+                  <th className="py-3 px-4 text-left">Tanggal</th>
+                  <th className="py-3 px-4 text-left">Aduan</th>
+                  <th className="py-3 px-4 text-left">Respons</th>
+                  <th className="py-3 px-4 text-left">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rekapPengaduan.map((rekap) => (
+                  <tr key={rekap.id} className="border-b hover:bg-gray-50">
+                    <td className="py-3 px-4">{rekap.category}</td>
+                    <td className="py-3 px-4">{rekap.cabang}</td>
+                    <td className="py-3 px-4">
+                      {new Date(...rekap.createdAt).toLocaleDateString('id-ID')}
+                    </td>
+                    <td className="py-3 px-4">{rekap.keterangan}</td>
+                    <td className="py-3 px-4">
+                      {responsesMap[rekap.id]?.map((response, index) => (
+                        <div key={index} className="mb-2">
+                          <p className="text-sm text-gray-700">
+                            <strong>{response.namaLengkap}:</strong> {response.message}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(...response.createdAt).toLocaleString('id-ID')}
+                          </p>
+                        </div>
+                      ))}
+                    </td>
+                    <td className="py-3 px-4">
+                      <button
+                        onClick={() => handleDeletePengaduan(rekap)}
+                        className="text-red-500 hover:text-red-700 mr-2"
+                        aria-label="Hapus"
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          handlePengaduanClick(rekap);
+                          setModalType("respon");
+                        }}
+                        className="text-blue-500 hover:text-blue-700"
+                        aria-label="Lihat Detail"
+                      >
+                        <FontAwesomeIcon icon={faEye} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const handlePrint = async () => {
+    setIsLoading(true);
+    try {
+      const filteredDataForPrint = rekapPengaduan;
+
+      if (!filteredDataForPrint || filteredDataForPrint.length === 0) {
+        toast.error("Tidak ada data yang tersedia untuk dicetak.");
+        return;
+      }
+
+      const printWindow = window.open("", "_blank", "width=800,height=600");
+      if (!printWindow) {
+        toast.error("Gagal membuka jendela cetak. Pastikan pop-up diizinkan.");
+        return;
+      }
+
+      const htmlContent = `
+        <html>
+          <head>
+            <title>Rekapitulasi Pengaduan</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              h3 { font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; text-align: center; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+              th { background-color: #2563eb; color: white; }
+              tr:hover { background-color: #f5f5f5; }
+              .response-item { margin-bottom: 8px; }
+              .response-name { font-weight: bold; }
+              .response-message { font-size: 0.875rem; }
+              .response-time { font-size: 0.75rem; color: #666; }
+            </style>
+          </head>
+          <body>
+            <h3>Rekapitulasi Pengaduan</h3>
+            <div style="overflow-x: auto;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Kategori</th>
+                    <th>Cabang</th>
+                    <th>Tanggal</th>
+                    <th>Aduan</th>
+                    <th>Respons</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filteredDataForPrint
+          .map(
+            (item) => `
+                    <tr>
+                      <td>${item.category}</td>
+                      <td>${item.cabang}</td>
+                      <td>
+                        ${item.createdAt
+                ? new Date(...item.createdAt).toLocaleDateString('id-ID')
+                : "-"}
+                      </td>
+                      <td>${item.keterangan}</td>
+                      <td>
+                        ${responsesMap[item.id]
+                ? responsesMap[item.id]
+                  .map((response, index) => `
+                              <div class="response-item">
+                                <div class="response-message">
+                                  <span class="response-name">${response.namaLengkap}:</span> ${response.message}
+                                </div>
+                                <div class="response-time">
+                                  ${new Date(...response.createdAt).toLocaleString('id-ID')}
+                                </div>
+                              </div>
+                            `).join('')
+                : ''}
+                      </td>
+                    </tr>
+                  `
+          )
+          .join("")}
+                </tbody>
+              </table>
+            </div>
+          </body>
+        </html>
+      `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+        printWindow.close();
+      };
+    } catch (error) {
+      console.error("Error selama proses cetak:", error);
+      toast.error("Gagal mencetak data.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeletePengaduan = (pengaduan) => {
+    setPengaduanToDelete(pengaduan);
+    setShowDeleteConfirmation(true);
+  };
+
+  const confirmDeletePengaduan = async () => {
+    try {
+      setLoading(true);
+      await GlobalApi.deletePengaduan(pengaduanToDelete.id);
+
+      fetchPengaduanList();
+      if (userRole === "SUPER ADMIN" || userRole === "ADMIN") {
+        fetchRekapPengaduan();
+      }
+
+      setNotification({
+        type: 'success',
+        message: 'Pengaduan berhasil dihapus'
+      });
+
+      if (selectedPengaduan && selectedPengaduan.id === pengaduanToDelete.id) {
+        setSelectedPengaduan(null);
+        setIsMobileChat(false);
+      }
+
+    } catch (error) {
+      console.error("Error deleting pengaduan:", error);
+      setNotification({
+        type: 'error',
+        message: 'Gagal menghapus pengaduan'
+      });
+    } finally {
+      setShowDeleteConfirmation(false);
+      setPengaduanToDelete(null);
+      setLoading(false);
+    }
+  };
+
   const toggleSidebar = () => {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
@@ -650,29 +922,90 @@ export default function PengaduanPage() {
                 {pengaduanList.map((pengaduan) => (
                   <li
                     key={pengaduan.id}
-                    className="p-4 border rounded-lg bg-gray-50 shadow-sm cursor-pointer"
-                    onClick={() => handlePengaduanClick(pengaduan)}
+                    className="p-4 border rounded-lg bg-gray-50 shadow-sm cursor-pointer relative"
                   >
-                    <h4 className="font-bold text-lg text-gray-800">
-                      {pengaduan.category}
-                    </h4>
-                    <p className="text-gray-600">
-                      {pengaduan.keterangan.length > 50
-                        ? `${pengaduan.keterangan.substring(0, 50)}...`
-                        : pengaduan.keterangan}
-                    </p>
-                    <div className="flex justify-between mt-2">
-                      <p className="text-sm text-blue-600">
-                        {/* {pengaduan.status || "Menunggu respon..."} */}
+                    <div onClick={() => handlePengaduanClick(pengaduan)}>
+                      <h4 className="font-bold text-lg text-gray-800">
+                        {pengaduan.category}
+                      </h4>
+                      <p className="text-gray-600">
+                        {pengaduan.keterangan.length > 50
+                          ? `${pengaduan.keterangan.substring(0, 50)}...`
+                          : pengaduan.keterangan}
                       </p>
-                      {userRole === "ADMIN" && (
-                        <p className="text-sm text-gray-500">
-                          NPA: {pengaduan.npa}
+                      <div className="flex justify-between mt-2">
+                        <p className="text-sm text-blue-600">
+                          {/* {pengaduan.status || "Menunggu respon..."} */}
                         </p>
-                      )}
+                        {userRole === "ADMIN" && (
+                          <p className="text-sm text-gray-500">
+                            NPA: {pengaduan.npa}
+                          </p>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Only show delete button for admins */}
+                    {(userRole === "SUPER ADMIN" ||
+                      (userRole === "ADMIN" && pengaduan.cabang === userCabang)) && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeletePengaduan(pengaduan);
+                          }}
+                          className="absolute top-2 right-2 text-red-500 hover:text-red-700 bg-white rounded-full p-1 shadow-sm"
+                          aria-label="Hapus Pengaduan"
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                      )}
                   </li>
                 ))}
+                {showDeleteConfirmation && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-[200]">
+                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                      <h3 className="text-xl font-bold text-red-600 mb-4">Konfirmasi Hapus</h3>
+                      <p className="mb-6">
+                        Apakah Anda yakin ingin menghapus pengaduan ini? Tindakan ini tidak dapat dibatalkan.
+                      </p>
+                      <div className="flex justify-end space-x-4">
+                        <button
+                          onClick={() => setShowDeleteConfirmation(false)}
+                          className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+                          disabled={loading}
+                        >
+                          Batal
+                        </button>
+                        <button
+                          onClick={confirmDeletePengaduan}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                          disabled={loading}
+                        >
+                          {loading ? "Menghapus..." : "Hapus"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {(userRole === "SUPER ADMIN" || userRole === "ADMIN") && (
+                  <div
+                    onClick={() => setModalType("rekap")}
+                    className="p-6 bg-gradient-to-br from-purple-600 to-purple-800 text-white rounded-2xl shadow-xl cursor-pointer text-center 
+    hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden
+    before:absolute before:inset-0 before:bg-black before:opacity-0 
+    hover:before:opacity-10 before:transition-opacity"
+                  >
+                    <div className="relative z-10">
+                      <FontAwesomeIcon
+                        icon={faChartBar} 
+                        className="text-4xl mb-3 transition-transform group-hover:rotate-12"
+                      />
+                      <p className="text-lg font-bold">Rekapitulasi Pengaduan</p>
+                      <p className="text-sm opacity-75 mt-1">Lihat ringkasan semua pengaduan</p>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+                  </div>
+                )}
               </ul>
             )}
           </div>
@@ -709,30 +1042,93 @@ export default function PengaduanPage() {
                 {pengaduanList.map((pengaduan) => (
                   <li
                     key={pengaduan.id}
-                    className="p-4 border rounded-lg bg-gray-50 shadow-sm cursor-pointer"
-                    onClick={() => handlePengaduanClick(pengaduan)}
+                    className="p-4 border rounded-lg bg-gray-50 shadow-sm cursor-pointer relative"
                   >
-                    <h4 className="font-bold text-lg text-gray-800">
-                      {pengaduan.category}
-                    </h4>
-                    <p className="text-gray-600">
-                      {pengaduan.keterangan.length > 50
-                        ? `${pengaduan.keterangan.substring(0, 50)}...`
-                        : pengaduan.keterangan}
-                    </p>
-                    <div className="flex justify-between mt-2">
-                      <p className="text-sm text-blue-600">
-                        {/* {pengaduan.status || "Menunggu respon..."} */}
+                    <div onClick={() => handlePengaduanClick(pengaduan)}>
+                      <h4 className="font-bold text-lg text-gray-800">
+                        {pengaduan.category}
+                      </h4>
+                      <p className="text-gray-600">
+                        {pengaduan.keterangan.length > 50
+                          ? `${pengaduan.keterangan.substring(0, 50)}...`
+                          : pengaduan.keterangan}
                       </p>
-                      {userRole === "ADMIN" && (
-                        <p className="text-sm text-gray-500">
-                          NPA: {pengaduan.npa}
+                      <div className="flex justify-between mt-2">
+                        <p className="text-sm text-blue-600">
+                          {/* {pengaduan.status || "Menunggu respon..."} */}
                         </p>
-                      )}
+                        {userRole === "ADMIN" && (
+                          <p className="text-sm text-gray-500">
+                            NPA: {pengaduan.npa}
+                          </p>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Delete button for admins - same as desktop */}
+                    {(userRole === "SUPER ADMIN" ||
+                      (userRole === "ADMIN" && pengaduan.cabang === userCabang)) && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation(); 
+                            handleDeletePengaduan(pengaduan);
+                          }}
+                          className="absolute top-2 right-2 text-red-500 hover:text-red-700 bg-white rounded-full p-1 shadow-sm"
+                          aria-label="Hapus Pengaduan"
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                      )}
                   </li>
                 ))}
+                {(userRole === "SUPER ADMIN" || userRole === "ADMIN") && (
+                  <div
+                    onClick={() => setModalType("rekap")}
+                    className="p-6 bg-gradient-to-br from-purple-600 to-purple-800 text-white rounded-2xl shadow-xl cursor-pointer text-center 
+                      hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden
+                      before:absolute before:inset-0 before:bg-black before:opacity-0 
+                      hover:before:opacity-10 before:transition-opacity"
+                  >
+                    <div className="relative z-10">
+                      <FontAwesomeIcon
+                        icon={faChartBar}
+                        className="text-4xl mb-3 transition-transform group-hover:rotate-12"
+                      />
+                      <p className="text-lg font-bold">Rekapitulasi Pengaduan</p>
+                      <p className="text-sm opacity-75 mt-1">Lihat ringkasan semua pengaduan</p>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+                  </div>
+                )}
               </ul>
+            )}
+
+            {/* Delete Confirmation Dialog - same as desktop */}
+            {showDeleteConfirmation && (
+              <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-[200]">
+                <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                  <h3 className="text-xl font-bold text-red-600 mb-4">Konfirmasi Hapus</h3>
+                  <p className="mb-6">
+                    Apakah Anda yakin ingin menghapus pengaduan ini? Tindakan ini tidak dapat dibatalkan.
+                  </p>
+                  <div className="flex justify-end space-x-4">
+                    <button
+                      onClick={() => setShowDeleteConfirmation(false)}
+                      className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+                      disabled={loading}
+                    >
+                      Batal
+                    </button>
+                    <button
+                      onClick={confirmDeletePengaduan}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                      disabled={loading}
+                    >
+                      {loading ? "Menghapus..." : "Hapus"}
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         ) : (
@@ -816,7 +1212,11 @@ export default function PengaduanPage() {
                 >
                   <FontAwesomeIcon icon={faTimes} className="text-xl" />
                 </button>
-                {modalType === "pengaduan" ? renderPengaduanForm() : renderResponModal()}
+                {modalType === "pengaduan"
+                  ? renderPengaduanForm()
+                  : modalType === "respon"
+                    ? renderResponModal()
+                    : renderRekapPengaduan()}
               </div>
             </div>
           )}
