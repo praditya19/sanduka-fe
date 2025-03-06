@@ -1972,6 +1972,24 @@ const getPengaduanById = async (id) => {
   }
 };
 
+const getAllRekapPengaduan = async () => {
+  try {
+    const response = await axiosClient.get('/api/pengaduan/all');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const deletePengaduan = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/pengaduan/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const createResponPengaduan = async (data) => {
   try {
     const response = await axiosClient.post("/api/respon-pengaduan", data);
@@ -2132,4 +2150,6 @@ export default {
   getPengaduanById,
   createResponPengaduan,
   getResponPengaduanByPengaduanId,
+  getAllRekapPengaduan,
+  deletePengaduan,
 };
