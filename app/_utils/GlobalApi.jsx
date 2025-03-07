@@ -1913,6 +1913,15 @@ const getAllPeserta = async (queryString = "") => {
   }
 };
 
+const deletePeserta = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/event/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Pengaduan
 const createPengaduan = async (data) => {
   try {
@@ -2146,6 +2155,7 @@ export default {
   getRekapRanting,
   addPesertaEvent,
   getAllPeserta,
+  deletePeserta,
   createPengaduan,
   getAllPengaduan,
   getPengaduanById,
