@@ -4,7 +4,14 @@ import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import { 
+  faTimesCircle,
+  faTrash,
+  faCheckCircle,
+  faExclamationCircle,
+  faTimes,
+  faExclamationTriangle,
+} from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { ClipLoader } from "react-spinners";
 import dynamic from "next/dynamic";
@@ -12,7 +19,7 @@ import dynamic from "next/dynamic";
 const SummernoteEditor = dynamic(
   () => {
     return Promise.all([
-      import("jquery").then((mod) => mod.default), 
+      import("jquery").then((mod) => mod.default),
       import("summernote/dist/summernote-lite.min.css"),
       import("summernote/dist/summernote-lite.min.js"),
     ]).then(([jQuery]) => {
@@ -23,7 +30,7 @@ const SummernoteEditor = dynamic(
         const editorRef = useRef(null);
 
         useEffect(() => {
-          const $ = window.jQuery; 
+          const $ = window.jQuery;
 
           if ($ && editorRef.current) {
             $(editorRef.current).summernote({
@@ -54,6 +61,78 @@ const SummernoteEditor = dynamic(
   { ssr: false }
 );
 
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
+      default:
+        return 'bg-blue-100';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success':
+        return <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 text-3xl" />;
+      case 'error':
+        return <FontAwesomeIcon icon={faExclamationCircle} className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      default:
+        return 'text-blue-800';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FontAwesomeIcon icon={faTimesCircle} size="lg" />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Page = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -74,6 +153,7 @@ const Page = () => {
   const fileInputRef = useRef(null);
   const formRef = useRef(null);
   const itemsPerPage = 6;
+  const [notification, setNotification] = useState(null);
 
   const handleResize = () => {
     setIsMobile(window.innerWidth <= 768);
@@ -118,6 +198,10 @@ const Page = () => {
       setGalleries(data);
     } catch (error) {
       console.error("Error fetching galleries:", error);
+      setNotification({
+        type: 'error',
+        message: 'Gagal mengambil data galeri. Silakan coba lagi.'
+      });
     }
   };
 
@@ -195,6 +279,11 @@ const Page = () => {
             gallery.id === editingId ? newGallery : gallery
           )
         );
+
+        setNotification({
+          type: 'success',
+          message: 'Data berhasil diperbarui!'
+        });
       } else {
         newGallery = await GlobalApi.createSidebarGallery({
           category: category,
@@ -209,13 +298,21 @@ const Page = () => {
           setCurrentPage(newItemPage);
           return updatedGalleries;
         });
+
+        setNotification({
+          type: 'success',
+          message: 'Data berhasil ditambahkan!'
+        });
       }
 
       resetForm();
 
     } catch (error) {
       console.error("Error saving gallery:", error);
-      alert("Terjadi kesalahan saat menyimpan data. Silakan coba lagi.");
+      setNotification({
+        type: 'error',
+        message: 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -238,8 +335,17 @@ const Page = () => {
           return updatedGalleries;
         });
         setIsDeleteModalOpen(false);
+
+        setNotification({
+          type: 'success',
+          message: 'Data berhasil dihapus!'
+        });
       } catch (error) {
         console.error("Error deleting gallery:", error);
+        setNotification({
+          type: 'error',
+          message: 'Gagal menghapus data. Silakan coba lagi.'
+        });
       }
     }
   };
@@ -314,9 +420,65 @@ const Page = () => {
     }
   };
 
+  const ConfirmationDialog = ({ isOpen, onClose, onConfirm, title, message }) => {
+    if (!isOpen) return null;
+  
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60]">
+        <div className="bg-white rounded-lg shadow-xl w-96 relative">
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 text-gray-500 hover:text-red-700"
+          >
+            <FontAwesomeIcon icon={faTimesCircle} size="lg" />
+          </button>
+          <div className="p-6 text-center">
+            <h2 className="text-lg font-bold mb-4">{title}</h2>
+            <p className="mb-6">{message}</p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={onConfirm}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              >
+                Ya
+              </button>
+              <button
+                onClick={onClose}
+                className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"
+              >
+                Tidak
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const PesertaModal = () => {
     if (!isPesertaModalOpen) return null;
-
+  
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteId, setDeleteId] = useState(null);
+    const [confirmDialog, setConfirmDialog] = useState({
+      isOpen: false,
+      id: null
+    });
+  
+    const openConfirmDialog = (id) => {
+      setConfirmDialog({
+        isOpen: true,
+        id: id
+      });
+    };
+  
+    const closeConfirmDialog = () => {
+      setConfirmDialog({
+        isOpen: false,
+        id: null
+      });
+    };
+  
     const handlePrint = () => {
       const printFrame = document.createElement("iframe");
       printFrame.style.position = "fixed";
@@ -325,11 +487,11 @@ const Page = () => {
       printFrame.style.width = "0";
       printFrame.style.height = "0";
       printFrame.style.border = "0";
-
+  
       document.body.appendChild(printFrame);
-
+  
       const eventName = selectedEvent?.namaEvent || "Event";
-
+  
       const printContent = `
         <!DOCTYPE html>
         <html>
@@ -369,8 +531,8 @@ const Page = () => {
               </thead>
               <tbody>
                 ${pesertaList
-          .map(
-            (peserta, index) => `
+                  .map(
+                    (peserta, index) => `
                   <tr>
                     <td>${index + 1}</td>
                     <td>${peserta.namaLengkap}</td>
@@ -381,8 +543,8 @@ const Page = () => {
                     <td>${peserta.jabatan}</td>
                   </tr>
                 `
-          )
-          .join("")}
+                  )
+                  .join("")}
               </tbody>
             </table>
           </div>
@@ -392,7 +554,7 @@ const Page = () => {
         </body>
         </html>
       `;
-
+  
       const frameDoc =
         printFrame.contentWindow ||
         printFrame.contentDocument.document ||
@@ -400,17 +562,84 @@ const Page = () => {
       frameDoc.document.open();
       frameDoc.document.write(printContent);
       frameDoc.document.close();
-
+  
       setTimeout(() => {
         frameDoc.focus();
         frameDoc.print();
-
+  
         setTimeout(() => {
           document.body.removeChild(printFrame);
         }, 1000);
       }, 500);
     };
-
+  
+    const exportToExcel = () => {
+      try {
+        import('xlsx').then(XLSX => {
+          const eventName = selectedEvent?.namaEvent || "Event";
+  
+          const excelData = pesertaList.map((peserta, index) => ({
+            'No': index + 1,
+            'Nama': peserta.namaLengkap,
+            'NPA': peserta.npa,
+            'Cabang': peserta.cabang,
+            'Unit Kerja': peserta.unitKerja,
+            'Nomor HP': peserta.nomorHp,
+            'Jabatan Organisasi': peserta.jabatan
+          }));
+  
+          const wb = XLSX.utils.book_new();
+          const ws = XLSX.utils.json_to_sheet(excelData);
+  
+          const columnWidths = [
+            { wch: 5 },   
+            { wch: 30 },  
+            { wch: 15 },  
+            { wch: 20 },  
+            { wch: 25 },  
+            { wch: 15 },  
+            { wch: 25 },  
+          ];
+  
+          ws['!cols'] = columnWidths;
+  
+          XLSX.utils.book_append_sheet(wb, ws, 'Daftar Peserta');
+  
+          XLSX.writeFile(wb, `Daftar Peserta - ${eventName}.xlsx`);
+        }).catch(error => {
+          console.error("Error loading XLSX library:", error);
+          alert("Gagal mengekspor ke Excel. Silakan coba lagi.");
+        });
+      } catch (error) {
+        console.error("Error exporting to Excel:", error);
+        alert("Gagal mengekspor ke Excel. Silakan coba lagi.");
+      }
+    };
+  
+    const handleDeletePeserta = async (id) => {
+      setIsDeleting(true);
+      setDeleteId(id);
+  
+      try {
+        await GlobalApi.deletePeserta(id);
+        setPesertaList(pesertaList.filter(peserta => peserta.id !== id));
+  
+        setNotification({
+          type: 'success',
+          message: 'Peserta berhasil dihapus!'
+        });
+      } catch (error) {
+        console.error("Error deleting peserta:", error);
+        setNotification({
+          type: 'error',
+          message: 'Gagal menghapus peserta. Silakan coba lagi.'
+        });
+      } finally {
+        setIsDeleting(false);
+        setDeleteId(null);
+      }
+    };
+  
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
         <div className="bg-white rounded-lg shadow-xl w-[80%] max-h-[80vh] relative">
@@ -425,12 +654,20 @@ const Page = () => {
               <h2 className="text-lg font-bold">
                 Daftar Peserta - {selectedEvent?.namaEvent}
               </h2>
-              <button
-                onClick={handlePrint}
-                className="bg-blue-500 text-white px-4 py-2 mr-3 rounded hover:bg-blue-600"
-              >
-                Cetak
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={exportToExcel}
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                >
+                  Download Excel
+                </button>
+                <button
+                  onClick={handlePrint}
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                >
+                  Download PDF
+                </button>
+              </div>
             </div>
             <div className="overflow-auto max-h-[60vh]">
               {isLoadingPeserta ? (
@@ -459,6 +696,9 @@ const Page = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Jabatan Organisasi
                       </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Aksi
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -483,12 +723,26 @@ const Page = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {peserta.jabatan}
                           </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                            <button
+                              onClick={() => openConfirmDialog(peserta.id)}
+                              disabled={isDeleting && deleteId === peserta.id}
+                              className="text-red-500 hover:text-red-700 focus:outline-none"
+                              title="Hapus Peserta"
+                            >
+                              {isDeleting && deleteId === peserta.id ? (
+                                <ClipLoader color="#FF0000" size={16} />
+                              ) : (
+                                <FontAwesomeIcon icon={faTrash} />
+                              )}
+                            </button>
+                          </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
                         <td
-                          colSpan="4"
+                          colSpan="7"
                           className="px-6 py-4 text-center text-sm text-gray-500"
                         >
                           Tidak ada data peserta
@@ -501,6 +755,18 @@ const Page = () => {
             </div>
           </div>
         </div>
+  
+        {/* Custom Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={confirmDialog.isOpen}
+          onClose={closeConfirmDialog}
+          onConfirm={() => {
+            handleDeletePeserta(confirmDialog.id);
+            closeConfirmDialog();
+          }}
+          title="Konfirmasi Hapus"
+          message="Apakah Anda yakin ingin menghapus peserta ini?"
+        />
       </div>
     );
   };
@@ -847,6 +1113,13 @@ const Page = () => {
 
       <DeleteConfirmationModal />
       <PesertaModal />
+      {notification && (
+        <NotificationPopup
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 };
