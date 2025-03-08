@@ -124,9 +124,9 @@ export default function Home() {
 
               {showButton && (
                 <button
-                  className="absolute bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+                  className="absolute bg-blue-500 hover:bg-blue-600 text-white mt-6 px-4 py-2 rounded-lg"
                   style={{
-                    top: "85%",
+                    top: "95%",
                     left: "50%",
                     transform: "translate(-50%, -50%)",
                     zIndex: 10,

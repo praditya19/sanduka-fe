@@ -8,6 +8,7 @@ const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
 });
+
 // Konversi Gambar Dalam Format Base64
 const base64ToBlob = (base64, mime) => {
   const byteChars = atob(base64);
@@ -1891,9 +1892,13 @@ const deleteNamaRanting = async (id) => {
 const getRekapRanting = () => axiosClient.get("/api/ranting/summary");
 
 //Peserta Event
-const addPesertaEvent = async (pesertaEvent) => {
+const addPesertaEvent = async (formData) => {
   try {
-    const response = await axiosClient.post("/api/event", pesertaEvent);
+    const response = await axiosClient.post("/api/event", formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
     return response.data;
   } catch (error) {
     console.error("Error add peserta event:", error);
@@ -1906,6 +1911,15 @@ const getAllPeserta = async (queryString = "") => {
     const response = await axiosClient.get(
       `/api/event${queryString ? `?${queryString}` : ""}`
     );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const deletePeserta = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/event/${id}`);
     return response.data;
   } catch (error) {
     throw error;
@@ -1966,6 +1980,24 @@ const getAllPengaduan = async (filters = {}) => {
 const getPengaduanById = async (id) => {
   try {
     const response = await axiosClient.get(`/api/pengaduan/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const getAllRekapPengaduan = async () => {
+  try {
+    const response = await axiosClient.get('/api/pengaduan/all');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const deletePengaduan = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/pengaduan/${id}`);
     return response.data;
   } catch (error) {
     throw error;
@@ -2127,9 +2159,12 @@ export default {
   getRekapRanting,
   addPesertaEvent,
   getAllPeserta,
+  deletePeserta,
   createPengaduan,
   getAllPengaduan,
   getPengaduanById,
   createResponPengaduan,
   getResponPengaduanByPengaduanId,
+  getAllRekapPengaduan,
+  deletePengaduan,
 };
