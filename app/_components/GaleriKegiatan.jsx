@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -93,6 +93,12 @@ const GaleriKegiatan = () => {
   const [notification, setNotification] = useState(null);
   const [jabatan, setJabatan] = useState("");
   const [jabatanError, setJabatanError] = useState("");
+  const [komisi, setKomisi] = useState("");
+  const [komisiError, setKomisiError] = useState("");
+  const [ranting, setRanting] = useState("");
+  const [rantingError, setRantingError] = useState("");
+  const [uploadFile, setUploadFile] = useState(null);
+  const [fileName, setFileName] = useState("");
 
   useEffect(() => {
     fetchGalleries();
@@ -182,7 +188,7 @@ const GaleriKegiatan = () => {
   const handleRegister = async (itemId) => {
     const selectedEvent = galleries.find(item => item.id === itemId);
     setCurrentEvent(selectedEvent);
-    
+
     try {
       const userId = sessionStorage.getItem("userId");
       if (userId) {
@@ -192,7 +198,7 @@ const GaleriKegiatan = () => {
     } catch (error) {
       console.error("Error refreshing user data:", error);
     }
-    
+
     setJabatan("");
     setJabatanError("");
     setShowPopup(true);
@@ -211,63 +217,7 @@ const GaleriKegiatan = () => {
     return isValid;
   };
 
-  const handleSubmitRegistration = async () => {
-    if (!currentEvent || isSubmitting) return;
-
-    if (!validateForm()) {
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      
-      const userId = sessionStorage.getItem("userId");
-      if (!userId) {
-        throw new Error("User ID not found");
-      }
-      
-      const userDataDaftar = await GlobalApi.getUserById(userId);
-      
-      if (!userDataDaftar) {
-        throw new Error("Could not retrieve user data");
-      }
-
-      const pesertaEvent = {
-        namaLengkap: userDataDaftar.namaLengkap || userDataDaftar.nama,
-        npa: userDataDaftar.npaPgri,
-        email: userDataDaftar.email,
-        cabang: userDataDaftar.cabang,
-        unitKerja: userDataDaftar.unitKerja,
-        jabatan: jabatan.trim(),
-        nomorHp: userDataDaftar.nomorHp,
-        namaEvent: currentEvent.namaEvent
-      };
-
-      await GlobalApi.addPesertaEvent(pesertaEvent);
-
-      setRegistrationStatus(prev => ({
-        ...prev,
-        [currentEvent.id]: "Sudah Terdaftar"
-      }));
-
-      await fetchEventParticipants();
-
-      setShowPopup(false);
-      setNotification({
-        type: 'success',
-        message: `Selamat! Anda telah berhasil terdaftar untuk event "${currentEvent.namaEvent}".`
-      });
-
-    } catch (error) {
-      console.error("Error submitting registration:", error);
-      setNotification({
-        type: 'error',
-        message: 'Maaf, pendaftaran event gagal. Silakan coba lagi atau hubungi administrator jika masalah berlanjut.'
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  
 
   const nonEventGalleries = galleries.filter(item => item.category !== 'EVENT');
   const eventGalleries = galleries.filter(item => item.category === 'EVENT');
@@ -324,7 +274,80 @@ const GaleriKegiatan = () => {
   };
 
   const GallerySwiper = ({ items, title, showRegisterButton = false }) => {
+    const [expandedItems, setExpandedItems] = useState({});
+    const maxDescriptionLength = 150; 
+
     if (items.length === 0) return null;
+
+    const toggleExpand = (itemId) => {
+      setExpandedItems(prev => ({
+        ...prev,
+        [itemId]: !prev[itemId]
+      }));
+    };
+
+    const renderDescription = (item) => {
+      const plainText = item.deskripsi ? stripHtml(item.deskripsi) : "";
+      const isLongText = plainText.length > maxDescriptionLength;
+      const isExpanded = expandedItems[item.id];
+
+      if (!isLongText) {
+        return (
+          <div
+            className="text-gray-600 mt-1 prose max-w-none text-justify sm:text-left md:text-justify"
+            dangerouslySetInnerHTML={renderHTML(item.deskripsi)}
+          ></div>
+        );
+      }
+
+      return (
+        <>
+          <div
+            className="text-gray-600 mt-1 prose max-w-none text-justify sm:text-left md:text-justify"
+            dangerouslySetInnerHTML={renderHTML(
+              isExpanded
+                ? item.deskripsi
+                : truncateHtml(item.deskripsi, maxDescriptionLength)
+            )}
+          ></div>
+          <button
+            onClick={() => toggleExpand(item.id)}
+            className="text-blue-500 hover:text-blue-700 mt-1 text-sm font-medium focus:outline-none"
+          >
+            {isExpanded ? "Lihat lebih sedikit" : "Lihat lebih banyak"}
+          </button>
+        </>
+      );
+    };
+
+    const stripHtml = (html) => {
+      const tmp = document.createElement("DIV");
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || "";
+    };
+
+    const truncateHtml = (html, maxLength) => {
+      const tmp = document.createElement("DIV");
+      tmp.innerHTML = html;
+      const text = tmp.textContent || tmp.innerText || "";
+
+      if (text.length <= maxLength) return html;
+
+      let truncated = "";
+      let currentLength = 0;
+      const words = text.split(" ");
+
+      for (const word of words) {
+        if (currentLength + word.length <= maxLength - 3) { 
+          truncated += word + " ";
+          currentLength += word.length + 1;
+        } else {
+          break;
+        }
+      }
+
+      return truncated.trim() + "...";
+    };
 
     return (
       <div className="mb-12">
@@ -354,7 +377,7 @@ const GaleriKegiatan = () => {
                     sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 80vw, 70vw"
                     className="object-contain rounded-lg"
                     priority={true}
-                    quality={90} 
+                    quality={90}
                     style={{
                       maxHeight: "100%",
                       maxWidth: "100%"
@@ -370,16 +393,15 @@ const GaleriKegiatan = () => {
                 {item.category === "EVENT" ? (
                   <div>
                     <p className="text-lg font-medium">{item.namaEvent}</p>
+                    {renderDescription(item)}
+                  </div>
+                ) : (
+                  <div>
                     <div
-                      className="text-gray-600 mt-1 prose max-w-none text-justify sm:text-left md:text-justify"
+                      className="text-lg font-medium prose max-w-none"
                       dangerouslySetInnerHTML={renderHTML(item.deskripsi)}
                     ></div>
                   </div>
-                ) : (
-                  <div
-                    className="text-lg font-medium prose max-w-none"
-                    dangerouslySetInnerHTML={renderHTML(item.deskripsi)}
-                  ></div>
                 )}
                 {showRegisterButton && userData?.role === "USER" && (
                   <div className="mt-3">
@@ -409,10 +431,104 @@ const GaleriKegiatan = () => {
   const Popup = () => {
     if (!showPopup) return null;
 
+    const [fileName, setFileName] = useState("");
+    const [uploadFile, setUploadFile] = useState(null);
+    const [komisi, setKomisi] = useState("");
+    const [komisiError, setKomisiError] = useState("");
+    const [ranting, setRanting] = useState("");
+    const [rantingError, setRantingError] = useState("");
+    const fileInputRef = useRef(null);
+
+    const handleFileChange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+        if (allowedTypes.includes(file.type)) {
+          setUploadFile(file);
+          setFileName(file.name);
+        } else {
+          alert("Format file tidak didukung. Pilih file PDF, JPG, PNG, atau JPEG.");
+          e.target.value = null;
+          setFileName("");
+          setUploadFile(null);
+        }
+      } else {
+        setFileName("");
+        setUploadFile(null);
+      }
+    };
+
+    const handleCustomButtonClick = () => {
+      fileInputRef.current.click();
+    };
+
+    const handleSubmitRegistration = async () => {
+      if (!currentEvent || isSubmitting) return;
+    
+      if (!validateForm()) {
+        return;
+      }
+    
+      try {
+        setIsSubmitting(true);
+    
+        const userId = sessionStorage.getItem("userId");
+        if (!userId) {
+          throw new Error("User ID not found");
+        }
+    
+        const userDataDaftar = await GlobalApi.getUserById(userId);
+    
+        if (!userDataDaftar) {
+          throw new Error("Could not retrieve user data");
+        }
+    
+        const formData = new FormData();
+        formData.append("namaLengkap", userDataDaftar.namaLengkap || userDataDaftar.nama);
+        formData.append("npa", userDataDaftar.npaPgri);
+        formData.append("email", userDataDaftar.email);
+        formData.append("cabang", userDataDaftar.cabang);
+        formData.append("unitKerja", userDataDaftar.unitKerja);
+        formData.append("jabatan", jabatan.trim());
+        formData.append("nomorHp", userDataDaftar.nomorHp);
+        formData.append("namaEvent", currentEvent.namaEvent);
+        // formData.append("komisi", komisi || "");
+        // formData.append("ranting", ranting || "");
+    
+        if (uploadFile) {
+          formData.append("upload", uploadFile, fileName); 
+        }
+    
+        await GlobalApi.addPesertaEvent(formData);
+    
+        setRegistrationStatus(prev => ({
+          ...prev,
+          [currentEvent.id]: "Sudah Terdaftar"
+        }));
+    
+        await fetchEventParticipants();
+    
+        setShowPopup(false);
+        setNotification({
+          type: 'success',
+          message: `Selamat! Anda telah berhasil terdaftar untuk event "${currentEvent.namaEvent}".`
+        });
+    
+      } catch (error) {
+        console.error("Error submitting registration:", error);
+        setNotification({
+          type: 'error',
+          message: 'Maaf, pendaftaran event gagal. Silakan coba lagi atau hubungi administrator jika masalah berlanjut.'
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
     return (
       <div className="fixed inset-0 flex items-center justify-center z-[1000]">
         <div className="absolute inset-0 bg-black opacity-50"></div>
-        <div className="relative bg-white rounded-lg p-4 sm:p-6 shadow-xl z-[1001] w-full max-w-xs sm:max-w-md md:max-w-lg mx-4 transform transition-all duration-300 ease-in-out">
+        <div className="relative bg-white rounded-lg p-4 sm:p-6 shadow-xl z-[1001] w-full max-w-xs sm:max-w-md md:max-w-lg mx-4 transform transition-all duration-300 ease-in-out overflow-y-auto max-h-[90vh]">
           <button
             onClick={() => setShowPopup(false)}
             className="absolute top-2 right-2 text-red-600 hover:text-red-800 transition-colors"
@@ -485,6 +601,91 @@ const GaleriKegiatan = () => {
                 <p className="text-red-500 text-sm mt-1">{jabatanError}</p>
               )}
             </div>
+
+            {/* <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors col-span-1 sm:col-span-2">
+              <label className="text-sm text-gray-600" htmlFor="komisi">
+                Komisi
+              </label>
+              <input
+                id="komisi"
+                type="text"
+                value={komisi}
+                onChange={(e) => setKomisi(e.target.value)}
+                placeholder="Masukkan komisi (jika ada)"
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {komisiError && (
+                <p className="text-red-500 text-sm mt-1">{komisiError}</p>
+              )}
+            </div> */}
+
+            {/* <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors col-span-1 sm:col-span-2">
+              <label className="text-sm text-gray-600" htmlFor="ranting">
+                Ranting
+              </label>
+              <input
+                id="ranting"
+                type="text"
+                value={ranting}
+                onChange={(e) => setRanting(e.target.value)}
+                placeholder="Masukkan ranting (jika ada)"
+                className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {rantingError && (
+                <p className="text-red-500 text-sm mt-1">{rantingError}</p>
+              )}
+            </div> */}
+
+            <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors col-span-1 sm:col-span-2">
+              <label className="text-sm text-gray-600" htmlFor="uploadFile">
+                Upload Dokumen (opsional)
+              </label>
+              <div className="flex flex-col space-y-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleFileChange}
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  className="hidden"
+                />
+                <div className="w-full mt-1 border border-gray-300 rounded-md overflow-hidden flex">
+                  <button
+                    type="button"
+                    onClick={handleCustomButtonClick}
+                    className="bg-gray-100 hover:bg-gray-200 py-2 px-4 border-r border-gray-300 text-gray-700 font-medium transition-colors"
+                  >
+                    Choose File
+                  </button>
+                  <div className="flex-1 px-3 py-2 text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap">
+                    {fileName || "No file chosen"}
+                  </div>
+                </div>
+
+                {fileName && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start">
+                    <div className="flex-grow">
+                      <p className="text-sm text-blue-700 break-words">
+                        <span className="font-medium">File terpilih:</span> {fileName}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setFileName("");
+                        setUploadFile(null);
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = "";
+                        }
+                      }}
+                      className="text-red-500 hover:text-red-700 ml-2"
+                      aria-label="Remove file"
+                    >
+                      <FaTimesCircle size={18} />
+                    </button>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Format yang didukung: PDF, JPG, PNG, JPEG</p>
+            </div>
           </div>
 
           <button
@@ -523,7 +724,7 @@ const GaleriKegiatan = () => {
           />
         </div>
       </div>
-      {showPopup && <Popup />}
+      {showPopup && <Popup setUploadFile={setUploadFile} />}
       {notification && (
         <NotificationPopup
           type={notification.type}
