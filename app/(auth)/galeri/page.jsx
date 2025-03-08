@@ -4,13 +4,14 @@ import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
+import {
   faTimesCircle,
   faTrash,
   faCheckCircle,
   faExclamationCircle,
   faTimes,
   faExclamationTriangle,
+  faDownload,
 } from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { ClipLoader } from "react-spinners";
@@ -422,7 +423,7 @@ const Page = () => {
 
   const ConfirmationDialog = ({ isOpen, onClose, onConfirm, title, message }) => {
     if (!isOpen) return null;
-  
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60]">
         <div className="bg-white rounded-lg shadow-xl w-96 relative">
@@ -457,28 +458,136 @@ const Page = () => {
 
   const PesertaModal = () => {
     if (!isPesertaModalOpen) return null;
-  
+
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
     const [confirmDialog, setConfirmDialog] = useState({
       isOpen: false,
       id: null
     });
-  
+
     const openConfirmDialog = (id) => {
       setConfirmDialog({
         isOpen: true,
         id: id
       });
     };
-  
+
     const closeConfirmDialog = () => {
       setConfirmDialog({
         isOpen: false,
         id: null
       });
     };
-  
+
+    const handleFileDownload = (upload, fileName) => {
+      if (!upload) {
+        alert("File tidak tersedia");
+        return;
+      }
+
+      try {
+        const byteCharacters = atob(upload);
+        const byteNumbers = new Array(byteCharacters.length);
+
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+
+        const byteArray = new Uint8Array(byteNumbers);
+
+        let mimeType = 'application/octet-stream'; 
+        let fileExtension = '.bin'; 
+
+        if (byteArray[0] === 0x25 && byteArray[1] === 0x50 &&
+          byteArray[2] === 0x44 && byteArray[3] === 0x46) {
+          mimeType = 'application/pdf';
+          fileExtension = '.pdf';
+        }
+        else if (byteArray[0] === 0xFF && byteArray[1] === 0xD8) {
+          mimeType = 'image/jpeg';
+          fileExtension = '.jpg';
+        }
+        else if (byteArray[0] === 0x89 && byteArray[1] === 0x50 &&
+          byteArray[2] === 0x4E && byteArray[3] === 0x47) {
+          mimeType = 'image/png';
+          fileExtension = '.png';
+        }
+
+        const blob = new Blob([byteArray], { type: mimeType });
+
+        if (!fileName.toLowerCase().endsWith(fileExtension)) {
+          fileName += fileExtension;
+        }
+
+        const blobUrl = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      } catch (error) {
+        console.error("Error downloading file:", error);
+        alert("Gagal mengunduh file. Format file mungkin tidak valid.");
+      }
+    };
+
+    const isImageFile = (byteArray) => {
+      if (byteArray[0] === 0xFF && byteArray[1] === 0xD8) {
+        return true;
+      }
+      if (byteArray[0] === 0x89 && byteArray[1] === 0x50 &&
+          byteArray[2] === 0x4E && byteArray[3] === 0x47) {
+        return true;
+      }
+      return false;
+    };
+
+    const isPdfFile = (byteArray) => {
+      return (byteArray[0] === 0x25 && byteArray[1] === 0x50 &&
+              byteArray[2] === 0x44 && byteArray[3] === 0x46);
+    };
+
+    const getFileMimeType = (byteArray) => {
+      if (isPdfFile(byteArray)) return 'application/pdf';
+      if (byteArray[0] === 0xFF && byteArray[1] === 0xD8) return 'image/jpeg';
+      if (byteArray[0] === 0x89 && byteArray[1] === 0x50 &&
+          byteArray[2] === 0x4E && byteArray[3] === 0x47) return 'image/png';
+      return 'application/octet-stream';
+    };
+
+    const getFileDataUri = (upload) => {
+      if (!upload) return null;
+      
+      try {
+        const byteCharacters = atob(upload);
+        const byteArray = new Uint8Array(byteCharacters.length);
+        
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteArray[i] = byteCharacters.charCodeAt(i);
+        }
+        
+        const mimeType = getFileMimeType(byteArray);
+        
+        let binary = '';
+        const bytes = new Uint8Array(byteArray);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        const base64Data = window.btoa(binary);
+        
+        return `data:${mimeType};base64,${base64Data}`;
+      } catch (error) {
+        console.error("Error creating data URI:", error);
+        return null;
+      }
+    };
+
     const handlePrint = () => {
       const printFrame = document.createElement("iframe");
       printFrame.style.position = "fixed";
@@ -487,11 +596,57 @@ const Page = () => {
       printFrame.style.width = "0";
       printFrame.style.height = "0";
       printFrame.style.border = "0";
-  
+
       document.body.appendChild(printFrame);
-  
+
       const eventName = selectedEvent?.namaEvent || "Event";
-  
+
+      const participantsWithFiles = pesertaList.map(peserta => {
+        let fileHtml = '<span>Tidak ada</span>';
+        
+        if (peserta.upload) {
+          try {
+            const byteCharacters = atob(peserta.upload);
+            const byteArray = new Uint8Array(byteCharacters.length);
+            
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteArray[i] = byteCharacters.charCodeAt(i);
+            }
+            
+            const dataUri = getFileDataUri(peserta.upload);
+            
+            if (isImageFile(byteArray)) {
+              fileHtml = `
+                <div style="text-align: center;">
+                  <img src="${dataUri}" style="max-width: 120px; max-height: 120px; display: block; margin: 0 auto;" />
+                </div>
+              `;
+            } else if (isPdfFile(byteArray)) {
+              fileHtml = `
+                <div style="text-align: center;">
+                  <object data="${dataUri}" type="application/pdf" style="width: 80px; height: 100px;">
+                    <div style="border: 1px solid #ccc; padding: 5px; width: 80px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                      <span style="color: #cc0000; font-weight: bold;">PDF</span>
+                    </div>
+                  </object>
+                </div>
+              `;
+            } else {
+              fileHtml = `
+                <div style="text-align: center; border: 1px solid #ccc; padding: 5px; width: 80px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                  <span style="font-weight: bold;">File</span>
+                </div>
+              `;
+            }
+          } catch (error) {
+            console.error("Error processing file for PDF embedding:", error);
+            fileHtml = '<span>Tersedia (Error)</span>';
+          }
+        }
+        
+        return { ...peserta, fileHtml };
+      });
+
       const printContent = `
         <!DOCTYPE html>
         <html>
@@ -505,11 +660,17 @@ const Page = () => {
               padding: 8px; 
               text-align: left; 
               border: 1px solid #000; 
+              vertical-align: middle;
             }
             th { background-color: #f2f2f2; font-weight: bold; }
             .print-header { margin-bottom: 20px; text-align: center; }
             .table-container { margin-bottom: 30px; }
             .footer { text-align: right; margin-top: 20px; }
+            td.file-cell { 
+              padding: 10px; 
+              text-align: center; 
+              width: 140px; 
+            }
           </style>
         </head>
         <body>
@@ -527,22 +688,24 @@ const Page = () => {
                   <th>Unit Kerja</th>
                   <th>Nomor HP</th>
                   <th>Jabatan Organisasi</th>
+                  <th>File</th>
                 </tr>
               </thead>
               <tbody>
-                ${pesertaList
+                ${participantsWithFiles
                   .map(
                     (peserta, index) => `
-                  <tr>
-                    <td>${index + 1}</td>
-                    <td>${peserta.namaLengkap}</td>
-                    <td>${peserta.npa}</td>
-                    <td>${peserta.cabang}</td>
-                    <td>${peserta.unitKerja}</td>
-                    <td>${peserta.nomorHp}</td>
-                    <td>${peserta.jabatan}</td>
-                  </tr>
-                `
+                      <tr>
+                        <td>${index + 1}</td>
+                        <td>${peserta.namaLengkap}</td>
+                        <td>${peserta.npa}</td>
+                        <td>${peserta.cabang}</td>
+                        <td>${peserta.unitKerja}</td>
+                        <td>${peserta.nomorHp}</td>
+                        <td>${peserta.jabatan}</td>
+                        <td class="file-cell">${peserta.fileHtml}</td>
+                      </tr>
+                    `
                   )
                   .join("")}
               </tbody>
@@ -554,7 +717,7 @@ const Page = () => {
         </body>
         </html>
       `;
-  
+
       const frameDoc =
         printFrame.contentWindow ||
         printFrame.contentDocument.document ||
@@ -562,68 +725,67 @@ const Page = () => {
       frameDoc.document.open();
       frameDoc.document.write(printContent);
       frameDoc.document.close();
-  
+
       setTimeout(() => {
         frameDoc.focus();
         frameDoc.print();
-  
+
         setTimeout(() => {
           document.body.removeChild(printFrame);
         }, 1000);
       }, 500);
     };
-  
-    const exportToExcel = () => {
+
+    const exportToExcel = async () => {
       try {
-        import('xlsx').then(XLSX => {
-          const eventName = selectedEvent?.namaEvent || "Event";
-  
-          const excelData = pesertaList.map((peserta, index) => ({
+        const XLSX = await import('xlsx');
+        
+        const eventName = selectedEvent?.namaEvent || "Event";
+        
+        const wb = XLSX.utils.book_new();
+        
+        const mainData = pesertaList.map((peserta, index) => {
+          return {
             'No': index + 1,
             'Nama': peserta.namaLengkap,
             'NPA': peserta.npa,
             'Cabang': peserta.cabang,
             'Unit Kerja': peserta.unitKerja,
             'Nomor HP': peserta.nomorHp,
-            'Jabatan Organisasi': peserta.jabatan
-          }));
-  
-          const wb = XLSX.utils.book_new();
-          const ws = XLSX.utils.json_to_sheet(excelData);
-  
-          const columnWidths = [
-            { wch: 5 },   
-            { wch: 30 },  
-            { wch: 15 },  
-            { wch: 20 },  
-            { wch: 25 },  
-            { wch: 15 },  
-            { wch: 25 },  
-          ];
-  
-          ws['!cols'] = columnWidths;
-  
-          XLSX.utils.book_append_sheet(wb, ws, 'Daftar Peserta');
-  
-          XLSX.writeFile(wb, `Daftar Peserta - ${eventName}.xlsx`);
-        }).catch(error => {
-          console.error("Error loading XLSX library:", error);
-          alert("Gagal mengekspor ke Excel. Silakan coba lagi.");
+            'Jabatan Organisasi': peserta.jabatan,
+            'File': peserta.upload ? 'Tersedia' : 'Tidak ada'
+          };
         });
+    
+        const ws = XLSX.utils.json_to_sheet(mainData);
+        const columnWidths = [
+          { wch: 5 },    // No
+          { wch: 30 },   // Nama
+          { wch: 15 },   // NPA
+          { wch: 20 },   // Cabang
+          { wch: 25 },   // Unit Kerja
+          { wch: 15 },   // Nomor HP
+          { wch: 25 },   // Jabatan Organisasi
+          { wch: 15 },   // File
+        ];
+        ws['!cols'] = columnWidths;
+        XLSX.utils.book_append_sheet(wb, ws, 'Daftar Peserta');
+        
+        XLSX.writeFile(wb, `Daftar Peserta - ${eventName}.xlsx`);
       } catch (error) {
         console.error("Error exporting to Excel:", error);
         alert("Gagal mengekspor ke Excel. Silakan coba lagi.");
       }
     };
-  
+
     const handleDeletePeserta = async (id) => {
       setIsDeleting(true);
       setDeleteId(id);
-  
+
       try {
         await GlobalApi.deletePeserta(id);
         setPesertaList(pesertaList.filter(peserta => peserta.id !== id));
-  
+
         setNotification({
           type: 'success',
           message: 'Peserta berhasil dihapus!'
@@ -639,7 +801,7 @@ const Page = () => {
         setDeleteId(null);
       }
     };
-  
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
         <div className="bg-white rounded-lg shadow-xl w-[80%] max-h-[80vh] relative">
@@ -696,6 +858,9 @@ const Page = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Jabatan Organisasi
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        File
+                      </th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Aksi
                       </th>
@@ -723,6 +888,21 @@ const Page = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {peserta.jabatan}
                           </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {peserta.upload ? (
+                              <button
+                                onClick={() => handleFileDownload(peserta.upload, `Dokumen-${peserta.namaLengkap}`)}
+                                className="text-blue-600 hover:text-blue-800 focus:outline-none"
+                              >
+                                <div className="flex items-center">
+                                  <FontAwesomeIcon icon={faDownload} className="mr-1" />
+                                  <span>Unduh</span>
+                                </div>
+                              </button>
+                            ) : (
+                              <span className="text-gray-500">Tidak ada</span>
+                            )}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                             <button
                               onClick={() => openConfirmDialog(peserta.id)}
@@ -742,7 +922,7 @@ const Page = () => {
                     ) : (
                       <tr>
                         <td
-                          colSpan="7"
+                          colSpan="8"
                           className="px-6 py-4 text-center text-sm text-gray-500"
                         >
                           Tidak ada data peserta
@@ -755,7 +935,7 @@ const Page = () => {
             </div>
           </div>
         </div>
-  
+
         {/* Custom Confirmation Dialog */}
         <ConfirmationDialog
           isOpen={confirmDialog.isOpen}

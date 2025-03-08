@@ -1892,9 +1892,13 @@ const deleteNamaRanting = async (id) => {
 const getRekapRanting = () => axiosClient.get("/api/ranting/summary");
 
 //Peserta Event
-const addPesertaEvent = async (pesertaEvent) => {
+const addPesertaEvent = async (formData) => {
   try {
-    const response = await axiosClient.post("/api/event", pesertaEvent);
+    const response = await axiosClient.post("/api/event", formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
     return response.data;
   } catch (error) {
     console.error("Error add peserta event:", error);
