@@ -12,7 +12,11 @@ import { useAuth } from "@/app/AuthContext";
 import toast, { Toaster } from "react-hot-toast";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import Link from "next/link";
-import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaTimesCircle,
+  FaCheckCircle,
+  FaExclamationCircle,
+} from "react-icons/fa";
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -25,20 +29,20 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
       default:
-        return 'bg-blue-100';
+        return "bg-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case 'error':
+      case "error":
         return <FaExclamationCircle className="text-red-500 text-3xl" />;
       default:
         return null;
@@ -47,19 +51,24 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
       default:
-        return 'text-blue-800';
+        return "text-blue-800";
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -69,17 +78,13 @@ const NotificationPopup = ({ type, message, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
+          <div className="animate-bounce">{getIcon()}</div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+            {type === "success" ? "Berhasil!" : "Gagal!"}
           </h3>
 
-          <div className={`${getTextColor()} text-center`}>
-            {message}
-          </div>
+          <div className={`${getTextColor()} text-center`}>{message}</div>
         </div>
       </div>
     </div>
@@ -130,8 +135,8 @@ const Page = () => {
   const addCabang = async () => {
     if (!newCabang) {
       setNotification({
-        type: 'error',
-        message: `Cabang tidak boleh kosong!`
+        type: "error",
+        message: `Cabang tidak boleh kosong!`,
       });
       return;
     }
@@ -143,8 +148,8 @@ const Page = () => {
       };
       const response = await GlobalApi.addCabang(payload);
       setNotification({
-        type: 'success',
-        message: `Cabang Berhasil Ditambahkan!`
+        type: "success",
+        message: `Cabang Berhasil Ditambahkan!`,
       });
       setTimeout(() => {
         window.location.reload();
@@ -153,8 +158,8 @@ const Page = () => {
       setIdKecamatan(idKecamatan + 1);
     } catch (error) {
       setNotification({
-        type: 'error',
-        message: `Gagal menambahkan cabang!. Coba lagi nanti.`
+        type: "error",
+        message: `Gagal menambahkan cabang!. Coba lagi nanti.`,
       });
     }
   };
@@ -163,8 +168,8 @@ const Page = () => {
     try {
       const response = await GlobalApi.deleteCabang(idCabang);
       setNotification({
-        type: 'success',
-        message: `Cabang Berhasil Dihapus!`
+        type: "success",
+        message: `Cabang Berhasil Dihapus!`,
       });
       setTimeout(() => {
         window.location.reload();
@@ -197,13 +202,13 @@ const Page = () => {
   const startIndex = (currentPage - 1) * entries;
   const filteredData = Array.isArray(data)
     ? data.filter((item) => {
-      const kabupaten = item.kabupaten || "";
-      const cabang = item.cabang || "";
-      return (
-        kabupaten.toLowerCase().includes(searchQuery) ||
-        cabang.toLowerCase().includes(searchQuery)
-      );
-    })
+        const kabupaten = item.kabupaten || "";
+        const cabang = item.cabang || "";
+        return (
+          kabupaten.toLowerCase().includes(searchQuery) ||
+          cabang.toLowerCase().includes(searchQuery)
+        );
+      })
     : [];
 
   const selectedData = filteredData.slice(startIndex, startIndex + entries);
@@ -229,8 +234,9 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <main className="min-h-screen bg-gray-50 p-4 md:p-6">
             <nav className=" mt-6">
@@ -247,18 +253,18 @@ const Page = () => {
                 )}
                 <li>
                   <Link
-                    href="/pengaturan/unit-kerja"
-                    className="text-gray-700 hover:text-teal-600"
-                  >
-                    Unit Kerja
-                  </Link>
-                </li>
-                <li>
-                  <Link
                     href="/pengaturan/tambah"
                     className="text-gray-700 hover:text-teal-600"
                   >
                     Tambah Cabang
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/pengaturan/unit-kerja"
+                    className="text-gray-700 hover:text-teal-600"
+                  >
+                    Unit Kerja
                   </Link>
                 </li>
                 {sessionStorage.getItem("role") === "SUPER ADMIN" && (

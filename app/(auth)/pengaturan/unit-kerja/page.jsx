@@ -132,7 +132,7 @@ const AddUnitForm = () => {
   const fetchUnitKerja = async (
     page = currentPage,
     size = entries,
-    cabang = "",
+    cabang = selectedCabangFiltered,  // Use the selected filtered cabang
     unitKerja = ""
   ) => {
     try {
@@ -169,7 +169,6 @@ const AddUnitForm = () => {
     try {
       const unitKerjaResponse = await GlobalApi.getUnitKerja();
       setAllUnitKerjaFiltered(unitKerjaResponse.data);
-      setUnitKerjaOptions(unitKerjaResponse.data);
     } catch (error) {
       console.error("Error fetching unit kerja data:", error);
     }
@@ -183,7 +182,7 @@ const AddUnitForm = () => {
     setLoading(false);
     fetchCabang();
     fetchUnitKerjaData();
-
+  
     const storedRole = sessionStorage.getItem("role");
     if (storedRole) {
       setRole(storedRole);
@@ -192,9 +191,9 @@ const AddUnitForm = () => {
     const cabangFromSession = sessionStorage.getItem("cabang") || "";
     if (role === "ADMIN" && cabangFromSession) {
       setSelectedCabangFiltered(cabangFromSession);
-      fetchUnitKerja(currentPage, entries, cabangFromSession);
+      fetchUnitKerja(currentPage, entries, cabangFromSession); // Fetch with cabang filter
     } else {
-      fetchUnitKerja(currentPage, entries);
+      fetchUnitKerja(currentPage, entries); // Default fetch without filter
     }
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -218,7 +217,7 @@ const AddUnitForm = () => {
       document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("resize", handleResize);
     };
-  }, [token, router, currentPage, entries]);
+  }, [token, router, currentPage, entries, selectedCabangFiltered]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -329,7 +328,8 @@ const AddUnitForm = () => {
   const handlePageChange = (newPage) => {
     if (newPage >= 0 && newPage < totalPages) {
       setCurrentPage(newPage);
-      fetchUnitKerja(newPage, entries);
+      // Ensure that the filter persists across page changes
+      fetchUnitKerja(newPage, entries, selectedCabangFiltered); // Pass filtered cabang
     }
   };
 

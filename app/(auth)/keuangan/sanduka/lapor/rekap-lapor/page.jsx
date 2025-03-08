@@ -8,7 +8,13 @@ import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
 import { Input } from "@/components/ui/input";
-import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaTimesCircle,
+  FaCheckCircle,
+  FaTimes,
+  FaExclamationCircle,
+} from "react-icons/fa";
+import Kwitansi from "@/app/_components/Kwitansi";
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -21,20 +27,20 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
       default:
-        return 'bg-blue-100';
+        return "bg-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case 'error':
+      case "error":
         return <FaExclamationCircle className="text-red-500 text-3xl" />;
       default:
         return null;
@@ -43,19 +49,24 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
       default:
-        return 'text-blue-800';
+        return "text-blue-800";
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -65,17 +76,13 @@ const NotificationPopup = ({ type, message, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
+          <div className="animate-bounce">{getIcon()}</div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+            {type === "success" ? "Berhasil!" : "Gagal!"}
           </h3>
 
-          <div className={`${getTextColor()} text-center`}>
-            {message}
-          </div>
+          <div className={`${getTextColor()} text-center`}>{message}</div>
         </div>
       </div>
     </div>
@@ -95,19 +102,30 @@ const Page = () => {
   const currentYear = new Date().getFullYear();
   const startYear = 2020;
   const [selectedYear, setSelectedYear] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
+  const [filterStatus, setFilterStatus] = useState("Terima");
   const [selectedCabang, setSelectedCabang] = useState("");
   const [filterText, setFilterText] = useState("");
   const [showFilterInput, setShowFilterInput] = useState(false);
   const [filteredCabangList, setFilteredCabangList] = useState(cabangList);
   const [isPopupVisible, setPopupVisible] = useState(false);
-  const [kwitansiData, setKwitansiData] = useState(null);
   const [notification, setNotification] = useState(null);
+
+  // Kwitansi
+  const [showPopup, setShowPopup] = useState(false);
+
+  const handleKwitansiClick = () => {
+    setShowPopup(true);
+  };
+
+  const handleClosePopup = () => {
+    setShowPopup(false);
+  };
 
   useEffect(() => {
     const fetchDataDiterima = async () => {
       try {
         const response = await GlobalApi.getRekapLaporDiterima();
+        console.log(response)
         const fetchedDataDiterima = response || [];
         setDataLaporDiterima(fetchedDataDiterima);
       } catch (error) {
@@ -193,140 +211,6 @@ const Page = () => {
   const handleFocus = () => {
     setShowFilterInput(true);
     setFilteredCabangList(cabangList);
-  };
-
-  const handleViewClick = async (dataMeninggal) => {
-    if (!dataMeninggal) return;
-
-    const namaAnggota = dataMeninggal.split("\n")[0].trim();
-    console.log(`Nama Anggota yang diambil: ${namaAnggota}`);
-
-    try {
-      const response = await GlobalApi.searchUsersByName(namaAnggota);
-      console.log("Response searchUsersByName:", response);
-
-      const userDataArray = response.data.users;
-      if (userDataArray && userDataArray.length > 0) {
-        const user = userDataArray[0];
-        const { id, npaPgri } = user;
-        console.log(`ID yang ditemukan: ${id}, NPA PGRI: ${npaPgri}`);
-
-        try {
-          const kwitansiResponse = await GlobalApi.getKwitansiByIdAndNpa(
-            id,
-            npaPgri
-          );
-          console.log("Response getKwitansiByIdAndNpa:", kwitansiResponse);
-
-          const blob = kwitansiResponse.data;
-          const imageUrl = URL.createObjectURL(blob);
-          setKwitansiData(imageUrl);
-
-          setPopupVisible(true);
-        } catch (error) {
-          console.error("Error saat mengambil gambar kwitansi:", error);
-        }
-      } else {
-        console.error("Tidak ada data user yang ditemukan berdasarkan nama");
-      }
-    } catch (error) {
-      console.error("Error saat mengambil data user:", error);
-    }
-  };
-
-  const handleFileClick = async (dataMeninggal) => {
-    if (!dataMeninggal) return;
-
-    const namaAnggota = dataMeninggal.split("\n")[0].trim();
-    console.log(`Nama Anggota yang diambil: ${namaAnggota}`);
-
-    try {
-      const response = await GlobalApi.searchUsersByName(namaAnggota);
-      console.log("Response searchUsersByName:", response);
-
-      const userDataArray = response.data.users;
-      if (userDataArray && userDataArray.length > 0) {
-        const npaTerlaporList =
-          JSON.parse(sessionStorage.getItem("npaTerlaporList")) || [];
-
-        const filteredUser = userDataArray.find((user) =>
-          npaTerlaporList.includes(user.npaPgri)
-        );
-
-        if (filteredUser) {
-          const { id, npaPgri } = filteredUser;
-
-          console.log(`ID yang ditemukan: ${id}, NPA PGRI: ${npaPgri}`);
-
-          const npaResponse = await GlobalApi.cekNpa(npaPgri);
-          console.log("Response cekNpa:", npaResponse);
-
-          if (npaResponse && npaResponse.id && npaResponse.npaPgri) {
-            setUserDetails({ id, npaPgri });
-
-            console.log(
-              `ID Terpilih: ${npaResponse.id}, NPA PGRI: ${npaResponse.npaPgri}`
-            );
-          } else {
-            console.error("Data user tidak ditemukan pada response cekNpa");
-          }
-        } else {
-          console.error(
-            "Tidak ada user yang sesuai dengan NPA dari sessionStorage"
-          );
-        }
-      } else {
-        console.error("Tidak ada data user yang ditemukan berdasarkan nama");
-      }
-    } catch (error) {
-      console.error("Error saat mengambil data user:", error);
-    }
-  };
-
-  const handleFileChangeAndUpload = async (event) => {
-    const file = event.target.files[0];
-    const { id, npaPgri } = userDetails;
-
-    if (!file) {
-      console.error("Tidak ada file yang dipilih.");
-      setNotification({
-        type: 'error',
-        message: `Tidak ada file yang dipilih.`
-      });
-      return;
-    }
-
-    if (!id || !npaPgri) {
-      console.error("ID atau NPA PGRI tidak ditemukan.");
-      setNotification({
-        type: 'error',
-        message: `ID atau NPA PGRI tidak ditemukan.`
-      });
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const response = await GlobalApi.createKwitansiByIdAndNpa(
-        id,
-        npaPgri,
-        formData
-      );
-      console.log("Response Upload Kwitansi:", response);
-
-      setNotification({
-        type: 'success',
-        message: `File berhasil diupload.`
-      });
-    } catch (error) {
-      console.error("Gagal mengupload file kwitansi:", error);
-      setNotification({
-        type: 'success',
-        message: `Gagal mengupload file!`
-      });
-    }
   };
 
   const handleCabangChange = (e) => {
@@ -486,8 +370,9 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
             <div className="bg-teal-700 p-4 flex flex-col sm:flex-row items-center justify-between mt-5">
@@ -500,8 +385,9 @@ const Page = () => {
                 </button>
               </div>
               <div
-                className={` top-0 right-0 w-64 bg-teal-700 p-4 space-y-2 sm:space-y-0 sm:space-x-2 items-center sm:flex ${showFilters ? "block" : "hidden"
-                  } sm:relative sm:w-auto sm:p-0 sm:bg-transparent`}
+                className={` top-0 right-0 w-64 bg-teal-700 p-4 space-y-2 sm:space-y-0 sm:space-x-2 items-center sm:flex ${
+                  showFilters ? "block" : "hidden"
+                } sm:relative sm:w-auto sm:p-0 sm:bg-transparent`}
               >
                 <div className="relative w-full sm:w-auto" ref={dropdownRef}>
                   {/* Input for displaying the selected branch */}
@@ -602,6 +488,22 @@ const Page = () => {
                 </Button>
               </div>
             </div>
+            {showPopup && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                <div className="bg-white rounded-lg shadow-lg border border-gray-200 w-4/5 h-4/5 overflow-y-scroll relative">
+                  <Kwitansi />
+                  <div className="absolute top-1 right-1">
+                    <button
+                      onClick={handleClosePopup}
+                      className="absolute right-2 p-2 bg-white rounded-full"
+                    >
+                      <FaTimes className="h-6 w-6 text-red-600" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div id="table-to-print" className="overflow-x-auto">
               <table className="min-w-full bg-white text-sm">
                 <thead className="bg-teal-700 text-white">
@@ -613,13 +515,11 @@ const Page = () => {
                     <th className="py-2 px-3 text-center">Keterangan</th>
                     <th className="py-2 px-3 text-center">Diterimakan</th>
                     <th className="py-2 px-3 text-center">Action</th>
-                    <th className="py-2 px-3 text-center">Bukti</th>
-                    <th className="py-2 px-3 text-center">Kwitansi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {Array.isArray(displayedDataLapor) &&
-                    displayedDataLapor.length > 0 ? (
+                  displayedDataLapor.length > 0 ? (
                     displayedDataLapor.map((item, index) => (
                       <tr key={index} className="border-t text-sm">
                         <td className="py-2 px-3 text-center text-sm">
@@ -638,70 +538,17 @@ const Page = () => {
                           {item.Keterangan}
                         </td>
                         <td className="py-2 px-3 text-center text-sm">
-                          Diterimakan (Sesuaikan jika ada)
-                        </td>
+  {filterStatus === "Terima"
+    ? `Diterimakan (${item.Nama_Penerima})`
+    : "Belum Diterimakan"}
+</td>
                         <td className="py-2 px-3 space-x-2 text-sm">
-                          <button className="bg-blue-500 text-white p-2 rounded mb-2">
+                          <button
+                            className="bg-blue-500 text-white p-2 rounded mb-2"
+                            onClick={handleKwitansiClick}
+                          >
                             Kwitansi
                           </button>
-                          <button className="bg-blue-500 text-white p-2 rounded text-sm">
-                            Edit
-                          </button>
-                        </td>
-                        <td className="py-2 px-3 text-center">
-                          <button
-                            className="bg-gray-200 p-2 rounded border"
-                            onClick={() => handleViewClick(item.Data_Meninggal)}
-                          >
-                            View
-                          </button>
-                          {isPopupVisible && (
-                            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-5 z-50">
-                              <div className="bg-white rounded-lg p-6 w-3/4 max-w-lg">
-                                <h2 className="text-xl font-bold mb-4">
-                                  Bukti Kwitansi
-                                </h2>
-
-                                {kwitansiData ? (
-                                  <div className="flex justify-center">
-                                    <img
-                                      src={kwitansiData}
-                                      alt="Gambar Kwitansi"
-                                      className="w-full max-h-96 object-contain"
-                                    />
-                                  </div>
-                                ) : (
-                                  <p>Gambar kwitansi tidak tersedia.</p>
-                                )}
-
-                                <button
-                                  className="mt-4 bg-teal-500 text-white py-2 px-4 rounded"
-                                  onClick={() => {
-                                    setPopupVisible(false);
-                                    URL.revokeObjectURL(kwitansiData);
-                                    setKwitansiData(null);
-                                  }}
-                                >
-                                  Tutup
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-2 px-3 text-center">
-                          <input
-                            type="file"
-                            className="hidden"
-                            id={`file-upload-${index}`}
-                            onClick={() => handleFileClick(item.Data_Meninggal)}
-                            onChange={handleFileChangeAndUpload}
-                          />
-                          <label
-                            htmlFor={`file-upload-${index}`}
-                            className="bg-green-500 text-white p-2 rounded cursor-pointer"
-                          >
-                            Browse...
-                          </label>
                         </td>
                       </tr>
                     ))
