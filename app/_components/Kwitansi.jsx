@@ -277,32 +277,39 @@ function Pengeluaran() {
   const handleKwitansiClick = async () => {
     try {
       const selectedNames = formValues.yangMeninggalList; // Daftar nama yang meninggal
-  
+
       // Validasi minimal satu nama harus dipilih
       if (!selectedNames || selectedNames.length < 1) {
         alert("Harap pilih setidaknya satu nama.");
         return;
       }
-  
+
       const kwitansiDataList = [];
-  
+
       for (const name of selectedNames) {
         // Panggil API untuk mencari pengguna berdasarkan nama
         const userDataList = await GlobalApi.searchUsersByName(name);
-  
+
         // Validasi jika API mengembalikan data
-        if (userDataList.data && userDataList.data.users && userDataList.data.users.length > 0) {
+        if (
+          userDataList.data &&
+          userDataList.data.users &&
+          userDataList.data.users.length > 0
+        ) {
           const userData = userDataList.data.users[0];
-  
+
           // Helper untuk format tanggal
           const formatDate = (dateArray, separator = "-") => {
             if (!Array.isArray(dateArray) || dateArray.length !== 3) {
               return "Tanggal tidak valid";
             }
             const [year, month, day] = dateArray;
-            return `${year}${separator}${String(month).padStart(2, "0")}${separator}${String(day).padStart(2, "0")}`;
+            return `${year}${separator}${String(month).padStart(
+              2,
+              "0"
+            )}${separator}${String(day).padStart(2, "0")}`;
           };
-  
+
           // Helper untuk menghitung umur
           const calculateAge = (tanggalLahir) => {
             if (!tanggalLahir || !Array.isArray(tanggalLahir)) return 0; // Tambahan validasi
@@ -312,23 +319,25 @@ function Pengeluaran() {
               tanggalLahir[1] - 1,
               tanggalLahir[2]
             );
-  
+
             let age = today.getFullYear() - birthDate.getFullYear();
             const monthDiff = today.getMonth() - birthDate.getMonth();
             const dayDiff = today.getDate() - birthDate.getDate();
-  
+
             if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
               age--;
             }
-  
+
             return age;
           };
-  
+
           // Format tanggal meninggal dan mulai menjadi anggota
           const tanggalMeninggal = formatDate(userData.waktuMeninggalTerlapor);
           const umur = calculateAge(userData.tanggalLahir);
-          const mulaiJadiAnggotaPgri = formatDate(userData.mulaiJadiAnggotaPgri);
-  
+          const mulaiJadiAnggotaPgri = formatDate(
+            userData.mulaiJadiAnggotaPgri
+          );
+
           // Tambahkan data kwitansi ke daftar
           kwitansiDataList.push({
             noBukti: formValues.noBukti,
@@ -350,27 +359,27 @@ function Pengeluaran() {
           console.warn(`Data untuk nama "${name}" tidak ditemukan.`);
         }
       }
-  
+
       // Jika tidak ada data valid, tampilkan pesan
       if (kwitansiDataList.length === 0) {
         alert("Tidak ada data kwitansi yang valid untuk digenerate.");
         return;
       }
-  
+
       // Generate HTML kwitansi
       const htmlContent = generateKwitansiHTML(kwitansiDataList);
-  
+
       // Buat blob untuk kwitansi
       const blob = new Blob([htmlContent], { type: "text/html" });
       const blobUrl = URL.createObjectURL(blob);
-  
+
       setKwitansiData(blobUrl);
       setKwitansiList(blobUrl);
     } catch (error) {
       console.error("Error:", error.message);
       alert("Terjadi kesalahan saat memproses kwitansi.");
     }
-  };  
+  };
 
   const handleKwitansiDownloadPDF = async () => {
     const iframe = document.querySelector("iframe");
@@ -378,33 +387,34 @@ function Pengeluaran() {
       console.error("Iframe tidak ditemukan");
       return;
     }
-  
+
     const iframeDocument =
       iframe.contentDocument || iframe.contentWindow.document;
     const kwitansiElement = iframeDocument.body;
-  
+
     try {
       const canvas = await html2canvas(kwitansiElement, {
         scale: 2,
         useCORS: true,
       });
-  
+
       const imgData = canvas.toDataURL("image/png");
-  
+
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       let pdfHeight = pdf.internal.pageSize.getHeight();
-  
+
       // Tentukan tinggi halaman berdasarkan jumlah kwitansi
-      const kwitansiCount = iframeDocument.querySelectorAll('.kwitansi').length; // Asumsi ada class .kwitansi untuk setiap kwitansi
-      const heightAdjustment = kwitansiCount === 1 ? pdfHeight : pdfHeight * kwitansiCount;
-  
+      const kwitansiCount = iframeDocument.querySelectorAll(".kwitansi").length; // Asumsi ada class .kwitansi untuk setiap kwitansi
+      const heightAdjustment =
+        kwitansiCount === 1 ? pdfHeight : pdfHeight * kwitansiCount;
+
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, heightAdjustment);
       pdf.save("kwitansi_multiple.pdf");
     } catch (error) {
       console.error("Error saat mengonversi ke PDF:", error);
     }
-  };  
+  };
 
   const handleKwitansiDownloadPNG = async () => {
     const iframe = document.querySelector("iframe");
@@ -439,7 +449,7 @@ function Pengeluaran() {
   const handleCloseIframe = () => {
     setIsIframeVisible(false);
     window.location.reload();
-  };  
+  };
 
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -474,7 +484,9 @@ function Pengeluaran() {
   }, []);
 
   const generateKwitansiHTML = (generateDataList) => {
-    const kwitansiHTML = generateDataList.map((data) => `<!DOCTYPE html>
+    const kwitansiHTML = generateDataList
+      .map(
+        (data) => `<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
@@ -633,8 +645,10 @@ function Pengeluaran() {
   </table>
 </footer>
 </body>
-</html> `).join("");
-  
+</html> `
+      )
+      .join("");
+
     return `
       <html>
         <head>
@@ -660,169 +674,169 @@ function Pengeluaran() {
       </html>
     `;
   };
-  
-//   const generateKwitansiHTML = (data) => {
-//     const template = `<!DOCTYPE html>
-// <html lang="id">
-// <head>
-//   <meta charset="UTF-8" />
-//   <title>Kwitansi</title>
-//   <style>
-//     body {
-//         font-family: Arial, sans-serif;
-//         margin: 20px;
-//         background-color: #fff;
-//     }
-//     .header {
-//         display: flex;
-//         justify-content: space-between;
-//         align-items: center;
-//         margin-bottom: 20px;
-//         border-bottom: 2px solid #000;
-//         padding-bottom: 10px;
-//     }
-//     .left-header p, .right-header img {
-//         margin: 0;
-//     }
-//     .title {
-//         font-size: 20px;
-//         font-weight: bold;
-//         text-align: center;
-//     }
-//     .info, .footer {
-//         width: 100%;
-//         margin-top: 20px;
-//     }
-//     .info td{
-//         padding: 10px;
-//         vertical-align: top;
-//         border: 1px solid #ccc;
-//     }
-//     .nominal {
-//         font-weight: bold;
-//         background-color: #000;
-//         color: white;
-//         text-align: center;
-//     }
-//     .terbilang {
-//         font-weight: bold;
-//         color: black;
-//         text-align: center;
-//     }
-//     .signature {
-//         margin-top: 40px;
-//         width: 100%;
-//         display: flex;
-//         justify-content: space-between;
-//     }
-//     .signature div {
-//         text-align: center;
-//         width: 30%;
-//     }
-//     .footer {
-//         font-size: 12px;
-//         text-align: center;
-//     }
 
-//     .data-meninggal {
-//         display: flex;
-//         justify-content: space-between;
-//     }
+  //   const generateKwitansiHTML = (data) => {
+  //     const template = `<!DOCTYPE html>
+  // <html lang="id">
+  // <head>
+  //   <meta charset="UTF-8" />
+  //   <title>Kwitansi</title>
+  //   <style>
+  //     body {
+  //         font-family: Arial, sans-serif;
+  //         margin: 20px;
+  //         background-color: #fff;
+  //     }
+  //     .header {
+  //         display: flex;
+  //         justify-content: space-between;
+  //         align-items: center;
+  //         margin-bottom: 20px;
+  //         border-bottom: 2px solid #000;
+  //         padding-bottom: 10px;
+  //     }
+  //     .left-header p, .right-header img {
+  //         margin: 0;
+  //     }
+  //     .title {
+  //         font-size: 20px;
+  //         font-weight: bold;
+  //         text-align: center;
+  //     }
+  //     .info, .footer {
+  //         width: 100%;
+  //         margin-top: 20px;
+  //     }
+  //     .info td{
+  //         padding: 10px;
+  //         vertical-align: top;
+  //         border: 1px solid #ccc;
+  //     }
+  //     .nominal {
+  //         font-weight: bold;
+  //         background-color: #000;
+  //         color: white;
+  //         text-align: center;
+  //     }
+  //     .terbilang {
+  //         font-weight: bold;
+  //         color: black;
+  //         text-align: center;
+  //     }
+  //     .signature {
+  //         margin-top: 40px;
+  //         width: 100%;
+  //         display: flex;
+  //         justify-content: space-between;
+  //     }
+  //     .signature div {
+  //         text-align: center;
+  //         width: 30%;
+  //     }
+  //     .footer {
+  //         font-size: 12px;
+  //         text-align: center;
+  //     }
 
-//     .data-item {
-//         width: 22%;
-//     }
-// .kwitansi {
-//     width: 210mm; /* Lebar A4 */
-//     height: 297mm; /* Tinggi A4 */
-//     margin: 0 auto; /* Pusatkan di halaman */
-//     padding: 20px; /* Tambahkan padding */
-//     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Tambahkan bayangan */
-//     background-color: #fff; /* Warna latar belakang putih */
-//   }
-//     .data-item p {
-//   margin: 4px 0; /* Mengurangi jarak antar paragraf */
-//   line-height: 1.4; /* Menyesuaikan jarak antar teks */
-// }
-  
-//     @media (max-width: 600px) {
-//       .data-meninggal {
-//         flex-direction: column;
-//       }
-//       .data-item {
-//         width: 100%;
-//       }
-//     }
-//   </style>
-// </head>
-// <body>
-// <div class="header">
-//   <div class="left-header">
-//     <p>Nomor Transaksi: ${data.noBukti}</p>
-//     <p>Tanggal Transaksi: ${data.dataPelaporan}</p>
-//   </div>
-//   <div class="title">TANDA TERIMA</div>
-//   <div class="right-header">
-//     <img src="https://sanduka-fe.vercel.app/_next/image?url=%2Fsanduka.png&amp;w=256&amp;q=75" alt="SANDUKA Logo" style="height: 50px;" />
-//   </div>
-// </div>
+  //     .data-meninggal {
+  //         display: flex;
+  //         justify-content: space-between;
+  //     }
 
-// <div class="data-meninggal">
-//   <div class="data-item">
-//     <p>Data Meninggal</p>
-//     <p><strong>${data.nama}</strong></p>
-//             <p>${data.umur} Tahun</p>
-//             <p>${data.alamat}</p>
-//             <p>${data.nomorHp}</p>
-//   </div>
-//   <div class="data-item">
-//     <p>Data Dukung</p>
-//      <p><strong>${data.dataDukung}</strong></p>
-//             <p>${data.jabatan}</p>
-//             <p>Sejak Menjadi Anggota</p>
-//             <p>${data.sejakMenjadiAnggota}</p>
-//   </div>
-//   <div class="data-item">
-//     <p>Data Pelaporan</p>
-//     <p><strong>${data.dataPelaporan}</strong></p>
-//             <p><strong>Tanggal Meninggal:</strong> ${data.tanggalMeninggal}</p>
-//   </div>
-// </div>
+  //     .data-item {
+  //         width: 22%;
+  //     }
+  // .kwitansi {
+  //     width: 210mm; /* Lebar A4 */
+  //     height: 297mm; /* Tinggi A4 */
+  //     margin: 0 auto; /* Pusatkan di halaman */
+  //     padding: 20px; /* Tambahkan padding */
+  //     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Tambahkan bayangan */
+  //     background-color: #fff; /* Warna latar belakang putih */
+  //   }
+  //     .data-item p {
+  //   margin: 4px 0; /* Mengurangi jarak antar paragraf */
+  //   line-height: 1.4; /* Menyesuaikan jarak antar teks */
+  // }
 
-// <table class="info">
-//   <tr>
-//     <td class="nominal">Terbilang</td>
-//     <td class="nominal">Nominal</td>
-//   </tr>
-//   <tr>
-//     <td class="terbilang"><strong>${data.terbilang}</strong></td>
-//             <td class="terbilang"><strong>Rp ${data.nominal}</strong></td>
-//   </tr>
-// </table>
+  //     @media (max-width: 600px) {
+  //       .data-meninggal {
+  //         flex-direction: column;
+  //       }
+  //       .data-item {
+  //         width: 100%;
+  //       }
+  //     }
+  //   </style>
+  // </head>
+  // <body>
+  // <div class="header">
+  //   <div class="left-header">
+  //     <p>Nomor Transaksi: ${data.noBukti}</p>
+  //     <p>Tanggal Transaksi: ${data.dataPelaporan}</p>
+  //   </div>
+  //   <div class="title">TANDA TERIMA</div>
+  //   <div class="right-header">
+  //     <img src="https://sanduka-fe.vercel.app/_next/image?url=%2Fsanduka.png&amp;w=256&amp;q=75" alt="SANDUKA Logo" style="height: 50px;" />
+  //   </div>
+  // </div>
 
-// <div class="signature">
-//   <div>
-//     <p>Yang Menyerahkan,</p>
+  // <div class="data-meninggal">
+  //   <div class="data-item">
+  //     <p>Data Meninggal</p>
+  //     <p><strong>${data.nama}</strong></p>
+  //             <p>${data.umur} Tahun</p>
+  //             <p>${data.alamat}</p>
+  //             <p>${data.nomorHp}</p>
+  //   </div>
+  //   <div class="data-item">
+  //     <p>Data Dukung</p>
+  //      <p><strong>${data.dataDukung}</strong></p>
+  //             <p>${data.jabatan}</p>
+  //             <p>Sejak Menjadi Anggota</p>
+  //             <p>${data.sejakMenjadiAnggota}</p>
+  //   </div>
+  //   <div class="data-item">
+  //     <p>Data Pelaporan</p>
+  //     <p><strong>${data.dataPelaporan}</strong></p>
+  //             <p><strong>Tanggal Meninggal:</strong> ${data.tanggalMeninggal}</p>
+  //   </div>
+  // </div>
 
-//   </div>
-//   <div>
-//   ................., ..................
-//     <p>Penerima,</p>
-  
-//   </div>
-// </div>
+  // <table class="info">
+  //   <tr>
+  //     <td class="nominal">Terbilang</td>
+  //     <td class="nominal">Nominal</td>
+  //   </tr>
+  //   <tr>
+  //     <td class="terbilang"><strong>${data.terbilang}</strong></td>
+  //             <td class="terbilang"><strong>Rp ${data.nominal}</strong></td>
+  //   </tr>
+  // </table>
 
-// <footer>
-//   <table class="footer">
-//     <tr>
-//       <td>Sekretariat PGRI: <br /> Jalan Bata Putih VI, Kelurahan Demaan, Kecamatan Jepara, Kabupaten Jepara, Jawa Tengah, Telp/Fax : 0291 592479, email : pgrijepara@gmail.com</td>
-//     </tr>
-//   </table>
-// </footer>
-// </body>
-// </html>`;
-//     return template;
-//   };
+  // <div class="signature">
+  //   <div>
+  //     <p>Yang Menyerahkan,</p>
+
+  //   </div>
+  //   <div>
+  //   ................., ..................
+  //     <p>Penerima,</p>
+
+  //   </div>
+  // </div>
+
+  // <footer>
+  //   <table class="footer">
+  //     <tr>
+  //       <td>Sekretariat PGRI: <br /> Jalan Bata Putih VI, Kelurahan Demaan, Kecamatan Jepara, Kabupaten Jepara, Jawa Tengah, Telp/Fax : 0291 592479, email : pgrijepara@gmail.com</td>
+  //     </tr>
+  //   </table>
+  // </footer>
+  // </body>
+  // </html>`;
+  //     return template;
+  //   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-6">
@@ -836,7 +850,7 @@ function Pengeluaran() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Pengeluaran Sanduka</h1>
+              <h1 className="text-base">Kwitansi</h1>
             </div>
           </div>
         </header>
@@ -850,7 +864,7 @@ function Pengeluaran() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Pengeluaran Sanduka</h1>
+              <h1 className="text-base">Kwitansi</h1>
             </div>
           </div>
         </header>
@@ -885,19 +899,20 @@ function Pengeluaran() {
           />
           <div className="container mx-auto p-6 mt-2">
             <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
-              <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-6 text-center">
+              <h1 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4">
                 Kwitansi
-              </h2>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="flex flex-col">
+              </h1>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {/* Bagian Tanggal Transaksi */}
+                <div className="flex flex-col space-y-4">
                   <Label
-                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    className="text-gray-700 font-medium mb-2"
                     htmlFor="tanggalTransaksi"
                   >
                     Tanggal Transaksi
                   </Label>
                   <Input
-                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="shadow-md border-2 border-gray-300 rounded-lg py-3 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     id="tanggalTransaksi"
                     type="date"
                     name="tanggalTransaksi"
@@ -905,38 +920,37 @@ function Pengeluaran() {
                     onChange={handleChange}
                   />
                 </div>
-                <div className="flex flex-col">
+
+                <div className="flex flex-col space-y-4">
+                  {/* Nominal */}
                   <Label
-                    className="block text-gray-700 text-sm font-semibold mb-2"
-                    htmlFor="posTransaksi"
+                    className="text-gray-700 font-medium mb-2"
+                    htmlFor="nominal"
                   >
-                    Pos Pengeluaran
+                    Nominal
                   </Label>
-                  <select
-                    className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="posTransaksi"
-                    name="posTransaksi"
-                    value={formValues.posTransaksi}
+                  <Input
+                    className="shadow-md border-2 border-gray-300 rounded-lg py-3 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    id="nominal"
+                    type="number"
+                    name="nominal"
+                    value={formValues.nominal || ""}
                     onChange={handleChange}
-                  >
-                    <option value="">Pilih</option>
-                    <option value="Pengeluaran Sanduka">
-                      Pengeluaran Sanduka
-                    </option>
-                    <option value="Operasional 15%">Operasional 15%</option>
-                    <option value="Lain - Lain">Lain - Lain</option>
-                  </select>
+                  />
                 </div>
 
-                <div className="flex flex-col">
+                {/* Bagian Data Sanduka */}
+                <div className="flex flex-col space-y-4">
                   <Label
-                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    className="text-gray-700 font-medium mb-2"
                     htmlFor="cabang"
                   >
-                    Data Sanduka
+                    Data Meninggal
                   </Label>
+
+                  {/* Tahun Lapor */}
                   <select
-                    className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-5"
+                    className="shadow-md border-2 border-gray-300 rounded-lg py-3 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     id="tahun"
                     name="tahun"
                     value={formValues.tahun}
@@ -949,8 +963,10 @@ function Pengeluaran() {
                       </option>
                     ))}
                   </select>
+
+                  {/* Bulan Lapor */}
                   <select
-                    className="shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-5"
+                    className="shadow-md border-2 border-gray-300 rounded-lg py-3 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     id="bulan"
                     name="bulan"
                     value={formValues.bulan}
@@ -964,16 +980,15 @@ function Pengeluaran() {
                     ))}
                   </select>
 
-                  <div className="relative" ref={dropdownRef}>
+                  {/* Input Pencarian Nama */}
+                  <div className="relative">
                     <input
                       type="text"
-                      className="mb-5 w-full shadow border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full shadow-md border-2 border-gray-300 rounded-lg py-3 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       id="yangMeninggal"
                       name="yangMeninggal"
                       value={formValues.yangMeninggal}
-                      onChange={(e) => {
-                        handleSearch(e);
-                      }}
+                      onChange={(e) => handleSearch(e)}
                       onFocus={() => {
                         if (filteredNames.length > 0) {
                           setIsDropdownVisible(true);
@@ -982,7 +997,7 @@ function Pengeluaran() {
                       placeholder="Cari nama yang meninggal"
                     />
 
-                    {/* Dropdown */}
+                    {/* Dropdown Pencarian */}
                     {filteredNames.length > 0 && isDropdownVisible && (
                       <ul className="absolute z-10 shadow-lg bg-white border border-gray-300 rounded-md w-full max-h-48 overflow-y-auto -mt-3">
                         {filteredNames.map((name) => (
@@ -997,105 +1012,96 @@ function Pengeluaran() {
                       </ul>
                     )}
                   </div>
+
+                  {/* Tombol Tambah Nama */}
                   <button
-  className="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-  onClick={() => {
-    if (formValues.yangMeninggal && !formValues.yangMeninggalList.includes(formValues.yangMeninggal)) {
-      setFormValues({
-        ...formValues,
-        yangMeninggalList: [...formValues.yangMeninggalList, formValues.yangMeninggal],
-        yangMeninggal: "",
-      });
-    }
-  }}
->
-  Tambah Nama
-</button>
-      {/* Daftar Nama yang Dipilih */}
-<ul className="mt-4">
-  {formValues.yangMeninggalList.map((name, index) => (
-    <li key={index} className="flex items-center justify-between">
-      <span>{name}</span>
-      <button
-        className="text-red-500 hover:text-red-700"
-        onClick={() => {
-          setFormValues({
-            ...formValues,
-            yangMeninggalList: formValues.yangMeninggalList.filter((n) => n !== name),
-          });
-        }}
-      >
-        Hapus
-      </button>
-    </li>
-  ))}
-</ul>
-                  <div className="flex flex-col">
-                    <Label
-                      className="block text-gray-700 text-sm font-semibold mb-2"
-                      htmlFor="jenisPenerimaan"
-                    >
-                      Nama Penerima
-                    </Label>
-                    <Input
-                      className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      id="namaPenerima"
-                      type="text"
-                      name="namaPenerima"
-                      value={formValues.namaPenerima}
-                      onChange={handleChange}
-                    />
-                    <Button className="mt-2" onClick={handleKwitansiClick}>
-                      Kwitansi
-                    </Button>
-                  </div>
-                </div>
-                <div className="flex flex-col">
-                  <Label
-                    className="block text-gray-700 text-sm font-semibold mb-2"
-                    htmlFor="nominal"
+                    className="mt-4 bg-gradient-to-r from-blue-500 to-blue-700 text-white font-semibold py-2 px-6 rounded-lg hover:bg-gradient-to-l"
+                    onClick={() => {
+                      if (
+                        formValues.yangMeninggal &&
+                        !formValues.yangMeninggalList.includes(
+                          formValues.yangMeninggal
+                        )
+                      ) {
+                        setFormValues({
+                          ...formValues,
+                          yangMeninggalList: [
+                            ...formValues.yangMeninggalList,
+                            formValues.yangMeninggal,
+                          ],
+                          yangMeninggal: "",
+                        });
+                      }
+                    }}
                   >
-                    Nominal
+                    Tambah Nama
+                  </button>
+
+                  {/* Daftar Nama yang Dipilih */}
+                  <ul className="mt-4 space-y-2">
+                    {formValues.yangMeninggalList.map((name, index) => (
+                      <li
+                        key={index}
+                        className="flex items-center justify-between"
+                      >
+                        <span className="text-gray-700">{name}</span>
+                        <button
+                          className="text-red-500 hover:text-red-700"
+                          onClick={() => {
+                            setFormValues({
+                              ...formValues,
+                              yangMeninggalList:
+                                formValues.yangMeninggalList.filter(
+                                  (n) => n !== name
+                                ),
+                            });
+                          }}
+                        >
+                          Hapus
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Bagian Penerima dan Nominal */}
+                <div className="flex flex-col space-y-4">
+                  {/* Terbilang */}
+                  <Label
+                    className="text-gray-700 font-medium mb-2"
+                    htmlFor="terbilang"
+                  >
+                    Terbilang
+                  </Label>
+                  <textarea
+                    className="shadow-md border-2 border-gray-300 rounded-lg py-3 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    id="terbilang"
+                    name="terbilang"
+                    value={formValues.terbilang}
+                    onChange={handleChange}
+                    style={{ height: "5.6em" }}
+                  />
+                  {/* Nama Penerima */}
+                  <Label
+                    className="text-gray-700 font-medium mb-2"
+                    htmlFor="jenisPenerimaan"
+                  >
+                    Nama Penerima
                   </Label>
                   <Input
-                    className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    id="nominal"
-                    type="number"
-                    name="nominal"
-                    value={formValues.nominal || ""}
+                    className="shadow-md border-2 border-gray-300 rounded-lg py-3 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    id="namaPenerima"
+                    type="text"
+                    name="namaPenerima"
+                    value={formValues.namaPenerima}
                     onChange={handleChange}
                   />
-
-                  <div className="flex flex-col mt-5">
-                    <Label
-                      className="block text-gray-700 text-sm font-semibold mb-2"
-                      htmlFor="terbilang"
-                    >
-                      Terbilang
-                    </Label>
-                    <Textarea
-                      className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-24"
-                      id="terbilang"
-                      name="terbilang"
-                      value={formValues.terbilang}
-                      readOnly
-                    />
-                  </div>
-                  <div className="flex flex-col mt-5">
-                    <Label
-                      className="block text-gray-700 text-sm font-semibold mb-2"
-                      htmlFor="keterangan"
-                    >
-                      Keterangan
-                    </Label>
-                    <Textarea
-                      className="shadow appearance-none border rounded py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-24"
-                      id="keterangan"
-                      name="keterangan"
-                      value={formValues.keterangan}
-                      onChange={handleChange}
-                    />
-                  </div>
+                  <Button
+                    className="mt-4 bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold py-2 px-6 rounded-lg hover:bg-gradient-to-l"
+                    onClick={handleKwitansiClick}
+                  >
+                    Kwitansi
+                  </Button>
                 </div>
               </div>
               <div>
@@ -1107,12 +1113,6 @@ function Pengeluaran() {
                       className="ml-4 text-blue-500 underline"
                     >
                       Unduh Kwitansi (PDF)
-                    </button>
-                    <button
-                      onClick={() => handleKwitansiDownloadPNG("image")}
-                      className="ml-4 text-blue-500 underline"
-                    >
-                      Unduh Kwitansi (PNG)
                     </button>
                     <button
                       onClick={handleCloseIframe}
