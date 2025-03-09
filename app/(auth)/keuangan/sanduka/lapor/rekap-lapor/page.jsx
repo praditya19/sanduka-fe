@@ -125,7 +125,7 @@ const Page = () => {
     const fetchDataDiterima = async () => {
       try {
         const response = await GlobalApi.getRekapLaporDiterima();
-        console.log(response)
+        console.log(response);
         const fetchedDataDiterima = response || [];
         setDataLaporDiterima(fetchedDataDiterima);
       } catch (error) {
@@ -514,6 +514,7 @@ const Page = () => {
                     <th className="py-2 px-3 text-center">Cabang</th>
                     <th className="py-2 px-3 text-center">Keterangan</th>
                     <th className="py-2 px-3 text-center">Diterimakan</th>
+                    <th className="py-2 px-3 text-center">Nominal</th>
                     <th className="py-2 px-3 text-center">Action</th>
                   </tr>
                 </thead>
@@ -538,10 +539,16 @@ const Page = () => {
                           {item.Keterangan}
                         </td>
                         <td className="py-2 px-3 text-center text-sm">
-  {filterStatus === "Terima"
-    ? `Diterimakan (${item.Nama_Penerima})`
-    : "Belum Diterimakan"}
-</td>
+                          {filterStatus === "Terima"
+                            ? `Diterimakan (${item.Nama_Penerima})`
+                            : "Belum Diterimakan"}
+                        </td>
+                        <td className="py-2 px-3 text-center text-sm">
+                          {new Intl.NumberFormat("id-ID", {
+                            style: "currency",
+                            currency: "IDR",
+                          }).format(item.Nominal)}
+                        </td>
                         <td className="py-2 px-3 space-x-2 text-sm">
                           <button
                             className="bg-blue-500 text-white p-2 rounded mb-2"
