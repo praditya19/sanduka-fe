@@ -155,6 +155,8 @@ const Page = () => {
   const formRef = useRef(null);
   const itemsPerPage = 6;
   const [notification, setNotification] = useState(null);
+  const profileImageUrl = "/profile.png";
+  const [fotoBase64, setFotoBase64] = useState(null);
 
   const handleResize = () => {
     setIsMobile(window.innerWidth <= 768);
@@ -412,7 +414,6 @@ const Page = () => {
     try {
       const queryString = `namaEvent=${encodeURIComponent(gallery.namaEvent)}`;
       const data = await GlobalApi.getAllPeserta(queryString);
-
       setPesertaList(data);
     } catch (error) {
       console.error("Error fetching peserta:", error);
@@ -480,7 +481,7 @@ const Page = () => {
       });
     };
 
-    const handleFileDownload = (upload, fileName) => {
+    const handleFileDownload = (upload, namaEvent, namaPeserta) => {
       if (!upload) {
         alert("File tidak tersedia");
         return;
@@ -496,8 +497,8 @@ const Page = () => {
 
         const byteArray = new Uint8Array(byteNumbers);
 
-        let mimeType = 'application/octet-stream'; 
-        let fileExtension = '.bin'; 
+        let mimeType = 'application/octet-stream';
+        let fileExtension = '.bin';
 
         if (byteArray[0] === 0x25 && byteArray[1] === 0x50 &&
           byteArray[2] === 0x44 && byteArray[3] === 0x46) {
@@ -516,9 +517,8 @@ const Page = () => {
 
         const blob = new Blob([byteArray], { type: mimeType });
 
-        if (!fileName.toLowerCase().endsWith(fileExtension)) {
-          fileName += fileExtension;
-        }
+        // Format nama file sesuai dengan yang diinginkan
+        const fileName = `Dokumen ${namaEvent} - ${namaPeserta}${fileExtension}`;
 
         const blobUrl = URL.createObjectURL(blob);
 
@@ -541,7 +541,7 @@ const Page = () => {
         return true;
       }
       if (byteArray[0] === 0x89 && byteArray[1] === 0x50 &&
-          byteArray[2] === 0x4E && byteArray[3] === 0x47) {
+        byteArray[2] === 0x4E && byteArray[3] === 0x47) {
         return true;
       }
       return false;
@@ -549,38 +549,38 @@ const Page = () => {
 
     const isPdfFile = (byteArray) => {
       return (byteArray[0] === 0x25 && byteArray[1] === 0x50 &&
-              byteArray[2] === 0x44 && byteArray[3] === 0x46);
+        byteArray[2] === 0x44 && byteArray[3] === 0x46);
     };
 
     const getFileMimeType = (byteArray) => {
       if (isPdfFile(byteArray)) return 'application/pdf';
       if (byteArray[0] === 0xFF && byteArray[1] === 0xD8) return 'image/jpeg';
       if (byteArray[0] === 0x89 && byteArray[1] === 0x50 &&
-          byteArray[2] === 0x4E && byteArray[3] === 0x47) return 'image/png';
+        byteArray[2] === 0x4E && byteArray[3] === 0x47) return 'image/png';
       return 'application/octet-stream';
     };
 
     const getFileDataUri = (upload) => {
       if (!upload) return null;
-      
+
       try {
         const byteCharacters = atob(upload);
         const byteArray = new Uint8Array(byteCharacters.length);
-        
+
         for (let i = 0; i < byteCharacters.length; i++) {
           byteArray[i] = byteCharacters.charCodeAt(i);
         }
-        
+
         const mimeType = getFileMimeType(byteArray);
-        
+
         let binary = '';
         const bytes = new Uint8Array(byteArray);
         const len = bytes.byteLength;
         for (let i = 0; i < len; i++) {
-            binary += String.fromCharCode(bytes[i]);
+          binary += String.fromCharCode(bytes[i]);
         }
         const base64Data = window.btoa(binary);
-        
+
         return `data:${mimeType};base64,${base64Data}`;
       } catch (error) {
         console.error("Error creating data URI:", error);
@@ -603,18 +603,20 @@ const Page = () => {
 
       const participantsWithFiles = pesertaList.map(peserta => {
         let fileHtml = '<span>Tidak ada</span>';
-        
+
         if (peserta.upload) {
           try {
             const byteCharacters = atob(peserta.upload);
             const byteArray = new Uint8Array(byteCharacters.length);
-            
+
             for (let i = 0; i < byteCharacters.length; i++) {
               byteArray[i] = byteCharacters.charCodeAt(i);
             }
-            
-            const dataUri = getFileDataUri(peserta.upload);
-            
+
+            const mimeType = getFileMimeType(byteArray);
+            const base64Data = peserta.upload;
+            const dataUri = `data:${mimeType};base64,${base64Data}`;
+
             if (isImageFile(byteArray)) {
               fileHtml = `
                 <div style="text-align: center;">
@@ -624,11 +626,9 @@ const Page = () => {
             } else if (isPdfFile(byteArray)) {
               fileHtml = `
                 <div style="text-align: center;">
-                  <object data="${dataUri}" type="application/pdf" style="width: 80px; height: 100px;">
-                    <div style="border: 1px solid #ccc; padding: 5px; width: 80px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
-                      <span style="color: #cc0000; font-weight: bold;">PDF</span>
-                    </div>
-                  </object>
+                  <div style="border: 1px solid #ccc; padding: 5px; width: 80px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                    <span style="color: #cc0000; font-weight: bold;">PDF</span>
+                  </div>
                 </div>
               `;
             } else {
@@ -643,8 +643,23 @@ const Page = () => {
             fileHtml = '<span>Tersedia (Error)</span>';
           }
         }
-        
-        return { ...peserta, fileHtml };
+
+        let photoHtml = '';
+        if (peserta.foto) {
+          photoHtml = `
+            <div style="text-align: center;">
+              <img src="data:image/jpeg;base64,${peserta.foto}" style="max-width: 120px; max-height: 120px; display: block; margin: 0 auto;" />
+            </div>
+          `;
+        } else {
+          photoHtml = `
+            <div style="text-align: center;">
+              <img src="${profileImageUrl}" style="max-width: 80px; max-height: 80px; display: block; margin: 0 auto;" />
+            </div>
+          `;
+        }
+
+        return { ...peserta, fileHtml, photoHtml };
       });
 
       const printContent = `
@@ -666,10 +681,17 @@ const Page = () => {
             .print-header { margin-bottom: 20px; text-align: center; }
             .table-container { margin-bottom: 30px; }
             .footer { text-align: right; margin-top: 20px; }
-            td.file-cell { 
+            td.file-cell, td.photo-cell { 
               padding: 10px; 
               text-align: center; 
               width: 140px; 
+            }
+            @media print {
+              body { -webkit-print-color-adjust: exact; color-adjust: exact; }
+              table { page-break-inside: auto; }
+              tr { page-break-inside: avoid; page-break-after: auto; }
+              thead { display: table-header-group; }
+              tfoot { display: table-footer-group; }
             }
           </style>
         </head>
@@ -682,6 +704,7 @@ const Page = () => {
               <thead>
                 <tr>
                   <th>No</th>
+                  <th>Foto</th>
                   <th>Nama</th>
                   <th>NPA</th>
                   <th>Cabang</th>
@@ -693,10 +716,11 @@ const Page = () => {
               </thead>
               <tbody>
                 ${participantsWithFiles
-                  .map(
-                    (peserta, index) => `
+          .map(
+            (peserta, index) => `
                       <tr>
                         <td>${index + 1}</td>
+                        <td class="photo-cell">${peserta.photoHtml}</td>
                         <td>${peserta.namaLengkap}</td>
                         <td>${peserta.npa}</td>
                         <td>${peserta.cabang}</td>
@@ -706,8 +730,8 @@ const Page = () => {
                         <td class="file-cell">${peserta.fileHtml}</td>
                       </tr>
                     `
-                  )
-                  .join("")}
+          )
+          .join("")}
               </tbody>
             </table>
           </div>
@@ -727,26 +751,32 @@ const Page = () => {
       frameDoc.document.close();
 
       setTimeout(() => {
-        frameDoc.focus();
-        frameDoc.print();
+        try {
+          frameDoc.focus();
+          frameDoc.print();
+        } catch (error) {
+          console.error("Error printing:", error);
+          alert("Terjadi kesalahan saat mencetak PDF. Silakan coba lagi.");
+        }
 
         setTimeout(() => {
           document.body.removeChild(printFrame);
         }, 1000);
-      }, 500);
+      }, 1000);
     };
 
     const exportToExcel = async () => {
       try {
         const XLSX = await import('xlsx');
-        
+
         const eventName = selectedEvent?.namaEvent || "Event";
-        
+
         const wb = XLSX.utils.book_new();
-        
+
         const mainData = pesertaList.map((peserta, index) => {
           return {
             'No': index + 1,
+            'Foto': peserta.foto ? 'Tersedia' : 'Tidak ada',
             'Nama': peserta.namaLengkap,
             'NPA': peserta.npa,
             'Cabang': peserta.cabang,
@@ -756,7 +786,7 @@ const Page = () => {
             'File': peserta.upload ? 'Tersedia' : 'Tidak ada'
           };
         });
-    
+
         const ws = XLSX.utils.json_to_sheet(mainData);
         const columnWidths = [
           { wch: 5 },    // No
@@ -766,11 +796,12 @@ const Page = () => {
           { wch: 25 },   // Unit Kerja
           { wch: 15 },   // Nomor HP
           { wch: 25 },   // Jabatan Organisasi
+          { wch: 15 },   // Foto
           { wch: 15 },   // File
         ];
         ws['!cols'] = columnWidths;
         XLSX.utils.book_append_sheet(wb, ws, 'Daftar Peserta');
-        
+
         XLSX.writeFile(wb, `Daftar Peserta - ${eventName}.xlsx`);
       } catch (error) {
         console.error("Error exporting to Excel:", error);
@@ -804,7 +835,7 @@ const Page = () => {
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-        <div className="bg-white rounded-lg shadow-xl w-[80%] max-h-[80vh] relative">
+        <div className="bg-white rounded-lg shadow-xl w-[90%] max-h-[80vh] relative">
           <button
             onClick={() => setIsPesertaModalOpen(false)}
             className="absolute top-3 right-3 text-gray-500 hover:text-red-700"
@@ -859,6 +890,9 @@ const Page = () => {
                         Jabatan Organisasi
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Foto
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         File
                       </th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -870,6 +904,25 @@ const Page = () => {
                     {pesertaList.length > 0 ? (
                       pesertaList.map((peserta, index) => (
                         <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {peserta.foto ? (
+                              <div className="h-16 w-16 relative overflow-hidden rounded-full">
+                                <img
+                                  src={`data:image/jpeg;base64,${peserta.foto}`}
+                                  alt={`Foto ${peserta.namaLengkap}`}
+                                  className="w-full h-full rounded-full object-cover object-top"
+                                />
+                              </div>
+                            ) : (
+                              <div className="h-16 w-16 relative overflow-hidden rounded-full">
+                                <img
+                                  src={profileImageUrl}
+                                  alt="Foto User"
+                                  className="w-full h-full rounded-full object-cover object-top"
+                                />
+                              </div>
+                            )}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {peserta.namaLengkap}
                           </td>
@@ -891,7 +944,7 @@ const Page = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {peserta.upload ? (
                               <button
-                                onClick={() => handleFileDownload(peserta.upload, `Dokumen-${peserta.namaLengkap}`)}
+                                onClick={() => handleFileDownload(peserta.upload, selectedEvent.namaEvent, peserta.namaLengkap)}
                                 className="text-blue-600 hover:text-blue-800 focus:outline-none"
                               >
                                 <div className="flex items-center">
@@ -922,7 +975,7 @@ const Page = () => {
                     ) : (
                       <tr>
                         <td
-                          colSpan="8"
+                          colSpan="9"
                           className="px-6 py-4 text-center text-sm text-gray-500"
                         >
                           Tidak ada data peserta

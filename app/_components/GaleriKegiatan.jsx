@@ -99,6 +99,8 @@ const GaleriKegiatan = () => {
   const [rantingError, setRantingError] = useState("");
   const [uploadFile, setUploadFile] = useState(null);
   const [fileName, setFileName] = useState("");
+  const profileImageUrl = "/profile.png";
+  const [fotoBase64, setFotoBase64] = useState(null);
 
   useEffect(() => {
     fetchGalleries();
@@ -146,6 +148,17 @@ const GaleriKegiatan = () => {
           response = await GlobalApi.getUserById(userId);
         }
         setUserData(response);
+        if (response.foto) {
+          try {
+            const decodedString = atob(response.foto);
+            setFotoBase64(decodedString);
+          } catch (error) {
+            console.error("Error decoding Base64:", error);
+            setFotoBase64(null);
+          }
+        } else {
+          setFotoBase64(null);
+        }
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -204,20 +217,20 @@ const GaleriKegiatan = () => {
     setShowPopup(true);
   };
 
-  const validateForm = () => {
-    let isValid = true;
+  // const validateForm = () => {
+  //   let isValid = true;
 
-    if (!jabatan.trim()) {
-      setJabatanError("Jabatan organisasi wajib diisi");
-      isValid = false;
-    } else {
-      setJabatanError("");
-    }
+  //   if (!jabatan.trim()) {
+  //     setJabatanError("Jabatan organisasi wajib diisi");
+  //     isValid = false;
+  //   } else {
+  //     setJabatanError("");
+  //   }
 
-    return isValid;
-  };
+  //   return isValid;
+  // };
 
-  
+
 
   const nonEventGalleries = galleries.filter(item => item.category !== 'EVENT');
   const eventGalleries = galleries.filter(item => item.category === 'EVENT');
@@ -275,7 +288,7 @@ const GaleriKegiatan = () => {
 
   const GallerySwiper = ({ items, title, showRegisterButton = false }) => {
     const [expandedItems, setExpandedItems] = useState({});
-    const maxDescriptionLength = 150; 
+    const maxDescriptionLength = 150;
 
     if (items.length === 0) return null;
 
@@ -338,7 +351,7 @@ const GaleriKegiatan = () => {
       const words = text.split(" ");
 
       for (const word of words) {
-        if (currentLength + word.length <= maxLength - 3) { 
+        if (currentLength + word.length <= maxLength - 3) {
           truncated += word + " ";
           currentLength += word.length + 1;
         } else {
@@ -437,6 +450,8 @@ const GaleriKegiatan = () => {
     const [komisiError, setKomisiError] = useState("");
     const [ranting, setRanting] = useState("");
     const [rantingError, setRantingError] = useState("");
+    const [jabatan, setJabatan] = useState("");
+    const [jabatanError, setJabatanError] = useState("");
     const fileInputRef = useRef(null);
 
     const handleFileChange = (e) => {
@@ -465,9 +480,9 @@ const GaleriKegiatan = () => {
     const handleSubmitRegistration = async () => {
       if (!currentEvent || isSubmitting) return;
     
-      if (!validateForm()) {
-        return;
-      }
+      // if (!validateForm()) {
+      //   return;
+      // }
     
       try {
         setIsSubmitting(true);
@@ -494,9 +509,14 @@ const GaleriKegiatan = () => {
         formData.append("namaEvent", currentEvent.namaEvent);
         // formData.append("komisi", komisi || "");
         // formData.append("ranting", ranting || "");
+
+        if (fotoBase64) {
+          const blob = await fetch(`data:image/jpeg;base64,${fotoBase64}`).then((res) => res.blob());
+          formData.append("foto", blob, "profile.jpg");
+        }
     
         if (uploadFile) {
-          formData.append("upload", uploadFile, fileName); 
+          formData.append("upload", uploadFile, fileName);
         }
     
         await GlobalApi.addPesertaEvent(formData);
@@ -540,6 +560,35 @@ const GaleriKegiatan = () => {
           <h3 className="text-xl font-bold mb-4 text-center">
             Mendaftar Event {currentEvent?.namaEvent ? `${currentEvent.namaEvent}` : ''}
           </h3>
+
+          {/* User Photo Section */}
+          <div className="flex justify-center mb-4">
+            <div className="relative flex items-center justify-center w-24 h-24 rounded-full border-2 border-gray-300 shadow-md overflow-hidden">
+              {fotoBase64 ? (
+                <Image
+                  src={
+                    fotoBase64
+                      ? `data:image/jpeg;base64,${fotoBase64}`
+                      : profileImageUrl
+                  }
+                  width={100}
+                  height={100}
+                  alt={`Foto User`}
+                  className="w-full h-full rounded-full object-cover object-top"
+                  unoptimized={true}
+                />
+              ) : (
+                <Image
+                  src={profileImageUrl}
+                  width={100}
+                  height={100}
+                  alt="Foto User"
+                  className="w-full h-full rounded-full object-cover object-top"
+                  unoptimized={true}
+                />
+              )}
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors">
