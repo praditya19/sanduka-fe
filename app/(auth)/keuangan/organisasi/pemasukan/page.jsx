@@ -205,6 +205,48 @@ function Pemasukan() {
   };
 
   useEffect(() => {
+    const fetchData = async () => {
+      if (formValues.posTransaksi === "Daspen" && formValues.cabang) {
+        // Pastikan cabang dan posTransaksi sudah ada nilai
+        const selectedCabang = formValues.cabang;
+        try {
+          const response = await GlobalApi.getNominalAggregatedData(
+            selectedCabang, // Menggunakan cabang yang dipilih
+            formValues.unitKerja // Menambahkan unitKerja jika diperlukan
+          );
+  
+          // Cari item dengan cabang yang memiliki value "Total"
+          const totalItem = response.find(item => item.cabang === "Total");
+  
+          if (totalItem) {
+            // Ambil nilai daspen dari item yang ditemukan
+            const totalDaspen = totalItem.daspen;
+            console.log("Daspen untuk cabang Total:", totalDaspen);
+  
+            // Lakukan pengurangan 6.5% dari totalDaspen
+            const reducedDaspen = totalDaspen * 0.935; // Mengurangi 6.5%
+            console.log("Daspen setelah pengurangan 6.5%:", reducedDaspen);
+            
+            // Masukkan nilai daspen yang sudah dikurangi ke form
+            setFormValues((prevValues) => ({
+              ...prevValues,
+              nominal: reducedDaspen,  // Set nilai nominal ke hasil pengurangan
+            }));
+          } else {
+            console.log("Cabang 'Total' tidak ditemukan dalam response.");
+          }
+        } catch (error) {
+          console.error("Gagal mengambil data Daspen:", error);
+        }
+      } else {
+        console.log("PosTransaksi atau Cabang belum dipilih dengan benar.");
+      }
+    };
+  
+    fetchData();
+  }, [formValues.posTransaksi, formValues.cabang]);
+
+  useEffect(() => {
     const currentMonthIndex = new Date().getMonth();
     const currentBulan = bulanList.find(
       (b) => b.angkaBulan === currentMonthIndex
