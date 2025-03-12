@@ -790,13 +790,13 @@ const Page = () => {
         const ws = XLSX.utils.json_to_sheet(mainData);
         const columnWidths = [
           { wch: 5 },    // No
+          { wch: 10 },   // Foto
           { wch: 30 },   // Nama
           { wch: 15 },   // NPA
           { wch: 20 },   // Cabang
           { wch: 25 },   // Unit Kerja
           { wch: 15 },   // Nomor HP
           { wch: 25 },   // Jabatan Organisasi
-          { wch: 15 },   // Foto
           { wch: 15 },   // File
         ];
         ws['!cols'] = columnWidths;
@@ -869,8 +869,14 @@ const Page = () => {
                 </div>
               ) : (
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50 sticky top-0">
+                  <thead className="bg-gray-50 sticky top-0 z-10">
                     <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        No
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Foto
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Nama
                       </th>
@@ -890,9 +896,6 @@ const Page = () => {
                         Jabatan Organisasi
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Foto
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         File
                       </th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -904,6 +907,9 @@ const Page = () => {
                     {pesertaList.length > 0 ? (
                       pesertaList.map((peserta, index) => (
                         <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {index + 1}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {peserta.foto ? (
                               <div className="h-16 w-16 relative overflow-hidden rounded-full">
@@ -975,7 +981,7 @@ const Page = () => {
                     ) : (
                       <tr>
                         <td
-                          colSpan="9"
+                          colSpan="10"
                           className="px-6 py-4 text-center text-sm text-gray-500"
                         >
                           Tidak ada data peserta
