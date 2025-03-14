@@ -156,32 +156,26 @@ function Pemasukan() {
         [name]: value,
       }));
 
-      // Jika yang dipilih adalah "Iuran PGRI"
       if (name === "posTransaksi" && value === "Iuran PGRI") {
         try {
           const response = await GlobalApi.getDefaultIuranById(2);
 
-          // Hitung totalIuran dari response yang didapat
           const total =
             parseInt(response.pb) +
             parseInt(response.propinsi) +
             parseInt(response.kabupaten) +
             parseInt(response.cabang);
 
-          // Update state totalIuran dengan total yang sudah dihitung
           setTotalIuran(total);
-          console.log("Total Iuran PGRI:", total);
 
-          // Setelah mendapatkan total, hitung dengan totalAnggotaByAdmin
           if (formValues.totalAnggotaByAdmin) {
             const anggota = parseInt(formValues.totalAnggotaByAdmin) || 0;
             const totalPerhitungan = total * anggota;
-            setTotalPerhitungan(totalPerhitungan);  // Menyimpan hasil perhitungan di state
+            setTotalPerhitungan(totalPerhitungan);
 
-            // Update nilai nominal dengan totalPerhitungan
             setFormValues((prevValues) => ({
               ...prevValues,
-              nominal: totalPerhitungan,  // Menyimpan hasil perhitungan ke input nominal
+              nominal: totalPerhitungan,
             }));
           }
         } catch (error) {
@@ -189,16 +183,14 @@ function Pemasukan() {
         }
       }
 
-      // Jika terjadi perubahan pada input totalAnggotaByAdmin
       if (name === "totalAnggotaByAdmin") {
         const anggota = parseInt(value) || 0;
         const totalPerhitungan = totalIuran * anggota;
-        setTotalPerhitungan(totalPerhitungan);  // Update totalPerhitungan saat input berubah
+        setTotalPerhitungan(totalPerhitungan); 
 
-        // Update nilai nominal dengan totalPerhitungan
         setFormValues((prevValues) => ({
           ...prevValues,
-          nominal: totalPerhitungan,  // Menyimpan hasil perhitungan ke input nominal
+          nominal: totalPerhitungan, 
         }));
       }
     }
@@ -206,46 +198,46 @@ function Pemasukan() {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (formValues.posTransaksi === "Daspen" && formValues.cabang) {
-        // Pastikan cabang dan posTransaksi sudah ada nilai
-        const selectedCabang = formValues.cabang;
+      if (formValues.posTransaksi === "Derap" && formValues.cabang && formValues.tanggalTransaksi) {
+        const tanggal = new Date(formValues.tanggalTransaksi);
+        const bulanAngka = tanggal.getMonth(); 
+        const tahun = tanggal.getFullYear();
+  
+        const bulanData = bulanList.find(bulan => bulan.angkaBulan === bulanAngka);
+        const namaBulan = bulanData ? bulanData.namaBulan : "";
+  
         try {
-          const response = await GlobalApi.getNominalAggregatedData(
-            selectedCabang, // Menggunakan cabang yang dipilih
-            formValues.unitKerja // Menambahkan unitKerja jika diperlukan
-          );
+          const response = await GlobalApi.getTableDerap(namaBulan, tahun, formValues.cabang);
   
-          // Cari item dengan cabang yang memiliki value "Total"
-          const totalItem = response.find(item => item.cabang === "Total");
+          if (response && response.length > 0) {
+            const data = response[0];
+            const jumlah = parseInt(data.jumlah); 
   
-          if (totalItem) {
-            // Ambil nilai daspen dari item yang ditemukan
-            const totalDaspen = totalItem.daspen;
-            console.log("Daspen untuk cabang Total:", totalDaspen);
+            const derapData = JSON.parse(sessionStorage.getItem('derapData'));
   
-            // Lakukan pengurangan 6.5% dari totalDaspen
-            const reducedDaspen = totalDaspen * 0.935; // Mengurangi 6.5%
-            console.log("Daspen setelah pengurangan 6.5%:", reducedDaspen);
-            
-            // Masukkan nilai daspen yang sudah dikurangi ke form
-            setFormValues((prevValues) => ({
-              ...prevValues,
-              nominal: reducedDaspen,  // Set nilai nominal ke hasil pengurangan
-            }));
-          } else {
-            console.log("Cabang 'Total' tidak ditemukan dalam response.");
+            if (derapData && derapData.propinsi && derapData.kabupaten && derapData.cabang) {
+              const propinsi = parseInt(derapData.propinsi); 
+              const kabupaten = parseInt(derapData.kabupaten); 
+              const cabang = parseInt(derapData.cabang);
+  
+              const hasilPerhitungan = (jumlah * propinsi) + (jumlah * kabupaten) + (jumlah * cabang);
+  
+              setFormValues((prevValues) => ({
+                ...prevValues,
+                nominal: hasilPerhitungan, 
+              }));
+            } else {
+            }
           }
         } catch (error) {
-          console.error("Gagal mengambil data Daspen:", error);
+          console.error("Gagal mengambil data Derap:", error);
         }
-      } else {
-        console.log("PosTransaksi atau Cabang belum dipilih dengan benar.");
       }
     };
   
     fetchData();
-  }, [formValues.posTransaksi, formValues.cabang]);
-
+  }, [formValues.posTransaksi, formValues.cabang, formValues.tanggalTransaksi]);
+    
   useEffect(() => {
     const currentMonthIndex = new Date().getMonth();
     const currentBulan = bulanList.find(
@@ -279,12 +271,11 @@ function Pemasukan() {
   }, []);
 
   const printTable = () => {
-    // Menyiapkan nama bulan dan tahun untuk judul cetakan
+
     const bulanNama =
       bulanList.find((bulan) => bulan.id === selectedBulan)?.namaBulan || "";
     const tahunNama = newSelectedYear || "";
 
-    // Membangun HTML tabel tanpa kolom Action
     const tableHTMLWithoutActions = `
       <table class="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
         <thead class="text-sm text-black uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
@@ -376,7 +367,6 @@ function Pemasukan() {
       </table>
     `;
 
-    // Membuka jendela baru untuk mencetak
     const printWindow = window.open("", "_blank");
     printWindow.document.open();
     printWindow.document.write(`
@@ -456,7 +446,6 @@ function Pemasukan() {
           "Organisasi"
         );
         setTransactions(data);
-        // console.log(data);
 
         const saldoAwalData = data.find((item) => item.uraian === "Saldo Awal");
 
@@ -479,7 +468,6 @@ function Pemasukan() {
     let tempSaldoMap = {};
     let saldoSebelumnya = 0;
 
-    // Iterasi transaksi untuk menghitung saldo
     transactions.forEach((transaction, index) => {
       let currentSaldo = 0;
 
@@ -497,21 +485,15 @@ function Pemasukan() {
       saldoSebelumnya = currentSaldo;
     });
 
-    // Menyimpan hasil perhitungan saldo ke dalam state saldoMap
     setSaldoMap(tempSaldoMap);
 
-    // Menghitung total saldo dari saldoMap
     const calculatedTotalSaldo = Object.values(tempSaldoMap).reduce(
       (total, currentSaldo) => total + currentSaldo,
       0
     );
 
-    // Menyimpan total saldo ke dalam state totalSaldo
     setTotalSaldo(calculatedTotalSaldo);
-  }, [transactions]); // Dependensi: hanya akan berjalan ketika transactions berubah
-
-  // totalSaldo akan selalu berisi total dari saldo yang dihitung
-  // console.log("Total saldo yang dihitung:", totalSaldo);
+  }, [transactions]);
 
   const createSaldoAwal = async () => {
     try {
@@ -524,18 +506,15 @@ function Pemasukan() {
       );
       const formattedDate = sixteenthDayOfMonth.toISOString().split("T")[0];
 
-      // Ambil bulan dan tahun sebelumnya
       const prevMonth = today.getMonth() === 0 ? 11 : today.getMonth() - 1;
       const prevYear =
         today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
 
-      // Ambil data transaksi dari bulan sebelumnya
       const prevTransactions = await GlobalApi.getTablePemasukanSanduka(
         prevMonth + 1,
         prevYear
       );
 
-      // Perhitungan saldo berdasarkan transaksi bulan sebelumnya
       let saldoMapPrev = {};
       let saldoSebelumnya = 0;
 
@@ -572,7 +551,6 @@ function Pemasukan() {
 
       const responseSaldo = await GlobalApi.createSaldoAwal(saldoAwalRequest);
 
-      // Refresh halaman setelah sukses
       window.location.reload();
     } catch (error) {
       console.error("Error saat membuat Saldo Awal:", error);
@@ -587,16 +565,13 @@ function Pemasukan() {
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
 
-      // Pastikan hanya dieksekusi jika saldo awal belum ada
       if (currentHour === 7 && currentMinute === 10 && !isSaldoAwalExist) {
-        createSaldoAwal(); // Memanggil fungsi jika saldo awal belum ada
+        createSaldoAwal(); 
       }
     };
 
-    // Cek waktu setiap detik
     const intervalId = setInterval(checkTime, 1000);
 
-    // Hentikan pengecekan setelah 1 menit (untuk menghindari pemeriksaan yang tidak perlu)
     const timeoutId = setTimeout(() => clearInterval(intervalId), 60000);
 
     return () => {
@@ -663,20 +638,17 @@ function Pemasukan() {
     try {
       let dataToSend;
 
-      // Cek jika posTransaksi adalah 'Saldo Awal'
       if (formValues.posTransaksi === "Saldo Awal") {
         dataToSend = {
           tanggalTransaksi: formValues.tanggalTransaksi,
-          posTransaksi: "Saldo Awal", // Menggunakan "Saldo Awal" secara eksplisit
-          masukKe: formValues.jenisPenerimaan, // Bisa disesuaikan
+          posTransaksi: "Saldo Awal",
+          masukKe: formValues.jenisPenerimaan,
           debet: formValues.nominal,
           jenisPembayaran: "Organisasi",
         };
 
-        // Memanggil API createSaldoAwal
         const response = await GlobalApi.createSaldoAwal(dataToSend);
       } else {
-        // Kondisi default jika bukan 'Saldo Awal'
         dataToSend = {
           tanggalTransaksi: formValues.tanggalTransaksi,
           posTransaksi: formValues.posTransaksi,
@@ -695,7 +667,6 @@ function Pemasukan() {
           totalAnggotaByAdmin: formValues.totalAnggotaByAdmin,
         };
 
-        // Memanggil API createPembayaranSanduka
         const response = await GlobalApi.createPembayaranSanduka(dataToSend);
       }
 
@@ -849,22 +820,16 @@ function Pemasukan() {
   };
 
   const handleGetEdit = async (id) => {
-    // console.log("ID yang diklik:", id);
 
     try {
-      // Simpan ID yang diklik ke dalam state
       setEditId(id);
 
-      // Ambil data berdasarkan ID
       const data = await GlobalApi.getPemasukanUangMasukById(id);
-      // console.log("Data yang diambil:", data);
 
-      // Format tanggal transaksi
       const tanggalTransaksi = data.tanggalTransaksi
         ? data.tanggalTransaksi.split(", ")[1] || data.tanggalTransaksi
         : "";
 
-      // Persiapkan nilai untuk form
       const updatedFormValues = {
         noBukti: data.noBukti || "",
         tanggalTransaksi: tanggalTransaksi || "",
@@ -879,65 +844,49 @@ function Pemasukan() {
         keterangan: data.posTransaksi || "",
       };
 
-      // Jika posTransaksi bukan "Saldo Awal", langsung tampilkan data tanpa pencarian tambahan
-      if (data.posTransaksi !== "Saldo Awal") {
-        // console.log("Bukan 'Saldo Awal', langsung menampilkan form data.");
-        setFormValues(updatedFormValues);
-        setIsEditing(true);
-        return;
-      }
+      // if (data.posTransaksi !== "Saldo Awal") {
+      //   setFormValues(updatedFormValues);
+      //   setIsEditing(true);
+      //   return;
+      // }
 
-      // console.log(
-      //   "Mendeteksi uraian 'Saldo Awal', mengambil seluruh data terkait..."
-      // );
+      // let allIds = [];
+      // const startYear = 2021;
+      // const startMonth = 4;
 
-      let allIds = [];
-      const startYear = 2021;
-      const startMonth = 4; // April (bulan dalam JavaScript mulai dari 0, jadi 4 = Mei)
+      // const now = new Date();
+      // const currentYear = now.getFullYear();
+      // const currentMonth = now.getMonth() + 1;
 
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth() + 1; // getMonth() dimulai dari 0
+      // for (let year = startYear; year <= currentYear; year++) {
+      //   let start = year === startYear ? startMonth : 1;
+      //   let end = year === currentYear ? currentMonth : 12;
 
-      // Looping dari April 2021 hingga bulan saat ini
-      for (let year = startYear; year <= currentYear; year++) {
-        let start = year === startYear ? startMonth : 1; // Jika tahun pertama, mulai dari April, sisanya dari Januari
-        let end = year === currentYear ? currentMonth : 12; // Jika tahun terakhir, hanya sampai bulan saat ini
+      //   for (let month = start; month <= end; month++) {
 
-        for (let month = start; month <= end; month++) {
-          console.log(`Mengambil data bulan ${month} tahun ${year}...`);
+      //     try {
+      //       const allData = await GlobalApi.getTablePemasukanSanduka(
+      //         month,
+      //         year
+      //       );
 
-          try {
-            const allData = await GlobalApi.getTablePemasukanSanduka(
-              month,
-              year
-            );
+      //       const filteredData = allData.filter(
+      //         (item) => item.uraian === "Saldo Awal"
+      //       );
 
-            // Filter data yang memiliki uraian "Saldo Awal"
-            const filteredData = allData.filter(
-              (item) => item.uraian === "Saldo Awal"
-            );
+      //       const ids = filteredData.map((item) => item.id);
+      //       allIds = allIds.concat(ids);
+      //     } catch (error) {
+      //       console.error(
+      //         `Gagal mengambil data untuk bulan ${month} tahun ${year}:`,
+      //         error
+      //       );
+      //     }
+      //   }
+      // }
 
-            // Ambil semua ID dari hasil filter
-            const ids = filteredData.map((item) => item.id);
-            allIds = allIds.concat(ids);
-          } catch (error) {
-            console.error(
-              `Gagal mengambil data untuk bulan ${month} tahun ${year}:`,
-              error
-            );
-          }
-        }
-      }
+      // setAllIds(allIds);
 
-      // Simpan seluruh ID yang ditemukan ke dalam state
-      setAllIds(allIds);
-      console.log(
-        "Semua ID dengan uraian 'Saldo Awal' sejak April 2021:",
-        allIds
-      );
-
-      // Setelah mendapatkan ID yang sesuai, perbarui form
       setFormValues(updatedFormValues);
       setIsEditing(true);
     } catch (error) {
@@ -953,7 +902,6 @@ function Pemasukan() {
 
     try {
       const data = await GlobalApi.getPemasukanUangMasukById(editId);
-      console.log("ID yang akan dikirim untuk edit:", data);
 
       const updatedFormValues = {
         noBukti: data.noBukti || "",
@@ -983,10 +931,7 @@ function Pemasukan() {
         message: `Data berhasil diupdate!`,
       });
       if (data.posTransaksi === "Saldo Awal") {
-        console.log(
-          "Transaksi 'Saldo Awal' terdeteksi, memperbarui seluruh ID..."
-        );
-        await handleSubmitEditAll();
+        // await handleSubmitEditAll();
       }
       window.location.reload();
     } catch (error) {
@@ -997,98 +942,85 @@ function Pemasukan() {
       console.error("Gagal mengedit data:", error);
     }
   };
-  const handleSubmitEditAll = async () => {
-    if (allIds.length === 0) {
-      console.error("Tidak ada ID yang dapat diperbarui");
-      return;
-    }
 
-    console.log("ID yang akan diperbarui:", allIds);
+  // const handleSubmitEditAll = async () => {
+  //   if (allIds.length === 0) {
+  //     console.error("Tidak ada ID yang dapat diperbarui");
+  //     return;
+  //   }
 
-    try {
-      const promises = allIds.map(async (id) => {
-        const data = await GlobalApi.getPemasukanUangMasukById(id);
+  //   try {
+  //     const promises = allIds.map(async (id) => {
+  //       const data = await GlobalApi.getPemasukanUangMasukById(id);
 
-        const tanggalTransaksi = new Date(data.tanggalTransaksi);
-        const bulanTransaksi = tanggalTransaksi.getMonth() + 1;
-        const tahunTransaksi = tanggalTransaksi.getFullYear();
+  //       const tanggalTransaksi = new Date(data.tanggalTransaksi);
+  //       const bulanTransaksi = tanggalTransaksi.getMonth() + 1;
+  //       const tahunTransaksi = tanggalTransaksi.getFullYear();
 
-        // console.log(`Memproses transaksi untuk ID: ${id}, Bulan: ${bulanTransaksi}, Tahun: ${tahunTransaksi}`);
+  //       const bulanSebelumnya = bulanTransaksi === 1 ? 12 : bulanTransaksi - 1;
+  //       const tahunSebelumnya =
+  //         bulanTransaksi === 1 ? tahunTransaksi - 1 : tahunTransaksi;
 
-        const bulanSebelumnya = bulanTransaksi === 1 ? 12 : bulanTransaksi - 1;
-        const tahunSebelumnya =
-          bulanTransaksi === 1 ? tahunTransaksi - 1 : tahunTransaksi;
+  //       const allData = await GlobalApi.getTablePemasukanSanduka(
+  //         bulanSebelumnya,
+  //         tahunSebelumnya
+  //       );
 
-        const allData = await GlobalApi.getTablePemasukanSanduka(
-          bulanSebelumnya,
-          tahunSebelumnya
-        );
+  //       let currentSaldo = 0;
+  //       let totalSaldoBulan = 0;
+  //       let totalSaldoBulanFinal = 0;
 
-        let currentSaldo = 0;
-        let totalSaldoBulan = 0;
-        let totalSaldoBulanFinal = 0;
+  //       allData.forEach((transaction, index) => {
+  //         let debet = parseFloat(transaction.debet.replace(",", "")) || 0;
+  //         let kredit = parseFloat(transaction.kredit.replace(",", "")) || 0;
 
-        allData.forEach((transaction, index) => {
-          let debet = parseFloat(transaction.debet.replace(",", "")) || 0;
-          let kredit = parseFloat(transaction.kredit.replace(",", "")) || 0;
+  //         if (transaction.uraian === "Saldo Awal") {
+  //           currentSaldo = debet;
+  //         } else {
+  //           currentSaldo += debet - kredit;
+  //         }
 
-          if (transaction.uraian === "Saldo Awal") {
-            currentSaldo = debet;
-          } else {
-            currentSaldo += debet - kredit;
-          }
+  //         totalSaldoBulan = currentSaldo;
+  //         totalSaldoBulanFinal += totalSaldoBulan;
+  //       });
 
-          totalSaldoBulan = currentSaldo;
-          totalSaldoBulanFinal += totalSaldoBulan;
+  //       const updatedFormValues = {
+  //         noBukti: data.noBukti || "",
+  //         tanggalTransaksi: data.tanggalTransaksi || "",
+  //         posTransaksi: data.posTransaksi || "",
+  //         masukKe: data.masukKe || "",
+  //         cabang: data.cabang || "",
+  //         bulan: bulanTransaksi || "",
+  //         debet: totalSaldoBulanFinal || 0,
+  //         kredit: "",
+  //         bulanSantunan: "",
+  //         yangMeninggal: "",
+  //         namaPenerima: "",
+  //         keterangan: "",
+  //         jenisPembayaran: "Organisasi",
+  //       };
 
-          // console.log(`Transaksi ke-${index + 1} - Saldo sementara bulan ${bulanSebelumnya} tahun ${tahunSebelumnya}: ${totalSaldoBulan}`);
-        });
+  //       return GlobalApi.editPemasukanUangMasuk(id, updatedFormValues);
+  //     });
 
-        // console.log(`Total saldo akhir per bulan ${bulanSebelumnya} tahun ${tahunSebelumnya}: ${totalSaldoBulanFinal}`);
+  //     await Promise.all(promises);
 
-        const updatedFormValues = {
-          noBukti: data.noBukti || "",
-          tanggalTransaksi: data.tanggalTransaksi || "",
-          posTransaksi: data.posTransaksi || "",
-          masukKe: data.masukKe || "",
-          cabang: data.cabang || "",
-          bulan: bulanTransaksi || "",
-          debet: totalSaldoBulanFinal || 0,
-          kredit: "",
-          bulanSantunan: "",
-          yangMeninggal: "",
-          namaPenerima: "",
-          keterangan: "",
-          jenisPembayaran: "Organisasi",
-        };
-
-        console.log(
-          "Data yang akan dikirim untuk update ID:",
-          id,
-          updatedFormValues
-        );
-
-        return GlobalApi.editPemasukanUangMasuk(id, updatedFormValues);
-      });
-
-      await Promise.all(promises);
-
-      setNotification({
-        type: 'success',
-        message: `Semua saldo awal berhasil dihitung! (Tidak dikirim ke database)`
-      });
-      window.location.reload();
-    } catch (error) {
-      setNotification({
-        type: 'error',
-        message: `Gagal menghitung dan memperbarui saldo awal. Coba lagi!`,
-      });
-      console.error(
-        "Gagal menghitung dan memperbarui semua saldo awal:",
-        error
-      );
-    }
-  };
+  //     setNotification({
+  //       type: 'success',
+  //       message: `Semua saldo awal berhasil dihitung! (Tidak dikirim ke database)`
+  //     });
+  //     window.location.reload();
+  //   } catch (error) {
+  //     setNotification({
+  //       type: 'error',
+  //       message: `Gagal menghitung dan memperbarui saldo awal. Coba lagi!`,
+  //     });
+  //     console.error(
+  //       "Gagal menghitung dan memperbarui semua saldo awal:",
+  //       error
+  //     );
+  //   }
+  // };
 
   useEffect(() => {
     const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
@@ -1396,7 +1328,7 @@ function Pemasukan() {
                     id="nominal"
                     type="text"
                     name="nominal"
-                    value={formatCurrency(formValues.nominal || '')}  // Menampilkan nilai nominal yang sudah diformat
+                    value={formatCurrency(formValues.nominal || '')}
                     onChange={handleChange}
                   />
                 </div>
@@ -1736,7 +1668,7 @@ function Pemasukan() {
                                         Number(newSelectedYear) === 2021 &&
                                         Number(selectedBulan) === 3;
             
-                                      // Hanya jumlahkan "Saldo Awal" jika Maret 2021, transaksi lain tetap dihitung normal
+                                       Hanya jumlahkan "Saldo Awal" jika Maret 2021, transaksi lain tetap dihitung normal
                                       const debet =
                                         isSaldoAwal && !isMaret2021
                                           ? 0

@@ -1041,15 +1041,23 @@ const createSaldoAwal = async (saldoAwalRequest) => {
   }
 };
 // Rekap Lapor Sanduka
-const getRekapLaporDiterima = async () => {
+const getRekapLaporDiterima = async (bulan, tahun, cabang) => {
   try {
-    const response = await axiosClient.get("/api/rekap-lapor-sanduka/diterima");
+    // Menambahkan query parameter pada URL
+    const response = await axiosClient.get("/api/rekap-lapor-sanduka/diterima", {
+      params: {
+        bulan: bulan,
+        tahun: tahun,
+        cabang: cabang,
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Error fetching Data Lapor:", error);
     throw error;
   }
 };
+
 const getRekapLaporBelom = async () => {
   try {
     const response = await axiosClient.get(

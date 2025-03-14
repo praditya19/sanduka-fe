@@ -779,22 +779,16 @@ function Pemasukan() {
   };
 
   const handleGetEdit = async (id) => {
-    // console.log("ID yang diklik:", id);
 
     try {
-      // Simpan ID yang diklik ke dalam state
       setEditId(id);
 
-      // Ambil data berdasarkan ID
       const data = await GlobalApi.getPemasukanUangMasukById(id);
-      // console.log("Data yang diambil:", data);
 
-      // Format tanggal transaksi
       const tanggalTransaksi = data.tanggalTransaksi
         ? data.tanggalTransaksi.split(", ")[1] || data.tanggalTransaksi
         : "";
 
-      // Persiapkan nilai untuk form
       const updatedFormValues = {
         noBukti: data.noBukti || "",
         tanggalTransaksi: tanggalTransaksi || "",
@@ -867,7 +861,6 @@ function Pemasukan() {
       //   allIds
       // );
 
-      // Setelah mendapatkan ID yang sesuai, perbarui form
       setFormValues(updatedFormValues);
       setIsEditing(true);
     } catch (error) {
@@ -883,7 +876,6 @@ function Pemasukan() {
 
     try {
       const data = await GlobalApi.getPemasukanUangMasukById(editId);
-      // console.log("ID yang akan dikirim untuk edit:", data);
 
       const updatedFormValues = {
         noBukti: data.noBukti || "",
@@ -928,6 +920,7 @@ function Pemasukan() {
       console.error("Gagal mengedit data:", error);
     }
   };
+
   // const handleSubmitEditAll = async () => {
   //   if (allIds.length === 0) {
   //     console.error("Tidak ada ID yang dapat diperbarui");

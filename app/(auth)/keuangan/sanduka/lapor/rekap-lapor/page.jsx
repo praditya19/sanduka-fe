@@ -122,19 +122,29 @@ const Page = () => {
   };
 
   useEffect(() => {
-    const fetchDataDiterima = async () => {
+    const fetchDataLapor = async () => {
       try {
-        const response = await GlobalApi.getRekapLaporDiterima();
-        console.log(response);
-        const fetchedDataDiterima = response || [];
-        setDataLaporDiterima(fetchedDataDiterima);
+        let response;
+        if (!selectedBulan && !selectedYear && !selectedCabang) {
+          response = await GlobalApi.getRekapLaporDiterima();
+        } else {
+          response = await GlobalApi.getRekapLaporDiterima(
+            selectedBulan,
+            selectedYear,
+            selectedCabang
+          );
+        }
+
+        console.log("Data Lapor Diterima:", response);
+        setDataLaporDiterima(response || []);
+        setDisplayedDataLapor(response || []);
       } catch (error) {
         console.error("Error fetching data lapor diterima:", error);
       }
     };
 
-    fetchDataDiterima();
-  }, []);
+    fetchDataLapor();
+  }, [selectedBulan, selectedYear, selectedCabang]);
 
   useEffect(() => {
     const fetchDataBelum = async () => {
@@ -544,11 +554,19 @@ const Page = () => {
                             : "Belum Diterimakan"}
                         </td>
                         <td className="py-2 px-3 text-center text-sm">
+                          {filterStatus === "Terima"
+                            ? new Intl.NumberFormat("id-ID", {
+                                style: "currency",
+                                currency: "IDR",
+                              }).format(item.Nominal)
+                            : "-"}
+                        </td>
+                        {/* <td className="py-2 px-3 text-center text-sm">
                           {new Intl.NumberFormat("id-ID", {
                             style: "currency",
                             currency: "IDR",
                           }).format(item.Nominal)}
-                        </td>
+                        </td> */}
                         <td className="py-2 px-3 space-x-2 text-sm">
                           <button
                             className="bg-blue-500 text-white p-2 rounded mb-2"
