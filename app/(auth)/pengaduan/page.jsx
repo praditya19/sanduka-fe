@@ -12,6 +12,7 @@ import {
   faTrash,
   faEye,
   faPrint,
+  faHandsHelping,
 } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "@/app/_components/Sidebar";
 import HeaderMenu from "@/app/_components/HeaderMenu";
@@ -65,7 +66,7 @@ const NotificationPopup = ({ type, message, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-[9999]">
       <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
       <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
         <button
@@ -118,12 +119,30 @@ export default function PengaduanPage() {
   const [responses, setResponses] = useState([]);
   const [isMobileView, setIsMobileView] = useState(false);
   const [isMobileChat, setIsMobileChat] = useState(false);
-  const selectedCategory = watch("kategori");
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [rekapPengaduan, setRekapPengaduan] = useState([]);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [pengaduanToDelete, setPengaduanToDelete] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [responsesMap, setResponsesMap] = useState({});
+  const [newPengaduanCount, setNewPengaduanCount] = useState(0);
+
+  const fetchNewPengaduanCount = async () => {
+    try {
+      const count = await GlobalApi.countNewPengaduan(1); // 1 hari terakhir
+      setNewPengaduanCount(count);
+    } catch (error) {
+      console.error("Error fetching new pengaduan count:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNewPengaduanCount();
+
+    const interval = setInterval(fetchNewPengaduanCount, 6000); // Fetch setiap 1 menit
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -442,59 +461,26 @@ export default function PengaduanPage() {
     );
   };
 
-  const renderPengaduanForm = () => {
-    const categories = [
-      { value: "Pengaduan", icon: "📋", color: "bg-blue-500" },
-      { value: "Kritikan", icon: "🗣️", color: "bg-green-500" },
-      { value: "Permohonan Bantuan", icon: "🤝", color: "bg-purple-500" }
-    ];
+  const renderPengaduanForm = (category) => {
+    const categoryLabels = {
+      pengaduan: "Pengaduan",
+      kritikan: "Kritikan",
+      "permohonan-bantuan": "Permohonan Bantuan",
+    };
 
     return (
-      <>
+      <div className="max-h-[80vh] overflow-y-auto p-4">
         <h3 className="text-2xl font-semibold mb-4 text-center">
-          Buat Pengaduan
+          Buat {categoryLabels[category]}
         </h3>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Category Selection as Buttons */}
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            {categories.map((category) => (
-              <button
-                key={category.value}
-                type="button"
-                onClick={() => setValue("kategori", category.value)}
-                className={`
-                  flex flex-col items-center justify-center p-4 rounded-lg 
-                  transition-all duration-300 
-                  ${selectedCategory === category.value
-                    ? `${category.color} text-white scale-105 shadow-lg`
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
-                `}
-              >
-                <span className="text-3xl mb-2">{category.icon}</span>
-                <span className="text-sm font-medium text-center">
-                  {category.value}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Hidden input for form validation */}
-          <input
-            type="hidden"
-            {...register("kategori", {
-              required: "Silakan pilih kategori pengaduan"
-            })}
-          />
-
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pb-4">
           <textarea
             {...register("deskripsi", { required: true })}
             className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
             rows="4"
             required
-            placeholder="Tulis pengaduan Anda..."
+            placeholder={`Tulis ${categoryLabels[category]} Anda...`}
           ></textarea>
-
-          {/* Input untuk unggah foto */}
           <input
             type="file"
             accept="image/*"
@@ -512,12 +498,9 @@ export default function PengaduanPage() {
             }}
           />
 
-          {/* Pratinjau foto yang diunggah */}
           {buktiFoto && (
-            <div className="mt-2">
-              <p className="text-sm text-gray-500">
-                Pratinjau Foto:
-              </p>
+            <div className="mt-2 mb-4">
+              <p className="text-sm text-gray-500">Pratinjau Foto:</p>
               <img
                 src={buktiFoto}
                 alt="Bukti Pengaduan"
@@ -528,18 +511,13 @@ export default function PengaduanPage() {
 
           <button
             type="submit"
-            disabled={loading || !selectedCategory}
-            className={`
-              w-full py-2 rounded-lg transition 
-              ${selectedCategory
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-gray-400 text-gray-200 cursor-not-allowed'}
-            `}
+            disabled={loading}
+            className="w-full py-2 rounded-lg transition mt-4 bg-blue-600 text-white hover:bg-blue-700"
           >
             {loading ? "Mengirim..." : "Kirim"}
           </button>
         </form>
-      </>
+      </div>
     );
   };
 
@@ -586,7 +564,9 @@ export default function PengaduanPage() {
         filteredPengaduan = sortedResponse;
       } else if (userRole === "ADMIN") {
         filteredPengaduan = sortedResponse.filter(
-          (pengaduan) => pengaduan.cabang === userCabang
+          (pengaduan) =>
+            pengaduan.cabang === userCabang &&
+            pengaduan.category !== "Permohonan Bantuan"
         );
       } else {
         filteredPengaduan = sortedResponse.filter(
@@ -606,9 +586,57 @@ export default function PengaduanPage() {
     }
   };
 
+  const handleCreateHistory = async (category) => {
+    const now = new Date();
+
+    const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
+    const tanggal = now.toISOString().split("T")[0];
+    const jam = now.toTimeString().split(" ")[0];
+    const bulan = now.toLocaleString("id-ID", { month: "long" });
+    const tahun = now.getFullYear();
+
+    const userRole = sessionStorage.getItem("role");
+    const namaFromSession = userRole === "ADMIN" ? nama : sessionStorage.getItem("nama");
+    const npaPgri = sessionStorage.getItem("npa");
+    const selectedCabang = sessionStorage.getItem("cabang");
+
+    if (!npaPgri || !selectedCabang || !namaFromSession) {
+      console.error("Data tidak lengkap untuk membuat history");
+      setNotification({
+        type: 'error',
+        message: `Data tidak lengkap untuk membuat history`
+      });
+      return;
+    }
+
+    const historyData = {
+      hari,
+      tanggal,
+      jam,
+      npa: npaPgri,
+      nama: namaFromSession,
+      cabang: selectedCabang,
+      uraian: `Mengajukan ${category}`,
+      masuk: "-",
+      keluar: "-",
+      bulan,
+      tahun,
+      cabang_ke_2: "-",
+      user: namaFromSession,
+    };
+
+    try {
+      await GlobalApi.createHistoryData(historyData);
+    } catch (error) {
+      console.error("Failed to create history data:", error);
+      throw new Error("Gagal menyimpan riwayat edit data");
+    }
+  };
+
   const onSubmit = async (data) => {
     try {
       setLoading(true);
+
 
       const npa = sessionStorage.getItem("npa");
       const namaLengkap = sessionStorage.getItem("nama");
@@ -622,12 +650,18 @@ export default function PengaduanPage() {
         npa,
         cabang,
         unitKerja,
-        category: data.kategori,
+        category: selectedCategory, // Gunakan selectedCategory di sini
         keterangan: data.deskripsi,
         bukti: data.buktiFoto ? data.buktiFoto[0] : null
       };
 
+      console.log("Data yang akan dikirim:", pengaduanData); // Log data sebelum dikirim
+
       const response = await GlobalApi.createPengaduan(pengaduanData);
+
+      console.log("Respons dari API:", response); // Log respons dari API
+
+      await handleCreateHistory(selectedCategory); // Gunakan selectedCategory di sini
 
       reset();
       setBuktiFoto(null);
@@ -640,7 +674,7 @@ export default function PengaduanPage() {
     } catch (error) {
       console.error("Error submitting pengaduan:", error);
       setNotification({
-        type: 'success',
+        type: 'error',
         message: `Gagal mengirim pengaduan. Silahkan Coba lagi`
       });
     } finally {
@@ -686,7 +720,7 @@ export default function PengaduanPage() {
             {isLoading ? "Mencetak..." : "Cetak"}
           </button>
         </div>
-  
+
         {loading ? (
           <p className="text-center">Memuat data rekap...</p>
         ) : rekapPengaduan.length === 0 ? (
@@ -705,47 +739,51 @@ export default function PengaduanPage() {
                 </tr>
               </thead>
               <tbody>
-                {rekapPengaduan.map((rekap) => (
-                  <tr key={rekap.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{rekap.category}</td>
-                    <td className="py-3 px-4">{rekap.cabang}</td>
-                    <td className="py-3 px-4">
-                      {new Date(...rekap.createdAt).toLocaleDateString('id-ID')}
-                    </td>
-                    <td className="py-3 px-4">{rekap.keterangan}</td>
-                    <td className="py-3 px-4">
-                      {responsesMap[rekap.id]?.map((response, index) => (
-                        <div key={index} className="mb-2">
-                          <p className="text-sm text-gray-700">
-                            <strong>{response.namaLengkap}:</strong> {response.message}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(...response.createdAt).toLocaleString('id-ID')}
-                          </p>
-                        </div>
-                      ))}
-                    </td>
-                    <td className="py-3 px-4">
-                      <button
-                        onClick={() => handleDeletePengaduan(rekap)}
-                        className="text-red-500 hover:text-red-700 mr-2"
-                        aria-label="Hapus"
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          handlePengaduanClick(rekap);
-                          setModalType("respon");
-                        }}
-                        className="text-blue-500 hover:text-blue-700"
-                        aria-label="Lihat Detail"
-                      >
-                        <FontAwesomeIcon icon={faEye} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {rekapPengaduan
+                  .filter((rekap) =>
+                    userRole === "SUPER ADMIN" || rekap.category !== "Permohonan Bantuan"
+                  )
+                  .map((rekap) => (
+                    <tr key={rekap.id} className="border-b hover:bg-gray-50">
+                      <td className="py-3 px-4">{rekap.category}</td>
+                      <td className="py-3 px-4">{rekap.cabang}</td>
+                      <td className="py-3 px-4">
+                        {new Date(...rekap.createdAt).toLocaleDateString('id-ID')}
+                      </td>
+                      <td className="py-3 px-4">{rekap.keterangan}</td>
+                      <td className="py-3 px-4">
+                        {responsesMap[rekap.id]?.map((response, index) => (
+                          <div key={index} className="mb-2">
+                            <p className="text-sm text-gray-700">
+                              <strong>{response.namaLengkap}:</strong> {response.message}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(...response.createdAt).toLocaleString('id-ID')}
+                            </p>
+                          </div>
+                        ))}
+                      </td>
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={() => handleDeletePengaduan(rekap)}
+                          className="text-red-500 hover:text-red-700 mr-2"
+                          aria-label="Hapus"
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            handlePengaduanClick(rekap);
+                            setModalType("respon");
+                          }}
+                          className="text-blue-500 hover:text-blue-700"
+                          aria-label="Lihat Detail"
+                        >
+                          <FontAwesomeIcon icon={faEye} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
@@ -919,48 +957,52 @@ export default function PengaduanPage() {
               </p>
             ) : (
               <ul className="space-y-3">
-                {pengaduanList.map((pengaduan) => (
-                  <li
-                    key={pengaduan.id}
-                    className="p-4 border rounded-lg bg-gray-50 shadow-sm cursor-pointer relative"
-                  >
-                    <div onClick={() => handlePengaduanClick(pengaduan)}>
-                      <h4 className="font-bold text-lg text-gray-800">
-                        {pengaduan.category}
-                      </h4>
-                      <p className="text-gray-600">
-                        {pengaduan.keterangan.length > 50
-                          ? `${pengaduan.keterangan.substring(0, 50)}...`
-                          : pengaduan.keterangan}
-                      </p>
-                      <div className="flex justify-between mt-2">
-                        <p className="text-sm text-blue-600">
-                          {/* {pengaduan.status || "Menunggu respon..."} */}
+                {pengaduanList
+                  .filter((pengaduan) =>
+                    userRole === "SUPER ADMIN" || userRole === "USER" || pengaduan.category !== "Permohonan Bantuan"
+                  )
+                  .map((pengaduan) => (
+                    <li
+                      key={pengaduan.id}
+                      className="p-4 border rounded-lg bg-gray-50 shadow-sm cursor-pointer relative"
+                    >
+                      <div onClick={() => handlePengaduanClick(pengaduan)}>
+                        <h4 className="font-bold text-lg text-gray-800">
+                          {pengaduan.category}
+                        </h4>
+                        <p className="text-gray-600">
+                          {pengaduan.keterangan.length > 50
+                            ? `${pengaduan.keterangan.substring(0, 50)}...`
+                            : pengaduan.keterangan}
                         </p>
-                        {userRole === "ADMIN" && (
-                          <p className="text-sm text-gray-500">
-                            NPA: {pengaduan.npa}
+                        <div className="flex justify-between mt-2">
+                          <p className="text-sm text-blue-600">
+                            {/* {pengaduan.status || "Menunggu respon..."} */}
                           </p>
-                        )}
+                          {userRole === "ADMIN" && (
+                            <p className="text-sm text-gray-500">
+                              NPA: {pengaduan.npa}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Only show delete button for admins */}
-                    {(userRole === "SUPER ADMIN" ||
-                      (userRole === "ADMIN" && pengaduan.cabang === userCabang)) && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeletePengaduan(pengaduan);
-                          }}
-                          className="absolute top-2 right-2 text-red-500 hover:text-red-700 bg-white rounded-full p-1 shadow-sm"
-                          aria-label="Hapus Pengaduan"
-                        >
-                          <FontAwesomeIcon icon={faTrash} />
-                        </button>
-                      )}
-                  </li>
-                ))}
+                      {/* Only show delete button for admins */}
+                      {(userRole === "SUPER ADMIN" ||
+                        (userRole === "ADMIN" && pengaduan.cabang === userCabang)) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeletePengaduan(pengaduan);
+                            }}
+                            className="absolute top-2 right-2 text-red-500 hover:text-red-700 bg-white rounded-full p-1 shadow-sm"
+                            aria-label="Hapus Pengaduan"
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </button>
+                        )}
+                    </li>
+                  ))}
                 {showDeleteConfirmation && (
                   <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-[200]">
                     <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
@@ -991,13 +1033,13 @@ export default function PengaduanPage() {
                   <div
                     onClick={() => setModalType("rekap")}
                     className="p-6 bg-gradient-to-br from-purple-600 to-purple-800 text-white rounded-2xl shadow-xl cursor-pointer text-center 
-    hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden
-    before:absolute before:inset-0 before:bg-black before:opacity-0 
-    hover:before:opacity-10 before:transition-opacity"
+      hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden
+      before:absolute before:inset-0 before:bg-black before:opacity-0 
+      hover:before:opacity-10 before:transition-opacity"
                   >
                     <div className="relative z-10">
                       <FontAwesomeIcon
-                        icon={faChartBar} 
+                        icon={faChartBar}
                         className="text-4xl mb-3 transition-transform group-hover:rotate-12"
                       />
                       <p className="text-lg font-bold">Rekapitulasi Pengaduan</p>
@@ -1039,55 +1081,59 @@ export default function PengaduanPage() {
               </p>
             ) : (
               <ul className="space-y-3">
-                {pengaduanList.map((pengaduan) => (
-                  <li
-                    key={pengaduan.id}
-                    className="p-4 border rounded-lg bg-gray-50 shadow-sm cursor-pointer relative"
-                  >
-                    <div onClick={() => handlePengaduanClick(pengaduan)}>
-                      <h4 className="font-bold text-lg text-gray-800">
-                        {pengaduan.category}
-                      </h4>
-                      <p className="text-gray-600">
-                        {pengaduan.keterangan.length > 50
-                          ? `${pengaduan.keterangan.substring(0, 50)}...`
-                          : pengaduan.keterangan}
-                      </p>
-                      <div className="flex justify-between mt-2">
-                        <p className="text-sm text-blue-600">
-                          {/* {pengaduan.status || "Menunggu respon..."} */}
+                {pengaduanList
+                  .filter((pengaduan) =>
+                    userRole === "SUPER ADMIN" || pengaduan.category !== "Permohonan Bantuan"
+                  )
+                  .map((pengaduan) => (
+                    <li
+                      key={pengaduan.id}
+                      className="p-4 border rounded-lg bg-gray-50 shadow-sm cursor-pointer relative"
+                    >
+                      <div onClick={() => handlePengaduanClick(pengaduan)}>
+                        <h4 className="font-bold text-lg text-gray-800">
+                          {pengaduan.category}
+                        </h4>
+                        <p className="text-gray-600">
+                          {pengaduan.keterangan.length > 50
+                            ? `${pengaduan.keterangan.substring(0, 50)}...`
+                            : pengaduan.keterangan}
                         </p>
-                        {userRole === "ADMIN" && (
-                          <p className="text-sm text-gray-500">
-                            NPA: {pengaduan.npa}
+                        <div className="flex justify-between mt-2">
+                          <p className="text-sm text-blue-600">
+                            {/* {pengaduan.status || "Menunggu respon..."} */}
                           </p>
-                        )}
+                          {userRole === "ADMIN" && (
+                            <p className="text-sm text-gray-500">
+                              NPA: {pengaduan.npa}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Delete button for admins - same as desktop */}
-                    {(userRole === "SUPER ADMIN" ||
-                      (userRole === "ADMIN" && pengaduan.cabang === userCabang)) && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation(); 
-                            handleDeletePengaduan(pengaduan);
-                          }}
-                          className="absolute top-2 right-2 text-red-500 hover:text-red-700 bg-white rounded-full p-1 shadow-sm"
-                          aria-label="Hapus Pengaduan"
-                        >
-                          <FontAwesomeIcon icon={faTrash} />
-                        </button>
-                      )}
-                  </li>
-                ))}
+                      {/* Delete button for admins - same as desktop */}
+                      {(userRole === "SUPER ADMIN" ||
+                        (userRole === "ADMIN" && pengaduan.cabang === userCabang)) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeletePengaduan(pengaduan);
+                            }}
+                            className="absolute top-2 right-2 text-red-500 hover:text-red-700 bg-white rounded-full p-1 shadow-sm"
+                            aria-label="Hapus Pengaduan"
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </button>
+                        )}
+                    </li>
+                  ))}
                 {(userRole === "SUPER ADMIN" || userRole === "ADMIN") && (
                   <div
                     onClick={() => setModalType("rekap")}
                     className="p-6 bg-gradient-to-br from-purple-600 to-purple-800 text-white rounded-2xl shadow-xl cursor-pointer text-center 
-                      hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden
-                      before:absolute before:inset-0 before:bg-black before:opacity-0 
-                      hover:before:opacity-10 before:transition-opacity"
+                        hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden
+                        before:absolute before:inset-0 before:bg-black before:opacity-0 
+                        hover:before:opacity-10 before:transition-opacity"
                   >
                     <div className="relative z-10">
                       <FontAwesomeIcon
@@ -1139,6 +1185,11 @@ export default function PengaduanPage() {
     );
   };
 
+  const handleOpenResponModal = () => {
+    setModalType("respon");
+    setNewPengaduanCount(0); // Reset jumlah pengaduan baru
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       {notification && (
@@ -1161,59 +1212,144 @@ export default function PengaduanPage() {
           </h2>
 
           {/* Card Section */}
-          <div className="grid grid-cols-2 gap-6 mt-6 max-w-md mx-auto">
+          {/* Card Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8 max-w-6xl mx-auto">
+            {/* Card Pengaduan */}
             <div
-              onClick={() => setModalType("pengaduan")}
-              className="p-6 bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-2xl shadow-xl cursor-pointer text-center 
-    hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden
-    before:absolute before:inset-0 before:bg-black before:opacity-0 
-    hover:before:opacity-10 before:transition-opacity"
+              onClick={() => {
+                setModalType("pengaduan");
+                setSelectedCategory("Pengaduan");
+              }}
+              className="p-6 bg-gradient-to-br from-blue-600 to-blue-800 text-white rounded-2xl shadow-xl cursor-pointer text-center hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden"
             >
+              <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10 transform rotate-45"></div>
+              <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8"></div>
               <div className="relative z-10">
-                <FontAwesomeIcon
-                  icon={faPaperPlane}
-                  className="text-4xl mb-3 transition-transform group-hover:rotate-12"
-                />
-                <p className="text-lg font-bold">Ajukan Pengaduan</p>
-                <p className="text-sm opacity-75 mt-1">Sampaikan keluhan atau permasalahan Anda</p>
+                <div className="bg-white/20 rounded-full p-4 w-16 h-16 flex items-center justify-center mx-auto mb-4 transform transition-transform group-hover:rotate-12">
+                  <FontAwesomeIcon
+                    icon={faPaperPlane}
+                    className="text-3xl text-white"
+                  />
+                </div>
+                <p className="text-xl font-bold mb-2">Pengaduan</p>
+                <p className="text-sm opacity-90 mt-1">
+                  Sampaikan keluhan atau permasalahan Anda
+                </p>
+                <div className="mt-4 inline-block bg-white/20 rounded-full px-4 py-1 text-xs font-medium">
+                  Klik untuk memulai
+                </div>
               </div>
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
             </div>
+
+            {/* Card Kritikan */}
             <div
-              onClick={() => setModalType("respon")}
-              className="p-6 bg-gradient-to-br from-green-600 to-green-800 text-white rounded-2xl shadow-xl cursor-pointer text-center 
-    hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden
-    before:absolute before:inset-0 before:bg-black before:opacity-0 
-    hover:before:opacity-10 before:transition-opacity"
+              onClick={() => {
+                setModalType("kritikan");
+                setSelectedCategory("Kritikan");
+              }}
+              className="p-6 bg-gradient-to-br from-green-600 to-green-800 text-white rounded-2xl shadow-xl cursor-pointer text-center hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden"
             >
+              <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10 transform rotate-45"></div>
+              <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8"></div>
               <div className="relative z-10">
-                <FontAwesomeIcon
-                  icon={faComments}
-                  className="text-4xl mb-3 transition-transform group-hover:rotate-12"
-                />
-                <p className="text-lg font-bold">Lihat Respon</p>
-                <p className="text-sm opacity-75 mt-1">Pantau status dan respon pengaduan Anda</p>
+                <div className="bg-white/20 rounded-full p-4 w-16 h-16 flex items-center justify-center mx-auto mb-4 transform transition-transform group-hover:rotate-12">
+                  <FontAwesomeIcon
+                    icon={faComments}
+                    className="text-3xl text-white"
+                  />
+                </div>
+                <p className="text-xl font-bold mb-2">Kritikan</p>
+                <p className="text-sm opacity-90 mt-1">
+                  Berikan kritik dan saran untuk perbaikan
+                </p>
+                <div className="mt-4 inline-block bg-white/20 rounded-full px-4 py-1 text-xs font-medium">
+                  Klik untuk memulai
+                </div>
               </div>
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+            </div>
+
+            {/* Card Permohonan Bantuan */}
+            <div
+              onClick={() => {
+                setModalType("permohonan-bantuan");
+                setSelectedCategory("Permohonan Bantuan");
+              }}
+              className="p-6 bg-gradient-to-br from-purple-600 to-purple-800 text-white rounded-2xl shadow-xl cursor-pointer text-center hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10 transform rotate-45"></div>
+              <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8"></div>
+              <div className="relative z-10">
+                <div className="bg-white/20 rounded-full p-4 w-16 h-16 flex items-center justify-center mx-auto mb-4 transform transition-transform group-hover:rotate-12">
+                  <FontAwesomeIcon
+                    icon={faHandsHelping}
+                    className="text-3xl text-white"
+                  />
+                </div>
+                <p className="text-xl font-bold mb-2">Permohonan Bantuan</p>
+                <p className="text-sm opacity-90 mt-1">
+                  Ajukan permohonan bantuan atau dukungan
+                </p>
+                <div className="mt-4 inline-block bg-white/20 rounded-full px-4 py-1 text-xs font-medium">
+                  Klik untuk memulai
+                </div>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+            </div>
+
+            {/* Card Lihat Respon */}
+            <div
+              onClick={handleOpenResponModal}
+              className="p-6 bg-gradient-to-br from-orange-600 to-orange-800 text-white rounded-2xl shadow-xl cursor-pointer text-center hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10 transform rotate-45"></div>
+              <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full -ml-8 -mb-8"></div>
+              <div className="relative z-10">
+                <div className="bg-white/20 rounded-full p-4 w-16 h-16 flex items-center justify-center mx-auto mb-4 transform transition-transform group-hover:rotate-12">
+                  <FontAwesomeIcon
+                    icon={faChartBar}
+                    className="text-3xl text-white"
+                  />
+                </div>
+                <p className="text-xl font-bold mb-2">Lihat Respon</p>
+                <p className="text-sm opacity-90 mt-1">
+                  Pantau status dan respon pengaduan Anda
+                </p>
+                <div className="mt-4 inline-block bg-white/20 rounded-full px-4 py-1 text-xs font-medium">
+                  Klik untuk melihat
+                </div>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+
+              {/* Notifikasi Badge */}
+              {newPengaduanCount > 0 && (
+                <div className="absolute top-2 right-2 bg-red-500 text-white rounded-full px-2 py-1 text-xs">
+                  {newPengaduanCount}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Modal */}
           {modalType && (
-            <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm animate-fade-in z-[100]">
+            <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 backdrop-blur-sm animate-fade-in z-[100]"> {/* z-index modal */}
               <div className="bg-white p-6 mt-10 rounded-lg shadow-xl h-[86vh] w-[90vw] mx-auto relative overflow-hidden">
                 <button
                   onClick={() => {
                     setModalType(null);
                     setIsMobileChat(false);
+                    setSelectedCategory(null);
                   }}
                   className="absolute top-3 right-3 text-gray-500 hover:text-red-500 transition"
                   disabled={loading}
                 >
                   <FontAwesomeIcon icon={faTimes} className="text-xl" />
                 </button>
-                {modalType === "pengaduan"
-                  ? renderPengaduanForm()
+                {modalType === "pengaduan" ||
+                  modalType === "kritikan" ||
+                  modalType === "permohonan-bantuan"
+                  ? renderPengaduanForm(modalType)
                   : modalType === "respon"
                     ? renderResponModal()
                     : renderRekapPengaduan()}

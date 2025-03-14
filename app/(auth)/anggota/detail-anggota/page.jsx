@@ -227,8 +227,7 @@ const DetailAnggota = () => {
     const keanggotaan = [
       `NPA PGRI: ${anggotaData.npaPgri || "-"}`,
       `Status: ${anggotaData.statusKeanggotaan || "-"}`,
-      `Mulai: ${anggotaData.mulaiJadiAnggotaPgri?.join("-") || "-"}`,
-      `Mulai Jadi Anggota: ${anggotaData.mulaiJadiAnggotaPgri?.join("-")}`,
+      `Mulai Jadi Anggota: ${anggotaData.tahunDiangkat?.join("-")}`,
       `Peserta Sanduka: ${anggotaData.pesertaSanduka || "-"}`,
       `Peserta KTA Digital: ${anggotaData.pesertaKtaDigital || "-"}`,
       `Peserta Daspen: ${anggotaData.pesertaDaspen || "-"}`,
@@ -357,7 +356,7 @@ const DetailAnggota = () => {
     `NPA PGRI: ${anggotaData.npaPgri}`,
     `NIP: ${anggotaData.nip}`,
     `Status Keanggotaan: ${anggotaData.statusKeanggotaan}`,
-    `Mulai Jadi Anggota: ${anggotaData.mulaiJadiAnggotaPgri?.join("-")}`,
+    `Mulai Jadi Anggota: ${anggotaData.tahunDiangkat?.join("-")}`,
     `Peserta Sanduka: ${anggotaData.pesertaSanduka ?? "-"}`,
     `Peserta KTA Digital: ${anggotaData.pesertaKtaDigital ?? "-"}`,
     `Peserta Daspen: ${anggotaData.pesertaDaspen ?? "-"}`,

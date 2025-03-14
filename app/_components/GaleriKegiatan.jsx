@@ -103,7 +103,8 @@ const GaleriKegiatan = () => {
   const [fotoBase64, setFotoBase64] = useState(null);
 
   useEffect(() => {
-    fetchGalleries();
+    fetchEventGalleries();
+    fetchNonEventGalleries();
     fetchUserData();
     fetchEventParticipants();
   }, []);
@@ -165,6 +166,52 @@ const GaleriKegiatan = () => {
     }
   };
 
+  const fetchNonEventGalleries = async () => {
+    try {
+      setIsLoading(true);
+      const data = await GlobalApi.getSidebarGalleryByCategory('NON EVENT');
+
+      const processedGalleries = await Promise.all(
+        data.map(async (item) => {
+          const blob = await fetch(`data:image/jpeg;base64,${item.photo}`).then(
+            (r) => r.blob()
+          );
+          const objectUrl = URL.createObjectURL(blob);
+          return { ...item, imageUrl: objectUrl };
+        })
+      );
+
+      setNonEventGalleries(processedGalleries);
+    } catch (error) {
+      console.error("Error fetching non-event galleries:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchEventGalleries = async () => {
+    try {
+      setIsLoading(true);
+      const data = await GlobalApi.getSidebarGalleryByCategory('EVENT');
+
+      const processedGalleries = await Promise.all(
+        data.map(async (item) => {
+          const blob = await fetch(`data:image/jpeg;base64,${item.photo}`).then(
+            (r) => r.blob()
+          );
+          const objectUrl = URL.createObjectURL(blob);
+          return { ...item, imageUrl: objectUrl };
+        })
+      );
+
+      setEventGalleries(processedGalleries);
+    } catch (error) {
+      console.error("Error fetching event galleries:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const fetchGalleries = async () => {
     try {
       setIsLoading(true);
@@ -199,7 +246,13 @@ const GaleriKegiatan = () => {
   }, [galleries]);
 
   const handleRegister = async (itemId) => {
-    const selectedEvent = galleries.find(item => item.id === itemId);
+    const selectedEvent = eventGalleries.find(item => item.id === itemId);
+
+    if (!selectedEvent) {
+      console.error("Event not found with ID:", itemId);
+      return;
+    }
+
     setCurrentEvent(selectedEvent);
 
     try {
@@ -214,7 +267,10 @@ const GaleriKegiatan = () => {
 
     setJabatan("");
     setJabatanError("");
-    setShowPopup(true);
+
+    setTimeout(() => {
+      setShowPopup(true);
+    }, 100);
   };
 
   // const validateForm = () => {
@@ -232,8 +288,8 @@ const GaleriKegiatan = () => {
 
 
 
-  const nonEventGalleries = galleries.filter(item => item.category !== 'EVENT');
-  const eventGalleries = galleries.filter(item => item.category === 'EVENT');
+  const [nonEventGalleries, setNonEventGalleries] = useState([]);
+  const [eventGalleries, setEventGalleries] = useState([]);
 
   if (isLoading) {
     return (
@@ -290,15 +346,7 @@ const GaleriKegiatan = () => {
     const [expandedItems, setExpandedItems] = useState({});
     const maxDescriptionLength = 150;
 
-    if (items.length === 0) return null;
-
-    const toggleExpand = (itemId) => {
-      setExpandedItems(prev => ({
-        ...prev,
-        [itemId]: !prev[itemId]
-      }));
-    };
-
+    // Fungsi untuk merender deskripsi
     const renderDescription = (item) => {
       const plainText = item.deskripsi ? stripHtml(item.deskripsi) : "";
       const isLongText = plainText.length > maxDescriptionLength;
@@ -333,12 +381,14 @@ const GaleriKegiatan = () => {
       );
     };
 
+    // Fungsi untuk menghapus tag HTML dari teks
     const stripHtml = (html) => {
       const tmp = document.createElement("DIV");
       tmp.innerHTML = html;
       return tmp.textContent || tmp.innerText || "";
     };
 
+    // Fungsi untuk memotong teks HTML
     const truncateHtml = (html, maxLength) => {
       const tmp = document.createElement("DIV");
       tmp.innerHTML = html;
@@ -362,81 +412,95 @@ const GaleriKegiatan = () => {
       return truncated.trim() + "...";
     };
 
+    const toggleExpand = (itemId) => {
+      setExpandedItems((prev) => ({
+        ...prev,
+        [itemId]: !prev[itemId],
+      }));
+    };
+
     return (
       <div className="mb-12">
         <h2 className="text-xl font-bold mb-6 text-center">{title}</h2>
-        <Swiper
-          modules={[Navigation, Pagination, Autoplay]}
-          spaceBetween={30}
-          slidesPerView={1}
-          pagination={{ clickable: true }}
-          autoplay={{ delay: 3000, disableOnInteraction: false }}
-          className="w-full"
-        >
-          {items.map((item) => (
-            <SwiperSlide key={item.id} className="flex flex-col items-center">
-              {/* Improved image container with better background */}
-              <div className="relative w-full rounded-lg shadow-md bg-white flex justify-center">
-                {/* Fixed height container with better responsive handling */}
-                <div className="w-full" style={{
-                  height: "0",
-                  paddingBottom: "56.25%",
-                  position: "relative"
-                }}>
-                  <Image
-                    src={item.imageUrl}
-                    alt={item.deskripsi || "Gallery image"}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 80vw, 70vw"
-                    className="object-contain rounded-lg"
-                    priority={true}
-                    quality={90}
+        {items.length === 0 ? (
+          <div className="text-center text-gray-600">
+            {title === "Event" && "Tidak ada event apa pun untuk saat ini."}
+          </div>
+        ) : (
+          <Swiper
+            modules={[Navigation, Pagination, Autoplay]}
+            spaceBetween={30}
+            slidesPerView={1}
+            pagination={{ clickable: true }}
+            autoplay={{ delay: 3000, disableOnInteraction: false }}
+            className="w-full"
+          >
+            {items.map((item) => (
+              <SwiperSlide key={item.id} className="flex flex-col items-center">
+                <div className="relative w-full rounded-lg shadow-md bg-white flex justify-center">
+                  <div
+                    className="w-full"
                     style={{
-                      maxHeight: "100%",
-                      maxWidth: "100%"
+                      height: "0",
+                      paddingBottom: "56.25%",
+                      position: "relative",
                     }}
-                    onError={(e) => {
-                      e.currentTarget.src = '/placeholder-image.jpg';
-                      e.currentTarget.className = 'object-cover';
-                    }}
-                  />
+                  >
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.deskripsi || "Gallery image"}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 80vw, 70vw"
+                      className="object-contain rounded-lg"
+                      priority={true}
+                      quality={90}
+                      style={{
+                        maxHeight: "100%",
+                        maxWidth: "100%",
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.src = "/placeholder-image.jpg";
+                        e.currentTarget.className = "object-cover";
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="mt-4 text-center w-full px-2 sm:px-4 md:px-8">
-                {item.category === "EVENT" ? (
-                  <div>
-                    <p className="text-lg font-medium">{item.namaEvent}</p>
-                    {renderDescription(item)}
-                  </div>
-                ) : (
-                  <div>
-                    <div
-                      className="text-lg font-medium prose max-w-none"
-                      dangerouslySetInnerHTML={renderHTML(item.deskripsi)}
-                    ></div>
-                  </div>
-                )}
-                {showRegisterButton && userData?.role === "USER" && (
-                  <div className="mt-3">
-                    {registrationStatus[item.id] ? (
-                      <div className="inline-block px-6 py-2 bg-yellow-500 text-white rounded-md font-medium">
-                        {registrationStatus[item.id]}
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => handleRegister(item.id)}
-                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors"
-                      >
-                        Daftar
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            </SwiperSlide>
-          ))}
-          <div className="swiper-pagination !relative mt-10"></div>
-        </Swiper>
+                <div className="mt-4 text-center w-full px-2 sm:px-4 md:px-8">
+                  {item.category === "EVENT" ? (
+                    <div>
+                      <p className="text-lg font-medium">{item.namaEvent}</p>
+                      {renderDescription(item)}
+                    </div>
+                  ) : (
+                    <div>
+                      <div
+                        className="text-lg font-medium prose max-w-none"
+                        dangerouslySetInnerHTML={renderHTML(item.deskripsi)}
+                      ></div>
+                    </div>
+                  )}
+                  {showRegisterButton && userData?.role === "USER" && (
+                    <div className="mt-3">
+                      {registrationStatus[item.id] ? (
+                        <div className="inline-block px-6 py-2 bg-yellow-500 text-white rounded-md font-medium">
+                          {registrationStatus[item.id]}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleRegister(item.id)}
+                          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors"
+                        >
+                          Daftar
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </SwiperSlide>
+            ))}
+            <div className="swiper-pagination !relative mt-10"></div>
+          </Swiper>
+        )}
       </div>
     );
   };
@@ -479,25 +543,25 @@ const GaleriKegiatan = () => {
 
     const handleSubmitRegistration = async () => {
       if (!currentEvent || isSubmitting) return;
-    
+
       // if (!validateForm()) {
       //   return;
       // }
-    
+
       try {
         setIsSubmitting(true);
-    
+
         const userId = sessionStorage.getItem("userId");
         if (!userId) {
           throw new Error("User ID not found");
         }
-    
+
         const userDataDaftar = await GlobalApi.getUserById(userId);
-    
+
         if (!userDataDaftar) {
           throw new Error("Could not retrieve user data");
         }
-    
+
         const formData = new FormData();
         formData.append("namaLengkap", userDataDaftar.namaLengkap || userDataDaftar.nama);
         formData.append("npa", userDataDaftar.npaPgri);
@@ -514,26 +578,26 @@ const GaleriKegiatan = () => {
           const blob = await fetch(`data:image/jpeg;base64,${fotoBase64}`).then((res) => res.blob());
           formData.append("foto", blob, "profile.jpg");
         }
-    
+
         if (uploadFile) {
           formData.append("upload", uploadFile, fileName);
         }
-    
+
         await GlobalApi.addPesertaEvent(formData);
-    
+
         setRegistrationStatus(prev => ({
           ...prev,
           [currentEvent.id]: "Sudah Terdaftar"
         }));
-    
+
         await fetchEventParticipants();
-    
+
         setShowPopup(false);
         setNotification({
           type: 'success',
           message: `Selamat! Anda telah berhasil terdaftar untuk event "${currentEvent.namaEvent}".`
         });
-    
+
       } catch (error) {
         console.error("Error submitting registration:", error);
         setNotification({
@@ -558,7 +622,7 @@ const GaleriKegiatan = () => {
           </button>
 
           <h3 className="text-xl font-bold mb-4 text-center">
-            Mendaftar Event {currentEvent?.namaEvent ? `${currentEvent.namaEvent}` : ''}
+            Mendaftar Event: {currentEvent.namaEvent || "Undefined Event"}
           </h3>
 
           {/* User Photo Section */}
@@ -763,7 +827,6 @@ const GaleriKegiatan = () => {
           <GallerySwiper items={nonEventGalleries} title="Galeri Kegiatan" />
         </div>
       </div>
-
       <div id="eventSec" className="bg-gray-50 py-8 z-10">
         <div className="container mx-auto px-4 md:px-12 lg:px-24">
           <GallerySwiper
