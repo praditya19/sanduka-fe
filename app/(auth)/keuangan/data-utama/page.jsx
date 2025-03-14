@@ -60,10 +60,7 @@ export default function DataUtama() {
         sessionStorage.setItem("PGRIData", JSON.stringify(pgriResponse));
         sessionStorage.setItem("daspenData", JSON.stringify(daspenResponse));
         sessionStorage.setItem("derapData", JSON.stringify(derapResponse));
-        sessionStorage.setItem(
-          "kalenderData",
-          JSON.stringify(kalenderResponse)
-        );
+        sessionStorage.setItem("kalenderData",JSON.stringify(kalenderResponse));
 
         response = {
           pgri: pgriResponse,

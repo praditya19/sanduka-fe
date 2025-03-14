@@ -127,7 +127,6 @@ function DerapForm() {
           newSelectedYear,
           newCabangList
         );
-
         setTableData(data);
         setFilteredTableData(data);
       } catch (error) {

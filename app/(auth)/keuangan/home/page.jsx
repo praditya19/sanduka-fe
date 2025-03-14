@@ -46,6 +46,7 @@ export default function Home() {
   const [pengeluaranOr, setPengeluaranOr] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [ ,setDefaultIuran] = useState([]);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -54,6 +55,38 @@ export default function Home() {
     setRole(userRole);
   }, []);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      const pgriResponse = await GlobalApi.getDefaultIuranById(2);
+      const daspenResponse = await GlobalApi.getDefaultIuranById(4);
+      const derapResponse = await GlobalApi.getDefaultIuranById(3);
+      const kalenderResponse = await GlobalApi.getDefaultIuranById(1);
+  
+      sessionStorage.setItem("PGRIData", JSON.stringify(pgriResponse));
+      sessionStorage.setItem("daspenData", JSON.stringify(daspenResponse));
+      sessionStorage.setItem("derapData", JSON.stringify(derapResponse));
+      sessionStorage.setItem("kalenderData", JSON.stringify(kalenderResponse));
+  
+      const response = {
+        pgri: pgriResponse,
+        daspen: daspenResponse,
+        derap: derapResponse,
+        kalender: kalenderResponse,
+      };
+  
+      setDefaultIuran(response);
+    };
+  
+    const storedData = sessionStorage.getItem("PGRIData");
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      setDefaultIuran(parsedData);
+    } else {
+      fetchData();
+    }
+  }, []);
+
+  
   // Fungsi untuk memanggil API dan mendapatkan data saldo sanduka
   const fetchSaldoSanduka = async () => {
     try {

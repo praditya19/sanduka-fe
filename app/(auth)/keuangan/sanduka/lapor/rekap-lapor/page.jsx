@@ -122,19 +122,29 @@ const Page = () => {
   };
 
   useEffect(() => {
-    const fetchDataDiterima = async () => {
+    const fetchDataLapor = async () => {
       try {
-        const response = await GlobalApi.getRekapLaporDiterima();
-        console.log(response);
-        const fetchedDataDiterima = response || [];
-        setDataLaporDiterima(fetchedDataDiterima);
+        let response;
+        if (!selectedBulan && !selectedYear && !selectedCabang) {
+          response = await GlobalApi.getRekapLaporDiterima();
+        } else {
+          response = await GlobalApi.getRekapLaporDiterima(
+            selectedBulan,
+            selectedYear,
+            selectedCabang
+          );
+        }
+
+        console.log("Data Lapor Diterima:", response);
+        setDataLaporDiterima(response || []);
+        setDisplayedDataLapor(response || []);
       } catch (error) {
         console.error("Error fetching data lapor diterima:", error);
       }
     };
 
-    fetchDataDiterima();
-  }, []);
+    fetchDataLapor();
+  }, [selectedBulan, selectedYear, selectedCabang]);
 
   useEffect(() => {
     const fetchDataBelum = async () => {
