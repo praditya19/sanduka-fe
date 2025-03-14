@@ -103,8 +103,8 @@ const GaleriKegiatan = () => {
   const [fotoBase64, setFotoBase64] = useState(null);
 
   useEffect(() => {
-    fetchNonEventGalleries();
     fetchEventGalleries();
+    fetchNonEventGalleries();
     fetchUserData();
     fetchEventParticipants();
   }, []);
@@ -246,7 +246,13 @@ const GaleriKegiatan = () => {
   }, [galleries]);
 
   const handleRegister = async (itemId) => {
-    const selectedEvent = galleries.find(item => item.id === itemId);
+    const selectedEvent = eventGalleries.find(item => item.id === itemId);
+
+    if (!selectedEvent) {
+      console.error("Event not found with ID:", itemId);
+      return;
+    }
+
     setCurrentEvent(selectedEvent);
 
     try {
@@ -261,7 +267,10 @@ const GaleriKegiatan = () => {
 
     setJabatan("");
     setJabatanError("");
-    setShowPopup(true);
+
+    setTimeout(() => {
+      setShowPopup(true);
+    }, 100);
   };
 
   // const validateForm = () => {
@@ -336,13 +345,13 @@ const GaleriKegiatan = () => {
   const GallerySwiper = ({ items, title, showRegisterButton = false }) => {
     const [expandedItems, setExpandedItems] = useState({});
     const maxDescriptionLength = 150;
-  
+
     // Fungsi untuk merender deskripsi
     const renderDescription = (item) => {
       const plainText = item.deskripsi ? stripHtml(item.deskripsi) : "";
       const isLongText = plainText.length > maxDescriptionLength;
       const isExpanded = expandedItems[item.id];
-  
+
       if (!isLongText) {
         return (
           <div
@@ -351,7 +360,7 @@ const GaleriKegiatan = () => {
           ></div>
         );
       }
-  
+
       return (
         <>
           <div
@@ -371,26 +380,26 @@ const GaleriKegiatan = () => {
         </>
       );
     };
-  
+
     // Fungsi untuk menghapus tag HTML dari teks
     const stripHtml = (html) => {
       const tmp = document.createElement("DIV");
       tmp.innerHTML = html;
       return tmp.textContent || tmp.innerText || "";
     };
-  
+
     // Fungsi untuk memotong teks HTML
     const truncateHtml = (html, maxLength) => {
       const tmp = document.createElement("DIV");
       tmp.innerHTML = html;
       const text = tmp.textContent || tmp.innerText || "";
-  
+
       if (text.length <= maxLength) return html;
-  
+
       let truncated = "";
       let currentLength = 0;
       const words = text.split(" ");
-  
+
       for (const word of words) {
         if (currentLength + word.length <= maxLength - 3) {
           truncated += word + " ";
@@ -399,24 +408,22 @@ const GaleriKegiatan = () => {
           break;
         }
       }
-  
+
       return truncated.trim() + "...";
     };
-  
-    // Fungsi untuk toggle expand/collapse deskripsi
+
     const toggleExpand = (itemId) => {
       setExpandedItems((prev) => ({
         ...prev,
         [itemId]: !prev[itemId],
       }));
     };
-  
+
     return (
       <div className="mb-12">
         <h2 className="text-xl font-bold mb-6 text-center">{title}</h2>
         {items.length === 0 ? (
           <div className="text-center text-gray-600">
-            {/* Hanya tampilkan pesan untuk "Event" */}
             {title === "Event" && "Tidak ada event apa pun untuk saat ini."}
           </div>
         ) : (
@@ -615,7 +622,7 @@ const GaleriKegiatan = () => {
           </button>
 
           <h3 className="text-xl font-bold mb-4 text-center">
-            Mendaftar Event {currentEvent?.namaEvent ? `${currentEvent.namaEvent}` : ''}
+            Mendaftar Event: {currentEvent.namaEvent || "Undefined Event"}
           </h3>
 
           {/* User Photo Section */}

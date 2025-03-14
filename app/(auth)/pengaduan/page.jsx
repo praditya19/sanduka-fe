@@ -125,6 +125,24 @@ export default function PengaduanPage() {
   const [pengaduanToDelete, setPengaduanToDelete] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [responsesMap, setResponsesMap] = useState({});
+  const [newPengaduanCount, setNewPengaduanCount] = useState(0);
+
+  const fetchNewPengaduanCount = async () => {
+    try {
+      const count = await GlobalApi.countNewPengaduan(1); // 1 hari terakhir
+      setNewPengaduanCount(count);
+    } catch (error) {
+      console.error("Error fetching new pengaduan count:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNewPengaduanCount();
+
+    const interval = setInterval(fetchNewPengaduanCount, 6000); // Fetch setiap 1 menit
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -1167,6 +1185,11 @@ export default function PengaduanPage() {
     );
   };
 
+  const handleOpenResponModal = () => {
+    setModalType("respon");
+    setNewPengaduanCount(0); // Reset jumlah pengaduan baru
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       {notification && (
@@ -1277,7 +1300,7 @@ export default function PengaduanPage() {
 
             {/* Card Lihat Respon */}
             <div
-              onClick={() => setModalType("respon")}
+              onClick={handleOpenResponModal}
               className="p-6 bg-gradient-to-br from-orange-600 to-orange-800 text-white rounded-2xl shadow-xl cursor-pointer text-center hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10 transform rotate-45"></div>
@@ -1298,6 +1321,13 @@ export default function PengaduanPage() {
                 </div>
               </div>
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+
+              {/* Notifikasi Badge */}
+              {newPengaduanCount > 0 && (
+                <div className="absolute top-2 right-2 bg-red-500 text-white rounded-full px-2 py-1 text-xs">
+                  {newPengaduanCount}
+                </div>
+              )}
             </div>
           </div>
 
