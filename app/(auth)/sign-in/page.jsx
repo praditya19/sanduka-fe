@@ -107,7 +107,7 @@ function SignIn() {
 
       let response;
 
-      if (/^\d{11}$/.test(email)) {
+       if (/^\d{10,11}$/.test(email)) {
         const dateRegex = /^\d{2}\d{2}\d{4}$/;
         if (!dateRegex.test(password)) {
           throw new Error("Tanggal lahir harus dalam format DDMMYYYY.");
@@ -172,8 +172,8 @@ function SignIn() {
 
   const isNumericInput = /^[0-9]+$/.test(email);
   const isEmail = email.includes("@gmail.com");
-  const isNPA = /^\d{11}$/.test(email);
-
+  const isNPA = /^\d{10,11}$/.test(email);
+  
   return (
     <div className="flex items-baseline justify-center my-8">
       {notification && (
