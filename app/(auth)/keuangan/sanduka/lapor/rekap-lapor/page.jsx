@@ -15,6 +15,7 @@ import {
   FaExclamationCircle,
 } from "react-icons/fa";
 import Kwitansi from "@/app/_components/Kwitansi";
+import { ClipLoader } from "react-spinners";
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -109,6 +110,7 @@ const Page = () => {
   const [filteredCabangList, setFilteredCabangList] = useState(cabangList);
   const [isPopupVisible, setPopupVisible] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Kwitansi
   const [showPopup, setShowPopup] = useState(false);
@@ -123,6 +125,7 @@ const Page = () => {
 
   useEffect(() => {
     const fetchDataLapor = async () => {
+      setIsLoading(true);
       try {
         let response;
         if (!selectedBulan && !selectedYear && !selectedCabang) {
@@ -140,6 +143,8 @@ const Page = () => {
         setDisplayedDataLapor(response || []);
       } catch (error) {
         console.error("Error fetching data lapor diterima:", error);
+      } finally {
+        setIsLoading(false); // Set loading to false after fetching data
       }
     };
 
@@ -148,12 +153,15 @@ const Page = () => {
 
   useEffect(() => {
     const fetchDataBelum = async () => {
+      setIsLoading(true);
       try {
         const response = await GlobalApi.getRekapLaporBelom();
         const fetchedDataBelum = response || [];
         setDataLaporBelum(fetchedDataBelum);
       } catch (error) {
         console.error("Error fetching data lapor belum:", error);
+      } finally {
+        setIsLoading(false); // Set loading to false after fetching data
       }
     };
 
@@ -529,8 +537,19 @@ const Page = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {Array.isArray(displayedDataLapor) &&
-                  displayedDataLapor.length > 0 ? (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan="8" className="text-center py-16">
+                        <div className="flex justify-center items-center">
+                          <ClipLoader color="#3498db" size={50} />
+                          <span className="ml-4 text-gray-600">
+                            Memuat data...
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : Array.isArray(displayedDataLapor) &&
+                    displayedDataLapor.length > 0 ? (
                     displayedDataLapor.map((item, index) => (
                       <tr key={index} className="border-t text-sm">
                         <td className="py-2 px-3 text-center text-sm">

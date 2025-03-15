@@ -11,7 +11,11 @@ import ReCAPTCHA from "react-google-recaptcha";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/AuthContext";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaTimesCircle,
+  FaCheckCircle,
+  FaExclamationCircle,
+} from "react-icons/fa";
 
 // Updated NotificationPopup component with improved message formatting
 const NotificationPopup = ({ type, message, onClose }) => {
@@ -25,20 +29,20 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
       default:
-        return 'bg-blue-100';
+        return "bg-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case 'error':
+      case "error":
         return <FaExclamationCircle className="text-red-500 text-3xl" />;
       default:
         return null;
@@ -47,19 +51,24 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
       default:
-        return 'text-blue-800';
+        return "text-blue-800";
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -69,17 +78,13 @@ const NotificationPopup = ({ type, message, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
+          <div className="animate-bounce">{getIcon()}</div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+            {type === "success" ? "Berhasil!" : "Gagal!"}
           </h3>
 
-          <div className={`${getTextColor()} text-center`}>
-            {message}
-          </div>
+          <div className={`${getTextColor()} text-center`}>{message}</div>
         </div>
       </div>
     </div>
@@ -107,7 +112,7 @@ function SignIn() {
 
       let response;
 
-       if (/^\d{10,11}$/.test(email)) {
+      if (/^\d{10,11}$/.test(email)) {
         const dateRegex = /^\d{2}\d{2}\d{4}$/;
         if (!dateRegex.test(password)) {
           throw new Error("Tanggal lahir harus dalam format DDMMYYYY.");
@@ -141,14 +146,15 @@ function SignIn() {
 
       // Updated success notification with formatted name and branch on separate lines
       setNotification({
-        type: 'success',
+        type: "success",
         message: (
           <>
-            Selamat Datang Di Sanduka, <br/>
-            <span className="font-bold">{response.namaLengkap}</span><br/>
+            Selamat Datang Di Sanduka, <br />
+            <span className="font-bold">{response.namaLengkap}</span>
+            <br />
             <span className="text-sm">Cabang: {response.cabang}</span>
           </>
-        )
+        ),
       });
 
       setTimeout(() => {
@@ -158,8 +164,10 @@ function SignIn() {
       console.error("Error:", error);
       // Show error notification
       setNotification({
-        type: 'error',
-        message: `Terjadi kesalahan saat login: ${error.message || 'Periksa kredensial Anda dan coba lagi'}`
+        type: "error",
+        message: `Terjadi kesalahan saat login: ${
+          error.message || "Periksa kredensial Anda dan coba lagi"
+        }`,
       });
     } finally {
       setLoader(false);
@@ -173,7 +181,7 @@ function SignIn() {
   const isNumericInput = /^[0-9]+$/.test(email);
   const isEmail = email.includes("@gmail.com");
   const isNPA = /^\d{10,11}$/.test(email);
-  
+
   return (
     <div className="flex items-baseline justify-center my-8">
       {notification && (
@@ -183,7 +191,7 @@ function SignIn() {
           onClose={() => setNotification(null)}
         />
       )}
-      
+
       <div className="flex flex-col items-center justify-center p-6 sm:p-10 bg-gray-100 border border-gray-200 rounded-lg shadow-md w-full max-w-md sm:max-w-lg lg:w-[32%]">
         <Image src="/sanduka.png" width={100} height={100} alt="logo" />
         <h2 className="font-bold text-xl sm:text-2xl">Masuk ke Akun</h2>
