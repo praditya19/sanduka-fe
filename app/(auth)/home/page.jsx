@@ -33,7 +33,11 @@ import {
   faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
-import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaTimesCircle,
+  FaCheckCircle,
+  FaExclamationCircle,
+} from "react-icons/fa";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
 import HeaderHome from "@/app/_components/HeaderHome";
 import HeaderMobile from "@/app/_components/HeaderMobile";
@@ -63,20 +67,20 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
       default:
-        return 'bg-blue-100';
+        return "bg-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case 'error':
+      case "error":
         return <FaExclamationCircle className="text-red-500 text-3xl" />;
       default:
         return null;
@@ -85,19 +89,24 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
       default:
-        return 'text-blue-800';
+        return "text-blue-800";
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -107,17 +116,13 @@ const NotificationPopup = ({ type, message, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
+          <div className="animate-bounce">{getIcon()}</div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+            {type === "success" ? "Berhasil!" : "Gagal!"}
           </h3>
 
-          <div className={`${getTextColor()} text-center`}>
-            {message}
-          </div>
+          <div className={`${getTextColor()} text-center`}>{message}</div>
         </div>
       </div>
     </div>
@@ -151,6 +156,9 @@ export default function IconGrid() {
   const [loadingButton, setLoadingButton] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [dataDiterima, setDataDiterima] = useState([]);
+  const [dataCount, setDataCount] = useState(0);
+  const [totalNominal, setTotalNominal] = useState(0);
   const icons = [
     { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
     {
@@ -305,6 +313,29 @@ export default function IconGrid() {
       router.push("/sign-in");
       return;
     }
+
+    const fetchData = async () => {
+      try {
+        const responseDiterima = await GlobalApi.getRekapLaporDiterima();
+        const fetchedDataDiterima = responseDiterima || [];
+
+        setDataDiterima(fetchedDataDiterima);
+
+        setDataCount(fetchedDataDiterima.length);
+
+        const total = fetchedDataDiterima.reduce((acc, item) => {
+          const nominal = parseFloat(item.Nominal) || 0;
+          return acc + nominal;
+        }, 0);
+        setTotalNominal(total);
+
+        console.log("Data Lapor Diterima:", fetchedDataDiterima);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
 
     const fetchJumlahSantunan = async () => {
       try {
@@ -569,7 +600,7 @@ export default function IconGrid() {
       const userId = sessionStorage.getItem("userId");
       if (!userId) {
         setNotification({
-          type: 'error',
+          type: "error",
           message: `User ID tidak ditemukan!`,
         });
         setLoadingButton(false); // Matikan loading button
@@ -580,7 +611,7 @@ export default function IconGrid() {
       const userData = await GlobalApi.getUserById(userId);
       if (!userData || !userData.nip) {
         setNotification({
-          type: 'error',
+          type: "error",
           message: `NIP tidak ditemukan!`,
         });
         setLoadingButton(false); // Matikan loading button
@@ -594,7 +625,7 @@ export default function IconGrid() {
       const data = await GlobalApi.getByNIP(nip);
       if (!data) {
         setNotification({
-          type: 'error',
+          type: "error",
           message: `Data NIP ini tidak ditemukan!`,
         });
         setLoadingButton(false); // Matikan loading button
@@ -605,8 +636,8 @@ export default function IconGrid() {
       const nipData = await GlobalApi.getFileByNip(nip);
       if (nipData?.verifikasi === true) {
         setNotification({
-          type: 'success',
-          message: `Data anda sudah tersinkronisasi!`
+          type: "success",
+          message: `Data anda sudah tersinkronisasi!`,
         });
         setLoadingButton(false); // Matikan loading button
         return;
@@ -617,15 +648,15 @@ export default function IconGrid() {
 
       // Menampilkan notifikasi setelah data berhasil disinkronkan
       setNotification({
-        type: 'success',
+        type: "success",
         message: `Data berhasil disinkronkan!`,
       });
       window.location.reload();
     } catch (error) {
       console.error("Error saat mengirim data:", error);
       setNotification({
-        type: 'error',
-        message: `NIP tidak sesuai!`
+        type: "error",
+        message: `NIP tidak sesuai!`,
       });
       // setNotification({
       //   type: 'error',
@@ -729,61 +760,61 @@ export default function IconGrid() {
   const filteredIcons =
     role === "USER"
       ? icons
-        .filter((item) =>
-          [
-            "Lapor",
-            "Teman Unit",
-            "Ketentuan",
-            "Bantuan",
-            "History data",
-            "Pengaduan",
-          ].includes(item.label)
-        )
-        .concat({
-          icon: faUser,
-          label: "Detail Anggota",
-          href: "/anggota/detail-anggota",
-          color: "text-blue-500",
-          bgHover: "hover:bg-blue-100",
-          iconColor: "text-blue-600",
-        })
-        .concat({
-          icon: faUserPen,
-          label: "Edit Anggota",
-          href: "/anggota/edit-anggota",
-          color: "text-orange-500",
-          bgHover: "hover:bg-blue-100",
-          iconColor: "text-blue-600",
-        })
-        .concat({
-          icon: faRightLeft,
-          label: "Mutasi",
-          href: "/anggota/data-anggota/mutasiCabangUnit",
-          color: "text-cyan-500",
-        })
-        .concat({
-          icon: faFileAlt,
-          label: "Daspen",
-          href: "/daspen",
-          color: "text-teal-700",
-        })
-        .sort((a, b) => {
-          const order = [
-            "Lapor",
-            "Detail Anggota",
-            "Edit Anggota",
-            "Mutasi",
-            "Daspen",
-            "Ketentuan",
-            "Bantuan",
-            "Teman Unit",
-            "Pengaduan",
-          ];
-          return order.indexOf(a.label) - order.indexOf(b.label);
-        })
+          .filter((item) =>
+            [
+              "Lapor",
+              "Teman Unit",
+              "Ketentuan",
+              "Bantuan",
+              "History data",
+              "Pengaduan",
+            ].includes(item.label)
+          )
+          .concat({
+            icon: faUser,
+            label: "Detail Anggota",
+            href: "/anggota/detail-anggota",
+            color: "text-blue-500",
+            bgHover: "hover:bg-blue-100",
+            iconColor: "text-blue-600",
+          })
+          .concat({
+            icon: faUserPen,
+            label: "Edit Anggota",
+            href: "/anggota/edit-anggota",
+            color: "text-orange-500",
+            bgHover: "hover:bg-blue-100",
+            iconColor: "text-blue-600",
+          })
+          .concat({
+            icon: faRightLeft,
+            label: "Mutasi",
+            href: "/anggota/data-anggota/mutasiCabangUnit",
+            color: "text-cyan-500",
+          })
+          .concat({
+            icon: faFileAlt,
+            label: "Daspen",
+            href: "/daspen",
+            color: "text-teal-700",
+          })
+          .sort((a, b) => {
+            const order = [
+              "Lapor",
+              "Detail Anggota",
+              "Edit Anggota",
+              "Mutasi",
+              "Daspen",
+              "Ketentuan",
+              "Bantuan",
+              "Teman Unit",
+              "Pengaduan",
+            ];
+            return order.indexOf(a.label) - order.indexOf(b.label);
+          })
       : role === "SUPER ADMIN"
-        ? icons
-        : icons.filter((item) => item.label !== "Galeri");
+      ? icons
+      : icons.filter((item) => item.label !== "Galeri");
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -795,8 +826,9 @@ export default function IconGrid() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <main
-          className={`transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           {notification && (
             <NotificationPopup
@@ -957,7 +989,7 @@ export default function IconGrid() {
                           Sanduka Diberikan
                         </h3>
                         <p className="text-2xl font-bold text-orange-600 mt-2">
-                          {jumlahSantunan}{" "}
+                          {dataCount}{" "}
                           <span className="text-sm font-medium text-gray-500">
                             Orang
                           </span>
@@ -987,7 +1019,7 @@ export default function IconGrid() {
                           Total Santunan
                         </h3>
                         <p className="text-2xl font-bold text-green-600 mt-2">
-                          {formattedAmount}
+                          Rp {totalNominal.toLocaleString("id-ID")}
                         </p>
                         <p className="text-xs text-gray-500 mt-2">
                           2020 -{" "}
@@ -1021,10 +1053,11 @@ export default function IconGrid() {
                       className="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer"
                     >
                       <div
-                        className={`w-14 h-14 ${item.color.includes("text-")
+                        className={`w-14 h-14 ${
+                          item.color.includes("text-")
                             ? item.color.replace("text-", "bg-") + "/10"
                             : "bg-gray-100"
-                          } rounded-full flex items-center justify-center mb-3 shadow-sm`}
+                        } rounded-full flex items-center justify-center mb-3 shadow-sm`}
                       >
                         <FontAwesomeIcon
                           icon={item.icon}
