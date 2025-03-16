@@ -126,10 +126,16 @@ export default function PengaduanPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [responsesMap, setResponsesMap] = useState({});
   const [newPengaduanCount, setNewPengaduanCount] = useState(0);
+  const [responseCountsMap, setResponseCountsMap] = useState({});
 
   const fetchNewPengaduanCount = async () => {
     try {
-      const count = await GlobalApi.countNewPengaduan(1); // 1 hari terakhir
+      let cabang = null;
+      if (userRole === "ADMIN") {
+        cabang = userCabang; 
+      }
+
+      const count = await GlobalApi.countNewPengaduan(1, cabang); 
       setNewPengaduanCount(count);
     } catch (error) {
       console.error("Error fetching new pengaduan count:", error);
@@ -139,10 +145,29 @@ export default function PengaduanPage() {
   useEffect(() => {
     fetchNewPengaduanCount();
 
-    const interval = setInterval(fetchNewPengaduanCount, 6000); // Fetch setiap 1 menit
+    const interval = setInterval(fetchNewPengaduanCount, 60000); 
 
     return () => clearInterval(interval);
-  }, []);
+  }, [userRole, userCabang]); 
+
+  const fetchResponseCounts = async () => {
+    try {
+      const counts = {};
+      for (const pengaduan of pengaduanList) {
+        const count = await GlobalApi.countResponsesByPengaduanId(pengaduan.id);
+        counts[pengaduan.id] = count;
+      }
+      setResponseCountsMap(counts);
+    } catch (error) {
+      console.error("Error fetching response counts:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (pengaduanList.length > 0) {
+      fetchResponseCounts();
+    }
+  }, [pengaduanList]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -565,8 +590,9 @@ export default function PengaduanPage() {
       } else if (userRole === "ADMIN") {
         filteredPengaduan = sortedResponse.filter(
           (pengaduan) =>
-            pengaduan.cabang === userCabang &&
-            pengaduan.category !== "Permohonan Bantuan"
+            pengaduan.cabang === userCabang 
+          // &&
+          //   pengaduan.category !== "Permohonan Bantuan"
         );
       } else {
         filteredPengaduan = sortedResponse.filter(
@@ -650,18 +676,15 @@ export default function PengaduanPage() {
         npa,
         cabang,
         unitKerja,
-        category: selectedCategory, // Gunakan selectedCategory di sini
+        category: selectedCategory, 
         keterangan: data.deskripsi,
         bukti: data.buktiFoto ? data.buktiFoto[0] : null
       };
 
-      console.log("Data yang akan dikirim:", pengaduanData); // Log data sebelum dikirim
 
       const response = await GlobalApi.createPengaduan(pengaduanData);
 
-      console.log("Respons dari API:", response); // Log respons dari API
-
-      await handleCreateHistory(selectedCategory); // Gunakan selectedCategory di sini
+      await handleCreateHistory(selectedCategory); 
 
       reset();
       setBuktiFoto(null);
@@ -740,9 +763,9 @@ export default function PengaduanPage() {
               </thead>
               <tbody>
                 {rekapPengaduan
-                  .filter((rekap) =>
-                    userRole === "SUPER ADMIN" || rekap.category !== "Permohonan Bantuan"
-                  )
+                  //.filter((rekap) =>
+                  //  userRole === "SUPER ADMIN" || rekap.category !== "Permohonan Bantuan"
+                  //)
                   .map((rekap) => (
                     <tr key={rekap.id} className="border-b hover:bg-gray-50">
                       <td className="py-3 px-4">{rekap.category}</td>
@@ -958,9 +981,9 @@ export default function PengaduanPage() {
             ) : (
               <ul className="space-y-3">
                 {pengaduanList
-                  .filter((pengaduan) =>
-                    userRole === "SUPER ADMIN" || userRole === "USER" || pengaduan.category !== "Permohonan Bantuan"
-                  )
+                  // .filter((pengaduan) =>
+                  //  userRole === "SUPER ADMIN" || pengaduan.category !== "Permohonan Bantuan"
+                  // )
                   .map((pengaduan) => (
                     <li
                       key={pengaduan.id}
@@ -979,15 +1002,22 @@ export default function PengaduanPage() {
                           <p className="text-sm text-blue-600">
                             {/* {pengaduan.status || "Menunggu respon..."} */}
                           </p>
-                          {userRole === "ADMIN" && (
+                          {/* {userRole === "ADMIN" && (
                             <p className="text-sm text-gray-500">
                               NPA: {pengaduan.npa}
                             </p>
-                          )}
+                          )} */}
                         </div>
                       </div>
 
-                      {/* Only show delete button for admins */}
+                      {/* Notification Badge - keep in top right */}
+                      {responseCountsMap[pengaduan.id] > 0 && (
+                        <div className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                          {responseCountsMap[pengaduan.id]}
+                        </div>
+                      )}
+
+                      {/* Delete button for admins - moved to bottom right */}
                       {(userRole === "SUPER ADMIN" ||
                         (userRole === "ADMIN" && pengaduan.cabang === userCabang)) && (
                           <button
@@ -995,7 +1025,7 @@ export default function PengaduanPage() {
                               e.stopPropagation();
                               handleDeletePengaduan(pengaduan);
                             }}
-                            className="absolute top-2 right-2 text-red-500 hover:text-red-700 bg-white rounded-full p-1 shadow-sm"
+                            className="absolute bottom-2 right-2 text-red-500 hover:text-red-700 bg-white rounded-full p-1 shadow-sm"
                             aria-label="Hapus Pengaduan"
                           >
                             <FontAwesomeIcon icon={faTrash} />
@@ -1082,9 +1112,9 @@ export default function PengaduanPage() {
             ) : (
               <ul className="space-y-3">
                 {pengaduanList
-                  .filter((pengaduan) =>
-                    userRole === "SUPER ADMIN" || pengaduan.category !== "Permohonan Bantuan"
-                  )
+                  // .filter((pengaduan) =>
+                  // userRole === "SUPER ADMIN" || pengaduan.category !== "Permohonan Bantuan"
+                  // )
                   .map((pengaduan) => (
                     <li
                       key={pengaduan.id}
@@ -1111,7 +1141,14 @@ export default function PengaduanPage() {
                         </div>
                       </div>
 
-                      {/* Delete button for admins - same as desktop */}
+                      {/* Added notification badge in top right */}
+                      {responseCountsMap[pengaduan.id] > 0 && (
+                        <div className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                          {responseCountsMap[pengaduan.id]}
+                        </div>
+                      )}
+
+                      {/* Delete button moved to bottom right */}
                       {(userRole === "SUPER ADMIN" ||
                         (userRole === "ADMIN" && pengaduan.cabang === userCabang)) && (
                           <button
@@ -1119,7 +1156,7 @@ export default function PengaduanPage() {
                               e.stopPropagation();
                               handleDeletePengaduan(pengaduan);
                             }}
-                            className="absolute top-2 right-2 text-red-500 hover:text-red-700 bg-white rounded-full p-1 shadow-sm"
+                            className="absolute bottom-2 right-2 text-red-500 hover:text-red-700 bg-white rounded-full p-1 shadow-sm"
                             aria-label="Hapus Pengaduan"
                           >
                             <FontAwesomeIcon icon={faTrash} />
@@ -1131,9 +1168,9 @@ export default function PengaduanPage() {
                   <div
                     onClick={() => setModalType("rekap")}
                     className="p-6 bg-gradient-to-br from-purple-600 to-purple-800 text-white rounded-2xl shadow-xl cursor-pointer text-center 
-                        hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden
-                        before:absolute before:inset-0 before:bg-black before:opacity-0 
-                        hover:before:opacity-10 before:transition-opacity"
+                    hover:scale-105 transition-all duration-500 ease-in-out group relative overflow-hidden
+                    before:absolute before:inset-0 before:bg-black before:opacity-0 
+                    hover:before:opacity-10 before:transition-opacity"
                   >
                     <div className="relative z-10">
                       <FontAwesomeIcon
@@ -1322,8 +1359,8 @@ export default function PengaduanPage() {
               </div>
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
 
-              {/* Notifikasi Badge */}
-              {newPengaduanCount > 0 && (
+              {/* Notifikasi Badge - Hanya tampilkan untuk ADMIN atau SUPER ADMIN */}
+              {(userRole === "ADMIN" || userRole === "SUPER ADMIN") && newPengaduanCount > 0 && (
                 <div className="absolute top-2 right-2 bg-red-500 text-white rounded-full px-2 py-1 text-xs">
                   {newPengaduanCount}
                 </div>

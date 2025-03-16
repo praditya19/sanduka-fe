@@ -24,7 +24,7 @@ import {
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 const icons = [
   { icon: faBullhorn, label: "Lapor", href: "/lapor", color: "text-red-500" },
@@ -136,13 +136,24 @@ const icons = [
 export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
   const [currentPath, setCurrentPath] = useState(null);
   const [role, setRole] = useState(null);
+  const [newPengaduanCount, setNewPengaduanCount] = useState(0);
+  const [userCabang, setUserCabang] = useState("");
+  const [badgeVisible, setBadgeVisible] = useState(true);
 
   useEffect(() => {
     const { pathname } = window.location;
     setCurrentPath(pathname);
 
     const userRole = sessionStorage.getItem("role");
+    const cabang = sessionStorage.getItem("cabang");
     setRole(userRole);
+    setUserCabang(cabang);
+
+    if (pathname !== "/pengaduan") {
+      setBadgeVisible(true);
+    } else {
+      setBadgeVisible(false);
+    }
   }, []);
 
   const [isMobile, setIsMobile] = useState(false);
@@ -159,6 +170,30 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  const fetchNewPengaduanCount = async () => {
+    try {
+      let cabang = null;
+      if (role === "ADMIN") {
+        cabang = userCabang; 
+      }
+
+      const count = await GlobalApi.countNewPengaduan(1, cabang); 
+      setNewPengaduanCount(count);
+    } catch (error) {
+      console.error("Error fetching new pengaduan count:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (role === "ADMIN" || role === "SUPER ADMIN") {
+      fetchNewPengaduanCount();
+
+      const interval = setInterval(fetchNewPengaduanCount, 60000); 
+
+      return () => clearInterval(interval);
+    }
+  }, [role, userCabang]);
 
   const filteredIcons = icons.filter((item) => {
     if (role === "USER") {
@@ -177,6 +212,12 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
       return item.label !== "Galeri";
     }
   });
+
+  const handleIconClick = (label) => {
+    if (label === "Pengaduan") {
+      setBadgeVisible(false);
+    }
+  };
 
   return (
     <div className="relative">
@@ -215,6 +256,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
                 className={`flex items-center p-3 space-x-3 transition duration-300 ease-in-out transform hover:bg-blue-500 rounded-lg hover:shadow-md ${
                   isActive ? "bg-blue-400" : ""
                 }`}
+                onClick={() => handleIconClick(item.label)}
               >
                 <FontAwesomeIcon
                   icon={item.icon}
@@ -228,6 +270,14 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
                 >
                   {item.label}
                 </span>
+                {item.label === "Pengaduan" && 
+                  (role === "ADMIN" || role === "SUPER ADMIN") && 
+                  newPengaduanCount > 0 && 
+                  badgeVisible && (
+                    <div className="bg-red-500 text-white rounded-full px-2 py-1 text-xs">
+                      {newPengaduanCount}
+                    </div>
+                  )}
               </Link>
             );
           })}
