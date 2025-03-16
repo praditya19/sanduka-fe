@@ -2011,9 +2011,15 @@ const deletePengaduan = async (id) => {
   }
 };
 
-const countNewPengaduan = async (days = 1) => {
+const countNewPengaduan = async (days = 1, cabang = null) => {
   try {
-    const response = await axiosClient.get(`/api/pengaduan/count/new?days=${days}`);
+    let url = `/api/pengaduan/count/new?days=${days}`;
+    
+    if (cabang) {
+      url += `&cabang=${cabang}`;
+    }
+    
+    const response = await axiosClient.get(url);
     return response.data;
   } catch (error) {
     throw error;
@@ -2032,6 +2038,15 @@ const createResponPengaduan = async (data) => {
 const getResponPengaduanByPengaduanId = async (pengaduanId) => {
   try {
     const response = await axiosClient.get(`/api/respon-pengaduan/pengaduan/${pengaduanId}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const countResponsesByPengaduanId = async (pengaduanId) => {
+  try {
+    const response = await axiosClient.get(`/api/respon-pengaduan/pengaduan/${pengaduanId}/count`);
     return response.data;
   } catch (error) {
     throw error;
@@ -2184,4 +2199,5 @@ export default {
   getAllRekapPengaduan,
   deletePengaduan,
   countNewPengaduan,
+  countResponsesByPengaduanId,
 };

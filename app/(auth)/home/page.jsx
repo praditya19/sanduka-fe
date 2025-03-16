@@ -152,6 +152,7 @@ export default function IconGrid() {
   const [popupVisible, setPopupVisible] = useState(false);
   const profileImageUrl = "/profile.png";
   const [notification, setNotification] = useState(null);
+  const [newPengaduanCount, setNewPengaduanCount] = useState(0);
   const [data, setData] = useState(null);
   const [loadingButton, setLoadingButton] = useState(false);
   const [error, setError] = useState(null);
@@ -263,6 +264,7 @@ export default function IconGrid() {
       label: "Pengaduan",
       href: "/pengaduan",
       color: "text-red-700",
+      badge: newPengaduanCount > 0 ? newPengaduanCount : null,
     },
   ];
   const sortByDate = (data) => {
@@ -298,6 +300,29 @@ export default function IconGrid() {
       }
     });
   };
+
+  
+    const fetchNewPengaduanCount = async () => {
+      try {
+        let cabang = null;
+        if (role === "ADMIN") {
+          cabang = sessionStorage.getItem("cabang"); 
+        }
+  
+        const count = await GlobalApi.countNewPengaduan(1, cabang); 
+        setNewPengaduanCount(count);
+      } catch (error) {
+        console.error("Error fetching new pengaduan count:", error);
+      }
+    };
+  
+    useEffect(() => {
+      fetchNewPengaduanCount();
+  
+      const interval = setInterval(fetchNewPengaduanCount, 60000); 
+  
+      return () => clearInterval(interval);
+    }, [role]); 
 
   const sortedData = useMemo(() => {
     try {
@@ -1063,6 +1088,11 @@ export default function IconGrid() {
                           icon={item.icon}
                           className={`${item.color} text-2xl`}
                         />
+                        {item.badge && (
+                          <div className="absolute top-0 right-0 bg-red-500 text-white rounded-full px-2 py-1 text-xs">
+                            {item.badge}
+                          </div>
+                        )}
                       </div>
                       <span className="text-sm font-medium text-gray-700 text-center">
                         {item.label}
