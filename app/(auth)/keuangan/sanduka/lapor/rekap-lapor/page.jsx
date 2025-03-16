@@ -137,14 +137,12 @@ const Page = () => {
             selectedCabang
           );
         }
-
-        console.log("Data Lapor Diterima:", response);
         setDataLaporDiterima(response || []);
         setDisplayedDataLapor(response || []);
       } catch (error) {
         console.error("Error fetching data lapor diterima:", error);
       } finally {
-        setIsLoading(false); // Set loading to false after fetching data
+        setIsLoading(false);
       }
     };
 
@@ -161,7 +159,7 @@ const Page = () => {
       } catch (error) {
         console.error("Error fetching data lapor belum:", error);
       } finally {
-        setIsLoading(false); // Set loading to false after fetching data
+        setIsLoading(false);
       }
     };
 
@@ -253,57 +251,26 @@ const Page = () => {
     }
   }, [filterStatus, dataLaporDiterima, dataLaporBelum]);
 
-  useEffect(() => {
-    const filterData = () => {
-      let filteredData = [];
-
-      if (filterStatus === "Terima") {
-        filteredData = dataLaporDiterima;
-      } else if (filterStatus === "Belum") {
-        filteredData = dataLaporBelum;
-      } else {
-        filteredData = [...dataLaporDiterima, ...dataLaporBelum];
-      }
-
-      const finalFilteredData = filteredData.filter((item) => {
-        const isCabangMatch = selectedCabang
-          ? item.Cabang === selectedCabang
-          : true;
-
-        let monthFromData = null;
-        let yearFromData = null;
-        if (item.Date_lapor) {
-          const dateMatch = item.Date_lapor.match(/\b\d{2}-\d{2}-\d{4}\b/);
-          if (dateMatch) {
-            const dateParts = dateMatch[0].split("-");
-            monthFromData = dateParts[1];
-            yearFromData = dateParts[2];
-          }
-        }
-
-        const isBulanMatch = selectedBulan
-          ? monthFromData === selectedBulan
-          : true;
-        const isYearMatch = selectedYear ? yearFromData === selectedYear : true;
-
-        return isCabangMatch && isBulanMatch && isYearMatch;
-      });
-
-      setDisplayedDataLapor(finalFilteredData);
-    };
-
-    filterData();
-  }, [
-    filterStatus,
-    selectedCabang,
-    selectedBulan,
-    selectedYear,
-    dataLaporDiterima,
-    dataLaporBelum,
-  ]);
-
   const handlePrint = () => {
-    const printContent = document.getElementById("table-to-print").innerHTML;
+    const tableContent = document.getElementById("table-to-print").innerHTML;
+
+    const title = `<h2 class="text-center text-xl font-bold mb-4">Rekap Lapor Meninggal</h2>`;
+
+    const updatedTable = tableContent.replace(
+      /<th class="py-3 px-4 text-center border-b">Action<\/th>(.*?)<\/tr>/,
+      ""
+    );
+    const tableWithoutActionColumn = updatedTable.replace(
+      /<td class="py-3 px-4 space-x-2 text-center">(.*?)<\/td>/g,
+      ""
+    );
+
+    const tableWithBlackHeader = tableWithoutActionColumn.replace(
+      /<th /g,
+      `<th style="color: black;" `
+    );
+
+    const printContent = title + tableWithBlackHeader;
     const originalContent = document.body.innerHTML;
 
     document.body.innerHTML = printContent;
@@ -393,22 +360,19 @@ const Page = () => {
           }`}
         >
           <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-            <div className="bg-teal-700 p-4 flex flex-col sm:flex-row items-center justify-between mt-5">
-              <h1 className="text-white font-bold mb-4 sm:mb-0">
+            <div className="p-4 mt-5">
+              <h1 className="text-teal-700 font-bold text-xl mb-4">
                 REKAP LAPOR SANDUKA
               </h1>
-              <div className="flex items-end ml-auto sm:hidden">
-                <button className="text-white">
-                  <FontAwesomeIcon icon={faFilter} size="lg" />
-                </button>
-              </div>
-              <div
-                className={` top-0 right-0 w-64 bg-teal-700 p-4 space-y-2 sm:space-y-0 sm:space-x-2 items-center sm:flex ${
-                  showFilters ? "block" : "hidden"
-                } sm:relative sm:w-auto sm:p-0 sm:bg-transparent`}
-              >
-                <div className="relative w-full sm:w-auto" ref={dropdownRef}>
-                  {/* Input for displaying the selected branch */}
+
+              <div className="flex flex-wrap sm:flex-nowrap sm:space-x-4 items-center justify-between">
+                <div className="relative w-full sm:w-64">
+                  <label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="cabang"
+                  >
+                    Pilih Cabang
+                  </label>
                   <Input
                     className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     type="text"
@@ -417,8 +381,6 @@ const Page = () => {
                     readOnly
                     onFocus={handleFocus}
                   />
-
-                  {/* Dropdown with integrated filter input */}
                   {showFilterInput && (
                     <div className="absolute bg-white border rounded w-full mt-1 z-10 shadow-lg">
                       <ul className="max-h-44 overflow-y-auto">
@@ -433,7 +395,6 @@ const Page = () => {
                           />
                         </li>
 
-                        {/* Option to reset selection */}
                         <li
                           className="p-2 px-2 hover:bg-gray-100 cursor-pointer text-gray-500"
                           onClick={() => handleCabangSelect(null)}
@@ -441,7 +402,6 @@ const Page = () => {
                           Pilih Cabang
                         </li>
 
-                        {/* List of filtered cabang */}
                         {filteredCabangList.map((cabang) => (
                           <li
                             key={cabang.id}
@@ -452,7 +412,6 @@ const Page = () => {
                           </li>
                         ))}
 
-                        {/* Option if no cabang found */}
                         {filteredCabangList.length === 0 && (
                           <div className="p-2 text-gray-500 text-center">
                             Cabang tidak ditemukan
@@ -462,50 +421,81 @@ const Page = () => {
                     </div>
                   )}
                 </div>
-                <select
-                  className="bg-white p-2 rounded border w-full sm:w-auto"
-                  id="bulan"
-                  name="bulan"
-                  value={selectedBulan}
-                  onChange={handleBulanChange}
-                >
-                  <option value="">-- Bulan --</option>
-                  {bulanList.map((bulan) => (
-                    <option key={bulan.angkaBulan} value={bulan.angkaBulan}>
-                      {bulan.namaBulan}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className="bg-white p-2 rounded border w-full sm:w-auto"
-                  id="tahun"
-                  name="tahun"
-                  value={selectedYear}
-                  onChange={handleYearChange}
-                >
-                  <option value="">-- Tahun --</option>
-                  {years.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className="bg-white p-2 rounded border w-full sm:w-auto"
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                >
-                  <option value="Terima">Terima</option>
-                  <option value="Belum">Belum</option>
-                </select>
-                <Button
-                  className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300 w-full sm:w-auto"
-                  onClick={handlePrint}
-                >
-                  Cetak
-                </Button>
+
+                <div className="w-full sm:w-64">
+                  <label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="bulan"
+                  >
+                    Pilih Bulan
+                  </label>
+                  <select
+                    className="bg-white p-2 rounded border w-full"
+                    id="bulan"
+                    name="bulan"
+                    value={selectedBulan}
+                    onChange={handleBulanChange}
+                  >
+                    <option value="">-- Bulan --</option>
+                    {bulanList.map((bulan) => (
+                      <option key={bulan.angkaBulan} value={bulan.angkaBulan}>
+                        {bulan.namaBulan}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="w-full sm:w-64">
+                  <label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="tahun"
+                  >
+                    Pilih Tahun
+                  </label>
+                  <select
+                    className="bg-white p-2 rounded border w-full"
+                    id="tahun"
+                    name="tahun"
+                    value={selectedYear}
+                    onChange={handleYearChange}
+                  >
+                    <option value="">-- Tahun --</option>
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="w-full sm:w-64">
+                  <label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="status"
+                  >
+                    Status
+                  </label>
+                  <select
+                    className="bg-white p-2 rounded border w-full"
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                  >
+                    <option value="Terima">Terima</option>
+                    <option value="Belum">Belum</option>
+                  </select>
+                </div>
+
+                <div className="w-full sm:w-auto mt-4 sm:mt-0">
+                  <Button
+                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300 w-full sm:w-auto"
+                    onClick={handlePrint}
+                  >
+                    Cetak
+                  </Button>
+                </div>
               </div>
             </div>
+
             {showPopup && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
                 <div className="bg-white rounded-lg shadow-lg border border-gray-200 w-4/5 h-4/5 overflow-y-scroll relative">
@@ -522,18 +512,29 @@ const Page = () => {
               </div>
             )}
 
-            <div id="table-to-print" className="overflow-x-auto">
-              <table className="min-w-full bg-white text-sm">
+            <div
+              id="table-to-print"
+              className="overflow-x-auto shadow-lg rounded-lg"
+            >
+              <table className="min-w-full bg-white text-sm border-collapse">
                 <thead className="bg-teal-700 text-white">
                   <tr>
-                    <th className="py-2 px-3 text-center">No</th>
-                    <th className="py-2 px-3 text-center">Date lapor</th>
-                    <th className="py-2 px-3 text-center">Data Meninggal</th>
-                    <th className="py-2 px-3 text-center">Cabang</th>
-                    <th className="py-2 px-3 text-center">Keterangan</th>
-                    <th className="py-2 px-3 text-center">Diterimakan</th>
-                    <th className="py-2 px-3 text-center">Nominal</th>
-                    <th className="py-2 px-3 text-center">Action</th>
+                    <th className="py-3 px-4 text-center border-b">No</th>
+                    <th className="py-3 px-4 text-center border-b">
+                      Date lapor
+                    </th>
+                    <th className="py-3 px-4 text-center border-b">
+                      Data Meninggal
+                    </th>
+                    <th className="py-3 px-4 text-center border-b">Cabang</th>
+                    <th className="py-3 px-4 text-center border-b">
+                      Keterangan
+                    </th>
+                    <th className="py-3 px-4 text-center border-b">
+                      Diterimakan
+                    </th>
+                    <th className="py-3 px-4 text-center border-b">Nominal</th>
+                    <th className="py-3 px-4 text-center border-b">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -551,28 +552,25 @@ const Page = () => {
                   ) : Array.isArray(displayedDataLapor) &&
                     displayedDataLapor.length > 0 ? (
                     displayedDataLapor.map((item, index) => (
-                      <tr key={index} className="border-t text-sm">
-                        <td className="py-2 px-3 text-center text-sm">
-                          {index + 1}
+                      <tr
+                        key={index}
+                        className="border-t text-sm hover:bg-teal-100 transition-colors"
+                      >
+                        <td className="py-3 px-4 text-center">{index + 1}</td>
+                        <td className="py-3 px-4">
+                          {item.Date_lapor || "N/A"}
                         </td>
-                        <td className="py-2 px-3 text-sm">
-                          {item.Date_lapor ? item.Date_lapor : "N/A"}
-                        </td>
-                        <td className="py-2 px-3 text-sm">
-                          {item.Data_Meninggal}
-                        </td>
-                        <td className="py-2 px-3 text-center text-sm">
-                          {item.Cabang}
-                        </td>
-                        <td className="py-2 px-3 text-center text-sm">
+                        <td className="py-3 px-4">{item.Data_Meninggal}</td>
+                        <td className="py-3 px-4 text-center">{item.Cabang}</td>
+                        <td className="py-3 px-4 text-center">
                           {item.Keterangan}
                         </td>
-                        <td className="py-2 px-3 text-center text-sm">
+                        <td className="py-3 px-4 text-center">
                           {filterStatus === "Terima"
                             ? `Diterimakan (${item.Nama_Penerima})`
                             : "Belum Diterimakan"}
                         </td>
-                        <td className="py-2 px-3 text-center text-sm">
+                        <td className="py-3 px-4 text-center">
                           {filterStatus === "Terima"
                             ? new Intl.NumberFormat("id-ID", {
                                 style: "currency",
@@ -580,15 +578,9 @@ const Page = () => {
                               }).format(item.Nominal)
                             : "-"}
                         </td>
-                        {/* <td className="py-2 px-3 text-center text-sm">
-                          {new Intl.NumberFormat("id-ID", {
-                            style: "currency",
-                            currency: "IDR",
-                          }).format(item.Nominal)}
-                        </td> */}
-                        <td className="py-2 px-3 space-x-2 text-sm">
+                        <td className="py-3 px-4 space-x-2 text-center">
                           <button
-                            className="bg-blue-500 text-white p-2 rounded mb-2"
+                            className="bg-blue-500 text-white p-2 rounded mb-2 hover:bg-blue-600 transition-colors"
                             onClick={handleKwitansiClick}
                           >
                             Kwitansi
@@ -598,7 +590,7 @@ const Page = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="9" className="text-center py-2">
+                      <td colSpan="8" className="text-center py-2">
                         No data available
                       </td>
                     </tr>

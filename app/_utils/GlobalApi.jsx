@@ -1043,12 +1043,11 @@ const createSaldoAwal = async (saldoAwalRequest) => {
 // Rekap Lapor Sanduka
 const getRekapLaporDiterima = async (bulan, tahun, cabang) => {
   try {
-    // Menambahkan query parameter pada URL
     const response = await axiosClient.get("/api/rekap-lapor-sanduka/diterima", {
       params: {
-        bulan: bulan,
-        tahun: tahun,
         cabang: cabang,
+        bulanTransaksi: bulan,
+        tahunTransaksi: tahun,
       },
     });
     return response.data;
