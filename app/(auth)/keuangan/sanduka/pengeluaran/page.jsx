@@ -7,7 +7,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
-import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaTimesCircle,
+  FaCheckCircle,
+  FaExclamationCircle,
+} from "react-icons/fa";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
@@ -26,20 +30,20 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
       default:
-        return 'bg-blue-100';
+        return "bg-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case 'error':
+      case "error":
         return <FaExclamationCircle className="text-red-500 text-3xl" />;
       default:
         return null;
@@ -48,19 +52,24 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
       default:
-        return 'text-blue-800';
+        return "text-blue-800";
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -70,17 +79,13 @@ const NotificationPopup = ({ type, message, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
+          <div className="animate-bounce">{getIcon()}</div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+            {type === "success" ? "Berhasil!" : "Gagal!"}
           </h3>
 
-          <div className={`${getTextColor()} text-center`}>
-            {message}
-          </div>
+          <div className={`${getTextColor()} text-center`}>{message}</div>
         </div>
       </div>
     </div>
@@ -149,6 +154,7 @@ function Pengeluaran() {
   const [saldoMap, setSaldoMap] = useState({});
   const [totalSaldo, setTotalSaldo] = useState(0);
   const [notification, setNotification] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const getBulanAngka = (bulanNama) => {
     const bulanObj = bulanList.find((bulan) => bulan.namaBulan === bulanNama);
@@ -194,7 +200,7 @@ function Pengeluaran() {
     try {
       const response = await GlobalApi.createPembayaranSanduka(dataToSend);
       setNotification({
-        type: 'success',
+        type: "success",
         message: `Data berhasil dikirim!`,
       });
       setTimeout(() => {
@@ -202,7 +208,7 @@ function Pengeluaran() {
       }, 200);
     } catch (error) {
       setNotification({
-        type: 'error',
+        type: "error",
         message: `Gagal mengirim data!`,
       });
     }
@@ -359,75 +365,77 @@ function Pengeluaran() {
         </thead>
         <tbody>
           ${sortedTransactions
-        .filter((transaction) => transaction.tglTransaksi)
-        .map(
-          (transaction, index) => `
-              <tr class="border-b text-black text-center ${transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
-            }">
+            .filter((transaction) => transaction.tglTransaksi)
+            .map(
+              (transaction, index) => `
+              <tr class="border-b text-black text-center ${
+                transaction.checked ? "bg-gray-100" : "hover:bg-gray-50"
+              }">
                 <td class="px-6 py-4 text-sm">${index + 1}</td>
                 <td class="px-6 py-4 text-sm">${transaction.tglTransaksi}</td>
                 <td class="px-6 py-4 text-sm">${transaction.noBukti}</td>
                 <td class="px-6 py-4 text-sm">${transaction.uraian}</td>
                 <td class="px-6 py-4 text-sm">
                   ${formatCurrency(
-              transaction.uraian === "Saldo Awal"
-                ? Number(newSelectedYear) === 2021 &&
-                  Number(selectedBulan) === 3
-                  ? parseFloat(transaction.debet.replace(",", "")) || 0
-                  : 0
-                : parseFloat(transaction.debet.replace(",", "")) || 0
-            )}
+                    transaction.uraian === "Saldo Awal"
+                      ? Number(newSelectedYear) === 2021 &&
+                        Number(selectedBulan) === 3
+                        ? parseFloat(transaction.debet.replace(",", "")) || 0
+                        : 0
+                      : parseFloat(transaction.debet.replace(",", "")) || 0
+                  )}
                 </td>
                 <td class="px-6 py-4 text-sm">
                   ${formatCurrency(
-              parseFloat(transaction.kredit.replace(",", "")) || 0
-            )}
+                    parseFloat(transaction.kredit.replace(",", "")) || 0
+                  )}
                 </td>
                 <td class="px-6 py-4 text-sm">
-                  ${saldoMap[index]
-              ? saldoMap[index].toLocaleString("id-ID", {
-                minimumFractionDigits: 0,
-              })
-              : 0
-            }
+                  ${
+                    saldoMap[index]
+                      ? saldoMap[index].toLocaleString("id-ID", {
+                          minimumFractionDigits: 0,
+                        })
+                      : 0
+                  }
                 </td>
               </tr>
             `
-        )
-        .join("")}
+            )
+            .join("")}
           <tr class="bg-gray-200 text-base text-black text-center font-bold">
             <td class="px-6 py-4 text-left" colSpan="4">TOTAL</td>
             <td class="px-6 py-4 text-sm">
               ${formatCurrency(
-          transactions.reduce((total, transaction) => {
-            const isSaldoAwal = transaction.uraian === "Saldo Awal";
-            const isMaret2021 =
-              Number(newSelectedYear) === 2021 &&
-              Number(selectedBulan) === 3;
-            const debet =
-              isSaldoAwal && !isMaret2021
-                ? 0
-                : Math.floor(
-                  parseFloat(transaction.debet.replace(",")) || 0
-                );
-            return total + debet;
-          }, 0)
-        )}
+                transactions.reduce((total, transaction) => {
+                  const isSaldoAwal = transaction.uraian === "Saldo Awal";
+                  const isMaret2021 =
+                    Number(newSelectedYear) === 2021 &&
+                    Number(selectedBulan) === 3;
+                  const debet =
+                    isSaldoAwal && !isMaret2021
+                      ? 0
+                      : Math.floor(
+                          parseFloat(transaction.debet.replace(",")) || 0
+                        );
+                  return total + debet;
+                }, 0)
+              )}
             </td>
             <td class="px-6 py-4 text-sm">
               ${formatCurrency(
-          transactions.reduce((total, transaction) => {
-            const kredit = Math.floor(
-              parseFloat(transaction.kredit.replace(",", "")) || 0
-            );
-            return total + kredit;
-          }, 0)
-        )}
+                transactions.reduce((total, transaction) => {
+                  const kredit = Math.floor(
+                    parseFloat(transaction.kredit.replace(",", "")) || 0
+                  );
+                  return total + kredit;
+                }, 0)
+              )}
             </td>
             <td class="px-6 py-4 text-sm">
               ${totalSaldo.toLocaleString("id-ID", {
-          minimumFractionDigits: 0,
-        })}
+                minimumFractionDigits: 0,
+              })}
             </td>
             <td class="px-6 py-4 text-sm"></td>
           </tr>
@@ -537,8 +545,8 @@ function Pengeluaran() {
 
     const updatedCheckedIds = newSelectAll
       ? transactions
-        .filter((transaction) => transaction.uraian !== "Saldo Awal")
-        .map((transaction) => transaction.id)
+          .filter((transaction) => transaction.uraian !== "Saldo Awal")
+          .map((transaction) => transaction.id)
       : [];
 
     setCheckedIds(updatedCheckedIds);
@@ -571,7 +579,7 @@ function Pengeluaran() {
           );
 
           setNotification({
-            type: 'success',
+            type: "success",
             message: `Data berhasil dihapus!`,
           });
         }
@@ -582,7 +590,7 @@ function Pengeluaran() {
     } catch (error) {
       console.error("Gagal menghapus data dengan ID:", checkedIds, error);
       setNotification({
-        type: 'error',
+        type: "error",
         message: `Terjadi kesalahan saat menghapus data.`,
       });
     } finally {
@@ -607,7 +615,7 @@ function Pengeluaran() {
         );
 
         setNotification({
-          type: 'success',
+          type: "success",
           message: `Data berhasil dihapus!`,
         });
       }
@@ -616,7 +624,7 @@ function Pengeluaran() {
     } catch (error) {
       console.error("Gagal menghapus data dengan ID:", id, error);
       setNotification({
-        type: 'error',
+        type: "error",
         message: `Terjadi kesalahan saat menghapus data.`,
       });
     } finally {
@@ -648,12 +656,12 @@ function Pengeluaran() {
         totalSumbangan: data.totalSumbangan || "",
         totalAnggotaByAdmin: data.totalAnggotaByAdmin || "",
         keterangan: data.keterangan || "",
+        yangMeninggal: data.yangMeninggal || "",
+        namaPenerima: data.namaPenerima || "",
       };
 
       setFormValues(updatedFormValues);
-
       setEditId(id);
-
       setIsEditing(true);
     } catch (error) {
       console.error("Gagal mengambil data berdasarkan id:", error);
@@ -681,8 +689,8 @@ function Pengeluaran() {
         debet: "",
         kredit: formValues.nominal || "",
         bulanSantunan: "",
-        yangMeninggal: "",
-        namaPenerima: "",
+        yangMeninggal: data.yangMeninggal || "",
+        namaPenerima: data.namaPenerima || "",
         keterangan: formValues.keterangan || "",
         jenisPembayaran: "Sanduka",
       };
@@ -696,7 +704,7 @@ function Pengeluaran() {
         updatedFormValues
       );
       setNotification({
-        type: 'success',
+        type: "success",
         message: `Data berhasil diubah!`,
       });
       setTimeout(() => {
@@ -705,7 +713,7 @@ function Pengeluaran() {
     } catch (error) {
       console.error("Gagal mengedit data:", error);
       setNotification({
-        type: 'success',
+        type: "success",
         message: `Galat saat mengubah data!. Silakan coba lagi.`,
       });
     }
@@ -764,7 +772,9 @@ function Pengeluaran() {
     if (name === "posTransaksi" && value === "Operasional 15%") {
       // Menghitung total debet
       const totalDebet = transactions.reduce((total, transaction) => {
-        const debet = Math.floor(parseFloat(transaction.debet.replace(",", "")) || 0);
+        const debet = Math.floor(
+          parseFloat(transaction.debet.replace(",", "")) || 0
+        );
         return total + debet;
       }, 0);
 
@@ -778,7 +788,11 @@ function Pengeluaran() {
       }));
 
       // Munculkan hasilnya ke console
-      console.log(`Total Debet: ${formatCurrency(totalDebet)}, 15% dari total Debet: ${formatCurrency(operasional15)}`);
+      console.log(
+        `Total Debet: ${formatCurrency(
+          totalDebet
+        )}, 15% dari total Debet: ${formatCurrency(operasional15)}`
+      );
     }
 
     if (name === "tahun" || name === "bulan") {
@@ -839,8 +853,9 @@ function Pengeluaran() {
     if (number < 10) return satuan[number];
     if (number < 20) return belasan[number - 10];
     if (number < 100)
-      return `${satuan[Math.floor(number / 10)]} puluh ${satuan[number % 10]
-        }`.trim();
+      return `${satuan[Math.floor(number / 10)]} puluh ${
+        satuan[number % 10]
+      }`.trim();
 
     if (number < 1000)
       return `${satuan[Math.floor(number / 100)]} ratus ${convertToTerbilang(
@@ -868,6 +883,10 @@ function Pengeluaran() {
     if (isNaN(number) || number <= 0) return "";
     const terbilang = convertToTerbilang(number);
     return `${capitalizeFirstLetter(terbilang)} Rupiah`.trim();
+  };
+
+  const handleModalToggle = () => {
+    setIsModalOpen(!isModalOpen);
   };
 
   const handleKwitansiClick = async () => {
@@ -1279,8 +1298,9 @@ function Pengeluaran() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           {notification && (
             <NotificationPopup
@@ -1603,7 +1623,30 @@ function Pengeluaran() {
                 <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
                   Transaksi {selectedBulanName} {newSelectedYear}
                 </h1>
+                {isModalOpen && (
+                  <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
+                      <h2 className="text-xl font-bold mb-4">Informasi</h2>
+                      <p>
+                        Jika melakukan edit, sesuaikan dengan tab pemasukan atau
+                        pengeluaran.
+                      </p>
+                      <div className="flex justify-end mt-4">
+                        <button
+                          className="bg-red-500 text-white px-4 py-2 rounded-md"
+                          onClick={handleModalToggle}
+                        >
+                          Tutup
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="flex justify-center space-x-4 mt-5 mr-10">
+                  <FaExclamationCircle
+                    className="mt-3 text-lg cursor-pointer text-blue-400"
+                    onClick={handleModalToggle}
+                  />
                   <Input
                     type="checkbox"
                     className="form-checkbox h-4 w-4 mt-3"
@@ -1671,10 +1714,11 @@ function Pengeluaran() {
                     .map((transaction, index) => (
                       <tr
                         key={transaction.id}
-                        className={`border-b text-black text-center ${transaction.checked
+                        className={`border-b text-black text-center ${
+                          transaction.checked
                             ? "bg-gray-100"
                             : "hover:bg-gray-50"
-                          }`}
+                        }`}
                       >
                         <td className="px-6 py-4 text-sm">{index + 1}</td>
                         <td className="px-6 py-4 text-sm">
@@ -1720,7 +1764,7 @@ function Pengeluaran() {
                               className="form-checkbox h-4 w-4"
                               checked={transaction.checked}
                               onChange={() => handleCheck(transaction.id)}
-                            // disabled={transaction.uraian === "Saldo Awal"}
+                              // disabled={transaction.uraian === "Saldo Awal"}
                             />
                             <Button
                               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
@@ -1729,10 +1773,11 @@ function Pengeluaran() {
                               Edit
                             </Button>
                             <button
-                              className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center ${transaction.uraian === "Saldo Awal"
+                              className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 flex items-center justify-center ${
+                                transaction.uraian === "Saldo Awal"
                                   ? "opacity-50 cursor-not-allowed"
                                   : ""
-                                }`}
+                              }`}
                               onClick={() =>
                                 handleDeleteClickId(transaction.id)
                               }
