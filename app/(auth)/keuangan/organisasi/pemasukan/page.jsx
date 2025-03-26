@@ -226,17 +226,54 @@ function Pemasukan() {
                 ...prevValues,
                 nominal: hasilPerhitungan, 
               }));
-            } else {
             }
           }
         } catch (error) {
           console.error("Gagal mengambil data Derap:", error);
         }
       }
+  
+      // Tambahan untuk Kalender
+      if (formValues.posTransaksi === "Kalender" && formValues.cabang && formValues.tanggalTransaksi) {
+        const tanggal = new Date(formValues.tanggalTransaksi);
+        const bulanAngka = tanggal.getMonth(); 
+        const tahun = tanggal.getFullYear();
+  
+        const bulanData = bulanList.find(bulan => bulan.angkaBulan === bulanAngka);
+        const namaBulan = bulanData ? bulanData.namaBulan : "";
+  
+        try {
+          const response = await GlobalApi.getTableKalender(namaBulan, tahun, formValues.cabang);
+  
+          if (response && response.length > 0) {
+            const data = response[0];
+            const jumlah = parseInt(data.jumlah); 
+  
+            const kalenderData = JSON.parse(sessionStorage.getItem('kalenderData'));
+  
+            if (kalenderData && kalenderData.propinsi && kalenderData.kabupaten && kalenderData.cabang) {
+              const propinsi = parseInt(kalenderData.propinsi); 
+              const kabupaten = parseInt(kalenderData.kabupaten); 
+              const cabang = parseInt(kalenderData.cabang);
+  
+              const hasilPerhitungan = (jumlah * propinsi) + (jumlah * kabupaten) + (jumlah * cabang);
+  
+              console.log("Hasil Perhitungan Kalender:", hasilPerhitungan);
+  
+              setFormValues((prevValues) => ({
+                ...prevValues,
+                nominal: hasilPerhitungan, 
+              }));
+            }
+          }
+        } catch (error) {
+          console.error("Gagal mengambil data Kalender:", error);
+        }
+      }
     };
   
     fetchData();
-  }, [formValues.posTransaksi, formValues.cabang, formValues.tanggalTransaksi]);
+  }, [formValues.posTransaksi, formValues.cabang, formValues.tanggalTransaksi]);  
     
   useEffect(() => {
     const currentMonthIndex = new Date().getMonth();
