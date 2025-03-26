@@ -501,7 +501,7 @@ function Pengeluaran() {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
         border-bottom: 2px solid #000;
         padding-bottom: 10px;
     }
@@ -515,7 +515,7 @@ function Pengeluaran() {
     }
     .info, .footer {
         width: 100%;
-        margin-top: 20px;
+        margin-top: 10px;
     }
     .info td{
         padding: 10px;
