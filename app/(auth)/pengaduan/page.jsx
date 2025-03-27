@@ -256,38 +256,48 @@ export default function PengaduanPage() {
 
   const handleSendMessage = async () => {
     if (message.trim() === "" || !selectedPengaduan) return;
-
+  
+    const userId = sessionStorage.getItem("userId");
+    const role = sessionStorage.getItem("role");
+    let userData;
+  
+    if (role === "USER") {
+      userData = await GlobalApi.getUserById(userId);
+    } else {
+      userData = await GlobalApi.getAdminById(userId);
+    }
+  
     const tempMessage = {
       id: Date.now(),
       message: message,
-      senderRole: userRole === "SUPER ADMIN" ? "SUPERADMIN" :
-        userRole === "ADMIN" ? "ADMIN" : "USER",
-      namaLengkap: sessionStorage.getItem("nama"),
+      senderRole: userData.role === "SUPER ADMIN" ? "SUPERADMIN" :
+        userData.role === "ADMIN" ? "ADMIN" : "USER",
+      namaLengkap: role === "USER" ? userData.namaLengkap : userData.nama,
       createdAt: new Date().toISOString().split('T')[0].split('-'),
       isTemporary: true
     };
-
+  
     setResponses(prevResponses => [...prevResponses, tempMessage]);
     setChatHistory(prevHistory => [...prevHistory, {
       sender: tempMessage.senderRole.toLowerCase(),
       message,
       timestamp: new Date().toISOString()
     }]);
-
+  
     try {
       const responseData = {
         pengaduanId: selectedPengaduan.id,
         senderRole: tempMessage.senderRole,
         message: message,
-        namaLengkap: sessionStorage.getItem("nama"),
-        email: sessionStorage.getItem("email") || "",
-        npa: sessionStorage.getItem("npa"),
-        unitKerja: sessionStorage.getItem("unitKerja"),
-        cabang: sessionStorage.getItem("cabang")
+        namaLengkap: role === "USER" ? userData.namaLengkap : userData.nama,
+        email: userData.email || "",
+        npa: role === "USER" ? userData.npaPgri : userData.npapgri,
+        unitKerja: role === "USER" ? userData.unitKerja : "-",
+        cabang: userData.cabang
       };
-
+  
       const newResponse = await GlobalApi.createResponPengaduan(responseData);
-
+  
       setResponses(prevResponses =>
         prevResponses.map(resp =>
           resp.isTemporary && resp.message === message
@@ -295,16 +305,16 @@ export default function PengaduanPage() {
             : resp
         )
       );
-
+  
       setMessage("");
-
+  
     } catch (error) {
       console.error("Error sending message:", error);
-
+  
       setResponses(prevResponses =>
         prevResponses.filter(resp => !resp.isTemporary || resp.message !== message)
       );
-
+  
       setNotification({
         type: 'error',
         message: 'Gagal mengirim pesan'
@@ -550,18 +560,52 @@ export default function PengaduanPage() {
     if (!token) {
       router.push("/sign-in");
     } else {
-      const role = sessionStorage.getItem("role") || "";
-      const npa = sessionStorage.getItem("npa") || "";
-      const cabang = sessionStorage.getItem("cabang") || "";
-
-      setUserRole(role);
-      setUserNpa(npa);
-      setUserCabang(cabang);
-
-      if (role === "SUPER ADMIN" || role === "ADMIN") {
-        fetchRekapPengaduan();
-      }
-
+      const fetchUserData = async () => {
+        try {
+          const userId = sessionStorage.getItem("userId");
+          const role = sessionStorage.getItem("role");
+          
+          if (userId) {
+            let userData;
+            
+            if (role === "USER") {
+              userData = await GlobalApi.getUserById(userId);
+              setUserRole(userData.role);
+              setUserNpa(userData.npaPgri);
+              setUserCabang(userData.cabang);
+              setUserUnitKerja(userData.unitKerja);
+              
+              // Store in session for quick access if needed
+              sessionStorage.setItem("npa", userData.npaPgri);
+              sessionStorage.setItem("cabang", userData.cabang);
+              sessionStorage.setItem("unitKerja", userData.unitKerja);
+              sessionStorage.setItem("nama", userData.namaLengkap);
+              sessionStorage.setItem("email", userData.email);
+            } else {
+              // For ADMIN and SUPER ADMIN
+              userData = await GlobalApi.getAdminById(userId);
+              setUserRole(userData.role);
+              setUserNpa(userData.npapgri);
+              setUserCabang(userData.cabang);
+              
+              // Store in session for quick access if needed
+              sessionStorage.setItem("npa", userData.npapgri);
+              sessionStorage.setItem("cabang", userData.cabang);
+              sessionStorage.setItem("nama", userData.nama);
+              sessionStorage.setItem("email", userData.email);
+            }
+          }
+  
+          if (role === "SUPER ADMIN" || role === "ADMIN") {
+            fetchRekapPengaduan();
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      };
+  
+      fetchUserData();
+  
       const handleResize = () => setIsMobile(window.innerWidth <= 768);
       window.addEventListener("resize", handleResize);
       return () => window.removeEventListener("resize", handleResize);
@@ -612,45 +656,39 @@ export default function PengaduanPage() {
     }
   };
 
-  const handleCreateHistory = async (category) => {
+  const handleCreateHistory = async (category, role) => {
     const now = new Date();
-
+    const userId = sessionStorage.getItem("userId");
+    let userData;
+  
+    if (role === "USER") {
+      userData = await GlobalApi.getUserById(userId);
+    } else {
+      userData = await GlobalApi.getAdminById(userId);
+    }
+  
     const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
     const tanggal = now.toISOString().split("T")[0];
     const jam = now.toTimeString().split(" ")[0];
     const bulan = now.toLocaleString("id-ID", { month: "long" });
     const tahun = now.getFullYear();
-
-    const userRole = sessionStorage.getItem("role");
-    const namaFromSession = userRole === "ADMIN" ? nama : sessionStorage.getItem("nama");
-    const npaPgri = sessionStorage.getItem("npa");
-    const selectedCabang = sessionStorage.getItem("cabang");
-
-    if (!npaPgri || !selectedCabang || !namaFromSession) {
-      console.error("Data tidak lengkap untuk membuat history");
-      setNotification({
-        type: 'error',
-        message: `Data tidak lengkap untuk membuat history`
-      });
-      return;
-    }
-
+  
     const historyData = {
       hari,
       tanggal,
       jam,
-      npa: npaPgri,
-      nama: namaFromSession,
-      cabang: selectedCabang,
+      npa: role === "USER" ? userData.npaPgri : userData.npapgri,
+      nama: role === "USER" ? userData.namaLengkap : userData.nama,
+      cabang: userData.cabang,
       uraian: `Mengajukan ${category}`,
       masuk: "-",
       keluar: "-",
       bulan,
       tahun,
       cabang_ke_2: "-",
-      user: namaFromSession,
+      user: role === "USER" ? userData.namaLengkap : userData.nama,
     };
-
+  
     try {
       await GlobalApi.createHistoryData(historyData);
     } catch (error) {
@@ -662,30 +700,30 @@ export default function PengaduanPage() {
   const onSubmit = async (data) => {
     try {
       setLoading(true);
-
-
-      const npa = sessionStorage.getItem("npa");
-      const namaLengkap = sessionStorage.getItem("nama");
-      const email = sessionStorage.getItem("email") || "";
-      const cabang = sessionStorage.getItem("cabang");
-      const unitKerja = sessionStorage.getItem("unitKerja");
-
+      const userId = sessionStorage.getItem("userId");
+      const role = sessionStorage.getItem("role");
+      let userData;
+  
+      if (role === "USER") {
+        userData = await GlobalApi.getUserById(userId);
+      } else {
+        userData = await GlobalApi.getAdminById(userId);
+      }
+  
       const pengaduanData = {
-        namaLengkap,
-        email,
-        npa,
-        cabang,
-        unitKerja,
+        namaLengkap: role === "USER" ? userData.namaLengkap : userData.nama,
+        email: userData.email,
+        npa: role === "USER" ? userData.npaPgri : userData.npapgri,
+        cabang: userData.cabang,
+        unitKerja: role === "USER" ? userData.unitKerja : "-",
         category: selectedCategory, 
         keterangan: data.deskripsi,
         bukti: data.buktiFoto ? data.buktiFoto[0] : null
       };
-
-
+  
       const response = await GlobalApi.createPengaduan(pengaduanData);
-
-      await handleCreateHistory(selectedCategory); 
-
+      await handleCreateHistory(selectedCategory, role); 
+  
       reset();
       setBuktiFoto(null);
       setModalType(null);
@@ -693,7 +731,6 @@ export default function PengaduanPage() {
         type: 'success',
         message: `Pengaduan berhasil dikirim.`
       });
-
     } catch (error) {
       console.error("Error submitting pengaduan:", error);
       setNotification({
