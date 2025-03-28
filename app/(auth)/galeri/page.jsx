@@ -299,41 +299,23 @@ const Page = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
+  
     try {
-      const formData = new FormData();
-      formData.append("deskripsi", deskripsi);
-      formData.append("category", category);
-      if (category === "EVENT") {
-        formData.append("namaEvent", namaEvent);
-      }
-      if (selectedFile) {
-        formData.append("photo", selectedFile);
-      }
-
       let newGallery;
       if (editingId) {
-        const updateData = {
+        newGallery = await GlobalApi.updateSidebarGallery(editingId, {
           category: category,
           deskripsi: deskripsi,
           namaEvent: category === "EVENT" ? namaEvent : undefined,
           photo: selectedFile,
-        };
-
-        newGallery = await GlobalApi.updateSidebarGallery(
-          editingId,
-          updateData
-        );
-        setGalleries((prevGalleries) =>
-          prevGalleries.map((gallery) =>
-            gallery.id === editingId ? newGallery : gallery
-          )
-        );
-
-        setNotification({
-          type: 'success',
-          message: 'Data berhasil diperbarui!'
         });
+  
+        setGalleries(prev => ({
+          ...prev,
+          [category.replace(' ', '_')]: prev[category.replace(' ', '_')].map(
+            gallery => gallery.id === editingId ? newGallery : gallery
+          )
+        }));
       } else {
         newGallery = await GlobalApi.createSidebarGallery({
           category: category,
@@ -341,22 +323,30 @@ const Page = () => {
           namaEvent: category === "EVENT" ? namaEvent : undefined,
           photo: selectedFile,
         });
-        setGalleries((prevGalleries) => {
-          const updatedGalleries = [...prevGalleries, newGallery];
-          const newItemIndex = updatedGalleries.length - 1;
+  
+        setGalleries(prev => {
+          const categoryKey = category.replace(' ', '_');
+          const updatedCategoryGalleries = [...prev[categoryKey], newGallery];
+          
+          return {
+            ...prev,
+            [categoryKey]: updatedCategoryGalleries
+          };
+        });
+  
+        if (category === "NON EVENT") {
+          const newItemIndex = galleries.NON_EVENT.length;
           const newItemPage = Math.floor(newItemIndex / itemsPerPage);
           setCurrentPage(newItemPage);
-          return updatedGalleries;
-        });
-
-        setNotification({
-          type: 'success',
-          message: 'Data berhasil ditambahkan!'
-        });
+        }
       }
-
+  
       resetForm();
-
+      setNotification({
+        type: 'success',
+        message: editingId ? 'Data berhasil diperbarui!' : 'Data berhasil ditambahkan!'
+      });
+  
     } catch (error) {
       console.error("Error saving gallery:", error);
       setNotification({
@@ -372,20 +362,26 @@ const Page = () => {
     if (galleryToDelete) {
       try {
         await GlobalApi.deleteSidebarGallery(galleryToDelete.id);
-        setGalleries((prevGalleries) => {
-          const updatedGalleries = prevGalleries.filter(
+        
+        setGalleries((prev) => {
+          const categoryKey = galleryToDelete.category.replace(' ', '_');
+          const updatedCategoryGalleries = prev[categoryKey].filter(
             (gallery) => gallery.id !== galleryToDelete.id
           );
-          const totalPages = Math.ceil(updatedGalleries.length / itemsPerPage);
-
-          if (currentPage >= totalPages && totalPages > 0) {
+          
+          const totalPages = Math.ceil(updatedCategoryGalleries.length / itemsPerPage);
+          
+          if (categoryKey === "NON_EVENT" && currentPage >= totalPages && totalPages > 0) {
             setCurrentPage(totalPages - 1);
           }
-
-          return updatedGalleries;
+  
+          return {
+            ...prev,
+            [categoryKey]: updatedCategoryGalleries
+          };
         });
+  
         setIsDeleteModalOpen(false);
-
         setNotification({
           type: 'success',
           message: 'Data berhasil dihapus!'
