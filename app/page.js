@@ -1,5 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faTimesCircle,
+} from "@fortawesome/free-solid-svg-icons";
 import Slider from "./_components/Slider";
 import LayananKami from "./_components/LayananKami";
 import Flowchart from "./_components/Flowchart";
@@ -11,7 +15,7 @@ import { useRouter } from "next/navigation";
 import GlobalApi from "./_utils/GlobalApi";
 
 export default function Home() {
-  const [isPopupVisible, setIsPopupVisible] = useState(false); 
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [infoGallery, setInfoGallery] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -44,10 +48,10 @@ export default function Home() {
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = text;
     const cleanText = tempDiv.textContent || tempDiv.innerText || "";
-    
+
     const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/i;
     const match = cleanText.match(urlRegex);
-    
+
     if (match) {
       let url = match[0];
       if (url.startsWith('www.')) {
@@ -62,7 +66,7 @@ export default function Home() {
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = text;
     const cleanText = tempDiv.textContent || tempDiv.innerText || "";
-    
+
     const urlRegex = /https?:\/\/|www\./i;
     return urlRegex.test(cleanText);
   };
@@ -86,51 +90,50 @@ export default function Home() {
     <div>
       {/* Popup Section */}
       {isPopupVisible && infoGallery && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-          <div className="relative p-6 w-11/12 max-w-lg text-center">
-            <button
-              className="absolute top-0 right-0 text-white hover:text-gray-700 text-2xl font-bold"
-              onClick={closePopup}
-            >
-              &times;
-            </button>
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="relative w-full max-w-[90vw] max-h-[90vh] text-center flex flex-col items-center my-auto">
+            <div className="relative w-auto max-w-full max-h-full flex flex-col items-center rounded-lg">
+              <button
+                className="absolute top-3 right-2 text-red-500 hover:text-gray-400 z-50 p-2"
+                onClick={closePopup}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onMouseUp={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+              >
+                <FontAwesomeIcon
+                  icon={faTimesCircle}
+                  className="w-5 h-5 pointer-events-none"
+                />
+              </button>
 
-            <div className="relative">
               {isLoading ? (
                 <div className="w-full h-80 bg-gray-200 animate-pulse rounded-lg flex items-center justify-center">
                   <p className="text-gray-500">Loading...</p>
                 </div>
               ) : infoGallery && infoGallery.photo ? (
-                <div className="relative w-full max-h-80">
-                  <Image
+                <div className="relative w-auto max-w-full p-2">
+                  <img
                     src={`data:image/jpeg;base64,${infoGallery.photo}`}
                     alt={infoGallery.deskripsi || "Info Image"}
-                    width={800} 
-                    height={600} 
-                    className="w-full h-auto max-h-80 rounded-lg"
-                    priority 
+                    className="w-auto max-w-full max-h-[70vh] object-contain rounded-lg"
                   />
                 </div>
               ) : (
-                <Image
-                  className="w-full h-auto max-h-80 rounded-lg"
+                <img
+                  className="w-auto max-w-full max-h-[70vh] object-contain rounded-lg"
                   src={"/gif_hal_depan.gif"}
                   alt="Default Popup"
-                  width={800} 
-                  height={600} 
-                  priority 
                 />
               )}
 
               {showButton && (
                 <button
-                  className="absolute bg-blue-500 hover:bg-blue-600 text-white mt-6 px-4 py-2 rounded-lg"
-                  style={{
-                    top: "95%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    zIndex: 10,
-                  }}
+                  className="bg-blue-500 hover:bg-blue-600 text-white mt-2 px-4 py-2 rounded-lg"
                   onClick={handleLogin}
                 >
                   Selengkapnya

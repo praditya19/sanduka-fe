@@ -137,7 +137,11 @@ const NotificationPopup = ({ type, message, onClose }) => {
 const Page = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [galleries, setGalleries] = useState([]);
+  const [galleries, setGalleries] = useState({
+    NON_EVENT: [],
+    EVENT: [],
+    INFO: []
+  });
   const [selectedFile, setSelectedFile] = useState(null);
   const [deskripsi, setDeskripsi] = useState("");
   const [category, setCategory] = useState("NON EVENT");
@@ -168,7 +172,9 @@ const Page = () => {
     handleResize();
     window.addEventListener("resize", handleResize);
 
-    fetchGalleries();
+    fetchNonEventGalleries();
+    fetchEventGalleries();
+    fetchInfoGalleries();
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -180,32 +186,73 @@ const Page = () => {
     }
   }, [galleries, currentPage]);
 
-  const fetchGalleries = async () => {
+  const fetchNonEventGalleries = async () => {
     try {
-      const data = await GlobalApi.getAllSidebarGallery();
+      const nonEventGalleries = await GlobalApi.getSidebarGalleryByCategory('NON EVENT');
 
-      await Promise.all(
-        data.map(async (gallery) => {
-          if (gallery.photo) {
-            return new Promise((resolve) => {
-              const img = new Image();
-              img.src = `data:image/jpeg;base64,${gallery.photo}`;
-              img.onload = () => resolve();
-              img.onerror = () => resolve();
-            });
-          }
-          return Promise.resolve();
-        })
-      );
+      await Promise.all(nonEventGalleries.map(preloadImage));
 
-      setGalleries(data);
+      setGalleries(prev => ({
+        ...prev,
+        NON_EVENT: nonEventGalleries
+      }));
     } catch (error) {
-      console.error("Error fetching galleries:", error);
+      console.error("Error fetching NON EVENT galleries:", error);
       setNotification({
         type: 'error',
-        message: 'Gagal mengambil data galeri. Silakan coba lagi.'
+        message: 'Gagal mengambil data galeri NON EVENT. Silakan coba lagi.'
       });
     }
+  };
+
+  const fetchEventGalleries = async () => {
+    try {
+      const eventGalleries = await GlobalApi.getSidebarGalleryByCategory('EVENT');
+
+      await Promise.all(eventGalleries.map(preloadImage));
+
+      setGalleries(prev => ({
+        ...prev,
+        EVENT: eventGalleries
+      }));
+    } catch (error) {
+      console.error("Error fetching EVENT galleries:", error);
+      setNotification({
+        type: 'error',
+        message: 'Gagal mengambil data galeri EVENT. Silakan coba lagi.'
+      });
+    }
+  };
+
+  const fetchInfoGalleries = async () => {
+    try {
+      const infoGalleries = await GlobalApi.getSidebarGalleryByCategory('INFO');
+
+      await Promise.all(infoGalleries.map(preloadImage));
+
+      setGalleries(prev => ({
+        ...prev,
+        INFO: infoGalleries
+      }));
+    } catch (error) {
+      console.error("Error fetching INFO galleries:", error);
+      setNotification({
+        type: 'error',
+        message: 'Gagal mengambil data galeri INFO. Silakan coba lagi.'
+      });
+    }
+  };
+
+  const preloadImage = (gallery) => {
+    if (gallery.photo) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.src = `data:image/jpeg;base64,${gallery.photo}`;
+        img.onload = resolve;
+        img.onerror = resolve;
+      });
+    }
+    return Promise.resolve();
   };
 
   const toggleSidebar = () => {
@@ -252,41 +299,23 @@ const Page = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
+  
     try {
-      const formData = new FormData();
-      formData.append("deskripsi", deskripsi);
-      formData.append("category", category);
-      if (category === "EVENT") {
-        formData.append("namaEvent", namaEvent);
-      }
-      if (selectedFile) {
-        formData.append("photo", selectedFile);
-      }
-
       let newGallery;
       if (editingId) {
-        const updateData = {
+        newGallery = await GlobalApi.updateSidebarGallery(editingId, {
           category: category,
           deskripsi: deskripsi,
           namaEvent: category === "EVENT" ? namaEvent : undefined,
           photo: selectedFile,
-        };
-
-        newGallery = await GlobalApi.updateSidebarGallery(
-          editingId,
-          updateData
-        );
-        setGalleries((prevGalleries) =>
-          prevGalleries.map((gallery) =>
-            gallery.id === editingId ? newGallery : gallery
-          )
-        );
-
-        setNotification({
-          type: 'success',
-          message: 'Data berhasil diperbarui!'
         });
+  
+        setGalleries(prev => ({
+          ...prev,
+          [category.replace(' ', '_')]: prev[category.replace(' ', '_')].map(
+            gallery => gallery.id === editingId ? newGallery : gallery
+          )
+        }));
       } else {
         newGallery = await GlobalApi.createSidebarGallery({
           category: category,
@@ -294,22 +323,30 @@ const Page = () => {
           namaEvent: category === "EVENT" ? namaEvent : undefined,
           photo: selectedFile,
         });
-        setGalleries((prevGalleries) => {
-          const updatedGalleries = [...prevGalleries, newGallery];
-          const newItemIndex = updatedGalleries.length - 1;
+  
+        setGalleries(prev => {
+          const categoryKey = category.replace(' ', '_');
+          const updatedCategoryGalleries = [...prev[categoryKey], newGallery];
+          
+          return {
+            ...prev,
+            [categoryKey]: updatedCategoryGalleries
+          };
+        });
+  
+        if (category === "NON EVENT") {
+          const newItemIndex = galleries.NON_EVENT.length;
           const newItemPage = Math.floor(newItemIndex / itemsPerPage);
           setCurrentPage(newItemPage);
-          return updatedGalleries;
-        });
-
-        setNotification({
-          type: 'success',
-          message: 'Data berhasil ditambahkan!'
-        });
+        }
       }
-
+  
       resetForm();
-
+      setNotification({
+        type: 'success',
+        message: editingId ? 'Data berhasil diperbarui!' : 'Data berhasil ditambahkan!'
+      });
+  
     } catch (error) {
       console.error("Error saving gallery:", error);
       setNotification({
@@ -325,20 +362,26 @@ const Page = () => {
     if (galleryToDelete) {
       try {
         await GlobalApi.deleteSidebarGallery(galleryToDelete.id);
-        setGalleries((prevGalleries) => {
-          const updatedGalleries = prevGalleries.filter(
+        
+        setGalleries((prev) => {
+          const categoryKey = galleryToDelete.category.replace(' ', '_');
+          const updatedCategoryGalleries = prev[categoryKey].filter(
             (gallery) => gallery.id !== galleryToDelete.id
           );
-          const totalPages = Math.ceil(updatedGalleries.length / itemsPerPage);
-
-          if (currentPage >= totalPages && totalPages > 0) {
+          
+          const totalPages = Math.ceil(updatedCategoryGalleries.length / itemsPerPage);
+          
+          if (categoryKey === "NON_EVENT" && currentPage >= totalPages && totalPages > 0) {
             setCurrentPage(totalPages - 1);
           }
-
-          return updatedGalleries;
+  
+          return {
+            ...prev,
+            [categoryKey]: updatedCategoryGalleries
+          };
         });
+  
         setIsDeleteModalOpen(false);
-
         setNotification({
           type: 'success',
           message: 'Data berhasil dihapus!'
@@ -360,16 +403,14 @@ const Page = () => {
 
   const indexOfLastItem = (currentPage + 1) * itemsPerPage;
   const indexOfFirstItem = currentPage * itemsPerPage;
-  const currentItems = galleries
-    .filter((gallery) => gallery.category === "NON EVENT")
-    .slice(indexOfFirstItem, indexOfLastItem);
-  const eventItems = galleries.filter(
-    (gallery) => gallery.category === "EVENT"
+  const currentItems = galleries.NON_EVENT.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
   );
-  const totalPages = Math.ceil(
-    galleries.filter((gallery) => gallery.category === "NON EVENT").length /
-    itemsPerPage
-  );
+  // const eventItems = galleries.filter(
+  //   (gallery) => gallery.category === "EVENT"
+  // );
+  const totalPages = Math.ceil(galleries.NON_EVENT.length / itemsPerPage);
 
   const DeleteConfirmationModal = () => {
     if (!isDeleteModalOpen) return null;
@@ -517,7 +558,6 @@ const Page = () => {
 
         const blob = new Blob([byteArray], { type: mimeType });
 
-        // Format nama file sesuai dengan yang diinginkan
         const fileName = `Dokumen ${namaEvent} - ${namaPeserta}${fileExtension}`;
 
         const blobUrl = URL.createObjectURL(blob);
@@ -1330,7 +1370,7 @@ const Page = () => {
             <div className="bg-white p-6 rounded-lg shadow-md w-full mt-8">
               <h2 className="text-xl font-bold mb-4">Event</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {eventItems.map((gallery) => (
+                {galleries.EVENT.map((gallery) => (
                   <GalleryItem key={gallery.id} gallery={gallery} />
                 ))}
               </div>
@@ -1339,11 +1379,9 @@ const Page = () => {
             <div className="bg-white p-6 rounded-lg shadow-md w-full mt-8">
               <h2 className="text-xl font-bold mb-4">Info</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {galleries
-                  .filter((gallery) => gallery.category === "INFO")
-                  .map((gallery) => (
-                    <GalleryItem key={gallery.id} gallery={gallery} />
-                  ))}
+                {galleries.INFO.map((gallery) => (
+                  <GalleryItem key={gallery.id} gallery={gallery} />
+                ))}
               </div>
             </div>
           </div>
