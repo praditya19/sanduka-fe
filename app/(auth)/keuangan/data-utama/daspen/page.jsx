@@ -115,7 +115,7 @@ export default function Daspen() {
 
   const [cabangList, setCabangList] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
-
+  const [selectedRow, setSelectedRow] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredTableData, setFilteredTableData] = useState(tableData);
@@ -124,7 +124,7 @@ export default function Daspen() {
   const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
   const [chosenCabang, setChosenCabang] = useState("");
   const [cabangOptions, setCabangOptions] = useState([]);
-
+  const [isEditing, setIsEditing] = useState(false);
   const [newCabangList, setNewCabangList] = useState([]);
   const [selectedBulanBaru, setSelectedBulanBaru] = useState("");
   const [newSelectedYear, setNewSelectedYear] = useState(
@@ -139,7 +139,7 @@ export default function Daspen() {
         newSelectedYear,
         newCabangList
       );
-
+      console.log(data)
       const jumlahRow = data.find((row) => row["Cabang/Khusus"] === "Jumlah");
       const filteredData = data.filter(
         (row) => row["Cabang/Khusus"] !== "Jumlah"
@@ -392,6 +392,50 @@ export default function Daspen() {
       });
     }
   };
+
+  const handleEdit = (row) => {
+    setSelectedRow(row);
+    setSelectedCabang(row["Cabang/Khusus"] || "");
+    setKat1(row["Anggota Kategori I"] || 0);
+    setKat2(row["Anggota Kategori II"] || 0);
+    setKat3(row["Anggota Kategori III"] || 0);
+    // setBulan(row["Bulan"] || "");
+    // setTahun(row["Tahun"] || "");
+    // setSelectedItemId(row.id);
+    setIsEditing(true);
+  };
+
+  // const handleSaveUpdate = async () => {
+  //   const updatedData = {
+  //     cabang: selectedCabang,
+  //     kategori1: isNaN(kat1) ? 0 : kat1,
+  //     kategori2: isNaN(kat2) ? 0 : kat2,
+  //     kategori3: isNaN(kat3) ? 0 : kat3,
+  //     bulan:"",
+  //     tahun:"",
+  //   };
+  
+  //   try {
+  //     await GlobalApi.updateTargetDaspen(selectedItemId, updatedData);
+  
+  //     setIsEditing(false);
+  //     setSelectedItemId(null);
+  //   } catch (error) {
+  //     alert("Gagal memperbarui data.");
+  //   }
+  // };  
+
+  const handleDelete = async (id) => {
+    try {
+      await GlobalApi.deleteTargetDaspen(id);
+      setTableData((prevData) => prevData.filter((item) => item.ID !== id));
+      setFilteredTableData((prevData) => prevData.filter((item) => item.ID !== id));
+      fetchData();
+    } catch (error) {
+      console.error("Gagal menghapus data:", error);
+      alert("Gagal menghapus data!");
+    }
+  };  
 
   useEffect(() => {
     setValueKat1(kat1 * katagori1Lainnya);
@@ -711,50 +755,41 @@ export default function Daspen() {
                       </div>
                     </div>
                     <div className="flex flex-col">
-                      <Label
-                        htmlFor="kat1"
-                        className="text-gray-700 text-sm font-semibold mb-2"
-                      >
-                        Kat I
-                      </Label>
-                      <Input
-                        type="number"
-                        id="kat1"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                        value={kat1}
-                        onChange={(e) => setKat1(parseInt(e.target.value))}
-                      />
-                    </div>
-                    <div className="flex flex-col">
-                      <Label
-                        htmlFor="kat2"
-                        className="text-gray-700 text-sm font-semibold mb-2"
-                      >
-                        Kat II
-                      </Label>
-                      <Input
-                        type="number"
-                        id="kat2"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                        value={kat2}
-                        onChange={(e) => setKat2(parseInt(e.target.value))}
-                      />
-                    </div>
-                    <div className="flex flex-col">
-                      <Label
-                        htmlFor="kat3"
-                        className="text-gray-700 text-sm font-semibold mb-2"
-                      >
-                        Kat III
-                      </Label>
-                      <Input
-                        type="number"
-                        id="kat3"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
-                        value={kat3}
-                        onChange={(e) => setKat3(parseInt(e.target.value))}
-                      />
-                    </div>
+  <Label htmlFor="kat1" className="text-gray-700 text-sm font-semibold mb-2">
+    Kat I
+  </Label>
+  <Input
+    type="number"
+    id="kat1"
+    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+    value={kat1}
+    onChange={(e) => setKat1(e.target.value ? parseInt(e.target.value) : 0)}
+  />
+</div>
+<div className="flex flex-col">
+  <Label htmlFor="kat2" className="text-gray-700 text-sm font-semibold mb-2">
+    Kat II
+  </Label>
+  <Input
+    type="number"
+    id="kat2"
+    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+    value={kat2}
+    onChange={(e) => setKat2(e.target.value ? parseInt(e.target.value) : 0)}
+  />
+</div>
+<div className="flex flex-col">
+  <Label htmlFor="kat3" className="text-gray-700 text-sm font-semibold mb-2">
+    Kat III
+  </Label>
+  <Input
+    type="number"
+    id="kat3"
+    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+    value={kat3}
+    onChange={(e) => setKat3(e.target.value ? parseInt(e.target.value) : 0)}
+  />
+</div>
                   </div>
                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
                     <div className="flex flex-col">
@@ -823,12 +858,12 @@ export default function Daspen() {
                     </div>
                   </div>
                   <div className="mt-8 flex justify-center space-x-4">
-                    <Button
-                      className="bg-blue-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-blue-600 transition duration-150 ease-in-out"
-                      onClick={handleSubmitTarget}
-                    >
-                      Submit
-                    </Button>
+                  <Button
+  className="bg-blue-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-blue-600 transition duration-150 ease-in-out"
+  onClick={isEditing ? handleSaveUpdate : handleSubmitTarget}
+>
+  {isEditing ? "Update" : "Submit"}
+</Button>
                     <Button
                       className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-gray-600 transition duration-150 ease-in-out"
                       onClick={handleReset}
@@ -983,6 +1018,13 @@ export default function Daspen() {
                     >
                       Total
                     </th>
+                    <th
+                      scope="col"
+                      colSpan={2}
+                      className="px-6 py-3 border-b border-gray-200 dark:border-gray-700 text-sm text-center"
+                    >
+                      Action
+                    </th>
                   </tr>
                   <tr>
                     <th
@@ -1105,6 +1147,16 @@ export default function Daspen() {
                               "en-US"
                             )}
                           </td>
+                          <td className="border flex px-6 py-4 text-center text-sm text-black">
+  <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded mr-2" 
+    onClick={() => handleEdit(row)}>
+    Edit
+  </button>
+  <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded" 
+    onClick={() => handleDelete(row.ID)}>
+    Hapus
+  </button>
+</td>
                         </tr>
                       );
                     })

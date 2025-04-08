@@ -886,7 +886,7 @@ const getTotalAnggotaByCabang = async (cabang) => {
   }
 };
 // END
-// DASPEN start (Sumbangan Daspen)
+// DASPEN start (Data Utama)
 const createDaspenData = async (payload) => {
   try {
     const response = await axiosClient.post("/api/tabel-daspen", payload);
@@ -896,7 +896,6 @@ const createDaspenData = async (payload) => {
     throw error;
   }
 };
-// (Target Daspen)
 const createTargetDaspen = async (payload) => {
   try {
     const response = await axiosClient.post("/api/target-daspen", payload);
@@ -906,7 +905,6 @@ const createTargetDaspen = async (payload) => {
     throw error;
   }
 };
-// Table Daspen
 const getTableDaspen = async (bulan, tahun, cabang) => {
   try {
     const response = await axiosClient.get(
@@ -915,6 +913,24 @@ const getTableDaspen = async (bulan, tahun, cabang) => {
     return response.data;
   } catch (error) {
     console.error("Error fetching total sumbangan:", error);
+    throw error;
+  }
+};
+const deleteTargetDaspen = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/target-daspen/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching derap data: ", error);
+    throw error;
+  }
+};
+const updateTargetDaspen = async (id, updatedData) => {
+  try {
+    const response = await axiosClient.put(`/api/target-daspen/${id}`, updatedData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating derap data: ", error);
     throw error;
   }
 };
@@ -950,6 +966,24 @@ const getTableDerap = async (bulan, tahun, cabang) => {
     throw error;
   }
 };
+const deleteDerap = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/target-derap/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching derap data: ", error);
+    throw error;
+  }
+};
+const updateDerap = async (id, updatedData) => {
+  try {
+    const response = await axiosClient.put(`/api/target-derap/${id}`, updatedData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating derap data: ", error);
+    throw error;
+  }
+};
 // End
 // Start Kalender
 const createKalenderData = async (payload) => {
@@ -979,6 +1013,24 @@ const getTableKalender = async (bulan, tahun, cabang) => {
     return response.data;
   } catch (error) {
     console.error("Error fetching total Kalender:", error);
+    throw error;
+  }
+};
+const deleteKalender = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/target-kalender/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching derap data: ", error);
+    throw error;
+  }
+};
+const updateKalender = async (id, updatedData) => {
+  try {
+    const response = await axiosClient.put(`/api/target-kalender/${id}`, updatedData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating derap data: ", error);
     throw error;
   }
 };
@@ -2190,6 +2242,12 @@ export default {
   getRekapRanting,
   addPesertaEvent,
   getAllPeserta,
+  deleteKalender,
+  updateKalender,
+  deleteTargetDaspen,
+  updateTargetDaspen,
+  deleteDerap,
+  updateDerap,
   deletePeserta,
   createPengaduan,
   getAllPengaduan,

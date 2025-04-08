@@ -113,6 +113,10 @@ function DerapForm() {
   const currentYear = new Date().getFullYear();
   const startYear = 2020;
   const [newCabangList, setNewCabangList] = useState([]);
+  const [selectedItemId, setSelectedItemId] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [bulan, setBulan] = useState("");
+const [tahun, setTahun] = useState(""); 
   const [selectedBulanBaru, setSelectedBulanBaru] = useState("");
   const [newSelectedYear, setNewSelectedYear] = useState(
     new Date().getFullYear()
@@ -127,6 +131,7 @@ function DerapForm() {
           newSelectedYear,
           newCabangList
         );
+        console.log(data)
         setTableData(data);
         setFilteredTableData(data);
       } catch (error) {
@@ -367,6 +372,62 @@ function DerapForm() {
       });
     }
   };
+
+  const handleUpdate = (id) => {
+    const selectedItem = filteredTableData.find((item) => item.id === id);
+    if (selectedItem) {
+      setSelectedCabang(selectedItem.cabang);
+      setJumlahPesanan(selectedItem.jumlah);
+      setBulan(selectedItem.bulan);  // Ambil bulan dari data API
+      setTahun(selectedItem.tahun);  // Ambil tahun dari data API
+      setSelectedItemId(id);
+      setIsEditMode(true); // Aktifkan mode edit
+    }
+  };
+
+  const handleSaveUpdate = async () => {
+    if (!selectedItemId) return;
+  
+    const updatedData = {
+      cabang: selectedCabang,
+      jumlah: jumlahPesanan,
+      bulan,
+      tahun,
+    };
+  
+    try {
+      await GlobalApi.updateDerap(selectedItemId, updatedData);
+  
+      setTableData((prevData) =>
+        prevData.map((item) =>
+          item.id === selectedItemId ? { ...item, ...updatedData } : item
+        )
+      );
+  
+      setFilteredTableData((prevData) =>
+        prevData.map((item) =>
+          item.id === selectedItemId ? { ...item, ...updatedData } : item
+        )
+      );
+  
+      setIsEditMode(false);
+      setSelectedItemId(null);
+    } catch (error) {
+      alert("Gagal memperbarui data.");
+    }
+  };
+  
+  const handleDelete = async (id) => {
+    console.log("Hapus item dengan ID:", id);
+    try {
+      await GlobalApi.deleteDerap(id);
+      setTableData((prevData) => prevData.filter((item) => item.id !== id));
+      setFilteredTableData((prevData) => prevData.filter((item) => item.id !== id));
+    } catch (error) {
+      console.error("Gagal menghapus data:", error);
+      alert("Gagal menghapus data!");
+    }
+  };  
 
   const calculateTotalHarga = () => {
     const hargaProvinsi = parseInt(provinsi) || 0;
@@ -648,7 +709,8 @@ function DerapForm() {
                       id="jumlahPesananInput"
                       className="w-full lg:w-1/3 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out mt-2 lg:mt-0 lg:ml-4"
                       value={jumlahPesanan}
-                      onChange={handleJumlahPesananChange}
+                      // onChange={handleJumlahPesananChange}
+                      onChange={(e) => setJumlahPesanan(e.target.value)}
                       onKeyPress={handleKeyPress}
                     />
                   </div>
@@ -661,11 +723,11 @@ function DerapForm() {
                       Hitung
                     </Button>
                     <Button
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
-                      onClick={handleSubmit}
-                    >
-                      Simpan
-                    </Button>
+    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
+    onClick={isEditMode ? handleSaveUpdate : handleSubmit}
+  >
+    {isEditMode ? "Update" : "Simpan"}
+  </Button>
                     <Button
                       className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-600 transition duration-150 ease-in-out"
                       onClick={resetForm}
@@ -817,75 +879,51 @@ function DerapForm() {
             </div>
 
             <div ref={tableRef} className="overflow-x-auto">
-              <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
-                  <tr>
-                    <th
-                      scope="col"
-                      className="border px-6 py-3 text-center text-sm"
-                    >
-                      No
-                    </th>
-                    <th
-                      scope="col"
-                      className="border px-6 py-3 text-center text-sm"
-                    >
-                      Cabang Khusus
-                    </th>
-                    <th
-                      scope="col"
-                      className="border px-6 py-3 text-center text-sm"
-                    >
-                      Pesanan
-                    </th>
-                    <th
-                      scope="col"
-                      className="border px-6 py-3 text-center text-sm"
-                    >
-                      Total
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTableData.length > 0 ? (
-                    filteredTableData.map((item, index) => (
-                      <tr
-                        key={item.id}
-                        className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
-                      >
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {index + 1}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {item.cabang}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {item.jumlah}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {" "}
-                          {formatRupiah(
-                            calculateTotal(
-                              item.jumlah,
-                              parseInt(firstItem.cabang),
-                              parseInt(firstItem.kabupaten),
-                              parseInt(firstItem.propinsi)
-                            )
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                      <td className="px-6 py-4"></td>
-                      <td className="px-6 py-4">Jumlah</td>
-                      <td className="px-6 py-4">0</td>
-                      <td className="px-6 py-4">0</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+  <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
+    <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
+      <tr>
+        <th scope="col" className="border px-6 py-3 text-center text-sm">No</th>
+        <th scope="col" className="border px-6 py-3 text-center text-sm">Cabang Khusus</th>
+        <th scope="col" className="border px-6 py-3 text-center text-sm">Pesanan</th>
+        <th scope="col" className="border px-6 py-3 text-center text-sm">Total</th>
+        <th scope="col" className="border px-6 py-3 text-center text-sm">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {filteredTableData.length > 0 ? (
+        filteredTableData.map((item, index) => (
+          <tr key={item.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+            <td className="border px-6 py-4 text-center text-sm text-black">{index + 1}</td>
+            <td className="border px-6 py-4 text-center text-sm text-black">{item.cabang}</td>
+            <td className="border px-6 py-4 text-center text-sm text-black">{item.jumlah}</td>
+            <td className="border px-6 py-4 text-center text-sm text-black">
+              {formatRupiah(
+                calculateTotal(
+                  item.jumlah,
+                  parseInt(firstItem.cabang),
+                  parseInt(firstItem.kabupaten),
+                  parseInt(firstItem.propinsi)
+                )
+              )}
+            </td>
+            <td className="border px-6 py-4 text-center text-sm text-black">
+              <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded mr-2" onClick={() => handleUpdate(item.id)}>Edit</button>
+              <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded" onClick={() => handleDelete(item.id)}>Hapus</button>
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+          <td className="px-6 py-4"></td>
+          <td className="px-6 py-4">Jumlah</td>
+          <td className="px-6 py-4">0</td>
+          <td className="px-6 py-4">0</td>
+          <td className="px-6 py-4"></td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
           </div>
         </div>
       </div>

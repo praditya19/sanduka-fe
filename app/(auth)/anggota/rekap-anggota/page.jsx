@@ -41,6 +41,11 @@ function RekapAnggota() {
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [searchCabang, setSearchCabang] = useState("");
   const [searchUnitKerja, setSearchUnitKerja] = useState("");
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedKategori, setSelectedKategori] = useState('');
+  const [nominal, setNominal] = useState('');
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -72,6 +77,29 @@ function RekapAnggota() {
       setShowUnitKerjaDropdown(true);
     }
   };
+
+  const handleMemberClick = (member) => {
+    setSelectedMember(member);
+    setIsPopupVisible(true);
+  };
+
+  const handleSave = () => {
+    if (!selectedKategori || !nominal) {
+      alert('Kategori dan nominal harus diisi!');
+      return;
+    }
+  
+    // Kirim data ke backend atau state lokal
+    console.log('Data Tersimpan:', {
+      kategori: selectedKategori,
+      nominal: parseInt(nominal),
+    });
+  
+    // Reset form setelah simpan
+    setSelectedKategori('');
+    setNominal('');
+    setShowDropdown(false);
+  };  
 
   const handleCabangClick = () => {
     setFilteredCabangList(originalCabangList);
@@ -304,7 +332,6 @@ function RekapAnggota() {
           const response = await GlobalApi.getNominalAggregatedData(
             storedCabang
           );
-
           const totalRow = response.find(
             (item) => item.cabang === "Total" && !item.unitKerja
           );
@@ -913,7 +940,12 @@ function RekapAnggota() {
                                   <span className="w-6 h-6 flex items-center justify-center bg-teal-200 text-teal-800 rounded-full mr-2 text-xs">
                                     {idx + 1}
                                   </span>
-                                  <span>{member.namaAnggota}</span>
+                                  <span
+  onClick={() => handleMemberClick(member)}
+  className="text-teal-700 hover:underline cursor-pointer"
+>
+  {member.namaAnggota}
+</span>
                                 </div>
                                 <div className="lg:hidden space-y-2 mt-2 bg-white p-3 rounded-lg shadow-sm">
                                   <div className="flex justify-between px-4">
@@ -989,6 +1021,147 @@ function RekapAnggota() {
                   );
                 })}
               </tbody>
+              {isPopupVisible && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+    <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl relative space-y-6">
+      {/* Tombol Tutup */}
+      <button
+        className="absolute top-2 right-2 text-gray-500 hover:text-teal-600 text-xl"
+        onClick={() => setIsPopupVisible(false)}
+      >
+        ✕
+      </button>
+
+      {/* Judul Form */}
+      <h2 className="text-center text-2xl font-bold text-white bg-red-700 py-2 rounded">
+        Form Keuangan
+      </h2>
+
+      {/* Bagian Data Diri & Sinkronisasi */}
+      <div className="flex flex-col md:flex-row gap-4 items-start">
+        {/* Kiri: Foto + Data Diri */}
+        <div className="flex gap-4 w-full md:w-2/3">
+          <img
+            src="https://via.placeholder.com/100" // Ganti dengan foto asli jika ada
+            alt="Profile"
+            className="w-24 h-28 object-cover rounded-lg border"
+          />
+          <div className="text-sm space-y-1">
+            <p><strong>ANI WIDIASTUTI</strong></p>
+            <p>Tempat, Tanggal Lahir: JEPARA, 1-9-19821</p>
+            <p>Nomor Anggota PGRI: 332017900001</p>
+            <p>Nomor Induk Pegawai: 198209012022212018</p>
+            <p>Nomor Induk Kependudukan: 3320084109820008</p>
+          </div>
+        </div>
+
+        {/* Kanan: Info Singkat */}
+        <div className="w-full md:w-1/3 text-sm">
+          <p><strong>BANGSRI</strong>, Guru</p>
+          <p>SDN BANGSRI 6</p>
+          <div className="flex items-center mt-2 gap-2 text-teal-600">
+            <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" strokeWidth="4"></circle>
+            </svg>
+            Sinkronisasi Otomatis
+          </div>
+        </div>
+      </div>
+
+      {/* Form Keuangan */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Kiri: Daftar Kategori */}
+        <div className="space-y-2">
+          {[
+            { label: "Iuran Anggota", value: 8000 },
+            { label: "Sanduka", value: 3000 },
+            { label: "Daspen", value: 17000 },
+            { label: "Kalender", value: 17500 },
+            { label: "Derap", value: 17500 },
+            { label: "Sumbangan HUT", value: 50000 }
+          ].map((item, idx) => (
+            <div key={idx} className="flex items-center justify-between bg-purple-100 px-3 py-2 rounded-md">
+              <span>{item.label}</span>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">Rp. {item.value.toLocaleString()}</span>
+                <button className="text-teal-600">🔄</button>
+                <button className="text-blue-500">🔍</button>
+              </div>
+            </div>
+          ))}
+
+          {/* Total */}
+          <div className="flex items-center justify-between bg-purple-200 px-3 py-2 rounded-md font-bold">
+            <span>Total</span>
+            <span>Rp. 150.000</span>
+          </div>
+        </div>
+
+        {/* Kanan: Tambah Kategori */}
+        <div className="bg-gray-100 rounded-md p-4">
+          <h3 className="text-lg font-semibold text-purple-800 mb-3">Tambah Keuangan</h3>
+          
+          <button
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="flex items-center text-teal-600 hover:text-teal-800 mb-3"
+          >
+            <span className="text-xl mr-2">➕</span> Tambah Kategori
+          </button>
+
+          {showDropdown && (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium">Pilih Kategori Tambahan</label>
+                <select
+                  className="w-full border rounded px-3 py-2"
+                  value={selectedKategori}
+                  onChange={(e) => setSelectedKategori(e.target.value)}
+                >
+                  <option value="">-- Pilih --</option>
+                  <option value="iuran">Iuran</option>
+                  <option value="derap">Derap</option>
+                  <option value="kalender">Kalender</option>
+                  <option value="lain-lain">Lain-Lain</option>
+                </select>
+              </div>
+
+              {selectedKategori && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium">Nominal</label>
+                    <input
+                      type="number"
+                      className="w-full border rounded px-3 py-2"
+                      placeholder="Masukkan nominal"
+                      value={nominal}
+                      onChange={(e) => setNominal(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    onClick={handleSave}
+                    className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-md"
+                  >
+                    Simpan
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Tombol Aksi */}
+      <div className="flex justify-end gap-4 pt-4">
+        <button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md">
+          SAVE
+        </button>
+        <button className="bg-red-700 hover:bg-red-600 text-white px-6 py-2 rounded-md">
+          RESET
+        </button>
+      </div>
+    </div>
+  </div>
+)}
               <tfoot>
                 <tr className="bg-teal-700 text-white font-bold">
                   <td
