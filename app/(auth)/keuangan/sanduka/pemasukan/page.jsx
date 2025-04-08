@@ -373,7 +373,6 @@ function Pemasukan() {
           "Sanduka"
         );
         setTransactions(data);
-        console.log(data);
 
         const saldoAwalData = data.find((item) => item.uraian === "Saldo Awal");
 
@@ -393,56 +392,35 @@ function Pemasukan() {
   }, [selectedBulan, newSelectedYear]);
 
   useEffect(() => {
-    let tempSaldoMap = {};
-    let saldoSebelumnya = 0;
-
-    transactions.forEach((transaction, index) => {
-      let currentSaldo = 0;
-
-      if (transaction.uraian === "Saldo Awal") {
-        saldoSebelumnya = parseFloat(transaction.debet.replace(",", "")) || 0;
-        currentSaldo = saldoSebelumnya;
-      } else {
-        let debet = parseFloat(transaction.debet.replace(",", "")) || 0;
-        let kredit = parseFloat(transaction.kredit.replace(",", "")) || 0;
-
-        currentSaldo = saldoSebelumnya + debet - kredit;
-      }
-
-      tempSaldoMap[index] = currentSaldo;
-      saldoSebelumnya = currentSaldo;
-    });
-
-    setSaldoMap(tempSaldoMap);
-
-    const calculatedTotalSaldo =
-      transactions.reduce((total, transaction) => {
-        // Langsung hitung debet tanpa kondisi khusus
-        const debet = Math.floor(
-          parseFloat(transaction.debet.replace(",", "")) || 0
-        );
-
-        // Log debet setiap transaksi untuk debug
-        // console.log(`Debet (transaksi ${transaction.id}): ${debet}`);
-
-        return total + debet;
-      }, 0) -
-      transactions.reduce((total, transaction) => {
-        const kredit = Math.floor(
-          parseFloat(transaction.kredit.replace(",", "")) || 0
-        );
-
-        // Log kredit setiap transaksi untuk debug
-        // console.log(`Kredit (transaksi ${transaction.id}): ${kredit}`);
-
-        return total + kredit;
-      }, 0);
-
-    // Log total saldo yang dihitung
-    // console.log(`Calculated Total Saldo: ${calculatedTotalSaldo}`);
-
-    setTotalSaldo(calculatedTotalSaldo);
-  }, [transactions]);
+      let tempSaldoMap = {};
+      let saldoSebelumnya = 0;
+    
+      // Iterasi transaksi untuk menghitung saldo
+      transactions.forEach((transaction, index) => {
+        let currentSaldo = 0;
+    
+        if (transaction.uraian === "Saldo Awal") {
+          saldoSebelumnya = parseFloat(transaction.debet.replace(",", "")) || 0;
+          currentSaldo = saldoSebelumnya;
+        } else {
+          let debet = parseFloat(transaction.debet.replace(",", "")) || 0;
+          let kredit = parseFloat(transaction.kredit.replace(",", "")) || 0;
+    
+          currentSaldo = saldoSebelumnya + debet - kredit;
+        }
+    
+        tempSaldoMap[index] = currentSaldo;
+        saldoSebelumnya = currentSaldo;
+      });
+          setSaldoMap(tempSaldoMap);
+    
+      const calculatedTotalSaldo = Object.values(tempSaldoMap).reduce(
+        (total, currentSaldo) => total + currentSaldo,
+        0
+      );
+    
+      setTotalSaldo(calculatedTotalSaldo);
+    }, [transactions]); 
 
   const createSaldoAwal = async () => {
     try {

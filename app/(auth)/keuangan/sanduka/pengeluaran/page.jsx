@@ -236,37 +236,35 @@ function Pengeluaran() {
   useEffect(() => {
     let tempSaldoMap = {};
     let saldoSebelumnya = 0;
-
+  
     // Iterasi transaksi untuk menghitung saldo
     transactions.forEach((transaction, index) => {
       let currentSaldo = 0;
-
+  
       if (transaction.uraian === "Saldo Awal") {
         saldoSebelumnya = parseFloat(transaction.debet.replace(",", "")) || 0;
         currentSaldo = saldoSebelumnya;
       } else {
         let debet = parseFloat(transaction.debet.replace(",", "")) || 0;
         let kredit = parseFloat(transaction.kredit.replace(",", "")) || 0;
-
+  
         currentSaldo = saldoSebelumnya + debet - kredit;
       }
-
+  
       tempSaldoMap[index] = currentSaldo;
       saldoSebelumnya = currentSaldo;
     });
-
-    // Menyimpan hasil perhitungan saldo ke dalam state saldoMap
+  
     setSaldoMap(tempSaldoMap);
-
-    // Menghitung total saldo dari saldoMap
+  
     const calculatedTotalSaldo = Object.values(tempSaldoMap).reduce(
       (total, currentSaldo) => total + currentSaldo,
       0
     );
-
-    // Menyimpan total saldo ke dalam state totalSaldo
+  
     setTotalSaldo(calculatedTotalSaldo);
-  }, [transactions]);
+
+  }, [transactions]);  
 
   const sortedTransactions = (() => {
     if (!transactions) return [];
@@ -633,7 +631,6 @@ function Pengeluaran() {
   };
 
   const handleGetEdit = async (id) => {
-    console.log("ID yang diklik:", id);
     try {
       const data = await GlobalApi.getPemasukanUangMasukById(id);
 
@@ -674,8 +671,6 @@ function Pengeluaran() {
       return;
     }
 
-    console.log("ID yang akan dikirim untuk edit:", editId);
-
     try {
       const data = await GlobalApi.getPemasukanUangMasukById(editId);
 
@@ -695,7 +690,7 @@ function Pengeluaran() {
         jenisPembayaran: "Sanduka",
       };
 
-      console.log("Form Values yang akan dikirim:", updatedFormValues);
+      // console.log("Form Values yang akan dikirim:", updatedFormValues);
 
       setFormValues(updatedFormValues);
 
@@ -786,13 +781,6 @@ function Pengeluaran() {
         ...prevValues,
         nominal: operasional15, // Memasukkan hasil 15% ke nominal
       }));
-
-      // Munculkan hasilnya ke console
-      console.log(
-        `Total Debet: ${formatCurrency(
-          totalDebet
-        )}, 15% dari total Debet: ${formatCurrency(operasional15)}`
-      );
     }
 
     if (name === "tahun" || name === "bulan") {

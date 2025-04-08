@@ -118,6 +118,10 @@ function KalenderForm() {
   const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
   const [chosenCabang, setChosenCabang] = useState("");
   const [cabangOptions, setCabangOptions] = useState([]);
+  const [selectedItemId, setSelectedItemId] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [bulan, setBulan] = useState("");
+  const [tahun, setTahun] = useState(""); 
 
   useEffect(() => {
     const fetchData = async () => {
@@ -367,6 +371,62 @@ function KalenderForm() {
       });
     }
   };
+
+  const handleUpdate = (id) => {
+      const selectedItem = filteredTableData.find((item) => item.id === id);
+      if (selectedItem) {
+        setSelectedCabang(selectedItem.cabang);
+        setJumlahPesanan(selectedItem.jumlah);
+        setBulan(selectedItem.bulan);  // Ambil bulan dari data API
+        setTahun(selectedItem.tahun);  // Ambil tahun dari data API
+        setSelectedItemId(id);
+        setIsEditMode(true); // Aktifkan mode edit
+      }
+    };
+  
+    const handleSaveUpdate = async () => {
+      if (!selectedItemId) return;
+    
+      const updatedData = {
+        cabang: selectedCabang,
+        jumlah: jumlahPesanan,
+        bulan,
+        tahun,
+      };
+    
+      try {
+        await GlobalApi.updateKalender(selectedItemId, updatedData);
+    
+        setTableData((prevData) =>
+          prevData.map((item) =>
+            item.id === selectedItemId ? { ...item, ...updatedData } : item
+          )
+        );
+    
+        setFilteredTableData((prevData) =>
+          prevData.map((item) =>
+            item.id === selectedItemId ? { ...item, ...updatedData } : item
+          )
+        );
+    
+        setIsEditMode(false);
+        setSelectedItemId(null);
+      } catch (error) {
+        alert("Gagal memperbarui data.");
+      }
+  };
+  
+  const handleDelete = async (id) => {
+      console.log("Hapus item dengan ID:", id);
+      try {
+        await GlobalApi.deleteKalender(id);
+        setTableData((prevData) => prevData.filter((item) => item.id !== id));
+        setFilteredTableData((prevData) => prevData.filter((item) => item.id !== id));
+      } catch (error) {
+        console.error("Gagal menghapus data:", error);
+        alert("Gagal menghapus data!");
+      }
+    }; 
 
   const kalenderData = JSON.parse(sessionStorage.getItem("kalenderData"));
 
@@ -656,11 +716,11 @@ function KalenderForm() {
                       Hitung
                     </Button>
                     <Button
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
-                      onClick={handleSubmit}
-                    >
-                      Simpan
-                    </Button>
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
+                        onClick={isEditMode ? handleSaveUpdate : handleSubmit}
+                      >
+                        {isEditMode ? "Update" : "Simpan"}
+                      </Button>
                     <Button
                       className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-600 transition duration-150 ease-in-out"
                       onClick={resetForm}
@@ -827,6 +887,9 @@ function KalenderForm() {
                     <th scope="col" className="px-6 py-3 text-center">
                       Total
                     </th>
+                    <th scope="col" className="px-6 py-3 text-center">
+                    Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -854,6 +917,10 @@ function KalenderForm() {
                               parseInt(firstItem.propinsi)
                             )
                           )}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded mr-2" onClick={() => handleUpdate(item.id)}>Edit</button>
+                        <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded" onClick={() => handleDelete(item.id)}>Hapus</button>
                         </td>
                       </tr>
                     ))
