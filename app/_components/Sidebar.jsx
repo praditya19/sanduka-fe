@@ -11,15 +11,14 @@ import {
   faUserGraduate,
   faWallet,
   faSyncAlt,
-  faUsersGear,
   faCheckCircle,
   faCog,
   faBars,
   faTimes,
-  faChartPie,
   faSitemap,
   faImage,
   faExclamationCircle,
+  faFileInvoiceDollar,
 } from "@fortawesome/free-solid-svg-icons";
 import { faUbuntu } from "@fortawesome/free-brands-svg-icons";
 import { Button } from "@/components/ui/button";
@@ -175,10 +174,10 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
     try {
       let cabang = null;
       if (role === "ADMIN") {
-        cabang = userCabang; 
+        cabang = userCabang;
       }
 
-      const count = await GlobalApi.countNewPengaduan(1, cabang); 
+      const count = await GlobalApi.countNewPengaduan(1, cabang);
       setNewPengaduanCount(count);
     } catch (error) {
       console.error("Error fetching new pengaduan count:", error);
@@ -189,7 +188,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
     if (role === "ADMIN" || role === "SUPER ADMIN") {
       fetchNewPengaduanCount();
 
-      const interval = setInterval(fetchNewPengaduanCount, 60000); 
+      const interval = setInterval(fetchNewPengaduanCount, 60000);
 
       return () => clearInterval(interval);
     }
@@ -205,6 +204,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
         "Data Anggota",
         "History data",
         "Pengaduan",
+        "Tagihan",
       ].includes(item.label);
     } else if (role === "SUPER ADMIN") {
       return true;
@@ -270,9 +270,9 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
                 >
                   {item.label}
                 </span>
-                {item.label === "Pengaduan" && 
-                  (role === "ADMIN" || role === "SUPER ADMIN") && 
-                  newPengaduanCount > 0 && 
+                {item.label === "Pengaduan" &&
+                  (role === "ADMIN" || role === "SUPER ADMIN") &&
+                  newPengaduanCount > 0 &&
                   badgeVisible && (
                     <div className="bg-red-500 text-white rounded-full px-2 py-1 text-xs">
                       {newPengaduanCount}

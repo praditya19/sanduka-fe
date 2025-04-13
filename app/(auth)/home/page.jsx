@@ -31,6 +31,7 @@ import {
   faImage,
   faExclamationCircle,
   faInfoCircle,
+  faFileInvoiceDollar,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import {
@@ -301,28 +302,27 @@ export default function IconGrid() {
     });
   };
 
-  
-    const fetchNewPengaduanCount = async () => {
-      try {
-        let cabang = null;
-        if (role === "ADMIN") {
-          cabang = sessionStorage.getItem("cabang"); 
-        }
-  
-        const count = await GlobalApi.countNewPengaduan(1, cabang); 
-        setNewPengaduanCount(count);
-      } catch (error) {
-        console.error("Error fetching new pengaduan count:", error);
+  const fetchNewPengaduanCount = async () => {
+    try {
+      let cabang = null;
+      if (role === "ADMIN") {
+        cabang = sessionStorage.getItem("cabang");
       }
-    };
-  
-    useEffect(() => {
-      fetchNewPengaduanCount();
-  
-      const interval = setInterval(fetchNewPengaduanCount, 60000); 
-  
-      return () => clearInterval(interval);
-    }, [role]); 
+
+      const count = await GlobalApi.countNewPengaduan(1, cabang);
+      setNewPengaduanCount(count);
+    } catch (error) {
+      console.error("Error fetching new pengaduan count:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNewPengaduanCount();
+
+    const interval = setInterval(fetchNewPengaduanCount, 60000);
+
+    return () => clearInterval(interval);
+  }, [role]);
 
   const sortedData = useMemo(() => {
     try {
@@ -823,9 +823,17 @@ export default function IconGrid() {
             href: "/daspen",
             color: "text-teal-700",
           })
+
+          .concat({
+            icon: faFileInvoiceDollar,
+            label: "Tagihan",
+            href: "/tagihan",
+            color: "text-blue-700",
+          })
           .sort((a, b) => {
             const order = [
               "Lapor",
+              "Tagihan",
               "Detail Anggota",
               "Edit Anggota",
               "Mutasi",
