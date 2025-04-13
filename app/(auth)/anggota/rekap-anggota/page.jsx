@@ -16,6 +16,7 @@ import {
   FaPlus,
   FaPrint,
 } from "react-icons/fa";
+import { FiTrash } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { ClipLoader } from "react-spinners";
 import Image from "next/image";
@@ -669,7 +670,7 @@ function RekapAnggota() {
       try {
         const iuranResponse = await GlobalApi.getIuranAnggota(member.npaPgri);
         setDataIuran(iuranResponse);
-  
+  console.log(iuranResponse)
         if (iuranResponse?.id) {
           setIdIuran(iuranResponse.id);
         }
@@ -851,7 +852,7 @@ function RekapAnggota() {
         iuranSanduka = autoValue + inputValue;
       }
 
-      if ((item.key || "").toLowerCase() === "pgri") {
+      if ((item.key || "").toLowerCase() === "anggota") {
         otomatisValuePgri = autoValue;
         manualValuepgri = inputValue;
         iuranAnggota = autoValue + inputValue;
@@ -1016,7 +1017,7 @@ function RekapAnggota() {
       payload[`totalIuran${capitalizeFirstLetter(key)}`] = total;
     });
 
-    // console.log("Data yang akan diupdate:", payload);
+    console.log("Data yang akan diupdate:", payload);
 
     try {
       await GlobalApi.putIuranAnggota(idIuran, payload);
@@ -1059,13 +1060,40 @@ function RekapAnggota() {
     setGrandTotal(calculateGrandTotal());
   }, [nominalBaruList, manualInputs, addedCategories, groupedIuran]);
 
-  const handleReset = () => {
-    setNominalBaruList(Array(groupedIuran.length).fill(""));
-    setManualInputs({});
-    setAddedCategories([]);
-    setSelectedKategori("");
-    setShowDropdown(false);
-  };
+  const handleReset = async () => {
+    if (!idIuran) {
+      console.warn("ID iuran tidak ditemukan.");
+      return;
+    }
+  
+    try {
+      // Hapus data iuran by ID
+      await GlobalApi.deleteIuranAnggota(idIuran);
+
+      setNotification({
+        type: "success",
+        message: "Data berhasil direset!",
+      });
+  
+      // Reset semua form setelah penghapusan
+      setNominalBaruList(Array(groupedIuran.length).fill(""));
+      setManualInputs({});
+      setAddedCategories([]);
+      setSelectedKategori("");
+      setShowDropdown(false);
+      setDataIuran(null);
+      setIdIuran(null);
+      setIsPopupVisible(false);
+  
+      console.log("Data iuran berhasil dihapus.");
+    } catch (error) {
+      setNotification({
+        type: "error",
+        message: "Gagal mereset data. Silakan coba lagi.",
+      })
+      console.error("Gagal menghapus data iuran:", error);
+    }
+  };  
 
   useEffect(() => {
     if (!token) {
@@ -1817,69 +1845,75 @@ function RekapAnggota() {
                             );
                           })}
 
-                        {addedCategories.map((item, idx) => {
-                          const oldValue = newValues[item.key] ?? 0;
-                          const inputValue = manualInputs[item.key] ?? 0;
-                          const totalValue = oldValue + inputValue;
+{addedCategories.map((item, idx) => {
+  const oldValue = newValues[item.key] ?? 0;
+  const inputValue = manualInputs[item.key] ?? 0;
+  const totalValue = oldValue + inputValue;
 
-                          return (
-                            <div
-                              key={`added-${idx}`}
-                              className="space-y-1 px-3 py-2 rounded-md"
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="font-medium">
-                                  {item.label}
-                                </span>
-                              </div>
-                              <div className="grid grid-cols-3 gap-2 mt-2">
-                                {/* Form 1: Nominal Lama */}
-                                <input
-                                  type="text"
-                                  readOnly
-                                  value={`Rp. ${oldValue.toLocaleString(
-                                    "id-ID"
-                                  )}`}
-                                  className="border px-2 py-1 rounded bg-gray-200 text-center"
-                                />
+  return (
+    <div
+      key={`added-${idx}`}
+      className="space-y-1 px-3 py-2 rounded-md relative"
+    >
+      <div className="flex items-center justify-between">
+        <span className="font-medium">{item.label}</span>
 
-                                {/* Form 2: Input manual */}
-                                <input
-                                  type="text"
-                                  placeholder="Tambahan cabang"
-                                  value={
-                                    inputValue === 0
-                                      ? ""
-                                      : `Rp. ${inputValue.toLocaleString(
-                                          "id-ID"
-                                        )}`
-                                  }
-                                  onChange={(e) => {
-                                    const angka =
-                                      parseInt(
-                                        e.target.value.replace(/[^\d]/g, "")
-                                      ) || 0;
-                                    setManualInputs((prev) => ({
-                                      ...prev,
-                                      [item.key]: angka,
-                                    }));
-                                  }}
-                                  className="border px-2 py-1 rounded text-center"
-                                />
+        {/* Icon Sampah */}
+        <button
+          type="button"
+          onClick={() => {
+            const updatedCategories = addedCategories.filter((_, i) => i !== idx);
+            setAddedCategories(updatedCategories);
+            setManualInputs((prev) => {
+              const newInputs = { ...prev };
+              delete newInputs[item.key];
+              return newInputs;
+            });
+          }}
+          className="text-red-500 hover:text-red-700"
+        >
+          <FiTrash />
+        </button>
+      </div>
 
-                                {/* Form 3: Total */}
-                                <input
-                                  type="text"
-                                  readOnly
-                                  value={`Rp. ${totalValue.toLocaleString(
-                                    "id-ID"
-                                  )}`}
-                                  className="border px-2 py-1 rounded bg-gray-200 text-center"
-                                />
-                              </div>
-                            </div>
-                          );
-                        })}
+      <div className="grid grid-cols-3 gap-2 mt-2">
+        <input
+          type="text"
+          readOnly
+          value={`Rp. ${oldValue.toLocaleString("id-ID")}`}
+          className="border px-2 py-1 rounded bg-gray-200 text-center"
+        />
+
+        <input
+          type="text"
+          placeholder="Tambahan cabang"
+          value={
+            inputValue === 0
+              ? ""
+              : `Rp. ${inputValue.toLocaleString("id-ID")}`
+          }
+          onChange={(e) => {
+            const angka =
+              parseInt(e.target.value.replace(/[^\d]/g, "")) || 0;
+            setManualInputs((prev) => ({
+              ...prev,
+              [item.key]: angka,
+            }));
+          }}
+          className="border px-2 py-1 rounded text-center"
+        />
+
+        <input
+          type="text"
+          readOnly
+          value={`Rp. ${totalValue.toLocaleString("id-ID")}`}
+          className="border px-2 py-1 rounded bg-gray-200 text-center"
+        />
+      </div>
+    </div>
+  );
+})}
+
                         {/* Total */}
                         <div className="flex items-center justify-between bg-purple-200 px-3 py-2 rounded-md font-bold">
                           <span>Total</span>

@@ -1342,6 +1342,15 @@ const putIuranAnggota = async (id, payload) => {
   }
 };
 
+const deleteIuranAnggota = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/iuran-anggota/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error delete iuran data: ", error);
+    throw error;
+  }
+};
 
 const getAllPensiun = (
   page = 0,
@@ -2292,6 +2301,7 @@ export default {
   createResponPengaduan,
   getResponPengaduanByPengaduanId,
   getAllRekapPengaduan,
+  deleteIuranAnggota,
   getIuranAnggota,
   putIuranAnggota,
   deletePengaduan,
