@@ -926,7 +926,10 @@ const deleteTargetDaspen = async (id) => {
 };
 const updateTargetDaspen = async (id, updatedData) => {
   try {
-    const response = await axiosClient.put(`/api/target-daspen/${id}`, updatedData);
+    const response = await axiosClient.put(
+      `/api/target-daspen/${id}`,
+      updatedData
+    );
     return response.data;
   } catch (error) {
     console.error("Error updating derap data: ", error);
@@ -976,7 +979,10 @@ const deleteDerap = async (id) => {
 };
 const updateDerap = async (id, updatedData) => {
   try {
-    const response = await axiosClient.put(`/api/target-derap/${id}`, updatedData);
+    const response = await axiosClient.put(
+      `/api/target-derap/${id}`,
+      updatedData
+    );
     return response.data;
   } catch (error) {
     console.error("Error updating derap data: ", error);
@@ -1026,7 +1032,10 @@ const deleteKalender = async (id) => {
 };
 const updateKalender = async (id, updatedData) => {
   try {
-    const response = await axiosClient.put(`/api/target-kalender/${id}`, updatedData);
+    const response = await axiosClient.put(
+      `/api/target-kalender/${id}`,
+      updatedData
+    );
     return response.data;
   } catch (error) {
     console.error("Error updating derap data: ", error);
@@ -1095,13 +1104,16 @@ const createSaldoAwal = async (saldoAwalRequest) => {
 // Rekap Lapor Sanduka
 const getRekapLaporDiterima = async (bulan, tahun, cabang) => {
   try {
-    const response = await axiosClient.get("/api/rekap-lapor-sanduka/diterima", {
-      params: {
-        cabang: cabang,
-        bulanTransaksi: bulan,
-        tahunTransaksi: tahun,
-      },
-    });
+    const response = await axiosClient.get(
+      "/api/rekap-lapor-sanduka/diterima",
+      {
+        params: {
+          cabang: cabang,
+          bulanTransaksi: bulan,
+          tahunTransaksi: tahun,
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching Data Lapor:", error);
@@ -2000,8 +2012,8 @@ const addPesertaEvent = async (formData) => {
   try {
     const response = await axiosClient.post("/api/event", formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+        "Content-Type": "multipart/form-data",
+      },
     });
     return response.data;
   } catch (error) {
@@ -2092,7 +2104,7 @@ const getPengaduanById = async (id) => {
 
 const getAllRekapPengaduan = async () => {
   try {
-    const response = await axiosClient.get('/api/pengaduan/all');
+    const response = await axiosClient.get("/api/pengaduan/all");
     return response.data;
   } catch (error) {
     throw error;
@@ -2111,11 +2123,11 @@ const deletePengaduan = async (id) => {
 const countNewPengaduan = async (days = 1, cabang = null) => {
   try {
     let url = `/api/pengaduan/count/new?days=${days}`;
-    
+
     if (cabang) {
       url += `&cabang=${cabang}`;
     }
-    
+
     const response = await axiosClient.get(url);
     return response.data;
   } catch (error) {
@@ -2134,7 +2146,9 @@ const createResponPengaduan = async (data) => {
 
 const getResponPengaduanByPengaduanId = async (pengaduanId) => {
   try {
-    const response = await axiosClient.get(`/api/respon-pengaduan/pengaduan/${pengaduanId}`);
+    const response = await axiosClient.get(
+      `/api/respon-pengaduan/pengaduan/${pengaduanId}`
+    );
     return response.data;
   } catch (error) {
     throw error;
@@ -2143,7 +2157,9 @@ const getResponPengaduanByPengaduanId = async (pengaduanId) => {
 
 const countResponsesByPengaduanId = async (pengaduanId) => {
   try {
-    const response = await axiosClient.get(`/api/respon-pengaduan/pengaduan/${pengaduanId}/count`);
+    const response = await axiosClient.get(
+      `/api/respon-pengaduan/pengaduan/${pengaduanId}/count`
+    );
     return response.data;
   } catch (error) {
     throw error;
