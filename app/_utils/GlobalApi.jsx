@@ -1306,6 +1306,43 @@ const getNominalAggregatedData = async (cabang, unitKerja) => {
   }
 };
 
+const postIuranAnggota = async (data) => {
+  try {
+    const response = await axiosClient.post("/api/iuran-anggota", data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error creating iuran anggota:", error);
+    throw error;
+  }
+};
+
+const getIuranAnggota = async (npa) => {
+  try {
+    const response = await axiosClient.get(`/api/iuran-anggota/npa/${npa}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const putIuranAnggota = async (id, payload) => {
+  try {
+    const response = await axiosClient.put(
+      `/api/iuran-anggota/${id}`,
+      payload // <-- tambahkan payload di sini
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error saat update anggota: ", error);
+    throw error;
+  }
+};
+
+
 const getAllPensiun = (
   page = 0,
   size = 10,
@@ -1321,7 +1358,7 @@ const getAllPensiun = (
   if (tahun) params.append("tahun", tahun);
   if (keyword) params.append("keyword", encodeURIComponent(keyword));
 
-  return axiosClient.get(`/api/pensiun?${params.toString()}`); // Mengambil data dari endpoint API
+  return axiosClient.get(`/api/pensiun?${params.toString()}`);
 };
 
 //Notifikasi
@@ -2255,7 +2292,10 @@ export default {
   createResponPengaduan,
   getResponPengaduanByPengaduanId,
   getAllRekapPengaduan,
+  getIuranAnggota,
+  putIuranAnggota,
   deletePengaduan,
+  postIuranAnggota,
   countNewPengaduan,
   countResponsesByPengaduanId,
 };

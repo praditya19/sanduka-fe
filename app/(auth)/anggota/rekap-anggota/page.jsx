@@ -7,9 +7,91 @@ import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Input } from "@/components/ui/input";
-import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
+import {
+  FaPlusCircle,
+  FaMinusCircle,
+  FaTimesCircle,
+  FaCheckCircle,
+  FaExclamationCircle,
+  FaPlus,
+  FaPrint,
+} from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { ClipLoader } from "react-spinners";
+import Image from "next/image";
+
+const NotificationPopup = ({ type, message, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const getBgColor = () => {
+    switch (type) {
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
+      default:
+        return "bg-blue-100";
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case "success":
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case "error":
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
+      default:
+        return "text-blue-800";
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">{getIcon()}</div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === "success" ? "Berhasil!" : "Gagal!"}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>{message}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 function RekapAnggota() {
   const [data, setData] = useState([]);
@@ -44,8 +126,33 @@ function RekapAnggota() {
   const [selectedMember, setSelectedMember] = useState(null);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [selectedKategori, setSelectedKategori] = useState('');
-  const [nominal, setNominal] = useState('');
+  const [selectedKategori, setSelectedKategori] = useState("");
+  const [nominal, setNominal] = useState("");
+  const [dataNpa, setDataNpa] = useState(null);
+  const [fotoBase64, setFotoBase64] = useState(null);
+  const profileImageUrl = "/profile.png";
+  const [nominalBaruList, setNominalBaruList] = useState([]);
+  const [addedCategories, setAddedCategories] = useState([]);
+  const [defaultIuran, setDefaultIuran] = useState(null);
+  const [newValues, setNewValues] = useState({});
+  const [manualInputs, setManualInputs] = useState({});
+  const [dataIuran, setDataIuran] = useState(null);
+  const [grandTotal, setGrandTotal] = useState(0);
+  const [idIuran, setIdIuran] = useState(null);
+  const [formKetiga, setFormKetiga] = useState({
+    iuranAnggota: "",
+    iuranSanduka: "",
+    iuranDaspen: "",
+    iuranDerap: "",
+  });
+  const [totalIuranWilayah, setTotalIuranWilayah] = useState({
+    propinsi: 0,
+    kabupaten: 0,
+    cabang: 0,
+  });
+  const [notification, setNotification] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [daspenValue, setDaspenValue] = useState(null);
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -77,29 +184,6 @@ function RekapAnggota() {
       setShowUnitKerjaDropdown(true);
     }
   };
-
-  const handleMemberClick = (member) => {
-    setSelectedMember(member);
-    setIsPopupVisible(true);
-  };
-
-  const handleSave = () => {
-    if (!selectedKategori || !nominal) {
-      alert('Kategori dan nominal harus diisi!');
-      return;
-    }
-  
-    // Kirim data ke backend atau state lokal
-    console.log('Data Tersimpan:', {
-      kategori: selectedKategori,
-      nominal: parseInt(nominal),
-    });
-  
-    // Reset form setelah simpan
-    setSelectedKategori('');
-    setNominal('');
-    setShowDropdown(false);
-  };  
 
   const handleCabangClick = () => {
     setFilteredCabangList(originalCabangList);
@@ -305,6 +389,7 @@ function RekapAnggota() {
       }
       acc[unitKey].members.push({
         namaAnggota: item.namaAnggota,
+        npaPgri: item.npaPgri,
         pgri: parseFloat(item.pgri) || 0,
         sanduka: parseFloat(item.sanduka) || 0,
         daspen: parseFloat(item.daspen) || 0,
@@ -426,6 +511,561 @@ function RekapAnggota() {
     daspen: 0,
     totalIuran: 0,
   });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const pgriResponse = await GlobalApi.getDefaultIuranById(2);
+      const daspenResponse = await GlobalApi.getDefaultIuranById(4);
+      const derapResponse = await GlobalApi.getDefaultIuranById(3);
+      const kalenderResponse = await GlobalApi.getDefaultIuranById(1);
+
+      sessionStorage.setItem("PGRIData", JSON.stringify(pgriResponse));
+      sessionStorage.setItem("daspenData", JSON.stringify(daspenResponse));
+      sessionStorage.setItem("derapData", JSON.stringify(derapResponse));
+      sessionStorage.setItem("kalenderData", JSON.stringify(kalenderResponse));
+
+      const response = {
+        pgri: pgriResponse,
+        daspen: daspenResponse,
+        derap: derapResponse,
+        kalender: kalenderResponse,
+      };
+
+      setDefaultIuran(response);
+
+      const total = {
+        propinsi:
+          parseInt(kalenderResponse.propinsi || 0) +
+          parseInt(derapResponse.propinsi || 0),
+        kabupaten:
+          parseInt(kalenderResponse.kabupaten || 0) +
+          parseInt(derapResponse.kabupaten || 0),
+        cabang:
+          parseInt(kalenderResponse.cabang || 0) +
+          parseInt(derapResponse.cabang || 0),
+      };
+
+      setTotalIuranWilayah(total);
+      const pgriTotal =
+        parseInt(pgriResponse.pb || 0) +
+        parseInt(pgriResponse.propinsi || 0) +
+        parseInt(pgriResponse.kabupaten || 0) +
+        parseInt(pgriResponse.cabang || 0) +
+        parseInt(pgriResponse.sanduka || 0);
+    };
+
+    const kalenderData = sessionStorage.getItem("kalenderData");
+    const derapData = sessionStorage.getItem("derapData");
+
+    if (kalenderData && derapData) {
+      const kalender = JSON.parse(kalenderData);
+      const derap = JSON.parse(derapData);
+
+      const total = {
+        propinsi:
+          parseInt(kalender.propinsi || 0) + parseInt(derap.propinsi || 0),
+        kabupaten:
+          parseInt(kalender.kabupaten || 0) + parseInt(derap.kabupaten || 0),
+        cabang: parseInt(kalender.cabang || 0) + parseInt(derap.cabang || 0),
+      };
+
+      setTotalIuranWilayah(total);
+    } else {
+      fetchData();
+    }
+  }, []);
+
+  const handlePrintClick = async (member) => {
+    
+    setIsModalOpen(false); 
+  
+    try {
+      const response = await GlobalApi.cekNpaList([member.npaPgri]);
+  
+      setSelectedMember(member);
+      setDataNpa(response[0]);
+  
+      if (response[0].foto) {
+        try {
+          const decodedString = atob(response[0].foto);
+          setFotoBase64(decodedString);
+        } catch (error) {
+          console.error("Error decoding Base64:", error);
+          setFotoBase64(null);
+        }
+      }
+  
+      try {
+        const iuranResponse = await GlobalApi.getIuranAnggota(member.npaPgri);
+        setDataIuran(iuranResponse);
+      } catch (error) {
+        console.error("Gagal mengambil data iuran anggota:", error);
+  
+        if (error.response?.status === 500) {
+          console.warn("Server error 500: menggunakan nilai default dari sessionStorage");
+  
+          const pgriData = JSON.parse(sessionStorage.getItem("PGRIData"));
+          const totalIuranPGRI =
+            parseInt(pgriData.pb || 0) +
+            parseInt(pgriData.propinsi || 0) +
+            parseInt(pgriData.kabupaten || 0) +
+            parseInt(pgriData.cabang || 0);
+  
+          const fallbackData = {
+            iuranAnggota: totalIuranPGRI,
+            manualIuranAnggota: 0,
+            totalIuranAnggota: totalIuranPGRI,
+            iuranSanduka: parseInt(pgriData.sanduka || 0),
+            manualIuranSanduka: 0,
+            totalIuranSanduka: parseInt(pgriData.sanduka || 0),
+          };
+  
+          setDataIuran(fallbackData);
+        }
+      }
+  
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error("Error saat cek NPA:", error);
+      if (error.response?.status === 500) {
+        console.warn("Server error 500: data tidak akan ditampilkan.");
+      }
+    }
+  };  
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedMember(null);
+  };
+
+  const handleMemberClick = async (member) => {
+    setSelectedMember(null);
+    setDataNpa(null);
+    setFotoBase64(null);
+    setDataIuran(null);
+    setIsPopupVisible(false);
+    setIdIuran(null);
+    
+    try {
+      const response = await GlobalApi.cekNpaList([member.npaPgri]);
+  
+      setSelectedMember(member);
+      setDataNpa(response[0]);
+  
+      if (member.daspen) {
+        setDaspenValue(member.daspen); 
+      }
+  
+      if (response[0].foto) {
+        try {
+          const decodedString = atob(response[0].foto);
+          setFotoBase64(decodedString);
+        } catch (error) {
+          console.error("Error decoding Base64:", error);
+          setFotoBase64(null);
+        }
+      }
+  
+      try {
+        const iuranResponse = await GlobalApi.getIuranAnggota(member.npaPgri);
+        setDataIuran(iuranResponse);
+  
+        if (iuranResponse?.id) {
+          setIdIuran(iuranResponse.id);
+        }
+      } catch (error) {
+        console.error("Gagal mengambil data iuran anggota:", error);
+  
+        if (error.response?.status === 500) {
+          console.warn(
+            "Server error 500: menggunakan nilai default dari sessionStorage"
+          );
+          const pgriData = JSON.parse(sessionStorage.getItem("PGRIData"));
+          const totalIuranPGRI =
+            parseInt(pgriData.pb || 0) +
+            parseInt(pgriData.propinsi || 0) +
+            parseInt(pgriData.kabupaten || 0) +
+            parseInt(pgriData.cabang || 0);
+  
+          const fallbackData = {
+            iuranAnggota: totalIuranPGRI,
+            manualIuranAnggota: 0,
+            totalIuranAnggota: totalIuranPGRI,
+            iuranSanduka: parseInt(pgriData.sanduka || 0),
+            manualIuranSanduka: 0,
+            totalIuranSanduka: parseInt(pgriData.sanduka || 0),
+          };
+  
+          setDataIuran(fallbackData);
+          setIdIuran(null);
+        }
+      }
+  
+      setIsPopupVisible(true);
+    } catch (error) {
+      console.error("Error saat cek NPA:", error);
+      if (error.response?.status === 500) {
+        console.warn("Server error 500: data tidak akan ditampilkan.");
+      }
+    }
+  };  
+
+  const groupIuranData = (dataIuran) => {
+    if (!dataIuran) return [];
+
+    const keys = [
+      "Anggota",
+      "Daspen",
+      "Derap",
+      "Kalender",
+      "Sanduka",
+      "Sumbangan",
+    ];
+
+    return keys
+      .map((key) => {
+        const keySuffix = key === "Anggota" ? "Anggota" : key;
+        return {
+          key,
+          iuran: dataIuran[`iuran${keySuffix}`],
+          manual: dataIuran[`manualIuran${keySuffix}`],
+          total: dataIuran[`totalIuran${keySuffix}`],
+        };
+      })
+      .filter((item) => item.iuran !== undefined);
+  };
+
+  useEffect(() => {
+    if (dataIuran) {
+      const defaultNominalBaru = {};
+      const keys = [
+        "Anggota",
+        "Daspen",
+        "Derap",
+        "Kalender",
+        "Sanduka",
+        "Sumbangan",
+      ];
+
+      keys.forEach((key) => {
+        const suffix = key === "Anggota" ? "Anggota" : key;
+        const manualValue = dataIuran[`manualIuran${suffix}`] || 0;
+        defaultNominalBaru[key] = manualValue;
+      });
+
+      setNominalBaruList(defaultNominalBaru);
+    }
+  }, [dataIuran]);
+
+  const groupedIuran = dataIuran ? groupIuranData(dataIuran) : [];
+
+  const handleSave = () => {
+    if (selectedKategori) {
+      if (!addedCategories.find((cat) => cat.key === selectedKategori)) {
+        const labelMap = {
+          iuran: "Iuran",
+          derap: "Derap",
+          kalender: "Kalender",
+          lainLain: "Lain-Lain",
+          daspen: "Daspen",
+        };
+  
+        let initialValue = 0;
+  
+        if (selectedKategori === "kalender") {
+          const kalenderRaw = sessionStorage.getItem("kalenderData");
+          if (kalenderRaw) {
+            try {
+              const kalenderObj = JSON.parse(kalenderRaw);
+              const propinsi = parseInt(kalenderObj.propinsi || 0);
+              const kabupaten = parseInt(kalenderObj.kabupaten || 0);
+              const cabang = parseInt(kalenderObj.cabang || 0);
+              initialValue = propinsi + kabupaten + cabang;
+            } catch (e) {
+              console.error("Error parsing kalenderData:", e);
+            }
+          }
+        }
+  
+        if (selectedKategori === "derap") {
+          const derapRaw = sessionStorage.getItem("derapData");
+          if (derapRaw) {
+            try {
+              const derapObj = JSON.parse(derapRaw);
+              const propinsi = parseInt(derapObj.propinsi || 0);
+              const kabupaten = parseInt(derapObj.kabupaten || 0);
+              const cabang = parseInt(derapObj.cabang || 0);
+              initialValue = propinsi + kabupaten + cabang;
+            } catch (e) {
+              console.error("Error parsing derapData:", e);
+            }
+          }
+        }
+  
+        if (selectedKategori === "daspen") {
+          initialValue = daspenValue;
+        }
+  
+        setAddedCategories((prev) => [
+          ...prev,
+          { label: labelMap[selectedKategori], key: selectedKategori },
+        ]);
+  
+        setNewValues((prev) => ({
+          ...prev,
+          [selectedKategori]: initialValue,
+        }));
+  
+        setFormKetiga((prev) => ({
+          ...prev,
+          [selectedKategori]: initialValue,
+        }));
+      }
+  
+      setSelectedKategori("");
+      setShowDropdown(false);
+    }
+  };  
+  
+  const handleSaveClick = async () => {
+    if (!dataNpa) return;
+
+    const tempatTanggalLahir = `${dataNpa.tempatLahir}, ${dataNpa.tanggalLahir?.[2]}-${dataNpa.tanggalLahir?.[1]}-${dataNpa.tanggalLahir?.[0]}`;
+
+    let otomatisValueSanduka = 0;
+    let otomatisValuePgri = 0;
+
+    let manualValueSanduka = 0;
+    let manualValuepgri = 0;
+
+    let iuranSanduka = 0;
+    let iuranAnggota = formKetiga?.iuranAnggota || 0;
+
+    groupedIuran.forEach((item) => {
+      const autoValue = parseInt(item.iuran || 0);
+      const inputValue = nominalBaruList[item.key] ?? 0;
+
+      if (item.key?.toLowerCase() === "sanduka") {
+        otomatisValueSanduka = autoValue;
+        manualValueSanduka = inputValue;
+        iuranSanduka = autoValue + inputValue;
+      }
+
+      if ((item.key || "").toLowerCase() === "pgri") {
+        otomatisValuePgri = autoValue;
+        manualValuepgri = inputValue;
+        iuranAnggota = autoValue + inputValue;
+      }
+    });
+    let otomatisValueKalender = 0;
+    let otomatisValueDerap = 0;
+
+    let manualValueKalender = 0;
+    let manualValueDerap = 0;
+    let manualValueDaspen = 0;
+
+    let totalKalender = 0;
+    let iuranDerap = formKetiga?.iuranDerap || 0;
+    let iuranDaspen = 0;
+
+    addedCategories.forEach((item) => {
+      const oldValue = newValues[item.key] ?? 0;
+      const inputValue = manualInputs[item.key] ?? 0;
+      const totalValue = oldValue + inputValue;
+
+      if (item.label?.toLowerCase() === "kalender") {
+        otomatisValueKalender = oldValue;
+        manualValueKalender = inputValue;
+        totalKalender = totalValue;
+      }
+      if (item.label?.toLowerCase() === "derap") {
+        otomatisValueDerap = oldValue;
+        manualValueDerap = inputValue;
+        iuranDerap = totalValue;
+      }
+
+      if (item.label?.toLowerCase() === "daspen") {
+        manualValueDaspen = inputValue;
+        iuranDaspen = totalValue;
+      }
+    });
+
+    const payload = {
+      namaAnggota: dataNpa.namaLengkap,
+      tempatTanggalLahir: tempatTanggalLahir,
+      npa: dataNpa.npaPgri,
+      nip: dataNpa.nip,
+      nik: dataNpa.nik,
+      cabang: dataNpa.cabang,
+      unitKerja: dataNpa.unitKerja,
+      jabatan: dataNpa.jabatan,
+
+      iuranAnggota: otomatisValuePgri || 0,
+      manualIuranAnggota: manualValuepgri || 0,
+      totalIuranAnggota: iuranAnggota || 0,
+
+      iuranSanduka: otomatisValueSanduka || 0,
+      manualIuranSanduka: manualValueSanduka || 0,
+      totalIuranSanduka: iuranSanduka || 0,
+
+      iuranDaspen: 0,
+      manualIuranDaspen: manualValueDaspen || 0,
+      totalIuranDaspen: iuranDaspen || 0,
+
+      iuranDerap: otomatisValueDerap || 0,
+      manualIuranDerap: manualValueDerap || 0,
+      totalIuranDerap: iuranDerap || 0,
+
+      iuranKalender: otomatisValueKalender || 0,
+      manualIuranKalender: manualValueKalender || 0,
+      totalIuranKalender: totalKalender || 0,
+
+      iuranSumbangan: 0,
+      manualIuranSumbangan: 0,
+      totalIuranSumbangan: formKetiga?.iuranSumbangan || 0,
+
+      keuangan: [],
+    };
+
+    groupedIuran.forEach((item) => {
+      const nominalBaru = parseInt(nominalBaruList[item.key] || 0);
+      const nominalLama = parseInt(selectedMember?.[item.key] || 0);
+
+      if (nominalBaru > 0) {
+        payload.keuangan.push({
+          kategori: item.key,
+          nominalLama,
+          nominalBaru,
+          total: nominalLama + nominalBaru,
+        });
+      }
+    });
+
+    addedCategories.forEach((item) => {
+      const nominalBaru = manualInputs[item.key] || 0;
+      const nominalLama = newValues[item.key] || 0;
+
+      if (nominalBaru > 0) {
+        payload.keuangan.push({
+          kategori: item.label,
+          nominalLama,
+          nominalBaru,
+          total: nominalLama + nominalBaru,
+        });
+      }
+    });
+
+    try {
+      const response = await GlobalApi.postIuranAnggota(payload);
+
+      setNotification({
+        type: "success",
+        message: "Data berhasil disimpan!",
+      });
+
+      setIsPopupVisible(false);
+      setAddedCategories([]);
+      setManualInputs([]);
+      setSelectedKategori("");
+    } catch (error) {
+      console.error("Gagal simpan:", error);
+
+      setNotification({
+        type: "error",
+        message: "Gagal menyimpan data. Silakan coba lagi.",
+      });
+    }
+  };
+
+  const handleUpdateClick = async () => {
+    if (!dataNpa || !idIuran) return;
+
+    const payload = {
+      namaAnggota: dataNpa.namaLengkap,
+      tempatTanggalLahir: `${dataNpa.tempatLahir}, ${dataNpa.tanggalLahir?.[2]}-${dataNpa.tanggalLahir?.[1]}-${dataNpa.tanggalLahir?.[0]}`,
+      npa: dataNpa.npaPgri,
+      nip: dataNpa.nip,
+      nik: dataNpa.nik,
+      cabang: dataNpa.cabang,
+      unitKerja: dataNpa.unitKerja,
+      jabatan: dataNpa.jabatan,
+    };
+
+    const capitalizeFirstLetter = (string) =>
+      string.charAt(0).toUpperCase() + string.slice(1);
+
+    groupedIuran.forEach((item) => {
+      const key = item.key;
+      const iuran = parseInt(item.iuran || 0);
+      const manual = parseInt(nominalBaruList[key] || 0);
+      const total = iuran + manual;
+
+      payload[`iuran${capitalizeFirstLetter(key)}`] = iuran || 0;
+      payload[`manualIuran${capitalizeFirstLetter(key)}`] = manual || 0;
+      payload[`totalIuran${capitalizeFirstLetter(key)}`] = total || 0;
+    });
+
+    addedCategories.forEach((item) => {
+      const key = item.key.toLowerCase();
+      const oldVal = parseInt(newValues?.[key] || 0);
+      const manual = parseInt(manualInputs?.[key] || 0);
+      const total = oldVal + manual;
+
+      payload[`iuran${capitalizeFirstLetter(key)}`] = oldVal;
+      payload[`manualIuran${capitalizeFirstLetter(key)}`] = manual;
+      payload[`totalIuran${capitalizeFirstLetter(key)}`] = total;
+    });
+
+    // console.log("Data yang akan diupdate:", payload);
+
+    try {
+      await GlobalApi.putIuranAnggota(idIuran, payload);
+      setNotification({
+        type: "success",
+        message: "Data berhasil diupdate!",
+      });
+      setIsPopupVisible(false);
+      setAddedCategories([]);
+      setManualInputs([]);
+      setSelectedKategori("");
+    } catch (error) {
+      console.error("Gagal update data:", error);
+      setNotification({
+        type: "error",
+        message: "Gagal update data. Silakan cek console.",
+      });
+    }
+  };
+
+  const calculateGrandTotal = () => {
+    let total = 0;
+
+    groupedIuran.forEach((item) => {
+      const oldValue = parseInt(item.iuran || 0);
+      const inputValue = nominalBaruList[item.key] || 0;
+      total += oldValue + inputValue;
+    });
+
+    addedCategories.forEach((item) => {
+      const oldValue = newValues[item.key] ?? 0;
+      const inputValue = manualInputs[item.key] ?? 0;
+      total += oldValue + inputValue;
+    });
+
+    return total;
+  };
+
+  useEffect(() => {
+    setGrandTotal(calculateGrandTotal());
+  }, [nominalBaruList, manualInputs, addedCategories, groupedIuran]);
+
+  const handleReset = () => {
+    setNominalBaruList(Array(groupedIuran.length).fill(""));
+    setManualInputs({});
+    setAddedCategories([]);
+    setSelectedKategori("");
+    setShowDropdown(false);
+  };
 
   useEffect(() => {
     if (!token) {
@@ -742,8 +1382,14 @@ function RekapAnggota() {
     <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white p-2 md:p-6">
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
       <div>
+        {notification && (
+          <NotificationPopup
+            type={notification.type}
+            message={notification.message}
+            onClose={() => setNotification(null)}
+          />
+        )}
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-
         <div
           className={`flex-1 transition-all duration-300 ease-in-out ${
             isSidebarOpen ? "ml-64" : "ml-0"
@@ -792,63 +1438,70 @@ function RekapAnggota() {
             </div>
 
             <table className="w-full table-auto bg-white">
-              <thead>
-                <tr>
-                  <th
-                    className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 rounded-tl-lg"
-                    rowSpan="2"
-                  >
-                    No
-                  </th>
-                  <th
-                    className="p-3 border-b-2 border-teal-500 text-white bg-teal-600"
-                    rowSpan="2"
-                  >
-                    Cabang
-                  </th>
-                  <th
-                    className="p-3 border-b-2 border-teal-500 text-white bg-teal-600"
-                    rowSpan="2"
-                  >
-                    Unit Kerja
-                  </th>
-                  <th
-                    className="p-3 border-b-2 border-teal-500 text-white bg-teal-600"
-                    rowSpan="2"
-                  >
-                    Nama Anggota
-                  </th>
-                  <th
-                    className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell"
-                    rowSpan="2"
-                  >
-                    Jumlah Anggota
-                  </th>
-                  <th
-                    className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell text-center"
-                    colSpan="3"
-                  >
-                    Jumlah
-                  </th>
-                  <th
-                    className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 rounded-tr-lg w-36"
-                    rowSpan="2"
-                  >
-                    Total
-                  </th>
-                </tr>
-                <tr>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
-                    PGRI
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
-                    Sanduka
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
-                    Daspen
-                  </th>
-                </tr>
-              </thead>
+            <thead>
+  <tr>
+    <th
+      className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 rounded-tl-lg"
+      rowSpan="2"
+    >
+      No
+    </th>
+    <th
+      className="p-3 border-b-2 border-teal-500 text-white bg-teal-600"
+      rowSpan="2"
+    >
+      Cabang
+    </th>
+    <th
+      className="p-3 border-b-2 border-teal-500 text-white bg-teal-600"
+      rowSpan="2"
+    >
+      Unit Kerja
+    </th>
+    <th
+      className="p-3 border-b-2 border-teal-500 text-white bg-teal-600"
+      rowSpan="2"
+    >
+      Nama Anggota
+    </th>
+    <th
+      className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell"
+      rowSpan="2"
+    >
+      Jumlah Anggota
+    </th>
+    <th
+      className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell text-center"
+      colSpan="3"
+    >
+      Jumlah
+    </th>
+    <th
+      className="p-3 border-b-2 border-teal-500 text-white bg-teal-600  w-36"
+      rowSpan="2"
+    >
+      Total
+    </th>
+    <th
+      className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 w-28 rounded-tr-lg"
+      rowSpan="2"
+    >
+      Action
+    </th>
+  </tr>
+  <tr>
+    <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
+      PGRI
+    </th>
+    <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
+      Sanduka
+    </th>
+    <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
+      Daspen
+    </th>
+  </tr>
+</thead>
+
               <tbody>
                 {groupedData.map((group, index) => {
                   const isExpanded = expandedRows.has(group.unitKerja);
@@ -858,73 +1511,59 @@ function RekapAnggota() {
 
                   return (
                     <React.Fragment key={group.unitKerja}>
-                      <tr
-                        className={index % 2 === 0 ? "bg-white" : "bg-teal-50"}
-                      >
-                        <td
-                          className="p-3 border-b text-center"
-                          rowSpan={rowSpanCount}
-                        >
-                          <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-100 text-teal-700 font-semibold">
-                            {index + 1}
-                          </div>
-                        </td>
-                        <td className="p-3 border-b" rowSpan={rowSpanCount}>
-                          {group.cabang}
-                        </td>
-                        <td
-                          className="p-3 border-b font-medium"
-                          rowSpan={rowSpanCount}
-                        >
-                          {group.unitKerja}
-                        </td>
-                        <td className="p-3 border-b text-center">
-                          <Button
-                            className="text-teal-600 bg-transparent hover:bg-teal-50 hover:text-teal-700 rounded-full p-2 transition-all duration-200"
-                            onClick={() => toggleExpand(group.unitKerja)}
-                          >
-                            {isExpanded ? (
-                              <span className="flex items-center gap-1">
-                                <FaMinusCircle />{" "}
-                                <span className="text-sm">Tutup</span>
-                              </span>
-                            ) : (
-                              <span className="flex items-center gap-1">
-                                <FaPlusCircle />{" "}
-                                <span className="text-sm">Detail</span>
-                              </span>
-                            )}
-                          </Button>
-                        </td>
-                        <td
-                          className="p-3 border-b text-center hidden lg:table-cell font-medium"
-                          rowSpan={rowSpanCount}
-                        >
-                          {group.jumlah}
-                        </td>
-                        <td className="p-3 border-b text-center hidden lg:table-cell">
-                          <span className="text-gray-700">
-                            Rp. {parseInt(group.pgri).toLocaleString("id-ID")}
-                          </span>
-                        </td>
-                        <td className="p-3 border-b text-center hidden lg:table-cell">
-                          <span className="text-gray-700">
-                            Rp.{" "}
-                            {parseInt(group.sanduka).toLocaleString("id-ID")}
-                          </span>
-                        </td>
-                        <td className="p-3 border-b text-center hidden lg:table-cell">
-                          <span className="text-gray-700">
-                            Rp. {parseInt(group.daspen).toLocaleString("id-ID")}
-                          </span>
-                        </td>
-                        <td className="p-3 border-b text-center font-semibold">
-                          <span className="bg-teal-100 text-teal-800 py-1 px-3 rounded-full">
-                            Rp.{" "}
-                            {parseInt(group.totalIuran).toLocaleString("id-ID")}
-                          </span>
-                        </td>
-                      </tr>
+                      <tr className={index % 2 === 0 ? "bg-white" : "bg-teal-50"}>
+  <td className="p-3 border-b text-center" rowSpan={rowSpanCount}>
+    <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-100 text-teal-700 font-semibold">
+      {index + 1}
+    </div>
+  </td>
+  <td className="p-3 border-b" rowSpan={rowSpanCount}>
+    {group.cabang}
+  </td>
+  <td className="p-3 border-b font-medium" rowSpan={rowSpanCount}>
+    {group.unitKerja}
+  </td>
+  <td className="p-3 border-b text-center">
+    <Button
+      className="text-teal-600 bg-transparent hover:bg-teal-50 hover:text-teal-700 rounded-full p-2 transition-all duration-200"
+      onClick={() => toggleExpand(group.unitKerja)}
+    >
+      {isExpanded ? (
+        <span className="flex items-center gap-1">
+          <FaMinusCircle /> <span className="text-sm">Tutup</span>
+        </span>
+      ) : (
+        <span className="flex items-center gap-1">
+          <FaPlusCircle /> <span className="text-sm">Detail</span>
+        </span>
+      )}
+    </Button>
+  </td>
+  <td className="p-3 border-b text-center hidden lg:table-cell font-medium" rowSpan={rowSpanCount}>
+    {group.jumlah}
+  </td>
+  <td className="p-3 border-b text-center hidden lg:table-cell">
+    <span className="text-gray-700">
+      Rp. {parseInt(group.pgri).toLocaleString("id-ID")}
+    </span>
+  </td>
+  <td className="p-3 border-b text-center hidden lg:table-cell">
+    <span className="text-gray-700">
+      Rp. {parseInt(group.sanduka).toLocaleString("id-ID")}
+    </span>
+  </td>
+  <td className="p-3 border-b text-center hidden lg:table-cell">
+    <span className="text-gray-700">
+      Rp. {parseInt(group.daspen).toLocaleString("id-ID")}
+    </span>
+  </td>
+  <td className="p-3 border-b text-center font-semibold">
+    <span className="bg-teal-100 text-teal-800 py-1 px-3 rounded-full">
+      Rp. {parseInt(group.totalIuran).toLocaleString("id-ID")}
+    </span>
+  </td>
+</tr>
+
                       {isExpanded &&
                         group.members.map((member, idx) => (
                           <tr
@@ -940,12 +1579,7 @@ function RekapAnggota() {
                                   <span className="w-6 h-6 flex items-center justify-center bg-teal-200 text-teal-800 rounded-full mr-2 text-xs">
                                     {idx + 1}
                                   </span>
-                                  <span
-  onClick={() => handleMemberClick(member)}
-  className="text-teal-700 hover:underline cursor-pointer"
->
-  {member.namaAnggota}
-</span>
+                                  <span className="text-teal-700">{member.namaAnggota}</span>
                                 </div>
                                 <div className="lg:hidden space-y-2 mt-2 bg-white p-3 rounded-lg shadow-sm">
                                   <div className="flex justify-between px-4">
@@ -1015,6 +1649,19 @@ function RekapAnggota() {
                                 )}
                               </span>
                             </td>
+                            <td className="p-3 border-b text-center space-x-2">
+  <button
+    className="text-teal-600 hover:text-teal-800"
+    onClick={() => handleMemberClick(member)}
+  >
+    <FaPlus />
+  </button>
+                              <button className="text-teal-600 hover:text-teal-800"
+                              onClick={() => handlePrintClick(member)}>
+    <FaPrint />
+  </button>
+</td>
+
                           </tr>
                         ))}
                     </React.Fragment>
@@ -1022,142 +1669,382 @@ function RekapAnggota() {
                 })}
               </tbody>
               {isPopupVisible && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-    <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl relative space-y-6">
-      {/* Tombol Tutup */}
-      <button
-        className="absolute top-2 right-2 text-gray-500 hover:text-teal-600 text-xl"
-        onClick={() => setIsPopupVisible(false)}
-      >
-        ✕
-      </button>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                  <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl relative space-y-6 max-h-screen overflow-y-auto">
+                    {/* Tombol Tutup */}
+                    <button
+                      className="absolute top-2 right-2 text-gray-500 hover:text-teal-600 text-xl"
+                      onClick={() => {
+                        setIsPopupVisible(false);
+                        setAddedCategories([]);
+                        setManualInputs([]);
+                      }}
+                    >
+                      ✕
+                    </button>
 
-      {/* Judul Form */}
-      <h2 className="text-center text-2xl font-bold text-white bg-red-700 py-2 rounded">
-        Form Keuangan
-      </h2>
+                    {/* Judul Form */}
+                    <h2 className="text-center text-2xl font-bold text-white bg-red-700 py-2 rounded">
+                      Form Keuangan
+                    </h2>
 
-      {/* Bagian Data Diri & Sinkronisasi */}
-      <div className="flex flex-col md:flex-row gap-4 items-start">
-        {/* Kiri: Foto + Data Diri */}
-        <div className="flex gap-4 w-full md:w-2/3">
-          <img
-            src="https://via.placeholder.com/100" // Ganti dengan foto asli jika ada
-            alt="Profile"
-            className="w-24 h-28 object-cover rounded-lg border"
-          />
-          <div className="text-sm space-y-1">
-            <p><strong>ANI WIDIASTUTI</strong></p>
-            <p>Tempat, Tanggal Lahir: JEPARA, 1-9-19821</p>
-            <p>Nomor Anggota PGRI: 332017900001</p>
-            <p>Nomor Induk Pegawai: 198209012022212018</p>
-            <p>Nomor Induk Kependudukan: 3320084109820008</p>
-          </div>
-        </div>
+                    {/* Bagian Data Diri & Sinkronisasi */}
+                    <div className="flex flex-col md:flex-row gap-4 items-start">
+                      {/* Kiri: Foto + Data Diri */}
+                      <div className="flex gap-4 w-full md:w-2/3">
+                        <Image
+                          src={
+                            fotoBase64
+                              ? `data:image/jpeg;base64,${fotoBase64}`
+                              : profileImageUrl
+                          }
+                          width={100}
+                          height={100}
+                          alt="Foto User"
+                          className="w-24 h-28 object-cover rounded-lg border"
+                          unoptimized={true}
+                        />
 
-        {/* Kanan: Info Singkat */}
-        <div className="w-full md:w-1/3 text-sm">
-          <p><strong>BANGSRI</strong>, Guru</p>
-          <p>SDN BANGSRI 6</p>
-          <div className="flex items-center mt-2 gap-2 text-teal-600">
-            <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor">
-              <circle cx="12" cy="12" r="10" strokeWidth="4"></circle>
-            </svg>
-            Sinkronisasi Otomatis
-          </div>
-        </div>
-      </div>
+                        <div className="text-sm space-y-1">
+                          {dataNpa ? (
+                            <>
+                              <p>
+                                <strong>{dataNpa.namaLengkap}</strong>
+                              </p>
+                              <p>
+                                Tempat, Tanggal Lahir: {dataNpa.tempatLahir},
+                                {dataNpa.tanggalLahir?.[2]}-
+                                {dataNpa.tanggalLahir?.[1]}-
+                                {dataNpa.tanggalLahir?.[0]}
+                              </p>
+                              <p>Nomor Anggota PGRI: {dataNpa.npaPgri}</p>
+                              <p>Nomor Induk Pegawai: {dataNpa.nip}</p>
+                              <p>Nomor Induk Kependudukan: {dataNpa.nik}</p>
+                            </>
+                          ) : (
+                            <p>Loading data anggota...</p>
+                          )}
+                        </div>
+                      </div>
 
-      {/* Form Keuangan */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Kiri: Daftar Kategori */}
-        <div className="space-y-2">
-          {[
-            { label: "Iuran Anggota", value: 8000 },
-            { label: "Sanduka", value: 3000 },
-            { label: "Daspen", value: 17000 },
-            { label: "Kalender", value: 17500 },
-            { label: "Derap", value: 17500 },
-            { label: "Sumbangan HUT", value: 50000 }
-          ].map((item, idx) => (
-            <div key={idx} className="flex items-center justify-between bg-purple-100 px-3 py-2 rounded-md">
-              <span>{item.label}</span>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">Rp. {item.value.toLocaleString()}</span>
-                <button className="text-teal-600">🔄</button>
-                <button className="text-blue-500">🔍</button>
-              </div>
-            </div>
-          ))}
+                      {/* Kanan: Info Singkat */}
+                      <div className="w-full md:w-1/3 text-sm">
+                        {dataNpa && (
+                          <>
+                            <p>
+                              <strong>{dataNpa.cabang}</strong>,{" "}
+                            </p>
+                            <p>{dataNpa.jabatan}</p>
+                            <p>{dataNpa.unitKerja}</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
 
-          {/* Total */}
-          <div className="flex items-center justify-between bg-purple-200 px-3 py-2 rounded-md font-bold">
-            <span>Total</span>
-            <span>Rp. 150.000</span>
-          </div>
-        </div>
+                    {/* Form Keuangan */}
+                    <div className="gap-6">
+                      {/* Kiri: Daftar Kategori */}
+                      <div className="space-y-2">
+                        {groupedIuran
+                          .filter(
+                            (item) =>
+                              parseInt(item.iuran || 0) +
+                                parseInt(item.manual || 0) >
+                              0
+                          )
+                          .map((item, idx) => {
+                            const oldValue = parseInt(item.iuran || 0);
+                            const inputValue = nominalBaruList[item.key] || 0;
+                            const totalValue = oldValue + inputValue;
 
-        {/* Kanan: Tambah Kategori */}
-        <div className="bg-gray-100 rounded-md p-4">
-          <h3 className="text-lg font-semibold text-purple-800 mb-3">Tambah Keuangan</h3>
-          
-          <button
-            onClick={() => setShowDropdown(!showDropdown)}
-            className="flex items-center text-teal-600 hover:text-teal-800 mb-3"
-          >
-            <span className="text-xl mr-2">➕</span> Tambah Kategori
-          </button>
+                            return (
+                              <div
+                                key={idx}
+                                className="space-y-1 px-3 py-2 rounded-md"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="font-medium">
+                                    {item.key}
+                                  </span>
+                                </div>
 
-          {showDropdown && (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium">Pilih Kategori Tambahan</label>
-                <select
-                  className="w-full border rounded px-3 py-2"
-                  value={selectedKategori}
-                  onChange={(e) => setSelectedKategori(e.target.value)}
-                >
-                  <option value="">-- Pilih --</option>
-                  <option value="iuran">Iuran</option>
-                  <option value="derap">Derap</option>
-                  <option value="kalender">Kalender</option>
-                  <option value="lain-lain">Lain-Lain</option>
-                </select>
-              </div>
+                                <div className="grid grid-cols-3 gap-2 mt-2">
+                                  {/* Iuran Sekarang */}
+                                  <input
+                                    type="text"
+                                    readOnly
+                                    value={`Rp. ${oldValue.toLocaleString(
+                                      "id-ID"
+                                    )}`}
+                                    className="border px-2 py-1 rounded bg-gray-200 text-center"
+                                  />
 
-              {selectedKategori && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium">Nominal</label>
-                    <input
-                      type="number"
-                      className="w-full border rounded px-3 py-2"
-                      placeholder="Masukkan nominal"
-                      value={nominal}
-                      onChange={(e) => setNominal(e.target.value)}
-                    />
+                                  {/* Form 2: Input manual */}
+                                  <input
+                                    type="text"
+                                    placeholder="Tambahan cabang"
+                                    value={
+                                      inputValue === 0
+                                        ? ""
+                                        : `Rp. ${inputValue.toLocaleString(
+                                            "id-ID"
+                                          )}`
+                                    }
+                                    onChange={(e) => {
+                                      const angka =
+                                        parseInt(
+                                          e.target.value.replace(/[^\d]/g, "")
+                                        ) || 0;
+                                      setNominalBaruList((prev) => ({
+                                        ...prev,
+                                        [item.key]: angka,
+                                      }));
+                                    }}
+                                    className="border px-2 py-1 rounded text-center"
+                                  />
+
+                                  {/* Total */}
+                                  <input
+                                    type="text"
+                                    readOnly
+                                    value={`Rp. ${totalValue.toLocaleString(
+                                      "id-ID"
+                                    )}`}
+                                    className="border px-2 py-1 rounded bg-gray-200 text-center"
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                        {addedCategories.map((item, idx) => {
+                          const oldValue = newValues[item.key] ?? 0;
+                          const inputValue = manualInputs[item.key] ?? 0;
+                          const totalValue = oldValue + inputValue;
+
+                          return (
+                            <div
+                              key={`added-${idx}`}
+                              className="space-y-1 px-3 py-2 rounded-md"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium">
+                                  {item.label}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2 mt-2">
+                                {/* Form 1: Nominal Lama */}
+                                <input
+                                  type="text"
+                                  readOnly
+                                  value={`Rp. ${oldValue.toLocaleString(
+                                    "id-ID"
+                                  )}`}
+                                  className="border px-2 py-1 rounded bg-gray-200 text-center"
+                                />
+
+                                {/* Form 2: Input manual */}
+                                <input
+                                  type="text"
+                                  placeholder="Tambahan cabang"
+                                  value={
+                                    inputValue === 0
+                                      ? ""
+                                      : `Rp. ${inputValue.toLocaleString(
+                                          "id-ID"
+                                        )}`
+                                  }
+                                  onChange={(e) => {
+                                    const angka =
+                                      parseInt(
+                                        e.target.value.replace(/[^\d]/g, "")
+                                      ) || 0;
+                                    setManualInputs((prev) => ({
+                                      ...prev,
+                                      [item.key]: angka,
+                                    }));
+                                  }}
+                                  className="border px-2 py-1 rounded text-center"
+                                />
+
+                                {/* Form 3: Total */}
+                                <input
+                                  type="text"
+                                  readOnly
+                                  value={`Rp. ${totalValue.toLocaleString(
+                                    "id-ID"
+                                  )}`}
+                                  className="border px-2 py-1 rounded bg-gray-200 text-center"
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {/* Total */}
+                        <div className="flex items-center justify-between bg-purple-200 px-3 py-2 rounded-md font-bold">
+                          <span>Total</span>
+                          <span>Rp. {grandTotal.toLocaleString("id-ID")}</span>
+                        </div>
+
+                        {/* Pindahan: Tambah Kategori */}
+                        <div className="bg-gray-100 rounded-md p-4 mt-4">
+                          <h3 className="text-lg font-semibold text-purple-800 mb-3">
+                            Tambah Keuangan
+                          </h3>
+
+                          <button
+                            onClick={() => setShowDropdown(!showDropdown)}
+                            className="flex items-center text-teal-600 hover:text-teal-800 mb-3"
+                          >
+                            <span className="text-xl mr-2">➕</span> Tambah
+                            Kategori
+                          </button>
+
+                          {showDropdown && (
+                            <div className="space-y-3">
+                              <div>
+                                <label className="block text-sm font-medium">
+                                  Pilih Kategori Tambahan
+                                </label>
+                                <select
+                                  className="w-full border rounded px-3 py-2"
+                                  value={selectedKategori}
+                                  onChange={(e) =>
+                                    setSelectedKategori(e.target.value)
+                                  }
+                                >
+                                  <option value="">-- Pilih --</option>
+                                  <option value="daspen">Daspen</option>
+                                  <option value="sumbangan">Sumbangan</option>
+                                  <option value="kalender">Kalender</option>
+                                  <option value="derap">Derap</option>
+                                  <option value="lain-lain">Lain-Lain</option>
+                                </select>
+                              </div>
+
+                              {selectedKategori && (
+                                <div className="flex justify-end">
+                                  <button
+                                    onClick={handleSave}
+                                    className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded"
+                                  >
+                                    Simpan
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Tombol Aksi */}
+                    <div className="flex justify-end gap-4 pt-4">
+                      <button
+                        type="button"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        onClick={idIuran ? handleUpdateClick : handleSaveClick}
+                      >
+                        {idIuran ? "Update" : "Save"}
+                      </button>
+                      <button
+                        className="bg-red-700 hover:bg-red-600 text-white px-6 py-2 rounded-md"
+                        onClick={handleReset}
+                      >
+                        RESET
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    onClick={handleSave}
-                    className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-md"
-                  >
-                    Simpan
-                  </button>
-                </>
+                </div>
               )}
-            </div>
-          )}
-        </div>
-      </div>
+              {isModalOpen && selectedMember && dataIuran && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+                  <div className="bg-white p-6 rounded-lg w-[800px] relative shadow-lg">
+                  <button
+                      className="absolute top-2 right-2 text-gray-500 hover:text-teal-600 text-xl"
+                      onClick={closeModal}
+                    >
+                      ✕
+                    </button>
 
-      {/* Tombol Aksi */}
-      <div className="flex justify-end gap-4 pt-4">
-        <button className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md">
-          SAVE
-        </button>
-        <button className="bg-red-700 hover:bg-red-600 text-white px-6 py-2 rounded-md">
-          RESET
-        </button>
+      <div className="bg-blue-100 p-5 rounded-lg">
+        <h2 className="text-center text-blue-900 font-bold text-xl mb-3">
+          Data KEUANGAN ANGGOTA
+        </h2>
+
+        <div className="flex gap-4">
+        <Image
+                          src={
+                            fotoBase64
+                              ? `data:image/jpeg;base64,${fotoBase64}`
+                              : profileImageUrl
+                          }
+                          width={100}
+                          height={100}
+                          alt="Foto User"
+                          className="w-24 h-28 object-cover rounded-lg border"
+                          unoptimized={true}
+                        />
+          <div className="flex-1 text-sm">
+            <p>
+              <span className="font-bold text-green-800 text-lg uppercase">
+                {dataIuran.namaAnggota}
+              </span>
+            </p>
+            <p>Tempat, Tanggal Lahir: {dataIuran.tempatTanggalLahir}</p>
+            <p>Nomor Anggota PGRI: <strong>{dataIuran.npa}</strong></p>
+            <p>Nomor Induk Pegawai: <em>{dataIuran.nip}</em></p>
+            <p>Nomor Induk Kependudukan: <em>{dataIuran.nik}</em></p>
+          </div>
+          <div className="text-sm text-left">
+            <p>{dataIuran.cabang}</p>
+            <p>{dataIuran.jabatan}</p>
+            <p>{dataIuran.unitKerja}</p>
+          </div>
+        </div>
+
+        <div className="mt-5 text-sm">
+  <p>
+    <span className="inline-block min-w-[140px]">Iuran Anggota</span>
+    : Rp. {(dataIuran.totalIuranAnggota || 0).toLocaleString("id-ID")}
+  </p>
+  <p>
+    <span className="inline-block min-w-[140px]">Sanduka</span>
+    : Rp. {(dataIuran.totalIuranSanduka || 0).toLocaleString("id-ID")}
+  </p>
+  <p>
+    <span className="inline-block min-w-[140px]">Daspen</span>
+    : Rp. {(dataIuran.totalIuranDaspen || 0).toLocaleString("id-ID")}
+  </p>
+  <p>
+    <span className="inline-block min-w-[140px]">Derap</span>
+    : Rp. {(dataIuran.totalIuranDerap || 0).toLocaleString("id-ID")}
+  </p>
+  <p>
+    <span className="inline-block min-w-[140px]">Kalender</span>
+    : Rp. {(dataIuran.totalIuranKalender || 0).toLocaleString("id-ID")}
+  </p>
+  <p>
+    <span className="inline-block min-w-[140px]">Sumbangan</span>
+    : 
+        Rp. {(dataIuran.totalIuranSumbangan || 0).toLocaleString("id-ID")}
+  </p>
+
+  <hr className="my-2 border-t-2 border-gray-300" />
+
+  <p className="font-bold mt-2">
+    <span className="inline-block min-w-[140px]">Total Keseluruhan</span>
+    : Rp. {(
+      (dataIuran.totalIuranAnggota || 0) +
+      (dataIuran.totalIuranSanduka || 0) +
+      (dataIuran.totalIuranDaspen || 0) +
+      (dataIuran.totalIuranDerap || 0) +
+      (dataIuran.totalIuranKalender || 0) +
+      (dataIuran.totalIuranSumbangan || 0)
+    ).toLocaleString("id-ID")}
+  </p>
+</div>
+
       </div>
     </div>
   </div>
