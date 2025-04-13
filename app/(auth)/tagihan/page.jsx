@@ -5,17 +5,21 @@ import HeaderMobile from "@/app/_components/HeaderMobile";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
+import GlobalApi from "@/app/_utils/GlobalApi";
 
 export default function Tagihan() {
   const router = useRouter();
   const { token } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [dataIuran, setDataIuran] = useState(null);
 
   useEffect(() => {
     if (!token) {
       router.push("/sign-in");
     }
+
+    getIuranAnggotaByNpa();
 
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -38,6 +42,22 @@ export default function Tagihan() {
     const newSidebarState = !isSidebarOpen;
     setIsSidebarOpen(newSidebarState);
     localStorage.setItem("isSidebarOpen", newSidebarState);
+  };
+
+  const getIuranAnggotaByNpa = async () => {
+    try {
+      const npa = sessionStorage.getItem("npa");
+      if (!npa) {
+        return;
+      }
+
+      const iuranResponse = await GlobalApi.getIuranAnggota(npa);
+      setDataIuran(iuranResponse);
+    } catch (error) {
+      if (error.response && error.response.data) {
+      } else {
+      }
+    }
   };
 
   const generatePowerOfAttorneyPDF = () => {
@@ -68,60 +88,438 @@ export default function Tagihan() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <main className="container mx-auto py-10 px-4 flex-grow">
-            <div className="bg-white shadow-lg rounded-lg overflow-hidden max-w-lg mx-auto mb-8 mt-10">
-              <div className="px-6 py-4 bg-blue-600 text-white">
-                <h1 className="text-2xl font-bold text-center">
-                  TAGIHAN ANGGOTA
-                </h1>
-              </div>
-
-              <div className="p-8 text-center">
-                <div className="mb-8">
-                  <svg
-                    className="w-20 h-20 mx-auto text-blue-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
-
-                  <h2 className="text-xl font-bold mt-4 mb-2">
-                    Detail Tagihan Sedang Dalam Proses
-                  </h2>
-                  <p className="text-gray-600 mb-6">
-                    Terima kasih atas kesabaran Anda. Detail tagihan Anda sedang
-                    diproses dan akan tersedia dalam beberapa hari kedepan.
-                  </p>
+          <main className="container mx-auto py-6 md:py-10 px-4 flex-grow bg-gray-50 min-h-screen">
+            <div className="max-w-4xl mx-auto">
+              <div className="relative bg-gradient-to-r from-blue-700 to-blue-900 rounded-t-2xl shadow-xl overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-10">
+                  <div className="absolute w-56 h-56 rounded-full bg-white -top-20 -left-20"></div>
+                  <div className="absolute w-72 h-72 rounded-full bg-blue-400 -bottom-36 -right-36"></div>
                 </div>
 
-                <button
-                  onClick={generatePowerOfAttorneyPDF}
-                  className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition duration-300 ease-in-out flex items-center justify-center mx-auto"
-                >
-                  <svg
-                    className="w-5 h-5 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    ></path>
-                  </svg>
-                  Download Surat Kuasa
-                </button>
+                <div className="relative px-6 py-8 text-white text-center">
+                  <div className="flex justify-center mb-4">
+                    <div className="bg-white/20 rounded-full p-3 backdrop-blur-sm">
+                      <svg
+                        className="w-8 h-8 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                        ></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <h1 className="text-2xl md:text-3xl font-bold tracking-wide mb-1">
+                    TAGIHAN ANGGOTA
+                  </h1>
+                  <p className="text-blue-100 text-sm md:text-base">
+                    Periode{" "}
+                    {new Date().toLocaleDateString("id-ID", {
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white shadow-lg rounded-b-2xl overflow-hidden">
+                <div className="p-4 md:p-8">
+                  {dataIuran &&
+                  (dataIuran.totalIuranAnggota > 0 ||
+                    dataIuran.totalIuranDaspen > 0 ||
+                    dataIuran.totalIuranDerap > 0 ||
+                    dataIuran.totalIuranKalender > 0 ||
+                    dataIuran.totalIuranSanduka > 0 ||
+                    dataIuran.totalIuranSumbangan > 0) ? (
+                    <div className="space-y-6">
+                      <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl border border-blue-100 overflow-hidden">
+                        <div className="p-4 border-b border-blue-100 flex items-center">
+                          <div className="bg-blue-600 rounded-full p-2 mr-3 shadow-md">
+                            <svg
+                              className="w-5 h-5 text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                              ></path>
+                            </svg>
+                          </div>
+                          <h2 className="text-lg md:text-xl font-bold text-blue-800">
+                            Informasi Anggota
+                          </h2>
+                        </div>
+
+                        <div className="p-4 md:p-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                              <div className="flex items-start">
+                                <div className="bg-blue-100 rounded-full p-2 mr-3 mt-1">
+                                  <svg
+                                    className="w-4 h-4 text-blue-600"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                    ></path>
+                                  </svg>
+                                </div>
+                                <div>
+                                  <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
+                                    Nama
+                                  </span>
+                                  <p className="font-semibold text-gray-800 text-lg">
+                                    {dataIuran.namaAnggota}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-start">
+                                <div className="bg-blue-100 rounded-full p-2 mr-3 mt-1">
+                                  <svg
+                                    className="w-4 h-4 text-blue-600"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                    ></path>
+                                  </svg>
+                                </div>
+                                <div>
+                                  <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
+                                    Tempat, Tanggal Lahir
+                                  </span>
+                                  <p className="font-medium text-gray-800">
+                                    {dataIuran.tempatTanggalLahir}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-start">
+                                <div className="bg-blue-100 rounded-full p-2 mr-3 mt-1">
+                                  <svg
+                                    className="w-4 h-4 text-blue-600"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                    ></path>
+                                  </svg>
+                                </div>
+                                <div>
+                                  <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
+                                    Unit Kerja
+                                  </span>
+                                  <p className="font-medium text-gray-800">
+                                    {dataIuran.unitKerja}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-4">
+                              <div className="flex items-start">
+                                <div className="bg-blue-100 rounded-full p-2 mr-3 mt-1">
+                                  <svg
+                                    className="w-4 h-4 text-blue-600"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    ></path>
+                                  </svg>
+                                </div>
+                                <div>
+                                  <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
+                                    Cabang
+                                  </span>
+                                  <p className="font-medium text-gray-800">
+                                    {dataIuran.cabang}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-start">
+                                <div className="bg-blue-100 rounded-full p-2 mr-3 mt-1">
+                                  <svg
+                                    className="w-4 h-4 text-blue-600"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                    ></path>
+                                  </svg>
+                                </div>
+                                <div>
+                                  <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
+                                    Jabatan
+                                  </span>
+                                  <p className="font-medium text-gray-800">
+                                    {dataIuran.jabatan}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl overflow-hidden shadow-lg">
+                        <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-4 flex items-center">
+                          <div className="bg-white/20 rounded-full p-2 mr-3 backdrop-blur-sm">
+                            <svg
+                              className="w-5 h-5 text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                              ></path>
+                            </svg>
+                          </div>
+                          <h3 className="text-lg md:text-xl font-bold text-white">
+                            Rincian Tagihan
+                          </h3>
+                        </div>
+
+                        <div className="bg-white p-4 md:p-6">
+                          <div className="space-y-3">
+                            {dataIuran.totalIuranAnggota > 0 && (
+                              <div className="flex justify-between items-center p-2 hover:bg-blue-50 rounded-lg transition-colors">
+                                <div className="flex items-center">
+                                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                                  <span className="text-gray-700 font-medium">
+                                    Iuran Anggota
+                                  </span>
+                                </div>
+                                <span className="font-semibold text-gray-900">
+                                  Rp.{" "}
+                                  {dataIuran.totalIuranAnggota?.toLocaleString(
+                                    "id-ID"
+                                  )}
+                                </span>
+                              </div>
+                            )}
+
+                            {dataIuran.totalIuranSanduka > 0 && (
+                              <div className="flex justify-between items-center p-2 hover:bg-green-50 rounded-lg transition-colors">
+                                <div className="flex items-center">
+                                  <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                                  <span className="text-gray-700 font-medium">
+                                    Sanduka
+                                  </span>
+                                </div>
+                                <span className="font-semibold text-gray-900">
+                                  Rp.{" "}
+                                  {dataIuran.totalIuranSanduka?.toLocaleString(
+                                    "id-ID"
+                                  )}
+                                </span>
+                              </div>
+                            )}
+
+                            {dataIuran.totalIuranDaspen > 0 && (
+                              <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded-lg transition-colors">
+                                <div className="flex items-center">
+                                  <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                                  <span className="text-gray-700 font-medium">
+                                    Daspen
+                                  </span>
+                                </div>
+                                <span className="font-semibold text-gray-900">
+                                  Rp.{" "}
+                                  {dataIuran.totalIuranDaspen?.toLocaleString(
+                                    "id-ID"
+                                  )}
+                                </span>
+                              </div>
+                            )}
+
+                            {dataIuran.totalIuranDerap > 0 && (
+                              <div className="flex justify-between items-center p-2 hover:bg-yellow-50 rounded-lg transition-colors">
+                                <div className="flex items-center">
+                                  <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
+                                  <span className="text-gray-700 font-medium">
+                                    Derap
+                                  </span>
+                                </div>
+                                <span className="font-semibold text-gray-900">
+                                  Rp.{" "}
+                                  {dataIuran.totalIuranDerap?.toLocaleString(
+                                    "id-ID"
+                                  )}
+                                </span>
+                              </div>
+                            )}
+
+                            {dataIuran.totalIuranKalender > 0 && (
+                              <div className="flex justify-between items-center p-2 hover:bg-red-50 rounded-lg transition-colors">
+                                <div className="flex items-center">
+                                  <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
+                                  <span className="text-gray-700 font-medium">
+                                    Kalender
+                                  </span>
+                                </div>
+                                <span className="font-semibold text-gray-900">
+                                  Rp.{" "}
+                                  {dataIuran.totalIuranKalender?.toLocaleString(
+                                    "id-ID"
+                                  )}
+                                </span>
+                              </div>
+                            )}
+
+                            {dataIuran.totalIuranSumbangan > 0 && (
+                              <div className="flex justify-between items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors">
+                                <div className="flex items-center">
+                                  <div className="w-3 h-3 bg-indigo-500 rounded-full mr-3"></div>
+                                  <span className="text-gray-700 font-medium">
+                                    Sumbangan
+                                  </span>
+                                </div>
+                                <span className="font-semibold text-gray-900">
+                                  Rp.{" "}
+                                  {dataIuran.totalIuranSumbangan?.toLocaleString(
+                                    "id-ID"
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mt-6 pt-4 border-t border-dashed border-gray-200">
+                            <div className="flex flex-col sm:flex-row justify-between items-center">
+                              <span className="text-lg font-bold text-blue-800 mb-2 sm:mb-0">
+                                Total Tagihan
+                              </span>
+                              <div className="bg-gradient-to-r from-blue-700 to-blue-900 text-white px-6 py-3 rounded-lg font-bold shadow-md">
+                                Rp.{" "}
+                                {(
+                                  dataIuran.totalIuranAnggota +
+                                  dataIuran.totalIuranSanduka +
+                                  dataIuran.totalIuranDaspen +
+                                  dataIuran.totalIuranDerap +
+                                  dataIuran.totalIuranKalender +
+                                  dataIuran.totalIuranSumbangan
+                                ).toLocaleString("id-ID")}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-6 md:p-10 rounded-xl shadow-md border border-blue-100 text-center bg-gradient-to-br from-white to-blue-50">
+                      <div className="mb-8 flex justify-center">
+                        <div className="relative">
+                          <div className="absolute inset-0 rounded-full bg-blue-200 opacity-40 animate-ping"></div>
+                          <div className="relative bg-gradient-to-r from-blue-100 to-blue-200 rounded-full p-5 shadow-inner">
+                            <svg
+                              className="w-16 h-16 text-blue-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                              ></path>
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+
+                      <h2 className="text-2xl font-bold text-blue-800 mb-4">
+                        Detail Tagihan Sedang Dalam Proses
+                      </h2>
+
+                      <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                        Terima kasih atas kesabaran Anda. Detail tagihan Anda
+                        sedang diproses dan akan tersedia dalam beberapa hari
+                        kedepan.
+                      </p>
+
+                      <div className="w-full max-w-md mx-auto bg-white rounded-full h-3 shadow-inner overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-blue-500 to-blue-700 h-3 rounded-full animate-pulse"
+                          style={{ width: "75%" }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                    <button
+                      onClick={generatePowerOfAttorneyPDF}
+                      className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out flex items-center justify-center"
+                    >
+                      <svg
+                        className="w-5 h-5 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        ></path>
+                      </svg>
+                      Download Surat Kuasa
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </main>
