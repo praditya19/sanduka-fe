@@ -6,6 +6,7 @@ import HeaderMenu from "@/app/_components/HeaderMenu";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import Swal from "sweetalert2";
 
 export default function Tagihan() {
   const router = useRouter();
@@ -61,7 +62,16 @@ export default function Tagihan() {
   };
 
   const generatePowerOfAttorneyPDF = () => {
-    alert("Surat Kuasa sedang diunduh...");
+    Swal.fire({
+      title: "Mohon Tunggu...",
+      text: "Sedang menyiapkan Surat Kuasa Anda.",
+      icon: "info",
+      showConfirmButton: false,
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
 
     const fileId = "19gHtiUna9_qufcUGI7fc6uYrJAgvEg7n";
     const downloadUrl = `https://docs.google.com/document/d/${fileId}/export?format=docx`;
@@ -74,7 +84,12 @@ export default function Tagihan() {
     document.body.removeChild(link);
 
     setTimeout(() => {
-      alert("Surat Kuasa berhasil diunduh!");
+      Swal.fire({
+        title: "Surat Kuasa Berhasil Diunduh!",
+        text: "Terima kasih telah menggunakan layanan www.sanduka.id.",
+        icon: "success",
+        confirmButtonText: "Tutup",
+      });
     }, 1500);
   };
 
