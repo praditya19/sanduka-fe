@@ -391,7 +391,7 @@ function RekapAnggota() {
       acc[unitKey].members.push({
         namaAnggota: item.namaAnggota,
         npaPgri: item.npaPgri,
-        npaPgri: item.nip,
+        nip: item.nip,
         pgri: parseFloat(item.pgri) || 0,
         sanduka: parseFloat(item.sanduka) || 0,
         daspen: parseFloat(item.daspen) || 0,
@@ -1626,7 +1626,7 @@ function RekapAnggota() {
                                   </span>
                                   <span className="text-teal-700">
                                     {member.namaAnggota}
-                                    <div className="text-sm text-teal-700 italic">{member.npaPgri}</div>
+                                    <div className="text-sm text-teal-700 italic">{member.nip}</div>
                                   </span>
                                 </div>
                                 <div className="lg:hidden space-y-2 mt-2 bg-white p-3 rounded-lg shadow-sm">
