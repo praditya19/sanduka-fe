@@ -60,7 +60,10 @@ export default function DataUtama() {
         sessionStorage.setItem("PGRIData", JSON.stringify(pgriResponse));
         sessionStorage.setItem("daspenData", JSON.stringify(daspenResponse));
         sessionStorage.setItem("derapData", JSON.stringify(derapResponse));
-        sessionStorage.setItem("kalenderData",JSON.stringify(kalenderResponse));
+        sessionStorage.setItem(
+          "kalenderData",
+          JSON.stringify(kalenderResponse)
+        );
 
         response = {
           pgri: pgriResponse,
@@ -68,8 +71,10 @@ export default function DataUtama() {
           derap: derapResponse,
           kalender: kalenderResponse,
         };
-      } else if (activeTab === "iuran-pgri") {
-        sessionStorage.setItem("PGRIData", JSON.stringify(response));
+      } else if (activeTab === "lain-lain") {
+        // Tambahkan logika pengambilan data untuk tab "Lain-Lain"
+        response = await GlobalApi.getLainLainData();
+        sessionStorage.setItem("lainLainData", JSON.stringify(response));
       }
 
       setData(response);
@@ -112,7 +117,7 @@ export default function DataUtama() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <div className="min-h-screen bg-gray-50 py-3   ">
+          <div className="min-h-screen bg-gray-50 py-3 ">
             <nav className="container mt-12">
               <ul className="flex flex-wrap space-x-4 md:space-x-6">
                 <NavItem
@@ -139,6 +144,12 @@ export default function DataUtama() {
                 >
                   Kalender
                 </NavItem>
+                <Link
+                  href={"/keuangan/data-utama/lain-lain"}
+                  className=""
+                >
+                  Lain-Lain
+                </Link>
               </ul>
             </nav>
 
