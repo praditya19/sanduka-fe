@@ -21,7 +21,7 @@ export default function Tagihan() {
     }
 
     getIuranAnggotaByNpa();
-
+    cekNpa()
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };
@@ -54,7 +54,6 @@ export default function Tagihan() {
 
       const iuranResponse = await GlobalApi.getIuranAnggota(npa);
       setDataIuran(iuranResponse);
-      cekNpa(iuranResponse.npa)
     } catch (error) {
       if (error.response && error.response.data) {
       } else {
@@ -62,8 +61,9 @@ export default function Tagihan() {
     }
   };
 
-  const cekNpa = async (npa) => {
+  const cekNpa = async () => {
     try {
+      const npa = sessionStorage.getItem("npa");
       const member = await GlobalApi.cekNpa(npa);
       if (member) {
         const detailedMember = await GlobalApi.getUserById(member.id);
@@ -104,13 +104,13 @@ export default function Tagihan() {
   
         <div style="margin-top: 30px;">
           <table style="width: 100%;">
-            <tr><td style="width: 150px;">Nama</td><td style="width: 20px;">:</td><td>${dataIuran?.namaAnggota || "............................."}</td></tr>
-            <tr><td>NIP</td><td>:</td><td>${dataIuran?.nip || "............................."}</td></tr>
-            <tr><td>NPA PGRI</td><td>:</td><td>${dataIuran?.npa || "............................."}</td></tr>
+            <tr><td style="width: 150px;">Nama</td><td style="width: 20px;">:</td><td>${dataAnggota?.namaLengkap || "............................."}</td></tr>
+            <tr><td>NIP</td><td>:</td><td>${dataAnggota?.nip || "............................."}</td></tr>
+            <tr><td>NPA PGRI</td><td>:</td><td>${dataAnggota?.npaPgri || "............................."}</td></tr>
             <tr><td>Pangkat/Gol</td><td>:</td><td>${dataAnggota?.pangkatGolongan || "............................."}</td></tr>
-            <tr><td>Jabatan</td><td>:</td><td>${dataIuran?.jabatan || "............................."}</td></tr>
-            <tr><td>Kantor/sekolah</td><td>:</td><td>${dataIuran?.unitKerja || "............................."}</td></tr>
-            <tr><td>KTP Nomor</td><td>:</td><td>${dataIuran?.nik || "............................."}</td></tr>
+            <tr><td>Jabatan</td><td>:</td><td>${dataAnggota?.jabatan || "............................."}</td></tr>
+            <tr><td>Kantor/sekolah</td><td>:</td><td>${dataAnggota?.unitKerja || "............................."}</td></tr>
+            <tr><td>KTP Nomor</td><td>:</td><td>${dataAnggota?.nik || "............................."}</td></tr>
             <tr><td>HP Nomor</td><td>:</td><td>${dataAnggota?.nomorHp || "............................."}</td></tr>
             <tr><td>Alamat Rumah</td><td>:</td><td>${dataAnggota?.alamat || "............................."}</td></tr>
           </table>
@@ -129,7 +129,7 @@ export default function Tagihan() {
         <div style="margin-left: 20px;">
           <table style="width: 100%;">
             <tr><td style="width: 150px;">Nomor Rekening</td><td style="width: 20px;">:</td><td>.............................</td></tr>
-            <tr><td>Atas nama</td><td>:</td><td>${dataIuran?.namaAnggota || "............................."}</td></tr>
+            <tr><td>Atas nama</td><td>:</td><td>${dataAnggota?.namaLengkap || "............................."}</td></tr>
           </table>
         </div>
   
