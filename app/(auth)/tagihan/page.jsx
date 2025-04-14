@@ -6,7 +6,6 @@ import HeaderMenu from "@/app/_components/HeaderMenu";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import Swal from "sweetalert2";
 
 export default function Tagihan() {
   const router = useRouter();
@@ -14,6 +13,7 @@ export default function Tagihan() {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [dataIuran, setDataIuran] = useState(null);
+  const [dataAnggota, setDataAnggota] = useState(null);
 
   useEffect(() => {
     if (!token) {
@@ -54,6 +54,7 @@ export default function Tagihan() {
 
       const iuranResponse = await GlobalApi.getIuranAnggota(npa);
       setDataIuran(iuranResponse);
+      cekNpa(iuranResponse.npa)
     } catch (error) {
       if (error.response && error.response.data) {
       } else {
@@ -61,36 +62,144 @@ export default function Tagihan() {
     }
   };
 
-  const generatePowerOfAttorneyPDF = () => {
-    Swal.fire({
-      title: "Mohon Tunggu...",
-      text: "Sedang menyiapkan Surat Kuasa Anda.",
-      icon: "info",
-      showConfirmButton: false,
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
+  const cekNpa = async (npa) => {
+    try {
+      const member = await GlobalApi.cekNpa(npa);
+      if (member) {
+        const detailedMember = await GlobalApi.getUserById(member.id);
+        setDataAnggota(detailedMember);
+      }
+    } catch (error) {
+      console.error("Error fetching npa:", error);
+      setDataAnggota(null);
+    }
+  };
 
-    const fileId = "19gHtiUna9_qufcUGI7fc6uYrJAgvEg7n";
-    const downloadUrl = `https://docs.google.com/document/d/${fileId}/export?format=docx`;
+  const formatTanggalLengkap = () => {
+    const hariIndo = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const bulanIndo = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
-    const link = document.createElement("a");
-    link.href = downloadUrl;
-    link.setAttribute("download", "Surat_Kuasa.docx");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const now = new Date();
+    const hari = hariIndo[now.getDay()];
+    const tanggal = now.getDate();
+    const bulan = bulanIndo[now.getMonth()];
+    const tahun = now.getFullYear();
+    const jam = now.getHours().toString().padStart(2, '0');
+    const menit = now.getMinutes().toString().padStart(2, '0');
 
-    setTimeout(() => {
-      Swal.fire({
-        title: "Surat Kuasa Berhasil Diunduh!",
-        text: "Terima kasih telah menggunakan layanan www.sanduka.id.",
-        icon: "success",
-        confirmButtonText: "Tutup",
-      });
-    }, 1500);
+    return `${hari}, ${tanggal} ${bulan} ${tahun} pukul ${jam}:${menit}`;
+  };
+
+  const generatePowerOfAttorneyPDF = async () => {
+    const tanggalSekarang = formatTanggalLengkap();
+    const content = `
+      <div style="font-family: Arial, sans-serif; padding: 10px;">
+      <p style="margin-top: 20px; font-size: 12px; font-style: italic; text-align: right;">
+          Dicetak pada: ${tanggalSekarang}
+      </p>
+        <h2 style="text-align: center; text-decoration: underline; font-weight: bold;">
+          SURAT PERINTAH DAN KUASA
+        </h2>
+  
+        <div style="margin-top: 30px;">
+          <table style="width: 100%;">
+            <tr><td style="width: 150px;">Nama</td><td style="width: 20px;">:</td><td>${dataIuran.namaAnggota || "............................."}</td></tr>
+            <tr><td>NIP</td><td>:</td><td>${dataIuran.nip || "............................."}</td></tr>
+            <tr><td>NPA PGRI</td><td>:</td><td>${dataIuran.npa || "............................."}</td></tr>
+            <tr><td>Pangkat/Gol</td><td>:</td><td>${dataAnggota.pangkatGolongan || "............................."}</td></tr>
+            <tr><td>Jabatan</td><td>:</td><td>${dataIuran.jabatan || "............................."}</td></tr>
+            <tr><td>Kantor/sekolah</td><td>:</td><td>${dataIuran.unitKerja || "............................."}</td></tr>
+            <tr><td>KTP Nomor</td><td>:</td><td>${dataIuran.nik || "............................."}</td></tr>
+            <tr><td>HP Nomor</td><td>:</td><td>${dataAnggota.nomorHp || "............................."}</td></tr>
+            <tr><td>Alamat Rumah</td><td>:</td><td>${dataAnggota.alamat || "............................."}</td></tr>
+          </table>
+        </div>
+  
+        <p>Dengan ini memberi Perintah dan Kuasa kepada :</p>
+        <div style="text-align: center; margin: 15px 0;">
+          <strong>PT BANK PEMBANGUNAN DAERAH JAWA TENGAH</strong>
+        </div>
+  
+        <p>
+          Untuk memotong rekening gaji saya dengan mendebet/memindahkan rekening saya di 
+          PT Bank Pembangunan Daerah Jawa Tengah dengan :
+        </p>
+  
+        <div style="margin-left: 20px;">
+          <table style="width: 100%;">
+            <tr><td style="width: 150px;">Nomor Rekening</td><td style="width: 20px;">:</td><td>.............................</td></tr>
+            <tr><td>Atas nama</td><td>:</td><td>${dataIuran.namaAnggota || "............................."}</td></tr>
+          </table>
+        </div>
+  
+        <p>Untuk pembayaran :</p>
+        <div style="margin-left: 20px;">
+          <table style="width: 100%;">
+            <tr><td style="width: 30px;">1.</td><td style="width: 120px;">Iuran PGRI</td><td style="width: 20px;">:</td><td>Rp. ${dataIuran.totalIuranAnggota || "............................."}</td></tr>
+            <tr><td>2.</td><td>Sanduka</td><td>:</td><td>Rp. ${dataIuran.totalIuranSanduka || "............................."}</td></tr>
+            <tr><td>3.</td><td>Daspen</td><td>:</td><td>Rp. ${dataIuran.totalIuranDaspen || "............................."}</td></tr>
+            <tr><td>4.</td><td>Derap</td><td>:</td><td>Rp. ${dataIuran.totalIuranDerap || "............................."}</td></tr>
+            <tr><td>5.</td><td>Kalender</td><td>:</td><td>Rp. ${dataIuran.totalIuranKalender || "............................."}</td></tr>
+            <tr><td>6.</td><td>Lain - Lain</td><td>:</td><td>Rp. ${dataIuran.totalIuranSumbangan || "............................."}</td></tr>
+          </table>
+        </div>
+  
+        <p>Setiap bulan pada rekening Bank Jateng nomor rekening :</p>
+        <div style="margin-left: 30px;">
+          <p>1. 2.015.15169.5 (PGRI Kabupaten Jepara)</p>
+        </div>
+  
+        <p>Demikian untuk menjadi periksa dan dilaksanakan.</p>
+  
+        <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+          <!-- Kolom Kiri -->
+          <div style="width: 45%; text-align: center;">
+            <p>
+              Yang menerima Perintah dan Kuasa<br>
+              <strong>PT BANK PEMBANGUNAN<br>DAERAH JAWA TENGAH</strong><br>
+              Cabang Jepara
+            </p>
+            <p style="margin-top: 55px;">..................................................</p>
+          </div>
+  
+          <!-- Kolom Kanan -->
+          <div style="width: 45%; text-align: center; position: relative;">
+            <p style="text-align: left;">
+              Jepara, .................................<br>
+              Yang memberi Perintah dan Kuasa
+            </p>
+  
+            <!-- Kotak Materai -->
+            <div style="border: 1px solid #000; width: 80px; height: 40px; font-size: 10px; line-height: 1.2; padding: 4px; position: absolute; left: 50%; transform: translateX(-50%); top: 80px;">
+              Materai<br>10.000
+            </div>
+  
+            <p style="margin-top: 100px;">..................................................</p>
+            <p>NIP. ${dataIuran.nip}</p>
+          </div>
+        </div>
+  
+        <p style="margin-top: 10px; font-style: italic;">Fotocopy KTP</p>
+      </div>
+    `;
+
+    if (typeof window !== "undefined") {
+      const html2pdf = (await import("html2pdf.js")).default;
+
+      const element = document.createElement("div");
+      element.innerHTML = content;
+
+      const opt = {
+        margin: 0.5,
+        filename: "surat-perintah-kuasa.pdf",
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+      };
+
+      html2pdf().from(element).set(opt).save();
+    }
   };
 
   return (
@@ -99,9 +208,8 @@ export default function Tagihan() {
       <div className="flex flex-grow">
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <main className="container mx-auto py-6 md:py-10 px-4 flex-grow bg-gray-50 min-h-screen">
             <div className="max-w-4xl mx-auto">
@@ -146,12 +254,12 @@ export default function Tagihan() {
               <div className="bg-white shadow-lg rounded-b-2xl overflow-hidden">
                 <div className="p-4 md:p-8">
                   {dataIuran &&
-                  (dataIuran.totalIuranAnggota > 0 ||
-                    dataIuran.totalIuranDaspen > 0 ||
-                    dataIuran.totalIuranDerap > 0 ||
-                    dataIuran.totalIuranKalender > 0 ||
-                    dataIuran.totalIuranSanduka > 0 ||
-                    dataIuran.totalIuranSumbangan > 0) ? (
+                    (dataIuran.totalIuranAnggota > 0 ||
+                      dataIuran.totalIuranDaspen > 0 ||
+                      dataIuran.totalIuranDerap > 0 ||
+                      dataIuran.totalIuranKalender > 0 ||
+                      dataIuran.totalIuranSanduka > 0 ||
+                      dataIuran.totalIuranSumbangan > 0) ? (
                     <div className="space-y-6">
                       <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl border border-blue-100 overflow-hidden">
                         <div className="p-4 border-b border-blue-100 flex items-center">
@@ -534,7 +642,16 @@ export default function Tagihan() {
                       Download Surat Kuasa
                     </button>
                   </div>
+                  <div className="mt-10">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-4">Surat kuasa ini disertai dengan dokumen-dokumen berikut:</h3>
+                    <ul className="list-inside list-disc pl-5 space-y-2">
+                      <li className="text-gray-700">Fotokopi KTP</li>
+                      <li className="text-gray-700">Fotokopi Buku Rekening yang digunakan untuk surat kuasa</li>
+                      <li className="text-gray-700">Materai 10.000</li>
+                    </ul>
+                  </div>
                 </div>
+
               </div>
             </div>
           </main>
