@@ -35,16 +35,16 @@ const HeaderHome = () => {
     const userId = sessionStorage.getItem("userId");
     const userRole = sessionStorage.getItem("role");
     const npa = sessionStorage.getItem("npa");
-
+  
     if (!userId) {
       console.error("ID tidak ditemukan di sessionStorage");
       return;
     }
-
+  
     try {
       let idToFetch = userId;
-
-      if (userRole === "ADMIN" && npa) {
+  
+      if ((userRole === "ADMIN" || userRole === "SUPER ADMIN") && npa) {
         const npaResponse = await GlobalApi.cekNpa(npa);
         if (npaResponse && npaResponse.id) {
           idToFetch = npaResponse.id;
@@ -53,10 +53,11 @@ const HeaderHome = () => {
           return;
         }
       }
-
+  
       const response = await GlobalApi.getUserById(idToFetch);
       setUserData(response);
-
+      console.log("data by npa",response)
+  
       if (response.foto) {
         try {
           const decodedString = atob(response.foto);
@@ -68,13 +69,13 @@ const HeaderHome = () => {
       } else {
         setFotoBase64(null);
       }
-
+  
       setLoading(false);
     } catch (error) {
       console.error("Error saat mendapatkan data user:", error);
       setLoading(false);
     }
-  };
+  };  
 
   const handleNotificationClick = () => {
     router.push("/keuangan/sanduka/lapor/lapor-cabang");
