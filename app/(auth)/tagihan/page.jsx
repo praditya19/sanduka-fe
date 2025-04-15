@@ -165,25 +165,25 @@ export default function Tagihan() {
         <p>Untuk pembayaran :</p>
         <div style="margin-left: 20px;">
           <table style="width: 100%;">
-            <tr><td style="width: 30px;">1.</td><td style="width: 120px;">Iuran PGRI</td><td style="width: 20px;">:</td><td>Rp. ${dataIuran?.totalIuranAnggota || "............................."
+            <tr><td style="width: 30px;">1.</td><td style="width: 120px;">Iuran PGRI</td><td style="width: 20px;">:</td><td>Rp. ${dataIuran?.iuranAnggota || "............................."
       }</td></tr>
-            <tr><td>2.</td><td>Sanduka</td><td>:</td><td>Rp. ${dataIuran?.totalIuranSanduka || "............................."
+            <tr><td>2.</td><td>Sanduka</td><td>:</td><td>Rp. ${dataIuran?.sanduka || "............................."
       }</td></tr>
-            <tr><td>3.</td><td>Daspen</td><td>:</td><td>Rp. ${dataIuran?.totalIuranDaspen || "............................."
+            <tr><td>3.</td><td>Daspen</td><td>:</td><td>Rp. ${dataIuran?.daspen || "............................."
       }</td></tr>
-            <tr><td>4.</td><td>Derap</td><td>:</td><td>Rp. ${dataIuran?.totalIuranDerap || "............................."
+            <tr><td>4.</td><td>Derap</td><td>:</td><td>Rp. ${dataIuran?.derap || "............................."
       }</td></tr>
-            <tr><td>5.</td><td>Kalender</td><td>:</td><td>Rp. ${dataIuran?.totalIuranKalender || "............................."
+            <tr><td>5.</td><td>Kalender</td><td>:</td><td>Rp. ${dataIuran?.kalender || "............................."
       }</td></tr>
-            <tr><td>6.</td><td>Lain - Lain</td><td>:</td><td>Rp. ${dataIuran?.totalIuranSumbangan || "............................."
+            <tr><td>6.</td><td>Lain - Lain</td><td>:</td><td>Rp. ${dataIuran?.sumbangan || "............................."
       }</td></tr>
             <tr><td>7.</td><td>Total</td><td>:</td><td>Rp. ${[
-        dataIuran?.totalIuranAnggota,
-        dataIuran?.totalIuranSanduka,
-        dataIuran?.totalIuranDaspen,
-        dataIuran?.totalIuranDerap,
-        dataIuran?.totalIuranKalender,
-        dataIuran?.totalIuranSumbangan,
+        dataIuran?.iuranAnggota,
+        dataIuran?.sanduka,
+        dataIuran?.daspen,
+        dataIuran?.derap,
+        dataIuran?.kalender,
+        dataIuran?.sumbangan,
       ]
         .map((val) => Number(val) || 0)
         .reduce((acc, curr) => acc + curr, 0)
