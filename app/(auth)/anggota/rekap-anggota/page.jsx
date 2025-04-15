@@ -155,6 +155,7 @@ function RekapAnggota() {
   const [notification, setNotification] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [daspenValue, setDaspenValue] = useState(null);
+  const [nipValue, setNipValue] = useState(null);
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -471,7 +472,7 @@ function RekapAnggota() {
 
           const processed = processData(regularData);
           setGroupedData(processed);
-          console.log("proses",processed)
+          // console.log("proses",processed)y
           // console.log("reguler",regularData)
           setData(regularData);
           setOriginalRekapData(regularData);
@@ -653,23 +654,26 @@ function RekapAnggota() {
   };
 
   const handleMemberClick = async (member) => {
+    // console.log("NIP Member:", member.nip); // Tambahkan ini
+    setNipValue(member.nip);
+  
     setSelectedMember(null);
     setDataNpa(null);
     setFotoBase64(null);
     setDataIuran(null);
     setIsPopupVisible(false);
     setIdIuran(null);
-
+  
     try {
       const response = await GlobalApi.cekNpaList([member.npaPgri]);
-
+  
       setSelectedMember(member);
       setDataNpa(response[0]);
-
+  
       if (member.daspen) {
         setDaspenValue(member.daspen);
       }
-
+  
       if (response[0].foto) {
         try {
           const decodedString = atob(response[0].foto);
@@ -679,28 +683,26 @@ function RekapAnggota() {
           setFotoBase64(null);
         }
       }
-
+  
       try {
         const iuranResponse = await GlobalApi.getIuranAnggota(member.npaPgri);
         setDataIuran(iuranResponse);
-        // console.log(iuranResponse);
+  
         if (iuranResponse?.id) {
           setIdIuran(iuranResponse.id);
         }
       } catch (error) {
         console.error("Gagal mengambil data iuran anggota:", error);
-
+  
         if (error.response?.status === 500) {
-          console.warn(
-            "Server error 500: menggunakan nilai default dari sessionStorage"
-          );
+          console.warn("Server error 500: menggunakan nilai default dari sessionStorage");
           const pgriData = JSON.parse(sessionStorage.getItem("PGRIData"));
           const totalIuranPGRI =
             parseInt(pgriData.pb || 0) +
             parseInt(pgriData.propinsi || 0) +
             parseInt(pgriData.kabupaten || 0) +
             parseInt(pgriData.cabang || 0);
-
+  
           const fallbackData = {
             iuranAnggota: totalIuranPGRI,
             manualIuranAnggota: 0,
@@ -709,12 +711,12 @@ function RekapAnggota() {
             manualIuranSanduka: 0,
             totalIuranSanduka: parseInt(pgriData.sanduka || 0),
           };
-
+  
           setDataIuran(fallbackData);
           setIdIuran(null);
         }
       }
-
+  
       setIsPopupVisible(true);
     } catch (error) {
       console.error("Error saat cek NPA:", error);
@@ -722,7 +724,7 @@ function RekapAnggota() {
         console.warn("Server error 500: data tidak akan ditampilkan.");
       }
     }
-  };
+  };  
 
   const groupIuranData = (dataIuran) => {
     if (!dataIuran) return [];
@@ -773,7 +775,7 @@ function RekapAnggota() {
 
   const groupedIuran = dataIuran ? groupIuranData(dataIuran) : [];
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (selectedKategori) {
       if (!addedCategories.find((cat) => cat.key === selectedKategori)) {
         const labelMap = {
@@ -783,9 +785,9 @@ function RekapAnggota() {
           lainLain: "Lain-Lain",
           daspen: "Daspen",
         };
-
+  
         let initialValue = 0;
-
+  
         if (selectedKategori === "kalender") {
           const kalenderRaw = sessionStorage.getItem("kalenderData");
           if (kalenderRaw) {
@@ -800,7 +802,7 @@ function RekapAnggota() {
             }
           }
         }
-
+  
         if (selectedKategori === "derap") {
           const derapRaw = sessionStorage.getItem("derapData");
           if (derapRaw) {
@@ -815,31 +817,40 @@ function RekapAnggota() {
             }
           }
         }
-
-        if (selectedKategori === "daspen") {
-          initialValue = daspenValue;
+  
+        if (selectedKategori === "daspen" && dataNpa?.nip) {
+          try {
+            const response = await GlobalApi.getFileByNip(dataNpa.nip);
+            // console.log("Data dari getFileByNip:", response);
+  
+            const sumbangan = parseInt(response?.sumbangan || 0);
+            initialValue = sumbangan;
+          } catch (err) {
+            console.error("Gagal mengambil data daspen berdasarkan NIP:", err);
+          }
         }
-
+  
         setAddedCategories((prev) => [
           ...prev,
           { label: labelMap[selectedKategori], key: selectedKategori },
         ]);
-
+  
         setNewValues((prev) => ({
           ...prev,
           [selectedKategori]: initialValue,
         }));
-
+  
         setFormKetiga((prev) => ({
           ...prev,
           [selectedKategori]: initialValue,
         }));
       }
-
+  
       setSelectedKategori("");
       setShowDropdown(false);
     }
   };
+   
 
   const handleSaveClick = async () => {
     if (!dataNpa) return;
