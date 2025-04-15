@@ -165,7 +165,7 @@ export default function Tagihan() {
         <p>Untuk pembayaran :</p>
         <div style="margin-left: 20px;">
           <table style="width: 100%;">
-            <tr><td style="width: 30px;">1.</td><td style="width: 120px;">Iuran PGRI</td><td style="width: 20px;">:</td><td>Rp. ${dataIuran?.iuranAnggota || "............................."
+            <tr><td style="width: 30px;">1.</td><td style="width: 120px;">Iuran PGRI</td><td style="width: 20px;">:</td><td>Rp. ${dataIuran?.pgri || "............................."
       }</td></tr>
             <tr><td>2.</td><td>Sanduka</td><td>:</td><td>Rp. ${dataIuran?.sanduka || "............................."
       }</td></tr>
@@ -178,7 +178,7 @@ export default function Tagihan() {
             <tr><td>6.</td><td>Lain - Lain</td><td>:</td><td>Rp. ${dataIuran?.sumbangan || "............................."
       }</td></tr>
             <tr><td>7.</td><td>Total</td><td>:</td><td>Rp. ${[
-        dataIuran?.iuranAnggota,
+        dataIuran?.pgri,
         dataIuran?.sanduka,
         dataIuran?.daspen,
         dataIuran?.derap,
@@ -309,7 +309,7 @@ export default function Tagihan() {
               <td style="width: 40px; padding: 10px 5px; color: #7f8c8d;">1.</td>
               <td style="padding: 10px 5px; color: #7f8c8d;">Iuran Anggota</td>
               <td style="width: 20px; padding: 10px 5px; color: #7f8c8d;">:</td>
-              <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.iuranAnggota?.toLocaleString('id-ID') || '0'}</td>
+              <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.pgri?.toLocaleString('id-ID') || '0'}</td>
             </tr>
             <tr>
               <td style="padding: 10px 5px; color: #7f8c8d;">2.</td>
@@ -327,7 +327,7 @@ export default function Tagihan() {
           <div style="margin-top: 20px; background-color: #2c3e50; color: white; padding: 12px 15px; border-radius: 6px; display: flex; justify-content: space-between;">
             <span style="font-weight: bold; font-size: 15px;">Total Tagihan</span>
             <span style="font-weight: bold; font-size: 15px;">Rp. ${(
-        (dataIuran.iuranAnggota || 0) +
+        (dataIuran.pgri || 0) +
         (dataIuran.sanduka || 0) +
         (dataIuran.daspen || 0)
       ).toLocaleString('id-ID')}</span>
