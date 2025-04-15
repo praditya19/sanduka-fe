@@ -20,8 +20,8 @@ export default function Tagihan() {
       router.push("/sign-in");
     }
 
-    getIuranAnggotaByNpa();
-    cekNpa()
+    getIuranAnggotaById();
+    cekNpa();
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };
@@ -45,21 +45,20 @@ export default function Tagihan() {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  const getIuranAnggotaByNpa = async () => {
+  const getIuranAnggotaById = async () => {
     try {
-      const npa = sessionStorage.getItem("npa");
-      if (!npa) {
+      const userId = sessionStorage.getItem("userId");
+      if (!userId) {
         return;
       }
 
-      const iuranResponse = await GlobalApi.getIuranAnggota(npa);
+      const iuranResponse = await GlobalApi.getTagihanAnggotaById(userId);
       setDataIuran(iuranResponse);
     } catch (error) {
       if (error.response && error.response.data) {
-      } else {
       }
     }
-  };
+  }
 
   const cekNpa = async () => {
     try {
@@ -76,17 +75,37 @@ export default function Tagihan() {
   };
 
   const formatTanggalLengkap = () => {
-    const hariIndo = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    const bulanIndo = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const hariIndo = [
+      "Minggu",
+      "Senin",
+      "Selasa",
+      "Rabu",
+      "Kamis",
+      "Jumat",
+      "Sabtu",
+    ];
+    const bulanIndo = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
 
     const now = new Date();
     const hari = hariIndo[now.getDay()];
     const tanggal = now.getDate();
     const bulan = bulanIndo[now.getMonth()];
     const tahun = now.getFullYear();
-    const jam = now.getHours().toString().padStart(2, '0');
-    const menit = now.getMinutes().toString().padStart(2, '0');
+    const jam = now.getHours().toString().padStart(2, "0");
+    const menit = now.getMinutes().toString().padStart(2, "0");
 
     return `${hari}, ${tanggal} ${bulan} ${tahun} pukul ${jam}:${menit}`;
   };
@@ -104,15 +123,24 @@ export default function Tagihan() {
   
         <div style="margin-top: 30px;">
           <table style="width: 100%;">
-            <tr><td style="width: 150px;">Nama</td><td style="width: 20px;">:</td><td>${dataAnggota?.namaLengkap || "............................."}</td></tr>
-            <tr><td>NIP</td><td>:</td><td>${dataAnggota?.nip || "............................."}</td></tr>
-            <tr><td>NPA PGRI</td><td>:</td><td>${dataAnggota?.npaPgri || "............................."}</td></tr>
-            <tr><td>Pangkat/Gol</td><td>:</td><td>${dataAnggota?.pangkatGolongan || "............................."}</td></tr>
-            <tr><td>Jabatan</td><td>:</td><td>${dataAnggota?.jabatan || "............................."}</td></tr>
-            <tr><td>Kantor/sekolah</td><td>:</td><td>${dataAnggota?.unitKerja || "............................."}</td></tr>
-            <tr><td>KTP Nomor</td><td>:</td><td>${dataAnggota?.nik || "............................."}</td></tr>
-            <tr><td>HP Nomor</td><td>:</td><td>${dataAnggota?.nomorHp || "............................."}</td></tr>
-            <tr><td>Alamat Rumah</td><td>:</td><td>${dataAnggota?.alamat || "............................."}</td></tr>
+            <tr><td style="width: 150px;">Nama</td><td style="width: 20px;">:</td><td>${dataAnggota?.namaLengkap || "............................."
+      }</td></tr>
+            <tr><td>NIP</td><td>:</td><td>${dataAnggota?.nip || "............................."
+      }</td></tr>
+            <tr><td>NPA PGRI</td><td>:</td><td>${dataAnggota?.npaPgri || "............................."
+      }</td></tr>
+            <tr><td>Pangkat/Gol</td><td>:</td><td>${dataAnggota?.pangkatGolongan || "............................."
+      }</td></tr>
+            <tr><td>Jabatan</td><td>:</td><td>${dataAnggota?.jabatan || "............................."
+      }</td></tr>
+            <tr><td>Kantor/sekolah</td><td>:</td><td>${dataAnggota?.unitKerja || "............................."
+      }</td></tr>
+            <tr><td>KTP Nomor</td><td>:</td><td>${dataAnggota?.nik || "............................."
+      }</td></tr>
+            <tr><td>HP Nomor</td><td>:</td><td>${dataAnggota?.nomorHp || "............................."
+      }</td></tr>
+            <tr><td>Alamat Rumah</td><td>:</td><td>${dataAnggota?.alamat || "............................."
+      }</td></tr>
           </table>
         </div>
   
@@ -129,19 +157,39 @@ export default function Tagihan() {
         <div style="margin-left: 20px;">
           <table style="width: 100%;">
             <tr><td style="width: 150px;">Nomor Rekening</td><td style="width: 20px;">:</td><td>.............................</td></tr>
-            <tr><td>Atas nama</td><td>:</td><td>${dataAnggota?.namaLengkap || "............................."}</td></tr>
+            <tr><td>Atas nama</td><td>:</td><td>${dataAnggota?.namaLengkap || "............................."
+      }</td></tr>
           </table>
         </div>
   
         <p>Untuk pembayaran :</p>
         <div style="margin-left: 20px;">
           <table style="width: 100%;">
-            <tr><td style="width: 30px;">1.</td><td style="width: 120px;">Iuran PGRI</td><td style="width: 20px;">:</td><td>Rp. ${dataIuran?.totalIuranAnggota || "............................."}</td></tr>
-            <tr><td>2.</td><td>Sanduka</td><td>:</td><td>Rp. ${dataIuran?.totalIuranSanduka || "............................."}</td></tr>
-            <tr><td>3.</td><td>Daspen</td><td>:</td><td>Rp. ${dataIuran?.totalIuranDaspen || "............................."}</td></tr>
-            <tr><td>4.</td><td>Derap</td><td>:</td><td>Rp. ${dataIuran?.totalIuranDerap || "............................."}</td></tr>
-            <tr><td>5.</td><td>Kalender</td><td>:</td><td>Rp. ${dataIuran?.totalIuranKalender || "............................."}</td></tr>
-            <tr><td>6.</td><td>Lain - Lain</td><td>:</td><td>Rp. ${dataIuran?.totalIuranSumbangan || "............................."}</td></tr>
+            <tr><td style="width: 30px;">1.</td><td style="width: 120px;">Iuran PGRI</td><td style="width: 20px;">:</td><td>Rp. ${dataIuran?.pgri || "............................."
+      }</td></tr>
+            <tr><td>2.</td><td>Sanduka</td><td>:</td><td>Rp. ${dataIuran?.sanduka || "............................."
+      }</td></tr>
+            <tr><td>3.</td><td>Daspen</td><td>:</td><td>Rp. ${dataIuran?.daspen || "............................."
+      }</td></tr>
+            <tr><td>4.</td><td>Derap</td><td>:</td><td>Rp. ${dataIuran?.derap || "............................."
+      }</td></tr>
+            <tr><td>5.</td><td>Kalender</td><td>:</td><td>Rp. ${dataIuran?.kalender || "............................."
+      }</td></tr>
+            <tr><td>6.</td><td>Lain - Lain</td><td>:</td><td>Rp. ${dataIuran?.sumbangan || "............................."
+      }</td></tr>
+            <tr><td>7.</td><td>Total</td><td>:</td><td>Rp. ${[
+        dataIuran?.pgri,
+        dataIuran?.sanduka,
+        dataIuran?.daspen,
+        dataIuran?.derap,
+        dataIuran?.kalender,
+        dataIuran?.sumbangan,
+      ]
+        .map((val) => Number(val) || 0)
+        .reduce((acc, curr) => acc + curr, 0)
+        .toLocaleString(
+          "id-ID"
+        )}</td></tr>
           </table>
         </div>
   
@@ -171,16 +219,14 @@ export default function Tagihan() {
             </p>
   
             <!-- Kotak Materai -->
-            <div style="border: 1px solid #000; width: 80px; height: 40px; font-size: 10px; line-height: 1.2; padding: 4px; position: absolute; left: 50%; transform: translateX(-50%); top: 80px;">
+            <div style="border: 1px solid #000; width: 80px; height: 40px; font-size: 10px; line-height: 1.2; padding: 4px; position: absolute; left: 65%; transform: translateX(-50%); top: 80px;">
               Materai<br>10.000
             </div>
   
             <p style="margin-top: 100px;">..................................................</p>
-            <p>NIP. ${dataIuran?.nip || "............................."}</p>
+            <p>NIP. ${dataAnggota?.nip || "............................."}</p>
           </div>
         </div>
-  
-        <p style="margin-top: 10px; font-style: italic;">Fotocopy KTP</p>
       </div>
     `;
 
@@ -193,6 +239,114 @@ export default function Tagihan() {
       const opt = {
         margin: 0.5,
         filename: "surat-perintah-kuasa.pdf",
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+      };
+
+      html2pdf().from(element).set(opt).save();
+    }
+  };
+
+  const handleDownloadInformasiAnggota = async (dataIuran) => {
+    const tanggalSekarang = new Date().toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const content = `
+      <div style="font-family: 'Roboto', 'Arial', sans-serif; padding: 30px; font-size: 14px; color: #444; max-width: 800px; margin: 0 auto; background-color: #fff; box-shadow: 0 0 20px rgba(0,0,0,0.1);">
+        <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f0f0f0;">
+          <h1 style="color: #2c3e50; font-size: 24px; margin: 0; text-transform: uppercase; letter-spacing: 2px;">
+            Tagihan Anggota
+          </h1>
+          <p style="color: #7f8c8d; margin-top: 8px; font-size: 13px;">
+            Dicetak pada: ${tanggalSekarang}
+          </p>
+        </div>
+  
+        <section style="margin-top: 25px; background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
+          <h3 style="color: #2c3e50; font-size: 16px; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 1px solid #e0e0e0;">
+            <i style="margin-right: 8px;">&#128100;</i> Informasi Anggota
+          </h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="width: 180px; padding: 8px 0; color: #7f8c8d;">Nama</td>
+              <td style="width: 20px; padding: 8px 0; color: #7f8c8d;">:</td>
+              <td style="padding: 8px 0; font-weight: 500;">${dataIuran.namaLengkap}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #7f8c8d;">Tempat, Tanggal Lahir</td>
+              <td style="padding: 8px 0; color: #7f8c8d;">:</td>
+              <td style="padding: 8px 0;">${dataIuran.tempatTanggalLahir}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #7f8c8d;">Unit Kerja</td>
+              <td style="padding: 8px 0; color: #7f8c8d;">:</td>
+              <td style="padding: 8px 0;">${dataIuran.unitKerja}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #7f8c8d;">Cabang</td>
+              <td style="padding: 8px 0; color: #7f8c8d;">:</td>
+              <td style="padding: 8px 0;">${dataIuran.cabang}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #7f8c8d;">Jabatan</td>
+              <td style="padding: 8px 0; color: #7f8c8d;">:</td>
+              <td style="padding: 8px 0;">${dataIuran.jabatan}</td>
+            </tr>
+          </table>
+        </section>
+  
+        <section style="margin-top: 25px; background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
+          <h3 style="color: #2c3e50; font-size: 16px; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 1px solid #e0e0e0;">
+            <i style="margin-right: 8px;">&#128181;</i> Rincian Tagihan
+          </h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="width: 40px; padding: 10px 5px; color: #7f8c8d;">1.</td>
+              <td style="padding: 10px 5px; color: #7f8c8d;">Iuran Anggota</td>
+              <td style="width: 20px; padding: 10px 5px; color: #7f8c8d;">:</td>
+              <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.pgri?.toLocaleString('id-ID') || '0'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 5px; color: #7f8c8d;">2.</td>
+              <td style="padding: 10px 5px; color: #7f8c8d;">Sanduka</td>
+              <td style="padding: 10px 5px; color: #7f8c8d;">:</td>
+              <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.sanduka?.toLocaleString('id-ID') || '0'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 5px; color: #7f8c8d;">3.</td>
+              <td style="padding: 10px 5px; color: #7f8c8d;">Daspen</td>
+              <td style="padding: 10px 5px; color: #7f8c8d;">:</td>
+              <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.daspen?.toLocaleString('id-ID') || '0'}</td>
+            </tr>
+          </table>
+          <div style="margin-top: 20px; background-color: #2c3e50; color: white; padding: 12px 15px; border-radius: 6px; display: flex; justify-content: space-between;">
+            <span style="font-weight: bold; font-size: 15px;">Total Tagihan</span>
+            <span style="font-weight: bold; font-size: 15px;">Rp. ${(
+        (dataIuran.pgri || 0) +
+        (dataIuran.sanduka || 0) +
+        (dataIuran.daspen || 0)
+      ).toLocaleString('id-ID')}</span>
+          </div>
+        </section>
+        
+        <footer style="margin-top: 40px; text-align: center; font-size: 12px; color: #95a5a6; padding-top: 20px; border-top: 1px solid #f0f0f0;">
+          Dokumen ini diterbitkan secara elektronik dan sah tanpa tanda tangan
+        </footer>
+      </div>
+    `;
+
+    if (typeof window !== "undefined") {
+      const html2pdf = (await import("html2pdf.js")).default;
+      const element = document.createElement("div");
+      element.innerHTML = content;
+      const opt = {
+        margin: 0.5,
+        filename: `Tagihan-${dataIuran.namaLengkap}.pdf`,
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: { scale: 2 },
         jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
@@ -241,25 +395,18 @@ export default function Tagihan() {
                   <h1 className="text-2xl md:text-3xl font-bold tracking-wide mb-1">
                     TAGIHAN ANGGOTA
                   </h1>
-                  <p className="text-blue-100 text-sm md:text-base">
-                    Periode{" "}
-                    {new Date().toLocaleDateString("id-ID", {
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </p>
                 </div>
               </div>
 
               <div className="bg-white shadow-lg rounded-b-2xl overflow-hidden">
                 <div className="p-4 md:p-8">
                   {dataIuran &&
-                    (dataIuran.totalIuranAnggota > 0 ||
-                      dataIuran.totalIuranDaspen > 0 ||
-                      dataIuran.totalIuranDerap > 0 ||
-                      dataIuran.totalIuranKalender > 0 ||
-                      dataIuran.totalIuranSanduka > 0 ||
-                      dataIuran.totalIuranSumbangan > 0) ? (
+                    (dataIuran.pgri > 0 ||
+                      dataIuran.daspen > 0 ||
+                      dataIuran.derap > 0 ||
+                      dataIuran.kalender > 0 ||
+                      dataIuran.sanduka > 0 ||
+                      dataIuran.sumbangan > 0) ? (
                     <div className="space-y-6">
                       <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl border border-blue-100 overflow-hidden">
                         <div className="p-4 border-b border-blue-100 flex items-center">
@@ -309,7 +456,7 @@ export default function Tagihan() {
                                     Nama
                                   </span>
                                   <p className="font-semibold text-gray-800 text-lg">
-                                    {dataIuran.namaAnggota}
+                                    {dataIuran.namaLengkap}
                                   </p>
                                 </div>
                               </div>
@@ -453,7 +600,7 @@ export default function Tagihan() {
 
                         <div className="bg-white p-4 md:p-6">
                           <div className="space-y-3">
-                            {dataIuran.totalIuranAnggota > 0 && (
+                            {dataIuran.pgri > 0 && (
                               <div className="flex justify-between items-center p-2 hover:bg-blue-50 rounded-lg transition-colors">
                                 <div className="flex items-center">
                                   <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
@@ -463,14 +610,14 @@ export default function Tagihan() {
                                 </div>
                                 <span className="font-semibold text-gray-900">
                                   Rp.{" "}
-                                  {dataIuran.totalIuranAnggota?.toLocaleString(
+                                  {dataIuran.pgri?.toLocaleString(
                                     "id-ID"
                                   )}
                                 </span>
                               </div>
                             )}
 
-                            {dataIuran.totalIuranSanduka > 0 && (
+                            {dataIuran.sanduka > 0 && (
                               <div className="flex justify-between items-center p-2 hover:bg-green-50 rounded-lg transition-colors">
                                 <div className="flex items-center">
                                   <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
@@ -480,14 +627,14 @@ export default function Tagihan() {
                                 </div>
                                 <span className="font-semibold text-gray-900">
                                   Rp.{" "}
-                                  {dataIuran.totalIuranSanduka?.toLocaleString(
+                                  {dataIuran.sanduka?.toLocaleString(
                                     "id-ID"
                                   )}
                                 </span>
                               </div>
                             )}
 
-                            {dataIuran.totalIuranDaspen > 0 && (
+                            {dataIuran.daspen > 0 && (
                               <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded-lg transition-colors">
                                 <div className="flex items-center">
                                   <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
@@ -497,14 +644,14 @@ export default function Tagihan() {
                                 </div>
                                 <span className="font-semibold text-gray-900">
                                   Rp.{" "}
-                                  {dataIuran.totalIuranDaspen?.toLocaleString(
+                                  {dataIuran.daspen?.toLocaleString(
                                     "id-ID"
                                   )}
                                 </span>
                               </div>
                             )}
 
-                            {dataIuran.totalIuranDerap > 0 && (
+                            {dataIuran.derap > 0 && (
                               <div className="flex justify-between items-center p-2 hover:bg-yellow-50 rounded-lg transition-colors">
                                 <div className="flex items-center">
                                   <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
@@ -514,14 +661,14 @@ export default function Tagihan() {
                                 </div>
                                 <span className="font-semibold text-gray-900">
                                   Rp.{" "}
-                                  {dataIuran.totalIuranDerap?.toLocaleString(
+                                  {dataIuran.derap?.toLocaleString(
                                     "id-ID"
                                   )}
                                 </span>
                               </div>
                             )}
 
-                            {dataIuran.totalIuranKalender > 0 && (
+                            {dataIuran.kalender > 0 && (
                               <div className="flex justify-between items-center p-2 hover:bg-red-50 rounded-lg transition-colors">
                                 <div className="flex items-center">
                                   <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
@@ -531,14 +678,14 @@ export default function Tagihan() {
                                 </div>
                                 <span className="font-semibold text-gray-900">
                                   Rp.{" "}
-                                  {dataIuran.totalIuranKalender?.toLocaleString(
+                                  {dataIuran.kalender?.toLocaleString(
                                     "id-ID"
                                   )}
                                 </span>
                               </div>
                             )}
 
-                            {dataIuran.totalIuranSumbangan > 0 && (
+                            {dataIuran.sumbangan > 0 && (
                               <div className="flex justify-between items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors">
                                 <div className="flex items-center">
                                   <div className="w-3 h-3 bg-indigo-500 rounded-full mr-3"></div>
@@ -548,7 +695,7 @@ export default function Tagihan() {
                                 </div>
                                 <span className="font-semibold text-gray-900">
                                   Rp.{" "}
-                                  {dataIuran.totalIuranSumbangan?.toLocaleString(
+                                  {dataIuran.sumbangan?.toLocaleString(
                                     "id-ID"
                                   )}
                                 </span>
@@ -564,17 +711,61 @@ export default function Tagihan() {
                               <div className="bg-gradient-to-r from-blue-700 to-blue-900 text-white px-6 py-3 rounded-lg font-bold shadow-md">
                                 Rp.{" "}
                                 {(
-                                  dataIuran.totalIuranAnggota +
-                                  dataIuran.totalIuranSanduka +
-                                  dataIuran.totalIuranDaspen +
-                                  dataIuran.totalIuranDerap +
-                                  dataIuran.totalIuranKalender +
-                                  dataIuran.totalIuranSumbangan
+                                  dataIuran.pgri +
+                                  dataIuran.sanduka +
+                                  dataIuran.daspen +
+                                  dataIuran.derap +
+                                  dataIuran.kalender +
+                                  dataIuran.sumbangan
                                 ).toLocaleString("id-ID")}
                               </div>
                             </div>
                           </div>
                         </div>
+                      </div>
+
+                      <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                        <button
+                          onClick={generatePowerOfAttorneyPDF}
+                          className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out flex items-center justify-center"
+                        >
+                          <svg
+                            className="w-5 h-5 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            ></path>
+                          </svg>
+                          Download Surat Kuasa
+                        </button>
+
+                        <button
+                          onClick={() => handleDownloadInformasiAnggota(dataIuran)}
+                          className="flex items-center justify-center px-6 py-3 font-bold text-white transition duration-300 ease-in-out rounded-xl shadow-md bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                        >
+                          <svg
+                            className="w-5 h-5 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M12 16v-4m0 4l-2-2m2 2l2-2M8 6h8a2 2 0 012 2v8h-2v4H8v-4H6V8a2 2 0 012-2z"
+                            />
+                          </svg>
+                          Cetak Tagihan
+                        </button>
                       </div>
                     </div>
                   ) : (
@@ -607,8 +798,7 @@ export default function Tagihan() {
 
                       <p className="text-gray-600 mb-8 max-w-md mx-auto">
                         Terima kasih atas kesabaran Anda. Detail tagihan Anda
-                        sedang diproses dan akan tersedia dalam beberapa hari
-                        kedepan.
+                        sedang diproses dan akan tersedia dalam beberapa saat lagi.
                       </p>
 
                       <div className="w-full max-w-md mx-auto bg-white rounded-full h-3 shadow-inner overflow-hidden">
@@ -619,34 +809,15 @@ export default function Tagihan() {
                       </div>
                     </div>
                   )}
-
-                  <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                    <button
-                      onClick={generatePowerOfAttorneyPDF}
-                      className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 px-6 rounded-xl shadow-md transition duration-300 ease-in-out flex items-center justify-center"
-                    >
-                      <svg
-                        className="w-5 h-5 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        ></path>
-                      </svg>
-                      Download Surat Kuasa
-                    </button>
-                  </div>
                   <div className="mt-10">
-                    <h3 className="text-xl font-semibold text-gray-800 mb-4">Surat kuasa ini disertai dengan dokumen-dokumen berikut:</h3>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                      Surat kuasa ini disertai dengan dokumen-dokumen berikut:
+                    </h3>
                     <ul className="list-inside list-disc pl-5 space-y-2">
                       <li className="text-gray-700">Fotokopi KTP</li>
-                      <li className="text-gray-700">Fotokopi Buku Rekening yang digunakan untuk surat kuasa</li>
+                      <li className="text-gray-700">
+                        Fotokopi Buku Rekening yang digunakan untuk surat kuasa
+                      </li>
                       <li className="text-gray-700">Materai 10.000</li>
                     </ul>
                   </div>

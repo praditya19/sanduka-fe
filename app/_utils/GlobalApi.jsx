@@ -8,7 +8,6 @@ const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
 });
-
 // Konversi Gambar Dalam Format Base64
 const base64ToBlob = (base64, mime) => {
   const byteChars = atob(base64);
@@ -2167,6 +2166,17 @@ const countResponsesByPengaduanId = async (pengaduanId) => {
   }
 };
 
+const getTagihanAnggotaById = async (userId) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/auth/user/${userId}/tagihan`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -2324,4 +2334,5 @@ export default {
   postIuranAnggota,
   countNewPengaduan,
   countResponsesByPengaduanId,
+  getTagihanAnggotaById
 };
