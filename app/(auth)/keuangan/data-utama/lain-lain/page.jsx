@@ -1,6 +1,4 @@
 "use client";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -9,7 +7,12 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
-import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaTimesCircle,
+  FaCheckCircle,
+  FaExclamationCircle,
+} from "react-icons/fa";
+import { Plus } from "lucide-react";
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -22,20 +25,20 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
       default:
-        return 'bg-blue-100';
+        return "bg-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case 'error':
+      case "error":
         return <FaExclamationCircle className="text-red-500 text-3xl" />;
       default:
         return null;
@@ -44,19 +47,24 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
       default:
-        return 'text-blue-800';
+        return "text-blue-800";
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -66,17 +74,13 @@ const NotificationPopup = ({ type, message, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
+          <div className="animate-bounce">{getIcon()}</div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+            {type === "success" ? "Berhasil!" : "Gagal!"}
           </h3>
 
-          <div className={`${getTextColor()} text-center`}>
-            {message}
-          </div>
+          <div className={`${getTextColor()} text-center`}>{message}</div>
         </div>
       </div>
     </div>
@@ -84,176 +88,172 @@ const NotificationPopup = ({ type, message, onClose }) => {
 };
 
 function KalenderForm() {
-  const dropdownRef = useRef(null);
-  const [provinsi, setProvinsi] = useState(0);
-  const [kabupaten, setKabupaten] = useState(0);
-  const [cabang, setCabang] = useState(0);
-  const [totalHarga, setTotalHarga] = useState(0);
-  const [totalHargaAkhir, setTotalHargaAkhir] = useState(0);
-  const [jumlahPesanan, setJumlahPesanan] = useState(0);
-  const [setorProvinsi, setSetorProvinsi] = useState(0);
-  const [untukKabupaten, setUntukKabupaten] = useState(0);
-  const [untukCabang, setUntukCabang] = useState(0);
-  const [selectedBulan, setSelectedBulan] = useState("");
-  const [jenisCabang, setJenisCabang] = useState("");
-  const [tableData, setTableData] = useState([]);
-  const [selectedCabang, setSelectedCabang] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
-  const [cabangList, setCabangList] = useState([]);
-  const currentYear = new Date().getFullYear();
-  const startYear = 2020;
-  const [newCabangList, setNewCabangList] = useState([]);
-  const [selectedBulanBaru, setSelectedBulanBaru] = useState("");
-  const [newSelectedYear, setNewSelectedYear] = useState(
-    new Date().getFullYear()
-  );
-  const [bulanList, setBulanList] = useState([]);
   const tableRef = useRef();
   const [notification, setNotification] = useState(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filteredTableData, setFilteredTableData] = useState(tableData);
+  const [filteredTableData, setFilteredTableData] = useState([]);
   const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredCabangOptions, setFilteredCabangOptions] = useState([]);
-  const [chosenCabang, setChosenCabang] = useState("");
-  const [cabangOptions, setCabangOptions] = useState([]);
-  const [selectedItemId, setSelectedItemId] = useState(null);
-  const [isEditMode, setIsEditMode] = useState(false);
   const [bulan, setBulan] = useState("");
-  const [tahun, setTahun] = useState(""); 
+  const [tahun, setTahun] = useState("");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (selectedBulanBaru && newSelectedYear) {
-          const data = await GlobalApi.getTableKalender(
-            selectedBulanBaru,
-            newSelectedYear,
-            newCabangList
-          );
-          setTableData(data);
-          setFilteredTableData(data);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedOption, setSelectedOption] = useState("");
+  const [keterangan, setKeterangan] = useState("");
+  const [nominal, setNominal] = useState("");
+  const [rawNominal, setRawNominal] = useState("");
+  const [keteranganOptions, setKeteranganOptions] = useState([]);
+  const [isManualInput, setIsManualInput] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
-    fetchData();
-  }, [selectedBulanBaru, newSelectedYear, newCabangList]);
+  const handleAddClick = () => {
+    setShowDropdown(true);
+  };
 
-  useEffect(() => {
-    if (!selectedBulanBaru || !newSelectedYear) {
-      setTableData([]);
-    }
-  }, [selectedBulanBaru, newSelectedYear]);
+  const handleOptionChange = (e) => {
+    setSelectedOption(e.target.value);
+  };
 
-  const years = Array.from(
-    { length: currentYear - startYear + 1 },
-    (_, index) => startYear + index
-  );
-
-  const getCurrentMonthAndYear = () => {
+  const handleSubmitForm = async () => {
     const now = new Date();
-    const month = now.toLocaleString("id-ID", { month: "long" });
-    const year = now.getFullYear();
+    const bulan = now.toLocaleString("id-ID", { month: "long" });
+    const tahun = now.getFullYear();
 
-    return { month, year };
-  };
-
-  useEffect(() => {
-    const { month, year } = getCurrentMonthAndYear();
-    setSelectedBulan(month);
-    setSelectedYear(year);
-  }, []);
-
-  useEffect(() => {
-    const fetchBulan = async () => {
-      try {
-        const response = await GlobalApi.getBulan();
-        setBulanList(response.data || []);
-      } catch (error) {
-        console.error("Error fetching bulan:", error);
-      }
+    const payload = {
+      propinsi: selectedOption === "Provinsi" ? selectedOption : "",
+      kabupaten: selectedOption === "Kabupaten" ? selectedOption : "",
+      cabang: selectedOption === "Cabang" ? selectedOption : "",
+      keterangan: keterangan,
+      jumlahNominal: rawNominal,
+      bulan: bulan,
+      tahun: tahun,
     };
 
-    fetchBulan();
-  }, []);
-
-  useEffect(() => {
-    if (bulanList.length > 0) {
-      const currentMonthIndex = new Date().getMonth();
-      const currentMonth = bulanList[currentMonthIndex]?.namaBulan || "";
-      setSelectedBulanBaru(currentMonth);
-    }
-  }, [bulanList]);
-
-  useEffect(() => {
-    const fetchCabangData = async () => {
-      try {
-        const response = await GlobalApi.getCabang();
-        setCabangList(response.data);
-        setCabangOptions(response.data);
-      } catch (error) {
-        console.error("Error fetching cabang data:", error);
-      }
-    };
-
-    fetchCabangData();
-  }, []);
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    if (isDropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isDropdownOpen]);
-
-  const filteredCabangList = cabangList.filter((cabang) =>
-    cabang.kecamatan.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const handleCabangSelect = (cabang) => {
-    setSelectedCabang(cabang);
-    setIsDropdownOpen(false);
-  };
-
-  const handleSearchInputChange = (e) => {
-    const searchValue = e.target.value.toLowerCase();
-    setSearchTerm(searchValue);
-
-    const filteredOptions = cabangOptions.filter((cabang) =>
-      cabang.kecamatan.toLowerCase().includes(searchValue)
-    );
-    setFilteredCabangOptions(filteredOptions);
-  };
-
-  const handleCabangSelection = (cabang) => {
-    setChosenCabang(cabang.kecamatan || "Pilih Cabang");
-    setDropdownVisible(false);
-
-    if (cabang.kecamatan) {
-      const filteredData = tableData.filter(
-        (row) => row.cabang === cabang.kecamatan
-      );
-      setFilteredTableData(filteredData);
-    } else {
-      setFilteredTableData(tableData);
+    try {
+      await GlobalApi.postLainlain(payload);
+      setNotification({
+        type: "success",
+        message: "Data berhasil disimpan!",
+      });
+      setShowDropdown(false);
+      setSelectedOption("");
+      setKeterangan("");
+      setNominal("");
+      fetchLainLainData();
+    } catch (error) {
+      console.error("Gagal menyimpan data:", error);
+      setNotification({
+        type: "error",
+        message: "Gagal menyimpan data. Silakan coba lagi.",
+      });
     }
   };
+
+  const fetchLainLainData = async () => {
+    try {
+      const response = await GlobalApi.getLainlain();
+      setFilteredTableData(response);
+    } catch (error) {
+      console.error("Gagal mengambil data Lain-lain:", error);
+    }
+  };
+
+  const fetchKeteranganOptions = async () => {
+    try {
+      const response = await GlobalApi.getKeteranganLainlain();
+      setKeteranganOptions(response);
+    } catch (error) {
+      console.error("Gagal mengambil data keterangan:", error);
+    }
+  };
+
+  const handleUpdate = (id) => {
+    const item = filteredTableData.find((i) => i.id === id);
+    if (!item) return;
+
+    const tipe = item.propinsi
+      ? "Provinsi"
+      : item.kabupaten
+      ? "Kabupaten"
+      : item.cabang
+      ? "Cabang"
+      : "";
+
+    setSelectedOption(tipe);
+    setKeterangan(item.keterangan);
+    setRawNominal(item.jumlahNominal?.toString() || "");
+    setNominal(`Rp ${parseInt(item.jumlahNominal).toLocaleString("id-ID")}`);
+
+    setIsEditing(true);
+    setEditingId(id);
+    setShowDropdown(true);
+  };
+
+  const handleUpdateForm = async () => {
+    if (!selectedOption || !keterangan || !rawNominal) {
+      alert("Semua field wajib diisi.");
+      return;
+    }
+
+    const updatedData = {
+      propinsi: selectedOption === "Provinsi" ? selectedOption : "",
+      kabupaten: selectedOption === "Kabupaten" ? selectedOption : "",
+      cabang: selectedOption === "Cabang" ? selectedOption : "",
+      keterangan: keterangan,
+      jumlahNominal: rawNominal,
+      bulan: bulan,
+      tahun: tahun,
+    };
+
+    try {
+      if (isEditing && editingId) {
+        await GlobalApi.updateLainlain(editingId, updatedData);
+        setNotification({
+          type: "success",
+          message: "Data berhasil diupdate!",
+        });
+      }
+
+      fetchLainLainData();
+      setSelectedOption("");
+      setKeterangan("");
+      setRawNominal("");
+      setNominal("");
+      setIsEditing(false);
+      setEditingId(null);
+      setShowDropdown(false);
+      setIsManualInput(false);
+    } catch (error) {
+      console.error("Gagal simpan/update:", error);
+      setNotification({
+        type: "error",
+        message: "Gagal mengupdate data. Silakan coba lagi.",
+      });
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await GlobalApi.deleteLainlain(id);
+      setNotification({
+        type: "success",
+        message: "Data berhasil dihapus!",
+      });
+      fetchLainLainData();
+    } catch (error) {
+      console.error("Gagal menghapus data:", error);
+      setNotification({
+        type: "error",
+        message: "Gagal menghapus data. Silakan coba lagi.",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchLainLainData();
+    fetchKeteranganOptions();
+    setIsManualInput(false);
+    setKeterangan("");
+  }, []);
 
   const handleOutsideClick = (e) => {
     if (!e.target.closest(".relative")) {
@@ -270,37 +270,6 @@ function KalenderForm() {
     };
   }, [dropdownVisible]);
 
-  useEffect(() => {
-    const storedData = sessionStorage.getItem("kalenderData");
-
-    if (storedData) {
-      const data = JSON.parse(storedData);
-      const firstItem = data;
-
-      if (firstItem) {
-        setProvinsi(firstItem.propinsi);
-        setKabupaten(firstItem.kabupaten);
-        setCabang(firstItem.cabang);
-      }
-    }
-  }, []);
-
-  const handleProvinsiChange = (e) => {
-    setProvinsi(e.target.value);
-  };
-
-  const handleKabupatenChange = (e) => {
-    setKabupaten(e.target.value);
-  };
-
-  const handleCabangChange = (e) => {
-    setCabang(e.target.value);
-  };
-
-  const handleJumlahPesananChange = (e) => {
-    setJumlahPesanan(e.target.value);
-  };
-
   const printTable = () => {
     const printContent = tableRef.current;
     const originalContent = document.body.innerHTML;
@@ -311,196 +280,6 @@ function KalenderForm() {
 
     document.body.innerHTML = originalContent;
     window.location.reload();
-  };
-
-  const handleJenisCabangChange = (e) => {
-    setJenisCabang(e.target.value);
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    const payload = {
-      pb: "",
-      propinsi: provinsi,
-      kabupaten: kabupaten,
-      cabang: cabang,
-      sanduka: "",
-      iuran: "KALENDER",
-    };
-
-    const payload2 = {
-      cabang: selectedCabang,
-      jumlah: jumlahPesanan,
-      bulan: selectedBulan,
-      tahun: selectedYear,
-      perolehanKabupaten: untukKabupaten,
-      perolehanCabang: untukCabang,
-    };
-
-    try {
-      const id = 1;
-      const result1 = await GlobalApi.updateIuranData(id, payload);
-      const result2 = await GlobalApi.createTargetKalender(payload2);
-
-      setFilteredTableData((prevTableData) => [
-        ...prevTableData,
-        {
-          id: result2.id,
-          cabang: selectedCabang,
-          jumlah: jumlahPesanan,
-          bulan: selectedBulan,
-          tahun: selectedYear,
-          total: calculateTotal(
-            jumlahPesanan,
-            untukCabang,
-            untukKabupaten,
-            provinsi
-          ),
-        },
-      ]);
-      setNotification({
-        type: 'success',
-        message: `Data Berhasil disimpan!`
-      });
-    } catch (error) {
-      console.error("Error saat menyimpan data: ", error);
-      setNotification({
-        type: 'success',
-        message: `Gagal Menyimpan Data!`
-      });
-    }
-  };
-
-  const handleUpdate = (id) => {
-      const selectedItem = filteredTableData.find((item) => item.id === id);
-      if (selectedItem) {
-        setSelectedCabang(selectedItem.cabang);
-        setJumlahPesanan(selectedItem.jumlah);
-        setBulan(selectedItem.bulan);  // Ambil bulan dari data API
-        setTahun(selectedItem.tahun);  // Ambil tahun dari data API
-        setSelectedItemId(id);
-        setIsEditMode(true); // Aktifkan mode edit
-      }
-    };
-  
-    const handleSaveUpdate = async () => {
-      if (!selectedItemId) return;
-    
-      const updatedData = {
-        cabang: selectedCabang,
-        jumlah: jumlahPesanan,
-        bulan,
-        tahun,
-      };
-    
-      try {
-        await GlobalApi.updateKalender(selectedItemId, updatedData);
-    
-        setTableData((prevData) =>
-          prevData.map((item) =>
-            item.id === selectedItemId ? { ...item, ...updatedData } : item
-          )
-        );
-    
-        setFilteredTableData((prevData) =>
-          prevData.map((item) =>
-            item.id === selectedItemId ? { ...item, ...updatedData } : item
-          )
-        );
-    
-        setIsEditMode(false);
-        setSelectedItemId(null);
-      } catch (error) {
-        alert("Gagal memperbarui data.");
-      }
-  };
-  
-  const handleDelete = async (id) => {
-      console.log("Hapus item dengan ID:", id);
-      try {
-        await GlobalApi.deleteKalender(id);
-        setTableData((prevData) => prevData.filter((item) => item.id !== id));
-        setFilteredTableData((prevData) => prevData.filter((item) => item.id !== id));
-      } catch (error) {
-        console.error("Gagal menghapus data:", error);
-        alert("Gagal menghapus data!");
-      }
-    }; 
-
-  const kalenderData = JSON.parse(sessionStorage.getItem("kalenderData"));
-
-  const firstItem = kalenderData
-    ? kalenderData
-    : { cabang: 0, kabupaten: 0, propinsi: 0 };
-
-  const calculateTotal = (jumlah, cabang, kabupaten, propinsi) => {
-    const cabangMultiplier = cabang || 0;
-    const kabupatenMultiplier = kabupaten || 0;
-    const propinsiMultiplier = propinsi || 0;
-
-    const resultCabang = jumlah * cabangMultiplier;
-    const resultKabupaten = jumlah * kabupatenMultiplier;
-    const resultProvinsi = jumlah * propinsiMultiplier;
-
-    return resultCabang + resultKabupaten + resultProvinsi;
-  };
-
-  const calculateTotalHarga = () => {
-    const hargaProvinsi = parseInt(provinsi) || 0;
-    const hargaKabupaten = parseInt(kabupaten) || 0;
-    const hargaCabang = parseInt(cabang) || 0;
-    const jumlahPesananInt = parseInt(jumlahPesanan) || 1;
-
-    const setorProvinsiTotal = hargaProvinsi * jumlahPesananInt;
-    const untukKabupatenTotal = hargaKabupaten * jumlahPesananInt;
-    const untukCabangTotal = hargaCabang * jumlahPesananInt;
-
-    const total = hargaProvinsi + hargaKabupaten + hargaCabang;
-    setTotalHarga(total);
-
-    const totalAkhir =
-      setorProvinsiTotal + untukKabupatenTotal + untukCabangTotal;
-    setTotalHargaAkhir(totalAkhir);
-
-    setSetorProvinsi(setorProvinsiTotal);
-    setUntukKabupaten(untukKabupatenTotal);
-    setUntukCabang(untukCabangTotal);
-  };
-
-  const resetForm = () => {
-    const storedData = sessionStorage.getItem("kalenderData");
-
-    if (storedData) {
-      const data = JSON.parse(storedData);
-      const firstItem = data;
-
-      if (firstItem) {
-        setProvinsi(firstItem.propinsi || 0);
-        setKabupaten(firstItem.kabupaten || 0);
-        setCabang(firstItem.cabang || 0);
-        setTotalHarga(firstItem.totalHarga || 0);
-      }
-    } else {
-      setProvinsi(0);
-      setKabupaten(0);
-      setCabang(0);
-      setTotalHarga(0);
-    }
-
-    setJumlahPesanan(0);
-    setSetorProvinsi(0);
-    setUntukKabupaten(0);
-    setUntukCabang(0);
-    setTotalHargaAkhir(0);
-    setJenisCabang("");
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      calculateTotalHarga();
-      e.preventDefault();
-    }
   };
 
   const formatRupiah = (value) => {
@@ -555,7 +334,7 @@ function KalenderForm() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Kalender</h1>
+              <h1 className="text-base">Lain - Lain</h1>
             </div>
           </div>
         </header>
@@ -569,7 +348,7 @@ function KalenderForm() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Kalender</h1>
+              <h1 className="text-base">Lain - Lain</h1>
             </div>
           </div>
         </header>
@@ -578,8 +357,9 @@ function KalenderForm() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           {notification && (
             <NotificationPopup
@@ -589,288 +369,143 @@ function KalenderForm() {
             />
           )}
           <div className="min-h-screen bg-gray-50 p-2 md:p-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="p-6 rounded-lg shadow-lg border border-gray-200 bg-white">
-                <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-5 text-center">
-                  Besaran Inputan Kalender
-                </h2>
+            <div className="p-6 rounded-lg shadow-lg border border-gray-200 bg-white">
+              <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-5 text-center">
+                Lain - Lain
+              </h2>
+
+              {!showDropdown ? (
+                <div className="flex justify-center mb-6">
+                  <button
+                    onClick={handleAddClick}
+                    className="text-white bg-teal-700 hover:bg-teal-800 p-6 rounded-full shadow-lg focus:outline-none"
+                  >
+                    <Plus size={48} />
+                  </button>
+                </div>
+              ) : (
                 <div className="space-y-6">
-                  {[
-                    {
-                      id: "provinsi",
-                      label: "Provinsi",
-                      value: provinsi,
-                      onChange: handleProvinsiChange,
-                    },
-                    {
-                      id: "kabupaten",
-                      label: "Kabupaten",
-                      value: kabupaten,
-                      onChange: handleKabupatenChange,
-                    },
-                    {
-                      id: "cabang",
-                      label: "Cabang/Ranting",
-                      value: cabang,
-                      onChange: handleCabangChange,
-                    },
-                    {
-                      id: "totalHarga",
-                      label: "Total Harga",
-                      value: totalHarga,
-                      readOnly: true,
-                      customClass: "bg-gray-200",
-                    },
-                  ].map((field) => (
-                    <div
-                      key={field.id}
-                      className="flex flex-col lg:flex-row items-center mb-4"
+                  <div className="mb-4">
+                    <label className="block mb-2 font-medium text-gray-700">
+                      Pilih Tipe:
+                    </label>
+                    <select
+                      value={selectedOption}
+                      onChange={handleOptionChange}
+                      className="w-full border border-gray-300 p-2 rounded-md"
                     >
-                      <Label
-                        htmlFor={field.id}
-                        className="block text-gray-800 text-lg font-semibold mb-2 lg:mb-0 lg:w-full"
-                      >
-                        {field.label}
-                      </Label>
-                      <Input
-                        type="number"
-                        id={field.id}
-                        className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out lg:ml-4 ${field.customClass || ""
-                          }`}
-                        onKeyPress={handleKeyPress}
-                        value={field.value}
-                        onChange={field.onChange}
-                        readOnly={field.readOnly}
-                      />
-                    </div>
-                  ))}
-
-                  <div className="flex flex-col lg:flex-row items-center mb-4">
-                    <Label
-                      htmlFor="jumlahPesanan"
-                      className="block text-gray-800 text-lg font-semibold mb-2 lg:mb-0 w-full lg:w-auto mr-8"
-                    >
-                      Jumlah Pesanan
-                    </Label>
-                    <div className="relative " ref={dropdownRef}>
-                      <Input
-                        type="text"
-                        className="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        readOnly
-                        value={selectedCabang || ""}
-                        placeholder="Pilih Cabang"
-                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        onFocus={() => {
-                          setSearchQuery("");
-                        }}
-                      />
-
-                      {isDropdownOpen && (
-                        <div className="absolute w-full mt-1 bg-white border rounded shadow-lg z-10">
-                          <ul className="max-h-44 overflow-y-auto">
-                            <li className="py-2 px-2">
-                              <Input
-                                type="text"
-                                className="w-full p-2 border-b text-gray-700 focus:outline-none"
-                                placeholder="Cari cabang..."
-                                value={searchQuery}
-                                onChange={handleSearchChange}
-                                autoFocus
-                              />
-                            </li>
-                            {filteredCabangList.map((cabang) => (
-                              <li
-                                key={cabang.id}
-                                className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                onClick={() =>
-                                  handleCabangSelect(cabang.kecamatan)
-                                }
-                              >
-                                {cabang.kecamatan}
-                              </li>
-                            ))}
-                            {filteredCabangList.length === 0 && (
-                              <li className="p-2 text-gray-500">
-                                Cabang tidak ditemukan
-                              </li>
-                            )}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                    <Input
-                      type="number"
-                      id="jumlahPesananInput"
-                      className="w-full lg:w-1/3 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out mt-2 lg:mt-0 lg:ml-4"
-                      value={jumlahPesanan}
-                      onChange={handleJumlahPesananChange}
-                      onKeyPress={handleKeyPress}
-                    />
+                      <option value="">-- Pilih --</option>
+                      <option value="Provinsi">Provinsi</option>
+                      <option value="Kabupaten">Kabupaten</option>
+                      <option value="Cabang">Cabang</option>
+                    </select>
                   </div>
+
+                  {selectedOption && (
+                    <>
+                      <div>
+                        <label className="block mb-2 font-medium text-gray-700">
+                          Keterangan
+                        </label>
+
+                        {!isManualInput ? (
+                          <select
+                            value={keterangan}
+                            onChange={(e) => {
+                              if (e.target.value === "__manual__") {
+                                setKeterangan("");
+                                setIsManualInput(true);
+                              } else {
+                                setKeterangan(e.target.value);
+                              }
+                            }}
+                            className="w-full border border-gray-300 p-2 rounded-md"
+                          >
+                            <option value="">-- Pilih Keterangan --</option>
+                            {keteranganOptions.map((item, idx) => (
+                              <option key={idx} value={item}>
+                                {item}
+                              </option>
+                            ))}
+                            <option value="__manual__">+ Tambah Manual</option>
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            value={keterangan}
+                            onChange={(e) => setKeterangan(e.target.value)}
+                            className="w-full border border-gray-300 p-2 rounded-md mt-2"
+                            placeholder="Masukkan keterangan manual"
+                          />
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block mb-2 font-medium text-gray-700">
+                          Nominal
+                        </label>
+                        <input
+                          type="text"
+                          value={nominal}
+                          onChange={(e) => {
+                            let input = e.target.value.replace(/[^0-9]/g, "");
+
+                            setRawNominal(input);
+                            setNominal(
+                              input
+                                ? `Rp ${parseInt(input).toLocaleString(
+                                    "id-ID"
+                                  )}`
+                                : ""
+                            );
+                          }}
+                          className="w-full border border-gray-300 p-2 rounded-md"
+                          placeholder="Masukkan nominal"
+                        />
+                      </div>
+                    </>
+                  )}
 
                   <div className="flex justify-center space-x-4 mt-6">
-                    <Button
-                      className="bg-green-700 hover:bg-green-900 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
-                      onClick={calculateTotalHarga}
+                    <button
+                      onClick={isEditing ? handleUpdateForm : handleSubmitForm}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg"
                     >
-                      Hitung
-                    </Button>
-                    <Button
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
-                        onClick={isEditMode ? handleSaveUpdate : handleSubmit}
-                      >
-                        {isEditMode ? "Update" : "Simpan"}
-                      </Button>
-                    <Button
-                      className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-600 transition duration-150 ease-in-out"
-                      onClick={resetForm}
+                      {isEditing ? "Update" : "Simpan"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowDropdown(false);
+                        setSelectedOption("");
+                        setKeterangan("");
+                        setNominal("");
+                      }}
+                      className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-600"
                     >
                       Reset
-                    </Button>
+                    </button>
                   </div>
                 </div>
-              </div>
-
-              <div className="p-6 rounded-lg shadow-md border border-gray-200 bg-white">
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Jumlah Pesanan :
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>{jumlahPesanan} eksemplar</b>
-                  </p>
-                </div>
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Setor Provinsi:
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>Rp. {setorProvinsi.toLocaleString()}</b>
-                  </p>
-                </div>
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Untuk Kabupaten:
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>Rp. {untukKabupaten.toLocaleString()}</b>
-                  </p>
-                </div>
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Untuk Cabang:
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>Rp. {untukCabang.toLocaleString()}</b>
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Total:
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>Rp. {totalHargaAkhir.toLocaleString()}</b>
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
-            <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
-              <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
-                <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
-                  <div className="relative flex flex-col md:flex ml-2">
-                    <Input
-                      type="text"
-                      placeholder="Pilih Cabang"
-                      value={chosenCabang || "Pilih Cabang"}
-                      readOnly
-                      onFocus={() => {
-                        setDropdownVisible(true);
-                        setSearchTerm("");
-                        setFilteredCabangOptions(cabangOptions);
-                      }}
-                      className="border rounded-lg p-2 px-4 w-52 bg-white shadow-sm cursor-pointer"
-                    />
-
-                    {dropdownVisible && (
-                      <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full">
-                        <ul className="max-h-44 overflow-y-auto">
-                          <li className="py-2 px-2">
-                            <Input
-                              type="text"
-                              value={searchTerm}
-                              onChange={handleSearchInputChange}
-                              className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              placeholder="Cari Cabang..."
-                              autoFocus
-                            />
-                          </li>
-                          <li
-                            className="p-2 cursor-pointer hover:bg-gray-100"
-                            onClick={() =>
-                              handleCabangSelection({ kecamatan: "", id: "" })
-                            }
-                          >
-                            Pilih Cabang
-                          </li>
-                          {filteredCabangOptions.length > 0 ? (
-                            filteredCabangOptions.map((cabang) => (
-                              <li
-                                key={cabang.id}
-                                className="p-2 cursor-pointer hover:bg-gray-100"
-                                onClick={() => handleCabangSelection(cabang)}
-                              >
-                                {cabang.kecamatan}
-                              </li>
-                            ))
-                          ) : (
-                            <li className="px-4 py-2 text-gray-500 cursor-default">
-                              Tidak ada hasil
-                            </li>
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                  <select
-                    className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    id="bulanTableBaru"
-                    value={selectedBulanBaru}
-                    onChange={(e) => setSelectedBulanBaru(e.target.value)}
-                  >
-                    <option value="">Pilih Bulan</option>
-                    {bulanList.map((bulan) => (
-                      <option key={bulan.id} value={bulan.namaBulan}>
-                        {bulan.namaBulan}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
-                    id="tahunTable"
-                    value={newSelectedYear}
-                    onChange={(e) => setNewSelectedYear(e.target.value)}
-                  >
-                    <option value="">Pilih Tahun</option>
-
-                    {years.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-                  Transaksi {selectedBulanBaru} {newSelectedYear}
-                </h1>
-                <Button
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out mt-3 mr-6 w-24"
-                  onClick={printTable}
+            <div className="flex items-end justify-end mt-2 md:mt-0 gap-4">
+              <Button
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out mt-3 mr-6 w-24 gap-2"
+                onClick={printTable}
+              >
+                <span>Cetak</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
                 >
-                  Cetak
-                </Button>
-              </div>
+                  <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                  <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                </svg>
+              </Button>
             </div>
-
             <div ref={tableRef} className="overflow-x-auto">
               <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
@@ -879,59 +514,67 @@ function KalenderForm() {
                       No
                     </th>
                     <th scope="col" className="px-6 py-3 text-center">
-                      Cabang Khusus
+                      Kategori
                     </th>
                     <th scope="col" className="px-6 py-3 text-center">
-                      Pesanan
+                      Keterangan
                     </th>
                     <th scope="col" className="px-6 py-3 text-center">
-                      Total
+                      Nominal
                     </th>
                     <th scope="col" className="px-6 py-3 text-center">
-                    Action
+                      Action
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTableData.length > 0 ? (
-                    filteredTableData.map((item, index) => (
-                      <tr
-                        key={item.id}
-                        className="border px-2 py-2 text-sm text-black"
-                      >
-                        <td className="px-6 py-4 border text-sm text-gray-800 text-center">
-                          {index + 1}
-                        </td>
-                        <td className="px-4 py-4 border text-sm text-gray-800">
-                          {item.cabang}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {item.jumlah}
-                        </td>
-                        <td className="px-6 py-4 text-center border text-sm text-gray-800">
-                          {formatRupiah(
-                            calculateTotal(
-                              item.jumlah,
-                              parseInt(firstItem.cabang),
-                              parseInt(firstItem.kabupaten),
-                              parseInt(firstItem.propinsi)
-                            )
-                          )}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded mr-2" onClick={() => handleUpdate(item.id)}>Edit</button>
-                        <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded" onClick={() => handleDelete(item.id)}>Hapus</button>
-                        </td>
-                      </tr>
-                    ))
+                  {filteredTableData && filteredTableData.length > 0 ? (
+                    filteredTableData.map((item, index) => {
+                      const kategori =
+                        item.propinsi || item.kabupaten || item.cabang;
+
+                      return (
+                        <tr
+                          key={item.id}
+                          className="border px-2 py-2 text-sm text-black"
+                        >
+                          <td className="px-6 py-4 border text-sm text-gray-800 text-center">
+                            {index + 1}
+                          </td>
+                          <td className="px-4 py-4 border text-sm text-gray-800 text-center">
+                            {kategori}
+                          </td>
+                          <td className="border px-6 py-4 text-center text-sm text-black">
+                            {item.keterangan}
+                          </td>
+                          <td className="px-6 py-4 text-center border text-sm text-gray-800">
+                            {formatRupiah(item.jumlahNominal)}
+                          </td>
+                          <td className="border px-6 py-4 text-center text-sm text-black">
+                            <button
+                              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded mr-2"
+                              onClick={() => handleUpdate(item.id)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded"
+                              onClick={() => handleDelete(item.id)}
+                            >
+                              Hapus
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                      <td className="border px-6 py-4 text-center text-sm text-black"></td>
-                      <td className="border px-6 py-4 text-sm text-black">
-                        Jumlah
+                      <td
+                        className="border px-6 py-4 text-sm text-black text-center"
+                        colSpan={5}
+                      >
+                        Data Tidak Ditemukan
                       </td>
-                      <td className="border px-6 py-4 text-sm text-black">0</td>
-                      <td className="border px-6 py-4 text-sm text-black">0</td>
                     </tr>
                   )}
                 </tbody>

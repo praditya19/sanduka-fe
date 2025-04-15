@@ -1044,7 +1044,65 @@ const updateKalender = async (id, updatedData) => {
   }
 };
 // END
+// lain lain
+const postLainlain = async (payload) => {
+  try {
+    const response = await axiosClient.post("/api/tabel-lain-lain", payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating lain lain data:", error);
+    throw error;
+  }
+};
 
+const getLainlain = async () => {
+  try {
+    const response = await axiosClient.get(`/api/tabel-lain-lain`);
+    return response.data;
+  } catch (error) {
+    console.error("Error get data Lain Lain:", error);
+    throw error;
+  }
+};
+
+const getKeteranganLainlain = async () => {
+  try {
+    const response = await axiosClient.get(`/api/tabel-lain-lain/keterangan`);
+    return response.data;
+  } catch (error) {
+    console.error("Error get Keterangan Lain Lain:", error);
+    throw error;
+  }
+};
+
+const updateLainlain = async (id, updatedData) => {
+  try {
+    const response = await axiosClient.put(
+      `/api/tabel-lain-lain/${id}`,
+      updatedData
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating derap data: ", error);
+    throw error;
+  }
+};
+
+const deleteLainlain = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/tabel-lain-lain/${id}`);
+    return response;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
+// END
 // Sanduka
 // Pemasukan & Pengeluaran Sanduka
 const sendSesuaiJumlahTarget = async (data) => {
@@ -2240,18 +2298,22 @@ export default {
   getLaporanPemasukanTahunan,
   getLaporanPengeluaranTahunan,
   getLaporanPemasukan,
+  deleteLainlain,
   getLaporanPengeluaran,
   getNotifikasi,
   getAnggotaMeninggal,
   uploadFile,
   getAllFiles,
   updateUserById,
+  postLainlain,
   updateVerified,
   getSaldoAkhir,
   keluarAnggota,
   pensiunAnggota,
   mutasiCabangUnitKerja,
+  getLainlain,
   getByNIP,
+  getKeteranganLainlain,
   updateRegisUser,
   getNoBukti,
   sendSesuaiJumlahTarget,
@@ -2310,6 +2372,7 @@ export default {
   getNamaRantingByCabang,
   getNominalAggregatedData,
   uploadFileRegister,
+  updateLainlain,
   deleteUnitKerjaRanting,
   deleteNamaRanting,
   getRekapRanting,
