@@ -20,7 +20,7 @@ import { FiTrash } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { ClipLoader } from "react-spinners";
 import Image from "next/image";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -393,7 +393,7 @@ function RekapAnggota() {
           derap: 0,
           kalender: 0,
           totalIuran: 0,
-        };        
+        };
       }
       acc[unitKey].members.push({
         namaAnggota: item.namaAnggota,
@@ -666,14 +666,14 @@ function RekapAnggota() {
   const handleMemberClick = async (member) => {
     // console.log("NIP Member:", member.nip); // Tambahkan ini
     setNipValue(member.nip);
-  
+
     setSelectedMember(null);
     setDataNpa(null);
     setFotoBase64(null);
     setDataIuran(null);
     setIsPopupVisible(false);
     setIdIuran(null);
-  
+
     try {
       const fileResponse = await GlobalApi.getFileByNip(member.nip);
       if (fileResponse?.sumbangan) {
@@ -682,17 +682,17 @@ function RekapAnggota() {
     } catch (error) {
       console.error("Gagal mengambil file by NIP:", error);
     }
-    
+
     try {
       const response = await GlobalApi.cekNpaList([member.npaPgri]);
-  
+
       setSelectedMember(member);
       setDataNpa(response[0]);
-  
+
       if (member.daspen) {
         setDaspenValue(member.daspen);
       }
-  
+
       if (response[0].foto) {
         try {
           const decodedString = atob(response[0].foto);
@@ -702,26 +702,28 @@ function RekapAnggota() {
           setFotoBase64(null);
         }
       }
-  
+
       try {
         const iuranResponse = await GlobalApi.getIuranAnggota(member.npaPgri);
         setDataIuran(iuranResponse);
-  
+
         if (iuranResponse?.id) {
           setIdIuran(iuranResponse.id);
         }
       } catch (error) {
         console.error("Gagal mengambil data iuran anggota:", error);
-  
+
         if (error.response?.status === 500) {
-          console.warn("Server error 500: menggunakan nilai default dari sessionStorage");
+          console.warn(
+            "Server error 500: menggunakan nilai default dari sessionStorage"
+          );
           const pgriData = JSON.parse(sessionStorage.getItem("PGRIData"));
           const totalIuranPGRI =
             parseInt(pgriData.pb || 0) +
             parseInt(pgriData.propinsi || 0) +
             parseInt(pgriData.kabupaten || 0) +
             parseInt(pgriData.cabang || 0);
-  
+
           const fallbackData = {
             iuranAnggota: totalIuranPGRI,
             manualIuranAnggota: 0,
@@ -730,12 +732,12 @@ function RekapAnggota() {
             manualIuranSanduka: 0,
             totalIuranSanduka: parseInt(pgriData.sanduka || 0),
           };
-  
+
           setDataIuran(fallbackData);
           setIdIuran(null);
         }
       }
-  
+
       setIsPopupVisible(true);
     } catch (error) {
       console.error("Error saat cek NPA:", error);
@@ -743,7 +745,7 @@ function RekapAnggota() {
         console.warn("Server error 500: data tidak akan ditampilkan.");
       }
     }
-  };  
+  };
 
   const groupIuranData = (dataIuran) => {
     if (!dataIuran) return [];
@@ -804,9 +806,9 @@ function RekapAnggota() {
           lainLain: "Lain-Lain",
           daspen: "Daspen",
         };
-  
+
         let initialValue = 0;
-  
+
         if (selectedKategori === "kalender") {
           const kalenderRaw = sessionStorage.getItem("kalenderData");
           if (kalenderRaw) {
@@ -821,7 +823,7 @@ function RekapAnggota() {
             }
           }
         }
-  
+
         if (selectedKategori === "derap") {
           const derapRaw = sessionStorage.getItem("derapData");
           if (derapRaw) {
@@ -836,40 +838,39 @@ function RekapAnggota() {
             }
           }
         }
-  
+
         if (selectedKategori === "daspen" && dataNpa?.nip) {
           try {
             const response = await GlobalApi.getFileByNip(dataNpa.nip);
             // console.log("Data dari getFileByNip:", response);
-  
+
             const sumbangan = parseInt(response?.sumbangan || 0);
             initialValue = sumbangan;
           } catch (err) {
             console.error("Gagal mengambil data daspen berdasarkan NIP:", err);
           }
         }
-  
+
         setAddedCategories((prev) => [
           ...prev,
           { label: labelMap[selectedKategori], key: selectedKategori },
         ]);
-  
+
         setNewValues((prev) => ({
           ...prev,
           [selectedKategori]: initialValue,
         }));
-  
+
         setFormKetiga((prev) => ({
           ...prev,
           [selectedKategori]: initialValue,
         }));
       }
-  
+
       setSelectedKategori("");
       setShowDropdown(false);
     }
   };
-   
 
   const handleSaveClick = async () => {
     if (!dataNpa) return;
@@ -954,7 +955,7 @@ function RekapAnggota() {
       manualIuranSanduka: manualValueSanduka || 0,
       totalIuranSanduka: iuranSanduka || 0,
 
-      iuranDaspen:otomatisValueDaspen || 0,
+      iuranDaspen: otomatisValueDaspen || 0,
       manualIuranDaspen: manualValueDaspen || 0,
       totalIuranDaspen: iuranDaspen || 0,
 
@@ -1008,7 +1009,7 @@ function RekapAnggota() {
         type: "success",
         message: "Data berhasil disimpan!",
       });
-    // console.log("Data yang akan diupdate:", payload);
+      // console.log("Data yang akan diupdate:", payload);
 
       setIsPopupVisible(false);
       setAddedCategories([]);
@@ -1139,7 +1140,6 @@ function RekapAnggota() {
       setDataIuran(null);
       setIdIuran(null);
       setIsPopupVisible(false);
-      
     } catch (error) {
       setNotification({
         type: "error",
@@ -1346,51 +1346,54 @@ function RekapAnggota() {
       console.error("Data kosong, tidak dapat export ke Excel");
       return;
     }
-  
+
     // Prepare the data for Excel
     const excelData = [];
-    
+
     // Add headers
     excelData.push([
-      'No',
-      'Cabang',
-      'Unit Kerja',
-      'Nama Anggota',
-      'Jumlah Anggota',
-      'PGRI',
-      'Sanduka',
-      'Daspen',
-      'Derap',
-      'Kalender',
-      'Lain-Lain',
-      'Total'
+      "No",
+      "Cabang",
+      "Unit Kerja",
+      "Nama Anggota",
+      "Jumlah Anggota",
+      "PGRI",
+      "Sanduka",
+      "Daspen",
+      "Derap",
+      "Kalender",
+      "Lain-Lain",
+      "Total",
     ]);
-  
+
     // Add data rows
     groupedData.forEach((group, index) => {
       if (group.members && group.members.length > 0) {
         group.members.forEach((member, memberIndex) => {
           excelData.push([
-            memberIndex === 0 ? index + 1 : '',
-            memberIndex === 0 ? group.cabang : '',
-            memberIndex === 0 ? group.unitKerja : '',
+            memberIndex === 0 ? index + 1 : "",
+            memberIndex === 0 ? group.cabang : "",
+            memberIndex === 0 ? group.unitKerja : "",
             member.namaAnggota,
-            memberIndex === 0 ? group.jumlah : '',
+            memberIndex === 0 ? group.jumlah : "",
             parseInt(member.pgri || 0),
             parseInt(member.sanduka || 0),
             parseInt(member.daspen || 0),
             parseInt(member.derap || 0),
             parseInt(member.kalender || 0),
             parseInt(member.lainlain || 0),
-            parseInt(member.totalIuran || 0)
+            parseInt(member.totalIuran || 0),
           ]);
         });
       }
     });
-  
+
     // Add totals row
     excelData.push([
-      '', '', '', 'Total Keseluruhan:',
+      "",
+      "",
+      "",
+      "Total Keseluruhan:",
       grandTotals?.jumlah || 0,
       parseInt(grandTotals?.pgri || 0),
       parseInt(grandTotals?.sanduka || 0),
@@ -1398,21 +1401,21 @@ function RekapAnggota() {
       parseInt(grandTotals?.derap || 0),
       parseInt(grandTotals?.kalender || 0),
       parseInt(grandTotals?.lainlain || 0),
-      parseInt(grandTotals?.totalIuran || 0)
+      parseInt(grandTotals?.totalIuran || 0),
     ]);
-  
+
     // Create worksheet
     const ws = XLSX.utils.aoa_to_sheet(excelData);
-    
+
     // Create workbook
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "RekapData");
-  
+
     // Generate file name
     const fileName = `Rekap_By_Nominal${
       selectedCabang ? `_Cabang_${selectedCabang}` : ""
     }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
-  
+
     // Export to Excel
     XLSX.writeFile(wb, fileName);
   };
@@ -1602,12 +1605,12 @@ function RekapAnggota() {
                     </svg>
                   </button>
                   <button
-  className="p-2 px-6 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
-  onClick={exportToExcel}
-  title="Export to Excel"
+                    className="p-2 px-6 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
+                    onClick={exportToExcel}
+                    title="Export to Excel"
                   >
                     <span>Excel</span>
-<svg
+                    <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="16"
                       height="16"
@@ -1617,7 +1620,7 @@ function RekapAnggota() {
                       <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
                       <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
                     </svg>
-</button>
+                  </button>
                 </div>
               )}
             </div>
@@ -1782,13 +1785,12 @@ function RekapAnggota() {
                         </td>
                         <td className="p-3 border-b text-center hidden lg:table-cell">
                           <span className="text-gray-700">
-                            Rp. {parseInt(group.kalender).toLocaleString("id-ID")}
+                            Rp.{" "}
+                            {parseInt(group.kalender).toLocaleString("id-ID")}
                           </span>
                         </td>
                         <td className="p-3 border-b text-center hidden lg:table-cell">
-                          <span className="text-gray-700">
-                            Rp. 0
-                          </span>
+                          <span className="text-gray-700">Rp. 0</span>
                         </td>
                         <td className="p-3 border-b text-center font-semibold">
                           <span className="bg-teal-100 text-teal-800 py-1 px-3 rounded-full">
@@ -1815,7 +1817,9 @@ function RekapAnggota() {
                                   </span>
                                   <span className="text-teal-700">
                                     {member.namaAnggota}
-                                    <div className="text-sm text-teal-700 italic">{member.nip}</div>
+                                    <div className="text-sm text-teal-700 italic">
+                                      {member.nip}
+                                    </div>
                                   </span>
                                 </div>
                                 <div className="lg:hidden space-y-2 mt-2 bg-white p-3 rounded-lg shadow-sm">
@@ -1884,11 +1888,12 @@ function RekapAnggota() {
                             </td>
                             <td className="p-3 border-b text-center hidden lg:table-cell">
                               Rp.{" "}
-                              {parseInt(member.kalender).toLocaleString("id-ID")}
+                              {parseInt(member.kalender).toLocaleString(
+                                "id-ID"
+                              )}
                             </td>
                             <td className="p-3 border-b text-center hidden lg:table-cell">
-                              Rp.{" "}
-                             0
+                              Rp. 0
                             </td>
                             <td className="p-3 border-b text-center hidden lg:table-cell">
                               <span className="bg-teal-100 text-teal-800 py-1 px-2 rounded-full text-sm">
@@ -2021,10 +2026,12 @@ function RekapAnggota() {
                                 <div className="grid grid-cols-3 gap-2 mt-2">
                                   {/* Iuran Sekarang */}
                                   <input
-  type="text"
-  readOnly
-  value={`Rp. ${oldValue.toLocaleString("id-ID")}`}
-/>
+                                    type="text"
+                                    readOnly
+                                    value={`Rp. ${oldValue.toLocaleString(
+                                      "id-ID"
+                                    )}`}
+                                  />
 
                                   {/* Form 2: Input manual */}
                                   <input
