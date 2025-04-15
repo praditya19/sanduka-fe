@@ -9,11 +9,7 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
-import {
-  FaTimesCircle,
-  FaCheckCircle,
-  FaExclamationCircle,
-} from "react-icons/fa";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -26,20 +22,20 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case "success":
-        return "bg-green-100";
-      case "error":
-        return "bg-red-100";
+      case 'success':
+        return 'bg-green-100';
+      case 'error':
+        return 'bg-red-100';
       default:
-        return "bg-blue-100";
+        return 'bg-blue-100';
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case "success":
+      case 'success':
         return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case "error":
+      case 'error':
         return <FaExclamationCircle className="text-red-500 text-3xl" />;
       default:
         return null;
@@ -48,24 +44,19 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case "success":
-        return "text-green-800";
-      case "error":
-        return "text-red-800";
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
       default:
-        return "text-blue-800";
+        return 'text-blue-800';
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div
-        className="absolute inset-0 bg-black opacity-50"
-        onClick={onClose}
-      ></div>
-      <div
-        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
-      >
+      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -75,13 +66,17 @@ const NotificationPopup = ({ type, message, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">{getIcon()}</div>
+          <div className="animate-bounce">
+            {getIcon()}
+          </div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === "success" ? "Berhasil!" : "Gagal!"}
+            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
           </h3>
 
-          <div className={`${getTextColor()} text-center`}>{message}</div>
+          <div className={`${getTextColor()} text-center`}>
+            {message}
+          </div>
         </div>
       </div>
     </div>
@@ -126,16 +121,7 @@ function KalenderForm() {
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [bulan, setBulan] = useState("");
-  const [tahun, setTahun] = useState("");
-
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-
-  const handleSelect = (item) => {
-    setSelectedItem(item);
-    setShowDropdown(false);
-    // bisa tambahkan aksi spesifik jika item tertentu dipilih
-  };
+  const [tahun, setTahun] = useState(""); 
 
   useEffect(() => {
     const fetchData = async () => {
@@ -374,75 +360,73 @@ function KalenderForm() {
         },
       ]);
       setNotification({
-        type: "success",
-        message: `Data Berhasil disimpan!`,
+        type: 'success',
+        message: `Data Berhasil disimpan!`
       });
     } catch (error) {
       console.error("Error saat menyimpan data: ", error);
       setNotification({
-        type: "success",
-        message: `Gagal Menyimpan Data!`,
+        type: 'success',
+        message: `Gagal Menyimpan Data!`
       });
     }
   };
 
   const handleUpdate = (id) => {
-    const selectedItem = filteredTableData.find((item) => item.id === id);
-    if (selectedItem) {
-      setSelectedCabang(selectedItem.cabang);
-      setJumlahPesanan(selectedItem.jumlah);
-      setBulan(selectedItem.bulan); // Ambil bulan dari data API
-      setTahun(selectedItem.tahun); // Ambil tahun dari data API
-      setSelectedItemId(id);
-      setIsEditMode(true); // Aktifkan mode edit
-    }
-  };
-
-  const handleSaveUpdate = async () => {
-    if (!selectedItemId) return;
-
-    const updatedData = {
-      cabang: selectedCabang,
-      jumlah: jumlahPesanan,
-      bulan,
-      tahun,
+      const selectedItem = filteredTableData.find((item) => item.id === id);
+      if (selectedItem) {
+        setSelectedCabang(selectedItem.cabang);
+        setJumlahPesanan(selectedItem.jumlah);
+        setBulan(selectedItem.bulan);  // Ambil bulan dari data API
+        setTahun(selectedItem.tahun);  // Ambil tahun dari data API
+        setSelectedItemId(id);
+        setIsEditMode(true); // Aktifkan mode edit
+      }
     };
-
-    try {
-      await GlobalApi.updateKalender(selectedItemId, updatedData);
-
-      setTableData((prevData) =>
-        prevData.map((item) =>
-          item.id === selectedItemId ? { ...item, ...updatedData } : item
-        )
-      );
-
-      setFilteredTableData((prevData) =>
-        prevData.map((item) =>
-          item.id === selectedItemId ? { ...item, ...updatedData } : item
-        )
-      );
-
-      setIsEditMode(false);
-      setSelectedItemId(null);
-    } catch (error) {
-      alert("Gagal memperbarui data.");
-    }
+  
+    const handleSaveUpdate = async () => {
+      if (!selectedItemId) return;
+    
+      const updatedData = {
+        cabang: selectedCabang,
+        jumlah: jumlahPesanan,
+        bulan,
+        tahun,
+      };
+    
+      try {
+        await GlobalApi.updateKalender(selectedItemId, updatedData);
+    
+        setTableData((prevData) =>
+          prevData.map((item) =>
+            item.id === selectedItemId ? { ...item, ...updatedData } : item
+          )
+        );
+    
+        setFilteredTableData((prevData) =>
+          prevData.map((item) =>
+            item.id === selectedItemId ? { ...item, ...updatedData } : item
+          )
+        );
+    
+        setIsEditMode(false);
+        setSelectedItemId(null);
+      } catch (error) {
+        alert("Gagal memperbarui data.");
+      }
   };
-
+  
   const handleDelete = async (id) => {
-    console.log("Hapus item dengan ID:", id);
-    try {
-      await GlobalApi.deleteKalender(id);
-      setTableData((prevData) => prevData.filter((item) => item.id !== id));
-      setFilteredTableData((prevData) =>
-        prevData.filter((item) => item.id !== id)
-      );
-    } catch (error) {
-      console.error("Gagal menghapus data:", error);
-      alert("Gagal menghapus data!");
-    }
-  };
+      console.log("Hapus item dengan ID:", id);
+      try {
+        await GlobalApi.deleteKalender(id);
+        setTableData((prevData) => prevData.filter((item) => item.id !== id));
+        setFilteredTableData((prevData) => prevData.filter((item) => item.id !== id));
+      } catch (error) {
+        console.error("Gagal menghapus data:", error);
+        alert("Gagal menghapus data!");
+      }
+    }; 
 
   const kalenderData = JSON.parse(sessionStorage.getItem("kalenderData"));
 
@@ -585,7 +569,7 @@ function KalenderForm() {
                 onClick={handleBackClick}
                 className="cursor-pointer mr-4"
               />
-              <h1 className="text-base">Lain-Lain</h1>
+              <h1 className="text-base">Kalender</h1>
             </div>
           </div>
         </header>
@@ -594,9 +578,8 @@ function KalenderForm() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           {notification && (
             <NotificationPopup
@@ -605,66 +588,192 @@ function KalenderForm() {
               onClose={() => setNotification(null)}
             />
           )}
-          <div className="min-h-screen bg-gray-50 p-2 md:p-4 mt-6">
-            <div className="p-6 rounded-lg shadow-lg border border-gray-200 bg-white">
-              <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-5 text-center">
-                Lain - Lain
-              </h2>
+          <div className="min-h-screen bg-gray-50 p-2 md:p-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="p-6 rounded-lg shadow-lg border border-gray-200 bg-white">
+                <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-5 text-center">
+                  Besaran Inputan Kalender
+                </h2>
+                <div className="space-y-6">
+                  {[
+                    {
+                      id: "provinsi",
+                      label: "Provinsi",
+                      value: provinsi,
+                      onChange: handleProvinsiChange,
+                    },
+                    {
+                      id: "kabupaten",
+                      label: "Kabupaten",
+                      value: kabupaten,
+                      onChange: handleKabupatenChange,
+                    },
+                    {
+                      id: "cabang",
+                      label: "Cabang/Ranting",
+                      value: cabang,
+                      onChange: handleCabangChange,
+                    },
+                    {
+                      id: "totalHarga",
+                      label: "Total Harga",
+                      value: totalHarga,
+                      readOnly: true,
+                      customClass: "bg-gray-200",
+                    },
+                  ].map((field) => (
+                    <div
+                      key={field.id}
+                      className="flex flex-col lg:flex-row items-center mb-4"
+                    >
+                      <Label
+                        htmlFor={field.id}
+                        className="block text-gray-800 text-lg font-semibold mb-2 lg:mb-0 lg:w-full"
+                      >
+                        {field.label}
+                      </Label>
+                      <Input
+                        type="number"
+                        id={field.id}
+                        className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out lg:ml-4 ${field.customClass || ""
+                          }`}
+                        onKeyPress={handleKeyPress}
+                        value={field.value}
+                        onChange={field.onChange}
+                        readOnly={field.readOnly}
+                      />
+                    </div>
+                  ))}
 
-              {/* Tombol Plus */}
-              <div className="flex justify-center">
-                <button
-                  className="text-white bg-teal-700 hover:bg-teal-800 font-bold text-4xl w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition duration-300 ease-in-out"
-                  onClick={() => setShowDropdown((prev) => !prev)}
-                >
-                  +
-                </button>
-              </div>
+                  <div className="flex flex-col lg:flex-row items-center mb-4">
+                    <Label
+                      htmlFor="jumlahPesanan"
+                      className="block text-gray-800 text-lg font-semibold mb-2 lg:mb-0 w-full lg:w-auto mr-8"
+                    >
+                      Jumlah Pesanan
+                    </Label>
+                    <div className="relative " ref={dropdownRef}>
+                      <Input
+                        type="text"
+                        className="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        readOnly
+                        value={selectedCabang || ""}
+                        placeholder="Pilih Cabang"
+                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                        onFocus={() => {
+                          setSearchQuery("");
+                        }}
+                      />
 
-              {/* Dropdown */}
-              {showDropdown && (
-                <div className="mt-4 flex justify-center">
-                  <div className="bg-white border border-gray-300 rounded-lg shadow-md w-64">
-                    <ul className="divide-y divide-gray-200">
-                      {["PGRI", "Sanduka", "KTA"].map((item) => (
-                        <li
-                          key={item}
-                          className="px-4 py-3 hover:bg-teal-100 cursor-pointer text-center"
-                          onClick={() => handleSelect(item)}
-                        >
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
+                      {isDropdownOpen && (
+                        <div className="absolute w-full mt-1 bg-white border rounded shadow-lg z-10">
+                          <ul className="max-h-44 overflow-y-auto">
+                            <li className="py-2 px-2">
+                              <Input
+                                type="text"
+                                className="w-full p-2 border-b text-gray-700 focus:outline-none"
+                                placeholder="Cari cabang..."
+                                value={searchQuery}
+                                onChange={handleSearchChange}
+                                autoFocus
+                              />
+                            </li>
+                            {filteredCabangList.map((cabang) => (
+                              <li
+                                key={cabang.id}
+                                className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                onClick={() =>
+                                  handleCabangSelect(cabang.kecamatan)
+                                }
+                              >
+                                {cabang.kecamatan}
+                              </li>
+                            ))}
+                            {filteredCabangList.length === 0 && (
+                              <li className="p-2 text-gray-500">
+                                Cabang tidak ditemukan
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                    <Input
+                      type="number"
+                      id="jumlahPesananInput"
+                      className="w-full lg:w-1/3 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out mt-2 lg:mt-0 lg:ml-4"
+                      value={jumlahPesanan}
+                      onChange={handleJumlahPesananChange}
+                      onKeyPress={handleKeyPress}
+                    />
+                  </div>
+
+                  <div className="flex justify-center space-x-4 mt-6">
+                    <Button
+                      className="bg-green-700 hover:bg-green-900 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
+                      onClick={calculateTotalHarga}
+                    >
+                      Hitung
+                    </Button>
+                    <Button
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
+                        onClick={isEditMode ? handleSaveUpdate : handleSubmit}
+                      >
+                        {isEditMode ? "Update" : "Simpan"}
+                      </Button>
+                    <Button
+                      className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-600 transition duration-150 ease-in-out"
+                      onClick={resetForm}
+                    >
+                      Reset
+                    </Button>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* Tombol Aksi */}
-              <div className="space-y-6 mt-6">
-                <div className="flex justify-center space-x-4">
-                  <Button
-                    className="bg-green-700 hover:bg-green-900 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
-                    onClick={calculateTotalHarga}
-                  >
-                    Hitung
-                  </Button>
-                  <Button
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
-                    onClick={isEditMode ? handleSaveUpdate : handleSubmit}
-                  >
-                    {isEditMode ? "Update" : "Simpan"}
-                  </Button>
-                  <Button
-                    className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-600 transition duration-150 ease-in-out"
-                    onClick={resetForm}
-                  >
-                    Reset
-                  </Button>
+              <div className="p-6 rounded-lg shadow-md border border-gray-200 bg-white">
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold mb-2 text-blue-600">
+                    Jumlah Pesanan :
+                  </h3>
+                  <p className="text-lg text-gray-700">
+                    <b>{jumlahPesanan} eksemplar</b>
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold mb-2 text-blue-600">
+                    Setor Provinsi:
+                  </h3>
+                  <p className="text-lg text-gray-700">
+                    <b>Rp. {setorProvinsi.toLocaleString()}</b>
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold mb-2 text-blue-600">
+                    Untuk Kabupaten:
+                  </h3>
+                  <p className="text-lg text-gray-700">
+                    <b>Rp. {untukKabupaten.toLocaleString()}</b>
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold mb-2 text-blue-600">
+                    Untuk Cabang:
+                  </h3>
+                  <p className="text-lg text-gray-700">
+                    <b>Rp. {untukCabang.toLocaleString()}</b>
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold mb-2 text-blue-600">
+                    Total:
+                  </h3>
+                  <p className="text-lg text-gray-700">
+                    <b>Rp. {totalHargaAkhir.toLocaleString()}</b>
+                  </p>
                 </div>
               </div>
             </div>
-
             <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
               <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
                 <div className="flex flex-wrap gap-4 mb-4 sm:mb-0 px-5 mt-5">
@@ -779,7 +888,7 @@ function KalenderForm() {
                       Total
                     </th>
                     <th scope="col" className="px-6 py-3 text-center">
-                      Action
+                    Action
                     </th>
                   </tr>
                 </thead>
@@ -810,18 +919,8 @@ function KalenderForm() {
                           )}
                         </td>
                         <td className="border px-6 py-4 text-center text-sm text-black">
-                          <button
-                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded mr-2"
-                            onClick={() => handleUpdate(item.id)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            Hapus
-                          </button>
+                        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded mr-2" onClick={() => handleUpdate(item.id)}>Edit</button>
+                        <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded" onClick={() => handleDelete(item.id)}>Hapus</button>
                         </td>
                       </tr>
                     ))
