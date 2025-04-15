@@ -2167,6 +2167,17 @@ const countResponsesByPengaduanId = async (pengaduanId) => {
   }
 };
 
+const getTagihanAnggotaById = async (userId) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/auth/user/${userId}/tagihan`
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -2324,4 +2335,5 @@ export default {
   postIuranAnggota,
   countNewPengaduan,
   countResponsesByPengaduanId,
+  getTagihanAnggotaById
 };
