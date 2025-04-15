@@ -266,6 +266,9 @@ function RekapAnggota() {
           pgri: parseFloat(totalRow.pgri) || 0,
           sanduka: parseFloat(totalRow.sanduka) || 0,
           daspen: parseFloat(totalRow.daspen) || 0,
+          derap: parseFloat(totalRow.derap) || 0,
+          kalnder: parseFloat(totalRow.kalender) || 0,
+          daspen: parseFloat(totalRow.daspen) || 0,
           totalIuran: parseFloat(totalRow.totalIuran) || 0,
         });
       }
@@ -442,6 +445,7 @@ function RekapAnggota() {
               daspen: parseFloat(totalRow.daspen) || 0,
               derap: parseFloat(totalRow.derap) || 0,
               kalender: parseFloat(totalRow.kalender) || 0,
+              lainlain: parseFloat(totalRow.lainlain) || 0,
               totalIuran: parseFloat(totalRow.totalIuran) || 0,
             });
           }
@@ -466,6 +470,9 @@ function RekapAnggota() {
               pgri: parseFloat(totalRow.pgri) || 0,
               sanduka: parseFloat(totalRow.sanduka) || 0,
               daspen: parseFloat(totalRow.daspen) || 0,
+              derap: parseFloat(totalRow.derap) || 0,
+              kalender: parseFloat(totalRow.kalender) || 0,
+              lainlain: parseFloat(totalRow.lainlain) || 0,
               totalIuran: parseFloat(totalRow.totalIuran) || 0,
             });
           }
@@ -523,6 +530,9 @@ function RekapAnggota() {
     pgri: 0,
     sanduka: 0,
     daspen: 0,
+    derap: 0,
+    kalender: 0,
+    lainlain: 0,
     totalIuran: 0,
   });
 
@@ -664,6 +674,15 @@ function RekapAnggota() {
     setIsPopupVisible(false);
     setIdIuran(null);
   
+    try {
+      const fileResponse = await GlobalApi.getFileByNip(member.nip);
+      if (fileResponse?.sumbangan) {
+        setDaspenValue(parseInt(fileResponse.sumbangan));
+      }
+    } catch (error) {
+      console.error("Gagal mengambil file by NIP:", error);
+    }
+    
     try {
       const response = await GlobalApi.cekNpaList([member.npaPgri]);
   
@@ -882,6 +901,7 @@ function RekapAnggota() {
         iuranAnggota = autoValue + inputValue;
       }
     });
+    let otomatisValueDaspen = 0;
     let otomatisValueKalender = 0;
     let otomatisValueDerap = 0;
 
@@ -910,6 +930,7 @@ function RekapAnggota() {
       }
 
       if (item.label?.toLowerCase() === "daspen") {
+        otomatisValueDaspen = oldValue;
         manualValueDaspen = inputValue;
         iuranDaspen = totalValue;
       }
@@ -933,7 +954,7 @@ function RekapAnggota() {
       manualIuranSanduka: manualValueSanduka || 0,
       totalIuranSanduka: iuranSanduka || 0,
 
-      iuranDaspen: 0,
+      iuranDaspen:otomatisValueDaspen || 0,
       manualIuranDaspen: manualValueDaspen || 0,
       totalIuranDaspen: iuranDaspen || 0,
 
@@ -987,6 +1008,7 @@ function RekapAnggota() {
         type: "success",
         message: "Data berhasil disimpan!",
       });
+    // console.log("Data yang akan diupdate:", payload);
 
       setIsPopupVisible(false);
       setAddedCategories([]);
@@ -1055,7 +1077,8 @@ function RekapAnggota() {
       setIsPopupVisible(false);
       setAddedCategories([]);
       setManualInputs([]);
-      setSelectedKategori(""); setTimeout(() => {
+      setSelectedKategori("");
+      setTimeout(() => {
         window.location.reload();
       }, 1000);
     } catch (error) {
@@ -1098,6 +1121,9 @@ function RekapAnggota() {
     try {
       // Hapus data iuran by ID
       await GlobalApi.deleteIuranAnggota(idIuran);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
 
       setNotification({
         type: "success",
@@ -1113,6 +1139,7 @@ function RekapAnggota() {
       setDataIuran(null);
       setIdIuran(null);
       setIsPopupVisible(false);
+      
     } catch (error) {
       setNotification({
         type: "error",
@@ -1994,13 +2021,10 @@ function RekapAnggota() {
                                 <div className="grid grid-cols-3 gap-2 mt-2">
                                   {/* Iuran Sekarang */}
                                   <input
-                                    type="text"
-                                    readOnly
-                                    value={`Rp. ${oldValue.toLocaleString(
-                                      "id-ID"
-                                    )}`}
-                                    className="border px-2 py-1 rounded bg-gray-200 text-center"
-                                  />
+  type="text"
+  readOnly
+  value={`Rp. ${oldValue.toLocaleString("id-ID")}`}
+/>
 
                                   {/* Form 2: Input manual */}
                                   <input
@@ -2354,6 +2378,18 @@ function RekapAnggota() {
                       <td className="p-3 border-t-2 border-teal-800 text-center">
                         Rp.{" "}
                         {parseInt(grandTotals.daspen).toLocaleString("id-ID")}
+                      </td>
+                      <td className="p-3 border-t-2 border-teal-800 text-center">
+                        Rp.{" "}
+                        {parseInt(grandTotals.derap).toLocaleString("id-ID")}
+                      </td>
+                      <td className="p-3 border-t-2 border-teal-800 text-center">
+                        Rp.{" "}
+                        {parseInt(grandTotals.kalender).toLocaleString("id-ID")}
+                      </td>
+                      <td className="p-3 border-t-2 border-teal-800 text-center">
+                        Rp.{" "}
+                        {parseInt(grandTotals.lainlain).toLocaleString("id-ID")}
                       </td>
                     </>
                   )}
