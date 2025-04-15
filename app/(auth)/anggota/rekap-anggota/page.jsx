@@ -20,6 +20,7 @@ import { FiTrash } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { ClipLoader } from "react-spinners";
 import Image from "next/image";
+import * as XLSX from 'xlsx';
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -385,8 +386,10 @@ function RekapAnggota() {
           pgri: 0,
           sanduka: 0,
           daspen: 0,
+          derap: 0,
+          kalender: 0,
           totalIuran: 0,
-        };
+        };        
       }
       acc[unitKey].members.push({
         namaAnggota: item.namaAnggota,
@@ -395,12 +398,16 @@ function RekapAnggota() {
         pgri: parseFloat(item.pgri) || 0,
         sanduka: parseFloat(item.sanduka) || 0,
         daspen: parseFloat(item.daspen) || 0,
+        derap: parseFloat(item.derap) || 0,
+        kalender: parseFloat(item.kalender) || 0,
         totalIuran: parseFloat(item.totalIuran) || 0,
       });
       acc[unitKey].jumlah += 1;
       acc[unitKey].pgri += parseFloat(item.pgri) || 0;
       acc[unitKey].sanduka += parseFloat(item.sanduka) || 0;
       acc[unitKey].daspen += parseFloat(item.daspen) || 0;
+      acc[unitKey].derap += parseFloat(item.derap) || 0;
+      acc[unitKey].kalender += parseFloat(item.kalender) || 0;
       acc[unitKey].totalIuran += parseFloat(item.totalIuran) || 0;
       return acc;
     }, {});
@@ -432,6 +439,8 @@ function RekapAnggota() {
               pgri: parseFloat(totalRow.pgri) || 0,
               sanduka: parseFloat(totalRow.sanduka) || 0,
               daspen: parseFloat(totalRow.daspen) || 0,
+              derap: parseFloat(totalRow.derap) || 0,
+              kalender: parseFloat(totalRow.kalender) || 0,
               totalIuran: parseFloat(totalRow.totalIuran) || 0,
             });
           }
@@ -462,7 +471,7 @@ function RekapAnggota() {
 
           const processed = processData(regularData);
           setGroupedData(processed);
-          // console.log("proses",processed)
+          console.log("proses",processed)
           // console.log("reguler",regularData)
           setData(regularData);
           setOriginalRekapData(regularData);
@@ -972,6 +981,9 @@ function RekapAnggota() {
       setAddedCategories([]);
       setManualInputs([]);
       setSelectedKategori("");
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       console.error("Gagal simpan:", error);
 
@@ -1032,7 +1044,9 @@ function RekapAnggota() {
       setIsPopupVisible(false);
       setAddedCategories([]);
       setManualInputs([]);
-      setSelectedKategori("");
+      setSelectedKategori(""); setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       console.error("Gagal update data:", error);
       setNotification({
@@ -1178,13 +1192,16 @@ function RekapAnggota() {
                   <th rowspan="2">Unit Kerja</th>
                   <th rowspan="2">Nama Anggota</th>
                   <th rowspan="2">Jumlah Anggota</th>
-                  <th colspan="3">Jumlah</th>
+                  <th colspan="6">Jumlah</th>
                   <th rowspan="2">Total</th>
                 </tr>
                 <tr>
                   <th>PGRI</th>
                   <th>Sanduka</th>
                   <th>Daspen</th>
+                  <th>Derap</th>
+                  <th>Kalender</th>
+                  <th>Lain-Lain</th>
                 </tr>
               </thead>
               <tbody>
@@ -1221,6 +1238,15 @@ function RekapAnggota() {
                       <td>Rp. ${parseInt(member.daspen || 0).toLocaleString(
                         "id-ID"
                       )}</td>
+                      <td>Rp. ${parseInt(member.derap || 0).toLocaleString(
+                        "id-ID"
+                      )}</td>
+                      <td>Rp. ${parseInt(member.kalender || 0).toLocaleString(
+                        "id-ID"
+                      )}</td>
+                      <td>Rp. ${parseInt(member.lainlain || 0).toLocaleString(
+                        "id-ID"
+                      )}</td>
                       <td>Rp. ${parseInt(member.totalIuran || 0).toLocaleString(
                         "id-ID"
                       )}</td>
@@ -1240,6 +1266,15 @@ function RekapAnggota() {
                     "id-ID"
                   )}</td>
                   <td>Rp. ${parseInt(grandTotals?.daspen || 0).toLocaleString(
+                    "id-ID"
+                  )}</td>
+                  <td>Rp. ${parseInt(grandTotals?.derap || 0).toLocaleString(
+                    "id-ID"
+                  )}</td>
+                  <td>Rp. ${parseInt(grandTotals?.kalender || 0).toLocaleString(
+                    "id-ID"
+                  )}</td>
+                  <td>Rp. ${parseInt(grandTotals?.lainlain || 0).toLocaleString(
                     "id-ID"
                   )}</td>
                   <td>Rp. ${parseInt(
@@ -1266,6 +1301,82 @@ function RekapAnggota() {
     } catch (error) {
       console.error("Error during print process:", error);
     }
+  };
+
+  const exportToExcel = () => {
+    if (!groupedData || groupedData.length === 0) {
+      console.error("Data kosong, tidak dapat export ke Excel");
+      return;
+    }
+  
+    // Prepare the data for Excel
+    const excelData = [];
+    
+    // Add headers
+    excelData.push([
+      'No',
+      'Cabang',
+      'Unit Kerja',
+      'Nama Anggota',
+      'Jumlah Anggota',
+      'PGRI',
+      'Sanduka',
+      'Daspen',
+      'Derap',
+      'Kalender',
+      'Lain-Lain',
+      'Total'
+    ]);
+  
+    // Add data rows
+    groupedData.forEach((group, index) => {
+      if (group.members && group.members.length > 0) {
+        group.members.forEach((member, memberIndex) => {
+          excelData.push([
+            memberIndex === 0 ? index + 1 : '',
+            memberIndex === 0 ? group.cabang : '',
+            memberIndex === 0 ? group.unitKerja : '',
+            member.namaAnggota,
+            memberIndex === 0 ? group.jumlah : '',
+            parseInt(member.pgri || 0),
+            parseInt(member.sanduka || 0),
+            parseInt(member.daspen || 0),
+            parseInt(member.derap || 0),
+            parseInt(member.kalender || 0),
+            parseInt(member.lainlain || 0),
+            parseInt(member.totalIuran || 0)
+          ]);
+        });
+      }
+    });
+  
+    // Add totals row
+    excelData.push([
+      '', '', '', 'Total Keseluruhan:',
+      grandTotals?.jumlah || 0,
+      parseInt(grandTotals?.pgri || 0),
+      parseInt(grandTotals?.sanduka || 0),
+      parseInt(grandTotals?.daspen || 0),
+      parseInt(grandTotals?.derap || 0),
+      parseInt(grandTotals?.kalender || 0),
+      parseInt(grandTotals?.lainlain || 0),
+      parseInt(grandTotals?.totalIuran || 0)
+    ]);
+  
+    // Create worksheet
+    const ws = XLSX.utils.aoa_to_sheet(excelData);
+    
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "RekapData");
+  
+    // Generate file name
+    const fileName = `Rekap_By_Nominal${
+      selectedCabang ? `_Cabang_${selectedCabang}` : ""
+    }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
+  
+    // Export to Excel
+    XLSX.writeFile(wb, fileName);
   };
 
   const renderCabangInput = () => {
@@ -1435,7 +1546,7 @@ function RekapAnggota() {
                 />
               </div>
               {!isMobile && (
-                <div className="flex items-end mt-2 md:mt-0">
+                <div className="flex items-end mt-2 md:mt-0 gap-4">
                   <button
                     onClick={handlePrint}
                     className="p-2 px-6 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
@@ -1452,6 +1563,23 @@ function RekapAnggota() {
                       <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
                     </svg>
                   </button>
+                  <button
+  className="p-2 px-6 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
+  onClick={exportToExcel}
+  title="Export to Excel"
+                  >
+                    <span>Excel</span>
+<svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      fill="currentColor"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                      <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                    </svg>
+</button>
                 </div>
               )}
             </div>
@@ -1502,7 +1630,7 @@ function RekapAnggota() {
                   </th>
                   <th
                     className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell text-center"
-                    colSpan="3"
+                    colSpan="6"
                   >
                     Jumlah
                   </th>
@@ -1529,9 +1657,17 @@ function RekapAnggota() {
                   <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
                     Daspen
                   </th>
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
+                    Derap
+                  </th>
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
+                    Kalender
+                  </th>
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
+                    Lain-Lain
+                  </th>
                 </tr>
               </thead>
-
               <tbody>
                 {groupedData.map((group, index) => {
                   const isExpanded = expandedRows.has(group.unitKerja);
@@ -1599,6 +1735,21 @@ function RekapAnggota() {
                         <td className="p-3 border-b text-center hidden lg:table-cell">
                           <span className="text-gray-700">
                             Rp. {parseInt(group.daspen).toLocaleString("id-ID")}
+                          </span>
+                        </td>
+                        <td className="p-3 border-b text-center hidden lg:table-cell">
+                          <span className="text-gray-700">
+                            Rp. {parseInt(group.derap).toLocaleString("id-ID")}
+                          </span>
+                        </td>
+                        <td className="p-3 border-b text-center hidden lg:table-cell">
+                          <span className="text-gray-700">
+                            Rp. {parseInt(group.kalender).toLocaleString("id-ID")}
+                          </span>
+                        </td>
+                        <td className="p-3 border-b text-center hidden lg:table-cell">
+                          <span className="text-gray-700">
+                            Rp. 0
                           </span>
                         </td>
                         <td className="p-3 border-b text-center font-semibold">
@@ -1688,6 +1839,18 @@ function RekapAnggota() {
                             <td className="p-3 border-b text-center hidden lg:table-cell">
                               Rp.{" "}
                               {parseInt(member.daspen).toLocaleString("id-ID")}
+                            </td>
+                            <td className="p-3 border-b text-center hidden lg:table-cell">
+                              Rp.{" "}
+                              {parseInt(member.derap).toLocaleString("id-ID")}
+                            </td>
+                            <td className="p-3 border-b text-center hidden lg:table-cell">
+                              Rp.{" "}
+                              {parseInt(member.kalender).toLocaleString("id-ID")}
+                            </td>
+                            <td className="p-3 border-b text-center hidden lg:table-cell">
+                              Rp.{" "}
+                             0
                             </td>
                             <td className="p-3 border-b text-center hidden lg:table-cell">
                               <span className="bg-teal-100 text-teal-800 py-1 px-2 rounded-full text-sm">
