@@ -15,6 +15,7 @@ import {
   FaExclamationCircle,
   FaPlus,
   FaPrint,
+  FaSearch,
 } from "react-icons/fa";
 import { FiTrash } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
@@ -156,6 +157,8 @@ function RekapAnggota() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [daspenValue, setDaspenValue] = useState(null);
   const [nipValue, setNipValue] = useState(null);
+  const [namaAnggotaInput, setNamaAnggotaInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -247,6 +250,7 @@ function RekapAnggota() {
     setSelectedUnitKerja("");
     setUnitKerjaInput("");
     setSearchCabang("");
+    setNamaAnggotaInput("");
 
     try {
       const response = await GlobalApi.getNominalAggregatedData(
@@ -316,6 +320,7 @@ function RekapAnggota() {
     setUnitKerjaInput(selectedValue);
     setShowUnitKerjaDropdown(false);
     setSearchUnitKerja("");
+    setNamaAnggotaInput("");
 
     if (!selectedValue) {
       const cabangData = originalRekapData.filter((item) =>
@@ -340,41 +345,6 @@ function RekapAnggota() {
       calculateTotals(filteredData);
     }
   };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        unitKerjaRef.current &&
-        !unitKerjaRef.current.contains(event.target)
-      ) {
-        setShowUnitKerjaDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (cabangRef.current && !cabangRef.current.contains(event.target)) {
-        setShowCabangDropdown(false);
-      }
-      if (
-        unitKerjaRef.current &&
-        !unitKerjaRef.current.contains(event.target)
-      ) {
-        setShowUnitKerjaDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   const processData = (rawData) => {
     const grouped = rawData.reduce((acc, item) => {
@@ -492,6 +462,102 @@ function RekapAnggota() {
     };
     fetchInitialData();
   }, [unitKerjaList]);
+
+  const handleNamaAnggotaInputChange = (e) => {
+    setNamaAnggotaInput(e.target.value);
+  };
+
+  const handleSearchClick = () => {
+    setSearchQuery(namaAnggotaInput); // Set query pencarian
+    performSearch(namaAnggotaInput); // Lakukan pencarian
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearchClick();
+    }
+  };
+
+  const performSearch = (query) => {
+    if (query === "") {
+      let filteredData = originalRekapData;
+
+      if (selectedCabang) {
+        filteredData = filteredData.filter(
+          (item) => item.cabang?.toLowerCase() === selectedCabang.toLowerCase()
+        );
+      }
+
+      if (selectedUnitKerja) {
+        filteredData = filteredData.filter(
+          (item) =>
+            item.unitKerja?.toLowerCase() === selectedUnitKerja.toLowerCase()
+        );
+      }
+
+      const processed = processData(filteredData);
+      setGroupedData(processed);
+      setData(filteredData);
+      calculateTotals(filteredData);
+      setExpandedRows(new Set()); // Collapse semua row
+    } else {
+      // Lakukan pencarian
+      const filteredData = originalRekapData.filter(
+        (item) =>
+          (!selectedCabang ||
+            item.cabang?.toLowerCase() === selectedCabang.toLowerCase()) &&
+          (!selectedUnitKerja ||
+            item.unitKerja?.toLowerCase() ===
+              selectedUnitKerja.toLowerCase()) &&
+          item.namaAnggota?.toLowerCase().includes(query.toLowerCase())
+      );
+
+      const processed = processData(filteredData);
+      setGroupedData(processed);
+      setData(filteredData);
+      calculateTotals(filteredData);
+
+      // Auto-expand rows yang mengandung hasil pencarian
+      const unitsWithMatches = new Set(
+        filteredData.map((item) => item.unitKerja || "Tidak Ada Unit Kerja")
+      );
+      setExpandedRows(unitsWithMatches);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (cabangRef.current && !cabangRef.current.contains(event.target)) {
+        setShowCabangDropdown(false);
+      }
+      if (
+        unitKerjaRef.current &&
+        !unitKerjaRef.current.contains(event.target)
+      ) {
+        setShowUnitKerjaDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        unitKerjaRef.current &&
+        !unitKerjaRef.current.contains(event.target)
+      ) {
+        setShowUnitKerjaDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const toggleExpand = (unitKerja) => {
     setExpandedRows((prev) => {
@@ -1518,24 +1584,48 @@ function RekapAnggota() {
     renderCabangInput,
     renderUnitKerjaInput,
     isMobile,
+    namaAnggotaInput,
+    handleNamaAnggotaInputChange,
+    handleSearchClick,
+    handleKeyPress,
   }) => {
     return (
       <div className="container mx-auto p-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div>
+          <div className="flex flex-col md:flex-row gap-4 w-full">
+            <div className="flex-1">
               <label className="block mb-2 text-sm">Cabang</label>
               {renderCabangInput()}
             </div>
-            <div>
+            <div className="flex-1">
               <label className="block mb-2 text-sm">Unit Kerja</label>
               {renderUnitKerjaInput()}
+            </div>
+            <div className="flex-1">
+              <label className="block mb-2 text-sm">Cari Anggota</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={namaAnggotaInput}
+                  onChange={handleNamaAnggotaInputChange}
+                  onKeyDown={handleKeyPress}
+                  autoFocus
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm p-2 border pr-10"
+                  placeholder="Nama anggota..."
+                />
+                <button
+                  onClick={handleSearchClick}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-teal-600 hover:text-teal-800"
+                >
+                  <FaSearch />
+                </button>
+              </div>
             </div>
           </div>
           {isMobile && (
             <Button
               onClick={handlePrint}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-8"
+              className="bg-teal-600 hover:bg-teal-700 text-white px-8"
             >
               Cetak
             </Button>
@@ -1584,6 +1674,10 @@ function RekapAnggota() {
                   renderCabangInput={renderCabangInput}
                   renderUnitKerjaInput={renderUnitKerjaInput}
                   isMobile={isMobile}
+                  namaAnggotaInput={namaAnggotaInput}
+                  handleNamaAnggotaInputChange={handleNamaAnggotaInputChange}
+                  handleSearchClick={handleSearchClick}
+                  handleKeyPress={handleKeyPress}
                 />
               </div>
               {!isMobile && (
