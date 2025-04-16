@@ -1412,16 +1412,14 @@ function RekapAnggota() {
       console.error("Data kosong, tidak dapat export ke Excel");
       return;
     }
-
-    // Prepare the data for Excel
     const excelData = [];
 
-    // Add headers
     excelData.push([
       "No",
       "Cabang",
       "Unit Kerja",
       "Nama Anggota",
+      "NIP",
       "Jumlah Anggota",
       "PGRI",
       "Sanduka",
@@ -1441,6 +1439,7 @@ function RekapAnggota() {
             memberIndex === 0 ? group.cabang : "",
             memberIndex === 0 ? group.unitKerja : "",
             member.namaAnggota,
+            member.nip || "-",
             memberIndex === 0 ? group.jumlah : "",
             parseInt(member.pgri || 0),
             parseInt(member.sanduka || 0),
@@ -1460,6 +1459,7 @@ function RekapAnggota() {
       "",
       "",
       "Total Keseluruhan:",
+      "",
       grandTotals?.jumlah || 0,
       parseInt(grandTotals?.pgri || 0),
       parseInt(grandTotals?.sanduka || 0),
