@@ -219,7 +219,7 @@ export default function Tagihan() {
             </p>
   
             <!-- Kotak Materai -->
-            <div style="border: 1px solid #000; width: 80px; height: 40px; font-size: 10px; line-height: 1.2; padding: 4px; position: absolute; left: 65%; transform: translateX(-50%); top: 80px;">
+            <div style="border: 1px solid #000; width: 80px; height: 40px; font-size: 10px; line-height: 1.2; padding: 4px; position: absolute; left: 32%; transform: translateX(-50%); top: 80px;">
               Materai<br>10.000
             </div>
   
