@@ -1325,7 +1325,10 @@ function RekapAnggota() {
                       `
                           : ""
                       }
-                      <td class="member-list">${member.namaAnggota}</td>
+                      <td class="member-list">
+  <div>${member.namaAnggota}</div>
+  <div>${member.nip || "-"}</div>
+</td>
                       ${
                         memberIndex === 0
                           ? `<td rowspan="${members.length}">${
@@ -2495,7 +2498,7 @@ function RekapAnggota() {
                     </>
                   )}
                   <td className="p-3 border-t-2 border-teal-800 text-center rounded-br-lg">
-                    Rp.{" "}
+                    Rp.{"                    "}
                     {parseInt(grandTotals.totalIuran).toLocaleString("id-ID")}
                   </td>
                 </tr>
