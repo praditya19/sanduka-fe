@@ -126,6 +126,7 @@ const SyncData = () => {
   const router = useRouter();
   const [expandedRow, setExpandedRow] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [statusKeanggotaan, setStatusKeanggotaan] = useState("");
 
   useEffect(() => {
     const storedRole = sessionStorage.getItem("role");
@@ -327,6 +328,10 @@ const SyncData = () => {
   }, []);
 
   const filteredData = data.filter((item) => {
+
+    const statusMatch = statusKeanggotaan
+      ? item.statusKeanggotaan?.toLowerCase() === statusKeanggotaan.toLowerCase()
+      : true;
     // Logika untuk ADMIN
     if (role === "ADMIN") {
       const cabangMatch = item.cabang === selectedCabang;
@@ -336,11 +341,11 @@ const SyncData = () => {
 
       const namaMatch = searchNama
         ? item.namaAnggota?.toLowerCase().includes(searchNama) ||
-          item.npa?.toLowerCase().includes(searchNama) ||
-          item.nip?.toLowerCase().includes(searchNama)
+        item.npa?.toLowerCase().includes(searchNama) ||
+        item.nip?.toLowerCase().includes(searchNama)
         : true;
 
-      return cabangMatch && unitKerjaMatch && namaMatch;
+      return cabangMatch && unitKerjaMatch && namaMatch && statusMatch;
     }
 
     // Logika untuk role lainnya
@@ -351,17 +356,16 @@ const SyncData = () => {
 
     const namaMatch = searchNama
       ? item.namaAnggota?.toLowerCase().includes(searchNama) ||
-        item.npa?.toLowerCase().includes(searchNama) ||
-        item.nip?.toLowerCase().includes(searchNama)
+      item.npa?.toLowerCase().includes(searchNama) ||
+      item.nip?.toLowerCase().includes(searchNama)
       : true;
 
-    return cabangMatch && unitKerjaMatch && namaMatch;
+    return cabangMatch && unitKerjaMatch && namaMatch && statusMatch;
   });
 
   const paginatedData = paginateData(filteredData);
 
   useEffect(() => {
-    // Update total pages whenever filtered data changes
     setTotalPages(Math.ceil(filteredData.length / itemsPerPage));
   }, [filteredData, itemsPerPage]);
 
@@ -536,9 +540,8 @@ const SyncData = () => {
           return (
             <React.Fragment key={item.id || index}>
               <tr
-                className={`bg-white border-b ${
-                  index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                } hover:bg-gray-200 transition duration-150`}
+                className={`bg-white border-b ${index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                  } hover:bg-gray-200 transition duration-150`}
               >
                 <td className="py-4 px-6">
                   <div className="flex items-center justify-between">
@@ -566,22 +569,20 @@ const SyncData = () => {
                     <td className="py-4 px-6">{item.nip}</td>
                     <td className="py-4 px-6">
                       <span
-                        className={`inline-block px-2 py-1 rounded ${
-                          item.dataKtaDigital
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
+                        className={`inline-block px-2 py-1 rounded ${item.dataKtaDigital
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                          }`}
                       >
                         {item.dataKtaDigital ? "YES" : "NO"}
                       </span>
                     </td>
                     <td className="py-4 px-6">
                       <span
-                        className={`inline-block px-2 py-1 rounded ${
-                          item.dataDaspen
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
+                        className={`inline-block px-2 py-1 rounded ${item.dataDaspen
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                          }`}
                       >
                         {item.dataDaspen ? "YES" : "NO"}
                       </span>
@@ -599,6 +600,7 @@ const SyncData = () => {
                         ""
                       )}
                     </td>
+                    <td className="py-4 px-6">{item.statusKeanggotaan}</td>
                     <td className="py-4 px-6">
                       <button
                         onClick={() =>
@@ -644,11 +646,10 @@ const SyncData = () => {
                         <div className="text-left">
                           <h3 className="font-semibold">Data Kta Digital:</h3>
                           <p
-                            className={`inline-block px-2 py-1 rounded ${
-                              item.dataKtaDigital
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
+                            className={`inline-block px-2 py-1 rounded ${item.dataKtaDigital
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                              }`}
                           >
                             {item.dataKtaDigital ? "YES" : "NO"}
                           </p>
@@ -662,11 +663,10 @@ const SyncData = () => {
                         <div className="text-left">
                           <h3 className="font-semibold">Data Daspen:</h3>
                           <p
-                            className={`inline-block px-2 py-1 rounded ${
-                              item.dataDaspen
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
+                            className={`inline-block px-2 py-1 rounded ${item.dataDaspen
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                              }`}
                           >
                             {item.dataDaspen ? "YES" : "NO"}
                           </p>
@@ -690,28 +690,35 @@ const SyncData = () => {
                           </p>
                         </div>
                         <div className="text-left">
-                          <h3 className="font-semibold">Action:</h3>
-                          <div className="text-left flex items-center gap-2">
-                            <button
-                              onClick={() =>
-                                window.open(
-                                  `https://wa.me/${item.nomorHp}`,
-                                  "_blank"
-                                )
-                              }
-                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
-                            >
-                              <FontAwesomeIcon icon={faWhatsapp} size="lg" />
-                            </button>
-                            <Button
-                              className="bg-red-500 p-2 border rounded-md"
-                              title="Hapus"
-                              type="button"
-                              onClick={() => handleDeleteClick(item.id)}
-                            >
-                              <FaTrash className="w-4 h-4" />
-                            </Button>
+                          <div className="text-left">
+                            <h3 className="font-semibold">Status Keanggotaan:</h3>
+                            <p>{item.statusKeanggotaan}</p>
                           </div>
+                        </div>
+
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Action:</h3>
+                        <div className="text-left flex items-center gap-2">
+                          <button
+                            onClick={() =>
+                              window.open(
+                                `https://wa.me/${item.nomorHp}`,
+                                "_blank"
+                              )
+                            }
+                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
+                          >
+                            <FontAwesomeIcon icon={faWhatsapp} size="lg" />
+                          </button>
+                          <Button
+                            className="bg-red-500 p-2 border rounded-md"
+                            title="Hapus"
+                            type="button"
+                            onClick={() => handleDeleteClick(item.id)}
+                          >
+                            <FaTrash className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -768,11 +775,10 @@ const SyncData = () => {
           <button
             key={page}
             onClick={() => setCurrentPage(page)}
-            className={`px-3 py-1 border rounded-md ${
-              page === currentPage
-                ? "bg-blue-500 text-white"
-                : "bg-white hover:bg-gray-50"
-            }`}
+            className={`px-3 py-1 border rounded-md ${page === currentPage
+              ? "bg-blue-500 text-white"
+              : "bg-white hover:bg-gray-50"
+              }`}
           >
             {page}
           </button>
@@ -858,6 +864,12 @@ const SyncData = () => {
 
   const handleCekData = () => {
     router.push("/singkron-data/cek-data");
+  };
+
+  const handleStatusChange = (value) => {
+    console.log(value);
+
+    setStatusKeanggotaan(value);
   };
 
   return (
@@ -965,42 +977,36 @@ const SyncData = () => {
               </>
             )}
 
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-4 mb-4">
+            <div className="flex flex-col lg:flex-row items-start justify-between gap-4 mb-4">
               {/* Filter Controls */}
-              <div className="flex flex-col lg:flex-row gap-4 w-full lg:w-auto">
-                {/* Filter Group */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
+              <div className="flex-1 w-full">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 w-full">
                   {/* Cabang Filter */}
-                  <div className="w-full" ref={cabangRef}>
+                  <div className="relative w-full" ref={cabangRef}>
                     <Input
                       type="text"
                       value={selectedCabang}
                       readOnly
                       onClick={handleCabangClick}
-                      className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition duration-150 ${
-                        role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
-                      }`}
+                      className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition duration-150 ${role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
+                        }`}
                       placeholder="Pilih Cabang"
                       disabled={role === "ADMIN"}
                     />
                     {showCabangDropdown && role !== "ADMIN" && (
-                      <div className="absolute z-10 border rounded-md bg-white shadow-md mt-2">
+                      <div className="absolute z-10 border rounded-md bg-white shadow-md mt-2 w-full">
                         <ul className="max-h-44 overflow-y-auto">
                           <li className="py-2 px-3">
                             <Input
                               type="text"
-                              onChange={(e) =>
-                                handleCabangSearch(e.target.value)
-                              }
+                              onChange={(e) => handleCabangSearch(e.target.value)}
                               className="block w-full px-3 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none"
                               placeholder="Cari atau ketik Cabang..."
                               autoFocus
                             />
                           </li>
                           <li
-                            onClick={() =>
-                              handleSelectCabang({ kecamatan: "" })
-                            }
+                            onClick={() => handleSelectCabang({ kecamatan: "" })}
                             className="px-4 py-2 cursor-pointer hover:bg-gray-200"
                           >
                             Pilih Cabang
@@ -1020,20 +1026,19 @@ const SyncData = () => {
                   </div>
 
                   {/* Unit Kerja Filter */}
-                  <div className="w-full" ref={unitKerjaRef}>
+                  <div className="relative w-full" ref={unitKerjaRef}>
                     <Input
                       type="text"
                       value={unitKerjaInput}
                       onChange={handleUnitKerjaChange}
                       onFocus={handleUnitKerjaFocus}
                       placeholder="Pilih Unit Kerja"
-                      className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition ${
-                        !selectedCabang ? "bg-gray-100 cursor-not-allowed" : ""
-                      }`}
+                      className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition ${!selectedCabang ? "bg-gray-100 cursor-not-allowed" : ""
+                        }`}
                       disabled={!selectedCabang}
                     />
                     {showUnitKerjaDropdown && (
-                      <div className="absolute z-10 border rounded-md bg-white shadow-md mt-2">
+                      <div className="absolute z-10 border rounded-md bg-white shadow-md mt-2 w-full">
                         <ul className="max-h-44 overflow-y-auto">
                           <li className="py-2 px-3">
                             <Input
@@ -1047,9 +1052,7 @@ const SyncData = () => {
                             />
                           </li>
                           <li
-                            onClick={() =>
-                              handleUnitKerjaSelect({ unitKerja: "" })
-                            }
+                            onClick={() => handleUnitKerjaSelect({ unitKerja: "" })}
                             className="px-4 py-2 cursor-pointer hover:bg-gray-200"
                           >
                             Pilih Unit Kerja
@@ -1075,7 +1078,7 @@ const SyncData = () => {
                   </div>
 
                   {/* Search Filter */}
-                  <div>
+                  <div className="w-full">
                     <Input
                       type="text"
                       className="block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none"
@@ -1083,11 +1086,25 @@ const SyncData = () => {
                       onChange={handleNamaChange}
                     />
                   </div>
+
+                  {/* Dropdown Status Keanggotaan */}
+                  <div className="w-full">
+                    <select
+                      onChange={(e) => handleStatusChange(e.target.value)}
+                      className="block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none"
+                      defaultValue=""
+                    >
+                      <option value="">Pilih Semua</option>
+                      <option value="Terdaftar">Terdaftar</option>
+                      <option value="Tidak Terdaftar">Tidak Terdaftar</option>
+                    </select>
+                  </div>
+
                 </div>
               </div>
 
               {/* Data Totals */}
-              <div className="flex flex-col lg:flex-row items-center gap-4 lg:gap-8 whitespace-nowrap">
+              <div className="flex flex-col gap-1 min-w-max text-sm">
                 <span>
                   {loading
                     ? "Loading..."
@@ -1101,13 +1118,14 @@ const SyncData = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-wrap gap-2 justify-end min-w-[260px]">
                 <Button
                   className="bg-blue-600 hover:bg-blue-700 text-white"
                   onClick={openModal}
                 >
                   Download Template
                 </Button>
+
                 <Modal
                   isOpen={showModal}
                   onRequestClose={closeModal}
@@ -1124,11 +1142,10 @@ const SyncData = () => {
                         className="text-2xl font-bold text-gray-700 hover:text-red-500 focus:outline-none"
                         onClick={closeModal}
                       >
-                        x
+                        ×
                       </button>
                     </div>
 
-                    {/* Pilihan Template */}
                     <div className="flex flex-col gap-4">
                       <button
                         className="w-full bg-teal-700 hover:bg-teal-500 text-white px-4 py-2 rounded-md"
@@ -1144,7 +1161,6 @@ const SyncData = () => {
                       </button>
                     </div>
 
-                    {/* Tombol untuk download setelah memilih template */}
                     {selectedTemplate && (
                       <div className="mt-4">
                         <Button
@@ -1213,6 +1229,9 @@ const SyncData = () => {
                         </th>
                         <th scope="col" className="py-3 px-6">
                           Keterangan
+                        </th>
+                        <th scope="col" className="py-3 px-6">
+                          Status Keanggotaan
                         </th>
                         <th scope="col" className="py-3 px-6">
                           Wa
