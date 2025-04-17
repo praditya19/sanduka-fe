@@ -111,6 +111,7 @@ function RekapAnggota() {
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
   const cabangRef = useRef(null);
   const unitKerjaRef = useRef(null);
+  const namaInputRef = useRef(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [originalRekapData, setOriginalRekapData] = useState([]);
   const [expandedIndex, setExpandedIndex] = useState(null);
@@ -159,6 +160,12 @@ function RekapAnggota() {
   const [nipValue, setNipValue] = useState(null);
   const [namaAnggotaInput, setNamaAnggotaInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [nomorRekening, setNomorRekening] = useState("");
+  const [showPopup, setShowPopup] = useState(false);
+  const [keteranganLainLain, setKeteranganLainLain] = useState([]);
+  const [lainLainOptions, setLainLainOptions] = useState([]);
+  const [selectedKeterangan, setSelectedKeterangan] = useState("");
+  const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -184,6 +191,26 @@ function RekapAnggota() {
     };
     fetchUnitKerjaData();
   }, []);
+
+  useEffect(() => {
+    const fetchKeterangan = async () => {
+      if (selectedKategori === "lainlain") {
+        try {
+          const response = await GlobalApi.getKeteranganLainlain();
+          console.log(response);
+          setKeteranganLainLain(response);
+          setShowPopup(true);
+        } catch (err) {
+          console.error("Gagal ambil keterangan:", err);
+          setKeteranganLainLain([]);
+        }
+      } else {
+        setShowPopup(false);
+      }
+    };
+
+    fetchKeterangan();
+  }, [selectedKategori]);
 
   const handleUnitKerjaFocus = () => {
     if (selectedCabang) {
@@ -468,14 +495,8 @@ function RekapAnggota() {
   };
 
   const handleSearchClick = () => {
-    setSearchQuery(namaAnggotaInput); // Set query pencarian
-    performSearch(namaAnggotaInput); // Lakukan pencarian
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSearchClick();
-    }
+    setSearchQuery(namaAnggotaInput);
+    performSearch(namaAnggotaInput);
   };
 
   const performSearch = (query) => {
@@ -524,6 +545,12 @@ function RekapAnggota() {
       setExpandedRows(unitsWithMatches);
     }
   };
+
+  useEffect(() => {
+    if (!isPopupVisible && namaInputRef.current) {
+      namaInputRef.current.focus();
+    }
+  }, [isPopupVisible]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -776,6 +803,9 @@ function RekapAnggota() {
         if (iuranResponse?.id) {
           setIdIuran(iuranResponse.id);
         }
+        if (iuranResponse?.nomorRekening) {
+          setNomorRekening(iuranResponse.nomorRekening);
+        }
       } catch (error) {
         console.error("Gagal mengambil data iuran anggota:", error);
 
@@ -803,7 +833,6 @@ function RekapAnggota() {
           setIdIuran(null);
         }
       }
-
       setIsPopupVisible(true);
     } catch (error) {
       console.error("Error saat cek NPA:", error);
@@ -917,9 +946,48 @@ function RekapAnggota() {
           }
         }
 
+        if (selectedKategori === "lainlain" && selectedKeterangan) {
+          try {
+            const response = await GlobalApi.getLainlain(selectedKeterangan);
+
+            // Filter berdasarkan keterangan yang dipilih
+            const matchingItem = response.find(
+              (item) =>
+                item.keterangan.toLowerCase() ===
+                selectedKeterangan.toLowerCase()
+            );
+
+            if (matchingItem) {
+              const jumlah = parseInt(matchingItem.jumlahNominal || 0);
+              console.log(
+                "Jumlah Nominal untuk",
+                selectedKeterangan,
+                ":",
+                jumlah
+              );
+
+              // Kalau mau simpan ke initialValue juga bisa:
+              initialValue = jumlah;
+            } else {
+              console.warn(
+                "Tidak ditemukan data dengan keterangan:",
+                selectedKeterangan
+              );
+            }
+          } catch (error) {
+            console.error("Gagal mengambil data lain-lain:", error);
+          }
+        }
+
         setAddedCategories((prev) => [
           ...prev,
-          { label: labelMap[selectedKategori], key: selectedKategori },
+          {
+            label: labelMap[selectedKategori],
+            key: selectedKategori,
+            ...(selectedKategori === "lain-lain" && selectedKeterangan
+              ? { keterangan: selectedKeterangan }
+              : {}),
+          },
         ]);
 
         setNewValues((prev) => ({
@@ -971,14 +1039,17 @@ function RekapAnggota() {
     let otomatisValueDaspen = 0;
     let otomatisValueKalender = 0;
     let otomatisValueDerap = 0;
+    let otomatisValueLainLain = 0;
 
     let manualValueKalender = 0;
     let manualValueDerap = 0;
     let manualValueDaspen = 0;
+    let manualValueLainLain = 0;
 
     let totalKalender = 0;
     let iuranDerap = formKetiga?.iuranDerap || 0;
     let iuranDaspen = 0;
+    let totalIuranLainLain = 0;
 
     addedCategories.forEach((item) => {
       const oldValue = newValues[item.key] ?? 0;
@@ -1001,6 +1072,12 @@ function RekapAnggota() {
         manualValueDaspen = inputValue;
         iuranDaspen = totalValue;
       }
+
+      if (item.key?.toLowerCase() === "lainlain") {
+        otomatisValueLainLain = oldValue;
+        manualValueLainLain = inputValue;
+        totalIuranLainLain = totalValue;
+      }
     });
 
     const payload = {
@@ -1012,6 +1089,7 @@ function RekapAnggota() {
       cabang: dataNpa.cabang,
       unitKerja: dataNpa.unitKerja,
       jabatan: dataNpa.jabatan,
+      nomorRekening: nomorRekening,
 
       iuranAnggota: otomatisValuePgri || 0,
       manualIuranAnggota: manualValuepgri || 0,
@@ -1033,10 +1111,10 @@ function RekapAnggota() {
       manualIuranKalender: manualValueKalender || 0,
       totalIuranKalender: totalKalender || 0,
 
-      iuranSumbangan: 0,
-      manualIuranSumbangan: 0,
-      totalIuranSumbangan: formKetiga?.iuranSumbangan || 0,
-
+      iuranSumbangan: otomatisValueLainLain || 0,
+      manualIuranSumbangan: manualValueLainLain || 0,
+      totalIuranSumbangan: totalIuranLainLain || 0,
+      
       keuangan: [],
     };
 
@@ -1075,7 +1153,7 @@ function RekapAnggota() {
         type: "success",
         message: "Data berhasil disimpan!",
       });
-      // console.log("Data yang akan diupdate:", payload);
+      console.log("Data yang akan diupdate:", payload);
 
       setIsPopupVisible(false);
       setAddedCategories([]);
@@ -1106,6 +1184,7 @@ function RekapAnggota() {
       cabang: dataNpa.cabang,
       unitKerja: dataNpa.unitKerja,
       jabatan: dataNpa.jabatan,
+      nomorRekening: nomorRekening || "",
     };
 
     const capitalizeFirstLetter = (string) =>
@@ -1583,14 +1662,32 @@ function RekapAnggota() {
     </div>
   );
 
+  const renderNamaAnggota = () => (
+    <div className="flex-1">
+      <div className="relative">
+        <Input
+          ref={namaInputRef}
+          type="text"
+          value={namaAnggotaInput}
+          onChange={handleNamaAnggotaInputChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm p-2 border pr-10"
+          placeholder="Nama anggota..."
+        />
+        <button
+          onClick={handleSearchClick}
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-teal-600 hover:text-teal-800"
+        >
+          <FaSearch />
+        </button>
+      </div>
+    </div>
+  );
+
   const FilterSection = ({
     renderCabangInput,
     renderUnitKerjaInput,
+    renderNamaAnggota,
     isMobile,
-    namaAnggotaInput,
-    handleNamaAnggotaInputChange,
-    handleSearchClick,
-    handleKeyPress,
   }) => {
     return (
       <div className="container mx-auto p-4">
@@ -1605,24 +1702,8 @@ function RekapAnggota() {
               {renderUnitKerjaInput()}
             </div>
             <div className="flex-1">
-              <label className="block mb-2 text-sm">Cari Anggota</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={namaAnggotaInput}
-                  onChange={handleNamaAnggotaInputChange}
-                  onKeyDown={handleKeyPress}
-                  autoFocus
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm p-2 border pr-10"
-                  placeholder="Nama anggota..."
-                />
-                <button
-                  onClick={handleSearchClick}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-teal-600 hover:text-teal-800"
-                >
-                  <FaSearch />
-                </button>
-              </div>
+              <label className="block mb-2 text-sm">Nama Anggota</label>
+              {renderNamaAnggota()}
             </div>
           </div>
           {isMobile && (
@@ -1676,11 +1757,8 @@ function RekapAnggota() {
                 <FilterSection
                   renderCabangInput={renderCabangInput}
                   renderUnitKerjaInput={renderUnitKerjaInput}
+                  renderNamaAnggota={renderNamaAnggota}
                   isMobile={isMobile}
-                  namaAnggotaInput={namaAnggotaInput}
-                  handleNamaAnggotaInputChange={handleNamaAnggotaInputChange}
-                  handleSearchClick={handleSearchClick}
-                  handleKeyPress={handleKeyPress}
                 />
               </div>
               {!isMobile && (
@@ -2023,7 +2101,6 @@ function RekapAnggota() {
               {isPopupVisible && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
                   <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl relative space-y-6 max-h-screen overflow-y-auto">
-                    {/* Tombol Tutup */}
                     <button
                       className="absolute top-2 right-2 text-gray-500 hover:text-teal-600 text-xl"
                       onClick={() => {
@@ -2034,15 +2111,10 @@ function RekapAnggota() {
                     >
                       ✕
                     </button>
-
-                    {/* Judul Form */}
                     <h2 className="text-center text-2xl font-bold text-white bg-red-700 py-2 rounded">
                       Form Keuangan
                     </h2>
-
-                    {/* Bagian Data Diri & Sinkronisasi */}
                     <div className="flex flex-col md:flex-row gap-4 items-start">
-                      {/* Kiri: Foto + Data Diri */}
                       <div className="flex gap-4 w-full md:w-2/3">
                         <Image
                           src={
@@ -2078,8 +2150,6 @@ function RekapAnggota() {
                           )}
                         </div>
                       </div>
-
-                      {/* Kanan: Info Singkat */}
                       <div className="w-full md:w-1/3 text-sm">
                         {dataNpa && (
                           <>
@@ -2092,10 +2162,19 @@ function RekapAnggota() {
                         )}
                       </div>
                     </div>
-
-                    {/* Form Keuangan */}
                     <div className="gap-6">
-                      {/* Kiri: Daftar Kategori */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Nomor Rekening
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Masukkan Nomor Rekening"
+                          value={nomorRekening}
+                          onChange={(e) => setNomorRekening(e.target.value)}
+                          className="w-full border border-black px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        />
+                      </div>
                       <div className="space-y-2">
                         {groupedIuran
                           .filter(
@@ -2128,6 +2207,7 @@ function RekapAnggota() {
                                     value={`Rp. ${oldValue.toLocaleString(
                                       "id-ID"
                                     )}`}
+                                    className="border px-2 py-1 rounded bg-gray-200 text-center"
                                   />
 
                                   {/* Form 2: Input manual */}
@@ -2153,8 +2233,6 @@ function RekapAnggota() {
                                     }}
                                     className="border px-2 py-1 rounded text-center"
                                   />
-
-                                  {/* Total */}
                                   <input
                                     type="text"
                                     readOnly
@@ -2180,10 +2258,8 @@ function RekapAnggota() {
                             >
                               <div className="flex items-center justify-between">
                                 <span className="font-medium">
-                                  {item.label}
+                                {item.key === "lainlain" ? selectedKeterangan : item.key}
                                 </span>
-
-                                {/* Icon Sampah */}
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -2250,13 +2326,11 @@ function RekapAnggota() {
                           );
                         })}
 
-                        {/* Total */}
                         <div className="flex items-center justify-between bg-purple-200 px-3 py-2 rounded-md font-bold">
                           <span>Total</span>
                           <span>Rp. {grandTotal.toLocaleString("id-ID")}</span>
                         </div>
 
-                        {/* Pindahan: Tambah Kategori */}
                         <div className="bg-gray-100 rounded-md p-4 mt-4">
                           <h3 className="text-lg font-semibold text-purple-800 mb-3">
                             Tambah Keuangan
@@ -2285,13 +2359,41 @@ function RekapAnggota() {
                                 >
                                   <option value="">-- Pilih --</option>
                                   <option value="daspen">Daspen</option>
-                                  <option value="sumbangan">Sumbangan</option>
                                   <option value="kalender">Kalender</option>
                                   <option value="derap">Derap</option>
-                                  <option value="lain-lain">Lain-Lain</option>
+                                  <option value="lainlain">Lain-Lain</option>
                                 </select>
                               </div>
-
+                              {selectedKategori === "lainlain" && (
+                                <div>
+                                  <label className="block text-sm font-medium">
+                                    Pilih Keterangan
+                                  </label>
+                                  <select
+                                    className="w-full border rounded px-3 py-2"
+                                    value={selectedKeterangan}
+                                    onChange={(e) =>
+                                      setSelectedKeterangan(e.target.value)
+                                    }
+                                  >
+                                    <option value="">
+                                      -- Pilih Keterangan --
+                                    </option>
+                                    {Array.isArray(keteranganLainLain) &&
+                                    keteranganLainLain.length > 0 ? (
+                                      keteranganLainLain.map((item, index) => (
+                                        <option key={index} value={item}>
+                                          {item}
+                                        </option>
+                                      ))
+                                    ) : (
+                                      <option disabled>
+                                        Tidak ada data keterangan
+                                      </option>
+                                    )}
+                                  </select>
+                                </div>
+                              )}
                               {selectedKategori && (
                                 <div className="flex justify-end">
                                   <button
@@ -2308,7 +2410,6 @@ function RekapAnggota() {
                       </div>
                     </div>
 
-                    {/* Tombol Aksi */}
                     <div className="flex justify-end gap-4 pt-4">
                       <button
                         type="button"
