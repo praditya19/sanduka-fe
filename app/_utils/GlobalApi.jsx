@@ -8,7 +8,6 @@ const axiosClient = axios.create({
     "Content-Type": "application/json",
   },
 });
-
 // Konversi Gambar Dalam Format Base64
 const base64ToBlob = (base64, mime) => {
   const byteChars = atob(base64);
@@ -714,14 +713,17 @@ const uploadFile = async (formData) => {
   }
 };
 
-const getAllFiles = async (query = null) => {
+const getAllFiles = async (query = null, statusKeanggotaan = null) => {
   try {
-    const url = query ? `/api/files/all?query=${query}` : "/api/files/all";
+    const params = new URLSearchParams();
+    if (query) params.append("query", query);
+    if (statusKeanggotaan) params.append("statusKeanggotaan", statusKeanggotaan);
 
+    const url = `/api/files/all?${params.toString()}`;
     const response = await axiosClient.get(url);
     return response.data;
   } catch (error) {
-    console.error("Error fetching files:", error);
+    console.error("Gagal mengambil data file:", error?.response?.data || error.message);
     throw error;
   }
 };
