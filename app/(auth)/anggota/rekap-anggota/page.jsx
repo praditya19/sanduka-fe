@@ -16,6 +16,7 @@ import {
   FaPlus,
   FaPrint,
   FaSearch,
+  FaFileInvoiceDollar,
 } from "react-icons/fa";
 import { FiTrash } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
@@ -476,7 +477,7 @@ function RekapAnggota() {
 
           const processed = processData(regularData);
           setGroupedData(processed);
-          // console.log("proses",processed)y
+          // console.log("proses", processed);
           // console.log("reguler",regularData)
           setData(regularData);
           setOriginalRekapData(regularData);
@@ -520,9 +521,8 @@ function RekapAnggota() {
       setGroupedData(processed);
       setData(filteredData);
       calculateTotals(filteredData);
-      setExpandedRows(new Set()); // Collapse semua row
+      setExpandedRows(new Set());
     } else {
-      // Lakukan pencarian
       const filteredData = originalRekapData.filter(
         (item) =>
           (!selectedCabang ||
@@ -538,7 +538,6 @@ function RekapAnggota() {
       setData(filteredData);
       calculateTotals(filteredData);
 
-      // Auto-expand rows yang mengandung hasil pencarian
       const unitsWithMatches = new Set(
         filteredData.map((item) => item.unitKerja || "Tidak Ada Unit Kerja")
       );
@@ -757,7 +756,7 @@ function RekapAnggota() {
   };
 
   const handleMemberClick = async (member) => {
-    // console.log("NIP Member:", member.nip); // Tambahkan ini
+    // console.log("NIP Member:", member.nip);
     setNipValue(member.nip);
 
     setSelectedMember(null);
@@ -839,6 +838,30 @@ function RekapAnggota() {
       if (error.response?.status === 500) {
         console.warn("Server error 500: data tidak akan ditampilkan.");
       }
+    }
+  };
+
+  const handleTagihanClick = async (member) => {
+    const npa = member?.npaPgri?.trim();
+
+    if (!npa) {
+      console.error("NPA tidak ditemukan!");
+      return;
+    }
+
+    try {
+      const response = await GlobalApi.cekNpa(npa);
+
+      if (response?.id) {
+        console.log("ID dari NPA:", response.id);
+        sessionStorage.setItem("idTagihan", response.id);
+        router.push("/anggota/rekap-anggota/tagihanByAdmin");
+      } else {
+        console.warn("ID tidak ditemukan dalam respons.");
+        console.log("Respon penuh:", response);
+      }
+    } catch (error) {
+      console.error("Gagal mendapatkan ID dari NPA:", error);
     }
   };
 
@@ -950,7 +973,6 @@ function RekapAnggota() {
           try {
             const response = await GlobalApi.getLainlain(selectedKeterangan);
 
-            // Filter berdasarkan keterangan yang dipilih
             const matchingItem = response.find(
               (item) =>
                 item.keterangan.toLowerCase() ===
@@ -966,7 +988,6 @@ function RekapAnggota() {
                 jumlah
               );
 
-              // Kalau mau simpan ke initialValue juga bisa:
               initialValue = jumlah;
             } else {
               console.warn(
@@ -1114,7 +1135,7 @@ function RekapAnggota() {
       iuranSumbangan: otomatisValueLainLain || 0,
       manualIuranSumbangan: manualValueLainLain || 0,
       totalIuranSumbangan: totalIuranLainLain || 0,
-      
+
       keuangan: [],
     };
 
@@ -1265,7 +1286,6 @@ function RekapAnggota() {
     }
 
     try {
-      // Hapus data iuran by ID
       await GlobalApi.deleteIuranAnggota(idIuran);
       setTimeout(() => {
         window.location.reload();
@@ -1276,7 +1296,6 @@ function RekapAnggota() {
         message: "Data berhasil direset!",
       });
 
-      // Reset semua form setelah penghapusan
       setNominalBaruList(Array(groupedIuran.length).fill(""));
       setManualInputs({});
       setAddedCategories([]);
@@ -1512,7 +1531,6 @@ function RekapAnggota() {
       "Total",
     ]);
 
-    // Add data rows
     groupedData.forEach((group, index) => {
       if (group.members && group.members.length > 0) {
         group.members.forEach((member, memberIndex) => {
@@ -1535,7 +1553,6 @@ function RekapAnggota() {
       }
     });
 
-    // Add totals row
     excelData.push([
       "",
       "",
@@ -1552,19 +1569,15 @@ function RekapAnggota() {
       parseInt(grandTotals?.totalIuran || 0),
     ]);
 
-    // Create worksheet
     const ws = XLSX.utils.aoa_to_sheet(excelData);
 
-    // Create workbook
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "RekapData");
 
-    // Generate file name
     const fileName = `Rekap_By_Nominal${
       selectedCabang ? `_Cabang_${selectedCabang}` : ""
     }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
 
-    // Export to Excel
     XLSX.writeFile(wb, fileName);
   };
 
@@ -2091,6 +2104,12 @@ function RekapAnggota() {
                               >
                                 <FaPrint />
                               </button>
+                              <button
+                                className="text-teal-600 hover:text-teal-800"
+                                onClick={() => handleTagihanClick(member)}
+                              >
+                                <FaFileInvoiceDollar />
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -2258,7 +2277,9 @@ function RekapAnggota() {
                             >
                               <div className="flex items-center justify-between">
                                 <span className="font-medium">
-                                {item.key === "lainlain" ? selectedKeterangan : item.key}
+                                  {item.key === "lainlain"
+                                    ? selectedKeterangan
+                                    : item.key}
                                 </span>
                                 <button
                                   type="button"

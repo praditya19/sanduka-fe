@@ -133,6 +133,7 @@ const HeaderHome = () => {
   const router = useRouter();
   const handleBackClick = () => {
     sessionStorage.removeItem("anggotaId");
+    sessionStorage.removeItem("idTagihan");
     router.back();
   };
 
@@ -164,7 +165,7 @@ const HeaderHome = () => {
     sessionStorage.clear();
     localStorage.clear();
     window.location.href = "/";
-};
+  };
 
   const getEditProfilePath = () => {
     const userRole = sessionStorage.getItem("role");

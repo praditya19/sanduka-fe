@@ -73,7 +73,7 @@ const DataAnggota = () => {
     keyword = null,
     statusKeanggotaan = "Aktif"
   ) => {
-    setLoading(true); // Menambahkan set loading ke true sebelum mulai fetch data
+    setLoading(true);
 
     try {
       const response = await GlobalApi.getAllAnggota(
@@ -112,11 +112,11 @@ const DataAnggota = () => {
       setTotalPages(response.totalPages || 0);
       setTotalElements(response.totalElements || 0);
 
-      setLoading(false); // Set loading ke false setelah data berhasil diambil
+      setLoading(false);
       return fetchedData || [];
     } catch (error) {
       console.error("Error fetching anggota data:", error);
-      setLoading(false); // Set loading ke false jika terjadi error
+      setLoading(false);
     }
   };
 
@@ -1033,7 +1033,7 @@ const DataTable = ({
               icon: null,
               duration: 3000,
               style: {
-                background: "rgb(220, 252, 231)", // bg-green-100
+                background: "rgb(220, 252, 231)",
                 borderRadius: "0.5rem",
                 padding: "2rem",
                 width: "24rem",
@@ -1066,7 +1066,7 @@ const DataTable = ({
             icon: null,
             duration: 3000,
             style: {
-              background: "rgb(254, 226, 226)", // bg-red-100
+              background: "rgb(254, 226, 226)",
               borderRadius: "0.5rem",
               padding: "2rem",
               width: "24rem",
@@ -1091,11 +1091,12 @@ const DataTable = ({
     if (anggotaId) {
       try {
         const response = await GlobalApi.getUserById(anggotaId);
+        console.log(response)
 
         if (response) {
           setKategoriDaspen(response.kategoriDaspen || "Tidak tersedia");
 
-          const nip = response.nip;
+          const nip = response.nip?.trim();
 
           if (nip) {
             const fileResponse = await GlobalApi.getFileByNip(nip);
@@ -1114,14 +1115,14 @@ const DataTable = ({
                 </div>
                 <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
                 <div className="text-red-800 text-center">
-                  NIP tidak ditemukan. Silahkan sinkronisasi dulu.
+                Data Sinkron tidak ada. Silahkan hubungi admin!
                 </div>
               </div>,
               {
                 icon: null,
                 duration: 3000,
                 style: {
-                  background: "rgb(254, 226, 226)", // bg-red-100
+                  background: "rgb(254, 226, 226)",
                   borderRadius: "0.5rem",
                   padding: "2rem",
                   width: "24rem",
@@ -1148,14 +1149,14 @@ const DataTable = ({
             </div>
             <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
             <div className="text-red-800 text-center">
-              NIP tidak ditemukan. Silahkan sinkronisasi dulu.
+            Data Sinkron tidak ada. Silahkan hubungi admin!
             </div>
           </div>,
           {
             icon: null,
             duration: 3000,
             style: {
-              background: "rgb(254, 226, 226)", // bg-red-100
+              background: "rgb(254, 226, 226)",
               borderRadius: "0.5rem",
               padding: "2rem",
               width: "24rem",
@@ -1195,7 +1196,7 @@ const DataTable = ({
           icon: null,
           duration: 3000,
           style: {
-            background: "rgb(220, 252, 231)", // bg-green-100
+            background: "rgb(220, 252, 231)",
             borderRadius: "0.5rem",
             padding: "2rem",
             width: "24rem",
@@ -1227,7 +1228,7 @@ const DataTable = ({
           icon: null,
           duration: 3000,
           style: {
-            background: "rgb(254, 226, 226)", // bg-red-100
+            background: "rgb(254, 226, 226)",
             borderRadius: "0.5rem",
             padding: "2rem",
             width: "24rem",
@@ -1273,7 +1274,7 @@ const DataTable = ({
             icon: null,
             duration: 3000,
             style: {
-              background: "rgb(254, 226, 226)", // bg-red-100
+              background: "rgb(254, 226, 226)",
               borderRadius: "0.5rem",
               padding: "2rem",
               width: "24rem",
@@ -1306,7 +1307,7 @@ const DataTable = ({
           icon: null,
           duration: 3000,
           style: {
-            background: "rgb(220, 252, 231)", // bg-green-100
+            background: "rgb(220, 252, 231)",
             borderRadius: "0.5rem",
             padding: "2rem",
             width: "24rem",
@@ -1344,7 +1345,7 @@ const DataTable = ({
           icon: null,
           duration: 3000,
           style: {
-            background: "rgb(254, 226, 226)", // bg-red-100
+            background: "rgb(254, 226, 226)",
             borderRadius: "0.5rem",
             padding: "2rem",
             width: "24rem",
@@ -1380,7 +1381,7 @@ const DataTable = ({
             icon: null,
             duration: 3000,
             style: {
-              background: "rgb(254, 226, 226)", // bg-red-100
+              background: "rgb(254, 226, 226)",
               borderRadius: "0.5rem",
               padding: "2rem",
               width: "24rem",
@@ -1413,7 +1414,7 @@ const DataTable = ({
           icon: null,
           duration: 3000,
           style: {
-            background: "rgb(220, 252, 231)", // bg-green-100
+            background: "rgb(220, 252, 231)",
             borderRadius: "0.5rem",
             padding: "2rem",
             width: "24rem",
@@ -1451,7 +1452,7 @@ const DataTable = ({
           icon: null,
           duration: 3000,
           style: {
-            background: "rgb(254, 226, 226)", // bg-red-100
+            background: "rgb(254, 226, 226)",
             borderRadius: "0.5rem",
             padding: "2rem",
             width: "24rem",
@@ -1470,56 +1471,60 @@ const DataTable = ({
 
   const handleSync = async () => {
     try {
-      setLoadingButton(true); // Menandakan bahwa proses sedang berlangsung
-
+      setLoadingButton(true);
+  
       // Ambil userId dari sessionStorage
-      const userId = sessionStorage.getItem("userId");
+      const userId = sessionStorage.getItem("anggotaId");
       if (!userId) {
         toast.error("User ID tidak ditemukan!");
-        setLoadingButton(false); // Matikan loading button
+        setLoadingButton(false);
         return;
       }
-
+  
       // Mengambil data pengguna berdasarkan userId
       const userData = await GlobalApi.getUserById(userId);
       if (!userData || !userData.nip) {
         toast.error("NIP tidak ditemukan!");
-        setLoadingButton(false); // Matikan loading button
+        setLoadingButton(false);
         return;
       }
-
-      // Menyimpan NIP yang diperoleh ke dalam state nip
+  
+      // Membersihkan NIP dari karakter aneh/spasi
       const nip = userData.nip;
-
+      console.log("NIP yang digunakan:", nip);
+  
       // Mengecek data berdasarkan NIP
       const data = await GlobalApi.getByNIP(nip);
       if (!data) {
         toast.error("Data dengan NIP ini tidak ditemukan!");
-        setLoadingButton(false); // Matikan loading button
+        setLoadingButton(false);
         return;
       }
-
+  
       // Mengecek apakah data sudah disinkronkan
       const nipData = await GlobalApi.getFileByNip(nip);
       if (nipData?.verifikasi === true) {
-        toast.success("Data Anda sudah Tersinkronisasi!");
-        setLoadingButton(false); // Matikan loading button
+        toast.success("Data Anda sudah tersinkronisasi!");
+        console.log("Data verifikasi ditemukan:", nipData);
+        setLoadingButton(false);
         return;
       }
-
+  
       // Melakukan sinkronisasi data pengguna
+      console.log("User ID untuk update:", userId);
+      console.log("Data yang akan dikirim untuk update:", data);
       const response = await GlobalApi.updateRegisUser(userId, data);
-
-      // Menampilkan notifikasi setelah data berhasil disinkronkan
-      toast.success("Data Berhasil disinkronkan!");
+  
+      console.log("Respons dari updateRegisUser:", response);
+      toast.success("Data berhasil disinkronkan!");
       window.location.reload();
     } catch (error) {
       console.error("Error saat mengirim data:", error);
-      toast.error("Terjadi kesalahan saat mengirim data. Silahkan coba lagi.");
+      toast.error("Terjadi kesalahan saat mengirim data. NIP tidak sesuai.");
     } finally {
-      setLoadingButton(false); // Menonaktifkan loading button setelah selesai
+      setLoadingButton(false);
     }
-  };
+  };  
 
   useEffect(() => {
     const handleResize = () => {
@@ -1581,7 +1586,7 @@ const DataTable = ({
           icon: null,
           duration: 3000,
           style: {
-            background: "rgb(220, 252, 231)", // bg-green-100
+            background: "rgb(220, 252, 231)",
             borderRadius: "0.5rem",
             padding: "2rem",
             width: "24rem",
@@ -1614,7 +1619,7 @@ const DataTable = ({
           icon: null,
           duration: 3000,
           style: {
-            background: "rgb(254, 226, 226)", // bg-red-100
+            background: "rgb(254, 226, 226)",
             borderRadius: "0.5rem",
             padding: "2rem",
             width: "24rem",
@@ -2659,7 +2664,7 @@ const DataTable = ({
                                               <FontAwesomeIcon
                                                 icon={faInfoCircle}
                                                 className="w-6 h-6 text-blue-500 cursor-pointer hover:text-blue-600"
-                                                onClick={handleOpenPopup} // Menampilkan popup saat diklik
+                                                onClick={handleOpenPopup}
                                               />
                                             </div>
 
@@ -2990,8 +2995,8 @@ const PopupDetail = ({
   const profileImageUrl = "/profile.png";
 
   const handleRejectConfirmation = () => {
-    setShowConfirmReject(false); // Close the confirmation pop-up
-    handleRejectUserClick(selectedRow.id); // Trigger reject action
+    setShowConfirmReject(false);
+    handleRejectUserClick(selectedRow.id);
   };
 
   return (

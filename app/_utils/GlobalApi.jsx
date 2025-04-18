@@ -237,7 +237,7 @@ const updateUserById = async (userId, formData) => {
 // Cek NIP
 const getByNIP = async (nip) => {
   try {
-    const response = await axiosClient.get(`api/files/nip/${nip}`);
+    const response = await axiosClient.get(`/api/files/nip/${nip}`);
     return response.data;
   } catch (error) {
     console.error("Error mendapat data by NIP:", error);
