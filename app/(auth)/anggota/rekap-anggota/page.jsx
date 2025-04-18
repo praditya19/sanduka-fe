@@ -375,10 +375,21 @@ function RekapAnggota() {
   };
 
   const processData = (rawData) => {
-    const grouped = rawData.reduce((acc, item) => {
+    const uniqueMap = new Map();
+  
+    rawData.forEach((item) => {
+      const key = `${item.namaAnggota}-${item.npaPgri}`;
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, item);
+      }
+    });
+  
+    const filteredData = Array.from(uniqueMap.values());
+  
+    const grouped = filteredData.reduce((acc, item) => {
       const unitKey = item.unitKerja || "Tidak Ada Unit Kerja";
       const cabangKey = item.cabang || "Tidak Ada Cabang";
-
+  
       if (!acc[unitKey]) {
         acc[unitKey] = {
           unitKerja: unitKey,
@@ -393,6 +404,7 @@ function RekapAnggota() {
           totalIuran: 0,
         };
       }
+  
       acc[unitKey].members.push({
         namaAnggota: item.namaAnggota,
         npaPgri: item.npaPgri,
@@ -404,6 +416,7 @@ function RekapAnggota() {
         kalender: parseFloat(item.kalender) || 0,
         totalIuran: parseFloat(item.totalIuran) || 0,
       });
+  
       acc[unitKey].jumlah += 1;
       acc[unitKey].pgri += parseFloat(item.pgri) || 0;
       acc[unitKey].sanduka += parseFloat(item.sanduka) || 0;
@@ -411,10 +424,12 @@ function RekapAnggota() {
       acc[unitKey].derap += parseFloat(item.derap) || 0;
       acc[unitKey].kalender += parseFloat(item.kalender) || 0;
       acc[unitKey].totalIuran += parseFloat(item.totalIuran) || 0;
+  
       return acc;
     }, {});
+  
     return Object.values(grouped);
-  };
+  };  
 
   useEffect(() => {
     const fetchInitialData = async () => {
