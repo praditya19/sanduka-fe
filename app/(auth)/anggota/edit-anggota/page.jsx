@@ -245,8 +245,8 @@ const Page = () => {
   // };
   const handleChange = (index, e) => {
     const updatedNamaAnak = [...namaAnak];
-    updatedNamaAnak[index] = e.target.value; // Ambil nilai input
-    setNamaAnak(updatedNamaAnak); // Perbarui state
+    updatedNamaAnak[index] = e.target.value;
+    setNamaAnak(updatedNamaAnak);
   };
 
   const getAnggotaById = async () => {
@@ -410,12 +410,10 @@ const Page = () => {
         const prevNamaAnak = previousData.current.namaAnak || [];
         const currentNamaAnak = namaAnak || [];
 
-        // Only compare if there are actual changes
         if (
           prevNamaAnak.length !== currentNamaAnak.length ||
           currentNamaAnak.some((name, index) => name !== prevNamaAnak[index])
         ) {
-          // Only add to changedFields if there are actual changes and at least one non-empty name
           if (currentNamaAnak.some((name) => name.trim() !== "")) {
             changedFields.push("Nama Anak");
           }
@@ -582,7 +580,7 @@ const Page = () => {
     const cleanNamaAnak = (namaAnakArray) => {
       if (typeof namaAnakArray === "string") {
         try {
-          namaAnakArray = JSON.parse(namaAnakArray); // Ubah jadi array
+          namaAnakArray = JSON.parse(namaAnakArray);
         } catch (error) {
           console.error("Gagal parse JSON:", error);
           return [];
@@ -604,7 +602,7 @@ const Page = () => {
     const formattedTanggalLahir = formatTanggal(tanggalLahir);
 
     const formatTanggalPgri = (tanggal) => {
-      if (!tanggal) return new Date().toISOString().split("T")[0]; // Gunakan tanggal hari ini jika nilai tidak valid
+      if (!tanggal) return new Date().toISOString().split("T")[0];
       const date = new Date(tanggal);
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -697,10 +695,17 @@ const Page = () => {
 
   const handleConfirmAndSendData = async () => {
     try {
+      const role = sessionStorage.getItem("role");
       const anggotaId = sessionStorage.getItem("anggotaId");
       const userId = sessionStorage.getItem("userId");
 
-      const idToUse = userId || anggotaId;
+      let idToUse = null;
+
+      if (role === "SUPER ADMIN" || role === "ADMIN") {
+        idToUse = anggotaId;
+      } else if (role === "USER") {
+        idToUse = userId;
+      }
 
       if (!idToUse) {
         setNotification({
@@ -714,7 +719,7 @@ const Page = () => {
       if (nipData?.verifikasi === true) {
         setNotification({
           type: "success",
-          message: `Data Anda sudah Tersingkronisasi!`,
+          message: `Data Anda sudah Tersinkronisasi!`,
         });
         handleClosePopup();
         return;
@@ -1076,8 +1081,8 @@ const Page = () => {
   };
 
   const cleanName = (name) => {
-    if (typeof name !== "string") return name; // Pastikan input adalah string
-    return name.replace(/[[\]"\\]/g, "").trim(); // Hapus karakter yang tidak diperlukan
+    if (typeof name !== "string") return name;
+    return name.replace(/[[\]"\\]/g, "").trim();
   };
 
   const handleResize = () => {
