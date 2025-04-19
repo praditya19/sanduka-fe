@@ -11,7 +11,7 @@ import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/f
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Input } from "@/components/ui/input";
-import toast, { Toaster } from "react-hot-toast";
+import { FaBars, FaTimes } from "react-icons/fa";
 import Modal from "react-modal";
 
 const NotificationPopup = ({ type, message, onClose }) => {
@@ -127,6 +127,7 @@ const SyncData = () => {
   const [expandedRow, setExpandedRow] = useState(null);
   const [notification, setNotification] = useState(null);
   const [statusKeanggotaan, setStatusKeanggotaan] = useState("");
+  const [showActions, setShowActions] = useState(false);
 
   useEffect(() => {
     const storedRole = sessionStorage.getItem("role");
@@ -867,9 +868,15 @@ const SyncData = () => {
   };
 
   const handleStatusChange = (value) => {
-    console.log(value);
-
     setStatusKeanggotaan(value);
+  };
+
+  const toggleActions = () => {
+    setShowActions(!showActions);
+  };
+
+  const handleDownloadRekap = () => {
+    GlobalApi.exportTidakTerdaftarToExcel(selectedCabang, selectedUnitKerja);
   };
 
   return (
@@ -1118,78 +1125,121 @@ const SyncData = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap gap-2 justify-end min-w-[260px]">
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                  onClick={openModal}
+              <div className="relative">
+                {/* Tombol hamburger */}
+                <button
+                  aria-label="Tampilkan menu aksi"
+                  className="p-2 text-white bg-gray-700 rounded-md hover:bg-gray-800"
+                  onClick={toggleActions}
                 >
-                  Download Template
-                </Button>
+                  <FaBars />
+                </button>
 
-                <Modal
-                  isOpen={showModal}
-                  onRequestClose={closeModal}
-                  contentLabel="Pilih Template"
-                  className="fixed inset-0 flex items-center justify-center p-4"
-                  overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+                {showActions && (
+                  <div
+                    className="fixed inset-0 bg-black bg-opacity-40 z-40"
+                    onClick={toggleActions}
+                  ></div>
+                )}
+
+                <div
+                  className={`fixed top-0 right-0 h-full w-72 max-w-sm bg-white shadow-2xl p-4 z-50 transition-transform duration-300 transform ${showActions ? "translate-x-0" : "translate-x-full"
+                    }`}
                 >
-                  <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-                    <div className="flex justify-between items-center mb-4">
-                      <h2 className="text-xl font-bold">
-                        Pilih Template untuk Download
-                      </h2>
-                      <button
-                        className="text-2xl font-bold text-gray-700 hover:text-red-500 focus:outline-none"
-                        onClick={closeModal}
-                      >
-                        ×
-                      </button>
-                    </div>
+                  <div className="flex justify-end mb-4">
+                    <button
+                      aria-label="Tutup menu aksi"
+                      className="text-gray-600 text-2xl hover:text-red-500"
+                      onClick={toggleActions}
+                    >
+                      <FaTimes />
+                    </button>
+                  </div>
 
-                    <div className="flex flex-col gap-4">
-                      <button
-                        className="w-full bg-teal-700 hover:bg-teal-500 text-white px-4 py-2 rounded-md"
-                        onClick={() => setSelectedTemplate("daspen")}
-                      >
-                        Template Daspen
-                      </button>
-                      <button
-                        className="w-full bg-teal-700 hover:bg-teal-500 text-white px-4 py-2 rounded-md"
-                        onClick={() => setSelectedTemplate("kta")}
-                      >
-                        Template KTA Digital
-                      </button>
-                    </div>
+                  <div className="flex flex-col gap-4">
+                    {/* Tombol Download Template */}
+                    <Button
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={openModal}
+                    >
+                      Download Template
+                    </Button>
 
-                    {selectedTemplate && (
-                      <div className="mt-4">
-                        <Button
-                          className="w-full bg-teal-700 hover:bg-teal-500 text-white px-4 py-2 rounded-md"
-                          onClick={handleDownloadTemplate}
-                        >
-                          Download{" "}
-                          {selectedTemplate === "daspen"
-                            ? "Template Daspen"
-                            : "Template KTA Digital"}
-                        </Button>
+                    {/* Modal Pilih Template */}
+                    <Modal
+                      isOpen={showModal}
+                      onRequestClose={closeModal}
+                      contentLabel="Pilih Template"
+                      className="fixed inset-0 flex items-center justify-center p-4 z-[100]"
+                      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-[90]"
+                    >
+                      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md z-[101]">
+                        <div className="flex justify-between items-center mb-4">
+                          <h2 className="text-xl font-bold">Pilih Template untuk Download</h2>
+                          <button
+                            aria-label="Tutup modal"
+                            className="text-2xl font-bold text-gray-700 hover:text-red-500"
+                            onClick={closeModal}
+                          >
+                            ×
+                          </button>
+                        </div>
+
+                        <div className="flex flex-col gap-4">
+                          <button
+                            className="w-full bg-teal-700 hover:bg-teal-500 text-white px-4 py-2 rounded-md"
+                            onClick={() => setSelectedTemplate("daspen")}
+                          >
+                            Template Daspen
+                          </button>
+                          <button
+                            className="w-full bg-teal-700 hover:bg-teal-500 text-white px-4 py-2 rounded-md"
+                            onClick={() => setSelectedTemplate("kta")}
+                          >
+                            Template KTA Digital
+                          </button>
+                        </div>
+
+                        {selectedTemplate && (
+                          <div className="mt-4">
+                            <Button
+                              className="w-full bg-teal-700 hover:bg-teal-500 text-white px-4 py-2 rounded-md"
+                              onClick={handleDownloadTemplate}
+                            >
+                              Download {selectedTemplate === "daspen" ? "Template Daspen" : "Template KTA Digital"}
+                            </Button>
+                          </div>
+                        )}
                       </div>
+                    </Modal>
+
+                    {/* Tombol Upload Data */}
+                    <Button
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      onClick={() => setIsModalOpen(true)}
+                    >
+                      Upload Data
+                    </Button>
+
+                    {/* Tombol Cek Data */}
+                    <Button
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                      onClick={handleCekData}
+                    >
+                      Cek Data
+                    </Button>
+
+                    {/* Tombol Rekap Anggota */}
+                    {role === 'SUPER ADMIN' && (
+                      <Button
+                        className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                        onClick={handleDownloadRekap}
+                      >
+                        Rekap Anggota
+                      </Button>
                     )}
                   </div>
-                </Modal>
-
-                <Button
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                  onClick={() => setIsModalOpen(true)}
-                >
-                  Upload Data
-                </Button>
-
-                <Button
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                  onClick={() => handleCekData()}
-                >
-                  Cek Data
-                </Button>
+                </div>
               </div>
             </div>
 
