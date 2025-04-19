@@ -1572,9 +1572,9 @@ function RekapAnggota() {
             memberIndex === 0 ? index + 1 : "",
             memberIndex === 0 ? group.cabang : "",
             memberIndex === 0 ? group.unitKerja : "",
-            member.npaPgri,
+            member.namaAnggota,
             member.nip || "-",
-            member.nomorRekening || "-", // Tambahkan nomor rekening di sini
+            member.nomorRekening || "-", 
             memberIndex === 0 ? group.jumlah : "",
             parseInt(member.pgri || 0),
             parseInt(member.sanduka || 0),
