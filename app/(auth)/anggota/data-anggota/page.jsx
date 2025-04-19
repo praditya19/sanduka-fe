@@ -1862,22 +1862,25 @@ const DataTable = ({
 
                           <div className="text-sm">{item.pangkatGolongan}</div>
                         </td>
-                        <td className="py-2 px-4 border w-36 text-center ">
-                          <div
-                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-xs font-semibold shadow-sm sm:ml-3 sm:w-auto ${
-                              item.status === "BUKAN ANGGOTA"
-                                ? "bg-red-200 text-red-900"
-                                : "bg-green-200 text-green-900"
-                            }`}
-                          >
+                        <td className="py-2 px-4 border w-36 text-center">
+                          <div className="text-xs font-semibold">
                             {item.statusKeanggotaan}
                           </div>
-                          <div className="text-sm mt-1">
+
+                          <div
+                            className={`text-sm mt-1 font-medium px-2 py-1 rounded-full inline-block ${
+                              filesByNip.find(
+                                (file) => String(file?.nip) === String(item.nip)
+                              )?.verifikasi === true
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
                             {filesByNip.find(
                               (file) => String(file?.nip) === String(item.nip)
                             )?.verifikasi === true
-                              ? "✅ Sudah Sinkronisasi"
-                              : "❌ Belum Sinkronisasi"}
+                              ? "Sudah Sinkronisasi"
+                              : "Belum Sinkronisasi"}
                           </div>
                         </td>
                         <td className="py-2 px-4 border text-center">
