@@ -376,20 +376,20 @@ function RekapAnggota() {
 
   const processData = (rawData) => {
     const uniqueMap = new Map();
-  
+
     rawData.forEach((item) => {
       const key = `${item.namaAnggota}-${item.npaPgri}`;
       if (!uniqueMap.has(key)) {
         uniqueMap.set(key, item);
       }
     });
-  
+
     const filteredData = Array.from(uniqueMap.values());
-  
+
     const grouped = filteredData.reduce((acc, item) => {
       const unitKey = item.unitKerja || "Tidak Ada Unit Kerja";
       const cabangKey = item.cabang || "Tidak Ada Cabang";
-  
+
       if (!acc[unitKey]) {
         acc[unitKey] = {
           unitKerja: unitKey,
@@ -402,12 +402,14 @@ function RekapAnggota() {
           derap: 0,
           kalender: 0,
           totalIuran: 0,
+          nomorRekening: 0,
         };
       }
-  
+
       acc[unitKey].members.push({
         namaAnggota: item.namaAnggota,
         npaPgri: item.npaPgri,
+        nomorRekening: item.nomorRekening,
         nip: item.nip,
         pgri: parseFloat(item.pgri) || 0,
         sanduka: parseFloat(item.sanduka) || 0,
@@ -416,7 +418,7 @@ function RekapAnggota() {
         kalender: parseFloat(item.kalender) || 0,
         totalIuran: parseFloat(item.totalIuran) || 0,
       });
-  
+
       acc[unitKey].jumlah += 1;
       acc[unitKey].pgri += parseFloat(item.pgri) || 0;
       acc[unitKey].sanduka += parseFloat(item.sanduka) || 0;
@@ -424,12 +426,12 @@ function RekapAnggota() {
       acc[unitKey].derap += parseFloat(item.derap) || 0;
       acc[unitKey].kalender += parseFloat(item.kalender) || 0;
       acc[unitKey].totalIuran += parseFloat(item.totalIuran) || 0;
-  
+
       return acc;
     }, {});
-  
+
     return Object.values(grouped);
-  };  
+  };
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -492,7 +494,7 @@ function RekapAnggota() {
 
           const processed = processData(regularData);
           setGroupedData(processed);
-          // console.log("proses", processed);
+          console.log("proses", processed);
           // console.log("reguler",regularData)
           setData(regularData);
           setOriginalRekapData(regularData);
@@ -1439,9 +1441,10 @@ function RekapAnggota() {
                           : ""
                       }
                       <td class="member-list">
-  <div>${member.namaAnggota}</div>
-  <div>${member.nip || "-"}</div>
-</td>
+                      <div>${member.namaAnggota}</div>
+                      <div>${member.nip || "-"}</div>
+                      <div>${member.nomorRekening || "-"}</div>
+                      </td>
                       ${
                         memberIndex === 0
                           ? `<td rowspan="${members.length}">${
@@ -1530,12 +1533,14 @@ function RekapAnggota() {
     }
     const excelData = [];
 
+    // Tambahkan kolom "Nomor Rekening" di header
     excelData.push([
       "No",
       "Cabang",
       "Unit Kerja",
       "Nama Anggota",
       "NIP",
+      "Nomor Rekening",
       "Jumlah Anggota",
       "PGRI",
       "Sanduka",
@@ -1553,8 +1558,9 @@ function RekapAnggota() {
             memberIndex === 0 ? index + 1 : "",
             memberIndex === 0 ? group.cabang : "",
             memberIndex === 0 ? group.unitKerja : "",
-            member.namaAnggota,
+            member.npaPgri,
             member.nip || "-",
+            member.nomorRekening || "-", // Tambahkan nomor rekening di sini
             memberIndex === 0 ? group.jumlah : "",
             parseInt(member.pgri || 0),
             parseInt(member.sanduka || 0),
@@ -1568,11 +1574,13 @@ function RekapAnggota() {
       }
     });
 
+    // Tambahkan baris total keseluruhan, dengan sel kosong untuk nomor rekening
     excelData.push([
       "",
       "",
       "",
       "Total Keseluruhan:",
+      "",
       "",
       grandTotals?.jumlah || 0,
       parseInt(grandTotals?.pgri || 0),
