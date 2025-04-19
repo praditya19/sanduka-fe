@@ -1472,7 +1472,7 @@ const DataTable = ({
   const handleSync = async () => {
     try {
       setLoadingButton(true);
-  
+
       // Ambil userId dari sessionStorage
       const userId = sessionStorage.getItem("anggotaId");
       if (!userId) {
@@ -1480,7 +1480,7 @@ const DataTable = ({
         setLoadingButton(false);
         return;
       }
-  
+
       // Mengambil data pengguna berdasarkan userId
       const userData = await GlobalApi.getUserById(userId);
       if (!userData || !userData.nip) {
@@ -1488,11 +1488,11 @@ const DataTable = ({
         setLoadingButton(false);
         return;
       }
-  
+
       // Membersihkan NIP dari karakter aneh/spasi
       const nip = userData.nip;
       console.log("NIP yang digunakan:", nip);
-  
+
       // Mengecek data berdasarkan NIP
       const data = await GlobalApi.getByNIP(nip);
       if (!data) {
@@ -1500,7 +1500,7 @@ const DataTable = ({
         setLoadingButton(false);
         return;
       }
-  
+
       // Mengecek apakah data sudah disinkronkan
       const nipData = await GlobalApi.getFileByNip(nip);
       if (nipData?.verifikasi === true) {
@@ -1509,12 +1509,12 @@ const DataTable = ({
         setLoadingButton(false);
         return;
       }
-  
+
       // Melakukan sinkronisasi data pengguna
       console.log("User ID untuk update:", userId);
       console.log("Data yang akan dikirim untuk update:", data);
       const response = await GlobalApi.updateRegisUser(userId, data);
-  
+
       console.log("Respons dari updateRegisUser:", response);
       toast.success("Data berhasil disinkronkan!");
       window.location.reload();
@@ -1524,7 +1524,7 @@ const DataTable = ({
     } finally {
       setLoadingButton(false);
     }
-  };  
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -2011,8 +2011,19 @@ const DataTable = ({
                                       <FaTimes className="h-6 w-6 text-red-600" />
                                     </button>
 
-                                    <h2 className="text-xl font-bold">
+                                    <h2 className="text-xl font-bold flex items-center gap-2">
                                       Data Daspen
+                                      <span
+                                        className={`text-lg font-semibold px-3 py-2 rounded-full ${
+                                          daspenData.verifikasi === true
+                                            ? "bg-green-100 text-green-800"
+                                            : "bg-red-100 text-red-800"
+                                        }`}
+                                      >
+                                        {daspenData.verifikasi === true
+                                          ? "Sudah Sinkronisasi"
+                                          : "Belum Sinkronisasi"}
+                                      </span>
                                     </h2>
 
                                     <div className="mt-4 grid grid-cols-2 gap-4">
