@@ -2239,6 +2239,27 @@ const getTagihanAnggotaById = async (userId) => {
   }
 };
 
+const exportTidakTerdaftarToExcel = async (cabang = "", unitKerja = "") => {
+  try {
+    const response = await axiosClient.get(`/api/files/download-tidak-terdaftar`, {
+      params: { cabang, unitKerja },
+      responseType: "blob",
+    });
+
+    // Buat file download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "tidak-terdaftar.xlsx");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+  } catch (error) {
+    console.error("Gagal mengunduh file Excel:", error);
+  }
+}
+
 // Export all functions
 export default {
   registerUser,
@@ -2401,5 +2422,6 @@ export default {
   postIuranAnggota,
   countNewPengaduan,
   countResponsesByPengaduanId,
-  getTagihanAnggotaById
+  getTagihanAnggotaById,
+  exportTidakTerdaftarToExcel
 };
