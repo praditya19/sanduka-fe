@@ -198,7 +198,6 @@ function RekapAnggota() {
       if (selectedKategori === "lainlain") {
         try {
           const response = await GlobalApi.getKeteranganLainlain();
-          console.log(response);
           setKeteranganLainLain(response);
           setShowPopup(true);
         } catch (err) {
@@ -494,7 +493,7 @@ function RekapAnggota() {
 
           const processed = processData(regularData);
           setGroupedData(processed);
-          console.log("proses", processed);
+          // console.log("proses", processed);
           // console.log("reguler",regularData)
           setData(regularData);
           setOriginalRekapData(regularData);
@@ -870,12 +869,10 @@ function RekapAnggota() {
       const response = await GlobalApi.cekNpa(npa);
 
       if (response?.id) {
-        console.log("ID dari NPA:", response.id);
         sessionStorage.setItem("idTagihan", response.id);
         router.push("/anggota/rekap-anggota/tagihanByAdmin");
       } else {
         console.warn("ID tidak ditemukan dalam respons.");
-        console.log("Respon penuh:", response);
       }
     } catch (error) {
       console.error("Gagal mendapatkan ID dari NPA:", error);
@@ -998,12 +995,6 @@ function RekapAnggota() {
 
             if (matchingItem) {
               const jumlah = parseInt(matchingItem.jumlahNominal || 0);
-              console.log(
-                "Jumlah Nominal untuk",
-                selectedKeterangan,
-                ":",
-                jumlah
-              );
 
               initialValue = jumlah;
             } else {
@@ -1191,7 +1182,7 @@ function RekapAnggota() {
         type: "success",
         message: "Data berhasil disimpan!",
       });
-      console.log("Data yang akan diupdate:", payload);
+      // console.log("Data yang akan diupdate:", payload);
 
       setIsPopupVisible(false);
       setAddedCategories([]);
