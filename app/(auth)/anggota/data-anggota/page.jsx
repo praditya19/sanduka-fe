@@ -64,6 +64,7 @@ const DataAnggota = () => {
   const [role, setRole] = useState("");
   const [totalElements, setTotalElements] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [filesByNip, setFilesByNip] = useState([]);
 
   const fetchDataAnggota = async (
     page = 0,
@@ -86,11 +87,15 @@ const DataAnggota = () => {
       );
 
       const fetchedData = response.content;
+      // console.log("respon dari ALL", fetchedData);
 
       const fotoBase64Array = [];
+      const filesByNipArray = [];
 
       if (fetchedData && fetchedData.length > 0) {
+        // Ambil foto
         fetchedData.forEach((item) => {
+          console.log("NIP:", item.nip);
           if (item.foto) {
             try {
               const decodedString = atob(item.foto);
@@ -103,6 +108,21 @@ const DataAnggota = () => {
             fotoBase64Array.push(null);
           }
         });
+
+        // Ambil file berdasarkan NIP secara paralel
+        const filePromises = fetchedData.map(async (item) => {
+          try {
+            const fileResponse = await GlobalApi.getFileByNip(item.nip);
+            // console.log("data dari nip",fileResponse)
+            return fileResponse;
+          } catch (error) {
+            console.error(`Error fetching file for NIP ${item.nip}:`, error);
+            return null;
+          }
+        });
+
+        const resolvedFiles = await Promise.all(filePromises);
+        filesByNipArray.push(...resolvedFiles);
       } else {
         console.warn("No data found.");
       }
@@ -111,6 +131,8 @@ const DataAnggota = () => {
       setFotoBase64(fotoBase64Array);
       setTotalPages(response.totalPages || 0);
       setTotalElements(response.totalElements || 0);
+      // Optional: set file hasil getFileByNip
+      setFilesByNip(filesByNipArray); // <- pastikan kamu punya state ini
 
       setLoading(false);
       return fetchedData || [];
@@ -522,6 +544,7 @@ const DataAnggota = () => {
                 loading={loading}
                 currentPage={currentPage}
                 pageSize={pageSize}
+                filesByNip={filesByNip}
               />
             </div>
 
@@ -909,6 +932,7 @@ const DataTable = ({
   handleEditClick,
   handlePindahCabangUnit,
   loading,
+  filesByNip,
 }) => {
   const currentPageNumber = Number(currentPage) || 0;
   const pageSizeNumber = Number(pageSize) || 20;
@@ -1091,7 +1115,7 @@ const DataTable = ({
     if (anggotaId) {
       try {
         const response = await GlobalApi.getUserById(anggotaId);
-        console.log(response)
+        console.log(response);
 
         if (response) {
           setKategoriDaspen(response.kategoriDaspen || "Tidak tersedia");
@@ -1115,7 +1139,7 @@ const DataTable = ({
                 </div>
                 <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
                 <div className="text-red-800 text-center">
-                Data Sinkron tidak ada. Silahkan hubungi admin!
+                  Data Sinkron tidak ada. Silahkan hubungi admin!
                 </div>
               </div>,
               {
@@ -1149,7 +1173,7 @@ const DataTable = ({
             </div>
             <h4 className="text-xl font-bold text-red-800">Gagal!</h4>
             <div className="text-red-800 text-center">
-            Data Sinkron tidak ada. Silahkan hubungi admin!
+              Data Sinkron tidak ada. Silahkan hubungi admin!
             </div>
           </div>,
           {
@@ -1648,7 +1672,7 @@ const DataTable = ({
   const handleCancelKeluarAktivasi = () => {
     setPopupVisibleAktifasi(false);
   };
-
+  console.log("filesByNip:", filesByNip);
   const handleDetailAnggota = () => {
     router.push("/anggota/detail-anggota");
   };
@@ -1700,7 +1724,6 @@ const DataTable = ({
             </th>
           </tr>
         </thead>
-
         <tbody>
           {loading ? (
             <tr>
@@ -1726,6 +1749,7 @@ const DataTable = ({
           ) : (
             (anggotaData || []).map((item, index) => {
               const nomorUrut = currentPageNumber * pageSizeNumber + index + 1;
+              // cari file berdasarkan nip
               return (
                 <React.Fragment key={item.id}>
                   <tr className="hover:bg-gray-50 text-sm">
@@ -1847,6 +1871,13 @@ const DataTable = ({
                             }`}
                           >
                             {item.statusKeanggotaan}
+                          </div>
+                          <div className="text-sm mt-1">
+                            {filesByNip.find(
+                              (file) => String(file?.nip) === String(item.nip)
+                            )?.verifikasi === true
+                              ? "✅ Sudah Sinkronisasi"
+                              : "❌ Belum Sinkronisasi"}
                           </div>
                         </td>
                         <td className="py-2 px-4 border text-center">
