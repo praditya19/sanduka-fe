@@ -1480,29 +1480,52 @@ function RekapAnggota() {
                   })
                   .join("")}
                 <tr class="total-row">
-                  <td colspan="4" style="text-align: center">Total Keseluruhan :</td>
-                  <td>${grandTotals?.jumlah || 0}</td>
-                  <td>Rp. ${parseInt(grandTotals?.pgri || 0).toLocaleString(
-                    "id-ID"
-                  )}</td>
-                  <td>Rp. ${parseInt(grandTotals?.sanduka || 0).toLocaleString(
-                    "id-ID"
-                  )}</td>
-                  <td>Rp. ${parseInt(grandTotals?.daspen || 0).toLocaleString(
-                    "id-ID"
-                  )}</td>
-                  <td>Rp. ${parseInt(grandTotals?.derap || 0).toLocaleString(
-                    "id-ID"
-                  )}</td>
-                  <td>Rp. ${parseInt(grandTotals?.kalender || 0).toLocaleString(
-                    "id-ID"
-                  )}</td>
-                  <td>Rp. ${parseInt(grandTotals?.lainlain || 0).toLocaleString(
-                    "id-ID"
-                  )}</td>
-                  <td>Rp. ${parseInt(
-                    grandTotals?.totalIuran || 0
-                  ).toLocaleString("id-ID")}</td>
+                <td colspan="4" style="text-align: center">Total Keseluruhan :</td>
+                  <td>
+  ${groupedData.reduce((sum, group) => sum + parseInt(group.jumlah || 0), 0)}
+</td>
+<td>
+  Rp. ${groupedData
+    .flatMap((g) => g.members || [])
+    .reduce((sum, m) => sum + parseInt(m.pgri || 0), 0)
+    .toLocaleString("id-ID")}
+</td>
+<td>
+  Rp. ${groupedData
+    .flatMap((g) => g.members || [])
+    .reduce((sum, m) => sum + parseInt(m.sanduka || 0), 0)
+    .toLocaleString("id-ID")}
+</td>
+<td>
+  Rp. ${groupedData
+    .flatMap((g) => g.members || [])
+    .reduce((sum, m) => sum + parseInt(m.daspen || 0), 0)
+    .toLocaleString("id-ID")}
+</td>
+<td>
+  Rp. ${groupedData
+    .flatMap((g) => g.members || [])
+    .reduce((sum, m) => sum + parseInt(m.derap || 0), 0)
+    .toLocaleString("id-ID")}
+</td>
+<td>
+  Rp. ${groupedData
+    .flatMap((g) => g.members || [])
+    .reduce((sum, m) => sum + parseInt(m.kalender || 0), 0)
+    .toLocaleString("id-ID")}
+</td>
+<td>
+  Rp. ${groupedData
+    .flatMap((g) => g.members || [])
+    .reduce((sum, m) => sum + parseInt(m.lainlain || 0), 0)
+    .toLocaleString("id-ID")}
+</td>
+<td>
+  Rp. ${groupedData
+    .flatMap((g) => g.members || [])
+    .reduce((sum, m) => sum + parseInt(m.totalIuran || 0), 0)
+    .toLocaleString("id-ID")}
+</td>
                 </tr>
               </tbody>
             </table>
@@ -2606,46 +2629,56 @@ function RekapAnggota() {
               )}
               <tfoot>
                 <tr className="bg-teal-700 text-white font-bold">
-                  <td
-                    colSpan={isMobile ? 3 : 4}
-                    className="p-3 border-t-2 border-teal-800 text-center rounded-bl-lg"
-                  >
+                  <td colSpan={isMobile ? 4 : 4} className="p-3 text-center">
                     Total Keseluruhan:
                   </td>
-                  <td className="p-3 border-t-2 border-teal-800 text-center">
-                    {grandTotals.jumlah}
+                  <td className="p-3 text-center hidden lg:table-cell">
+                    {/* Total Jumlah Anggota */}
+                    {groupedData.reduce(
+                      (sum, g) => sum + parseInt(g.jumlah),
+                      0
+                    )}
                   </td>
-                  {!isMobile && (
-                    <>
-                      <td className="p-3 border-t-2 border-teal-800 text-center">
-                        Rp. {parseInt(grandTotals.pgri).toLocaleString("id-ID")}
-                      </td>
-                      <td className="p-3 border-t-2 border-teal-800 text-center">
-                        Rp.{" "}
-                        {parseInt(grandTotals.sanduka).toLocaleString("id-ID")}
-                      </td>
-                      <td className="p-3 border-t-2 border-teal-800 text-center">
-                        Rp.{" "}
-                        {parseInt(grandTotals.daspen).toLocaleString("id-ID")}
-                      </td>
-                      <td className="p-3 border-t-2 border-teal-800 text-center">
-                        Rp.{" "}
-                        {parseInt(grandTotals.derap).toLocaleString("id-ID")}
-                      </td>
-                      <td className="p-3 border-t-2 border-teal-800 text-center">
-                        Rp.{" "}
-                        {parseInt(grandTotals.kalender).toLocaleString("id-ID")}
-                      </td>
-                      <td className="p-3 border-t-2 border-teal-800 text-center">
-                        Rp.{" "}
-                        {parseInt(grandTotals.lainlain).toLocaleString("id-ID")}
-                      </td>
-                    </>
-                  )}
-                  <td className="p-3 border-t-2 border-teal-800 text-center rounded-br-lg">
-                    Rp.{"                    "}
-                    {parseInt(grandTotals.totalIuran).toLocaleString("id-ID")}
+                  <td className="p-3 text-center hidden lg:table-cell">
+                    Rp.{" "}
+                    {groupedData
+                      .reduce((sum, g) => sum + parseInt(g.pgri), 0)
+                      .toLocaleString("id-ID")}
                   </td>
+                  <td className="p-3 text-center hidden lg:table-cell">
+                    Rp.{" "}
+                    {groupedData
+                      .reduce((sum, g) => sum + parseInt(g.sanduka), 0)
+                      .toLocaleString("id-ID")}
+                  </td>
+                  <td className="p-3 text-center hidden lg:table-cell">
+                    Rp.{" "}
+                    {groupedData
+                      .reduce((sum, g) => sum + parseInt(g.daspen), 0)
+                      .toLocaleString("id-ID")}
+                  </td>
+                  <td className="p-3 text-center hidden lg:table-cell">
+                    Rp.{" "}
+                    {groupedData
+                      .reduce((sum, g) => sum + parseInt(g.derap), 0)
+                      .toLocaleString("id-ID")}
+                  </td>
+                  <td className="p-3 text-center hidden lg:table-cell">
+                    Rp.{" "}
+                    {groupedData
+                      .reduce((sum, g) => sum + parseInt(g.kalender), 0)
+                      .toLocaleString("id-ID")}
+                  </td>
+                  <td className="p-3 text-center hidden lg:table-cell">
+                    Rp. 0
+                  </td>
+                  <td className="p-3 text-center">
+                    Rp.{" "}
+                    {groupedData
+                      .reduce((sum, g) => sum + parseInt(g.totalIuran), 0)
+                      .toLocaleString("id-ID")}
+                  </td>
+                  <td className="p-3 text-center"></td>
                 </tr>
               </tfoot>
             </table>
