@@ -1082,7 +1082,7 @@ const Page = () => {
 
   const cleanName = (name) => {
     if (typeof name !== "string") return name;
-    return name.replace(/[[\]"\\]/g, "").trim();
+    return name.replace(/[[\]"\\]/g, "");
   };
 
   const handleResize = () => {
