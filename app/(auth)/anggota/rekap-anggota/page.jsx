@@ -1639,21 +1639,39 @@ function RekapAnggota() {
     ]);
 
     let rowNumber = 1;
+    let hasValidData = false;
+    let totalTagihanSemua = 0;
+
     groupedData.forEach((group) => {
       if (group.members && group.members.length > 0) {
         group.members.forEach((member) => {
-          excelData.push([
-            rowNumber++,
-            group.cabang,
-            member.namaAnggota,
-            member.nomorRekening || "-",
-            parseInt(member.totalIuran || 0),
-            "",
-          ]);
+          if (member.nomorRekening && member.nomorRekening.trim() !== "") {
+            const tagihan = parseInt(member.totalIuran || 0);
+            totalTagihanSemua += tagihan;
+            hasValidData = true;
+            excelData.push([
+              rowNumber++,
+              group.cabang,
+              member.namaAnggota,
+              member.nomorRekening,
+              tagihan,
+              "",
+            ]);
+          }
         });
       }
     });
 
+    if (!hasValidData) {
+      console.warn("Tidak ada data dengan nomor rekening, file tidak dibuat.");
+      return;
+    }
+
+    // Tambahkan baris total
+    excelData.push([]);
+    excelData.push(["", "", "", "Total Keseluruhan", totalTagihanSemua]);
+
+    // Tambahkan tanggal dan TTD
     const today = new Date();
     const tanggalOtomatis = today.toLocaleDateString("id-ID", {
       day: "2-digit",
