@@ -2070,7 +2070,7 @@ const DataTable = ({
                                             "Tidak tersedia"}
                                         </p>
                                       </div>
-                                      <div>
+                                      {/* <div>
                                         <p className="font-semibold">
                                           Kategori Daspen:
                                         </p>
@@ -2111,6 +2111,12 @@ const DataTable = ({
                                             </button>
                                           </div>
                                         )}
+                                      </div> */}
+                                      <div>
+                                        <p className="font-semibold">
+                                          Kategori Daspen:
+                                        </p>
+                                        <p>{kategoriDaspen}</p>
                                       </div>
                                       <div>
                                         <p className="font-semibold">
