@@ -2133,7 +2133,6 @@ function RekapAnggota() {
                                     {member.namaAnggota}
                                     <div className="text-sm text-teal-700 italic">
                                       {member.nip}
-                                      {member.nomorRekening}
                                     </div>
                                   </span>
                                 </div>
