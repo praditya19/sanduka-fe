@@ -2632,6 +2632,9 @@ function RekapAnggota() {
 
                       <div className="mt-5 text-sm">
                         <p>
+                            Nomor Rekening: <em>{dataIuran.nomorRekening}</em>
+                          </p>
+                        <p>
                           <span className="inline-block min-w-[140px]">
                             Iuran Anggota
                           </span>

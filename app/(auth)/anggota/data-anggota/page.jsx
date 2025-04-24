@@ -933,6 +933,7 @@ const DataTable = ({
   handlePindahCabangUnit,
   loading,
   filesByNip,
+  fetchDataAnggota,
 }) => {
   const currentPageNumber = Number(currentPage) || 0;
   const pageSizeNumber = Number(pageSize) || 20;
@@ -1497,7 +1498,6 @@ const DataTable = ({
     try {
       setLoadingButton(true);
 
-      // Ambil userId dari sessionStorage
       const userId = sessionStorage.getItem("anggotaId");
       if (!userId) {
         toast.error("User ID tidak ditemukan!");
@@ -1505,7 +1505,6 @@ const DataTable = ({
         return;
       }
 
-      // Mengambil data pengguna berdasarkan userId
       const userData = await GlobalApi.getUserById(userId);
       if (!userData || !userData.nip) {
         toast.error("NIP tidak ditemukan!");
@@ -1513,11 +1512,9 @@ const DataTable = ({
         return;
       }
 
-      // Membersihkan NIP dari karakter aneh/spasi
       const nip = userData.nip;
       console.log("NIP yang digunakan:", nip);
 
-      // Mengecek data berdasarkan NIP
       const data = await GlobalApi.getByNIP(nip);
       if (!data) {
         toast.error("Data dengan NIP ini tidak ditemukan!");
@@ -1525,7 +1522,6 @@ const DataTable = ({
         return;
       }
 
-      // Mengecek apakah data sudah disinkronkan
       const nipData = await GlobalApi.getFileByNip(nip);
       if (nipData?.verifikasi === true) {
         toast.success("Data Anda sudah tersinkronisasi!");
@@ -1534,14 +1530,13 @@ const DataTable = ({
         return;
       }
 
-      // Melakukan sinkronisasi data pengguna
       console.log("User ID untuk update:", userId);
       console.log("Data yang akan dikirim untuk update:", data);
       const response = await GlobalApi.updateRegisUser(userId, data);
 
       console.log("Respons dari updateRegisUser:", response);
       toast.success("Data berhasil disinkronkan!");
-      window.location.reload();
+      await fetchDataAnggota();
     } catch (error) {
       console.error("Error saat mengirim data:", error);
       toast.error("Terjadi kesalahan saat mengirim data. NIP tidak sesuai.");
