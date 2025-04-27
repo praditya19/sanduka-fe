@@ -468,6 +468,10 @@ function RekapAnggota() {
           setGroupedData(processed);
           setData(regularData);
           setOriginalRekapData(regularData);
+          const allUnits = new Set(
+            regularData.map((item) => item.unitKerja || "Tidak Ada Unit Kerja")
+          );
+          setExpandedRows(allUnits);
         } else {
           const response = await GlobalApi.getNominalAggregatedData("");
 
@@ -497,6 +501,10 @@ function RekapAnggota() {
           // console.log("reguler",regularData)
           setData(regularData);
           setOriginalRekapData(regularData);
+          const allUnits = new Set(
+            regularData.map((item) => item.unitKerja || "Tidak Ada Unit Kerja")
+          );
+          setExpandedRows(allUnits);
         }
         setLoading(false);
       } catch (error) {
@@ -537,7 +545,11 @@ function RekapAnggota() {
       setGroupedData(processed);
       setData(filteredData);
       calculateTotals(filteredData);
-      setExpandedRows(new Set());
+      // setExpandedRows(new Set());
+      const allUnits = new Set(
+        filteredData.map((item) => item.unitKerja || "Tidak Ada Unit Kerja")
+      );
+      setExpandedRows(allUnits);
     } else {
       const filteredData = originalRekapData.filter(
         (item) =>
@@ -769,6 +781,12 @@ function RekapAnggota() {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedMember(null);
+  };
+
+  const closePopup = () => {
+    setIsPopupVisible(false);
+    setAddedCategories([]);
+    setManualInputs([]);
   };
 
   const handleMemberClick = async (member) => {
@@ -2115,130 +2133,156 @@ function RekapAnggota() {
                       </tr>
 
                       {isExpanded &&
-                        group.members.map((member, idx) => (
-                          <tr
-                            key={`${group.unitKerja}-member-${idx}`}
-                            className="bg-teal-50/30 hover:bg-teal-50"
-                          >
-                            <td
-                              className="p-3 border-b"
-                              colSpan={isMobile ? 5 : 1}
+                        group.members.map((member, idx) => {
+                          const daspenValue = parseInt(member.daspen || 0);
+                          const showDaspenBadge = daspenValue === 0;
+
+                          return (
+                            <tr
+                              key={`${group.unitKerja}-member-${idx}`}
+                              className="bg-teal-50/30 hover:bg-teal-50"
                             >
-                              <div className="flex flex-col lg:flex-row">
-                                <div className="font-medium mb-2 lg:mb-0 flex items-center">
-                                  <span className="w-6 h-6 flex items-center justify-center bg-teal-200 text-teal-800 rounded-full mr-2 text-xs">
-                                    {idx + 1}
-                                  </span>
-                                  <span className="text-teal-700">
-                                    {member.namaAnggota}
-                                    <div className="text-sm text-teal-700 italic">
-                                      {member.nip}
+                              <td
+                                className="p-3 border-b"
+                                colSpan={isMobile ? 5 : 1}
+                              >
+                                <div className="flex flex-col lg:flex-row">
+                                  <div className="font-medium mb-2 lg:mb-0 flex items-center">
+                                    <span className="w-6 h-6 flex items-center justify-center bg-teal-200 text-teal-800 rounded-full mr-2 text-xs">
+                                      {idx + 1}
+                                    </span>
+                                    <span className="text-teal-700">
+                                      {member.namaAnggota}
+                                      <div className="text-sm text-teal-700 italic">
+                                        {member.nip}
+                                      </div>
+                                      <div className="text-sm text-teal-700 italic">
+                                        {member.nomorRekening}
+                                      </div>
+                                    </span>
+                                  </div>
+                                  <div className="lg:hidden space-y-2 mt-2 bg-white p-3 rounded-lg shadow-sm">
+                                    <div className="flex justify-between px-4">
+                                      <span className="font-medium text-teal-700">
+                                        PGRI:
+                                      </span>
+                                      <span>
+                                        Rp.{" "}
+                                        {parseInt(member.pgri).toLocaleString(
+                                          "id-ID"
+                                        )}
+                                      </span>
                                     </div>
-                                  </span>
-                                </div>
-                                <div className="lg:hidden space-y-2 mt-2 bg-white p-3 rounded-lg shadow-sm">
-                                  <div className="flex justify-between px-4">
-                                    <span className="font-medium text-teal-700">
-                                      PGRI:
-                                    </span>
-                                    <span>
-                                      Rp.{" "}
-                                      {parseInt(member.pgri).toLocaleString(
-                                        "id-ID"
+                                    <div className="flex justify-between px-4">
+                                      <span className="font-medium text-teal-700">
+                                        Sanduka:
+                                      </span>
+                                      <span>
+                                        Rp.{" "}
+                                        {parseInt(
+                                          member.sanduka
+                                        ).toLocaleString("id-ID")}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between px-4">
+                                      <span className="font-medium text-teal-700">
+                                        Daspen:
+                                      </span>
+                                      {showDaspenBadge ? (
+                                        <span className="bg-red-100 text-red-800 py-1 px-2 rounded-full text-xs">
+                                          Belum Input
+                                        </span>
+                                      ) : (
+                                        <span>
+                                          Rp.{" "}
+                                          {parseInt(
+                                            member.daspen
+                                          ).toLocaleString("id-ID")}
+                                        </span>
                                       )}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between px-4">
-                                    <span className="font-medium text-teal-700">
-                                      Sanduka:
-                                    </span>
-                                    <span>
-                                      Rp.{" "}
-                                      {parseInt(member.sanduka).toLocaleString(
-                                        "id-ID"
-                                      )}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between px-4">
-                                    <span className="font-medium text-teal-700">
-                                      Daspen:
-                                    </span>
-                                    <span>
-                                      Rp.{" "}
-                                      {parseInt(member.daspen).toLocaleString(
-                                        "id-ID"
-                                      )}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between px-4 font-medium bg-teal-100 p-2 rounded-lg">
-                                    <span className="text-teal-800">
-                                      Total:
-                                    </span>
-                                    <span className="text-teal-800">
-                                      Rp.{" "}
-                                      {parseInt(
-                                        member.totalIuran
-                                      ).toLocaleString("id-ID")}
-                                    </span>
+                                    </div>
+                                    <div className="flex justify-between px-4 font-medium bg-teal-100 p-2 rounded-lg">
+                                      <span className="text-teal-800">
+                                        Total:
+                                      </span>
+                                      <span className="text-teal-800">
+                                        Rp.{" "}
+                                        {parseInt(
+                                          member.totalIuran
+                                        ).toLocaleString("id-ID")}
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            </td>
-                            <td className="p-3 border-b text-center hidden lg:table-cell">
-                              Rp.{" "}
-                              {parseInt(member.pgri).toLocaleString("id-ID")}
-                            </td>
-                            <td className="p-3 border-b text-center hidden lg:table-cell">
-                              Rp.{" "}
-                              {parseInt(member.sanduka).toLocaleString("id-ID")}
-                            </td>
-                            <td className="p-3 border-b text-center hidden lg:table-cell">
-                              Rp.{" "}
-                              {parseInt(member.daspen).toLocaleString("id-ID")}
-                            </td>
-                            <td className="p-3 border-b text-center hidden lg:table-cell">
-                              Rp.{" "}
-                              {parseInt(member.derap).toLocaleString("id-ID")}
-                            </td>
-                            <td className="p-3 border-b text-center hidden lg:table-cell">
-                              Rp.{" "}
-                              {parseInt(member.kalender).toLocaleString(
-                                "id-ID"
-                              )}
-                            </td>
-                            <td className="p-3 border-b text-center hidden lg:table-cell">
-                              Rp. 0
-                            </td>
-                            <td className="p-3 border-b text-center hidden lg:table-cell">
-                              <span className="bg-teal-100 text-teal-800 py-1 px-2 rounded-full text-sm">
+                              </td>
+                              <td className="p-3 border-b text-center hidden lg:table-cell">
                                 Rp.{" "}
-                                {parseInt(member.totalIuran).toLocaleString(
+                                {parseInt(member.pgri).toLocaleString("id-ID")}
+                              </td>
+                              <td className="p-3 border-b text-center hidden lg:table-cell">
+                                Rp.{" "}
+                                {parseInt(member.sanduka).toLocaleString(
                                   "id-ID"
                                 )}
-                              </span>
-                            </td>
-                            <td className="p-3 border-b text-center space-x-2">
-                              <button
-                                className="text-teal-600 hover:text-teal-800"
-                                onClick={() => handleMemberClick(member)}
-                              >
-                                <FaPlus />
-                              </button>
-                              <button
-                                className="text-teal-600 hover:text-teal-800"
-                                onClick={() => handlePrintClick(member)}
-                              >
-                                <FaPrint />
-                              </button>
-                              <button
-                                className="text-teal-600 hover:text-teal-800"
-                                onClick={() => handleTagihanClick(member)}
-                              >
-                                <FaFileInvoiceDollar />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
+                              </td>
+                              <td className="p-3 border-b text-center hidden lg:table-cell">
+                                {showDaspenBadge ? (
+                                  <span className="bg-red-100 text-red-800 py-1 px-2 rounded-full text-xs">
+                                    Belum Input
+                                  </span>
+                                ) : (
+                                  <span>
+                                    Rp.{" "}
+                                    {parseInt(member.daspen).toLocaleString(
+                                      "id-ID"
+                                    )}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="p-3 border-b text-center hidden lg:table-cell">
+                                Rp.{" "}
+                                {parseInt(member.derap).toLocaleString("id-ID")}
+                              </td>
+                              <td className="p-3 border-b text-center hidden lg:table-cell">
+                                Rp.{" "}
+                                {parseInt(member.kalender).toLocaleString(
+                                  "id-ID"
+                                )}
+                              </td>
+                              <td className="p-3 border-b text-center hidden lg:table-cell">
+                                Rp. 0
+                              </td>
+                              <td className="p-3 border-b text-center hidden lg:table-cell">
+                                <span className="bg-teal-100 text-teal-800 py-1 px-2 rounded-full text-sm">
+                                  Rp.{" "}
+                                  {parseInt(member.totalIuran).toLocaleString(
+                                    "id-ID"
+                                  )}
+                                </span>
+                              </td>
+                              <td className="p-3 border-b text-center space-x-2">
+                                <button
+                                  className="text-teal-600 hover:text-teal-800 text-xl"
+                                  onClick={() => handleMemberClick(member)}
+                                >
+                                  <FaPlus />
+                                </button>
+                                <button
+                                  className="text-teal-600 hover:text-teal-800 text-xl"
+                                  onClick={() => handlePrintClick(member)}
+                                >
+                                  <FaPrint />
+                                </button>
+                                <button
+                                  className="text-teal-600 hover:text-teal-800 text-xl"
+                                  onClick={() => handleTagihanClick(member)}
+                                >
+                                  <FaFileInvoiceDollar />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
                     </React.Fragment>
                   );
                 })}
@@ -2247,12 +2291,9 @@ function RekapAnggota() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
                   <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl relative space-y-6 max-h-screen overflow-y-auto">
                     <button
+                      type="button"
                       className="absolute top-2 right-2 text-gray-500 hover:text-teal-600 text-xl"
-                      onClick={() => {
-                        setIsPopupVisible(false);
-                        setAddedCategories([]);
-                        setManualInputs([]);
-                      }}
+                      onClick={closePopup}
                     >
                       ✕
                     </button>
@@ -2332,6 +2373,9 @@ function RekapAnggota() {
                             const oldValue = parseInt(item.iuran || 0);
                             const inputValue = nominalBaruList[item.key] || 0;
                             const totalValue = oldValue + inputValue;
+                            const isDaspen =
+                              item.key.toLowerCase() === "daspen";
+                            const showBadge = isDaspen && totalValue === 0;
 
                             return (
                               <div
@@ -2632,8 +2676,8 @@ function RekapAnggota() {
 
                       <div className="mt-5 text-sm">
                         <p>
-                            Nomor Rekening: <em>{dataIuran.nomorRekening}</em>
-                          </p>
+                          Nomor Rekening: <em>{dataIuran.nomorRekening}</em>
+                        </p>
                         <p>
                           <span className="inline-block min-w-[140px]">
                             Iuran Anggota
