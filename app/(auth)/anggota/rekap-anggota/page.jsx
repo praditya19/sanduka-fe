@@ -1591,6 +1591,40 @@ function RekapAnggota() {
       }
     });
 
+    // Calculate totals from groupedData like in the table footer
+    const totalJumlah = groupedData.reduce(
+      (sum, g) => sum + parseInt(g.jumlah || 0),
+      0
+    );
+    const totalPgri = groupedData.reduce(
+      (sum, g) => sum + parseInt(g.pgri || 0),
+      0
+    );
+    const totalSanduka = groupedData.reduce(
+      (sum, g) => sum + parseInt(g.sanduka || 0),
+      0
+    );
+    const totalDaspen = groupedData.reduce(
+      (sum, g) => sum + parseInt(g.daspen || 0),
+      0
+    );
+    const totalDerap = groupedData.reduce(
+      (sum, g) => sum + parseInt(g.derap || 0),
+      0
+    );
+    const totalKalender = groupedData.reduce(
+      (sum, g) => sum + parseInt(g.kalender || 0),
+      0
+    );
+    const totalLainlain = groupedData.reduce(
+      (sum, g) => sum + parseInt(g.lainlain || 0),
+      0
+    );
+    const totalIuran = groupedData.reduce(
+      (sum, g) => sum + parseInt(g.totalIuran || 0),
+      0
+    );
+
     excelData.push([
       "",
       "",
@@ -1598,14 +1632,14 @@ function RekapAnggota() {
       "Total Keseluruhan:",
       "",
       "",
-      grandTotals?.jumlah || 0,
-      parseInt(grandTotals?.pgri || 0),
-      parseInt(grandTotals?.sanduka || 0),
-      parseInt(grandTotals?.daspen || 0),
-      parseInt(grandTotals?.derap || 0),
-      parseInt(grandTotals?.kalender || 0),
-      parseInt(grandTotals?.lainlain || 0),
-      parseInt(grandTotals?.totalIuran || 0),
+      totalJumlah,
+      totalPgri,
+      totalSanduka,
+      totalDaspen,
+      totalDerap,
+      totalKalender,
+      totalLainlain,
+      totalIuran,
     ]);
 
     const ws = XLSX.utils.aoa_to_sheet(excelData);
