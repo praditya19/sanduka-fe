@@ -720,6 +720,8 @@ function RekapAnggota() {
   }, []);
 
   const handlePrintClick = async (member) => {
+    const daspenFromMember = member.daspen ? parseInt(member.daspen) : 0;
+    setDaspenValue(daspenFromMember);
     setIsModalOpen(false);
 
     try {
@@ -763,6 +765,9 @@ function RekapAnggota() {
             iuranSanduka: parseInt(pgriData.sanduka || 0),
             manualIuranSanduka: 0,
             totalIuranSanduka: parseInt(pgriData.sanduka || 0),
+            iuranDaspen: daspenFromMember,
+            manualIuranDaspen: 0,
+            totalIuranDaspen: daspenFromMember,
           };
 
           setDataIuran(fallbackData);
@@ -790,11 +795,9 @@ function RekapAnggota() {
   };
 
   const handleMemberClick = async (member) => {
-    // Set nilai Daspen dari member.daspen (jika ada)
     const daspenFromMember = member.daspen ? parseInt(member.daspen) : 0;
     setDaspenValue(daspenFromMember);
 
-    // Reset state lainnya
     setNipValue(member.nip);
     setSelectedMember(null);
     setDataNpa(null);
@@ -804,16 +807,12 @@ function RekapAnggota() {
     setIdIuran(null);
 
     try {
-      // Cek apakah ada data Daspen dari API lain (opsional)
       const fileResponse = await GlobalApi.getFileByNip(member.nip);
       if (fileResponse?.sumbangan) {
-        // Jika ada data Daspen dari API, timpa nilai sebelumnya
         setDaspenValue(parseInt(fileResponse.sumbangan));
       }
-      // Jika tidak ada, tetap menggunakan nilai dari member.daspen
     } catch (error) {
       console.error("Gagal mengambil file by NIP:", error);
-      // Tetap gunakan nilai dari member.daspen (jika ada)
     }
 
     try {
@@ -821,7 +820,6 @@ function RekapAnggota() {
       setSelectedMember(member);
       setDataNpa(response[0]);
 
-      // Decode foto jika ada
       if (response[0].foto) {
         try {
           const decodedString = atob(response[0].foto);
@@ -832,7 +830,6 @@ function RekapAnggota() {
         }
       }
 
-      // Ambil data iuran
       try {
         const iuranResponse = await GlobalApi.getIuranAnggota(member.npaPgri);
         setDataIuran(iuranResponse);
@@ -863,9 +860,9 @@ function RekapAnggota() {
             iuranSanduka: parseInt(pgriData.sanduka || 0),
             manualIuranSanduka: 0,
             totalIuranSanduka: parseInt(pgriData.sanduka || 0),
-            iuranDaspen: daspenFromMember, // Gunakan nilai dari member.daspen
+            iuranDaspen: daspenFromMember,
             manualIuranDaspen: 0,
-            totalIuranDaspen: daspenFromMember, // Gunakan nilai dari member.daspen
+            totalIuranDaspen: daspenFromMember,
           };
 
           setDataIuran(fallbackData);
@@ -1594,7 +1591,6 @@ function RekapAnggota() {
       }
     });
 
-    // Tambahkan baris total keseluruhan, dengan sel kosong untuk nomor rekening
     excelData.push([
       "",
       "",
@@ -1623,7 +1619,6 @@ function RekapAnggota() {
 
     XLSX.writeFile(wb, fileName);
   };
-  // NorekExcel
 
   const NorekExcel = () => {
     if (!groupedData || groupedData.length === 0) {
@@ -1674,11 +1669,9 @@ function RekapAnggota() {
       return;
     }
 
-    // Tambahkan baris total
     excelData.push([]);
     excelData.push(["", "", "", "Total Keseluruhan", totalTagihanSemua]);
 
-    // Tambahkan tanggal dan TTD
     const today = new Date();
     const tanggalOtomatis = today.toLocaleDateString("id-ID", {
       day: "2-digit",
@@ -1930,7 +1923,7 @@ function RekapAnggota() {
                     onClick={NorekExcel}
                     title="Export to Excel"
                   >
-                    <span>Norek</span>
+                    <span>Rekap</span>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="16"
