@@ -1536,9 +1536,10 @@ const DataTable = ({
       }
       const response = await GlobalApi.updateRegisUser(userId, data);
       toast.success("Data berhasil disinkronkan!");
+      window.location.reload();
       await fetchDataAnggota();
     } catch (error) {
-      toast.error("Terjadi kesalahan saat mengirim data. NIP tidak sesuai.");
+      // toast.error("Terjadi kesalahan saat mengirim data. NIP tidak sesuai.");
     } finally {
       setLoadingButton(false);
     }
