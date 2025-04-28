@@ -790,9 +790,12 @@ function RekapAnggota() {
   };
 
   const handleMemberClick = async (member) => {
-    // console.log("NIP Member:", member.nip);
-    setNipValue(member.nip);
+    // Set nilai Daspen dari member.daspen (jika ada)
+    const daspenFromMember = member.daspen ? parseInt(member.daspen) : 0;
+    setDaspenValue(daspenFromMember);
 
+    // Reset state lainnya
+    setNipValue(member.nip);
     setSelectedMember(null);
     setDataNpa(null);
     setFotoBase64(null);
@@ -801,24 +804,24 @@ function RekapAnggota() {
     setIdIuran(null);
 
     try {
+      // Cek apakah ada data Daspen dari API lain (opsional)
       const fileResponse = await GlobalApi.getFileByNip(member.nip);
       if (fileResponse?.sumbangan) {
+        // Jika ada data Daspen dari API, timpa nilai sebelumnya
         setDaspenValue(parseInt(fileResponse.sumbangan));
       }
+      // Jika tidak ada, tetap menggunakan nilai dari member.daspen
     } catch (error) {
       console.error("Gagal mengambil file by NIP:", error);
+      // Tetap gunakan nilai dari member.daspen (jika ada)
     }
 
     try {
       const response = await GlobalApi.cekNpaList([member.npaPgri]);
-
       setSelectedMember(member);
       setDataNpa(response[0]);
 
-      if (member.daspen) {
-        setDaspenValue(member.daspen);
-      }
-
+      // Decode foto jika ada
       if (response[0].foto) {
         try {
           const decodedString = atob(response[0].foto);
@@ -829,9 +832,11 @@ function RekapAnggota() {
         }
       }
 
+      // Ambil data iuran
       try {
         const iuranResponse = await GlobalApi.getIuranAnggota(member.npaPgri);
         setDataIuran(iuranResponse);
+        console.log(iuranResponse);
 
         if (iuranResponse?.id) {
           setIdIuran(iuranResponse.id);
@@ -843,9 +848,7 @@ function RekapAnggota() {
         console.error("Gagal mengambil data iuran anggota:", error);
 
         if (error.response?.status === 500) {
-          console.warn(
-            "Server error 500: menggunakan nilai default dari sessionStorage"
-          );
+          console.warn("Server error 500: menggunakan fallback data");
           const pgriData = JSON.parse(sessionStorage.getItem("PGRIData"));
           const totalIuranPGRI =
             parseInt(pgriData.pb || 0) +
@@ -860,6 +863,9 @@ function RekapAnggota() {
             iuranSanduka: parseInt(pgriData.sanduka || 0),
             manualIuranSanduka: 0,
             totalIuranSanduka: parseInt(pgriData.sanduka || 0),
+            iuranDaspen: daspenFromMember, // Gunakan nilai dari member.daspen
+            manualIuranDaspen: 0,
+            totalIuranDaspen: daspenFromMember, // Gunakan nilai dari member.daspen
           };
 
           setDataIuran(fallbackData);
@@ -869,9 +875,6 @@ function RekapAnggota() {
       setIsPopupVisible(true);
     } catch (error) {
       console.error("Error saat cek NPA:", error);
-      if (error.response?.status === 500) {
-        console.warn("Server error 500: data tidak akan ditampilkan.");
-      }
     }
   };
 
@@ -989,18 +992,6 @@ function RekapAnggota() {
           }
         }
 
-        if (selectedKategori === "daspen" && dataNpa?.nip) {
-          try {
-            const response = await GlobalApi.getFileByNip(dataNpa.nip);
-            // console.log("Data dari getFileByNip:", response);
-
-            const sumbangan = parseInt(response?.sumbangan || 0);
-            initialValue = sumbangan;
-          } catch (err) {
-            console.error("Gagal mengambil data daspen berdasarkan NIP:", err);
-          }
-        }
-
         if (selectedKategori === "lainlain" && selectedKeterangan) {
           try {
             const response = await GlobalApi.getLainlain(selectedKeterangan);
@@ -1060,11 +1051,14 @@ function RekapAnggota() {
 
     let otomatisValueSanduka = 0;
     let otomatisValuePgri = 0;
+    let otomatisValueDaspen = 0;
 
     let manualValueSanduka = 0;
     let manualValuepgri = 0;
+    let manualValueDaspen = 0;
 
     let iuranSanduka = 0;
+    let iuranDaspen = 0;
     let iuranAnggota = formKetiga?.iuranAnggota || 0;
 
     groupedIuran.forEach((item) => {
@@ -1076,26 +1070,27 @@ function RekapAnggota() {
         manualValueSanduka = inputValue;
         iuranSanduka = autoValue + inputValue;
       }
-
       if ((item.key || "").toLowerCase() === "anggota") {
         otomatisValuePgri = autoValue;
         manualValuepgri = inputValue;
         iuranAnggota = autoValue + inputValue;
       }
+      if ((item.key || "").toLowerCase() === "daspen") {
+        otomatisValueDaspen = autoValue;
+        manualValueDaspen = inputValue;
+        iuranDaspen = autoValue + inputValue;
+      }
     });
-    let otomatisValueDaspen = 0;
     let otomatisValueKalender = 0;
     let otomatisValueDerap = 0;
     let otomatisValueLainLain = 0;
 
     let manualValueKalender = 0;
     let manualValueDerap = 0;
-    let manualValueDaspen = 0;
     let manualValueLainLain = 0;
 
     let totalKalender = 0;
     let iuranDerap = formKetiga?.iuranDerap || 0;
-    let iuranDaspen = 0;
     let totalIuranLainLain = 0;
 
     addedCategories.forEach((item) => {
@@ -1112,12 +1107,6 @@ function RekapAnggota() {
         otomatisValueDerap = oldValue;
         manualValueDerap = inputValue;
         iuranDerap = totalValue;
-      }
-
-      if (item.label?.toLowerCase() === "daspen") {
-        otomatisValueDaspen = oldValue;
-        manualValueDaspen = inputValue;
-        iuranDaspen = totalValue;
       }
 
       if (item.key?.toLowerCase() === "lainlain") {
@@ -2373,9 +2362,6 @@ function RekapAnggota() {
                             const oldValue = parseInt(item.iuran || 0);
                             const inputValue = nominalBaruList[item.key] || 0;
                             const totalValue = oldValue + inputValue;
-                            const isDaspen =
-                              item.key.toLowerCase() === "daspen";
-                            const showBadge = isDaspen && totalValue === 0;
 
                             return (
                               <div
