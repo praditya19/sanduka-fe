@@ -167,6 +167,8 @@ function RekapAnggota() {
   const [lainLainOptions, setLainLainOptions] = useState([]);
   const [selectedKeterangan, setSelectedKeterangan] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -833,7 +835,6 @@ function RekapAnggota() {
       try {
         const iuranResponse = await GlobalApi.getIuranAnggota(member.npaPgri);
         setDataIuran(iuranResponse);
-        console.log(iuranResponse);
 
         if (iuranResponse?.id) {
           setIdIuran(iuranResponse.id);
@@ -1654,6 +1655,32 @@ function RekapAnggota() {
     XLSX.writeFile(wb, fileName);
   };
 
+  const handleRekapClick = () => {
+    setOpen((prev) => !prev);
+  };
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleExport = (type) => {
+    if (type === "bank") {
+      NorekExcel();
+    } else if (type === "mandiri") {
+      MandiriExcel();
+    }
+    setOpen(false);
+  };
+
   const NorekExcel = () => {
     if (!groupedData || groupedData.length === 0) {
       console.error("Data kosong, tidak dapat export ke Excel");
@@ -1722,6 +1749,75 @@ function RekapAnggota() {
     XLSX.utils.book_append_sheet(wb, ws, "Laporan Rekening");
 
     XLSX.writeFile(wb, "Laporan_Nomor_Rekening.xlsx");
+  };
+  const MandiriExcel = () => {
+    if (!groupedData || groupedData.length === 0) {
+      console.error("Data kosong, tidak dapat export ke Excel");
+      return;
+    }
+
+    const excelData = [];
+
+    excelData.push(["Pgri Kabupaten Jepara"]);
+    excelData.push(["No Rekening : 2.015.15169.5 (PGRI Kabupaten Jepara)"]);
+    excelData.push([]);
+    excelData.push([
+      "No",
+      "Cabang",
+      "Nama",
+      "No Rekening",
+      "Total Tagihan",
+      "Keterangan",
+    ]);
+
+    let rowNumber = 1;
+    let hasMissingData = false;
+    let totalTagihanSemua = 0;
+
+    groupedData.forEach((group) => {
+      if (group.members && group.members.length > 0) {
+        group.members.forEach((member) => {
+          if (!member.nomorRekening || member.nomorRekening.trim() === "") {
+            const tagihan = parseInt(member.totalIuran || 0);
+            totalTagihanSemua += tagihan;
+            hasMissingData = true;
+            excelData.push([
+              rowNumber++,
+              group.cabang,
+              member.namaAnggota,
+              "",
+              tagihan,
+              "",
+            ]);
+          }
+        });
+      }
+    });
+
+    if (!hasMissingData) {
+      console.warn("Semua data memiliki nomor rekening, file tidak dibuat.");
+      return;
+    }
+
+    excelData.push([]);
+    excelData.push(["", "", "", "Total Keseluruhan", totalTagihanSemua]);
+
+    const today = new Date();
+    const tanggalOtomatis = today.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+
+    excelData.push([]);
+    excelData.push(["", "", "", "", tanggalOtomatis]);
+    excelData.push(["", "", "", "", "TTD"]);
+
+    const ws = XLSX.utils.aoa_to_sheet(excelData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Data Tanpa No Rekening");
+
+    XLSX.writeFile(wb, "Laporan_Tanpa_Nomor_Rekening.xlsx");
   };
 
   const renderCabangInput = () => {
@@ -1952,7 +2048,46 @@ function RekapAnggota() {
                       <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
                     </svg>
                   </button>
-                  <button
+                  <div
+                    className="relative inline-block text-left"
+                    ref={dropdownRef}
+                  >
+                    <button
+                      className="p-2 px-6 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
+                      onClick={handleRekapClick}
+                      title="Export to Excel"
+                    >
+                      <span>Rekap</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        viewBox="0 0 16 16"
+                      >
+                        <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                        <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                      </svg>
+                    </button>
+
+                    {open && (
+                      <div className="absolute mt-2 w-48 bg-white rounded-lg shadow-lg z-10">
+                        <button
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                          onClick={() => handleExport("bank")}
+                        >
+                          Potongan Bank
+                        </button>
+                        <button
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                          onClick={() => handleExport("mandiri")}
+                        >
+                          Potongan Mandiri
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {/* <button
                     className="p-2 px-6 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
                     onClick={NorekExcel}
                     title="Export to Excel"
@@ -1968,7 +2103,7 @@ function RekapAnggota() {
                       <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
                       <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
                     </svg>
-                  </button>
+                  </button> */}
                 </div>
               )}
             </div>
