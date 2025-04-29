@@ -534,6 +534,7 @@ const DataAnggota = () => {
                 currentPage={currentPage}
                 pageSize={pageSize}
                 filesByNip={filesByNip}
+                fetchDataAnggota={fetchDataAnggota}
               />
             </div>
 
@@ -1536,8 +1537,7 @@ const DataTable = ({
       }
       const response = await GlobalApi.updateRegisUser(userId, data);
       toast.success("Data berhasil disinkronkan!");
-      window.location.reload();
-      await fetchDataAnggota();
+      await fetchDataAnggota(currentPage, pageSize);
     } catch (error) {
       // toast.error("Terjadi kesalahan saat mengirim data. NIP tidak sesuai.");
     } finally {
@@ -1667,7 +1667,7 @@ const DataTable = ({
   const handleCancelKeluarAktivasi = () => {
     setPopupVisibleAktifasi(false);
   };
-  console.log("filesByNip:", filesByNip);
+
   const handleDetailAnggota = () => {
     router.push("/anggota/detail-anggota");
   };
