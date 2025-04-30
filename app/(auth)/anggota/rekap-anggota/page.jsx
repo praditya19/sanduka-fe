@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
@@ -169,6 +170,8 @@ function RekapAnggota() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [lastUpdatedMemberNip, setLastUpdatedMemberNip] = useState(null);
+  const lastUpdatedMemberRef = useRef(null);
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -434,88 +437,93 @@ function RekapAnggota() {
     return Object.values(grouped);
   };
 
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        const storedRole = sessionStorage.getItem("role");
-        const storedCabang = sessionStorage.getItem("cabang");
+  const fetchInitialData = useCallback(async () => {
+    try {
+      const storedRole = sessionStorage.getItem("role");
+      const storedCabang = sessionStorage.getItem("cabang");
 
-        if (storedRole === "ADMIN" && storedCabang) {
-          setIsAdmin(true);
-          setSelectedCabang(storedCabang);
-          const response = await GlobalApi.getNominalAggregatedData(
-            storedCabang
-          );
-          const totalRow = response.find(
-            (item) => item.cabang === "Total" && !item.unitKerja
-          );
-          const regularData = response.filter(
-            (item) => !(item.cabang === "Total" && !item.unitKerja)
-          );
+      if (storedRole === "ADMIN" && storedCabang) {
+        setIsAdmin(true);
+        setSelectedCabang(storedCabang);
+        const response = await GlobalApi.getNominalAggregatedData(storedCabang);
+        const totalRow = response.find(
+          (item) => item.cabang === "Total" && !item.unitKerja
+        );
+        const regularData = response.filter(
+          (item) => !(item.cabang === "Total" && !item.unitKerja)
+        );
 
-          if (totalRow) {
-            setGrandTotals({
-              jumlah: parseInt(totalRow.jumlah) || 0,
-              pgri: parseFloat(totalRow.pgri) || 0,
-              sanduka: parseFloat(totalRow.sanduka) || 0,
-              daspen: parseFloat(totalRow.daspen) || 0,
-              derap: parseFloat(totalRow.derap) || 0,
-              kalender: parseFloat(totalRow.kalender) || 0,
-              lainlain: parseFloat(totalRow.lainlain) || 0,
-              totalIuran: parseFloat(totalRow.totalIuran) || 0,
-            });
-          }
-
-          const processed = processData(regularData);
-          setGroupedData(processed);
-          setData(regularData);
-          setOriginalRekapData(regularData);
-          const allUnits = new Set(
-            regularData.map((item) => item.unitKerja || "Tidak Ada Unit Kerja")
-          );
-          setExpandedRows(allUnits);
-        } else {
-          const response = await GlobalApi.getNominalAggregatedData("");
-
-          const totalRow = response.find(
-            (item) => item.cabang === "Total" && !item.unitKerja
-          );
-          const regularData = response.filter(
-            (item) => !(item.cabang === "Total" && !item.unitKerja)
-          );
-
-          if (totalRow) {
-            setGrandTotals({
-              jumlah: parseInt(totalRow.jumlah) || 0,
-              pgri: parseFloat(totalRow.pgri) || 0,
-              sanduka: parseFloat(totalRow.sanduka) || 0,
-              daspen: parseFloat(totalRow.daspen) || 0,
-              derap: parseFloat(totalRow.derap) || 0,
-              kalender: parseFloat(totalRow.kalender) || 0,
-              lainlain: parseFloat(totalRow.lainlain) || 0,
-              totalIuran: parseFloat(totalRow.totalIuran) || 0,
-            });
-          }
-
-          const processed = processData(regularData);
-          setGroupedData(processed);
-          // console.log("proses", processed);
-          // console.log("reguler",regularData)
-          setData(regularData);
-          setOriginalRekapData(regularData);
-          const allUnits = new Set(
-            regularData.map((item) => item.unitKerja || "Tidak Ada Unit Kerja")
-          );
-          setExpandedRows(allUnits);
+        if (totalRow) {
+          setGrandTotals({
+            jumlah: parseInt(totalRow.jumlah) || 0,
+            pgri: parseFloat(totalRow.pgri) || 0,
+            sanduka: parseFloat(totalRow.sanduka) || 0,
+            daspen: parseFloat(totalRow.daspen) || 0,
+            derap: parseFloat(totalRow.derap) || 0,
+            kalender: parseFloat(totalRow.kalender) || 0,
+            lainlain: parseFloat(totalRow.lainlain) || 0,
+            totalIuran: parseFloat(totalRow.totalIuran) || 0,
+          });
         }
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching initial data:", error);
-        setLoading(false);
+
+        const processed = processData(regularData);
+        setGroupedData(processed);
+        setData(regularData);
+        setOriginalRekapData(regularData);
+        const allUnits = new Set(
+          processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
+        );
+        setExpandedRows(allUnits);
+      } else {
+        const response = await GlobalApi.getNominalAggregatedData("");
+        const totalRow = response.find(
+          (item) => item.cabang === "Total" && !item.unitKerja
+        );
+        const regularData = response.filter(
+          (item) => !(item.cabang === "Total" && !item.unitKerja)
+        );
+
+        if (totalRow) {
+          setGrandTotals({
+            jumlah: parseInt(totalRow.jumlah) || 0,
+            pgri: parseFloat(totalRow.pgri) || 0,
+            sanduka: parseFloat(totalRow.sanduka) || 0,
+            daspen: parseFloat(totalRow.daspen) || 0,
+            derap: parseFloat(totalRow.derap) || 0,
+            kalender: parseFloat(totalRow.kalender) || 0,
+            lainlain: parseFloat(totalRow.lainlain) || 0,
+            totalIuran: parseFloat(totalRow.totalIuran) || 0,
+          });
+        }
+
+        const processed = processData(regularData);
+        setGroupedData(processed);
+        setData(regularData);
+        setOriginalRekapData(regularData);
+        const allUnits = new Set(
+          processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
+        );
+        setExpandedRows(allUnits);
       }
-    };
-    fetchInitialData();
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching initial data:", error);
+      setLoading(false);
+    }
   }, [unitKerjaList]);
+
+  useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
+
+  useEffect(() => {
+    if (lastUpdatedMemberRef.current) {
+      lastUpdatedMemberRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [lastUpdatedMemberNip]);
 
   const handleNamaAnggotaInputChange = (e) => {
     setNamaAnggotaInput(e.target.value);
@@ -549,7 +557,7 @@ function RekapAnggota() {
       calculateTotals(filteredData);
       // setExpandedRows(new Set());
       const allUnits = new Set(
-        filteredData.map((item) => item.unitKerja || "Tidak Ada Unit Kerja")
+        processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
       );
       setExpandedRows(allUnits);
     } else {
@@ -1182,7 +1190,7 @@ function RekapAnggota() {
 
     try {
       const response = await GlobalApi.postIuranAnggota(payload);
-
+      await fetchInitialData();
       setNotification({
         type: "success",
         message: "Data berhasil disimpan!",
@@ -1193,9 +1201,7 @@ function RekapAnggota() {
       setAddedCategories([]);
       setManualInputs([]);
       setSelectedKategori("");
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      setLastUpdatedMemberNip(dataNpa.nip);
     } catch (error) {
       console.error("Gagal simpan:", error);
 
@@ -1250,6 +1256,9 @@ function RekapAnggota() {
 
     try {
       await GlobalApi.putIuranAnggota(idIuran, payload);
+
+      await fetchInitialData();
+
       setNotification({
         type: "success",
         message: "Data berhasil diupdate!",
@@ -1258,14 +1267,12 @@ function RekapAnggota() {
       setAddedCategories([]);
       setManualInputs([]);
       setSelectedKategori("");
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      setLastUpdatedMemberNip(dataNpa.nip);
     } catch (error) {
       console.error("Gagal update data:", error);
       setNotification({
         type: "error",
-        message: "Gagal update data. Silakan cek console.",
+        message: "Gagal update data.",
       });
     }
   };
@@ -1300,9 +1307,7 @@ function RekapAnggota() {
 
     try {
       await GlobalApi.deleteIuranAnggota(idIuran);
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      await fetchInitialData();
 
       setNotification({
         type: "success",
@@ -1317,6 +1322,7 @@ function RekapAnggota() {
       setDataIuran(null);
       setIdIuran(null);
       setIsPopupVisible(false);
+      setLastUpdatedMemberNip(dataNpa.nip);
     } catch (error) {
       setNotification({
         type: "error",
@@ -1592,7 +1598,6 @@ function RekapAnggota() {
       }
     });
 
-    // Calculate totals from groupedData like in the table footer
     const totalJumlah = groupedData.reduce(
       (sum, g) => sum + parseInt(g.jumlah || 0),
       0
@@ -1918,7 +1923,7 @@ function RekapAnggota() {
     <div className="flex-1">
       <div className="relative">
         <Input
-          ref={namaInputRef}
+          // ref={namaInputRef}
           type="text"
           value={namaAnggotaInput}
           onChange={handleNamaAnggotaInputChange}
@@ -2087,23 +2092,6 @@ function RekapAnggota() {
                       </div>
                     )}
                   </div>
-                  {/* <button
-                    className="p-2 px-6 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
-                    onClick={NorekExcel}
-                    title="Export to Excel"
-                  >
-                    <span>Rekap</span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      fill="currentColor"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
-                      <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
-                    </svg>
-                  </button> */}
                 </div>
               )}
             </div>
@@ -2292,6 +2280,11 @@ function RekapAnggota() {
                             <tr
                               key={`${group.unitKerja}-member-${idx}`}
                               className="bg-teal-50/30 hover:bg-teal-50"
+                              ref={
+                                member.nip === lastUpdatedMemberNip
+                                  ? lastUpdatedMemberRef
+                                  : null
+                              }
                             >
                               <td
                                 className="p-3 border-b"
