@@ -172,6 +172,7 @@ function RekapAnggota() {
   const dropdownRef = useRef(null);
   const [lastUpdatedMemberNip, setLastUpdatedMemberNip] = useState(null);
   const lastUpdatedMemberRef = useRef(null);
+  const [resetKeys, setResetKeys] = useState([]);
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -802,6 +803,7 @@ function RekapAnggota() {
     setIsPopupVisible(false);
     setAddedCategories([]);
     setManualInputs([]);
+    setResetKeys([]);
   };
 
   const handleMemberClick = async (member) => {
@@ -965,9 +967,9 @@ function RekapAnggota() {
           lainLain: "Lain-Lain",
           daspen: "Daspen",
         };
-
+  
         let initialValue = 0;
-
+  
         if (selectedKategori === "kalender") {
           const kalenderRaw = sessionStorage.getItem("kalenderData");
           if (kalenderRaw) {
@@ -982,7 +984,7 @@ function RekapAnggota() {
             }
           }
         }
-
+  
         if (selectedKategori === "derap") {
           const derapRaw = sessionStorage.getItem("derapData");
           if (derapRaw) {
@@ -997,20 +999,19 @@ function RekapAnggota() {
             }
           }
         }
-
+  
         if (selectedKategori === "lainlain" && selectedKeterangan) {
           try {
             const response = await GlobalApi.getLainlain(selectedKeterangan);
-
+  
             const matchingItem = response.find(
               (item) =>
                 item.keterangan.toLowerCase() ===
                 selectedKeterangan.toLowerCase()
             );
-
+  
             if (matchingItem) {
               const jumlah = parseInt(matchingItem.jumlahNominal || 0);
-
               initialValue = jumlah;
             } else {
               console.warn(
@@ -1022,7 +1023,11 @@ function RekapAnggota() {
             console.error("Gagal mengambil data lain-lain:", error);
           }
         }
-
+  
+        if (selectedKategori === "daspen") {
+          initialValue = parseInt(daspenValue || 0);
+        }
+  
         setAddedCategories((prev) => [
           ...prev,
           {
@@ -1033,22 +1038,23 @@ function RekapAnggota() {
               : {}),
           },
         ]);
-
+  
         setNewValues((prev) => ({
           ...prev,
           [selectedKategori]: initialValue,
         }));
-
+  
         setFormKetiga((prev) => ({
           ...prev,
           [selectedKategori]: initialValue,
         }));
       }
-
+  
       setSelectedKategori("");
       setShowDropdown(false);
     }
   };
+  
 
   const handleSaveClick = async () => {
     if (!dataNpa) return;
@@ -1232,9 +1238,10 @@ function RekapAnggota() {
 
     groupedIuran.forEach((item) => {
       const key = item.key;
-      const iuran = parseInt(item.iuran || 0);
-      const manual = parseInt(nominalBaruList[key] || 0);
-      const total = iuran + manual;
+      const isReset = resetKeys.includes(key);
+const iuran = isReset ? 0 : parseInt(item.iuran || 0);
+const manual = isReset ? 0 : parseInt(nominalBaruList[key] || 0);
+const total = iuran + manual;
 
       payload[`iuran${capitalizeFirstLetter(key)}`] = iuran || 0;
       payload[`manualIuran${capitalizeFirstLetter(key)}`] = manual || 0;
@@ -1264,6 +1271,7 @@ function RekapAnggota() {
         message: "Data berhasil diupdate!",
       });
       setIsPopupVisible(false);
+      setResetKeys([]);
       setAddedCategories([]);
       setManualInputs([]);
       setSelectedKategori("");
@@ -2514,20 +2522,32 @@ function RekapAnggota() {
                               0
                           )
                           .map((item, idx) => {
-                            const oldValue = parseInt(item.iuran || 0);
-                            const inputValue = nominalBaruList[item.key] || 0;
-                            const totalValue = oldValue + inputValue;
+                            const isReset = resetKeys.includes(item.key);
+const oldValue = isReset ? 0 : parseInt(item.iuran || 0);
+const inputValue = isReset ? 0 : nominalBaruList[item.key] || 0;
+const totalValue = oldValue + inputValue;
 
                             return (
                               <div
                                 key={idx}
                                 className="space-y-1 px-3 py-2 rounded-md"
                               >
-                                <div className="flex items-center justify-between">
-                                  <span className="font-medium">
-                                    {item.key}
-                                  </span>
-                                </div>
+                               <div className="flex items-center justify-between">
+  <span className="font-medium">{item.key}</span>
+  <button
+  type="button"
+  className="text-red-500 hover:text-red-700"
+  onClick={() => {
+    setResetKeys((prev) => [...prev, item.key]);
+    setNominalBaruList((prev) => ({
+      ...prev,
+      [item.key]: 0,
+    }));
+  }}
+>
+  <FiTrash />
+</button>
+</div>
 
                                 <div className="grid grid-cols-3 gap-2 mt-2">
                                   {/* Iuran Sekarang */}
