@@ -445,6 +445,8 @@ function RekapAnggota() {
         npaPgri: item.npaPgri,
         nomorRekening: item.nomorRekening,
         nip: item.nip,
+        statusPotongan: item.statusPotongan,
+        potongan: item.potongan,
         pgri: parseFloat(item.pgri) || 0,
         sanduka: parseFloat(item.sanduka) || 0,
         daspen: parseFloat(item.daspen) || 0,
@@ -2407,6 +2409,12 @@ function RekapAnggota() {
                                       </div>
                                       <div className="text-sm text-teal-700 italic">
                                         {member.nomorRekening}
+                                      </div>
+                                      <div className="text-sm text-teal-700 italic">
+                                        Potongan: {member.potongan}
+                                      </div>
+                                      <div className="text-sm text-teal-700 italic">
+                                        Status: {member.statusPotongan}
                                       </div>
                                     </span>
                                   </div>
