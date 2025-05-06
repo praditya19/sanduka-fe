@@ -1362,12 +1362,14 @@ const getRekapAnggotaByCabang = async (cabang) => {
   }
 };
 
-const getNominalAggregatedData = async (cabang, unitKerja, namaAnggota) => {
+const getNominalAggregatedData = async (cabang, unitKerja, namaAnggota, bulan, tahun) => {
   try {
     const params = new URLSearchParams();
     if (cabang) params.append("cabang", cabang);
     if (unitKerja) params.append("unitKerja", unitKerja);
     if (namaAnggota) params.append("namaAnggota", namaAnggota);
+    if (bulan) params.append("bulan", bulan);
+    if (tahun) params.append("tahun", tahun);
 
     const response = await axiosClient.get(
       `/api/by-nominal/aggregated?${params.toString()}`

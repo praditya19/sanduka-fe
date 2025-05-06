@@ -158,6 +158,8 @@ function RekapAnggota() {
   });
   const [notification, setNotification] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [loader, setLoader] = useState(false);
   const [daspenValue, setDaspenValue] = useState(null);
   const [nipValue, setNipValue] = useState(null);
   const [namaAnggotaInput, setNamaAnggotaInput] = useState("");
@@ -173,6 +175,33 @@ function RekapAnggota() {
   const [lastUpdatedMemberNip, setLastUpdatedMemberNip] = useState(null);
   const lastUpdatedMemberRef = useRef(null);
   const [resetKeys, setResetKeys] = useState([]);
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from(
+    { length: currentYear - 2025 + 6 },
+    (_, i) => 2025 + i
+  );
+
+  const months = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
+
+  const [selectedBulan, setSelectedBulan] = useState(new Date().getMonth() + 1);
+  const [selectedTahun, setSelectedTahun] = useState(currentYear);
+
+  // Hanya tampilkan bulan Mei–Desember jika tahun 2025
+  const filteredMonths = selectedTahun === 2025 ? months.slice(4) : months;
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -443,75 +472,65 @@ function RekapAnggota() {
       const storedRole = sessionStorage.getItem("role");
       const storedCabang = sessionStorage.getItem("cabang");
 
+      const bulan = selectedBulan;
+      const tahun = selectedTahun;
+
+      let response;
+
       if (storedRole === "ADMIN" && storedCabang) {
         setIsAdmin(true);
         setSelectedCabang(storedCabang);
-        const response = await GlobalApi.getNominalAggregatedData(storedCabang);
-        const totalRow = response.find(
-          (item) => item.cabang === "Total" && !item.unitKerja
+        response = await GlobalApi.getNominalAggregatedData(
+          storedCabang,
+          null,
+          null,
+          bulan,
+          tahun
         );
-        const regularData = response.filter(
-          (item) => !(item.cabang === "Total" && !item.unitKerja)
-        );
-
-        if (totalRow) {
-          setGrandTotals({
-            jumlah: parseInt(totalRow.jumlah) || 0,
-            pgri: parseFloat(totalRow.pgri) || 0,
-            sanduka: parseFloat(totalRow.sanduka) || 0,
-            daspen: parseFloat(totalRow.daspen) || 0,
-            derap: parseFloat(totalRow.derap) || 0,
-            kalender: parseFloat(totalRow.kalender) || 0,
-            lainlain: parseFloat(totalRow.lainlain) || 0,
-            totalIuran: parseFloat(totalRow.totalIuran) || 0,
-          });
-        }
-
-        const processed = processData(regularData);
-        setGroupedData(processed);
-        setData(regularData);
-        setOriginalRekapData(regularData);
-        const allUnits = new Set(
-          processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
-        );
-        setExpandedRows(allUnits);
       } else {
-        const response = await GlobalApi.getNominalAggregatedData("");
-        const totalRow = response.find(
-          (item) => item.cabang === "Total" && !item.unitKerja
+        response = await GlobalApi.getNominalAggregatedData(
+          "",
+          null,
+          null,
+          bulan,
+          tahun
         );
-        const regularData = response.filter(
-          (item) => !(item.cabang === "Total" && !item.unitKerja)
-        );
-
-        if (totalRow) {
-          setGrandTotals({
-            jumlah: parseInt(totalRow.jumlah) || 0,
-            pgri: parseFloat(totalRow.pgri) || 0,
-            sanduka: parseFloat(totalRow.sanduka) || 0,
-            daspen: parseFloat(totalRow.daspen) || 0,
-            derap: parseFloat(totalRow.derap) || 0,
-            kalender: parseFloat(totalRow.kalender) || 0,
-            lainlain: parseFloat(totalRow.lainlain) || 0,
-            totalIuran: parseFloat(totalRow.totalIuran) || 0,
-          });
-        }
-
-        const processed = processData(regularData);
-        setGroupedData(processed);
-        setData(regularData);
-        setOriginalRekapData(regularData);
-        const allUnits = new Set(
-          processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
-        );
-        setExpandedRows(allUnits);
       }
+
+      const totalRow = response.find(
+        (item) => item.cabang === "Total" && !item.unitKerja
+      );
+      const regularData = response.filter(
+        (item) => !(item.cabang === "Total" && !item.unitKerja)
+      );
+
+      if (totalRow) {
+        setGrandTotals({
+          jumlah: parseInt(totalRow.jumlah) || 0,
+          pgri: parseFloat(totalRow.pgri) || 0,
+          sanduka: parseFloat(totalRow.sanduka) || 0,
+          daspen: parseFloat(totalRow.daspen) || 0,
+          derap: parseFloat(totalRow.derap) || 0,
+          kalender: parseFloat(totalRow.kalender) || 0,
+          lainlain: parseFloat(totalRow.lainlain) || 0,
+          totalIuran: parseFloat(totalRow.totalIuran) || 0,
+        });
+      }
+
+      const processed = processData(regularData);
+      setGroupedData(processed);
+      setData(regularData);
+      setOriginalRekapData(regularData);
+      const allUnits = new Set(
+        processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
+      );
+      setExpandedRows(allUnits);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching initial data:", error);
       setLoading(false);
     }
-  }, [unitKerjaList]);
+  }, [unitKerjaList, selectedBulan, selectedTahun]);
 
   useEffect(() => {
     fetchInitialData();
@@ -798,12 +817,53 @@ function RekapAnggota() {
     setIsModalOpen(false);
     setSelectedMember(null);
   };
-
   const closePopup = () => {
     setIsPopupVisible(false);
     setAddedCategories([]);
     setManualInputs([]);
     setResetKeys([]);
+  };
+  const handleCloseModal = () => {
+    setShowUploadModal(false);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === "file") {
+      // handle file upload (misalnya simpan ke state atau FormData)
+    } else {
+      // handle kategori atau input lain
+    }
+  };
+  const handleSubmitUpload = (e) => {
+    e.preventDefault();
+    setLoader(true);
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setLoader(false);
+          setShowUploadModal(false);
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 300);
+  };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLoader(true);
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setLoader(false);
+          setShowUploadModal(false);
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 300);
   };
 
   const handleMemberClick = async (member) => {
@@ -967,9 +1027,9 @@ function RekapAnggota() {
           lainLain: "Lain-Lain",
           daspen: "Daspen",
         };
-  
+
         let initialValue = 0;
-  
+
         if (selectedKategori === "kalender") {
           const kalenderRaw = sessionStorage.getItem("kalenderData");
           if (kalenderRaw) {
@@ -984,7 +1044,7 @@ function RekapAnggota() {
             }
           }
         }
-  
+
         if (selectedKategori === "derap") {
           const derapRaw = sessionStorage.getItem("derapData");
           if (derapRaw) {
@@ -999,17 +1059,17 @@ function RekapAnggota() {
             }
           }
         }
-  
+
         if (selectedKategori === "lainlain" && selectedKeterangan) {
           try {
             const response = await GlobalApi.getLainlain(selectedKeterangan);
-  
+
             const matchingItem = response.find(
               (item) =>
                 item.keterangan.toLowerCase() ===
                 selectedKeterangan.toLowerCase()
             );
-  
+
             if (matchingItem) {
               const jumlah = parseInt(matchingItem.jumlahNominal || 0);
               initialValue = jumlah;
@@ -1023,11 +1083,11 @@ function RekapAnggota() {
             console.error("Gagal mengambil data lain-lain:", error);
           }
         }
-  
+
         if (selectedKategori === "daspen") {
           initialValue = parseInt(daspenValue || 0);
         }
-  
+
         setAddedCategories((prev) => [
           ...prev,
           {
@@ -1038,23 +1098,22 @@ function RekapAnggota() {
               : {}),
           },
         ]);
-  
+
         setNewValues((prev) => ({
           ...prev,
           [selectedKategori]: initialValue,
         }));
-  
+
         setFormKetiga((prev) => ({
           ...prev,
           [selectedKategori]: initialValue,
         }));
       }
-  
+
       setSelectedKategori("");
       setShowDropdown(false);
     }
   };
-  
 
   const handleSaveClick = async () => {
     if (!dataNpa) return;
@@ -1239,9 +1298,9 @@ function RekapAnggota() {
     groupedIuran.forEach((item) => {
       const key = item.key;
       const isReset = resetKeys.includes(key);
-const iuran = isReset ? 0 : parseInt(item.iuran || 0);
-const manual = isReset ? 0 : parseInt(nominalBaruList[key] || 0);
-const total = iuran + manual;
+      const iuran = isReset ? 0 : parseInt(item.iuran || 0);
+      const manual = isReset ? 0 : parseInt(nominalBaruList[key] || 0);
+      const total = iuran + manual;
 
       payload[`iuran${capitalizeFirstLetter(key)}`] = iuran || 0;
       payload[`manualIuran${capitalizeFirstLetter(key)}`] = manual || 0;
@@ -2097,6 +2156,12 @@ const total = iuran + manual;
                         >
                           Potongan Mandiri
                         </button>
+                        <button
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                          onClick={() => setShowUploadModal(true)}
+                        >
+                          Upload Data
+                        </button>
                       </div>
                     )}
                   </div>
@@ -2107,12 +2172,44 @@ const total = iuran + manual;
 
           <div className="overflow-x-auto rounded-lg shadow-lg mx-4 md:mx-12">
             <div className="bg-teal-700 p-4 rounded-t-lg">
-              <h2 className="text-white text-xl font-semibold">
-                Laporan Tagihan
-              </h2>
-              <p className="text-teal-100 text-sm">
-                Daftar iuran anggota per unit kerja
-              </p>
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-white text-xl font-semibold">
+                    Laporan Tagihan
+                  </h2>
+                  <p className="text-teal-100 text-sm">
+                    Daftar iuran anggota per unit kerja
+                  </p>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <select
+                    value={selectedBulan}
+                    onChange={(e) => setSelectedBulan(Number(e.target.value))}
+                    className="p-2 rounded bg-white text-black border"
+                  >
+                    {filteredMonths.map((month, index) => {
+                      const monthValue =
+                        selectedTahun === 2025 ? index + 5 : index + 1;
+                      return (
+                        <option key={monthValue} value={monthValue}>
+                          {month}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <select
+                    value={selectedTahun}
+                    onChange={(e) => setSelectedTahun(Number(e.target.value))}
+                    className="p-2 rounded bg-white text-black border"
+                  >
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
 
             <table className="w-full table-auto bg-white">
@@ -2523,31 +2620,40 @@ const total = iuran + manual;
                           )
                           .map((item, idx) => {
                             const isReset = resetKeys.includes(item.key);
-const oldValue = isReset ? 0 : parseInt(item.iuran || 0);
-const inputValue = isReset ? 0 : nominalBaruList[item.key] || 0;
-const totalValue = oldValue + inputValue;
+                            const oldValue = isReset
+                              ? 0
+                              : parseInt(item.iuran || 0);
+                            const inputValue = isReset
+                              ? 0
+                              : nominalBaruList[item.key] || 0;
+                            const totalValue = oldValue + inputValue;
 
                             return (
                               <div
                                 key={idx}
                                 className="space-y-1 px-3 py-2 rounded-md"
                               >
-                               <div className="flex items-center justify-between">
-  <span className="font-medium">{item.key}</span>
-  <button
-  type="button"
-  className="text-red-500 hover:text-red-700"
-  onClick={() => {
-    setResetKeys((prev) => [...prev, item.key]);
-    setNominalBaruList((prev) => ({
-      ...prev,
-      [item.key]: 0,
-    }));
-  }}
->
-  <FiTrash />
-</button>
-</div>
+                                <div className="flex items-center justify-between">
+                                  <span className="font-medium">
+                                    {item.key}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="text-red-500 hover:text-red-700"
+                                    onClick={() => {
+                                      setResetKeys((prev) => [
+                                        ...prev,
+                                        item.key,
+                                      ]);
+                                      setNominalBaruList((prev) => ({
+                                        ...prev,
+                                        [item.key]: 0,
+                                      }));
+                                    }}
+                                  >
+                                    <FiTrash />
+                                  </button>
+                                </div>
 
                                 <div className="grid grid-cols-3 gap-2 mt-2">
                                   {/* Iuran Sekarang */}
@@ -2914,6 +3020,81 @@ const totalValue = oldValue + inputValue;
                     </div>
                   </div>
                 </div>
+              )}
+              {showUploadModal && (
+                <>
+                  <div
+                    className="fixed inset-0 bg-black opacity-50 z-40"
+                    onClick={handleCloseModal}
+                  ></div>
+                  <div className="fixed inset-0 flex items-center justify-center z-50">
+                    <div className="bg-white shadow-lg rounded-lg p-6 w-11/12 md:w-1/2 relative">
+                      <button
+                        className="absolute top-2 right-2 text-gray-500"
+                        onClick={handleCloseModal}
+                      >
+                        <svg
+                          className="w-6 h-6"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                      <h2 className="text-xl font-bold mb-4">Upload Data</h2>
+                      <form onSubmit={handleSubmitUpload}>
+                        <div className="mb-4">
+                          <label className="block text-gray-700 text-sm font-bold mb-2">
+                            Upload File
+                          </label>
+                          <input
+                            type="file"
+                            name="file"
+                            onChange={handleInputChange}
+                            className="block w-full mt-1"
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label className="block text-gray-700 text-sm font-bold mb-2">
+                            Kategori
+                          </label>
+                          <select
+                            className="form-select block w-full mt-1 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent"
+                            name="category"
+                            onChange={handleInputChange}
+                          >
+                            <option value="">-- Pilih Kategori --</option>
+                            <option value="DASPEN">Daspen</option>
+                            <option value="KTA_DIGITAL">KTA Digital</option>
+                          </select>
+                        </div>
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={handleCloseModal}
+                            className="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded-lg mr-2"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            className="bg-green-600 hover:bg-green-800 text-white py-2 px-4 rounded-lg"
+                            disabled={loader}
+                          >
+                            {loader ? `Uploading... ${progress}%` : "Submit"}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </>
               )}
               <tfoot>
                 <tr className="bg-teal-700 text-white font-bold">
