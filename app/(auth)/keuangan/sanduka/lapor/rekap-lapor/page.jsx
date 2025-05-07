@@ -498,7 +498,7 @@ const Page = () => {
 
             {showPopup && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                <div className="bg-white rounded-lg shadow-lg border border-gray-200 w-4/5 h-4/5 overflow-y-scroll relative">
+                <div className="bg-white rounded-lg shadow-lg border border-gray-200 w-11/12 h-4/5 overflow-y-scroll relative">
                   <Kwitansi />
                   <div className="absolute top-1 right-1">
                     <button
