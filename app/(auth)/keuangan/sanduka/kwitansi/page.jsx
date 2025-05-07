@@ -522,7 +522,7 @@ function Pengeluaran() {
         text-align: center;
     }
     .signature {
-        margin-top: 40px;
+        margin-top: 80px;
         width: 100%;
         display: flex;
         justify-content: space-between;
@@ -614,10 +614,12 @@ function Pengeluaran() {
 </table>
 
 <div class="signature">
-  <div>
+<div>
+  ................., ..................
     <p>Yang Menyerahkan,</p>
-
+  
   </div>
+
   <div>
   ................., ..................
     <p>Penerima,</p>

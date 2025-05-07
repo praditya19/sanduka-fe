@@ -626,9 +626,10 @@ function Pengeluaran() {
 </table>
 
 <div class="signature">
-  <div>
+<div>
+  ................., ..................
     <p>Yang Menyerahkan,</p>
-
+  
   </div>
   <div>
   ................., ..................
