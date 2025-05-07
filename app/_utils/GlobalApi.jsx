@@ -1381,6 +1381,21 @@ const getNominalAggregatedData = async (cabang, unitKerja, namaAnggota, bulan, t
   }
 };
 
+const uploadSinkronBank = async (formData) => {
+  try {
+    const response = await axiosClient.post("/api/potongan-gaji/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    throw error;
+  }
+};
+
 const postIuranAnggota = async (data) => {
   try {
     const response = await axiosClient.post("/api/iuran-anggota", data, {
@@ -2422,6 +2437,7 @@ export default {
   putIuranAnggota,
   deletePengaduan,
   postIuranAnggota,
+  uploadSinkronBank,
   countNewPengaduan,
   countResponsesByPengaduanId,
   getTagihanAnggotaById,
