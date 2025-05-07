@@ -829,43 +829,45 @@ function RekapAnggota() {
     setShowUploadModal(false);
   };
 
+  const [formData, setFormData] = useState({
+    file: null,
+    namaFile: "",
+  });
+
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "file") {
-      // handle file upload (misalnya simpan ke state atau FormData)
+      setFormData((prev) => ({ ...prev, file: files[0] }));
     } else {
-      // handle kategori atau input lain
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
-  const handleSubmitUpload = (e) => {
+
+  const handleSubmitUpload = async (e) => {
     e.preventDefault();
     setLoader(true);
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setLoader(false);
-          setShowUploadModal(false);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 300);
-  };
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setLoader(true);
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setLoader(false);
-          setShowUploadModal(false);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 300);
+
+    const uploadData = new FormData();
+    uploadData.append("file", formData.file);
+    uploadData.append("namaFile", formData.namaFile);
+
+    try {
+      const response = await GlobalApi.uploadSinkronBank(uploadData);
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setLoader(false);
+            setShowUploadModal(false);
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 300);
+    } catch (error) {
+      console.error("Upload gagal:", error);
+      setLoader(false);
+    }
   };
 
   const handleMemberClick = async (member) => {
@@ -1634,7 +1636,6 @@ function RekapAnggota() {
       "Nama Anggota",
       "NIP",
       "Nomor Rekening",
-      "Jumlah Anggota",
       "PGRI",
       "Sanduka",
       "Daspen",
@@ -1642,6 +1643,8 @@ function RekapAnggota() {
       "Kalender",
       "Lain-Lain",
       "Total",
+      "Potongan Bank",
+      "Keterangan",
     ]);
 
     groupedData.forEach((group, index) => {
@@ -1654,7 +1657,6 @@ function RekapAnggota() {
             member.namaAnggota,
             member.nip || "-",
             member.nomorRekening || "-",
-            memberIndex === 0 ? group.jumlah : "",
             parseInt(member.pgri || 0),
             parseInt(member.sanduka || 0),
             parseInt(member.daspen || 0),
@@ -1662,15 +1664,13 @@ function RekapAnggota() {
             parseInt(member.kalender || 0),
             parseInt(member.lainlain || 0),
             parseInt(member.totalIuran || 0),
+            parseInt(member.potongan || 0),
+            member.statusPotongan || "-",
           ]);
         });
       }
     });
 
-    const totalJumlah = groupedData.reduce(
-      (sum, g) => sum + parseInt(g.jumlah || 0),
-      0
-    );
     const totalPgri = groupedData.reduce(
       (sum, g) => sum + parseInt(g.pgri || 0),
       0
@@ -1707,7 +1707,6 @@ function RekapAnggota() {
       "Total Keseluruhan:",
       "",
       "",
-      totalJumlah,
       totalPgri,
       totalSanduka,
       totalDaspen,
@@ -3071,17 +3070,15 @@ function RekapAnggota() {
                         </div>
                         <div className="mb-4">
                           <label className="block text-gray-700 text-sm font-bold mb-2">
-                            Kategori
+                            Nama File
                           </label>
-                          <select
-                            className="form-select block w-full mt-1 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent"
-                            name="category"
+                          <input
+                            type="text"
+                            name="namaFile"
                             onChange={handleInputChange}
-                          >
-                            <option value="">-- Pilih Kategori --</option>
-                            <option value="DASPEN">Daspen</option>
-                            <option value="KTA_DIGITAL">KTA Digital</option>
-                          </select>
+                            className="form-input block w-full mt-1 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent"
+                            placeholder="Contoh: Potongan Bank Bulan Mei"
+                          />
                         </div>
                         <div className="flex justify-end">
                           <button
