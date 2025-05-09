@@ -3159,7 +3159,10 @@ function RekapAnggota() {
 
             <div className="bg-white p-4 rounded-b-lg border-t border-gray-200 text-sm text-gray-500 flex justify-between">
               <div>Menampilkan {groupedData.length} unit kerja</div>
-              <div>Total anggota: {grandTotals.jumlah}</div>
+              <div>Total anggota: {groupedData.reduce(
+                      (sum, g) => sum + parseInt(g.jumlah),
+                      0
+                    )}</div>
             </div>
           </div>
         </div>
