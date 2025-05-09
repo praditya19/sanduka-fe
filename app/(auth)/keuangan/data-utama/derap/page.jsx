@@ -9,7 +9,11 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
-import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaTimesCircle,
+  FaCheckCircle,
+  FaExclamationCircle,
+} from "react-icons/fa";
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -22,20 +26,20 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
       default:
-        return 'bg-blue-100';
+        return "bg-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case 'error':
+      case "error":
         return <FaExclamationCircle className="text-red-500 text-3xl" />;
       default:
         return null;
@@ -44,19 +48,24 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
       default:
-        return 'text-blue-800';
+        return "text-blue-800";
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -66,17 +75,13 @@ const NotificationPopup = ({ type, message, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
+          <div className="animate-bounce">{getIcon()}</div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+            {type === "success" ? "Berhasil!" : "Gagal!"}
           </h3>
 
-          <div className={`${getTextColor()} text-center`}>
-            {message}
-          </div>
+          <div className={`${getTextColor()} text-center`}>{message}</div>
         </div>
       </div>
     </div>
@@ -116,7 +121,7 @@ function DerapForm() {
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [bulan, setBulan] = useState("");
-const [tahun, setTahun] = useState(""); 
+  const [tahun, setTahun] = useState("");
   const [selectedBulanBaru, setSelectedBulanBaru] = useState("");
   const [newSelectedYear, setNewSelectedYear] = useState(
     new Date().getFullYear()
@@ -131,7 +136,7 @@ const [tahun, setTahun] = useState("");
           newSelectedYear,
           newCabangList
         );
-        console.log(data)
+        console.log(data);
         setTableData(data);
         setFilteredTableData(data);
       } catch (error) {
@@ -361,14 +366,14 @@ const [tahun, setTahun] = useState("");
         },
       ]);
       setNotification({
-        type: 'success',
-        message: `Data Berhasil disimpan!`
+        type: "success",
+        message: `Data Berhasil disimpan!`,
       });
     } catch (error) {
       console.error("Error saat menyimpan data: ", error);
       setNotification({
-        type: 'error',
-        message: `Gagal Menyimpan Data!`
+        type: "error",
+        message: `Gagal Menyimpan Data!`,
       });
     }
   };
@@ -378,8 +383,8 @@ const [tahun, setTahun] = useState("");
     if (selectedItem) {
       setSelectedCabang(selectedItem.cabang);
       setJumlahPesanan(selectedItem.jumlah);
-      setBulan(selectedItem.bulan);  // Ambil bulan dari data API
-      setTahun(selectedItem.tahun);  // Ambil tahun dari data API
+      setBulan(selectedItem.bulan); // Ambil bulan dari data API
+      setTahun(selectedItem.tahun); // Ambil tahun dari data API
       setSelectedItemId(id);
       setIsEditMode(true); // Aktifkan mode edit
     }
@@ -387,69 +392,96 @@ const [tahun, setTahun] = useState("");
 
   const handleSaveUpdate = async () => {
     if (!selectedItemId) return;
-  
+
     const updatedData = {
       cabang: selectedCabang,
       jumlah: jumlahPesanan,
       bulan,
       tahun,
     };
-  
+
     try {
       await GlobalApi.updateDerap(selectedItemId, updatedData);
-  
+
       setTableData((prevData) =>
         prevData.map((item) =>
           item.id === selectedItemId ? { ...item, ...updatedData } : item
         )
       );
-  
+
       setFilteredTableData((prevData) =>
         prevData.map((item) =>
           item.id === selectedItemId ? { ...item, ...updatedData } : item
         )
       );
-  
+
       setIsEditMode(false);
       setSelectedItemId(null);
     } catch (error) {
       alert("Gagal memperbarui data.");
     }
   };
-  
+
   const handleDelete = async (id) => {
     console.log("Hapus item dengan ID:", id);
     try {
       await GlobalApi.deleteDerap(id);
       setTableData((prevData) => prevData.filter((item) => item.id !== id));
-      setFilteredTableData((prevData) => prevData.filter((item) => item.id !== id));
+      setFilteredTableData((prevData) =>
+        prevData.filter((item) => item.id !== id)
+      );
     } catch (error) {
       console.error("Gagal menghapus data:", error);
       alert("Gagal menghapus data!");
     }
+  };
+
+  const handleOtomatisClick = async () => {
+    if (!selectedCabang) {
+      alert("Pilih cabang terlebih dahulu.");
+      return;
+    }
+  
+    try {
+      const data = await GlobalApi.getNominalAggregatedData(selectedCabang);
+  
+      // Jika data berupa array
+      const dataArray = Array.isArray(data) ? data : [data];
+  
+      // Filter dan hitung jumlah item yang memiliki nomorRekening
+      const countWithNomorRekening = dataArray.filter(
+        (item) => item.nomorRekening
+      ).length;
+  
+      // Set nilai ke field jumlahPesanan
+      setJumlahPesanan(countWithNomorRekening - 2);
+  
+      console.log("Jumlah dengan nomor rekening:", countWithNomorRekening);
+    } catch (error) {
+      console.error("Gagal mengambil data otomatis:", error);
+    }
   };  
 
-  const calculateTotalHarga = () => {
+  useEffect(() => {
     const hargaProvinsi = parseInt(provinsi) || 0;
     const hargaKabupaten = parseInt(kabupaten) || 0;
     const hargaCabang = parseInt(cabang) || 0;
     const jumlahPesananInt = parseInt(jumlahPesanan) || 1;
-
+  
     const setorProvinsiTotal = hargaProvinsi * jumlahPesananInt;
     const untukKabupatenTotal = hargaKabupaten * jumlahPesananInt;
     const untukCabangTotal = hargaCabang * jumlahPesananInt;
-
+  
     const total = hargaProvinsi + hargaKabupaten + hargaCabang;
     setTotalHarga(total);
-
-    const totalAkhir =
-      setorProvinsiTotal + untukKabupatenTotal + untukCabangTotal;
+  
+    const totalAkhir = setorProvinsiTotal + untukKabupatenTotal + untukCabangTotal;
     setTotalHargaAkhir(totalAkhir);
-
+  
     setSetorProvinsi(setorProvinsiTotal);
     setUntukKabupaten(untukKabupatenTotal);
     setUntukCabang(untukCabangTotal);
-  };
+  }, [provinsi, kabupaten, cabang, jumlahPesanan]);
 
   const resetForm = () => {
     const storedData = sessionStorage.getItem("derapData");
@@ -584,8 +616,9 @@ const [tahun, setTahun] = useState("");
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           {notification && (
             <NotificationPopup
@@ -641,8 +674,9 @@ const [tahun, setTahun] = useState("");
                       <Input
                         type="number"
                         id={field.id}
-                        className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out lg:ml-4 ${field.customClass || ""
-                          }`}
+                        className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out lg:ml-4 ${
+                          field.customClass || ""
+                        }`}
                         onKeyPress={handleKeyPress}
                         value={field.value}
                         onChange={field.onChange}
@@ -717,22 +751,22 @@ const [tahun, setTahun] = useState("");
 
                   <div className="flex justify-center space-x-4 mt-6">
                     <Button
-                      className="bg-green-700 hover:bg-green-900 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
-                      onClick={calculateTotalHarga}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
+                      onClick={isEditMode ? handleSaveUpdate : handleSubmit}
                     >
-                      Hitung
+                      {isEditMode ? "Update" : "Simpan"}
                     </Button>
-                    <Button
-    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
-    onClick={isEditMode ? handleSaveUpdate : handleSubmit}
-  >
-    {isEditMode ? "Update" : "Simpan"}
-  </Button>
                     <Button
                       className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-600 transition duration-150 ease-in-out"
                       onClick={resetForm}
                     >
                       Reset
+                    </Button>
+                    <Button
+                      className="bg-teal-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-teal-600 transition duration-150 ease-in-out"
+                      onClick={handleOtomatisClick}
+                    >
+                     Otomatis
                     </Button>
                   </div>
                 </div>
@@ -879,51 +913,95 @@ const [tahun, setTahun] = useState("");
             </div>
 
             <div ref={tableRef} className="overflow-x-auto">
-  <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
-    <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
-      <tr>
-        <th scope="col" className="border px-6 py-3 text-center text-sm">No</th>
-        <th scope="col" className="border px-6 py-3 text-center text-sm">Cabang Khusus</th>
-        <th scope="col" className="border px-6 py-3 text-center text-sm">Pesanan</th>
-        <th scope="col" className="border px-6 py-3 text-center text-sm">Total</th>
-        <th scope="col" className="border px-6 py-3 text-center text-sm">Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {filteredTableData.length > 0 ? (
-        filteredTableData.map((item, index) => (
-          <tr key={item.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-            <td className="border px-6 py-4 text-center text-sm text-black">{index + 1}</td>
-            <td className="border px-6 py-4 text-center text-sm text-black">{item.cabang}</td>
-            <td className="border px-6 py-4 text-center text-sm text-black">{item.jumlah}</td>
-            <td className="border px-6 py-4 text-center text-sm text-black">
-              {formatRupiah(
-                calculateTotal(
-                  item.jumlah,
-                  parseInt(firstItem.cabang),
-                  parseInt(firstItem.kabupaten),
-                  parseInt(firstItem.propinsi)
-                )
-              )}
-            </td>
-            <td className="border px-6 py-4 text-center text-sm text-black">
-              <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded mr-2" onClick={() => handleUpdate(item.id)}>Edit</button>
-              <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded" onClick={() => handleDelete(item.id)}>Hapus</button>
-            </td>
-          </tr>
-        ))
-      ) : (
-        <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-          <td className="px-6 py-4"></td>
-          <td className="px-6 py-4">Jumlah</td>
-          <td className="px-6 py-4">0</td>
-          <td className="px-6 py-4">0</td>
-          <td className="px-6 py-4"></td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-</div>
+              <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="border px-6 py-3 text-center text-sm"
+                    >
+                      No
+                    </th>
+                    <th
+                      scope="col"
+                      className="border px-6 py-3 text-center text-sm"
+                    >
+                      Cabang Khusus
+                    </th>
+                    <th
+                      scope="col"
+                      className="border px-6 py-3 text-center text-sm"
+                    >
+                      Pesanan
+                    </th>
+                    <th
+                      scope="col"
+                      className="border px-6 py-3 text-center text-sm"
+                    >
+                      Total
+                    </th>
+                    <th
+                      scope="col"
+                      className="border px-6 py-3 text-center text-sm"
+                    >
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTableData.length > 0 ? (
+                    filteredTableData.map((item, index) => (
+                      <tr
+                        key={item.id}
+                        className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
+                      >
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {index + 1}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {item.cabang}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {item.jumlah}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {formatRupiah(
+                            calculateTotal(
+                              item.jumlah,
+                              parseInt(firstItem.cabang),
+                              parseInt(firstItem.kabupaten),
+                              parseInt(firstItem.propinsi)
+                            )
+                          )}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          <button
+                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded mr-2"
+                            onClick={() => handleUpdate(item.id)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded"
+                            onClick={() => handleDelete(item.id)}
+                          >
+                            Hapus
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                      <td className="px-6 py-4"></td>
+                      <td className="px-6 py-4">Jumlah</td>
+                      <td className="px-6 py-4">0</td>
+                      <td className="px-6 py-4">0</td>
+                      <td className="px-6 py-4"></td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
