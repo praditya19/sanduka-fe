@@ -200,7 +200,6 @@ function RekapAnggota() {
   const [selectedBulan, setSelectedBulan] = useState(new Date().getMonth() + 1);
   const [selectedTahun, setSelectedTahun] = useState(currentYear);
 
-  // Hanya tampilkan bulan Mei–Desember jika tahun 2025
   const filteredMonths = selectedTahun === 2025 ? months.slice(4) : months;
 
   useEffect(() => {
@@ -1627,6 +1626,7 @@ function RekapAnggota() {
       console.error("Data kosong, tidak dapat export ke Excel");
       return;
     }
+
     const excelData = [];
 
     excelData.push([
@@ -1644,12 +1644,20 @@ function RekapAnggota() {
       "Lain-Lain",
       "Total",
       "Potongan Bank",
+      "Selisih",
       "Keterangan",
     ]);
 
     groupedData.forEach((group, index) => {
       if (group.members && group.members.length > 0) {
         group.members.forEach((member, memberIndex) => {
+          const total = parseInt(member.totalIuran || 0);
+          const potongan = parseInt(member.potongan || 0);
+          const selisih = total - potongan;
+          const tanda = selisih > 0 ? "-" : selisih < 0 ? "+" : "";
+          const nilaiSelisih =
+            potongan !== 0 ? `${tanda}${Math.abs(selisih)}` : "";
+
           excelData.push([
             memberIndex === 0 ? index + 1 : "",
             memberIndex === 0 ? group.cabang : "",
@@ -1663,8 +1671,9 @@ function RekapAnggota() {
             parseInt(member.derap || 0),
             parseInt(member.kalender || 0),
             parseInt(member.lainlain || 0),
-            parseInt(member.totalIuran || 0),
-            parseInt(member.potongan || 0),
+            total,
+            potongan,
+            nilaiSelisih,
             member.statusPotongan || "-",
           ]);
         });
@@ -1714,10 +1723,12 @@ function RekapAnggota() {
       totalKalender,
       totalLainlain,
       totalIuran,
+      "",
+      "",
+      "",
     ]);
 
     const ws = XLSX.utils.aoa_to_sheet(excelData);
-
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "RekapData");
 
@@ -1991,7 +2002,6 @@ function RekapAnggota() {
     <div className="flex-1">
       <div className="relative">
         <Input
-          // ref={namaInputRef}
           type="text"
           value={namaAnggotaInput}
           onChange={handleNamaAnggotaInputChange}
@@ -2415,6 +2425,32 @@ function RekapAnggota() {
                                       <div className="text-sm text-teal-700 italic">
                                         Status: {member.statusPotongan}
                                       </div>
+                                      {member.potongan != null &&
+                                        parseInt(member.potongan) !== 0 &&
+                                        (() => {
+                                          const total = parseInt(
+                                            member.totalIuran
+                                          );
+                                          const potongan = parseInt(
+                                            member.potongan
+                                          );
+                                          const selisih = total - potongan;
+                                          const tanda =
+                                            selisih > 0
+                                              ? "-"
+                                              : selisih < 0
+                                              ? "+"
+                                              : "";
+
+                                          return (
+                                            <div className="text-sm text-teal-700 italic">
+                                              Selisih: Rp. {tanda}
+                                              {Math.abs(selisih).toLocaleString(
+                                                "id-ID"
+                                              )}
+                                            </div>
+                                          );
+                                        })()}
                                     </span>
                                   </div>
                                   <div className="lg:hidden space-y-2 mt-2 bg-white p-3 rounded-lg shadow-sm">
@@ -3159,10 +3195,10 @@ function RekapAnggota() {
 
             <div className="bg-white p-4 rounded-b-lg border-t border-gray-200 text-sm text-gray-500 flex justify-between">
               <div>Menampilkan {groupedData.length} unit kerja</div>
-              <div>Total anggota: {groupedData.reduce(
-                      (sum, g) => sum + parseInt(g.jumlah),
-                      0
-                    )}</div>
+              <div>
+                Total anggota:{" "}
+                {groupedData.reduce((sum, g) => sum + parseInt(g.jumlah), 0)}
+              </div>
             </div>
           </div>
         </div>
