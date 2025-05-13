@@ -18,6 +18,7 @@ import {
   FaPrint,
   FaSearch,
   FaFileInvoiceDollar,
+  FaDatabase,
 } from "react-icons/fa";
 import { FiTrash } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
@@ -1773,6 +1774,27 @@ function RekapAnggota() {
 
     const excelData = [];
 
+    const today = new Date();
+    const bulanNama = today.toLocaleDateString("id-ID", {
+      month: "long",
+      year: "numeric",
+    });
+
+    const tanggalDownload = today.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+
+    const semuaCabangUnik = [...new Set(groupedData.map((g) => g.cabang))];
+    const namaCabang =
+      semuaCabangUnik.length > 1 ? "Semua Cabang" : semuaCabangUnik[0];
+
+    excelData.push(["Rekap Laporan Potongan Bank"]);
+    excelData.push([`Cabang: ${namaCabang}`]);
+    excelData.push([`Bulan: ${bulanNama}`]);
+    excelData.push([`Tanggal Download: ${tanggalDownload}`]);
+    excelData.push([]);
     excelData.push(["Pgri Kabupaten Jepara"]);
     excelData.push(["No Rekening : 2.015.15169.5 (PGRI Kabupaten Jepara)"]);
     excelData.push([]);
@@ -1816,32 +1838,44 @@ function RekapAnggota() {
 
     excelData.push([]);
     excelData.push(["", "", "", "Total Keseluruhan", totalTagihanSemua]);
-
-    const today = new Date();
-    const tanggalOtomatis = today.toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-
     excelData.push([]);
-    excelData.push(["", "", "", "", tanggalOtomatis]);
+    excelData.push(["", "", "", "", tanggalDownload]);
     excelData.push(["", "", "", "", "TTD"]);
 
     const ws = XLSX.utils.aoa_to_sheet(excelData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Laporan Rekening");
 
-    XLSX.writeFile(wb, "Laporan_Nomor_Rekening.xlsx");
+    XLSX.writeFile(wb, "Rekap_Laporan_Potongan_Bank.xlsx");
   };
+
   const MandiriExcel = () => {
     if (!groupedData || groupedData.length === 0) {
       console.error("Data kosong, tidak dapat export ke Excel");
       return;
     }
 
+    const semuaCabangUnik = [...new Set(groupedData.map((g) => g.cabang))];
+    const namaCabang =
+      semuaCabangUnik.length > 1 ? "Semua Cabang" : semuaCabangUnik[0];
+
+    const bulanNama = new Date().toLocaleString("id-ID", {
+      month: "long",
+      year: "numeric",
+    });
+    const tanggalDownload = new Date().toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+
     const excelData = [];
 
+    excelData.push(["Rekap Data Anggota Tanpa No Rekening"]);
+    excelData.push([`Cabang: ${namaCabang}`]);
+    excelData.push([`Bulan: ${bulanNama}`]);
+    excelData.push([`Tanggal Download: ${tanggalDownload}`]);
+    excelData.push([]);
     excelData.push(["Pgri Kabupaten Jepara"]);
     excelData.push(["No Rekening : 2.015.15169.5 (PGRI Kabupaten Jepara)"]);
     excelData.push([]);
@@ -1885,173 +1919,15 @@ function RekapAnggota() {
 
     excelData.push([]);
     excelData.push(["", "", "", "Total Keseluruhan", totalTagihanSemua]);
-
-    const today = new Date();
-    const tanggalOtomatis = today.toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-
     excelData.push([]);
-    excelData.push(["", "", "", "", tanggalOtomatis]);
+    excelData.push(["", "", "", "", tanggalDownload]);
     excelData.push(["", "", "", "", "TTD"]);
 
     const ws = XLSX.utils.aoa_to_sheet(excelData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Data Tanpa No Rekening");
 
-    XLSX.writeFile(wb, "Laporan_Tanpa_Nomor_Rekening.xlsx");
-  };
-
-  const renderCabangInput = () => {
-    return (
-      <div className="flex flex-col relative w-64" ref={cabangRef}>
-        <Input
-          type="text"
-          value={selectedCabang}
-          readOnly
-          onClick={!isAdmin ? handleCabangClick : undefined}
-          className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
-            isAdmin ? "bg-gray-100" : ""
-          }`}
-          placeholder="Pilih Cabang"
-          disabled={isAdmin}
-        />
-        {!isAdmin && showCabangDropdown && (
-          <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
-            <ul className="max-h-44 overflow-y-auto">
-              <li className="py-2 px-2">
-                <Input
-                  type="text"
-                  value={searchCabang}
-                  onChange={(e) => handleCabangSearch(e.target.value)}
-                  className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
-                  placeholder="Cari Cabang..."
-                  autoFocus
-                />
-              </li>
-              <li
-                onClick={() => handleSelectCabang({ kecamatan: "" })}
-                className="px-4 py-2 cursor-pointer hover:bg-gray-100"
-              >
-                Pilih Cabang
-              </li>
-              {filteredCabangList.map((cabang) => (
-                <li
-                  key={cabang.id}
-                  onClick={() => handleSelectCabang(cabang)}
-                  className="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                >
-                  {cabang.kecamatan}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderUnitKerjaInput = () => (
-    <div className="flex flex-col relative w-64" ref={unitKerjaRef}>
-      <Input
-        type="text"
-        value={unitKerjaInput}
-        onChange={handleUnitKerjaChange}
-        onFocus={handleUnitKerjaFocus}
-        placeholder="Pilih Unit Kerja"
-        className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
-        disabled={!selectedCabang}
-      />
-      {showUnitKerjaDropdown && (
-        <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
-          <ul className="max-h-44 overflow-y-auto">
-            <li className="py-2 px-2">
-              <Input
-                type="text"
-                value={searchUnitKerja}
-                onChange={(e) => handleUnitKerjaSearch(e.target.value)}
-                className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
-                placeholder="Cari Unit Kerja..."
-                autoFocus
-              />
-            </li>
-            <li
-              onClick={() => handleUnitKerjaSelect({ unitKerja: "" })}
-              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-            >
-              Pilih Unit Kerja
-            </li>
-            {filteredUnitKerja.map((unitKerja) => (
-              <li
-                key={unitKerja.id}
-                onClick={() => handleUnitKerjaSelect(unitKerja)}
-                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-              >
-                {unitKerja.unitKerja}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderNamaAnggota = () => (
-    <div className="flex-1">
-      <div className="relative">
-        <Input
-          type="text"
-          value={namaAnggotaInput}
-          onChange={handleNamaAnggotaInputChange}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm p-2 border pr-10"
-          placeholder="Nama anggota..."
-        />
-        <button
-          onClick={handleSearchClick}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-teal-600 hover:text-teal-800"
-        >
-          <FaSearch />
-        </button>
-      </div>
-    </div>
-  );
-
-  const FilterSection = ({
-    renderCabangInput,
-    renderUnitKerjaInput,
-    renderNamaAnggota,
-    isMobile,
-  }) => {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div className="flex flex-col md:flex-row gap-4 w-full">
-            <div className="flex-1">
-              <label className="block mb-2 text-sm">Cabang</label>
-              {renderCabangInput()}
-            </div>
-            <div className="flex-1">
-              <label className="block mb-2 text-sm">Unit Kerja</label>
-              {renderUnitKerjaInput()}
-            </div>
-            <div className="flex-1">
-              <label className="block mb-2 text-sm">Nama Anggota</label>
-              {renderNamaAnggota()}
-            </div>
-          </div>
-          {isMobile && (
-            <Button
-              onClick={handlePrint}
-              className="bg-teal-600 hover:bg-teal-700 text-white px-8"
-            >
-              Cetak
-            </Button>
-          )}
-        </div>
-      </div>
-    );
+    XLSX.writeFile(wb, "Rekap_Laporan_Mandiri.xlsx");
   };
 
   if (loading) {
@@ -2088,59 +1964,18 @@ function RekapAnggota() {
         >
           <div className="mb-6 mx-4 md:mx-12">
             <div className="flex flex-wrap items-start mt-14 justify-between">
-              <div className="flex flex-wrap items-center space-x-2">
-                <FilterSection
-                  renderCabangInput={renderCabangInput}
-                  renderUnitKerjaInput={renderUnitKerjaInput}
-                  renderNamaAnggota={renderNamaAnggota}
-                  isMobile={isMobile}
-                />
-              </div>
               {!isMobile && (
-                <div className="flex items-end mt-2 md:mt-0 gap-4">
-                  <button
-                    onClick={handlePrint}
-                    className="p-2 px-6 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
-                  >
-                    <span>Cetak</span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      fill="currentColor"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
-                      <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
-                    </svg>
-                  </button>
-                  <button
-                    className="p-2 px-6 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
-                    onClick={exportToExcel}
-                    title="Export to Excel"
-                  >
-                    <span>Excel</span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      fill="currentColor"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
-                      <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
-                    </svg>
-                  </button>
-                  <div
-                    className="relative inline-block text-left"
-                    ref={dropdownRef}
-                  >
+                <div className="flex justify-between items-end mt-2 md:mt-0 p-4 w-full">
+                  <div className="flex items-center gap-2">
+                    <FaDatabase className="text-2xl text-gray-700" />
+                    <h1 className="font-semibold text-2xl">By Nominal</h1>
+                  </div>
+
+                  <div className="flex gap-4">
                     <button
-                      className="p-2 px-6 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
-                      onClick={handleRekapClick}
-                      title="Export to Excel"
+                      onClick={handlePrint}
+                      className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3"
                     >
-                      <span>Rekap</span>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="16"
@@ -2151,30 +1986,72 @@ function RekapAnggota() {
                         <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
                         <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
                       </svg>
+                      <span>Cetak</span>
                     </button>
 
-                    {open && (
-                      <div className="absolute mt-2 w-48 bg-white rounded-lg shadow-lg z-10">
-                        <button
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                          onClick={() => handleExport("bank")}
+                    <button
+                      className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
+                      onClick={exportToExcel}
+                      title="Export to Excel"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M4 2h10a2 2 0 0 1 2 2v4h4a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 2v16h16V10h-6a2 2 0 0 1-2-2V4H4zm5.5 5 1.7 2.5L9.5 12l1.7 2.5H9.5L8 13.3 6.5 14.5H5.8l1.7-2.5L5.8 9.5h.7L8 10.7 9.5 9H10.2z" />
+                      </svg>
+
+                      <span>Excel</span>
+                    </button>
+
+                    <div
+                      className="relative inline-block text-left"
+                      ref={dropdownRef}
+                    >
+                      <button
+                        className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-2"
+                        onClick={handleRekapClick}
+                        title="Rekap Data"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          fill="currentColor"
+                          viewBox="0 0 16 16"
                         >
-                          Potongan Bank
-                        </button>
-                        <button
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                          onClick={() => handleExport("mandiri")}
-                        >
-                          Potongan Mandiri
-                        </button>
-                        <button
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                          onClick={() => setShowUploadModal(true)}
-                        >
-                          Upload Data
-                        </button>
-                      </div>
-                    )}
+                          <path d="M8 3.5a.5.5 0 0 1 .5.5v4h3a.5.5 0 0 1 0 1H8a.5.5 0 0 1-.5-.5V4a.5.5 0 0 1 .5-.5z" />
+                          <path d="M8 16A8 8 0 1 1 16 8a8 8 0 0 1-8 8zm0-1A7 7 0 1 0 1 8a7 7 0 0 0 7 7z" />
+                        </svg>
+                        <span>Rekap</span>
+                      </button>
+
+                      {open && (
+                        <div className="absolute mt-2 w-48 bg-white rounded-lg shadow-lg z-10">
+                          <button
+                            className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                            onClick={() => handleExport("bank")}
+                          >
+                            Potongan Bank
+                          </button>
+                          <button
+                            className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                            onClick={() => handleExport("mandiri")}
+                          >
+                            Potongan Mandiri
+                          </button>
+                          <button
+                            className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                            onClick={() => setShowUploadModal(true)}
+                          >
+                            Upload Data
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -2182,7 +2059,117 @@ function RekapAnggota() {
           </div>
 
           <div className="overflow-x-auto rounded-lg shadow-lg mx-4 md:mx-12">
-            <div className="bg-teal-700 p-4 rounded-t-lg">
+            <div className="flex gap-4">
+              <div className="flex flex-col relative w-64" ref={cabangRef}>
+                <p>Cabang</p>
+                <Input
+                  type="text"
+                  value={selectedCabang}
+                  readOnly
+                  onClick={!isAdmin ? handleCabangClick : undefined}
+                  className={`block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out ${
+                    isAdmin ? "bg-gray-100" : ""
+                  }`}
+                  placeholder="Pilih Cabang"
+                  disabled={isAdmin}
+                />
+                {!isAdmin && showCabangDropdown && (
+                  <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                    <ul className="max-h-44 overflow-y-auto">
+                      <li className="py-2 px-2">
+                        <Input
+                          type="text"
+                          value={searchCabang}
+                          onChange={(e) => handleCabangSearch(e.target.value)}
+                          className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                          placeholder="Cari Cabang..."
+                          autoFocus
+                        />
+                      </li>
+                      <li
+                        onClick={() => handleSelectCabang({ kecamatan: "" })}
+                        className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                      >
+                        Pilih Cabang
+                      </li>
+                      {filteredCabangList.map((cabang) => (
+                        <li
+                          key={cabang.id}
+                          onClick={() => handleSelectCabang(cabang)}
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                        >
+                          {cabang.kecamatan}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col relative w-64" ref={unitKerjaRef}>
+                <p>Unit Kerja</p>
+                <Input
+                  type="text"
+                  value={unitKerjaInput}
+                  onChange={handleUnitKerjaChange}
+                  onFocus={handleUnitKerjaFocus}
+                  placeholder="Pilih Unit Kerja"
+                  className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
+                  disabled={!selectedCabang}
+                />
+                {showUnitKerjaDropdown && (
+                  <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                    <ul className="max-h-44 overflow-y-auto">
+                      <li className="py-2 px-2">
+                        <Input
+                          type="text"
+                          value={searchUnitKerja}
+                          onChange={(e) =>
+                            handleUnitKerjaSearch(e.target.value)
+                          }
+                          className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                          placeholder="Cari Unit Kerja..."
+                          autoFocus
+                        />
+                      </li>
+                      <li
+                        onClick={() => handleUnitKerjaSelect({ unitKerja: "" })}
+                        className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                      >
+                        Pilih Unit Kerja
+                      </li>
+                      {filteredUnitKerja.map((unitKerja) => (
+                        <li
+                          key={unitKerja.id}
+                          onClick={() => handleUnitKerjaSelect(unitKerja)}
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                        >
+                          {unitKerja.unitKerja}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col relative w-64">
+                <div className="relative">
+                  <p>Nama Anggota</p>
+                  <Input
+                    type="text"
+                    value={namaAnggotaInput}
+                    onChange={handleNamaAnggotaInputChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm p-2 border pr-10"
+                    placeholder="Nama anggota..."
+                  />
+                  <button
+                    onClick={handleSearchClick}
+                    className="absolute right-2 top-12 transform -translate-y-1/2 text-teal-600 hover:text-teal-800"
+                  >
+                    <FaSearch />
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="bg-teal-700 p-4 rounded-t-lg mt-2">
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-white text-xl font-semibold">
@@ -2226,73 +2213,32 @@ function RekapAnggota() {
             <table className="w-full table-auto bg-white">
               <thead>
                 <tr>
-                  <th
-                    className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 rounded-tl-lg"
-                    rowSpan="2"
-                  >
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 rounded-tl-lg">
                     No
                   </th>
-                  <th
-                    className="p-3 border-b-2 border-teal-500 text-white bg-teal-600"
-                    rowSpan="2"
-                  >
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600">
                     Cabang
                   </th>
-                  <th
-                    className="p-3 border-b-2 border-teal-500 text-white bg-teal-600"
-                    rowSpan="2"
-                  >
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600">
                     Unit Kerja
                   </th>
-                  <th
-                    className="p-3 border-b-2 border-teal-500 text-white bg-teal-600"
-                    rowSpan="2"
-                  >
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600">
                     Nama Anggota
                   </th>
-                  <th
-                    className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell"
-                    rowSpan="2"
-                  >
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
                     Jumlah Anggota
                   </th>
                   <th
                     className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell text-center"
-                    colSpan="6"
+                    colSpan="2"
                   >
-                    Jumlah
+                    Rincian Potongan
                   </th>
-                  <th
-                    className="p-3 border-b-2 border-teal-500 text-white bg-teal-600  w-36"
-                    rowSpan="2"
-                  >
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600  w-36">
                     Total
                   </th>
-                  <th
-                    className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 w-28 rounded-tr-lg"
-                    rowSpan="2"
-                  >
+                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 w-28 rounded-tr-lg">
                     Action
-                  </th>
-                </tr>
-                <tr>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
-                    PGRI
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
-                    Sanduka
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
-                    Daspen
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
-                    Derap
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
-                    Kalender
-                  </th>
-                  <th className="p-3 border-b-2 border-teal-500 text-white bg-teal-600 hidden lg:table-cell">
-                    Lain-Lain
                   </th>
                 </tr>
               </thead>
@@ -2349,36 +2295,50 @@ function RekapAnggota() {
                         >
                           {group.jumlah}
                         </td>
-                        <td className="p-3 border-b text-center hidden lg:table-cell">
-                          <span className="text-gray-700">
-                            Rp. {parseInt(group.pgri).toLocaleString("id-ID")}
-                          </span>
+                        <td
+                          colSpan={2}
+                          className="p-3 border-b text-left hidden lg:table-cell"
+                        >
+                          <div className="flex justify-between py-1">
+                            <span>PGRI:</span>
+                            <span className="text-gray-700">
+                              Rp. {parseInt(group.pgri).toLocaleString("id-ID")}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span>Sanduka:</span>
+                            <span className="text-gray-700">
+                              Rp.{" "}
+                              {parseInt(group.sanduka).toLocaleString("id-ID")}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span>Daspen:</span>
+                            <span className="text-gray-700">
+                              Rp.{" "}
+                              {parseInt(group.daspen).toLocaleString("id-ID")}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span>Derap:</span>
+                            <span className="text-gray-700">
+                              Rp.{" "}
+                              {parseInt(group.derap).toLocaleString("id-ID")}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span>Kalender:</span>
+                            <span className="text-gray-700">
+                              Rp.{" "}
+                              {parseInt(group.kalender).toLocaleString("id-ID")}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-1">
+                            <span>Lain-lain:</span>
+                            <span className="text-gray-700">Rp. 0</span>
+                          </div>
                         </td>
-                        <td className="p-3 border-b text-center hidden lg:table-cell">
-                          <span className="text-gray-700">
-                            Rp.{" "}
-                            {parseInt(group.sanduka).toLocaleString("id-ID")}
-                          </span>
-                        </td>
-                        <td className="p-3 border-b text-center hidden lg:table-cell">
-                          <span className="text-gray-700">
-                            Rp. {parseInt(group.daspen).toLocaleString("id-ID")}
-                          </span>
-                        </td>
-                        <td className="p-3 border-b text-center hidden lg:table-cell">
-                          <span className="text-gray-700">
-                            Rp. {parseInt(group.derap).toLocaleString("id-ID")}
-                          </span>
-                        </td>
-                        <td className="p-3 border-b text-center hidden lg:table-cell">
-                          <span className="text-gray-700">
-                            Rp.{" "}
-                            {parseInt(group.kalender).toLocaleString("id-ID")}
-                          </span>
-                        </td>
-                        <td className="p-3 border-b text-center hidden lg:table-cell">
-                          <span className="text-gray-700">Rp. 0</span>
-                        </td>
+
                         <td className="p-3 border-b text-center font-semibold">
                           <span className="bg-teal-100 text-teal-800 py-1 px-3 rounded-full">
                             Rp.{" "}
@@ -2507,42 +2467,65 @@ function RekapAnggota() {
                                   </div>
                                 </div>
                               </td>
-                              <td className="p-3 border-b text-center hidden lg:table-cell">
-                                Rp.{" "}
-                                {parseInt(member.pgri).toLocaleString("id-ID")}
-                              </td>
-                              <td className="p-3 border-b text-center hidden lg:table-cell">
-                                Rp.{" "}
-                                {parseInt(member.sanduka).toLocaleString(
-                                  "id-ID"
-                                )}
-                              </td>
-                              <td className="p-3 border-b text-center hidden lg:table-cell">
-                                {showDaspenBadge ? (
-                                  <span className="bg-red-100 text-red-800 py-1 px-2 rounded-full text-xs">
-                                    Belum Input
-                                  </span>
-                                ) : (
-                                  <span>
+                              <td
+                                colSpan={2}
+                                className="p-3 border-b text-left hidden lg:table-cell"
+                              >
+                                <div className="flex justify-between py-1">
+                                  <span>PGRI:</span>
+                                  <span className="text-gray-700">
                                     Rp.{" "}
-                                    {parseInt(member.daspen).toLocaleString(
+                                    {parseInt(member.pgri).toLocaleString(
                                       "id-ID"
                                     )}
                                   </span>
-                                )}
-                              </td>
-                              <td className="p-3 border-b text-center hidden lg:table-cell">
-                                Rp.{" "}
-                                {parseInt(member.derap).toLocaleString("id-ID")}
-                              </td>
-                              <td className="p-3 border-b text-center hidden lg:table-cell">
-                                Rp.{" "}
-                                {parseInt(member.kalender).toLocaleString(
-                                  "id-ID"
-                                )}
-                              </td>
-                              <td className="p-3 border-b text-center hidden lg:table-cell">
-                                Rp. 0
+                                </div>
+                                <div className="flex justify-between py-1">
+                                  <span>Sanduka:</span>
+                                  <span className="text-gray-700">
+                                    Rp.{" "}
+                                    {parseInt(member.sanduka).toLocaleString(
+                                      "id-ID"
+                                    )}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between py-1 items-center">
+                                  <span>Daspen:</span>
+                                  {showDaspenBadge ? (
+                                    <span className="bg-red-100 text-red-800 py-1 px-2 rounded-full text-xs">
+                                      Belum Input
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-700">
+                                      Rp.{" "}
+                                      {parseInt(member.daspen).toLocaleString(
+                                        "id-ID"
+                                      )}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex justify-between py-1">
+                                  <span>Derap:</span>
+                                  <span className="text-gray-700">
+                                    Rp.{" "}
+                                    {parseInt(member.derap).toLocaleString(
+                                      "id-ID"
+                                    )}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between py-1">
+                                  <span>Kalender:</span>
+                                  <span className="text-gray-700">
+                                    Rp.{" "}
+                                    {parseInt(member.kalender).toLocaleString(
+                                      "id-ID"
+                                    )}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between py-1">
+                                  <span>Lain-lain:</span>
+                                  <span className="text-gray-700">Rp. 0</span>
+                                </div>
                               </td>
                               <td className="p-3 border-b text-center hidden lg:table-cell">
                                 <span className="bg-teal-100 text-teal-800 py-1 px-2 rounded-full text-sm">
@@ -2913,17 +2896,23 @@ function RekapAnggota() {
 
                     <div className="flex justify-end gap-4 pt-4">
                       <button
+                        className="bg-red-700 hover:bg-red-600 text-white px-6 py-2 rounded-md"
+                        onClick={handleReset}
+                      >
+                        RESET
+                      </button>
+                      <button
+                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                        onClick={closePopup}
+                      >
+                        Batal
+                      </button>
+                      <button
                         type="button"
                         className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                         onClick={idIuran ? handleUpdateClick : handleSaveClick}
                       >
                         {idIuran ? "Update" : "Save"}
-                      </button>
-                      <button
-                        className="bg-red-700 hover:bg-red-600 text-white px-6 py-2 rounded-md"
-                        onClick={handleReset}
-                      >
-                        RESET
                       </button>
                     </div>
                   </div>
@@ -2934,7 +2923,7 @@ function RekapAnggota() {
                   <div className="bg-white p-6 rounded-lg w-[800px] relative shadow-lg">
                     <button
                       className="absolute top-2 right-2 text-gray-500 hover:text-teal-600 text-xl"
-                      onClick={closeModal}
+                      onClick={closePopup}
                     >
                       ✕
                     </button>
@@ -3149,39 +3138,67 @@ function RekapAnggota() {
                       0
                     )}
                   </td>
-                  <td className="p-3 text-center hidden lg:table-cell">
-                    Rp.{" "}
-                    {groupedData
-                      .reduce((sum, g) => sum + parseInt(g.pgri), 0)
-                      .toLocaleString("id-ID")}
+                  <td
+                    colSpan={2}
+                    className="p-3 text-left hidden lg:table-cell"
+                  >
+                    <div className="flex justify-between py-1">
+                      {" "}
+                      <span className="text-xs">PGRI:</span>{" "}
+                      <span className="text-xs">
+                        Rp.{" "}
+                        {groupedData
+                          .reduce((sum, g) => sum + parseInt(g.pgri), 0)
+                          .toLocaleString("id-ID")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      {" "}
+                      <span className="text-xs">Sanduka:</span>{" "}
+                      <span className="text-xs">
+                        Rp.{" "}
+                        {groupedData
+                          .reduce((sum, g) => sum + parseInt(g.sanduka), 0)
+                          .toLocaleString("id-ID")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      {" "}
+                      <span className="text-xs">Daspen:</span>{" "}
+                      <span className="text-xs">
+                        Rp.{" "}
+                        {groupedData
+                          .reduce((sum, g) => sum + parseInt(g.daspen), 0)
+                          .toLocaleString("id-ID")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      {" "}
+                      <span className="text-xs">Derap:</span>{" "}
+                      <span className="text-xs">
+                        Rp.{" "}
+                        {groupedData
+                          .reduce((sum, g) => sum + parseInt(g.derap), 0)
+                          .toLocaleString("id-ID")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      {" "}
+                      <span className="text-xs">Kalender:</span>{" "}
+                      <span className="text-xs">
+                        Rp.{" "}
+                        {groupedData
+                          .reduce((sum, g) => sum + parseInt(g.kalender), 0)
+                          .toLocaleString("id-ID")}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      {" "}
+                      <span className="text-xs">Lain-lain:</span>{" "}
+                      <span className="text-xs">Rp. 0</span>
+                    </div>
                   </td>
-                  <td className="p-3 text-center hidden lg:table-cell">
-                    Rp.{" "}
-                    {groupedData
-                      .reduce((sum, g) => sum + parseInt(g.sanduka), 0)
-                      .toLocaleString("id-ID")}
-                  </td>
-                  <td className="p-3 text-center hidden lg:table-cell">
-                    Rp.{" "}
-                    {groupedData
-                      .reduce((sum, g) => sum + parseInt(g.daspen), 0)
-                      .toLocaleString("id-ID")}
-                  </td>
-                  <td className="p-3 text-center hidden lg:table-cell">
-                    Rp.{" "}
-                    {groupedData
-                      .reduce((sum, g) => sum + parseInt(g.derap), 0)
-                      .toLocaleString("id-ID")}
-                  </td>
-                  <td className="p-3 text-center hidden lg:table-cell">
-                    Rp.{" "}
-                    {groupedData
-                      .reduce((sum, g) => sum + parseInt(g.kalender), 0)
-                      .toLocaleString("id-ID")}
-                  </td>
-                  <td className="p-3 text-center hidden lg:table-cell">
-                    Rp. 0
-                  </td>
+
                   <td className="p-3 text-center">
                     Rp.{" "}
                     {groupedData

@@ -138,7 +138,7 @@ const SyncData = () => {
       setSelectedCabang(storedCabang);
       filterUnitKerjaForCabang(storedCabang);
     }
-  }, []);
+  }, []);D
 
   const filterUnitKerjaForCabang = (cabang) => {
     const filtered = unitKerjaList.filter(
@@ -210,7 +210,6 @@ const SyncData = () => {
   };
 
   const handleCabangClick = () => {
-    // Only allow cabang selection if not ADMIN
     if (role !== "ADMIN") {
       setFilteredCabangList(originalCabangList);
       setShowCabangDropdown(true);
@@ -329,11 +328,9 @@ const SyncData = () => {
   }, []);
 
   const filteredData = data.filter((item) => {
-
     const statusMatch = statusKeanggotaan
       ? item.statusKeanggotaan?.toLowerCase() === statusKeanggotaan.toLowerCase()
       : true;
-    // Logika untuk ADMIN
     if (role === "ADMIN") {
       const cabangMatch = item.cabang === selectedCabang;
       const unitKerjaMatch = selectedUnitKerja
@@ -349,7 +346,6 @@ const SyncData = () => {
       return cabangMatch && unitKerjaMatch && namaMatch && statusMatch;
     }
 
-    // Logika untuk role lainnya
     const cabangMatch = selectedCabang ? item.cabang === selectedCabang : true;
     const unitKerjaMatch = selectedUnitKerja
       ? item.unitKerja?.toLowerCase() === selectedUnitKerja?.toLowerCase()
