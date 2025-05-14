@@ -113,9 +113,8 @@ export default function DataUtama() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           <div className="min-h-screen bg-gray-50 py-3 ">
             <nav className="container mt-12">
@@ -149,6 +148,12 @@ export default function DataUtama() {
                   className=""
                 >
                   Lain-Lain
+                </Link>
+                <Link
+                  href={"/keuangan/data-utama/transaksi-bank"}
+                  className=""
+                >
+                  Transaksi Bank
                 </Link>
               </ul>
             </nav>
