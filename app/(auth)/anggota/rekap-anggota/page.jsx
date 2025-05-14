@@ -198,8 +198,8 @@ function RekapAnggota() {
     "Desember",
   ];
 
-  const [selectedBulan, setSelectedBulan] = useState(new Date().getMonth() + 1);
-  const [selectedTahun, setSelectedTahun] = useState(currentYear);
+  const [selectedBulan, setSelectedBulan] = useState("");
+  const [selectedTahun, setSelectedTahun] = useState("");
 
   const filteredMonths = selectedTahun === 2025 ? months.slice(4) : months;
 
@@ -2074,7 +2074,7 @@ function RekapAnggota() {
                   disabled={isAdmin}
                 />
                 {!isAdmin && showCabangDropdown && (
-                  <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                  <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-16 w-full">
                     <ul className="max-h-44 overflow-y-auto">
                       <li className="py-2 px-2">
                         <Input
@@ -2117,7 +2117,7 @@ function RekapAnggota() {
                   disabled={!selectedCabang}
                 />
                 {showUnitKerjaDropdown && (
-                  <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-11 w-full">
+                  <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-16 w-full">
                     <ul className="max-h-44 overflow-y-auto">
                       <li className="py-2 px-2">
                         <Input
@@ -2185,6 +2185,7 @@ function RekapAnggota() {
                     onChange={(e) => setSelectedBulan(Number(e.target.value))}
                     className="p-2 rounded bg-white text-black border"
                   >
+                    <option value="">-- Pilih Bulan --</option>
                     {filteredMonths.map((month, index) => {
                       const monthValue =
                         selectedTahun === 2025 ? index + 5 : index + 1;
@@ -2195,11 +2196,13 @@ function RekapAnggota() {
                       );
                     })}
                   </select>
+
                   <select
                     value={selectedTahun}
                     onChange={(e) => setSelectedTahun(Number(e.target.value))}
                     className="p-2 rounded bg-white text-black border"
                   >
+                    <option value="">-- Pilih Tahun --</option>
                     {years.map((year) => (
                       <option key={year} value={year}>
                         {year}
@@ -2243,324 +2246,334 @@ function RekapAnggota() {
                 </tr>
               </thead>
               <tbody>
-                {groupedData.map((group, index) => {
-                  const isExpanded = expandedRows.has(group.unitKerja);
-                  const rowSpanCount = isExpanded
-                    ? group.members.length + 1
-                    : 1;
-
-                  return (
-                    <React.Fragment key={group.unitKerja}>
-                      <tr
-                        className={index % 2 === 0 ? "bg-white" : "bg-teal-50"}
-                      >
-                        <td
-                          className="p-3 border-b text-center"
-                          rowSpan={rowSpanCount}
+                {[...groupedData]
+                  .sort((a, b) => a.unitKerja.localeCompare(b.unitKerja))
+                  .map((group, index) => {
+                    const isExpanded = expandedRows.has(group.unitKerja);
+                    const rowSpanCount = isExpanded
+                      ? group.members.length + 1
+                      : 1;
+                    return (
+                      <React.Fragment key={group.unitKerja}>
+                        <tr
+                          className={
+                            index % 2 === 0 ? "bg-white" : "bg-teal-50"
+                          }
                         >
-                          <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-100 text-teal-700 font-semibold">
-                            {index + 1}
-                          </div>
-                        </td>
-                        <td className="p-3 border-b" rowSpan={rowSpanCount}>
-                          {group.cabang}
-                        </td>
-                        <td
-                          className="p-3 border-b font-medium"
-                          rowSpan={rowSpanCount}
-                        >
-                          {group.unitKerja}
-                        </td>
-                        <td className="p-3 border-b text-center">
-                          <Button
-                            className="text-teal-600 bg-transparent hover:bg-teal-50 hover:text-teal-700 rounded-full p-2 transition-all duration-200"
-                            onClick={() => toggleExpand(group.unitKerja)}
+                          <td
+                            className="p-3 border-b text-center"
+                            rowSpan={rowSpanCount}
                           >
-                            {isExpanded ? (
-                              <span className="flex items-center gap-1">
-                                <FaMinusCircle />{" "}
-                                <span className="text-sm">Tutup</span>
-                              </span>
-                            ) : (
-                              <span className="flex items-center gap-1">
-                                <FaPlusCircle />{" "}
-                                <span className="text-sm">Detail</span>
-                              </span>
-                            )}
-                          </Button>
-                        </td>
-                        <td
-                          className="p-3 border-b text-center hidden lg:table-cell font-medium"
-                          rowSpan={rowSpanCount}
-                        >
-                          {group.jumlah}
-                        </td>
-                        <td
-                          colSpan={2}
-                          className="p-3 border-b text-left hidden lg:table-cell"
-                        >
-                          <div className="flex justify-between py-1">
-                            <span>PGRI:</span>
-                            <span className="text-gray-700">
-                              Rp. {parseInt(group.pgri).toLocaleString("id-ID")}
-                            </span>
-                          </div>
-                          <div className="flex justify-between py-1">
-                            <span>Sanduka:</span>
-                            <span className="text-gray-700">
-                              Rp.{" "}
-                              {parseInt(group.sanduka).toLocaleString("id-ID")}
-                            </span>
-                          </div>
-                          <div className="flex justify-between py-1">
-                            <span>Daspen:</span>
-                            <span className="text-gray-700">
-                              Rp.{" "}
-                              {parseInt(group.daspen).toLocaleString("id-ID")}
-                            </span>
-                          </div>
-                          <div className="flex justify-between py-1">
-                            <span>Derap:</span>
-                            <span className="text-gray-700">
-                              Rp.{" "}
-                              {parseInt(group.derap).toLocaleString("id-ID")}
-                            </span>
-                          </div>
-                          <div className="flex justify-between py-1">
-                            <span>Kalender:</span>
-                            <span className="text-gray-700">
-                              Rp.{" "}
-                              {parseInt(group.kalender).toLocaleString("id-ID")}
-                            </span>
-                          </div>
-                          <div className="flex justify-between py-1">
-                            <span>Lain-lain:</span>
-                            <span className="text-gray-700">Rp. 0</span>
-                          </div>
-                        </td>
-
-                        <td className="p-3 border-b text-center font-semibold">
-                          <span className="bg-teal-100 text-teal-800 py-1 px-3 rounded-full">
-                            Rp.{" "}
-                            {parseInt(group.totalIuran).toLocaleString("id-ID")}
-                          </span>
-                        </td>
-                      </tr>
-
-                      {isExpanded &&
-                        group.members.map((member, idx) => {
-                          const daspenValue = parseInt(member.daspen || 0);
-                          const showDaspenBadge = daspenValue === 0;
-
-                          return (
-                            <tr
-                              key={`${group.unitKerja}-member-${idx}`}
-                              className="bg-teal-50/30 hover:bg-teal-50"
-                              ref={
-                                member.nip === lastUpdatedMemberNip
-                                  ? lastUpdatedMemberRef
-                                  : null
-                              }
+                            <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-100 text-teal-700 font-semibold">
+                              {index + 1}
+                            </div>
+                          </td>
+                          <td className="p-3 border-b" rowSpan={rowSpanCount}>
+                            {group.cabang}
+                          </td>
+                          <td
+                            className="p-3 border-b font-medium"
+                            rowSpan={rowSpanCount}
+                          >
+                            {group.unitKerja}
+                          </td>
+                          <td className="p-3 border-b text-center">
+                            <Button
+                              className="text-teal-600 bg-transparent hover:bg-teal-50 hover:text-teal-700 rounded-full p-2 transition-all duration-200"
+                              onClick={() => toggleExpand(group.unitKerja)}
                             >
-                              <td
-                                className="p-3 border-b"
-                                colSpan={isMobile ? 5 : 1}
-                              >
-                                <div className="flex flex-col lg:flex-row">
-                                  <div className="font-medium mb-2 lg:mb-0 flex items-center">
-                                    <span className="w-6 h-6 flex items-center justify-center bg-teal-200 text-teal-800 rounded-full mr-2 text-xs">
-                                      {idx + 1}
-                                    </span>
-                                    <span className="text-teal-700">
-                                      {member.namaAnggota}
-                                      <div className="text-sm text-teal-700 italic">
-                                        {member.nip}
-                                      </div>
-                                      <div className="text-sm text-teal-700 italic">
-                                        {member.nomorRekening}
-                                      </div>
-                                      <div className="text-sm text-teal-700 italic">
-                                        Potongan: {member.potongan}
-                                      </div>
-                                      <div className="text-sm text-teal-700 italic">
-                                        Status: {member.statusPotongan}
-                                      </div>
-                                      {member.potongan != null &&
-                                        parseInt(member.potongan) !== 0 &&
-                                        (() => {
-                                          const total = parseInt(
-                                            member.totalIuran
-                                          );
-                                          const potongan = parseInt(
-                                            member.potongan
-                                          );
-                                          const selisih = total - potongan;
-                                          const tanda =
-                                            selisih > 0
-                                              ? "-"
-                                              : selisih < 0
-                                              ? "+"
-                                              : "";
+                              {isExpanded ? (
+                                <span className="flex items-center gap-1">
+                                  <FaMinusCircle />{" "}
+                                  <span className="text-sm">Tutup</span>
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1">
+                                  <FaPlusCircle />{" "}
+                                  <span className="text-sm">Detail</span>
+                                </span>
+                              )}
+                            </Button>
+                          </td>
+                          <td
+                            className="p-3 border-b text-center hidden lg:table-cell font-medium"
+                            rowSpan={rowSpanCount}
+                          >
+                            {group.jumlah}
+                          </td>
+                          <td
+                            colSpan={2}
+                            className="p-3 border-b text-left hidden lg:table-cell"
+                          >
+                            <div className="flex justify-between py-1">
+                              <span>PGRI:</span>
+                              <span className="text-gray-700">
+                                Rp.{" "}
+                                {parseInt(group.pgri).toLocaleString("id-ID")}
+                              </span>
+                            </div>
+                            <div className="flex justify-between py-1">
+                              <span>Sanduka:</span>
+                              <span className="text-gray-700">
+                                Rp.{" "}
+                                {parseInt(group.sanduka).toLocaleString(
+                                  "id-ID"
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex justify-between py-1">
+                              <span>Daspen:</span>
+                              <span className="text-gray-700">
+                                Rp.{" "}
+                                {parseInt(group.daspen).toLocaleString("id-ID")}
+                              </span>
+                            </div>
+                            <div className="flex justify-between py-1">
+                              <span>Derap:</span>
+                              <span className="text-gray-700">
+                                Rp.{" "}
+                                {parseInt(group.derap).toLocaleString("id-ID")}
+                              </span>
+                            </div>
+                            <div className="flex justify-between py-1">
+                              <span>Kalender:</span>
+                              <span className="text-gray-700">
+                                Rp.{" "}
+                                {parseInt(group.kalender).toLocaleString(
+                                  "id-ID"
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex justify-between py-1">
+                              <span>Lain-lain:</span>
+                              <span className="text-gray-700">Rp. 0</span>
+                            </div>
+                          </td>
 
-                                          return (
-                                            <div className="text-sm text-teal-700 italic">
-                                              Selisih: Rp. {tanda}
-                                              {Math.abs(selisih).toLocaleString(
-                                                "id-ID"
-                                              )}
-                                            </div>
-                                          );
-                                        })()}
-                                    </span>
-                                  </div>
-                                  <div className="lg:hidden space-y-2 mt-2 bg-white p-3 rounded-lg shadow-sm">
-                                    <div className="flex justify-between px-4">
-                                      <span className="font-medium text-teal-700">
-                                        PGRI:
+                          <td className="p-3 border-b text-center font-semibold">
+                            <span className="bg-teal-100 text-teal-800 py-1 px-3 rounded-full">
+                              Rp.{" "}
+                              {parseInt(group.totalIuran).toLocaleString(
+                                "id-ID"
+                              )}
+                            </span>
+                          </td>
+                        </tr>
+
+                        {isExpanded &&
+                          group.members.map((member, idx) => {
+                            const daspenValue = parseInt(member.daspen || 0);
+                            const showDaspenBadge = daspenValue === 0;
+
+                            return (
+                              <tr
+                                key={`${group.unitKerja}-member-${idx}`}
+                                className="bg-teal-50/30 hover:bg-teal-50"
+                                ref={
+                                  member.nip === lastUpdatedMemberNip
+                                    ? lastUpdatedMemberRef
+                                    : null
+                                }
+                              >
+                                <td
+                                  className="p-3 border-b"
+                                  colSpan={isMobile ? 5 : 1}
+                                >
+                                  <div className="flex flex-col lg:flex-row">
+                                    <div className="font-medium mb-2 lg:mb-0 flex items-center">
+                                      <span className="w-6 h-6 flex items-center justify-center bg-teal-200 text-teal-800 rounded-full mr-2 text-xs">
+                                        {idx + 1}
                                       </span>
-                                      <span>
-                                        Rp.{" "}
-                                        {parseInt(member.pgri).toLocaleString(
-                                          "id-ID"
-                                        )}
+                                      <span className="text-teal-700">
+                                        {member.namaAnggota}
+                                        <div className="text-sm text-teal-700 italic">
+                                          {member.nip}
+                                        </div>
+                                        <div className="text-sm text-teal-700 italic">
+                                          {member.nomorRekening}
+                                        </div>
+                                        <div className="text-sm text-teal-700 italic">
+                                          Potongan: {member.potongan}
+                                        </div>
+                                        <div className="text-sm text-teal-700 italic">
+                                          Status: {member.statusPotongan}
+                                        </div>
+                                        {member.potongan != null &&
+                                          parseInt(member.potongan) !== 0 &&
+                                          (() => {
+                                            const total = parseInt(
+                                              member.totalIuran
+                                            );
+                                            const potongan = parseInt(
+                                              member.potongan
+                                            );
+                                            const selisih = total - potongan;
+                                            const tanda =
+                                              selisih > 0
+                                                ? "-"
+                                                : selisih < 0
+                                                ? "+"
+                                                : "";
+
+                                            return (
+                                              <div className="text-sm text-teal-700 italic">
+                                                Selisih: Rp. {tanda}
+                                                {Math.abs(
+                                                  selisih
+                                                ).toLocaleString("id-ID")}
+                                              </div>
+                                            );
+                                          })()}
                                       </span>
                                     </div>
-                                    <div className="flex justify-between px-4">
-                                      <span className="font-medium text-teal-700">
-                                        Sanduka:
-                                      </span>
-                                      <span>
-                                        Rp.{" "}
-                                        {parseInt(
-                                          member.sanduka
-                                        ).toLocaleString("id-ID")}
-                                      </span>
-                                    </div>
-                                    <div className="flex justify-between px-4">
-                                      <span className="font-medium text-teal-700">
-                                        Daspen:
-                                      </span>
-                                      {showDaspenBadge ? (
-                                        <span className="bg-red-100 text-red-800 py-1 px-2 rounded-full text-xs">
-                                          Belum Input
+                                    <div className="lg:hidden space-y-2 mt-2 bg-white p-3 rounded-lg shadow-sm">
+                                      <div className="flex justify-between px-4">
+                                        <span className="font-medium text-teal-700">
+                                          PGRI:
                                         </span>
-                                      ) : (
+                                        <span>
+                                          Rp.{" "}
+                                          {parseInt(member.pgri).toLocaleString(
+                                            "id-ID"
+                                          )}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between px-4">
+                                        <span className="font-medium text-teal-700">
+                                          Sanduka:
+                                        </span>
                                         <span>
                                           Rp.{" "}
                                           {parseInt(
-                                            member.daspen
+                                            member.sanduka
                                           ).toLocaleString("id-ID")}
                                         </span>
-                                      )}
-                                    </div>
-                                    <div className="flex justify-between px-4 font-medium bg-teal-100 p-2 rounded-lg">
-                                      <span className="text-teal-800">
-                                        Total:
-                                      </span>
-                                      <span className="text-teal-800">
-                                        Rp.{" "}
-                                        {parseInt(
-                                          member.totalIuran
-                                        ).toLocaleString("id-ID")}
-                                      </span>
+                                      </div>
+                                      <div className="flex justify-between px-4">
+                                        <span className="font-medium text-teal-700">
+                                          Daspen:
+                                        </span>
+                                        {showDaspenBadge ? (
+                                          <span className="bg-red-100 text-red-800 py-1 px-2 rounded-full text-xs">
+                                            Belum Input
+                                          </span>
+                                        ) : (
+                                          <span>
+                                            Rp.{" "}
+                                            {parseInt(
+                                              member.daspen
+                                            ).toLocaleString("id-ID")}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex justify-between px-4 font-medium bg-teal-100 p-2 rounded-lg">
+                                        <span className="text-teal-800">
+                                          Total:
+                                        </span>
+                                        <span className="text-teal-800">
+                                          Rp.{" "}
+                                          {parseInt(
+                                            member.totalIuran
+                                          ).toLocaleString("id-ID")}
+                                        </span>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              </td>
-                              <td
-                                colSpan={2}
-                                className="p-3 border-b text-left hidden lg:table-cell"
-                              >
-                                <div className="flex justify-between py-1">
-                                  <span>PGRI:</span>
-                                  <span className="text-gray-700">
-                                    Rp.{" "}
-                                    {parseInt(member.pgri).toLocaleString(
-                                      "id-ID"
-                                    )}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between py-1">
-                                  <span>Sanduka:</span>
-                                  <span className="text-gray-700">
-                                    Rp.{" "}
-                                    {parseInt(member.sanduka).toLocaleString(
-                                      "id-ID"
-                                    )}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between py-1 items-center">
-                                  <span>Daspen:</span>
-                                  {showDaspenBadge ? (
-                                    <span className="bg-red-100 text-red-800 py-1 px-2 rounded-full text-xs">
-                                      Belum Input
-                                    </span>
-                                  ) : (
+                                </td>
+                                <td
+                                  colSpan={2}
+                                  className="p-3 border-b text-left hidden lg:table-cell"
+                                >
+                                  <div className="flex justify-between py-1">
+                                    <span>PGRI:</span>
                                     <span className="text-gray-700">
                                       Rp.{" "}
-                                      {parseInt(member.daspen).toLocaleString(
+                                      {parseInt(member.pgri).toLocaleString(
                                         "id-ID"
                                       )}
                                     </span>
-                                  )}
-                                </div>
-                                <div className="flex justify-between py-1">
-                                  <span>Derap:</span>
-                                  <span className="text-gray-700">
+                                  </div>
+                                  <div className="flex justify-between py-1">
+                                    <span>Sanduka:</span>
+                                    <span className="text-gray-700">
+                                      Rp.{" "}
+                                      {parseInt(member.sanduka).toLocaleString(
+                                        "id-ID"
+                                      )}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between py-1 items-center">
+                                    <span>Daspen:</span>
+                                    {showDaspenBadge ? (
+                                      <span className="bg-red-100 text-red-800 py-1 px-2 rounded-full text-xs">
+                                        Belum Input
+                                      </span>
+                                    ) : (
+                                      <span className="text-gray-700">
+                                        Rp.{" "}
+                                        {parseInt(member.daspen).toLocaleString(
+                                          "id-ID"
+                                        )}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex justify-between py-1">
+                                    <span>Derap:</span>
+                                    <span className="text-gray-700">
+                                      Rp.{" "}
+                                      {parseInt(member.derap).toLocaleString(
+                                        "id-ID"
+                                      )}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between py-1">
+                                    <span>Kalender:</span>
+                                    <span className="text-gray-700">
+                                      Rp.{" "}
+                                      {parseInt(member.kalender).toLocaleString(
+                                        "id-ID"
+                                      )}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between py-1">
+                                    <span>Lain-lain:</span>
+                                    <span className="text-gray-700">Rp. 0</span>
+                                  </div>
+                                </td>
+                                <td className="p-3 border-b text-center hidden lg:table-cell">
+                                  <span className="bg-teal-100 text-teal-800 py-1 px-2 rounded-full text-sm">
                                     Rp.{" "}
-                                    {parseInt(member.derap).toLocaleString(
+                                    {parseInt(member.totalIuran).toLocaleString(
                                       "id-ID"
                                     )}
                                   </span>
-                                </div>
-                                <div className="flex justify-between py-1">
-                                  <span>Kalender:</span>
-                                  <span className="text-gray-700">
-                                    Rp.{" "}
-                                    {parseInt(member.kalender).toLocaleString(
-                                      "id-ID"
-                                    )}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between py-1">
-                                  <span>Lain-lain:</span>
-                                  <span className="text-gray-700">Rp. 0</span>
-                                </div>
-                              </td>
-                              <td className="p-3 border-b text-center hidden lg:table-cell">
-                                <span className="bg-teal-100 text-teal-800 py-1 px-2 rounded-full text-sm">
-                                  Rp.{" "}
-                                  {parseInt(member.totalIuran).toLocaleString(
-                                    "id-ID"
-                                  )}
-                                </span>
-                              </td>
-                              <td className="p-3 border-b text-center space-x-2">
-                                <button
-                                  className="text-teal-600 hover:text-teal-800 text-xl"
-                                  onClick={() => handleMemberClick(member)}
-                                >
-                                  <FaPlus />
-                                </button>
-                                <button
-                                  className="text-teal-600 hover:text-teal-800 text-xl"
-                                  onClick={() => handlePrintClick(member)}
-                                >
-                                  <FaPrint />
-                                </button>
-                                <button
-                                  className="text-teal-600 hover:text-teal-800 text-xl"
-                                  onClick={() => handleTagihanClick(member)}
-                                >
-                                  <FaFileInvoiceDollar />
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                    </React.Fragment>
-                  );
-                })}
+                                </td>
+                                <td className="p-3 border-b text-center space-x-2">
+                                  <button
+                                    className="text-teal-600 hover:text-teal-800 text-xl"
+                                    onClick={() => handleMemberClick(member)}
+                                  >
+                                    <FaPlus />
+                                  </button>
+                                  <button
+                                    className="text-teal-600 hover:text-teal-800 text-xl"
+                                    onClick={() => handlePrintClick(member)}
+                                  >
+                                    <FaPrint />
+                                  </button>
+                                  <button
+                                    className="text-teal-600 hover:text-teal-800 text-xl"
+                                    onClick={() => handleTagihanClick(member)}
+                                  >
+                                    <FaFileInvoiceDollar />
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </React.Fragment>
+                    );
+                  })}
               </tbody>
               {isPopupVisible && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
