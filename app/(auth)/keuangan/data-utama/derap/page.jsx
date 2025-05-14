@@ -441,43 +441,44 @@ function DerapForm() {
       alert("Pilih cabang terlebih dahulu.");
       return;
     }
-  
+
     try {
       const data = await GlobalApi.getNominalAggregatedData(selectedCabang);
-  
+
       // Jika data berupa array
       const dataArray = Array.isArray(data) ? data : [data];
-  
+
       // Filter dan hitung jumlah item yang memiliki nomorRekening
       const countWithNomorRekening = dataArray.filter(
         (item) => item.nomorRekening
       ).length;
-  
+
       // Set nilai ke field jumlahPesanan
       setJumlahPesanan(countWithNomorRekening - 2);
-  
+
       console.log("Jumlah dengan nomor rekening:", countWithNomorRekening);
     } catch (error) {
       console.error("Gagal mengambil data otomatis:", error);
     }
-  };  
+  };
 
   useEffect(() => {
     const hargaProvinsi = parseInt(provinsi) || 0;
     const hargaKabupaten = parseInt(kabupaten) || 0;
     const hargaCabang = parseInt(cabang) || 0;
     const jumlahPesananInt = parseInt(jumlahPesanan) || 1;
-  
+
     const setorProvinsiTotal = hargaProvinsi * jumlahPesananInt;
     const untukKabupatenTotal = hargaKabupaten * jumlahPesananInt;
     const untukCabangTotal = hargaCabang * jumlahPesananInt;
-  
+
     const total = hargaProvinsi + hargaKabupaten + hargaCabang;
     setTotalHarga(total);
-  
-    const totalAkhir = setorProvinsiTotal + untukKabupatenTotal + untukCabangTotal;
+
+    const totalAkhir =
+      setorProvinsiTotal + untukKabupatenTotal + untukCabangTotal;
     setTotalHargaAkhir(totalAkhir);
-  
+
     setSetorProvinsi(setorProvinsiTotal);
     setUntukKabupaten(untukKabupatenTotal);
     setUntukCabang(untukCabangTotal);
@@ -766,7 +767,7 @@ function DerapForm() {
                       className="bg-teal-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-teal-600 transition duration-150 ease-in-out"
                       onClick={handleOtomatisClick}
                     >
-                     Otomatis
+                      Otomatis
                     </Button>
                   </div>
                 </div>
@@ -926,19 +927,43 @@ function DerapForm() {
                       scope="col"
                       className="border px-6 py-3 text-center text-sm"
                     >
-                      Cabang Khusus
+                      Cabang
                     </th>
                     <th
                       scope="col"
                       className="border px-6 py-3 text-center text-sm"
                     >
-                      Pesanan
+                      Pesanan (Eks)
                     </th>
                     <th
                       scope="col"
                       className="border px-6 py-3 text-center text-sm"
                     >
-                      Total
+                      Total Tagihan (Rp)
+                    </th>
+                    <th
+                      scope="col"
+                      className="border px-6 py-3 text-center text-sm"
+                    >
+                      Pemb. Bank (Eks)
+                    </th>
+                    <th
+                      scope="col"
+                      className="border px-6 py-3 text-center text-sm"
+                    >
+                      Pemb. Bank (Nominal Rp)
+                    </th>
+                    <th
+                      scope="col"
+                      className="border px-6 py-3 text-center text-sm"
+                    >
+                      Pemb. Tunai (Rp)
+                    </th>
+                    <th
+                      scope="col"
+                      className="border px-6 py-3 text-center text-sm"
+                    >
+                      Selisih (Rp)
                     </th>
                     <th
                       scope="col"
@@ -975,6 +1000,18 @@ function DerapForm() {
                           )}
                         </td>
                         <td className="border px-6 py-4 text-center text-sm text-black">
+                          10
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          Rp 100.000
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          Rp 0
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          Rp 0
+                        </td>
+                        <td className="border px-2 py-4 text-center text-sm text-black">
                           <button
                             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded mr-2"
                             onClick={() => handleUpdate(item.id)}

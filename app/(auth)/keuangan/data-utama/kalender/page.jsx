@@ -9,7 +9,11 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
-import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaTimesCircle,
+  FaCheckCircle,
+  FaExclamationCircle,
+} from "react-icons/fa";
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -22,20 +26,20 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
       default:
-        return 'bg-blue-100';
+        return "bg-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case 'error':
+      case "error":
         return <FaExclamationCircle className="text-red-500 text-3xl" />;
       default:
         return null;
@@ -44,19 +48,24 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
       default:
-        return 'text-blue-800';
+        return "text-blue-800";
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -66,17 +75,13 @@ const NotificationPopup = ({ type, message, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
+          <div className="animate-bounce">{getIcon()}</div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+            {type === "success" ? "Berhasil!" : "Gagal!"}
           </h3>
 
-          <div className={`${getTextColor()} text-center`}>
-            {message}
-          </div>
+          <div className={`${getTextColor()} text-center`}>{message}</div>
         </div>
       </div>
     </div>
@@ -121,7 +126,7 @@ function KalenderForm() {
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [bulan, setBulan] = useState("");
-  const [tahun, setTahun] = useState(""); 
+  const [tahun, setTahun] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -360,73 +365,75 @@ function KalenderForm() {
         },
       ]);
       setNotification({
-        type: 'success',
-        message: `Data Berhasil disimpan!`
+        type: "success",
+        message: `Data Berhasil disimpan!`,
       });
     } catch (error) {
       console.error("Error saat menyimpan data: ", error);
       setNotification({
-        type: 'success',
-        message: `Gagal Menyimpan Data!`
+        type: "success",
+        message: `Gagal Menyimpan Data!`,
       });
     }
   };
 
   const handleUpdate = (id) => {
-      const selectedItem = filteredTableData.find((item) => item.id === id);
-      if (selectedItem) {
-        setSelectedCabang(selectedItem.cabang);
-        setJumlahPesanan(selectedItem.jumlah);
-        setBulan(selectedItem.bulan);  // Ambil bulan dari data API
-        setTahun(selectedItem.tahun);  // Ambil tahun dari data API
-        setSelectedItemId(id);
-        setIsEditMode(true); // Aktifkan mode edit
-      }
-    };
-  
-    const handleSaveUpdate = async () => {
-      if (!selectedItemId) return;
-    
-      const updatedData = {
-        cabang: selectedCabang,
-        jumlah: jumlahPesanan,
-        bulan,
-        tahun,
-      };
-    
-      try {
-        await GlobalApi.updateKalender(selectedItemId, updatedData);
-    
-        setTableData((prevData) =>
-          prevData.map((item) =>
-            item.id === selectedItemId ? { ...item, ...updatedData } : item
-          )
-        );
-    
-        setFilteredTableData((prevData) =>
-          prevData.map((item) =>
-            item.id === selectedItemId ? { ...item, ...updatedData } : item
-          )
-        );
-    
-        setIsEditMode(false);
-        setSelectedItemId(null);
-      } catch (error) {
-        alert("Gagal memperbarui data.");
-      }
+    const selectedItem = filteredTableData.find((item) => item.id === id);
+    if (selectedItem) {
+      setSelectedCabang(selectedItem.cabang);
+      setJumlahPesanan(selectedItem.jumlah);
+      setBulan(selectedItem.bulan); // Ambil bulan dari data API
+      setTahun(selectedItem.tahun); // Ambil tahun dari data API
+      setSelectedItemId(id);
+      setIsEditMode(true); // Aktifkan mode edit
+    }
   };
-  
+
+  const handleSaveUpdate = async () => {
+    if (!selectedItemId) return;
+
+    const updatedData = {
+      cabang: selectedCabang,
+      jumlah: jumlahPesanan,
+      bulan,
+      tahun,
+    };
+
+    try {
+      await GlobalApi.updateKalender(selectedItemId, updatedData);
+
+      setTableData((prevData) =>
+        prevData.map((item) =>
+          item.id === selectedItemId ? { ...item, ...updatedData } : item
+        )
+      );
+
+      setFilteredTableData((prevData) =>
+        prevData.map((item) =>
+          item.id === selectedItemId ? { ...item, ...updatedData } : item
+        )
+      );
+
+      setIsEditMode(false);
+      setSelectedItemId(null);
+    } catch (error) {
+      alert("Gagal memperbarui data.");
+    }
+  };
+
   const handleDelete = async (id) => {
-      console.log("Hapus item dengan ID:", id);
-      try {
-        await GlobalApi.deleteKalender(id);
-        setTableData((prevData) => prevData.filter((item) => item.id !== id));
-        setFilteredTableData((prevData) => prevData.filter((item) => item.id !== id));
-      } catch (error) {
-        console.error("Gagal menghapus data:", error);
-        alert("Gagal menghapus data!");
-      }
-    }; 
+    console.log("Hapus item dengan ID:", id);
+    try {
+      await GlobalApi.deleteKalender(id);
+      setTableData((prevData) => prevData.filter((item) => item.id !== id));
+      setFilteredTableData((prevData) =>
+        prevData.filter((item) => item.id !== id)
+      );
+    } catch (error) {
+      console.error("Gagal menghapus data:", error);
+      alert("Gagal menghapus data!");
+    }
+  };
 
   const kalenderData = JSON.parse(sessionStorage.getItem("kalenderData"));
 
@@ -578,8 +585,9 @@ function KalenderForm() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           {notification && (
             <NotificationPopup
@@ -635,8 +643,9 @@ function KalenderForm() {
                       <Input
                         type="number"
                         id={field.id}
-                        className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out lg:ml-4 ${field.customClass || ""
-                          }`}
+                        className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out lg:ml-4 ${
+                          field.customClass || ""
+                        }`}
                         onKeyPress={handleKeyPress}
                         value={field.value}
                         onChange={field.onChange}
@@ -716,11 +725,11 @@ function KalenderForm() {
                       Hitung
                     </Button>
                     <Button
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
-                        onClick={isEditMode ? handleSaveUpdate : handleSubmit}
-                      >
-                        {isEditMode ? "Update" : "Simpan"}
-                      </Button>
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
+                      onClick={isEditMode ? handleSaveUpdate : handleSubmit}
+                    >
+                      {isEditMode ? "Update" : "Simpan"}
+                    </Button>
                     <Button
                       className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-600 transition duration-150 ease-in-out"
                       onClick={resetForm}
@@ -879,16 +888,28 @@ function KalenderForm() {
                       No
                     </th>
                     <th scope="col" className="px-6 py-3 text-center">
-                      Cabang Khusus
+                      Cabang
                     </th>
                     <th scope="col" className="px-6 py-3 text-center">
-                      Pesanan
+                      Pesanan (Buah)
                     </th>
                     <th scope="col" className="px-6 py-3 text-center">
-                      Total
+                      Total Tagihan (Rp)
                     </th>
                     <th scope="col" className="px-6 py-3 text-center">
-                    Action
+                      Pemb. Bank (Buah)
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-center">
+                      Pemb. Bank (Nominal Rp)
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-center">
+                      Pemb. Tunai (Rp)
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-center">
+                      Selisih (Rp)
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-center">
+                      Action
                     </th>
                   </tr>
                 </thead>
@@ -919,8 +940,30 @@ function KalenderForm() {
                           )}
                         </td>
                         <td className="border px-6 py-4 text-center text-sm text-black">
-                        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded mr-2" onClick={() => handleUpdate(item.id)}>Edit</button>
-                        <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded" onClick={() => handleDelete(item.id)}>Hapus</button>
+                          {item.jumlah}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {item.jumlah}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {item.jumlah}
+                        </td>
+                        <td className="border px-6 py-4 text-center text-sm text-black">
+                          {item.jumlah}
+                        </td>
+                        <td className="border px-2 py-4 text-center text-sm text-black">
+                          <button
+                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded mr-2"
+                            onClick={() => handleUpdate(item.id)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded"
+                            onClick={() => handleDelete(item.id)}
+                          >
+                            Hapus
+                          </button>
                         </td>
                       </tr>
                     ))

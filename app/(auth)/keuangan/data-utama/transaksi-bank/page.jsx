@@ -206,36 +206,6 @@ export default function BankTransactionPage() {
                         </p>
                     </div>
 
-                    <div className="flex mb-6 border-b border-gray-200">
-                        <button
-                            className={`py-3 px-5 font-medium relative transition-colors duration-200 ${activeTab === "potongan"
-                                ? "text-teal-600 border-b-2 border-teal-600"
-                                : "text-gray-600 hover:text-gray-800"
-                                }`}
-                            onClick={() => setActiveTab("potongan")}
-                        >
-                            Potongan Bank
-                        </button>
-                        <button
-                            className={`py-3 px-5 font-medium relative transition-colors duration-200 ${activeTab === "balancing"
-                                ? "text-teal-600 border-b-2 border-teal-600"
-                                : "text-gray-600 hover:text-gray-800"
-                                }`}
-                            onClick={() => setActiveTab("balancing")}
-                        >
-                            Balancing Potongan
-                        </button>
-                        <button
-                            className={`py-3 px-5 font-medium relative transition-colors duration-200 ${activeTab === "rekapitulasi"
-                                ? "text-teal-600 border-b-2 border-teal-600"
-                                : "text-gray-600 hover:text-gray-800"
-                                }`}
-                            onClick={() => setActiveTab("rekapitulasi")}
-                        >
-                            Rekap Data Keuangan
-                        </button>
-                    </div>
-
                     <div className="bg-white rounded-xl shadow-sm mb-8 overflow-hidden">
                         <div className="p-6 border-b border-gray-100">
                             <h2 className="text-lg font-semibold text-gray-800">
@@ -281,6 +251,26 @@ export default function BankTransactionPage() {
                             </div>
                         </div>
                     </div>
+
+                    <div className="flex mb-6 border-b border-gray-200 w-full">
+  {["potongan", "balancing", "rekapitulasi"].map((tab) => (
+    <button
+      key={tab}
+      className={`w-full text-center py-3 px-5 font-medium transition-colors duration-200 
+        ${activeTab === tab
+          ? "bg-teal-100 text-teal-700 border-b-2 border-teal-600"
+          : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+        }`}
+      onClick={() => setActiveTab(tab)}
+    >
+      {tab === "potongan"
+        ? "Potongan Bank"
+        : tab === "balancing"
+        ? "Balancing Potongan"
+        : "Rekap Data Keuangan"}
+    </button>
+  ))}
+</div>
 
                     {activeTab === "potongan" && (
                         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
