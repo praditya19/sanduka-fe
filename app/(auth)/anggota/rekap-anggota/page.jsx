@@ -850,6 +850,7 @@ function RekapAnggota() {
     const uploadData = new FormData();
     uploadData.append("file", formData.file);
     uploadData.append("namaFile", formData.namaFile);
+    uploadData.append("tanggalUntuk", formData.tanggalUntuk);
 
     try {
       const response = await GlobalApi.uploadSinkronBank(uploadData);
@@ -3116,6 +3117,17 @@ function RekapAnggota() {
                             onChange={handleInputChange}
                             className="form-input block w-full mt-1 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent"
                             placeholder="Contoh: Potongan Bank Bulan Mei"
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <label className="block text-gray-700 text-sm font-bold mb-2">
+                            Tanggal Untuk
+                          </label>
+                          <input
+                            type="date"
+                            name="tanggalUntuk"
+                            onChange={handleInputChange}
+                            className="form-input block w-full mt-1 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent"
                           />
                         </div>
                         <div className="flex justify-end">
