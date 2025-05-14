@@ -176,6 +176,7 @@ function RekapAnggota() {
   const [lastUpdatedMemberNip, setLastUpdatedMemberNip] = useState(null);
   const lastUpdatedMemberRef = useRef(null);
   const [resetKeys, setResetKeys] = useState([]);
+  const [progress, setProgress] = useState(0);
 
   const currentYear = new Date().getFullYear();
   const years = Array.from(
@@ -832,6 +833,7 @@ function RekapAnggota() {
   const [formData, setFormData] = useState({
     file: null,
     namaFile: "",
+    tanggalUntuk: "",
   });
 
   const handleInputChange = (e) => {
@@ -860,6 +862,7 @@ function RekapAnggota() {
             clearInterval(interval);
             setLoader(false);
             setShowUploadModal(false);
+            setProgress(0);
             return 100;
           }
           return prev + 10;
