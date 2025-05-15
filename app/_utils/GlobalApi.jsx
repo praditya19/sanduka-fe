@@ -1106,6 +1106,27 @@ const deleteLainlain = async (id) => {
   }
 };
 // END
+
+// Transaksi Bank (data utama)
+const getTransaksiBank = async (bulan, tahun, query, size) => {
+  try {
+    const params = new URLSearchParams();
+    if (bulan) params.append("bulan", bulan);
+    if (tahun) params.append("tahun", tahun);
+    if (query) params.append("query", query);
+    if (size) params.append("size", size);
+
+    const response = await axiosClient.get(
+      `/api/potongan-gaji?${params.toString()}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching transaksi bank:", error);
+    throw error;
+  }
+};
+
+// End
 // Sanduka
 // Pemasukan & Pengeluaran Sanduka
 const sendSesuaiJumlahTarget = async (data) => {
@@ -2440,6 +2461,7 @@ export default {
   postIuranAnggota,
   uploadSinkronBank,
   countNewPengaduan,
+  getTransaksiBank,
   countResponsesByPengaduanId,
   getTagihanAnggotaById,
   exportTidakTerdaftarToExcel
