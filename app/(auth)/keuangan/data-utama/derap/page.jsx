@@ -13,6 +13,8 @@ import {
   FaTimesCircle,
   FaCheckCircle,
   FaExclamationCircle,
+  FaNewspaper,
+  FaChartBar,
 } from "react-icons/fa";
 
 const NotificationPopup = ({ type, message, onClose }) => {
@@ -582,6 +584,11 @@ function DerapForm() {
     };
   }, []);
 
+  const totalJumlah = filteredTableData.reduce((total, item) => {
+  const jumlah = Number(item.jumlah) || 0;
+  return total + jumlah;
+}, 0);
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-4">
       {isMobile ? (
@@ -629,133 +636,116 @@ function DerapForm() {
             />
           )}
           <div className="p-4 bg-gray-50 rounded-lg shadow-lg ">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="p-6 rounded-lg shadow-lg border border-gray-200 bg-white">
-                <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-5 text-center">
-                  Pesanan Derap PGRI
-                </h2>
-                <div className="space-y-6">
-                  {[
-                    {
-                      id: "provinsi",
-                      label: "Derap Provinsi",
-                      value: provinsi,
-                      onChange: handleProvinsiChange,
-                    },
-                    {
-                      id: "kabupaten",
-                      label: "Derap Kabupaten",
-                      value: kabupaten,
-                      onChange: handleKabupatenChange,
-                    },
-                    {
-                      id: "cabang",
-                      label: "Derap Cabang/Ranting",
-                      value: cabang,
-                      onChange: handleCabangChange,
-                    },
-                    {
-                      id: "totalHarga",
-                      label: "Total Harga",
-                      value: totalHarga,
-                      readOnly: true,
-                      customClass: "bg-gray-200",
-                    },
-                  ].map((field) => (
-                    <div
-                      key={field.id}
-                      className="flex flex-col lg:flex-row items-center mb-4"
+            <div className="">
+              <div className=" rounded-lg shadow-lg border border-gray-200 bg-white">
+                <div className="bg-teal-100 flex items-center justify-between p-4">
+                  <div className="flex items-center gap-3">
+                    <FaNewspaper className="text-teal-800 text-2xl" />
+                    <span className="text-teal-800 text-xl font-medium">
+                      Pesanan Derap PGRI
+                    </span>
+                  </div>
+                  <button className="p-3 text-teal-600 hover:bg-teal-500 hover:text-white bg-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3 border border-teal-600 hover:border-teal-500">
+                    {" "}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      fill="currentColor"
+                      viewBox="0 0 16 16"
                     >
-                      <Label
-                        htmlFor={field.id}
-                        className="block text-gray-800 text-lg font-semibold mb-2 lg:mb-0 lg:w-full"
-                      >
-                        {field.label}
-                      </Label>
+                      <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                      <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                    </svg>
+                    Cetak Rekap Pesanan
+                  </button>
+                </div>
+
+                <div className="space-y-6 p-6">
+                  <div className="flex flex-col md:flex-row gap-4 w-full">
+                    <div ref={dropdownRef} className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Cabang
+                      </label>
+                      <div className="relative">
+                        <Input
+                          type="text"
+                          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                          readOnly
+                          value={selectedCabang || ""}
+                          placeholder="Pilih Cabang"
+                          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                          onFocus={() => {
+                            setSearchQuery("");
+                          }}
+                        />
+
+                        {isDropdownOpen && (
+                          <div className="absolute w-full mt-1 bg-white border rounded shadow-lg z-10">
+                            <ul className="max-h-44 overflow-y-auto">
+                              <li className="py-2 px-2">
+                                <Input
+                                  type="text"
+                                  className="w-full p-2 border-b text-gray-700 focus:outline-none"
+                                  placeholder="Cari cabang..."
+                                  value={searchQuery}
+                                  onChange={handleSearchChange}
+                                  autoFocus
+                                />
+                              </li>
+                              {filteredCabangList.map((cabang) => (
+                                <li
+                                  key={cabang.id}
+                                  className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                  onClick={() =>
+                                    handleCabangSelect(cabang.kecamatan)
+                                  }
+                                >
+                                  {cabang.kecamatan}
+                                </li>
+                              ))}
+                              {filteredCabangList.length === 0 && (
+                                <li className="p-2 text-gray-500">
+                                  Cabang tidak ditemukan
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Jumlah (Eksemplar)
+                      </label>
                       <Input
                         type="number"
-                        id={field.id}
-                        className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out lg:ml-4 ${
-                          field.customClass || ""
-                        }`}
+                        id="jumlahPesananInput"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out"
+                        value={jumlahPesanan}
+                        onChange={(e) => setJumlahPesanan(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        value={field.value}
-                        onChange={field.onChange}
-                        readOnly={field.readOnly}
                       />
                     </div>
-                  ))}
-
-                  <div className="flex flex-col lg:flex-row items-center mb-4">
-                    <label
-                      htmlFor="jumlahPesanan"
-                      className="block text-gray-800 text-lg font-semibold mb-2 lg:mb-0 w-full lg:w-auto mr-8"
-                    >
-                      Jumlah Pesanan
-                    </label>
-                    <div className="relative " ref={dropdownRef}>
-                      <Input
-                        type="text"
-                        className="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        readOnly
-                        value={selectedCabang || ""}
-                        placeholder="Pilih Cabang"
-                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        onFocus={() => {
-                          setSearchQuery("");
-                        }}
-                      />
-
-                      {isDropdownOpen && (
-                        <div className="absolute w-full mt-1 bg-white border rounded shadow-lg z-10">
-                          <ul className="max-h-44 overflow-y-auto">
-                            <li className="py-2 px-2">
-                              <Input
-                                type="text"
-                                className="w-full p-2 border-b text-gray-700 focus:outline-none"
-                                placeholder="Cari cabang..."
-                                value={searchQuery}
-                                onChange={handleSearchChange}
-                                autoFocus
-                              />
-                            </li>
-                            {filteredCabangList.map((cabang) => (
-                              <li
-                                key={cabang.id}
-                                className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                onClick={() =>
-                                  handleCabangSelect(cabang.kecamatan)
-                                }
-                              >
-                                {cabang.kecamatan}
-                              </li>
-                            ))}
-                            {filteredCabangList.length === 0 && (
-                              <li className="p-2 text-gray-500">
-                                Cabang tidak ditemukan
-                              </li>
-                            )}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                    <Input
-                      type="number"
-                      id="jumlahPesananInput"
-                      className="w-full lg:w-1/3 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out mt-2 lg:mt-0 lg:ml-4"
-                      value={jumlahPesanan}
-                      // onChange={handleJumlahPesananChange}
-                      onChange={(e) => setJumlahPesanan(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                    />
                   </div>
-
-                  <div className="flex justify-center space-x-4 mt-6">
+                  <div className="flex  space-x-4 mt-6">
                     <Button
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out"
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out gap-3"
                       onClick={isEditMode ? handleSaveUpdate : handleSubmit}
                     >
-                      {isEditMode ? "Update" : "Simpan"}
+                      {" "}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        viewBox="0 0 16 16"
+                      >
+                        <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                        <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                      </svg>
+                      {isEditMode ? "Update" : "Simpan Pesanan"}
                     </Button>
                     <Button
                       className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-600 transition duration-150 ease-in-out"
@@ -770,148 +760,144 @@ function DerapForm() {
                       Otomatis
                     </Button>
                   </div>
+                  <div className="border-t border-gray-200 my-4"></div>
+                <div ref={tableRef} className="overflow-x-auto">
+  <h1 className="text-2xl font-bold text-teal-800 mb-4 sm:mb-0 mt-4">
+    Rekap Pesanan Derap - Mei 2025{" "}
+  </h1>
+  <div className="max-h-60 overflow-y-auto">
+    <table className="min-w-full border-collapse border border-gray-300">
+      <thead>
+        <tr className="border-b border-gray-200">
+          <th className="px-4 py-3 text-left font-medium text-gray-700">No</th>
+          <th className="px-4 py-3 text-left font-medium text-gray-700">Cabang</th>
+          <th className="px-4 py-3 text-right font-medium text-gray-700">Jumlah Pesanan</th>
+        </tr>
+      </thead>
+      <tbody>
+        {filteredTableData.length > 0 ? (
+          filteredTableData.slice(0, 5).map((item, index) => (
+            <tr 
+              key={item.id} 
+              className="border-b border-gray-200 hover:bg-gray-200 transition-colors duration-150"
+            >
+              <td className="px-4 py-3">{index + 1}</td>
+              <td className="px-4 py-3">{item.cabang}</td>
+              <td className="px-4 py-3 text-right">{item.jumlah}</td>
+            </tr>
+          ))
+        ) : (
+          <tr className="border-b border-gray-200">
+            <td className="px-4 py-3"></td>
+            <td className="px-4 py-3">Jumlah</td>
+            <td className="px-4 py-3">0</td>
+          </tr>
+        )}
+      </tbody>
+      <tfoot className="border-t border-gray-300 bg-gray-100">
+        <tr>
+          <td colSpan="2" className="px-4 py-3 font-semibold text-center">Total Pesanan Derap</td>
+          <td className="px-4 py-3 text-right font-semibold">{totalJumlah}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+
+                  
                 </div>
               </div>
 
-              <div className="p-6 rounded-lg shadow-md border border-gray-200 bg-white">
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Jumlah Pesanan :
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>{jumlahPesanan} eksemplar</b>
-                  </p>
-                </div>
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Setor Provinsi:
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>Rp. {setorProvinsi.toLocaleString()}</b>
-                  </p>
-                </div>
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Untuk Kabupaten:
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>Rp. {untukKabupaten.toLocaleString()}</b>
-                  </p>
-                </div>
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Untuk Cabang:
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>Rp. {untukCabang.toLocaleString()}</b>
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Total:
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>Rp. {totalHargaAkhir.toLocaleString()}</b>
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-teal-800 p-2 rounded-lg shadow-lg mt-5">
-              <div className="flex flex-col sm:flex-row sm:justify-between items-center mb-4">
-                <div className="flex flex-wrap gap-3 mb-4 sm:mb-0 px-2 mt-5">
-                  <div className="relative flex flex-col md:flex ml-2">
-                    <Input
-                      type="text"
-                      placeholder="Pilih Cabang"
-                      value={chosenCabang || "Pilih Cabang"}
-                      readOnly
-                      onFocus={() => {
-                        setDropdownVisible(true);
-                        setSearchTerm("");
-                        setFilteredCabangOptions(cabangOptions);
-                      }}
-                      className="border rounded-lg p-2 px-4 w-52 bg-white shadow-sm cursor-pointer"
-                    />
+              <div className="rounded-lg shadow-md border border-gray-200 bg-white mt-8">
+                <div className="bg-teal-100 p-4 rounded-lg shadow-lg">
+  <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+    {/* Title on the left */}
+    <div className="flex items-center mb-4 sm:mb-0">
+      <FaChartBar className="text-teal-600 mr-3 text-2xl" />
+      <h1 className="text-2xl font-bold text-teal-800">
+        Rekapitulasi Derap dan Pembayaran
+      </h1>
+    </div>
 
-                    {dropdownVisible && (
-                      <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-12 w-full">
-                        <ul className="max-h-44 overflow-y-auto">
-                          <li className="py-2 px-2">
-                            <Input
-                              type="text"
-                              value={searchTerm}
-                              onChange={handleSearchInputChange}
-                              className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              placeholder="Cari Cabang..."
-                              autoFocus
-                            />
-                          </li>
-                          <li
-                            className="p-2 cursor-pointer hover:bg-gray-100"
-                            onClick={() =>
-                              handleCabangSelection({ kecamatan: "", id: "" })
-                            }
-                          >
-                            Pilih Cabang
-                          </li>
-                          {filteredCabangOptions.length > 0 ? (
-                            filteredCabangOptions.map((cabang) => (
-                              <li
-                                key={cabang.id}
-                                className="p-2 cursor-pointer hover:bg-gray-100"
-                                onClick={() => handleCabangSelection(cabang)}
-                              >
-                                {cabang.kecamatan}
-                              </li>
-                            ))
-                          ) : (
-                            <li className="px-4 py-2 text-gray-500 cursor-default">
-                              Tidak ada hasil
-                            </li>
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                  <select
-                    className="shadow appearance-none border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    id="bulanTableBaru"
-                    value={selectedBulanBaru}
-                    onChange={(e) => setSelectedBulanBaru(e.target.value)}
-                  >
-                    <option value="">Pilih Bulan</option>
-                    {bulanList.map((bulan) => (
-                      <option key={bulan.id} value={bulan.namaBulan}>
-                        {bulan.namaBulan}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="shadow-lg border rounded w-full sm:w-auto py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white"
-                    id="tahunTable"
-                    value={newSelectedYear}
-                    onChange={(e) => setNewSelectedYear(e.target.value)}
-                  >
-                    <option value="">Pilih Tahun</option>
+    {/* Print button on the right */}
+    <button className="p-3 mt-3 text-teal-600 hover:bg-teal-500 hover:text-white bg-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3 border border-teal-600 hover:border-teal-500"
+      onClick={printTable}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        fill="currentColor"
+        viewBox="0 0 16 16"
+      >
+        <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+        <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+      </svg>
+      Cetak Rekapitulasi
+    </button>
+  </div>
 
-                    {years.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <h1 className="text-2xl font-bold text-white mb-4 sm:mb-0 mt-4">
-                  Transaksi {selectedBulanBaru} {newSelectedYear}
-                </h1>
-                <Button
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out mt-3 mr-6 w-24"
-                  onClick={printTable}
-                >
-                  Cetak
-                </Button>
-              </div>
-            </div>
+  {/* Rest of your content (filters, etc.) */}
+  <div className="flex flex-col sm:flex-row gap-3 w-full">
+  {/* Filter Cabang */}
+  <div className="flex-1 min-w-[200px]">
+    <div className="relative w-full">
+      <Input
+        type="text"
+        placeholder="Semua Cabang"
+        value={chosenCabang || "Pilih Cabang"}
+        readOnly
+        onFocus={() => {
+          setDropdownVisible(true);
+          setSearchTerm("");
+          setFilteredCabangOptions(cabangOptions);
+        }}
+        className="w-full border rounded-lg p-2 px-4 bg-white shadow-sm cursor-pointer"
+      />
+      {dropdownVisible && (
+        <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg">
+          {/* Dropdown content */}
+        </div>
+      )}
+    </div>
+  </div>
+
+  {/* Filter Bulan */}
+  <div className="flex-1 min-w-[180px]">
+    <select
+      className="w-full border rounded-lg py-2 px-4 text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      id="bulanTableBaru"
+      value={selectedBulanBaru}
+      onChange={(e) => setSelectedBulanBaru(e.target.value)}
+    >
+      <option value="">Pilih Bulan</option>
+      {bulanList.map((bulan) => (
+        <option key={bulan.id} value={bulan.namaBulan}>
+          {bulan.namaBulan}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  {/* Filter Tahun */}
+  <div className="flex-1 min-w-[150px]">
+    <select
+      className="w-full border rounded-lg py-2 px-4 text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      id="tahunTable"
+      value={newSelectedYear}
+      onChange={(e) => setNewSelectedYear(e.target.value)}
+    >
+      <option value="">Pilih Tahun</option>
+      {years.map((year) => (
+        <option key={year} value={year}>
+          {year}
+        </option>
+      ))}
+    </select>
+  </div>
+</div>
+</div>
 
             <div ref={tableRef} className="overflow-x-auto">
               <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -1038,7 +1024,101 @@ function DerapForm() {
                   )}
                 </tbody>
               </table>
+                </div>
+                
+                {/* {[
+                    {
+                      id: "provinsi",
+                      label: "Derap Provinsi",
+                      value: provinsi,
+                      onChange: handleProvinsiChange,
+                    },
+                    {
+                      id: "kabupaten",
+                      label: "Derap Kabupaten",
+                      value: kabupaten,
+                      onChange: handleKabupatenChange,
+                    },
+                    {
+                      id: "cabang",
+                      label: "Derap Cabang/Ranting",
+                      value: cabang,
+                      onChange: handleCabangChange,
+                    },
+                    {
+                      id: "totalHarga",
+                      label: "Total Harga",
+                      value: totalHarga,
+                      readOnly: true,
+                      customClass: "bg-gray-200",
+                    },
+                  ].map((field) => (
+                    <div
+                      key={field.id}
+                      className="flex flex-col lg:flex-row items-center mb-4"
+                    >
+                      <Label
+                        htmlFor={field.id}
+                        className="block text-gray-800 text-lg font-semibold mb-2 lg:mb-0 lg:w-full"
+                      >
+                        {field.label}
+                      </Label>
+                      <Input
+                        type="number"
+                        id={field.id}
+                        className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out lg:ml-4 ${
+                          field.customClass || ""
+                        }`}
+                        onKeyPress={handleKeyPress}
+                        value={field.value}
+                        onChange={field.onChange}
+                        readOnly={field.readOnly}
+                      />
+                    </div>
+                  ))}
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold mb-2 text-blue-600">
+                    Jumlah Pesanan :
+                  </h3>
+                  <p className="text-lg text-gray-700">
+                    <b>{jumlahPesanan} eksemplar</b>
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold mb-2 text-blue-600">
+                    Setor Provinsi:
+                  </h3>
+                  <p className="text-lg text-gray-700">
+                    <b>Rp. {setorProvinsi.toLocaleString()}</b>
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold mb-2 text-blue-600">
+                    Untuk Kabupaten:
+                  </h3>
+                  <p className="text-lg text-gray-700">
+                    <b>Rp. {untukKabupaten.toLocaleString()}</b>
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold mb-2 text-blue-600">
+                    Untuk Cabang:
+                  </h3>
+                  <p className="text-lg text-gray-700">
+                    <b>Rp. {untukCabang.toLocaleString()}</b>
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold mb-2 text-blue-600">
+                    Total:
+                  </h3>
+                  <p className="text-lg text-gray-700">
+                    <b>Rp. {totalHargaAkhir.toLocaleString()}</b>
+                  </p>
+                </div> */}
+              </div>
             </div>
+            
           </div>
         </div>
       </div>
