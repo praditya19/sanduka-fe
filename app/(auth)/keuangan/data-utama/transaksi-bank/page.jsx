@@ -622,9 +622,6 @@ export default function BankTransactionPage() {
                         No
                       </th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Cabang
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                         Rekening
                       </th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
@@ -650,9 +647,6 @@ export default function BankTransactionPage() {
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                             {index + 1}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {item.nama}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                             {item.rekening}
