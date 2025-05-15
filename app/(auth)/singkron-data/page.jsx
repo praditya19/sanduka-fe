@@ -138,7 +138,7 @@ const SyncData = () => {
       setSelectedCabang(storedCabang);
       filterUnitKerjaForCabang(storedCabang);
     }
-  }, []);D
+  }, []);
 
   const filterUnitKerjaForCabang = (cabang) => {
     const filtered = unitKerjaList.filter(
