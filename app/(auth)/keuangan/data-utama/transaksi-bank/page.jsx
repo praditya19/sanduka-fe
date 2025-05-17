@@ -142,6 +142,12 @@ export default function BankTransactionPage() {
   const tahunList = Array.from({ length: 6 }, (_, i) =>
     (currentYear + i).toString()
   );
+  const [jumlahPotonganBank, setJumlahPotonganBank] = useState(0);
+  const [totalNominalPotonganBank, setTotalNominalPotonganBank] = useState(0);
+  const [jumlahSetorTunai, setJumlahSetorTunai] = useState(0);
+  const [totalNominalSetorTunai, setTotalNominalSetorTunai] = useState(0);
+  const [totalTerfilter, setTotalTerfilter] = useState(0);
+  const [totalNominalTerfilter, setTotalNominalTerfilter] = useState(0);
 
   const handleFilter = async () => {
     try {
@@ -167,7 +173,6 @@ export default function BankTransactionPage() {
         displayCount
       );
       setDataBalancing(result);
-      console.log(result);
     } catch (err) {
       console.error("Gagal memuat data:", err);
     }
@@ -177,9 +182,31 @@ export default function BankTransactionPage() {
     getBalancingdata();
   }, [month, year, searchQuery, displayCount, paymentNote]);
 
+  const getTotalBalancing = async () => {
+    const now = new Date();
+    const bulan = now.getMonth() + 1;
+    const tahun = now.getFullYear();
+
+    try {
+      const data = await GlobalApi.getCountBalancing(bulan, tahun);
+      setJumlahPotonganBank(data.jumlahPotonganBank || 0);
+      setTotalNominalPotonganBank(data.totalNominalPotonganBank || 0);
+      setJumlahSetorTunai(data.jumlahSetorTunai || 0);
+      setTotalNominalSetorTunai(data.totalNominalSetorTunai || 0);
+      setTotalTerfilter(data.totalTerfilter || 0);
+      setTotalNominalTerfilter(data.totalNominalTerfilter || 0);
+      console.log("Data Potongan Gaji Summary:", data);
+    } catch (error) {
+      console.error("Gagal mengambil data:", error);
+    }
+  };
+  const formatRupiah = (angka) =>
+    angka.toLocaleString("id-ID", { style: "currency", currency: "IDR" });
+
   useEffect(() => {
     fetchCabangData();
     fetchUnitKerjaData();
+    getTotalBalancing();
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };
@@ -227,8 +254,6 @@ export default function BankTransactionPage() {
   };
   const handleUnitKerjaClick = () => {
     if (!selectedCabang) return;
-
-    // Filter unit kerja sesuai cabang yang dipilih
     const filteredList = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang?.toLowerCase() === selectedCabang.toLowerCase()
@@ -503,8 +528,13 @@ export default function BankTransactionPage() {
                     Anggota Potongan Bank
                   </h3>
                 </div>
-                <p className="text-lg font-semibold text-gray-800">0 Anggota</p>
-                <p className="text-gray-600 text-sm">Total Nominal: Rp 0</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  {" "}
+                  {jumlahPotonganBank} Anggota
+                </p>
+                <p className="text-gray-600 text-sm">
+                  Total Nominal: {formatRupiah(totalNominalPotonganBank)}{" "}
+                </p>
               </div>
 
               <div className="p-4 rounded-lg bg-gradient-to-br from-blue-50 to-white border border-blue-100">
@@ -519,8 +549,12 @@ export default function BankTransactionPage() {
                     Anggota Setor Tunai
                   </h3>
                 </div>
-                <p className="text-lg font-semibold text-gray-800">0 Anggota</p>
-                <p className="text-gray-600 text-sm">Total Nominal: Rp 0</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  {jumlahSetorTunai} Anggota
+                </p>
+                <p className="text-gray-600 text-sm">
+                  Total Nominal: {formatRupiah(totalNominalSetorTunai)}
+                </p>
               </div>
 
               <div className="p-4 rounded-lg bg-gradient-to-br from-indigo-50 to-white border border-indigo-100">
@@ -535,8 +569,12 @@ export default function BankTransactionPage() {
                     Total Anggota Terfilter
                   </h3>
                 </div>
-                <p className="text-lg font-semibold text-gray-800">0 Anggota</p>
-                <p className="text-gray-600 text-sm">Total Nominal: Rp 0</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  {totalTerfilter} Anggota
+                </p>
+                <p className="text-gray-600 text-sm">
+                  Total Nominal: {formatRupiah(totalNominalTerfilter)}
+                </p>
               </div>
             </div>
           </div>
