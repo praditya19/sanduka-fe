@@ -1126,6 +1126,26 @@ const getTransaksiBank = async (bulan, tahun, query, size) => {
   }
 };
 
+const getTransaksiBankBalancing = async (cabang, unitKerja, tahun, bulan, keterangan, size) => {
+  try {
+    const params = new URLSearchParams();
+    params.append("cabang", cabang?.id ?? "");
+    params.append("unitKerja", unitKerja?.id ?? "");
+    if (bulan) params.append("bulan", bulan);
+    if (tahun) params.append("tahun", tahun);
+    params.append("keterangan", keterangan ?? "");
+    if (size) params.append("size", size);
+
+    console.log("URL:", `/api/potongan-gaji/balancing?${params.toString()}`);
+
+    const response = await axiosClient.get(`/api/potongan-gaji/balancing?${params.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching transaksi bank balancing:", error);
+    throw error;
+  }
+};
+
 // End
 // Sanduka
 // Pemasukan & Pengeluaran Sanduka
@@ -2460,6 +2480,7 @@ export default {
   deletePengaduan,
   postIuranAnggota,
   uploadSinkronBank,
+  getTransaksiBankBalancing,
   countNewPengaduan,
   getTransaksiBank,
   countResponsesByPengaduanId,
