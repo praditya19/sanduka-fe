@@ -254,6 +254,17 @@ function RekapAnggota() {
     }
   };
 
+  const handleUnitKerjaClick = () => {
+  if (!selectedCabang) return;
+  const filteredList = unitKerjaList.filter(
+    (unitKerja) =>
+      unitKerja.cabang?.toLowerCase() === selectedCabang.toLowerCase()
+  );
+
+  setFilteredUnitKerja(filteredList);
+  setShowUnitKerjaDropdown(true);
+  };
+  
   const handleCabangClick = () => {
     setFilteredCabangList(originalCabangList);
     setShowCabangDropdown(true);
@@ -2119,6 +2130,7 @@ function RekapAnggota() {
                   placeholder="Pilih Unit Kerja"
                   className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
                   disabled={!selectedCabang}
+                  onClick={handleUnitKerjaClick}
                 />
                 {showUnitKerjaDropdown && (
                   <div className="absolute z-10 border rounded-lg bg-white shadow-sm mt-16 w-full">
