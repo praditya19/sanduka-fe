@@ -1207,7 +1207,7 @@ export default function BankTransactionPage() {
                             {item.rekening}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.totalIuranSanduka}
+                            {item.totalIuranAnggota}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                             {item.totalIuranSanduka}
