@@ -15,6 +15,8 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/app/_components/Sidebar";
 import { Input } from "@/components/ui/input";
 import GlobalApi from "@/app/_utils/GlobalApi";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -173,6 +175,7 @@ export default function BankTransactionPage() {
         displayCount
       );
       setDataBalancing(result);
+      console.log(result);
     } catch (err) {
       console.error("Gagal memuat data:", err);
     }
@@ -180,7 +183,15 @@ export default function BankTransactionPage() {
   useEffect(() => {
     handleFilter();
     getBalancingdata();
-  }, [month, year, searchQuery, displayCount, paymentNote]);
+  }, [
+    month,
+    year,
+    searchQuery,
+    displayCount,
+    paymentNote,
+    selectedCabang,
+    selectedUnitKerja,
+  ]);
 
   const getTotalBalancing = async () => {
     const now = new Date();
@@ -195,7 +206,6 @@ export default function BankTransactionPage() {
       setTotalNominalSetorTunai(data.totalNominalSetorTunai || 0);
       setTotalTerfilter(data.totalTerfilter || 0);
       setTotalNominalTerfilter(data.totalNominalTerfilter || 0);
-      console.log("Data Potongan Gaji Summary:", data);
     } catch (error) {
       console.error("Gagal mengambil data:", error);
     }
@@ -343,8 +353,6 @@ export default function BankTransactionPage() {
           ? item.cabang?.toLowerCase() === selectedCabang.toLowerCase()
           : true
       );
-      const processed = processData(cabangData);
-      setGroupedData(processed);
       setData(cabangData);
     } else {
       const filteredData = originalRekapData.filter(
@@ -454,6 +462,77 @@ export default function BankTransactionPage() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const exportToExcel = () => {
+    const formattedData = data.map((item, index) => ({
+      No: index + 1,
+      Rekening: item.rekening,
+      "Nama Anggota": item.namaAnggota,
+      "Rekening Kabupaten": item.rekeningKabupaten,
+      Potongan: item.potongan,
+      "Tgl. Potongan": formatTanggal(item.tanggalPemotongan),
+      Transaksi: item.transaksi,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(formattedData, {
+      header: [
+        "No",
+        "Rekening",
+        "Nama Anggota",
+        "Rekening Kabupaten",
+        "Potongan",
+        "Tgl. Potongan",
+        "Transaksi",
+      ],
+    });
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "potonganbnk");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(blob, "potongan-bank.xlsx");
+  };
+
+  const exportBalancingToExcel = () => {
+    const rekeningCount = {};
+    dataBalancing.forEach((item) => {
+      rekeningCount[item.rekening] = (rekeningCount[item.rekening] || 0) + 1;
+    });
+
+    const formattedData = dataBalancing.map((item, index) => ({
+      No: index + 1,
+      Cabang: item.cabang,
+      "Unit Kerja": item.unitKerja,
+      Nama: item.nama,
+      Rekening: item.rekening,
+      Iuran: item.totalIuranSanduka,
+      Sanduka: item.totalIuranSanduka,
+      Daspen: item.totalIuranDaspen,
+      Derap: item.totalIuranDerap,
+      Kalender: item.totalIuranKalender,
+      "Lain-lain": item.totalIuranKalender,
+      "Total Iuran": item.totalIuran,
+      "Potongan Bank": item.potongan,
+      Selisih: item.selisih,
+      Keterangan: item.keterangan,
+      "Cek Duplicate": rekeningCount[item.rekening] > 1 ? "Duplicate" : "-",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Balancing Potongan");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(blob, "balancing-potongan.xlsx");
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-4">
@@ -687,10 +766,27 @@ export default function BankTransactionPage() {
 
           {activeTab === "potongan" && (
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-gray-100">
+              <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-gray-800">
                   Data Potongan Bank
                 </h2>
+                <button
+                  className="px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm"
+                  onClick={exportToExcel}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                    className="hover:text-white transition"
+                  >
+                    <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                    <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                  </svg>
+                  Cetak Potongan
+                </button>
               </div>
 
               <div className="p-6 bg-gray-50 border-b border-gray-100">
@@ -762,7 +858,7 @@ export default function BankTransactionPage() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto" id="print-section">
                 <table className="min-w-full">
                   <thead>
                     <tr className="bg-gray-50">
@@ -844,12 +940,33 @@ export default function BankTransactionPage() {
           {activeTab === "balancing" && (
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               <div className="p-6 border-b border-gray-100">
-                <h2 className="text-lg font-semibold text-gray-800">
-                  Balancing Potongan
-                </h2>
-                <p className="text-gray-600 mt-1">
-                  Rekonsiliasi iuran anggota dengan data potongan bank.
-                </p>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-800">
+                      Balancing Potongan
+                    </h2>
+                    <p className="text-gray-600 mt-1">
+                      Rekonsiliasi iuran anggota dengan data potongan bank.
+                    </p>
+                  </div>
+                  <button
+                    className="px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm"
+                    onClick={exportBalancingToExcel}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      fill="currentColor"
+                      viewBox="0 0 16 16"
+                      className="hover:text-white transition"
+                    >
+                      <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                      <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                    </svg>
+                    Cetak Balancing Potongan
+                  </button>
+                </div>
               </div>
 
               <div className="p-6 bg-gray-50 border-b border-gray-100">
@@ -1013,6 +1130,7 @@ export default function BankTransactionPage() {
                       <option value="">Pilih Keterangan</option>
                       <option value="Sukses">Sukses</option>
                       <option value="Gagal">Gagal</option>
+                      <option value="Tunai">Tunai</option>
                     </select>
                   </div>
                 </div>

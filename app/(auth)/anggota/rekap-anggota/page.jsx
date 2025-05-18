@@ -856,35 +856,6 @@ function RekapAnggota() {
     }
   };
 
-  const handleSubmitUpload = async (e) => {
-    e.preventDefault();
-    setLoader(true);
-
-    const uploadData = new FormData();
-    uploadData.append("file", formData.file);
-    uploadData.append("namaFile", formData.namaFile);
-    uploadData.append("tanggalUntuk", formData.tanggalUntuk);
-
-    try {
-      const response = await GlobalApi.uploadSinkronBank(uploadData);
-      const interval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setLoader(false);
-            setShowUploadModal(false);
-            setProgress(0);
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 300);
-    } catch (error) {
-      console.error("Upload gagal:", error);
-      setLoader(false);
-    }
-  };
-
   const handleMemberClick = async (member) => {
     const daspenFromMember = member.daspen ? parseInt(member.daspen) : 0;
     setDaspenValue(daspenFromMember);
@@ -2058,12 +2029,6 @@ function RekapAnggota() {
                           >
                             Potongan Mandiri
                           </button>
-                          <button
-                            className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                            onClick={() => setShowUploadModal(true)}
-                          >
-                            Upload Data
-                          </button>
                         </div>
                       )}
                     </div>
@@ -2402,9 +2367,11 @@ function RekapAnggota() {
                                       </span>
                                       <span className="text-teal-700">
                                         {member.namaAnggota}
-                                        <div className="text-sm text-teal-700 italic">
-                                          {member.nip}
-                                        </div>
+                                        {member.nip && member.nip.length >= 10 && (
+  <div className="text-sm text-teal-700 italic">
+    {member.nip}
+  </div>
+)}
                                         <div className="text-sm text-teal-700 italic">
                                           {member.nomorRekening}
                                         </div>
