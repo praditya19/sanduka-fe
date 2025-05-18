@@ -1129,20 +1129,23 @@ const getTransaksiBank = async (bulan, tahun, query, size) => {
 const getTransaksiBankBalancing = async (cabang, unitKerja, tahun, bulan, keterangan, size) => {
   try {
     const params = new URLSearchParams();
-    params.append("cabang", cabang?.id ?? "");
-    params.append("unitKerja", unitKerja?.id ?? "");
+    if (cabang) params.append("cabang", cabang);
+    if (unitKerja) params.append("unitKerja", unitKerja);
     if (bulan) params.append("bulan", bulan);
     if (tahun) params.append("tahun", tahun);
     params.append("keterangan", keterangan ?? "");
     if (size) params.append("size", size);
 
-    const response = await axiosClient.get(`/api/potongan-gaji/balancing?${params.toString()}`);
+    const url = `/api/potongan-gaji/balancing?${params.toString()}`;
+
+    const response = await axiosClient.get(url);
     return response.data;
   } catch (error) {
     console.error("Error fetching transaksi bank balancing:", error);
     throw error;
   }
 };
+
 const getCountBalancing = async (bulan, tahun) => {
   try {
     const response = await axiosClient.get(
