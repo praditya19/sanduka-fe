@@ -575,7 +575,7 @@ export default function BankTransactionPage() {
             </p>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm mb-8 overflow-hidden">
+          <div className={`bg-white rounded-xl shadow-sm mb-8 ${activeTab === 'potongan' ? 'w-full' : 'w-[1900px]'}`}>
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-start justify-between">
                 <div>
@@ -743,26 +743,26 @@ export default function BankTransactionPage() {
             </>
           )}
 
-          <div className="flex mb-6 border-b border-gray-200 w-full">
-            {["potongan", "balancing", "rekapitulasi"].map((tab) => (
-              <button
-                key={tab}
-                className={`w-full text-center py-3 px-5 font-medium transition-colors duration-200 
+          <div className={`flex mb-6 border-b border-gray-200 ${activeTab === 'potongan' ? 'w-full' : 'w-[1900px]'}`}>
+  {["potongan", "balancing", "rekapitulasi"].map((tab) => (
+    <button
+      key={tab}
+      className={`w-full text-center py-3 px-5 font-medium transition-colors duration-200 
         ${
           activeTab === tab
             ? "bg-teal-100 text-teal-700 border-b-2 border-teal-600"
             : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
         }`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab === "potongan"
-                  ? "Potongan Bank"
-                  : tab === "balancing"
-                  ? "Balancing Potongan"
-                  : "Rekap Data Keuangan"}
-              </button>
-            ))}
-          </div>
+      onClick={() => setActiveTab(tab)}
+    >
+      {tab === "potongan"
+        ? "Potongan Bank"
+        : tab === "balancing"
+        ? "Balancing Potongan"
+        : "Rekap Data Keuangan"}
+    </button>
+  ))}
+</div>
 
           {activeTab === "potongan" && (
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -858,7 +858,7 @@ export default function BankTransactionPage() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto" id="print-section">
+              <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
                     <tr className="bg-gray-50">
@@ -938,7 +938,7 @@ export default function BankTransactionPage() {
           )}
 
           {activeTab === "balancing" && (
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm w-[1900px]">
               <div className="p-6 border-b border-gray-100">
                 <div className="flex items-start justify-between">
                   <div>
@@ -1136,7 +1136,131 @@ export default function BankTransactionPage() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="w-full">
+  <table className="min-w-full">
+    <thead>
+                    <tr className="bg-gray-50">
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        No
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        Cabang
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        Unit Kerja
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        Nama
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        Rekening
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        Iuran
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        Sanduka
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        Daspen
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        Derap
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        Kalender
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        Lain-lain
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        Total Iuran
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        Potongan Bank
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        Selisih
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        Keterangan
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dataBalancing.length > 0 ? (
+                      dataBalancing.map((item, index) => (
+                        <tr key={index}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {index + 1}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {item.cabang}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {item.unitKerja}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {item.nama}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {item.rekening}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {item.totalIuranAnggota}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {item.totalIuranSanduka}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {item.totalIuranDaspen}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {item.totalIuranDerap}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {item.totalIuranKalender}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {item.totalIuranKalender}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {item.totalIuran}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {item.potongan}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {item.selisih}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            {item.keterangan}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={15}
+                          className="px-6 py-8 text-center text-sm text-gray-500 border-b"
+                        >
+                          <div className="flex flex-col items-center justify-center">
+                            <FontAwesomeIcon
+                              icon={faSearch}
+                              className="text-gray-300 text-4xl mb-3"
+                            />
+                            <p>
+                              Tidak ada data transaksi bank yang cocok dengan
+                              filter Anda.
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+  </table>
+</div>
+              {/* <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
                     <tr className="bg-gray-50">
@@ -1259,7 +1383,7 @@ export default function BankTransactionPage() {
                     )}
                   </tbody>
                 </table>
-              </div>
+              </div> */}
             </div>
           )}
 
