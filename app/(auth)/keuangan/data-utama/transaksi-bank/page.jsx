@@ -116,7 +116,6 @@ export default function BankTransactionPage() {
   const [unitKerjaList, setUnitKerjaList] = useState([]);
   const [originalRekapData, setOriginalRekapData] = useState([]);
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
-  const dropdownRef = useRef(null);
   const [role, setRole] = useState("");
   const today = new Date();
   const currentMonth = today.getMonth() + 1;
@@ -150,6 +149,10 @@ export default function BankTransactionPage() {
   const [totalNominalSetorTunai, setTotalNominalSetorTunai] = useState(0);
   const [totalTerfilter, setTotalTerfilter] = useState(0);
   const [totalNominalTerfilter, setTotalNominalTerfilter] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPageBalancing, setCurrentPageBalancing] = useState(1);
+  const [totalPagesBalancing, setTotalPagesBalancing] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
 
   const handleFilter = async () => {
     try {
@@ -157,13 +160,16 @@ export default function BankTransactionPage() {
         month,
         year,
         searchQuery,
-        displayCount
+        displayCount,
+        currentPage - 1
       );
-      setData(result);
+      setData(result.content);
+      setTotalPages(result.totalPages);
     } catch (err) {
       console.error("Gagal memuat data:", err);
     }
   };
+
   const getBalancingdata = async () => {
     try {
       const result = await GlobalApi.getTransaksiBankBalancing(
@@ -172,14 +178,16 @@ export default function BankTransactionPage() {
         year,
         month,
         paymentNote,
-        displayCount
+        displayCount,
+        currentPageBalancing - 1 // backend biasanya 0-based
       );
-      setDataBalancing(result);
-      console.log(result);
+      setDataBalancing(result.content);
+      setTotalPagesBalancing(result.totalPages); // total halaman dari backend
     } catch (err) {
       console.error("Gagal memuat data:", err);
     }
   };
+
   useEffect(() => {
     handleFilter();
     getBalancingdata();
@@ -191,6 +199,8 @@ export default function BankTransactionPage() {
     paymentNote,
     selectedCabang,
     selectedUnitKerja,
+    currentPage,
+    currentPageBalancing,
   ]);
 
   const getTotalBalancing = async () => {
@@ -534,6 +544,70 @@ export default function BankTransactionPage() {
     saveAs(blob, "balancing-potongan.xlsx");
   };
 
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePageClick = (page) => {
+    setCurrentPage(page);
+  };
+
+  const getVisiblePages = () => {
+    const pages = [];
+    const maxPagesToShow = 5;
+    const half = Math.floor(maxPagesToShow / 2);
+    let start = Math.max(currentPage - half, 1);
+    let end = Math.min(start + maxPagesToShow - 1, totalPages);
+
+    if (end - start < maxPagesToShow - 1) {
+      start = Math.max(end - maxPagesToShow + 1, 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  };
+  // Balancing
+  const handlePageClickBalancing = (page) => {
+    setCurrentPageBalancing(page);
+  };
+
+  const handlePreviousPageBalancing = () => {
+    setCurrentPageBalancing((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPageBalancing = () => {
+    setCurrentPageBalancing((prev) => Math.min(prev + 1, totalPagesBalancing));
+  };
+
+  const getVisiblePagesBalancing = () => {
+    const pages = [];
+    const maxVisible = 5;
+
+    let start = Math.max(currentPageBalancing - 2, 1);
+    let end = Math.min(start + maxVisible - 1, totalPagesBalancing);
+
+    if (end - start < maxVisible - 1) {
+      start = Math.max(end - maxVisible + 1, 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-4">
       <header className="bg-gradient-to-r from-teal-600 to-teal-700 text-white py-4 px-4 md:px-8 shadow-lg fixed top-0 left-0 w-full z-50 flex items-center">
@@ -575,7 +649,11 @@ export default function BankTransactionPage() {
             </p>
           </div>
 
-          <div className={`bg-white rounded-xl shadow-sm mb-8 ${activeTab === 'potongan' ? 'w-full' : 'w-[1900px]'}`}>
+          <div
+            className={`bg-white rounded-xl shadow-sm mb-8 ${
+              activeTab === "potongan" ? "w-full" : "w-[1900px]"
+            }`}
+          >
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-start justify-between">
                 <div>
@@ -743,26 +821,30 @@ export default function BankTransactionPage() {
             </>
           )}
 
-          <div className={`flex mb-6 border-b border-gray-200 ${activeTab === 'potongan' ? 'w-full' : 'w-[1900px]'}`}>
-  {["potongan", "balancing", "rekapitulasi"].map((tab) => (
-    <button
-      key={tab}
-      className={`w-full text-center py-3 px-5 font-medium transition-colors duration-200 
+          <div
+            className={`flex mb-6 border-b border-gray-200 ${
+              activeTab === "potongan" ? "w-full" : "w-[1900px]"
+            }`}
+          >
+            {["potongan", "balancing", "rekapitulasi"].map((tab) => (
+              <button
+                key={tab}
+                className={`w-full text-center py-3 px-5 font-medium transition-colors duration-200 
         ${
           activeTab === tab
             ? "bg-teal-100 text-teal-700 border-b-2 border-teal-600"
             : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
         }`}
-      onClick={() => setActiveTab(tab)}
-    >
-      {tab === "potongan"
-        ? "Potongan Bank"
-        : tab === "balancing"
-        ? "Balancing Potongan"
-        : "Rekap Data Keuangan"}
-    </button>
-  ))}
-</div>
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab === "potongan"
+                  ? "Potongan Bank"
+                  : tab === "balancing"
+                  ? "Balancing Potongan"
+                  : "Rekap Data Keuangan"}
+              </button>
+            ))}
+          </div>
 
           {activeTab === "potongan" && (
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -890,7 +972,7 @@ export default function BankTransactionPage() {
                       data.map((item, index) => (
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {index + 1}
+                            {(currentPage - 1) * displayCount + index + 1}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                             {item.rekening}
@@ -933,6 +1015,113 @@ export default function BankTransactionPage() {
                     )}
                   </tbody>
                 </table>
+                <div className="p-4 border-t">
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <button
+                      onClick={() => handlePageClick(1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 mr-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                        />
+                      </svg>
+                      First
+                    </button>
+                    <button
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 mr-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 19l-7-7 7-7"
+                        />
+                      </svg>
+                      Prev
+                    </button>
+
+                    {getVisiblePages().map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => handlePageClick(page)}
+                        className={`px-3 py-1 border rounded-md text-sm ${
+                          page === currentPage
+                            ? "bg-teal-600 text-white border-teal-600"
+                            : "bg-white hover:bg-gray-50"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+
+                    {totalPages > 3 && currentPage < totalPages - 3 && (
+                      <span className="px-2 py-1">...</span>
+                    )}
+
+                    <button
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
+                    >
+                      Next
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 ml-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handlePageClick(totalPages)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
+                    >
+                      Last
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 ml-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 5l7 7-7 7M5 5l7 7-7 7"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -1137,130 +1326,6 @@ export default function BankTransactionPage() {
               </div>
 
               <div className="w-full">
-  <table className="min-w-full">
-    <thead>
-                    <tr className="bg-gray-50">
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        No
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Cabang
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Unit Kerja
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Nama
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Rekening
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Iuran
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Sanduka
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Daspen
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Derap
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Kalender
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Lain-lain
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Total Iuran
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Potongan Bank
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Selisih
-                      </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Keterangan
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dataBalancing.length > 0 ? (
-                      dataBalancing.map((item, index) => (
-                        <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {index + 1}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {item.cabang}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {item.unitKerja}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {item.nama}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.rekening}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.totalIuranAnggota}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.totalIuranSanduka}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.totalIuranDaspen}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.totalIuranDerap}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.totalIuranKalender}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.totalIuranKalender}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.totalIuran}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.potongan}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.selisih}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.keterangan}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={15}
-                          className="px-6 py-8 text-center text-sm text-gray-500 border-b"
-                        >
-                          <div className="flex flex-col items-center justify-center">
-                            <FontAwesomeIcon
-                              icon={faSearch}
-                              className="text-gray-300 text-4xl mb-3"
-                            />
-                            <p>
-                              Tidak ada data transaksi bank yang cocok dengan
-                              filter Anda.
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-  </table>
-</div>
-              {/* <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
                     <tr className="bg-gray-50">
@@ -1383,7 +1448,119 @@ export default function BankTransactionPage() {
                     )}
                   </tbody>
                 </table>
-              </div> */}
+                <div className="p-4 border-t">
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <button
+                      onClick={() => handlePageClickBalancing(1)}
+                      disabled={currentPageBalancing === 1}
+                      className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 mr-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                        />
+                      </svg>
+                      First
+                    </button>
+
+                    <button
+                      onClick={handlePreviousPageBalancing}
+                      disabled={currentPageBalancing === 1}
+                      className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 mr-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 19l-7-7 7-7"
+                        />
+                      </svg>
+                      Prev
+                    </button>
+
+                    {getVisiblePagesBalancing().map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => handlePageClickBalancing(page)}
+                        className={`px-3 py-1 border rounded-md text-sm ${
+                          page === currentPageBalancing
+                            ? "bg-teal-600 text-white border-teal-600"
+                            : "bg-white hover:bg-gray-50"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+
+                    {totalPagesBalancing > 3 &&
+                      currentPageBalancing < totalPagesBalancing - 3 && (
+                        <span className="px-2 py-1">...</span>
+                      )}
+
+                    <button
+                      onClick={handleNextPageBalancing}
+                      disabled={currentPageBalancing === totalPagesBalancing}
+                      className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
+                    >
+                      Next
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 ml-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        handlePageClickBalancing(totalPagesBalancing)
+                      }
+                      disabled={currentPageBalancing === totalPagesBalancing}
+                      className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
+                    >
+                      Last
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 ml-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 5l7 7-7 7M5 5l7 7-7 7"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

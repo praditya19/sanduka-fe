@@ -1107,38 +1107,64 @@ const deleteLainlain = async (id) => {
 // END
 
 // Transaksi Bank (data utama)
-const getTransaksiBank = async (bulan, tahun, query, size) => {
+const getTransaksiBank = async (
+  bulan = null,
+  tahun = null,
+  query = null,
+  size = 10,
+  page = 0
+) => {
   try {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams({ page, size });
+
     if (bulan) params.append("bulan", bulan);
     if (tahun) params.append("tahun", tahun);
     if (query) params.append("query", query);
-    if (size) params.append("size", size);
 
-    const response = await axiosClient.get(
-      `/api/potongan-gaji?${params.toString()}`
+    const response = await axios.get(
+      `https://sanduka.my.id/api/potongan-gaji?${params.toString()}`
     );
-    return response.data;
+
+    return {
+      content: response.data.content,
+      totalElements: response.data.totalElements,
+      totalPages: response.data.totalPages,
+    };
   } catch (error) {
     console.error("Error fetching transaksi bank:", error);
     throw error;
   }
 };
 
-const getTransaksiBankBalancing = async (cabang, unitKerja, tahun, bulan, keterangan, size) => {
+const getTransaksiBankBalancing = async (
+  cabang = null,
+  unitKerja = null,
+  tahun = null,
+  bulan = null,
+  keterangan = null,
+  size = 10,
+  page = 0
+) => {
   try {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams({
+      page,
+      size,
+    });
+
     if (cabang) params.append("cabang", cabang);
     if (unitKerja) params.append("unitKerja", unitKerja);
     if (bulan) params.append("bulan", bulan);
     if (tahun) params.append("tahun", tahun);
-    params.append("keterangan", keterangan ?? "");
-    if (size) params.append("size", size);
+    if (keterangan) params.append("keterangan", keterangan);
 
-    const url = `/api/potongan-gaji/balancing?${params.toString()}`;
-
+    const url = `https://sanduka.my.id/api/potongan-gaji/balancing?${params.toString()}`;
     const response = await axiosClient.get(url);
-    return response.data;
+
+    return {
+      content: response.data.content,
+      totalElements: response.data.totalElements,
+      totalPages: response.data.totalPages,
+    };
   } catch (error) {
     console.error("Error fetching transaksi bank balancing:", error);
     throw error;
