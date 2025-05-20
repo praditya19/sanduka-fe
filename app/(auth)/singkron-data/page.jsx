@@ -128,6 +128,9 @@ const SyncData = () => {
   const [notification, setNotification] = useState(null);
   const [statusKeanggotaan, setStatusKeanggotaan] = useState("");
   const [showActions, setShowActions] = useState(false);
+  const [sortField, setSortField] = useState(null);
+  const [sortOrder, setSortOrder] = useState("asc"); // atau "desc"
+
 
   useEffect(() => {
     const storedRole = sessionStorage.getItem("role");
@@ -327,39 +330,67 @@ const SyncData = () => {
     };
   }, []);
 
-  const filteredData = data.filter((item) => {
-    const statusMatch = statusKeanggotaan
-      ? item.statusKeanggotaan?.toLowerCase() === statusKeanggotaan.toLowerCase()
-      : true;
-    if (role === "ADMIN") {
-      const cabangMatch = item.cabang === selectedCabang;
+  const handleSort = (field) => {
+    const newSortOrder = sortField === field && sortOrder === 'asc' ? 'desc' : 'asc';
+
+    setSortField(field);
+    setSortOrder(newSortOrder);
+  };
+
+  const sortAndFilterData = () => {
+    let result = [...data];
+
+    if (sortField) {
+      result.sort((a, b) => {
+        let valA = a[sortField] ?? '';
+        let valB = b[sortField] ?? '';
+
+        if (typeof valA === 'boolean' && typeof valB === 'boolean') {
+          return sortOrder === 'asc'
+            ? (valA === valB ? 0 : valA ? 1 : -1)
+            : (valA === valB ? 0 : valA ? -1 : 1);
+        }
+
+        if (!isNaN(valA) && !isNaN(valB)) {
+          return sortOrder === 'asc'
+            ? Number(valA) - Number(valB)
+            : Number(valB) - Number(valA);
+        }
+
+        valA = String(valA).toLowerCase();
+        valB = String(valB).toLowerCase();
+
+        if (sortOrder === 'asc') {
+          return valA.localeCompare(valB);
+        } else {
+          return valB.localeCompare(valA);
+        }
+      });
+    }
+
+    result = result.filter((item) => {
+      const statusMatch = statusKeanggotaan
+        ? item.statusKeanggotaan?.toLowerCase() === statusKeanggotaan.toLowerCase()
+        : true;
+
+      const cabangMatch = selectedCabang ? item.cabang === selectedCabang : true;
       const unitKerjaMatch = selectedUnitKerja
         ? item.unitKerja?.toLowerCase() === selectedUnitKerja?.toLowerCase()
         : true;
 
       const namaMatch = searchNama
-        ? item.namaAnggota?.toLowerCase().includes(searchNama) ||
-        item.npa?.toLowerCase().includes(searchNama) ||
-        item.nip?.toLowerCase().includes(searchNama)
+        ? item.namaAnggota?.toLowerCase().includes(searchNama.toLowerCase()) ||
+        item.npa?.toLowerCase().includes(searchNama.toLowerCase()) ||
+        item.nip?.toLowerCase().includes(searchNama.toLowerCase())
         : true;
 
       return cabangMatch && unitKerjaMatch && namaMatch && statusMatch;
-    }
+    });
 
-    const cabangMatch = selectedCabang ? item.cabang === selectedCabang : true;
-    const unitKerjaMatch = selectedUnitKerja
-      ? item.unitKerja?.toLowerCase() === selectedUnitKerja?.toLowerCase()
-      : true;
+    return result;
+  };
 
-    const namaMatch = searchNama
-      ? item.namaAnggota?.toLowerCase().includes(searchNama) ||
-      item.npa?.toLowerCase().includes(searchNama) ||
-      item.nip?.toLowerCase().includes(searchNama)
-      : true;
-
-    return cabangMatch && unitKerjaMatch && namaMatch && statusMatch;
-  });
-
+  const filteredData = sortAndFilterData();
   const paginatedData = paginateData(filteredData);
 
   useEffect(() => {
@@ -654,10 +685,6 @@ const SyncData = () => {
                       </div>
                       <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
                         <div className="text-left">
-                          <h3 className="font-semibold">Nip:</h3>
-                          <p>{item.nip}</p>
-                        </div>
-                        <div className="text-left">
                           <h3 className="font-semibold">Data Daspen:</h3>
                           <p
                             className={`inline-block px-2 py-1 rounded ${item.dataDaspen
@@ -668,8 +695,6 @@ const SyncData = () => {
                             {item.dataDaspen ? "YES" : "NO"}
                           </p>
                         </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
                         <div className="text-left">
                           <h3 className="font-semibold">Keterangan:</h3>
                           <p>
@@ -686,36 +711,37 @@ const SyncData = () => {
                             )}
                           </p>
                         </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
                         <div className="text-left">
                           <div className="text-left">
                             <h3 className="font-semibold">Status Keanggotaan:</h3>
                             <p>{item.statusKeanggotaan}</p>
                           </div>
                         </div>
-
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">Action:</h3>
-                        <div className="text-left flex items-center gap-2">
-                          <button
-                            onClick={() =>
-                              window.open(
-                                `https://wa.me/${item.nomorHp}`,
-                                "_blank"
-                              )
-                            }
-                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
-                          >
-                            <FontAwesomeIcon icon={faWhatsapp} size="lg" />
-                          </button>
-                          <Button
-                            className="bg-red-500 p-2 border rounded-md"
-                            title="Hapus"
-                            type="button"
-                            onClick={() => handleDeleteClick(item.id)}
-                          >
-                            <FaTrash className="w-4 h-4" />
-                          </Button>
+                        <div>
+                          <h3 className="text-left">Action:</h3>
+                          <div className="text-left flex items-center gap-2">
+                            <button
+                              onClick={() =>
+                                window.open(
+                                  `https://wa.me/${item.nomorHp}`,
+                                  "_blank"
+                                )
+                              }
+                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
+                            >
+                              <FontAwesomeIcon icon={faWhatsapp} size="lg" />
+                            </button>
+                            <Button
+                              className="bg-red-500 p-2 border rounded-md"
+                              title="Hapus"
+                              type="button"
+                              onClick={() => handleDeleteClick(item.id)}
+                            >
+                              <FaTrash className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1246,38 +1272,67 @@ const SyncData = () => {
               <table className="w-full text-sm text-left text-gray-500">
                 <thead className="text-xs text-white uppercase bg-teal-700 text-center">
                   <tr>
-                    <th scope="col" className="py-3 px-6">
+                    <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('id')}>
                       No
+                      {sortField === 'id' && (
+                        <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
+                      )}
                     </th>
-                    <th scope="col" className="py-3 px-6">
+                    <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('cabang')}>
                       Cabang
+                      {sortField === 'cabang' && (
+                        <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
+                      )}
                     </th>
-                    <th scope="col" className="py-3 px-6">
+                    <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('unitKerja')}>
                       Unit Kerja
+                      {sortField === 'unitKerja' && (
+                        <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
+                      )}
                     </th>
                     {!isMobile && (
                       <>
-                        <th scope="col" className="py-3 px-6">
+                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('namaAnggota')}>
                           Nama
+                          {sortField === 'namaAnggota' && (
+                            <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
+                          )}
                         </th>
-                        <th scope="col" className="py-3 px-6">
+                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('npa')}>
                           NPA
+                          {sortField === 'npa' && (
+                            <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
+                          )}
                         </th>
-                        <th scope="col" className="py-3 px-6">
+                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('nip')}>
                           NIP
+                          {sortField === 'nip' && (
+                            <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
+                          )}
                         </th>
-
-                        <th scope="col" className="py-3 px-6">
+                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('dataKtaDigital')}>
                           Data KTA Digital
+                          {sortField === 'dataKtaDigital' && (
+                            <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
+                          )}
                         </th>
-                        <th scope="col" className="py-3 px-6">
+                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('dataDaspen')}>
                           Data Daspen
+                          {sortField === 'dataDaspen' && (
+                            <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
+                          )}
                         </th>
-                        <th scope="col" className="py-3 px-6">
+                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('verifikasi')}>
                           Keterangan
+                          {sortField === 'verifikasi' && (
+                            <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
+                          )}
                         </th>
-                        <th scope="col" className="py-3 px-6">
+                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('statusKeanggotaan')}>
                           Status Keanggotaan
+                          {sortField === 'statusKeanggotaan' && (
+                            <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
+                          )}
                         </th>
                         <th scope="col" className="py-3 px-6">
                           Wa
