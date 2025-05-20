@@ -2936,10 +2936,28 @@ function RekapAnggota() {
                       </button>
                       <button
                         type="button"
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                        onClick={idIuran ? handleUpdateClick : handleSaveClick}
+                        className={`font-bold py-2 px-4 rounded ${
+                          idIuran
+                            ? "bg-gray-400 cursor-not-allowed text-white"
+                            : "bg-green-600 hover:bg-green-700 text-white"
+                        }`}
+                        onClick={handleSaveClick}
+                        disabled={!idIuran}
                       >
-                        {idIuran ? "Update" : "Save"}
+                        Save
+                      </button>
+
+                      <button
+                        type="button"
+                        className={`font-bold py-2 px-4 rounded ${
+                          idIuran
+                            ? "bg-blue-600 hover:bg-blue-700 text-white"
+                            : "bg-gray-300 text-white cursor-not-allowed"
+                        }`}
+                        onClick={handleUpdateClick}
+                        disabled={!idIuran}
+                      >
+                        Update
                       </button>
                     </div>
                   </div>
