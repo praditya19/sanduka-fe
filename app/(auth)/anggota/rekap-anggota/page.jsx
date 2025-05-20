@@ -255,16 +255,16 @@ function RekapAnggota() {
   };
 
   const handleUnitKerjaClick = () => {
-  if (!selectedCabang) return;
-  const filteredList = unitKerjaList.filter(
-    (unitKerja) =>
-      unitKerja.cabang?.toLowerCase() === selectedCabang.toLowerCase()
-  );
+    if (!selectedCabang) return;
+    const filteredList = unitKerjaList.filter(
+      (unitKerja) =>
+        unitKerja.cabang?.toLowerCase() === selectedCabang.toLowerCase()
+    );
 
-  setFilteredUnitKerja(filteredList);
-  setShowUnitKerjaDropdown(true);
+    setFilteredUnitKerja(filteredList);
+    setShowUnitKerjaDropdown(true);
   };
-  
+
   const handleCabangClick = () => {
     setFilteredCabangList(originalCabangList);
     setShowCabangDropdown(true);
@@ -1614,7 +1614,20 @@ function RekapAnggota() {
       return;
     }
 
+    const bulanSekarang = new Date();
+    const bulanBerikutnya = new Date(
+      bulanSekarang.getFullYear(),
+      bulanSekarang.getMonth() + 1
+    );
+    const namaBulan = bulanBerikutnya.toLocaleString("id-ID", {
+      month: "long",
+      year: "numeric",
+    });
+
     const excelData = [];
+
+    excelData.push([`Tagihan Untuk Bulan ${namaBulan}`]);
+    excelData.push([]);
 
     excelData.push([
       "No",
@@ -1724,6 +1737,16 @@ function RekapAnggota() {
     }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
 
     XLSX.writeFile(wb, fileName);
+  };
+
+  const handleBackupData = async () => {
+    try {
+      await GlobalApi.postToBackup(groupedData);
+
+      exportToExcel();
+    } catch (error) {
+      console.error("Gagal backup dan export:", error);
+    }
   };
 
   const handleRekapClick = () => {
@@ -1991,6 +2014,13 @@ function RekapAnggota() {
                       </svg>
 
                       <span>Excel</span>
+                    </button>
+
+                    <button
+                      className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3"
+                      onClick={handleBackupData}
+                    >
+                      <span>Backup Data</span>
                     </button>
 
                     <div
@@ -2367,11 +2397,12 @@ function RekapAnggota() {
                                       </span>
                                       <span className="text-teal-700">
                                         {member.namaAnggota}
-                                        {member.nip && member.nip.length >= 10 && (
-  <div className="text-sm text-teal-700 italic">
-    {member.nip}
-  </div>
-)}
+                                        {member.nip &&
+                                          member.nip.length >= 10 && (
+                                            <div className="text-sm text-teal-700 italic">
+                                              {member.nip}
+                                            </div>
+                                          )}
                                         <div className="text-sm text-teal-700 italic">
                                           {member.nomorRekening}
                                         </div>
@@ -2437,7 +2468,7 @@ function RekapAnggota() {
                                           Daspen:
                                         </span>
                                         {showDaspenBadge ? (
-                                          <span className="bg-red-100 text-red-800 py-1 px-2 rounded-full text-xs">
+                                          <span className="bg-red-100 text-red-800 py-1  rounded-full text-xs">
                                             Belum Input
                                           </span>
                                         ) : (
@@ -2488,7 +2519,7 @@ function RekapAnggota() {
                                   <div className="flex justify-between py-1 items-center">
                                     <span>Daspen:</span>
                                     {showDaspenBadge ? (
-                                      <span className="bg-red-100 text-red-800 py-1 px-2 rounded-full text-xs">
+                                      <span className="bg-red-100 text-red-800 py-1 px-1 rounded-full text-xs">
                                         Belum Input
                                       </span>
                                     ) : (

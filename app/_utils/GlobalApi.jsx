@@ -1475,6 +1475,21 @@ const uploadSinkronBank = async (formData) => {
   }
 };
 
+const postToBackup = async (data) => {
+  try {
+    const response = await axiosClient.post("/api/by-nominal/backup", data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error posting to backup API:", error);
+    throw error;
+  }
+};
+
 const postIuranAnggota = async (data) => {
   try {
     const response = await axiosClient.post("/api/iuran-anggota", data, {
@@ -2521,6 +2536,7 @@ export default {
   getCountBalancing,
   countNewPengaduan,
   getTransaksiBank,
+  postToBackup,
   countResponsesByPengaduanId,
   getTagihanAnggotaById,
   exportTidakTerdaftarToExcel
