@@ -143,6 +143,7 @@ export default function BankTransactionPage() {
   const tahunList = Array.from({ length: 6 }, (_, i) =>
     (currentYear + i).toString()
   );
+  const [isLoading, setIsLoading] = useState(false);
   const [jumlahPotonganBank, setJumlahPotonganBank] = useState(0);
   const [totalNominalPotonganBank, setTotalNominalPotonganBank] = useState(0);
   const [jumlahSetorTunai, setJumlahSetorTunai] = useState(0);
@@ -179,10 +180,11 @@ export default function BankTransactionPage() {
         month,
         paymentNote,
         displayCount,
-        currentPageBalancing - 1 // backend biasanya 0-based
+        currentPageBalancing - 1
       );
       setDataBalancing(result.content);
-      setTotalPagesBalancing(result.totalPages); // total halaman dari backend
+      setTotalPagesBalancing(result.totalPages);
+      console.log(result.content);
     } catch (err) {
       console.error("Gagal memuat data:", err);
     }
@@ -473,75 +475,135 @@ export default function BankTransactionPage() {
     };
   }, []);
 
-  const exportToExcel = () => {
-    const formattedData = data.map((item, index) => ({
-      No: index + 1,
-      Rekening: item.rekening,
-      "Nama Anggota": item.namaAnggota,
-      "Rekening Kabupaten": item.rekeningKabupaten,
-      Potongan: item.potongan,
-      "Tgl. Potongan": formatTanggal(item.tanggalPemotongan),
-      Transaksi: item.transaksi,
-    }));
+  const exportToExcel = async () => {
+    try {
+      setIsLoading(true);
+      const allData = [];
+      let currentPage = 0;
+      const pageSize = 100;
 
-    const worksheet = XLSX.utils.json_to_sheet(formattedData, {
-      header: [
-        "No",
-        "Rekening",
-        "Nama Anggota",
-        "Rekening Kabupaten",
-        "Potongan",
-        "Tgl. Potongan",
-        "Transaksi",
-      ],
-    });
+      let totalPages = 1;
 
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "potonganbnk");
+      while (currentPage < totalPages) {
+        const result = await GlobalApi.getTransaksiBank(
+          month,
+          year,
+          searchQuery,
+          pageSize,
+          currentPage
+        );
 
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(blob, "potongan-bank.xlsx");
+        allData.push(...result.content);
+        totalPages = result.totalPages;
+        currentPage++;
+      }
+
+      const formattedData = allData.map((item, index) => ({
+        No: index + 1,
+        Rekening: item.rekening,
+        "Nama Anggota": item.namaAnggota,
+        "Rekening Kabupaten": item.rekeningKabupaten,
+        Potongan: item.potongan,
+        "Tgl. Potongan": formatTanggal(item.tanggalPemotongan),
+        Transaksi: item.transaksi,
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(formattedData, {
+        header: [
+          "No",
+          "Rekening",
+          "Nama Anggota",
+          "Rekening Kabupaten",
+          "Potongan",
+          "Tgl. Potongan",
+          "Transaksi",
+        ],
+      });
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "potonganbnk");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      const blob = new Blob([excelBuffer], {
+        type: "application/octet-stream",
+      });
+      saveAs(blob, "potongan-bank.xlsx");
+    } catch (error) {
+      console.error("Gagal mengekspor data:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const exportBalancingToExcel = () => {
-    const rekeningCount = {};
-    dataBalancing.forEach((item) => {
-      rekeningCount[item.rekening] = (rekeningCount[item.rekening] || 0) + 1;
-    });
+  const exportBalancingToExcel = async () => {
+    try {
+      setIsLoading(true);
+      let allData = [];
+      let currentPage = 0;
+      let isLastPage = false;
+      const pageSize = 100;
 
-    const formattedData = dataBalancing.map((item, index) => ({
-      No: index + 1,
-      Cabang: item.cabang,
-      "Unit Kerja": item.unitKerja,
-      Nama: item.nama,
-      Rekening: item.rekening,
-      Iuran: item.totalIuranSanduka,
-      Sanduka: item.totalIuranSanduka,
-      Daspen: item.totalIuranDaspen,
-      Derap: item.totalIuranDerap,
-      Kalender: item.totalIuranKalender,
-      "Lain-lain": item.totalIuranKalender,
-      "Total Iuran": item.totalIuran,
-      "Potongan Bank": item.potongan,
-      Selisih: item.selisih,
-      Keterangan: item.keterangan,
-      "Cek Duplicate": rekeningCount[item.rekening] > 1 ? "Duplicate" : "-",
-    }));
+      while (currentPage < totalPages) {
+        const result = await GlobalApi.getTransaksiBankBalancing(
+          selectedCabang,
+          selectedUnitKerja,
+          year,
+          month,
+          paymentNote,
+          pageSize,
+          currentPage
+        );
 
-    const worksheet = XLSX.utils.json_to_sheet(formattedData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Balancing Potongan");
+        allData = [...allData, ...result.content];
+        isLastPage = result.last;
+        currentPage++;
+      }
 
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(blob, "balancing-potongan.xlsx");
+      const rekeningCount = {};
+      allData.forEach((item) => {
+        rekeningCount[item.rekening] = (rekeningCount[item.rekening] || 0) + 1;
+      });
+
+      const formattedData = allData.map((item, index) => ({
+        No: index + 1,
+        Cabang: item.cabang,
+        "Unit Kerja": item.unitKerja,
+        Nama: item.nama,
+        Rekening: item.rekening,
+        Iuran: item.totalIuranAnggota,
+        Sanduka: item.totalIuranSanduka,
+        Daspen: item.totalIuranDaspen,
+        Derap: item.totalIuranDerap,
+        Kalender: item.totalIuranKalender,
+        "Lain-lain": item.totalIuranSumbangan,
+        "Total Iuran": item.totalIuran,
+        "Potongan Bank": item.potongan,
+        Selisih: item.selisih,
+        Keterangan: item.keterangan,
+        "Cek Duplicate": rekeningCount[item.rekening] > 1 ? "Duplicate" : "-",
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(formattedData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Balancing Potongan");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const blob = new Blob([excelBuffer], {
+        type: "application/octet-stream",
+      });
+      saveAs(blob, "balancing-potongan-semua.xlsx");
+    } catch (err) {
+      console.error("Gagal mengekspor data:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePreviousPage = () => {
@@ -853,21 +915,51 @@ export default function BankTransactionPage() {
                   Data Potongan Bank
                 </h2>
                 <button
-                  className="px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm"
+                  className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                    isLoading ? "opacity-60 cursor-not-allowed" : ""
+                  }`}
                   onClick={exportToExcel}
+                  disabled={isLoading}
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    viewBox="0 0 16 16"
-                    className="hover:text-white transition"
-                  >
-                    <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
-                    <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
-                  </svg>
-                  Cetak Potongan
+                  {isLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-4 w-4 text-black"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
+                      </svg>
+                      Memproses...
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        viewBox="0 0 16 16"
+                        className="hover:text-white transition"
+                      >
+                        <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                        <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                      </svg>
+                      Cetak Potongan
+                    </>
+                  )}
                 </button>
               </div>
 
@@ -1139,21 +1231,51 @@ export default function BankTransactionPage() {
                     </p>
                   </div>
                   <button
-                    className="px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm"
+                    className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                      isLoading ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
                     onClick={exportBalancingToExcel}
+                    disabled={isLoading}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      fill="currentColor"
-                      viewBox="0 0 16 16"
-                      className="hover:text-white transition"
-                    >
-                      <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
-                      <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
-                    </svg>
-                    Cetak Balancing Potongan
+                    {isLoading ? (
+                      <>
+                        <svg
+                          className="animate-spin h-4 w-4 text-black"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                          />
+                        </svg>
+                        Memproses...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          fill="currentColor"
+                          viewBox="0 0 16 16"
+                          className="hover:text-white transition"
+                        >
+                          <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                          <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                        </svg>
+                        Cetak Balancing Potongan
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -1381,7 +1503,9 @@ export default function BankTransactionPage() {
                       dataBalancing.map((item, index) => (
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {index + 1}
+                            {(currentPageBalancing - 1) * displayCount +
+                              index +
+                              1}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {item.cabang}
