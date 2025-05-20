@@ -144,6 +144,7 @@ export default function BankTransactionPage() {
     (currentYear + i).toString()
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [onProses, setOnProses] = useState(true);
   const [jumlahPotonganBank, setJumlahPotonganBank] = useState(0);
   const [totalNominalPotonganBank, setTotalNominalPotonganBank] = useState(0);
   const [jumlahSetorTunai, setJumlahSetorTunai] = useState(0);
@@ -1689,167 +1690,53 @@ export default function BankTransactionPage() {
           )}
 
           {activeTab === "rekapitulasi" && (
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-gray-100">
-                <h2 className="text-lg font-semibold text-gray-800">
-                  Rekap Data Keuangan
-                </h2>
-                <p className="text-gray-600 mt-1">
-                  Rekonsiliasi iuran anggota dengan data potongan bank.
-                </p>
-              </div>
+  <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-[300px] flex items-center justify-center relative">
+    {onProses ? (
+  <div className="text-center animate-slide-up">
+    {/* <div className="flex justify-center mb-2">
+      <div className="text-4xl animate-bounce text-black">!</div>
+    </div> */}
+     <p className="text-gray-600 text-2xl font-medium">
+      Sedang Proses
+      <span className="inline-block dot-animation ml-1">.</span>
+      <span className="inline-block dot-animation ml-0.5" style={{ animationDelay: "0.2s" }}>.</span>
+      <span className="inline-block dot-animation ml-0.5" style={{ animationDelay: "0.4s" }}>.</span>
+    </p>
+  </div>
+    ) : (
+      <div>
+        <div className="p-6 border-b border-gray-100">
+          <h2 className="text-lg font-semibold text-gray-800">
+            Rekap Data Keuangan
+          </h2>
+          <p className="text-gray-600 mt-1">
+            Rekonsiliasi iuran anggota dengan data potongan bank.
+          </p>
+        </div>
 
-              <div className="p-6 bg-gray-50 border-b border-gray-100">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Cabang
-                    </label>
-                    <select
-                      className="w-full rounded-lg border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
-                      value={branch}
-                      onChange={(e) => setBranch(e.target.value)}
-                    >
-                      <option>Semua Cabang</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Bulan Transaksi
-                    </label>
-                    <select
-                      className="w-full rounded-lg border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
-                      value={month}
-                      onChange={(e) => setMonth(e.target.value)}
-                    >
-                      <option selected>Mei</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tahun Transaksi
-                    </label>
-                    <select
-                      className="w-full rounded-lg border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
-                      value={year}
-                      onChange={(e) => setYear(e.target.value)}
-                    >
-                      <option selected>2025</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Ket. Pembayaransssss
-                    </label>
-                    <select
-                      className="w-full rounded-lg border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
-                      // value={paymentNote}
-                      // onChange={(e) => setPaymentNote(e.target.value)}
-                    >
-                      {/* <option>Semua Keterangan</option> */}
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="min-w-full">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        No
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Cabang
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Unit Kerja
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Nama
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Rekening
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Iuran
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Sanduka
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Daspen
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Dengo
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Kalender
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Lain-lain
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Total Iuran
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Potongan Bank
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Selisih
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Keterangan
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td
-                        colSpan={15}
-                        className="px-6 py-8 text-center text-sm text-gray-500 border-b"
-                      >
-                        <div className="flex flex-col items-center justify-center">
-                          <FontAwesomeIcon
-                            icon={faChartBar}
-                            className="text-gray-300 text-4xl mb-3"
-                          />
-                          <p>
-                            Tidak ada data rekap data keuangan yang cocok dengan
-                            filter Anda.
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="p-6 bg-gray-50 border-t border-gray-100">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                  <h3 className="font-medium text-gray-800 mb-2 sm:mb-0">
-                    Cetak Rekap Data Keuangan
-                  </h3>
-                  <div className="flex items-center">
-                    <label className="block text-sm font-medium text-gray-700 mr-2">
-                      Ket. Pembayaran:
-                    </label>
-                    <select
-                      className="rounded-lg border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
-                      // value={paymentNote}
-                      // onChange={(e) => setPaymentNote(e.target.value)}
-                    >
-                      {/* <option>Semua Keterangan</option> */}
-                    </select>
-                    <button className="ml-3 bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded-lg transition-colors duration-200 flex items-center">
-                      <FontAwesomeIcon icon={faPrint} className="mr-2" />
-                      Cetak
-                    </button>
-                  </div>
-                </div>
-              </div>
+        <div className="p-6 bg-gray-50 border-t border-gray-100">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <h3 className="font-medium text-gray-800 mb-2 sm:mb-0">
+              Cetak Rekap Data Keuangan
+            </h3>
+            <div className="flex items-center">
+              <label className="block text-sm font-medium text-gray-700 mr-2">
+                Ket. Pembayaran:
+              </label>
+              <select className="rounded-lg border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all">
+              </select>
+              <button className="ml-3 bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded-lg transition-colors duration-200 flex items-center">
+                <FontAwesomeIcon icon={faPrint} className="mr-2" />
+                Cetak
+              </button>
             </div>
-          )}
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+)}
+
         </div>
       </div>
     </div>

@@ -74,3 +74,13 @@
       @apply bg-background text-foreground;
     }
   }
+
+  @keyframes blink {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.dot-animation {
+  animation: blink 1.2s infinite;
+}
