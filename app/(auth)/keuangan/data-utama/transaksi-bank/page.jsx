@@ -184,6 +184,7 @@ export default function BankTransactionPage() {
       );
       setDataBalancing(result.content);
       setTotalPagesBalancing(result.totalPages);
+      console.log(result.content);
     } catch (err) {
       console.error("Gagal memuat data:", err);
     }
@@ -479,11 +480,10 @@ export default function BankTransactionPage() {
       setIsLoading(true);
       const allData = [];
       let currentPage = 0;
-      const pageSize = 100; // Bisa sesuaikan dengan kemampuan backend
+      const pageSize = 100;
 
-      let totalPages = 1; // nilai default agar masuk ke loop
+      let totalPages = 1;
 
-      // Fetch data per halaman sampai semua halaman diambil
       while (currentPage < totalPages) {
         const result = await GlobalApi.getTransaksiBank(
           month,
@@ -498,7 +498,6 @@ export default function BankTransactionPage() {
         currentPage++;
       }
 
-      // Format untuk Excel
       const formattedData = allData.map((item, index) => ({
         No: index + 1,
         Rekening: item.rekening,
@@ -536,7 +535,7 @@ export default function BankTransactionPage() {
     } catch (error) {
       console.error("Gagal mengekspor data:", error);
     } finally {
-      setIsLoading(false); // ✅ Selesai loading
+      setIsLoading(false);
     }
   };
 
@@ -548,8 +547,7 @@ export default function BankTransactionPage() {
       let isLastPage = false;
       const pageSize = 100;
 
-      // Ambil semua halaman data
-      while (!isLastPage) {
+      while (currentPage < totalPages) {
         const result = await GlobalApi.getTransaksiBankBalancing(
           selectedCabang,
           selectedUnitKerja,
@@ -565,13 +563,11 @@ export default function BankTransactionPage() {
         currentPage++;
       }
 
-      // Cek duplikat rekening
       const rekeningCount = {};
       allData.forEach((item) => {
         rekeningCount[item.rekening] = (rekeningCount[item.rekening] || 0) + 1;
       });
 
-      // Format data untuk Excel
       const formattedData = allData.map((item, index) => ({
         No: index + 1,
         Cabang: item.cabang,
@@ -591,7 +587,6 @@ export default function BankTransactionPage() {
         "Cek Duplicate": rekeningCount[item.rekening] > 1 ? "Duplicate" : "-",
       }));
 
-      // Buat dan simpan file Excel
       const worksheet = XLSX.utils.json_to_sheet(formattedData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Balancing Potongan");
@@ -607,7 +602,7 @@ export default function BankTransactionPage() {
     } catch (err) {
       console.error("Gagal mengekspor data:", err);
     } finally {
-      setIsLoading(false); // ✅ Selesai loading
+      setIsLoading(false);
     }
   };
 
