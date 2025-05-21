@@ -171,6 +171,8 @@ function RekapAnggota() {
   const [lainLainOptions, setLainLainOptions] = useState([]);
   const [selectedKeterangan, setSelectedKeterangan] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
+  const [popupBackup, setPopupBackup] = useState(false);
+  const [selectedDate, setSelectedDate] = useState("");
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [lastUpdatedMemberNip, setLastUpdatedMemberNip] = useState(null);
@@ -1740,10 +1742,16 @@ function RekapAnggota() {
   };
 
   const handleBackupData = async () => {
+    if (!selectedDate) {
+      alert("Silakan pilih bulan tagihan terlebih dahulu.");
+      return;
+    }
+
     try {
-      await GlobalApi.postToBackup(groupedData);
+      await GlobalApi.postToBackup(groupedData, selectedDate);
 
       exportToExcel();
+      setPopupBackup(false);
     } catch (error) {
       console.error("Gagal backup dan export:", error);
     }
@@ -2018,7 +2026,7 @@ function RekapAnggota() {
 
                     <button
                       className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3"
-                      onClick={handleBackupData}
+                      onClick={() => setPopupBackup(true)}
                     >
                       <span>Backup Data</span>
                     </button>
@@ -2223,6 +2231,37 @@ function RekapAnggota() {
                 </div>
               </div>
             </div>
+            {popupBackup && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                  <h2 className="text-lg font-semibold mb-4">
+                    Pilih Bulan Tagihan
+                  </h2>
+
+                  <input
+                    type="month"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="w-full mb-4 p-2 border border-gray-300 rounded"
+                  />
+
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setPopupBackup(false)}
+                      className="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      onClick={handleBackupData}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+                    >
+                      Konfirmasi
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <table className="w-full table-auto bg-white">
               <thead>

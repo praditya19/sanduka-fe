@@ -1475,13 +1475,17 @@ const uploadSinkronBank = async (formData) => {
   }
 };
 
-const postToBackup = async (data) => {
+const postToBackup = async (data, tagihanUntukBulan) => {
   try {
-    const response = await axiosClient.post("/api/by-nominal/backup", data, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await axiosClient.post(
+      `/api/by-nominal/backup?tagihanUntukBulan=${encodeURIComponent(tagihanUntukBulan)}`,
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     return response.data;
   } catch (error) {
@@ -1489,6 +1493,7 @@ const postToBackup = async (data) => {
     throw error;
   }
 };
+
 
 const postIuranAnggota = async (data) => {
   try {
