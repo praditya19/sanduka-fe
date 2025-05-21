@@ -860,14 +860,17 @@ export default function BankTransactionPage() {
                     Data berdasarkan filter pada tab aktif di bawah.
                   </p>
                 </div>
-                <div>
-                  <button
-                    className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-500 transition"
-                    onClick={() => setShowUploadModal(true)}
-                  >
-                    Upload Data
-                  </button>
-                </div>
+                {typeof window !== "undefined" &&
+                  sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                    <div>
+                      <button
+                        className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-500 transition"
+                        onClick={() => setShowUploadModal(true)}
+                      >
+                        Upload Data
+                      </button>
+                    </div>
+                  )}
               </div>
             </div>
 

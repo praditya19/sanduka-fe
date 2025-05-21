@@ -32,6 +32,7 @@ import {
   faExclamationCircle,
   faInfoCircle,
   faFileInvoiceDollar,
+  faMoneyBillTransfer,
 } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import {
@@ -247,7 +248,6 @@ export default function IconGrid() {
       href: "/pengaturan/user",
       color: "text-gray-700",
     },
-
     {
       icon: faUsers,
       label: "Teman Unit",
@@ -266,6 +266,12 @@ export default function IconGrid() {
       href: "/pengaduan",
       color: "text-red-700",
       badge: newPengaduanCount > 0 ? newPengaduanCount : null,
+    },
+    {
+      icon: faMoneyBillTransfer,
+      label: "Transaksi Bank",
+      href: "/transaksi-bank",
+      color: "text-green-600",
     },
   ];
   const sortByDate = (data) => {
