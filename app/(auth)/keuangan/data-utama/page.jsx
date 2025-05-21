@@ -149,12 +149,6 @@ export default function DataUtama() {
                 >
                   Lain-Lain
                 </Link>
-                <Link
-                  href={"/keuangan/data-utama/transaksi-bank"}
-                  className=""
-                >
-                  Transaksi Bank
-                </Link>
               </ul>
             </nav>
 
