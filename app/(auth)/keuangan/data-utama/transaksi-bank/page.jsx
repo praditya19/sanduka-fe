@@ -185,7 +185,6 @@ export default function BankTransactionPage() {
       );
       setDataBalancing(result.content);
       setTotalPagesBalancing(result.totalPages);
-      console.log(result.content);
     } catch (err) {
       console.error("Gagal memuat data:", err);
     }
@@ -476,6 +475,57 @@ export default function BankTransactionPage() {
     };
   }, []);
 
+  const exportAllToExcel = async () => {
+    try {
+      setIsLoading(true);
+      const allData = [];
+      let currentPage = 0;
+      const pageSize = 100;
+      let totalPages = 1;
+
+      while (currentPage < totalPages) {
+        const result = await GlobalApi.getTransaksiBank(
+          null,
+          null,
+          null,
+          pageSize,
+          currentPage
+        );
+
+        allData.push(...result.content);
+        totalPages = result.totalPages;
+        currentPage++;
+      }
+
+      const formattedData = allData.map((item, index) => ({
+        No: index + 1,
+        Rekening: item.rekening,
+        "Nama Anggota": item.namaAnggota,
+        "Rekening Kabupaten": item.rekeningKabupaten,
+        Potongan: item.potongan,
+        "Tgl. Potongan": formatTanggal(item.tanggalPemotongan),
+        Transaksi: item.transaksi,
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(formattedData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Potongan Bank");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      const blob = new Blob([excelBuffer], {
+        type: "application/octet-stream",
+      });
+      saveAs(blob, "potongan-bank.xlsx");
+    } catch (error) {
+      console.error("Gagal mengekspor data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const exportToExcel = async () => {
     try {
       setIsLoading(true);
@@ -540,6 +590,89 @@ export default function BankTransactionPage() {
     }
   };
 
+  const exportAllBalancingToExcel = async () => {
+    try {
+      setIsLoading(true);
+      let allData = [];
+      let currentPage = 0;
+      const pageSize = 100;
+      let totalPages = 1;
+
+      const firstResult = await GlobalApi.getTransaksiBankBalancing(
+        null,
+        null,
+        null,
+        null,
+        null,
+        pageSize,
+        currentPage
+      );
+
+      allData = [...allData, ...firstResult.content];
+      totalPages = firstResult.totalPages;
+      currentPage++;
+
+      while (currentPage < totalPages) {
+        const result = await GlobalApi.getTransaksiBankBalancing(
+          null,
+          null,
+          null,
+          null,
+          null,
+          pageSize,
+          currentPage
+        );
+
+        allData = [...allData, ...result.content];
+        currentPage++;
+      }
+
+      const rekeningCount = {};
+      allData.forEach((item) => {
+        if (item.rekening) {
+          rekeningCount[item.rekening] =
+            (rekeningCount[item.rekening] || 0) + 1;
+        }
+      });
+
+      const formattedData = allData.map((item, index) => ({
+        No: index + 1,
+        Cabang: item.cabang,
+        "Unit Kerja": item.unitKerja,
+        Nama: item.nama,
+        Rekening: item.rekening,
+        Iuran: item.totalIuranAnggota,
+        Sanduka: item.totalIuranSanduka,
+        Daspen: item.totalIuranDaspen,
+        Derap: item.totalIuranDerap,
+        Kalender: item.totalIuranKalender,
+        "Lain-lain": item.totalIuranSumbangan,
+        "Total Iuran": item.totalIuran,
+        "Potongan Bank": item.potongan,
+        Selisih: item.selisih,
+        Keterangan: item.keterangan,
+        "Cek Duplicate":
+          item.rekening && rekeningCount[item.rekening] > 1 ? "Duplicate" : "-",
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(formattedData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Balancing Potongan");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const blob = new Blob([excelBuffer], {
+        type: "application/octet-stream",
+      });
+      saveAs(blob, "balancing-potongan-semua.xlsx");
+    } catch (err) {
+      console.error("Gagal mengekspor data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const exportBalancingToExcel = async () => {
     try {
       setIsLoading(true);
@@ -915,53 +1048,102 @@ export default function BankTransactionPage() {
                 <h2 className="text-lg font-semibold text-gray-800">
                   Data Potongan Bank
                 </h2>
-                <button
-                  className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
-                    isLoading ? "opacity-60 cursor-not-allowed" : ""
-                  }`}
-                  onClick={exportToExcel}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <svg
-                        className="animate-spin h-4 w-4 text-black"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                          fill="none"
-                        />
-                        <path
-                          className="opacity-75"
+                <div className="flex gap-3">
+                  <button
+                    className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                      isLoading ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
+                    onClick={exportAllToExcel}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <svg
+                          className="animate-spin h-4 w-4 text-black"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                          />
+                        </svg>
+                        Memproses...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
                           fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                        />
-                      </svg>
-                      Memproses...
-                    </>
-                  ) : (
-                    <>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        fill="currentColor"
-                        viewBox="0 0 16 16"
-                        className="hover:text-white transition"
-                      >
-                        <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
-                        <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
-                      </svg>
-                      Cetak Potongan
-                    </>
-                  )}
-                </button>
+                          viewBox="0 0 16 16"
+                          className="hover:text-white transition"
+                        >
+                          <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                          <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                        </svg>
+                        Cetak Seluruh Potongan
+                      </>
+                    )}
+                  </button>
+                  <button
+                    className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                      isLoading ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
+                    onClick={exportToExcel}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <svg
+                          className="animate-spin h-4 w-4 text-black"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                          />
+                        </svg>
+                        Memproses...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          fill="currentColor"
+                          viewBox="0 0 16 16"
+                          className="hover:text-white transition"
+                        >
+                          <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                          <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                        </svg>
+                        Cetak Potongan
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="p-6 bg-gray-50 border-b border-gray-100">
@@ -1231,53 +1413,102 @@ export default function BankTransactionPage() {
                       Rekonsiliasi iuran anggota dengan data potongan bank.
                     </p>
                   </div>
-                  <button
-                    className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
-                      isLoading ? "opacity-60 cursor-not-allowed" : ""
-                    }`}
-                    onClick={exportBalancingToExcel}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <svg
-                          className="animate-spin h-4 w-4 text-black"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            fill="none"
-                          />
-                          <path
-                            className="opacity-75"
+                  <div className="flex gap-3">
+                    <button
+                      className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                        isLoading ? "opacity-60 cursor-not-allowed" : ""
+                      }`}
+                      onClick={exportAllBalancingToExcel}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <svg
+                            className="animate-spin h-4 w-4 text-black"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                              fill="none"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                            />
+                          </svg>
+                          Memproses...
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
                             fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                          />
-                        </svg>
-                        Memproses...
-                      </>
-                    ) : (
-                      <>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          fill="currentColor"
-                          viewBox="0 0 16 16"
-                          className="hover:text-white transition"
-                        >
-                          <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
-                          <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
-                        </svg>
-                        Cetak Balancing Potongan
-                      </>
-                    )}
-                  </button>
+                            viewBox="0 0 16 16"
+                            className="hover:text-white transition"
+                          >
+                            <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                            <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                          </svg>
+                          Cetak Seluruh Balancing
+                        </>
+                      )}
+                    </button>
+                    <button
+                      className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                        isLoading ? "opacity-60 cursor-not-allowed" : ""
+                      }`}
+                      onClick={exportBalancingToExcel}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <svg
+                            className="animate-spin h-4 w-4 text-black"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                              fill="none"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                            />
+                          </svg>
+                          Memproses...
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            fill="currentColor"
+                            viewBox="0 0 16 16"
+                            className="hover:text-white transition"
+                          >
+                            <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                            <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                          </svg>
+                          Cetak Balancing Potongan
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1690,53 +1921,61 @@ export default function BankTransactionPage() {
           )}
 
           {activeTab === "rekapitulasi" && (
-  <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-[300px] flex items-center justify-center relative">
-    {onProses ? (
-  <div className="text-center animate-slide-up">
-    {/* <div className="flex justify-center mb-2">
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-[300px] flex items-center justify-center relative">
+              {onProses ? (
+                <div className="text-center animate-slide-up">
+                  {/* <div className="flex justify-center mb-2">
       <div className="text-4xl animate-bounce text-black">!</div>
     </div> */}
-     <p className="text-gray-600 text-2xl font-medium">
-      Sedang Proses
-      <span className="inline-block dot-animation ml-1">.</span>
-      <span className="inline-block dot-animation ml-0.5" style={{ animationDelay: "0.2s" }}>.</span>
-      <span className="inline-block dot-animation ml-0.5" style={{ animationDelay: "0.4s" }}>.</span>
-    </p>
-  </div>
-    ) : (
-      <div>
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-800">
-            Rekap Data Keuangan
-          </h2>
-          <p className="text-gray-600 mt-1">
-            Rekonsiliasi iuran anggota dengan data potongan bank.
-          </p>
-        </div>
+                  <p className="text-gray-600 text-2xl font-medium">
+                    Sedang Proses
+                    <span className="inline-block dot-animation ml-1">.</span>
+                    <span
+                      className="inline-block dot-animation ml-0.5"
+                      style={{ animationDelay: "0.2s" }}
+                    >
+                      .
+                    </span>
+                    <span
+                      className="inline-block dot-animation ml-0.5"
+                      style={{ animationDelay: "0.4s" }}
+                    >
+                      .
+                    </span>
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <div className="p-6 border-b border-gray-100">
+                    <h2 className="text-lg font-semibold text-gray-800">
+                      Rekap Data Keuangan
+                    </h2>
+                    <p className="text-gray-600 mt-1">
+                      Rekonsiliasi iuran anggota dengan data potongan bank.
+                    </p>
+                  </div>
 
-        <div className="p-6 bg-gray-50 border-t border-gray-100">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="font-medium text-gray-800 mb-2 sm:mb-0">
-              Cetak Rekap Data Keuangan
-            </h3>
-            <div className="flex items-center">
-              <label className="block text-sm font-medium text-gray-700 mr-2">
-                Ket. Pembayaran:
-              </label>
-              <select className="rounded-lg border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all">
-              </select>
-              <button className="ml-3 bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded-lg transition-colors duration-200 flex items-center">
-                <FontAwesomeIcon icon={faPrint} className="mr-2" />
-                Cetak
-              </button>
+                  <div className="p-6 bg-gray-50 border-t border-gray-100">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                      <h3 className="font-medium text-gray-800 mb-2 sm:mb-0">
+                        Cetak Rekap Data Keuangan
+                      </h3>
+                      <div className="flex items-center">
+                        <label className="block text-sm font-medium text-gray-700 mr-2">
+                          Ket. Pembayaran:
+                        </label>
+                        <select className="rounded-lg border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"></select>
+                        <button className="ml-3 bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded-lg transition-colors duration-200 flex items-center">
+                          <FontAwesomeIcon icon={faPrint} className="mr-2" />
+                          Cetak
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        </div>
-      </div>
-    )}
-  </div>
-)}
-
+          )}
         </div>
       </div>
     </div>
