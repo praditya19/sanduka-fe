@@ -144,7 +144,7 @@ export default function BankTransactionPage() {
     (currentYear + i).toString()
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [onProses, setOnProses] = useState(false);
+  const [onProses, setOnProses] = useState(true);
   const [jumlahPotonganBank, setJumlahPotonganBank] = useState(0);
   const [totalNominalPotonganBank, setTotalNominalPotonganBank] = useState(0);
   const [jumlahSetorTunai, setJumlahSetorTunai] = useState(0);
@@ -1925,6 +1925,173 @@ export default function BankTransactionPage() {
 
           {activeTab === "rekapitulasi" && (
             <div className="bg-white rounded-xl shadow-sm w-[1900px]">
+              <div className="p-6 border-b border-gray-100">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h2 className="text-lg font-semibold text-gray-800">
+                          Rekap Data Keuangan
+                        </h2>
+                        <p className="text-gray-600 mt-1">
+                          Rekonsiliasi iuran anggota dengan data potongan bank.
+                        </p>
+                      </div>
+                      <button
+                        className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                          isLoading ? "opacity-60 cursor-not-allowed" : ""
+                        }`}
+                        onClick={exportAllBalancingToExcel}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <svg
+                              className="animate-spin h-4 w-4 text-black"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                                fill="none"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                              />
+                            </svg>
+                            Memproses...
+                          </>
+                        ) : (
+                          <>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              fill="currentColor"
+                              viewBox="0 0 16 16"
+                              className="hover:text-white transition"
+                            >
+                              <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                              <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                            </svg>
+                            Cetak Rekap Data Keuangan
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="p-6 bg-gray-50 border-b border-gray-100">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Cabang
+                          </label>
+                          <div
+                            className="flex items-center relative"
+                            ref={cabangRef}
+                          >
+                            <Input
+                              type="text"
+                              value={selectedCabang}
+                              readOnly
+                              disabled={role === "ADMIN"}
+                              onClick={handleCabangClick}
+                              className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                              placeholder="Pilih Cabang"
+                            />
+                            {showCabangDropdown && (
+                              <div
+                                className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full"
+                                style={{ top: "100%", left: 0 }}
+                              >
+                                <ul className="max-h-44 overflow-y-auto">
+                                  <li className="py-2 px-2">
+                                    <Input
+                                      type="text"
+                                      onChange={(e) =>
+                                        handleCabangSearch(e.target.value)
+                                      }
+                                      className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                                      placeholder="Cari atau ketik Cabang..."
+                                      autoFocus
+                                    />
+                                  </li>
+                                  <li
+                                    onClick={() =>
+                                      handleSelectCabang({ kecamatan: "" })
+                                    }
+                                    className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                                  >
+                                    Pilih Cabang
+                                  </li>
+                                  {[...filteredCabangList].map((cabang) => (
+                                    <li
+                                      key={cabang.id}
+                                      onClick={() => handleSelectCabang(cabang)}
+                                      className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                                    >
+                                      {cabang.kecamatan}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Bulan Transaksi
+                          </label>
+                          <select
+                            className="w-full h-10 text-base px-4 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
+                            value={month}
+                            onChange={(e) => setMonth(e.target.value)}
+                          >
+                            {bulanList.map((bulan) => (
+                              <option key={bulan.value} value={bulan.value}>
+                                {bulan.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Tahun Transaksi
+                          </label>
+                          <select
+                            className="w-full h-10 text-base px-4 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
+                            value={year}
+                            onChange={(e) => setYear(e.target.value)}
+                          >
+                            {tahunList.map((tahun) => (
+                              <option key={tahun} value={tahun}>
+                                {tahun}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Ket. Pembayaran
+                          </label>
+                          <select
+                            className="w-full h-10 text-base px-4 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
+                            value={paymentNote}
+                            onChange={(e) => setPaymentNote(e.target.value)}
+                          >
+                            <option value="">Pilih Keterangan</option>
+                            <option value="Sukses">Sukses</option>
+                            <option value="Gagal">Gagal</option>
+                            <option value="Tunai">Tunai</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    </div>
               {onProses ? (
                 <div className="text-center animate-slide-up mt-28">
                   <p className="text-gray-600 text-2xl font-medium">
