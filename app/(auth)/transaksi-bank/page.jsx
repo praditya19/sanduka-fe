@@ -144,7 +144,7 @@ export default function BankTransactionPage() {
     (currentYear + i).toString()
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [onProses, setOnProses] = useState(true);
+  const [onProses, setOnProses] = useState(false);
   const [jumlahPotonganBank, setJumlahPotonganBank] = useState(0);
   const [totalNominalPotonganBank, setTotalNominalPotonganBank] = useState(0);
   const [jumlahSetorTunai, setJumlahSetorTunai] = useState(0);
@@ -1924,12 +1924,9 @@ export default function BankTransactionPage() {
           )}
 
           {activeTab === "rekapitulasi" && (
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden min-h-[300px] flex items-center justify-center relative">
+            <div className="bg-white rounded-xl shadow-sm w-[1900px]">
               {onProses ? (
-                <div className="text-center animate-slide-up">
-                  {/* <div className="flex justify-center mb-2">
-      <div className="text-4xl animate-bounce text-black">!</div>
-    </div> */}
+                <div className="text-center animate-slide-up mt-28">
                   <p className="text-gray-600 text-2xl font-medium">
                     Sedang Proses
                     <span className="inline-block dot-animation ml-1">.</span>
@@ -1948,30 +1945,414 @@ export default function BankTransactionPage() {
                   </p>
                 </div>
               ) : (
-                <div>
+                <div className="w-full">
                   <div className="p-6 border-b border-gray-100">
-                    <h2 className="text-lg font-semibold text-gray-800">
-                      Rekap Data Keuangan
-                    </h2>
-                    <p className="text-gray-600 mt-1">
-                      Rekonsiliasi iuran anggota dengan data potongan bank.
-                    </p>
-                  </div>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h2 className="text-lg font-semibold text-gray-800">
+                          Rekap Data Keuangan
+                        </h2>
+                        <p className="text-gray-600 mt-1">
+                          Rekonsiliasi iuran anggota dengan data potongan bank.
+                        </p>
+                      </div>
+                      <button
+                        className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
+                          isLoading ? "opacity-60 cursor-not-allowed" : ""
+                        }`}
+                        onClick={exportAllBalancingToExcel}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <svg
+                              className="animate-spin h-4 w-4 text-black"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                                fill="none"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                              />
+                            </svg>
+                            Memproses...
+                          </>
+                        ) : (
+                          <>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              fill="currentColor"
+                              viewBox="0 0 16 16"
+                              className="hover:text-white transition"
+                            >
+                              <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                              <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                            </svg>
+                            Cetak Rekap Data Keuangan
+                          </>
+                        )}
+                      </button>
+                    </div>
 
-                  <div className="p-6 bg-gray-50 border-t border-gray-100">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                      <h3 className="font-medium text-gray-800 mb-2 sm:mb-0">
-                        Cetak Rekap Data Keuangan
-                      </h3>
-                      <div className="flex items-center">
-                        <label className="block text-sm font-medium text-gray-700 mr-2">
-                          Ket. Pembayaran:
-                        </label>
-                        <select className="rounded-lg border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"></select>
-                        <button className="ml-3 bg-teal-600 hover:bg-teal-700 text-white py-2 px-4 rounded-lg transition-colors duration-200 flex items-center">
-                          <FontAwesomeIcon icon={faPrint} className="mr-2" />
-                          Cetak
-                        </button>
+                    <div className="p-6 bg-gray-50 border-b border-gray-100">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Cabang
+                          </label>
+                          <div
+                            className="flex items-center relative"
+                            ref={cabangRef}
+                          >
+                            <Input
+                              type="text"
+                              value={selectedCabang}
+                              readOnly
+                              disabled={role === "ADMIN"}
+                              onClick={handleCabangClick}
+                              className="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out"
+                              placeholder="Pilih Cabang"
+                            />
+                            {showCabangDropdown && (
+                              <div
+                                className="absolute z-50 border rounded-lg bg-white shadow-sm mt-1 w-full"
+                                style={{ top: "100%", left: 0 }}
+                              >
+                                <ul className="max-h-44 overflow-y-auto">
+                                  <li className="py-2 px-2">
+                                    <Input
+                                      type="text"
+                                      onChange={(e) =>
+                                        handleCabangSearch(e.target.value)
+                                      }
+                                      className="block w-full px-4 py-2 border-gray-300 rounded-md focus:ring focus:ring-blue-200 focus:outline-none transition duration-150 ease-in-out mt-1"
+                                      placeholder="Cari atau ketik Cabang..."
+                                      autoFocus
+                                    />
+                                  </li>
+                                  <li
+                                    onClick={() =>
+                                      handleSelectCabang({ kecamatan: "" })
+                                    }
+                                    className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                                  >
+                                    Pilih Cabang
+                                  </li>
+                                  {[...filteredCabangList].map((cabang) => (
+                                    <li
+                                      key={cabang.id}
+                                      onClick={() => handleSelectCabang(cabang)}
+                                      className="px-4 py-2 cursor-pointer hover:bg-gray-200"
+                                    >
+                                      {cabang.kecamatan}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Bulan Transaksi
+                          </label>
+                          <select
+                            className="w-full h-10 text-base px-4 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
+                            value={month}
+                            onChange={(e) => setMonth(e.target.value)}
+                          >
+                            {bulanList.map((bulan) => (
+                              <option key={bulan.value} value={bulan.value}>
+                                {bulan.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Tahun Transaksi
+                          </label>
+                          <select
+                            className="w-full h-10 text-base px-4 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
+                            value={year}
+                            onChange={(e) => setYear(e.target.value)}
+                          >
+                            {tahunList.map((tahun) => (
+                              <option key={tahun} value={tahun}>
+                                {tahun}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Ket. Pembayaran
+                          </label>
+                          <select
+                            className="w-full h-10 text-base px-4 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
+                            value={paymentNote}
+                            onChange={(e) => setPaymentNote(e.target.value)}
+                          >
+                            <option value="">Pilih Keterangan</option>
+                            <option value="Sukses">Sukses</option>
+                            <option value="Gagal">Gagal</option>
+                            <option value="Tunai">Tunai</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="w-full">
+                      <table className="min-w-full">
+                        <thead>
+                          <tr className="bg-gray-50">
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              No
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              Cabang
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              Unit Kerja
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              Nama
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              Rekening
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              Iuran
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              Sanduka
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              Daspen
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              Derap
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              Kalender
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              Lain-lain
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              Total Iuran
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              Potongan Bank
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              Selisih
+                            </th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              Keterangan
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {dataBalancing.length > 0 ? (
+                            dataBalancing.map((item, index) => (
+                              <tr key={index}>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                  {(currentPageBalancing - 1) * displayCount +
+                                    index +
+                                    1}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {item.cabang}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {item.unitKerja}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {item.nama}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                  {item.rekening}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                  {item.totalIuranAnggota}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                  {item.totalIuranSanduka}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                  {item.totalIuranDaspen}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                  {item.totalIuranDerap}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                  {item.totalIuranKalender}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                  {item.totalIuranKalender}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                  {item.totalIuran}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                  {item.potongan}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                  {item.selisih}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                  {item.keterangan}
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td
+                                colSpan={15}
+                                className="px-6 py-8 text-center text-sm text-gray-500 border-b"
+                              >
+                                <div className="flex flex-col items-center justify-center">
+                                  <FontAwesomeIcon
+                                    icon={faSearch}
+                                    className="text-gray-300 text-4xl mb-3"
+                                  />
+                                  <p>
+                                    Tidak ada data transaksi bank yang cocok
+                                    dengan filter Anda.
+                                  </p>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                      <div className="p-4 border-t">
+                        <div className="flex flex-wrap justify-center gap-2">
+                          <button
+                            onClick={() => handlePageClickBalancing(1)}
+                            disabled={currentPageBalancing === 1}
+                            className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4 mr-1"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                              />
+                            </svg>
+                            First
+                          </button>
+
+                          <button
+                            onClick={handlePreviousPageBalancing}
+                            disabled={currentPageBalancing === 1}
+                            className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4 mr-1"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 19l-7-7 7-7"
+                              />
+                            </svg>
+                            Prev
+                          </button>
+
+                          {getVisiblePagesBalancing().map((page) => (
+                            <button
+                              key={page}
+                              onClick={() => handlePageClickBalancing(page)}
+                              className={`px-3 py-1 border rounded-md text-sm ${
+                                page === currentPageBalancing
+                                  ? "bg-teal-600 text-white border-teal-600"
+                                  : "bg-white hover:bg-gray-50"
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          ))}
+
+                          {totalPagesBalancing > 3 &&
+                            currentPageBalancing < totalPagesBalancing - 3 && (
+                              <span className="px-2 py-1">...</span>
+                            )}
+
+                          <button
+                            onClick={handleNextPageBalancing}
+                            disabled={
+                              currentPageBalancing === totalPagesBalancing
+                            }
+                            className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
+                          >
+                            Next
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4 ml-1"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5l7 7-7 7"
+                              />
+                            </svg>
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              handlePageClickBalancing(totalPagesBalancing)
+                            }
+                            disabled={
+                              currentPageBalancing === totalPagesBalancing
+                            }
+                            className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm flex items-center"
+                          >
+                            Last
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4 ml-1"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13 5l7 7-7 7M5 5l7 7-7 7"
+                              />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
