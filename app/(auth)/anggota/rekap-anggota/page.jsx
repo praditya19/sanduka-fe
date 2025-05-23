@@ -126,6 +126,7 @@ function RekapAnggota() {
     iuran: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [loadButton, setLoadButton] = useState(false);
   const [groupedData, setGroupedData] = useState([]);
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [searchCabang, setSearchCabang] = useState("");
@@ -1183,7 +1184,7 @@ function RekapAnggota() {
       namaAnggota: dataNpa.namaLengkap,
       tempatTanggalLahir: tempatTanggalLahir,
       npa: dataNpa.npaPgri,
-      nip: dataNpa.nip,
+      nip: dataNpa.nip || "-",
       nik: dataNpa.nik,
       cabang: dataNpa.cabang,
       unitKerja: dataNpa.unitKerja,
@@ -1749,10 +1750,18 @@ function RekapAnggota() {
 
     try {
       await GlobalApi.postToBackup(groupedData, selectedDate);
-
-      exportToExcel();
+      
+      setNotification({
+        type: "success",
+        message: "Backup berhasil!",
+      });
       setPopupBackup(false);
+      exportToExcel();
     } catch (error) {
+      setNotification({
+        type: "error",
+        message: "Gagal backup dan export.",
+      });
       console.error("Gagal backup dan export:", error);
     }
   };
@@ -2975,29 +2984,110 @@ function RekapAnggota() {
                       </button>
                       <button
                         type="button"
-                        className={`font-bold py-2 px-4 rounded ${
-                          idIuran
-                            ? "bg-gray-400 cursor-not-allowed text-white"
-                            : "bg-green-600 hover:bg-green-700 text-white"
+                        className={`flex items-center justify-center bg-blue-600 text-white font-bold py-2 px-4 rounded ${
+                          loadButton
+                            ? "opacity-60 cursor-not-allowed"
+                            : "hover:bg-blue-700"
                         }`}
-                        onClick={handleSaveClick}
-                        disabled={!idIuran}
+                        onClick={async () => {
+                          if (loadButton) return;
+                          setLoadButton(true);
+                          try {
+                            await handleUpdateClick(); // hanya menjalankan fungsi update
+                          } finally {
+                            setLoadButton(false);
+                          }
+                        }}
+                        disabled={loadButton}
                       >
-                        Save
+                        {loadButton ? (
+                          <>
+                            <svg
+                              className="animate-spin h-5 w-5 mr-2"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                              />
+                            </svg>
+                            Loading...
+                          </>
+                        ) : (
+                          "Update"
+                        )}
                       </button>
-
-                      <button
+                      {/* <button
                         type="button"
-                        className={`font-bold py-2 px-4 rounded ${
-                          idIuran
-                            ? "bg-blue-600 hover:bg-blue-700 text-white"
-                            : "bg-gray-300 text-white cursor-not-allowed"
+                        className={`flex items-center justify-center bg-blue-600 text-white font-bold py-2 px-4 rounded ${
+                          loadButton
+                            ? "opacity-60 cursor-not-allowed"
+                            : "hover:bg-blue-700"
                         }`}
-                        onClick={handleUpdateClick}
-                        disabled={!idIuran}
+                        onClick={async () => {
+                          if (loadButton) return;
+                          setLoadButton(true);
+                          try {
+                            if (idIuran) {
+                              await handleUpdateClick();
+                            } else {
+                              await handleSaveClick();
+                            }
+                          } finally {
+                            setLoadButton(false);
+                          }
+                        }}
+                        disabled={loadButton}
                       >
-                        Update
-                      </button>
+                        {loadButton ? (
+                          <>
+                            <svg
+                              className="animate-spin h-5 w-5 mr-2"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                              />
+                            </svg>
+                            Loading...
+                          </>
+                        ) : idIuran ? (
+                          "Update"
+                        ) : (
+                          "Save"
+                        )}
+                      </button>   */}
+
+                      {/* <button
+                        type="button"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        onClick={idIuran ? handleUpdateClick : handleSaveClick}
+                      >
+                        {idIuran ? "Update" : "Save"}
+                      </button> */}
                     </div>
                   </div>
                 </div>
