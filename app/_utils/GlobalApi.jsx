@@ -1171,18 +1171,22 @@ const getTransaksiBankBalancing = async (
   }
 };
 
-const getCountBalancing = async (bulan, tahun) => {
+const getCountBalancing = async (bulan, tahun, cabang, unitKerja) => {
+  const params = new URLSearchParams();
+  params.append("bulan", bulan);
+  params.append("tahun", tahun);
+  if (cabang) params.append("cabang", cabang);
+  if (unitKerja) params.append("unitKerja", unitKerja);
+
+  const url = `/api/potongan-gaji/balancing/summary?${params.toString()}`;
   try {
-    const response = await axiosClient.get(
-      `/api/potongan-gaji/balancing/summary?bulan=${bulan}&tahun=${tahun}`
-    );
+    const response = await axiosClient.get(url);
     return response.data;
   } catch (error) {
     console.error("Error fetching Potongan Gaji Summary:", error);
     throw error;
   }
 };
-
 // End
 // Sanduka
 // Pemasukan & Pengeluaran Sanduka
@@ -1733,7 +1737,6 @@ const getRantingSummary = async (
     if (Array.isArray(data)) {
       return {
         content: data.map((dataItem) => {
-          console.log(dataItem);
 
           return {
             cabang: dataItem.cabang,
@@ -1862,14 +1865,9 @@ const getDetailKeuangan = async ({
       cabang,
     };
 
-    // Endpoint URL dengan parameter dinamis
     const response = await axiosClient.get("/api/setor/data", { params });
-
-    // Return data dari response
-    console.log("Data fetched:", response.data);
     return response.data;
   } catch (error) {
-    // Tangani error
     console.error("Error fetching data:", error);
     throw error;
   }
