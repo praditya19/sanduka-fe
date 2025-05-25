@@ -690,11 +690,11 @@ const getTotalAnggotaStatistik = async () => {
 
 const updateIuranById = async (id, payload) => {
   try {
-    const response = await axiosClient.put(`/api/iuran/${id}`, payload); // Mengirim payload di body
-    return response.data; // Mengembalikan data dari respon API
+    const response = await axiosClient.put(`/api/iuran/${id}`, payload);
+    return response.data;
   } catch (error) {
     console.error("Error fetching data from API:", error);
-    throw error; // Melempar error agar bisa ditangani di tempat lain
+    throw error;
   }
 };
 

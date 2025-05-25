@@ -129,6 +129,7 @@ function DerapForm() {
     new Date().getFullYear()
   );
   const tableRef = useRef();
+  const [activeTab, setActiveTab] = useState(1); // 1 for Rincian Derap, 2 for Pembagian Derap
 
   useEffect(() => {
     const fetchData = async () => {
@@ -585,9 +586,9 @@ function DerapForm() {
   }, []);
 
   const totalJumlah = filteredTableData.reduce((total, item) => {
-  const jumlah = Number(item.jumlah) || 0;
-  return total + jumlah;
-}, 0);
+    const jumlah = Number(item.jumlah) || 0;
+    return total + jumlah;
+  }, 0);
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-4">
@@ -635,490 +636,943 @@ function DerapForm() {
               onClose={() => setNotification(null)}
             />
           )}
-          <div className="p-4 bg-gray-50 rounded-lg shadow-lg ">
-            <div className="">
-              <div className=" rounded-lg shadow-lg border border-gray-200 bg-white">
-                <div className="bg-teal-100 flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3">
-                    <FaNewspaper className="text-teal-800 text-2xl" />
-                    <span className="text-teal-800 text-xl font-medium">
-                      Pesanan Derap PGRI
-                    </span>
-                  </div>
-                  <button className="p-3 text-teal-600 hover:bg-teal-500 hover:text-white bg-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3 border border-teal-600 hover:border-teal-500">
-                    {" "}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      fill="currentColor"
-                      viewBox="0 0 16 16"
-                    >
-                      <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
-                      <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
-                    </svg>
-                    Cetak Rekap Pesanan
+          <div className="p-4 bg-gray-50 rounded-lg shadow-lg">
+            <div className="rounded-lg shadow-lg border border-gray-200 bg-white">
+              {/* Tab Navigation */}
+              <div className="border-b border-gray-200">
+                <nav className="flex -mb-px">
+                  <button
+                    onClick={() => setActiveTab(1)}
+                    className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
+                      activeTab === 1
+                        ? "border-teal-500 text-teal-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    Rincian Derap
                   </button>
-                </div>
+                  <button
+                    onClick={() => setActiveTab(2)}
+                    className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
+                      activeTab === 2
+                        ? "border-teal-500 text-teal-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    Pembagian Derap
+                  </button>
+                </nav>
+              </div>
 
-                <div className="space-y-6 p-6">
-                  <div className="flex flex-col md:flex-row gap-4 w-full">
-                    <div ref={dropdownRef} className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Cabang
-                      </label>
-                      <div className="relative">
-                        <Input
-                          type="text"
-                          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                          readOnly
-                          value={selectedCabang || ""}
-                          placeholder="Pilih Cabang"
-                          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                          onFocus={() => {
-                            setSearchQuery("");
-                          }}
-                        />
+              {/* Tab Content */}
+              <div className="p-6">
+                {activeTab === 1 ? (
+                  <>
+                    <div className="bg-teal-100 flex items-center justify-between p-4">
+                      <div className="flex items-center gap-3">
+                        <FaNewspaper className="text-teal-800 text-2xl" />
+                        <span className="text-teal-800 text-xl font-medium">
+                          Pesanan Derap PGRI
+                        </span>
+                      </div>
+                      <button className="p-3 text-teal-600 hover:bg-teal-500 hover:text-white bg-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3 border border-teal-600 hover:border-teal-500">
+                        {" "}
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          fill="currentColor"
+                          viewBox="0 0 16 16"
+                        >
+                          <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                          <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                        </svg>
+                        Cetak Rekap Pesanan
+                      </button>
+                    </div>
 
-                        {isDropdownOpen && (
-                          <div className="absolute w-full mt-1 bg-white border rounded shadow-lg z-10">
-                            <ul className="max-h-44 overflow-y-auto">
-                              <li className="py-2 px-2">
-                                <Input
-                                  type="text"
-                                  className="w-full p-2 border-b text-gray-700 focus:outline-none"
-                                  placeholder="Cari cabang..."
-                                  value={searchQuery}
-                                  onChange={handleSearchChange}
-                                  autoFocus
-                                />
-                              </li>
-                              {filteredCabangList.map((cabang) => (
-                                <li
-                                  key={cabang.id}
-                                  className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                  onClick={() =>
-                                    handleCabangSelect(cabang.kecamatan)
+                    <div className="space-y-6 p-6">
+                      <div className="flex flex-col md:flex-row gap-4 w-full">
+                        <div ref={dropdownRef} className="flex-1">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Cabang
+                          </label>
+                          <div className="relative">
+                            <Input
+                              type="text"
+                              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                              readOnly
+                              value={selectedCabang || ""}
+                              placeholder="Pilih Cabang"
+                              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                              onFocus={() => {
+                                setSearchQuery("");
+                              }}
+                            />
+
+                            {isDropdownOpen && (
+                              <div className="absolute w-full mt-1 bg-white border rounded shadow-lg z-10">
+                                <ul className="max-h-44 overflow-y-auto">
+                                  <li className="py-2 px-2">
+                                    <Input
+                                      type="text"
+                                      className="w-full p-2 border-b text-gray-700 focus:outline-none"
+                                      placeholder="Cari cabang..."
+                                      value={searchQuery}
+                                      onChange={handleSearchChange}
+                                      autoFocus
+                                    />
+                                  </li>
+                                  {filteredCabangList.map((cabang) => (
+                                    <li
+                                      key={cabang.id}
+                                      className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                      onClick={() =>
+                                        handleCabangSelect(cabang.kecamatan)
+                                      }
+                                    >
+                                      {cabang.kecamatan}
+                                    </li>
+                                  ))}
+                                  {filteredCabangList.length === 0 && (
+                                    <li className="p-2 text-gray-500">
+                                      Cabang tidak ditemukan
+                                    </li>
+                                  )}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex-1">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Jumlah (Eksemplar)
+                          </label>
+                          <Input
+                            type="number"
+                            id="jumlahPesananInput"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out"
+                            value={jumlahPesanan}
+                            onChange={(e) => setJumlahPesanan(e.target.value)}
+                            onKeyPress={handleKeyPress}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex  space-x-4 mt-6">
+                        <Button
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out gap-3"
+                          onClick={isEditMode ? handleSaveUpdate : handleSubmit}
+                        >
+                          {" "}
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            fill="currentColor"
+                            viewBox="0 0 16 16"
+                          >
+                            <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                            <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                          </svg>
+                          {isEditMode ? "Update" : "Simpan Pesanan"}
+                        </Button>
+                        <Button
+                          className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-600 transition duration-150 ease-in-out"
+                          onClick={resetForm}
+                        >
+                          Reset
+                        </Button>
+                        <Button
+                          className="bg-teal-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-teal-600 transition duration-150 ease-in-out"
+                          onClick={handleOtomatisClick}
+                        >
+                          Otomatis
+                        </Button>
+                      </div>
+                      <div className="border-t border-gray-200 my-4"></div>
+                      <div ref={tableRef} className="overflow-x-auto">
+                        <h1 className="text-2xl font-bold text-teal-800 mb-4 sm:mb-0 mt-4">
+                          Rekap Pesanan Derap - Mei 2025{" "}
+                        </h1>
+                        <div className="max-h-60 overflow-y-auto">
+                          <table className="min-w-full border-collapse border border-gray-300">
+                            <thead>
+                              <tr className="border-b border-gray-200">
+                                <th className="px-4 py-3 text-left font-medium text-gray-700">
+                                  No
+                                </th>
+                                <th className="px-4 py-3 text-left font-medium text-gray-700">
+                                  Cabang
+                                </th>
+                                <th className="px-4 py-3 text-right font-medium text-gray-700">
+                                  Jumlah Pesanan
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {filteredTableData.length > 0 ? (
+                                filteredTableData
+                                  .slice(0, 5)
+                                  .map((item, index) => (
+                                    <tr
+                                      key={item.id}
+                                      className="border-b border-gray-200 hover:bg-gray-200 transition-colors duration-150"
+                                    >
+                                      <td className="px-4 py-3">{index + 1}</td>
+                                      <td className="px-4 py-3">
+                                        {item.cabang}
+                                      </td>
+                                      <td className="px-4 py-3 text-right">
+                                        {item.jumlah}
+                                      </td>
+                                    </tr>
+                                  ))
+                              ) : (
+                                <tr className="border-b border-gray-200">
+                                  <td className="px-4 py-3"></td>
+                                  <td className="px-4 py-3">Jumlah</td>
+                                  <td className="px-4 py-3">0</td>
+                                </tr>
+                              )}
+                            </tbody>
+                            <tfoot className="border-t border-gray-300 bg-gray-100">
+                              <tr>
+                                <td
+                                  colSpan="2"
+                                  className="px-4 py-3 font-semibold text-center"
+                                >
+                                  Total Pesanan Derap
+                                </td>
+                                <td className="px-4 py-3 text-right font-semibold">
+                                  {totalJumlah}
+                                </td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                        <div className="rounded-lg shadow-md border border-gray-200 bg-white mt-8">
+                          <div className="bg-teal-100 p-4 rounded-lg shadow-lg">
+                            <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+                              {/* Title on the left */}
+                              <div className="flex items-center mb-4 sm:mb-0">
+                                <FaChartBar className="text-teal-600 mr-3 text-2xl" />
+                                <h1 className="text-2xl font-bold text-teal-800">
+                                  Rekapitulasi Derap dan Pembayaran
+                                </h1>
+                              </div>
+
+                              {/* Print button on the right */}
+                              <button
+                                className="p-3 mt-3 text-teal-600 hover:bg-teal-500 hover:text-white bg-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3 border border-teal-600 hover:border-teal-500"
+                                onClick={printTable}
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="16"
+                                  height="16"
+                                  fill="currentColor"
+                                  viewBox="0 0 16 16"
+                                >
+                                  <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                                  <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                                </svg>
+                                Cetak Rekapitulasi
+                              </button>
+                            </div>
+
+                            {/* Rest of your content (filters, etc.) */}
+                            <div className="flex flex-col sm:flex-row gap-3 w-full">
+                              {/* Filter Cabang */}
+                              <div className="flex-1 min-w-[200px]">
+                                <div className="relative w-full">
+                                  <Input
+                                    type="text"
+                                    placeholder="Semua Cabang"
+                                    value={chosenCabang || "Pilih Cabang"}
+                                    readOnly
+                                    onFocus={() => {
+                                      setDropdownVisible(true);
+                                      setSearchTerm("");
+                                      setFilteredCabangOptions(cabangOptions);
+                                    }}
+                                    className="w-full border rounded-lg p-2 px-4 bg-white shadow-sm cursor-pointer"
+                                  />
+                                  {dropdownVisible && (
+                                    <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg">
+                                      {/* Dropdown content */}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Filter Bulan */}
+                              <div className="flex-1 min-w-[180px]">
+                                <select
+                                  className="w-full border rounded-lg py-2 px-4 text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  id="bulanTableBaru"
+                                  value={selectedBulanBaru}
+                                  onChange={(e) =>
+                                    setSelectedBulanBaru(e.target.value)
                                   }
                                 >
-                                  {cabang.kecamatan}
-                                </li>
-                              ))}
-                              {filteredCabangList.length === 0 && (
-                                <li className="p-2 text-gray-500">
-                                  Cabang tidak ditemukan
-                                </li>
-                              )}
-                            </ul>
+                                  <option value="">Pilih Bulan</option>
+                                  {bulanList.map((bulan) => (
+                                    <option
+                                      key={bulan.id}
+                                      value={bulan.namaBulan}
+                                    >
+                                      {bulan.namaBulan}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              {/* Filter Tahun */}
+                              <div className="flex-1 min-w-[150px]">
+                                <select
+                                  className="w-full border rounded-lg py-2 px-4 text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  id="tahunTable"
+                                  value={newSelectedYear}
+                                  onChange={(e) =>
+                                    setNewSelectedYear(e.target.value)
+                                  }
+                                >
+                                  <option value="">Pilih Tahun</option>
+                                  {years.map((year) => (
+                                    <option key={year} value={year}>
+                                      {year}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
                           </div>
-                        )}
+
+                          <div ref={tableRef} className="overflow-x-auto">
+                            <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                              <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
+                                <tr>
+                                  <th
+                                    scope="col"
+                                    className="border px-6 py-3 text-center text-sm"
+                                  >
+                                    No
+                                  </th>
+                                  <th
+                                    scope="col"
+                                    className="border px-6 py-3 text-center text-sm"
+                                  >
+                                    Cabang
+                                  </th>
+                                  <th
+                                    scope="col"
+                                    className="border px-6 py-3 text-center text-sm"
+                                  >
+                                    Pesanan (Eks)
+                                  </th>
+                                  <th
+                                    scope="col"
+                                    className="border px-6 py-3 text-center text-sm"
+                                  >
+                                    Total Tagihan (Rp)
+                                  </th>
+                                  <th
+                                    scope="col"
+                                    className="border px-6 py-3 text-center text-sm"
+                                  >
+                                    Pemb. Bank (Eks)
+                                  </th>
+                                  <th
+                                    scope="col"
+                                    className="border px-6 py-3 text-center text-sm"
+                                  >
+                                    Pemb. Bank (Nominal Rp)
+                                  </th>
+                                  <th
+                                    scope="col"
+                                    className="border px-6 py-3 text-center text-sm"
+                                  >
+                                    Pemb. Tunai (Rp)
+                                  </th>
+                                  <th
+                                    scope="col"
+                                    className="border px-6 py-3 text-center text-sm"
+                                  >
+                                    Selisih (Rp)
+                                  </th>
+                                  <th
+                                    scope="col"
+                                    className="border px-6 py-3 text-center text-sm"
+                                  >
+                                    Action
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {filteredTableData.length > 0 ? (
+                                  filteredTableData.map((item, index) => (
+                                    <tr
+                                      key={item.id}
+                                      className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
+                                    >
+                                      <td className="border px-6 py-4 text-center text-sm text-black">
+                                        {index + 1}
+                                      </td>
+                                      <td className="border px-6 py-4 text-center text-sm text-black">
+                                        {item.cabang}
+                                      </td>
+                                      <td className="border px-6 py-4 text-center text-sm text-black">
+                                        {item.jumlah}
+                                      </td>
+                                      <td className="border px-6 py-4 text-center text-sm text-black">
+                                        {formatRupiah(
+                                          calculateTotal(
+                                            item.jumlah,
+                                            parseInt(firstItem.cabang),
+                                            parseInt(firstItem.kabupaten),
+                                            parseInt(firstItem.propinsi)
+                                          )
+                                        )}
+                                      </td>
+                                      <td className="border px-6 py-4 text-center text-sm text-black">
+                                        10
+                                      </td>
+                                      <td className="border px-6 py-4 text-center text-sm text-black">
+                                        Rp 100.000
+                                      </td>
+                                      <td className="border px-6 py-4 text-center text-sm text-black">
+                                        Rp 0
+                                      </td>
+                                      <td className="border px-6 py-4 text-center text-sm text-black">
+                                        Rp 0
+                                      </td>
+                                      <td className="border px-2 py-4 text-center text-sm text-black">
+                                        <button
+                                          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded mr-2"
+                                          onClick={() => handleUpdate(item.id)}
+                                        >
+                                          Edit
+                                        </button>
+                                        <button
+                                          className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded"
+                                          onClick={() => handleDelete(item.id)}
+                                        >
+                                          Hapus
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                    <td className="px-6 py-4"></td>
+                                    <td className="px-6 py-4">Jumlah</td>
+                                    <td className="px-6 py-4">0</td>
+                                    <td className="px-6 py-4">0</td>
+                                    <td className="px-6 py-4"></td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          {/* {[
+                                            {
+                                              id: "provinsi",
+                                              label: "Derap Provinsi",
+                                              value: provinsi,
+                                              onChange: handleProvinsiChange,
+                                            },
+                                            {
+                                              id: "kabupaten",
+                                              label: "Derap Kabupaten",
+                                              value: kabupaten,
+                                              onChange: handleKabupatenChange,
+                                            },
+                                            {
+                                              id: "cabang",
+                                              label: "Derap Cabang/Ranting",
+                                              value: cabang,
+                                              onChange: handleCabangChange,
+                                            },
+                                            {
+                                              id: "totalHarga",
+                                              label: "Total Harga",
+                                              value: totalHarga,
+                                              readOnly: true,
+                                              customClass: "bg-gray-200",
+                                            },
+                                          ].map((field) => (
+                                            <div
+                                              key={field.id}
+                                              className="flex flex-col lg:flex-row items-center mb-4"
+                                            >
+                                              <Label
+                                                htmlFor={field.id}
+                                                className="block text-gray-800 text-lg font-semibold mb-2 lg:mb-0 lg:w-full"
+                                              >
+                                                {field.label}
+                                              </Label>
+                                              <Input
+                                                type="number"
+                                                id={field.id}
+                                                className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out lg:ml-4 ${
+                                                  field.customClass || ""
+                                                }`}
+                                                onKeyPress={handleKeyPress}
+                                                value={field.value}
+                                                onChange={field.onChange}
+                                                readOnly={field.readOnly}
+                                              />
+                                            </div>
+                                          ))}
+                                        <div className="mb-4">
+                                          <h3 className="text-lg font-bold mb-2 text-blue-600">
+                                            Jumlah Pesanan :
+                                          </h3>
+                                          <p className="text-lg text-gray-700">
+                                            <b>{jumlahPesanan} eksemplar</b>
+                                          </p>
+                                        </div>
+                                        <div className="mb-4">
+                                          <h3 className="text-lg font-bold mb-2 text-blue-600">
+                                            Setor Provinsi:
+                                          </h3>
+                                          <p className="text-lg text-gray-700">
+                                            <b>Rp. {setorProvinsi.toLocaleString()}</b>
+                                          </p>
+                                        </div>
+                                        <div className="mb-4">
+                                          <h3 className="text-lg font-bold mb-2 text-blue-600">
+                                            Untuk Kabupaten:
+                                          </h3>
+                                          <p className="text-lg text-gray-700">
+                                            <b>Rp. {untukKabupaten.toLocaleString()}</b>
+                                          </p>
+                                        </div>
+                                        <div className="mb-4">
+                                          <h3 className="text-lg font-bold mb-2 text-blue-600">
+                                            Untuk Cabang:
+                                          </h3>
+                                          <p className="text-lg text-gray-700">
+                                            <b>Rp. {untukCabang.toLocaleString()}</b>
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <h3 className="text-lg font-bold mb-2 text-blue-600">
+                                            Total:
+                                          </h3>
+                                          <p className="text-lg text-gray-700">
+                                            <b>Rp. {totalHargaAkhir.toLocaleString()}</b>
+                                          </p>
+                                        </div> */}
+                        </div>
                       </div>
                     </div>
-
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Jumlah (Eksemplar)
-                      </label>
-                      <Input
-                        type="number"
-                        id="jumlahPesananInput"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out"
-                        value={jumlahPesanan}
-                        onChange={(e) => setJumlahPesanan(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                      />
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-teal-100 flex items-center justify-between p-4 shadow-lg">
+                      <div className="flex items-center gap-3">
+                        <FaNewspaper className="text-teal-800 text-2xl" />
+                        <span className="text-teal-800 text-xl font-medium">
+                          Pesanan Derap PGRI
+                        </span>
+                      </div>
+                      <button className="p-3 text-teal-600 hover:bg-teal-500 hover:text-white bg-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3 border border-teal-600 hover:border-teal-500">
+                        {" "}
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          fill="currentColor"
+                          viewBox="0 0 16 16"
+                        >
+                          <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                          <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                        </svg>
+                        Cetak Ringkasan
+                      </button>
                     </div>
-                  </div>
-                  <div className="flex  space-x-4 mt-6">
-                    <Button
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-150 ease-in-out gap-3"
-                      onClick={isEditMode ? handleSaveUpdate : handleSubmit}
-                    >
-                      {" "}
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        fill="currentColor"
-                        viewBox="0 0 16 16"
-                      >
-                        <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
-                        <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
-                      </svg>
-                      {isEditMode ? "Update" : "Simpan Pesanan"}
-                    </Button>
-                    <Button
-                      className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-600 transition duration-150 ease-in-out"
-                      onClick={resetForm}
-                    >
-                      Reset
-                    </Button>
-                    <Button
-                      className="bg-teal-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-teal-600 transition duration-150 ease-in-out"
-                      onClick={handleOtomatisClick}
-                    >
-                      Otomatis
-                    </Button>
-                  </div>
-                  <div className="border-t border-gray-200 my-4"></div>
-                <div ref={tableRef} className="overflow-x-auto">
-  <h1 className="text-2xl font-bold text-teal-800 mb-4 sm:mb-0 mt-4">
-    Rekap Pesanan Derap - Mei 2025{" "}
-  </h1>
-  <div className="max-h-60 overflow-y-auto">
-    <table className="min-w-full border-collapse border border-gray-300">
-      <thead>
-        <tr className="border-b border-gray-200">
-          <th className="px-4 py-3 text-left font-medium text-gray-700">No</th>
-          <th className="px-4 py-3 text-left font-medium text-gray-700">Cabang</th>
-          <th className="px-4 py-3 text-right font-medium text-gray-700">Jumlah Pesanan</th>
-        </tr>
-      </thead>
-      <tbody>
-        {filteredTableData.length > 0 ? (
-          filteredTableData.slice(0, 5).map((item, index) => (
-            <tr 
-              key={item.id} 
-              className="border-b border-gray-200 hover:bg-gray-200 transition-colors duration-150"
-            >
-              <td className="px-4 py-3">{index + 1}</td>
-              <td className="px-4 py-3">{item.cabang}</td>
-              <td className="px-4 py-3 text-right">{item.jumlah}</td>
-            </tr>
-          ))
-        ) : (
-          <tr className="border-b border-gray-200">
-            <td className="px-4 py-3"></td>
-            <td className="px-4 py-3">Jumlah</td>
-            <td className="px-4 py-3">0</td>
-          </tr>
-        )}
-      </tbody>
-      <tfoot className="border-t border-gray-300 bg-gray-100">
-        <tr>
-          <td colSpan="2" className="px-4 py-3 font-semibold text-center">Total Pesanan Derap</td>
-          <td className="px-4 py-3 text-right font-semibold">{totalJumlah}</td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-</div>
-
-
-                  
-                </div>
-              </div>
-
-              <div className="rounded-lg shadow-md border border-gray-200 bg-white mt-8">
-                <div className="bg-teal-100 p-4 rounded-lg shadow-lg">
-  <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
-    {/* Title on the left */}
-    <div className="flex items-center mb-4 sm:mb-0">
-      <FaChartBar className="text-teal-600 mr-3 text-2xl" />
-      <h1 className="text-2xl font-bold text-teal-800">
-        Rekapitulasi Derap dan Pembayaran
-      </h1>
-    </div>
-
-    {/* Print button on the right */}
-    <button className="p-3 mt-3 text-teal-600 hover:bg-teal-500 hover:text-white bg-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3 border border-teal-600 hover:border-teal-500"
-      onClick={printTable}
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        fill="currentColor"
-        viewBox="0 0 16 16"
-      >
-        <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
-        <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
-      </svg>
-      Cetak Rekapitulasi
-    </button>
-  </div>
-
-  {/* Rest of your content (filters, etc.) */}
-  <div className="flex flex-col sm:flex-row gap-3 w-full">
-  {/* Filter Cabang */}
-  <div className="flex-1 min-w-[200px]">
-    <div className="relative w-full">
-      <Input
-        type="text"
-        placeholder="Semua Cabang"
-        value={chosenCabang || "Pilih Cabang"}
-        readOnly
-        onFocus={() => {
-          setDropdownVisible(true);
-          setSearchTerm("");
-          setFilteredCabangOptions(cabangOptions);
-        }}
-        className="w-full border rounded-lg p-2 px-4 bg-white shadow-sm cursor-pointer"
-      />
-      {dropdownVisible && (
-        <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg">
-          {/* Dropdown content */}
-        </div>
-      )}
-    </div>
-  </div>
-
-  {/* Filter Bulan */}
-  <div className="flex-1 min-w-[180px]">
-    <select
-      className="w-full border rounded-lg py-2 px-4 text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-      id="bulanTableBaru"
-      value={selectedBulanBaru}
-      onChange={(e) => setSelectedBulanBaru(e.target.value)}
-    >
-      <option value="">Pilih Bulan</option>
-      {bulanList.map((bulan) => (
-        <option key={bulan.id} value={bulan.namaBulan}>
-          {bulan.namaBulan}
-        </option>
-      ))}
-    </select>
-  </div>
-
-  {/* Filter Tahun */}
-  <div className="flex-1 min-w-[150px]">
-    <select
-      className="w-full border rounded-lg py-2 px-4 text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-      id="tahunTable"
-      value={newSelectedYear}
-      onChange={(e) => setNewSelectedYear(e.target.value)}
-    >
-      <option value="">Pilih Tahun</option>
-      {years.map((year) => (
-        <option key={year} value={year}>
-          {year}
-        </option>
-      ))}
-    </select>
-  </div>
-</div>
-</div>
-
-            <div ref={tableRef} className="overflow-x-auto">
-              <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
-                  <tr>
-                    <th
-                      scope="col"
-                      className="border px-6 py-3 text-center text-sm"
-                    >
-                      No
-                    </th>
-                    <th
-                      scope="col"
-                      className="border px-6 py-3 text-center text-sm"
-                    >
-                      Cabang
-                    </th>
-                    <th
-                      scope="col"
-                      className="border px-6 py-3 text-center text-sm"
-                    >
-                      Pesanan (Eks)
-                    </th>
-                    <th
-                      scope="col"
-                      className="border px-6 py-3 text-center text-sm"
-                    >
-                      Total Tagihan (Rp)
-                    </th>
-                    <th
-                      scope="col"
-                      className="border px-6 py-3 text-center text-sm"
-                    >
-                      Pemb. Bank (Eks)
-                    </th>
-                    <th
-                      scope="col"
-                      className="border px-6 py-3 text-center text-sm"
-                    >
-                      Pemb. Bank (Nominal Rp)
-                    </th>
-                    <th
-                      scope="col"
-                      className="border px-6 py-3 text-center text-sm"
-                    >
-                      Pemb. Tunai (Rp)
-                    </th>
-                    <th
-                      scope="col"
-                      className="border px-6 py-3 text-center text-sm"
-                    >
-                      Selisih (Rp)
-                    </th>
-                    <th
-                      scope="col"
-                      className="border px-6 py-3 text-center text-sm"
-                    >
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTableData.length > 0 ? (
-                    filteredTableData.map((item, index) => (
-                      <tr
-                        key={item.id}
-                        className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
-                      >
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {index + 1}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {item.cabang}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {item.jumlah}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          {formatRupiah(
-                            calculateTotal(
-                              item.jumlah,
-                              parseInt(firstItem.cabang),
-                              parseInt(firstItem.kabupaten),
-                              parseInt(firstItem.propinsi)
-                            )
-                          )}
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          10
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          Rp 100.000
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          Rp 0
-                        </td>
-                        <td className="border px-6 py-4 text-center text-sm text-black">
-                          Rp 0
-                        </td>
-                        <td className="border px-2 py-4 text-center text-sm text-black">
-                          <button
-                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded mr-2"
-                            onClick={() => handleUpdate(item.id)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            Hapus
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                      <td className="px-6 py-4"></td>
-                      <td className="px-6 py-4">Jumlah</td>
-                      <td className="px-6 py-4">0</td>
-                      <td className="px-6 py-4">0</td>
-                      <td className="px-6 py-4"></td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-                </div>
-                
-                {/* {[
-                    {
-                      id: "provinsi",
-                      label: "Derap Provinsi",
-                      value: provinsi,
-                      onChange: handleProvinsiChange,
-                    },
-                    {
-                      id: "kabupaten",
-                      label: "Derap Kabupaten",
-                      value: kabupaten,
-                      onChange: handleKabupatenChange,
-                    },
-                    {
-                      id: "cabang",
-                      label: "Derap Cabang/Ranting",
-                      value: cabang,
-                      onChange: handleCabangChange,
-                    },
-                    {
-                      id: "totalHarga",
-                      label: "Total Harga",
-                      value: totalHarga,
-                      readOnly: true,
-                      customClass: "bg-gray-200",
-                    },
-                  ].map((field) => (
-                    <div
-                      key={field.id}
-                      className="flex flex-col lg:flex-row items-center mb-4"
-                    >
-                      <Label
-                        htmlFor={field.id}
-                        className="block text-gray-800 text-lg font-semibold mb-2 lg:mb-0 lg:w-full"
-                      >
-                        {field.label}
-                      </Label>
-                      <Input
-                        type="number"
-                        id={field.id}
-                        className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out lg:ml-4 ${
-                          field.customClass || ""
-                        }`}
-                        onKeyPress={handleKeyPress}
-                        value={field.value}
-                        onChange={field.onChange}
-                        readOnly={field.readOnly}
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                      <div className="p-4 border rounded-md bg-card shadow-sm">
+                        <span className="text-lg text-muted-foreground ">
+                          Tranfer ke Provinsi
+                        </span>
+                        <p className="text-2xl font-bold text-primary">2</p>
+                      </div>
+                      <div className="p-4 border rounded-md bg-card shadow-sm">
+                        <span className="text-lg text-muted-foreground">
+                          Bagian Kabupaten
+                        </span>
+                        <p className="text-2xl font-bold text-primary">2</p>
+                      </div>
+                      <div className="p-4 border rounded-md bg-card shadow-sm">
+                        <span className="text-lg text-muted-foreground">
+                          Pengembalian Ke Cabang/Ranting
+                        </span>
+                        <p className="text-2xl font-bold text-primary">2</p>
+                      </div>
                     </div>
-                  ))}
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Jumlah Pesanan :
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>{jumlahPesanan} eksemplar</b>
-                  </p>
-                </div>
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Setor Provinsi:
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>Rp. {setorProvinsi.toLocaleString()}</b>
-                  </p>
-                </div>
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Untuk Kabupaten:
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>Rp. {untukKabupaten.toLocaleString()}</b>
-                  </p>
-                </div>
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Untuk Cabang:
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>Rp. {untukCabang.toLocaleString()}</b>
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold mb-2 text-blue-600">
-                    Total:
-                  </h3>
-                  <p className="text-lg text-gray-700">
-                    <b>Rp. {totalHargaAkhir.toLocaleString()}</b>
-                  </p>
-                </div> */}
+                    <div className="p-4 border rounded-md bg-card shadow-lg text-center">
+                      <span className="text-lg text-muted-foreground ">
+                        Total Keseluruhan Derap (429 Eksemplar)
+                      </span>
+                      <p className="text-2xl font-bold text-primary">2</p>
+                    </div>
+                    <div className="rounded-lg shadow-md border border-gray-200 bg-white mt-8">
+                      <div className="bg-teal-100 p-4 rounded-lg shadow-lg">
+                        <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
+                          {/* Title on the left */}
+                          <div className="flex items-center mb-4 sm:mb-0">
+                            <FaChartBar className="text-teal-600 mr-3 text-2xl" />
+                            <h1 className="text-2xl font-bold text-teal-800">
+                              Rekapitulasi Derap dan Pembayaran
+                            </h1>
+                          </div>
+
+                          {/* Print button on the right */}
+                          <button
+                            className="p-3 mt-3 text-teal-600 hover:bg-teal-500 hover:text-white bg-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3 border border-teal-600 hover:border-teal-500"
+                            onClick={printTable}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              fill="currentColor"
+                              viewBox="0 0 16 16"
+                            >
+                              <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                              <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                            </svg>
+                            Cetak Detail
+                          </button>
+                        </div>
+
+                        {/* Rest of your content (filters, etc.) */}
+                        <div className="flex flex-col sm:flex-row gap-3 w-full">
+                          {/* Filter Cabang */}
+                          <div className="flex-1 min-w-[200px]">
+                            <div className="relative w-full">
+                              <Input
+                                type="text"
+                                placeholder="Semua Cabang"
+                                value={chosenCabang || "Pilih Cabang"}
+                                readOnly
+                                onFocus={() => {
+                                  setDropdownVisible(true);
+                                  setSearchTerm("");
+                                  setFilteredCabangOptions(cabangOptions);
+                                }}
+                                className="w-full border rounded-lg p-2 px-4 bg-white shadow-sm cursor-pointer"
+                              />
+                              {dropdownVisible && (
+                                <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg">
+                                  {/* Dropdown content */}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Filter Bulan */}
+                          <div className="flex-1 min-w-[180px]">
+                            <select
+                              className="w-full border rounded-lg py-2 px-4 text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              id="bulanTableBaru"
+                              value={selectedBulanBaru}
+                              onChange={(e) =>
+                                setSelectedBulanBaru(e.target.value)
+                              }
+                            >
+                              <option value="">Pilih Bulan</option>
+                              {bulanList.map((bulan) => (
+                                <option key={bulan.id} value={bulan.namaBulan}>
+                                  {bulan.namaBulan}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Filter Tahun */}
+                          <div className="flex-1 min-w-[150px]">
+                            <select
+                              className="w-full border rounded-lg py-2 px-4 text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              id="tahunTable"
+                              value={newSelectedYear}
+                              onChange={(e) =>
+                                setNewSelectedYear(e.target.value)
+                              }
+                            >
+                              <option value="">Pilih Tahun</option>
+                              {years.map((year) => (
+                                <option key={year} value={year}>
+                                  {year}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div ref={tableRef} className="overflow-x-auto">
+                        <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                          <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
+                            <tr>
+                              <th
+                                scope="col"
+                                className="border px-6 py-3 text-center text-sm"
+                              >
+                                No
+                              </th>
+                              <th
+                                scope="col"
+                                className="border px-6 py-3 text-center text-sm"
+                              >
+                                Cabang
+                              </th>
+                              <th
+                                scope="col"
+                                className="border px-6 py-3 text-center text-sm"
+                              >
+                                Pesanan (Eks)
+                              </th>
+                              <th
+                                scope="col"
+                                className="border px-6 py-3 text-center text-sm"
+                              >
+                                Total Tagihan (Rp)
+                              </th>
+                              <th
+                                scope="col"
+                                className="border px-6 py-3 text-center text-sm"
+                              >
+                                Provinsi (Rp)
+                              </th>
+                              <th
+                                scope="col"
+                                className="border px-6 py-3 text-center text-sm"
+                              >
+                                Kabupaten (Rp)
+                              </th>
+                              <th
+                                scope="col"
+                                className="border px-6 py-3 text-center text-sm"
+                              >
+                                Prk. Cabang (Rp)
+                              </th>
+                              <th
+                                scope="col"
+                                className="border px-6 py-3 text-center text-sm"
+                              >
+                                Tmbh. Cabang (Rp)
+                              </th>
+                              <th
+                                scope="col"
+                                className="border px-6 py-3 text-center text-sm"
+                              >
+                                Pemb. Bank (Eks)
+                              </th>
+                              <th
+                                scope="col"
+                                className="border px-6 py-3 text-center text-sm"
+                              >
+                                Pemb. Bank (Nominal Rp)
+                              </th>
+                              <th
+                                scope="col"
+                                className="border px-6 py-3 text-center text-sm"
+                              >
+                                Pemb. Tunai (Rp)
+                              </th>
+                              <th
+                                scope="col"
+                                className="border px-6 py-3 text-center text-sm"
+                              >
+                                Selisih (Rp)
+                              </th>
+                              <th
+                                scope="col"
+                                className="border px-6 py-3 text-center text-sm"
+                              >
+                                Action
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredTableData.length > 0 ? (
+                              filteredTableData.map((item, index) => (
+                                <tr
+                                  key={item.id}
+                                  className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
+                                >
+                                  <td className="border px-6 py-4 text-center text-sm text-black">
+                                    {index + 1}
+                                  </td>
+                                  <td className="border px-6 py-4 text-center text-sm text-black">
+                                    {item.cabang}
+                                  </td>
+                                  <td className="border px-6 py-4 text-center text-sm text-black">
+                                    {item.jumlah}
+                                  </td>
+                                  <td className="border px-6 py-4 text-center text-sm text-black">
+                                    {formatRupiah(
+                                      calculateTotal(
+                                        item.jumlah,
+                                        parseInt(firstItem.cabang),
+                                        parseInt(firstItem.kabupaten),
+                                        parseInt(firstItem.propinsi)
+                                      )
+                                    )}
+                                  </td>
+                                  <td className="border px-6 py-4 text-center text-sm text-black">
+                                    10
+                                  </td>
+                                  <td className="border px-6 py-4 text-center text-sm text-black">
+                                    Rp 100.000
+                                  </td>
+                                  <td className="border px-6 py-4 text-center text-sm text-black">
+                                    Rp 0
+                                  </td>
+                                  <td className="border px-6 py-4 text-center text-sm text-black">
+                                    Rp 0
+                                  </td>
+                                  <td className="border px-6 py-4 text-center text-sm text-black">
+                                    Rp 0
+                                  </td>
+                                  <td className="border px-6 py-4 text-center text-sm text-black">
+                                    Rp 0
+                                  </td>
+                                  <td className="border px-6 py-4 text-center text-sm text-black">
+                                    Rp 0
+                                  </td>
+                                  <td className="border px-6 py-4 text-center text-sm text-black">
+                                    Rp 0
+                                  </td>
+                                  <td className="border py-4 text-center text-sm text-black">
+                                    <button
+                                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-1 rounded mr-2"
+                                      onClick={() => handleUpdate(item.id)}
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-1 rounded"
+                                      onClick={() => handleDelete(item.id)}
+                                    >
+                                      Hapus
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                <td className="px-6 py-4"></td>
+                                <td className="px-6 py-4">Jumlah</td>
+                                <td className="px-6 py-4">0</td>
+                                <td className="px-6 py-4">0</td>
+                                <td className="px-6 py-4"></td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* {[
+                                            {
+                                              id: "provinsi",
+                                              label: "Derap Provinsi",
+                                              value: provinsi,
+                                              onChange: handleProvinsiChange,
+                                            },
+                                            {
+                                              id: "kabupaten",
+                                              label: "Derap Kabupaten",
+                                              value: kabupaten,
+                                              onChange: handleKabupatenChange,
+                                            },
+                                            {
+                                              id: "cabang",
+                                              label: "Derap Cabang/Ranting",
+                                              value: cabang,
+                                              onChange: handleCabangChange,
+                                            },
+                                            {
+                                              id: "totalHarga",
+                                              label: "Total Harga",
+                                              value: totalHarga,
+                                              readOnly: true,
+                                              customClass: "bg-gray-200",
+                                            },
+                                          ].map((field) => (
+                                            <div
+                                              key={field.id}
+                                              className="flex flex-col lg:flex-row items-center mb-4"
+                                            >
+                                              <Label
+                                                htmlFor={field.id}
+                                                className="block text-gray-800 text-lg font-semibold mb-2 lg:mb-0 lg:w-full"
+                                              >
+                                                {field.label}
+                                              </Label>
+                                              <Input
+                                                type="number"
+                                                id={field.id}
+                                                className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out lg:ml-4 ${
+                                                  field.customClass || ""
+                                                }`}
+                                                onKeyPress={handleKeyPress}
+                                                value={field.value}
+                                                onChange={field.onChange}
+                                                readOnly={field.readOnly}
+                                              />
+                                            </div>
+                                          ))}
+                                        <div className="mb-4">
+                                          <h3 className="text-lg font-bold mb-2 text-blue-600">
+                                            Jumlah Pesanan :
+                                          </h3>
+                                          <p className="text-lg text-gray-700">
+                                            <b>{jumlahPesanan} eksemplar</b>
+                                          </p>
+                                        </div>
+                                        <div className="mb-4">
+                                          <h3 className="text-lg font-bold mb-2 text-blue-600">
+                                            Setor Provinsi:
+                                          </h3>
+                                          <p className="text-lg text-gray-700">
+                                            <b>Rp. {setorProvinsi.toLocaleString()}</b>
+                                          </p>
+                                        </div>
+                                        <div className="mb-4">
+                                          <h3 className="text-lg font-bold mb-2 text-blue-600">
+                                            Untuk Kabupaten:
+                                          </h3>
+                                          <p className="text-lg text-gray-700">
+                                            <b>Rp. {untukKabupaten.toLocaleString()}</b>
+                                          </p>
+                                        </div>
+                                        <div className="mb-4">
+                                          <h3 className="text-lg font-bold mb-2 text-blue-600">
+                                            Untuk Cabang:
+                                          </h3>
+                                          <p className="text-lg text-gray-700">
+                                            <b>Rp. {untukCabang.toLocaleString()}</b>
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <h3 className="text-lg font-bold mb-2 text-blue-600">
+                                            Total:
+                                          </h3>
+                                          <p className="text-lg text-gray-700">
+                                            <b>Rp. {totalHargaAkhir.toLocaleString()}</b>
+                                          </p>
+                                        </div> */}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
-            
           </div>
         </div>
       </div>
