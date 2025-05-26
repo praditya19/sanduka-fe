@@ -16,6 +16,7 @@ import {
   FaNewspaper,
   FaChartBar,
 } from "react-icons/fa";
+import { FaGear } from 'react-icons/fa6';
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -129,7 +130,8 @@ function DerapForm() {
     new Date().getFullYear()
   );
   const tableRef = useRef();
-  const [activeTab, setActiveTab] = useState(1); // 1 for Rincian Derap, 2 for Pembagian Derap
+  const [activeTab, setActiveTab] = useState(1);
+  const [modalNominal, setModalNominal] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -638,31 +640,188 @@ function DerapForm() {
           )}
           <div className="p-4 bg-gray-50 rounded-lg shadow-lg">
             <div className="rounded-lg shadow-lg border border-gray-200 bg-white">
-              {/* Tab Navigation */}
               <div className="border-b border-gray-200">
-                <nav className="flex -mb-px">
+                <div className="flex justify-between items-center px-4">
+                  <nav className="flex -mb-px">
+                    <button
+                      onClick={() => setActiveTab(1)}
+                      className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
+                        activeTab === 1
+                          ? "border-teal-500 text-teal-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      Rincian Derap
+                    </button>
+                    <button
+                      onClick={() => setActiveTab(2)}
+                      className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
+                        activeTab === 2
+                          ? "border-teal-500 text-teal-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      Pembagian Derap
+                    </button>
+                  </nav>
                   <button
-                    onClick={() => setActiveTab(1)}
-                    className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
-                      activeTab === 1
-                        ? "border-teal-500 text-teal-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    }`}
-                  >
-                    Rincian Derap
+                    onClick={() => setModalNominal(true)}
+                    className="bg-white text-black font-medium py-2 px-4 rounded-lg shadow-md border border-gray-300 hover:bg-blue-500 hover:text-white transition duration-150 ease-in-out"
+                  ><FaGear /> 
+                    Atur Nominal Peruntukan Derap
                   </button>
-                  <button
-                    onClick={() => setActiveTab(2)}
-                    className={`py-4 px-6 text-center border-b-2 font-medium text-sm ${
-                      activeTab === 2
-                        ? "border-teal-500 text-teal-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    }`}
-                  >
-                    Pembagian Derap
-                  </button>
-                </nav>
+                </div>
               </div>
+
+              {modalNominal && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+                    <div className="flex justify-between items-center mb-4">
+                      <div>
+                        <h2 className="text-xl font-bold text-teal-800">
+                          Nominal Peruntukan Derap
+                        </h2>
+                        <p>Atur besaran nominal peruntukan untuk Derap.</p>
+                      </div>
+                      <button
+                        onClick={() => setModalNominal(false)}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {[
+                        {
+                          id: "provinsi",
+                          label: "Derap Provinsi",
+                          value: provinsi,
+                          onChange: handleProvinsiChange,
+                        },
+                        {
+                          id: "kabupaten",
+                          label: "Derap Kabupaten",
+                          value: kabupaten,
+                          onChange: handleKabupatenChange,
+                        },
+                        {
+                          id: "cabang",
+                          label: "Derap Cabang/Ranting",
+                          value: cabang,
+                          onChange: handleCabangChange,
+                        },
+                        {
+                          id: "totalHarga",
+                          label: "Total Harga",
+                          value: totalHarga,
+                          readOnly: true,
+                          customClass: "bg-gray-200",
+                        },
+                      ].map((field) => (
+                        <div
+                          key={field.id}
+                          className="flex flex-col lg:flex-row items-center mb-4"
+                        >
+                          <Label
+                            htmlFor={field.id}
+                            className="block text-gray-800 text-lg font-semibold mb-2 lg:mb-0 lg:w-full"
+                          >
+                            {field.label}
+                          </Label>
+                          <Input
+                            type="number"
+                            id={field.id}
+                            className={`w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition duration-150 ease-in-out lg:ml-4 ${
+                              field.customClass || ""
+                            }`}
+                            onKeyPress={handleKeyPress}
+                            value={field.value}
+                            onChange={field.onChange}
+                            readOnly={field.readOnly}
+                          />
+                        </div>
+                      ))}
+
+                      {/* <div className="mb-4">
+          <h3 className="text-lg font-bold mb-2 text-blue-600">
+            Jumlah Pesanan :
+          </h3>
+          <p className="text-lg text-gray-700">
+            <b>{jumlahPesanan} eksemplar</b>
+          </p>
+        </div>
+        
+        <div className="mb-4">
+          <h3 className="text-lg font-bold mb-2 text-blue-600">
+            Setor Provinsi:
+          </h3>
+          <p className="text-lg text-gray-700">
+            <b>Rp. {setorProvinsi.toLocaleString()}</b>
+          </p>
+        </div>
+        
+        <div className="mb-4">
+          <h3 className="text-lg font-bold mb-2 text-blue-600">
+            Untuk Kabupaten:
+          </h3>
+          <p className="text-lg text-gray-700">
+            <b>Rp. {untukKabupaten.toLocaleString()}</b>
+          </p>
+        </div>
+        
+        <div className="mb-4">
+          <h3 className="text-lg font-bold mb-2 text-blue-600">
+            Untuk Cabang:
+          </h3>
+          <p className="text-lg text-gray-700">
+            <b>Rp. {untukCabang.toLocaleString()}</b>
+          </p>
+        </div>
+        
+        <div>
+          <h3 className="text-lg font-bold mb-2 text-blue-600">
+            Total:
+          </h3>
+          <p className="text-lg text-gray-700">
+            <b>Rp. {totalHargaAkhir.toLocaleString()}</b>
+          </p>
+        </div> */}
+
+                      <div className="flex justify-end space-x-3 mt-6">
+                        <button
+                          onClick={() => setModalNominal(false)}
+                          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition duration-150"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          onClick={() => {
+                            // Handle save logic here
+                            setModalNominal(false);
+                          }}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-150"
+                        >
+                          Simpan
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Tab Content */}
               <div className="p-6">

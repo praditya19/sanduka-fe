@@ -1142,6 +1142,7 @@ const getTransaksiBankBalancing = async (
   tahun = null,
   bulan = null,
   keterangan = null,
+  search = null,
   size = 10,
   page = 0
 ) => {
@@ -1156,6 +1157,7 @@ const getTransaksiBankBalancing = async (
     if (bulan) params.append("bulan", bulan);
     if (tahun) params.append("tahun", tahun);
     if (keterangan) params.append("keterangan", keterangan);
+    if (search) params.append("search", search);
 
     const url = `https://sanduka.my.id/api/potongan-gaji/balancing?${params.toString()}`;
     const response = await axiosClient.get(url);
@@ -1170,6 +1172,7 @@ const getTransaksiBankBalancing = async (
     throw error;
   }
 };
+
 
 const getCountBalancing = async (bulan, tahun, cabang, unitKerja) => {
   const params = new URLSearchParams();

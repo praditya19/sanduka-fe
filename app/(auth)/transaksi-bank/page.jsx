@@ -155,6 +155,7 @@ export default function BankTransactionPage() {
   const [currentPageBalancing, setCurrentPageBalancing] = useState(1);
   const [totalPagesBalancing, setTotalPagesBalancing] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const [searchBalancing, setSearchBalancing] = useState("");
 
   const handleFilter = async () => {
     try {
@@ -180,6 +181,7 @@ export default function BankTransactionPage() {
         year,
         month,
         paymentNote,
+        searchBalancing,
         displayCount,
         currentPageBalancing - 1
       );
@@ -199,6 +201,7 @@ export default function BankTransactionPage() {
     searchQuery,
     displayCount,
     paymentNote,
+    searchBalancing,
     selectedCabang,
     selectedUnitKerja,
     currentPage,
@@ -1527,7 +1530,7 @@ export default function BankTransactionPage() {
               </div>
 
               <div className="p-6 bg-gray-50 border-b border-gray-100">
-                <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Cabang
@@ -1674,6 +1677,23 @@ export default function BankTransactionPage() {
                       <option value={50}>50</option>
                       <option value={100}>100</option>
                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cari Anggota/Rekening
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={searchBalancing}
+                        onChange={(e) => setSearchBalancing(e.target.value)}
+                        className="w-full h-10 text-base px-4 pr-12 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
+                        placeholder="Ketik nama atau rekening"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
+                        <FontAwesomeIcon icon={faSearch} />
+                      </span>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
