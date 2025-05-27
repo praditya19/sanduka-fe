@@ -237,8 +237,16 @@ export default function BankTransactionPage() {
     getTotalBalancing();
   }, [selectedCabang, unitKerjaInput]);
 
-  const formatRupiah = (angka) =>
-    angka.toLocaleString("id-ID", { style: "currency", currency: "IDR" });
+  const formatRupiah = (angka) => {
+    const parsed = Number(angka);
+    if (isNaN(parsed)) return "Rp 0";
+    return parsed.toLocaleString("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+  };
 
   useEffect(() => {
     fetchCabangData();
@@ -818,6 +826,10 @@ export default function BankTransactionPage() {
     return pages;
   };
 
+  const startIdx = (currentPageBalancing - 1) * displayCount;
+  const endIdx = startIdx + displayCount;
+  const pageData = dataBalancing.slice(startIdx, endIdx);
+
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-4">
       <header className="bg-gradient-to-r from-teal-600 to-teal-700 text-white py-4 px-4 md:px-8 shadow-lg fixed top-0 left-0 w-full z-50 flex items-center">
@@ -1276,7 +1288,7 @@ export default function BankTransactionPage() {
                             {item.rekeningKabupaten}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.potongan}
+                            {formatRupiah(item.potongan)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                             {formatTanggal(item.tanggalPemotongan)}
@@ -1786,31 +1798,31 @@ export default function BankTransactionPage() {
                             {item.rekening}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.totalIuranAnggota}
+                            {formatRupiah(item.totalIuranAnggota)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.totalIuranSanduka}
+                            {formatRupiah(item.totalIuranSanduka)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.totalIuranDaspen}
+                            {formatRupiah(item.totalIuranDaspen)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.totalIuranDerap}
+                            {formatRupiah(item.totalIuranDerap)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.totalIuranKalender}
+                            {formatRupiah(item.totalIuranKalender)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.totalIuranKalender}
+                            {formatRupiah(item.totalIuranKalender)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.totalIuran}
+                            {formatRupiah(item.totalIuran)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.potongan}
+                            {formatRupiah(item.potongan)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.selisih}
+                            {formatRupiah(item.selisih)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                             {item.keterangan}
@@ -1837,6 +1849,70 @@ export default function BankTransactionPage() {
                       </tr>
                     )}
                   </tbody>
+                  <tfoot>
+                    <tr className="bg-gray-100">
+                      <td colSpan={5} className="px-6 py-4 text-center">
+                        Total
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {formatRupiah(
+                          pageData.reduce(
+                            (sum, item) => sum + item.totalIuranAnggota,
+                            0
+                          )
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {formatRupiah(
+                          pageData.reduce(
+                            (sum, item) => sum + item.totalIuranSanduka,
+                            0
+                          )
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {formatRupiah(
+                          pageData.reduce(
+                            (sum, item) => sum + item.totalIuranDaspen,
+                            0
+                          )
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {formatRupiah(
+                          pageData.reduce(
+                            (sum, item) => sum + item.totalIuranDerap,
+                            0
+                          )
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {formatRupiah(
+                          pageData.reduce(
+                            (sum, item) => sum + item.totalIuranKalender,
+                            0
+                          )
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {formatRupiah(
+                          pageData.reduce(
+                            (sum, item) => sum + item.totalIuranKalender,
+                            0
+                          )
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {formatRupiah(
+                          pageData.reduce(
+                            (sum, item) => sum + item.totalIuran,
+                            0
+                          )
+                        )}
+                      </td>
+                      <td colSpan={3}></td>
+                    </tr>
+                  </tfoot>
                 </table>
                 <div className="p-4 border-t">
                   <div className="flex flex-wrap justify-center gap-2">
