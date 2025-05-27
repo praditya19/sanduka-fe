@@ -825,10 +825,9 @@ export default function BankTransactionPage() {
 
     return pages;
   };
-
-  const startIdx = (currentPageBalancing - 1) * displayCount;
-  const endIdx = startIdx + displayCount;
-  const pageData = dataBalancing.slice(startIdx, endIdx);
+  const startIndex = (currentPageBalancing - 1) * displayCount;
+  const endIndex = startIndex + displayCount;
+  const pageData = dataBalancing.slice(startIndex, endIndex);
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-4">
@@ -1856,7 +1855,7 @@ export default function BankTransactionPage() {
                       </td>
                       <td className="px-6 py-4 text-center">
                         {formatRupiah(
-                          pageData.reduce(
+                          dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranAnggota,
                             0
                           )
@@ -1864,7 +1863,7 @@ export default function BankTransactionPage() {
                       </td>
                       <td className="px-6 py-4 text-center">
                         {formatRupiah(
-                          pageData.reduce(
+                          dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranSanduka,
                             0
                           )
@@ -1872,7 +1871,7 @@ export default function BankTransactionPage() {
                       </td>
                       <td className="px-6 py-4 text-center">
                         {formatRupiah(
-                          pageData.reduce(
+                          dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranDaspen,
                             0
                           )
@@ -1880,7 +1879,7 @@ export default function BankTransactionPage() {
                       </td>
                       <td className="px-6 py-4 text-center">
                         {formatRupiah(
-                          pageData.reduce(
+                          dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranDerap,
                             0
                           )
@@ -1888,7 +1887,7 @@ export default function BankTransactionPage() {
                       </td>
                       <td className="px-6 py-4 text-center">
                         {formatRupiah(
-                          pageData.reduce(
+                          dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranKalender,
                             0
                           )
@@ -1896,7 +1895,7 @@ export default function BankTransactionPage() {
                       </td>
                       <td className="px-6 py-4 text-center">
                         {formatRupiah(
-                          pageData.reduce(
+                          dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuranKalender,
                             0
                           )
@@ -1904,7 +1903,7 @@ export default function BankTransactionPage() {
                       </td>
                       <td className="px-6 py-4 text-center">
                         {formatRupiah(
-                          pageData.reduce(
+                          dataBalancing.reduce(
                             (sum, item) => sum + item.totalIuran,
                             0
                           )
