@@ -1750,7 +1750,7 @@ function RekapAnggota() {
 
     try {
       await GlobalApi.postToBackup(groupedData, selectedDate);
-      
+
       setNotification({
         type: "success",
         message: "Backup berhasil!",
@@ -2033,12 +2033,14 @@ function RekapAnggota() {
                       <span>Excel</span>
                     </button>
 
-                    <button
-                      className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3"
-                      onClick={() => setPopupBackup(true)}
-                    >
-                      <span>Backup Data</span>
-                    </button>
+                    {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                      <button
+                        className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3"
+                        onClick={() => setPopupBackup(true)}
+                      >
+                        <span>Backup Data</span>
+                      </button>
+                    )}
 
                     <div
                       className="relative inline-block text-left"
