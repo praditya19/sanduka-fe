@@ -175,23 +175,53 @@ export default function BankTransactionPage() {
 
   const getBalancingdata = async () => {
     try {
-      const result = await GlobalApi.getTransaksiBankBalancing(
-        selectedCabang,
-        selectedUnitKerja,
-        year,
-        month,
-        paymentNote,
-        searchBalancing,
-        displayCount,
-        currentPageBalancing - 1
-      );
+      let result;
+
+      if (displayCount === "all") {
+        // Pertama ambil totalElements dulu (misalnya dari halaman pertama)
+        const tempResult = await GlobalApi.getTransaksiBankBalancing(
+          selectedCabang,
+          selectedUnitKerja,
+          year,
+          month,
+          paymentNote,
+          searchBalancing,
+          1,
+          0
+        );
+
+        const totalElements = tempResult.totalElements;
+
+        // Lalu ambil semua data
+        result = await GlobalApi.getTransaksiBankBalancing(
+          selectedCabang,
+          selectedUnitKerja,
+          year,
+          month,
+          paymentNote,
+          searchBalancing,
+          totalElements,
+          0
+        );
+      } else {
+        result = await GlobalApi.getTransaksiBankBalancing(
+          selectedCabang,
+          selectedUnitKerja,
+          year,
+          month,
+          paymentNote,
+          searchBalancing,
+          displayCount,
+          currentPageBalancing - 1
+        );
+      }
+
       setDataBalancing(result.content);
       setTotalPagesBalancing(result.totalPages);
     } catch (err) {
       console.error("Gagal memuat data:", err);
     }
   };
-
   useEffect(() => {
     handleFilter();
     getBalancingdata();
@@ -825,9 +855,16 @@ export default function BankTransactionPage() {
 
     return pages;
   };
-  const startIndex = (currentPageBalancing - 1) * displayCount;
-  const endIndex = startIndex + displayCount;
-  const pageData = dataBalancing.slice(startIndex, endIndex);
+  const startIndex =
+    displayCount === "all" ? 0 : (currentPageBalancing - 1) * displayCount;
+
+  const endIndex =
+    displayCount === "all" ? dataBalancing.length : startIndex + displayCount;
+
+  const pageData =
+    displayCount === "all"
+      ? dataBalancing
+      : dataBalancing.slice(startIndex, endIndex);
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-4">
@@ -1681,12 +1718,19 @@ export default function BankTransactionPage() {
                     <select
                       className="w-full h-10 text-base px-4 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
                       value={displayCount}
-                      onChange={(e) => setDisplayCount(Number(e.target.value))}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setDisplayCount(
+                          value === "all" ? "all" : Number(value)
+                        );
+                        setCurrentPageBalancing(1); // reset page
+                      }}
                     >
                       <option value={10}>10</option>
                       <option value={25}>25</option>
                       <option value={50}>50</option>
                       <option value={100}>100</option>
+                      <option value="all">All</option>
                     </select>
                   </div>
                   <div>
@@ -1780,9 +1824,11 @@ export default function BankTransactionPage() {
                       dataBalancing.map((item, index) => (
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {(currentPageBalancing - 1) * displayCount +
-                              index +
-                              1}
+                            {displayCount === "all"
+                              ? index + 1
+                              : (currentPageBalancing - 1) * displayCount +
+                                index +
+                                1}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {item.cabang}
