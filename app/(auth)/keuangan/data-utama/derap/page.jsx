@@ -666,7 +666,7 @@ function DerapForm() {
                   </nav>
                   <button
                     onClick={() => setModalNominal(true)}
-                    className="bg-white text-black font-medium py-2 px-4 rounded-lg shadow-md border border-gray-300 hover:bg-blue-500 hover:text-white transition duration-150 ease-in-out"
+                    className="flex items-center gap-2 bg-white text-black font-medium py-2 px-4 rounded-lg shadow-md border border-gray-300 hover:bg-blue-500 hover:text-white transition duration-150 ease-in-out"
                   ><FaGear /> 
                     Atur Nominal Peruntukan Derap
                   </button>

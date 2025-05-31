@@ -1513,7 +1513,7 @@ function KalenderForm() {
                           {/* Title on the left */}
                           <div className="flex items-center mb-4 sm:mb-0">
                             <FaCalendarAlt className="text-teal-600 mr-3 text-2xl" />
-                            <h1 className="text-2xl font-bold text-teal-800">
+                              <h1 className="text-teal-800 text-xl font-medium">
                               Detail Pembagian Kalender
                             </h1>
                           </div>

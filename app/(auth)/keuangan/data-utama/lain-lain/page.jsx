@@ -11,6 +11,8 @@ import {
   FaTimesCircle,
   FaCheckCircle,
   FaExclamationCircle,
+  FaPlus,
+  FaFileAlt,
 } from "react-icons/fa";
 import { Plus } from "lucide-react";
 
@@ -368,145 +370,171 @@ function KalenderForm() {
               onClose={() => setNotification(null)}
             />
           )}
-          <div className="min-h-screen bg-gray-50 p-2 md:p-4">
-            <div className="p-6 rounded-lg shadow-lg border border-gray-200 bg-white">
-              <h2 className="bg-teal-700 text-2xl text-white font-bold py-2 px-4 rounded mb-5 text-center">
-                Lain - Lain
-              </h2>
-
-              {!showDropdown ? (
-                <div className="flex justify-center mb-6">
-                  <button
-                    onClick={handleAddClick}
-                    className="text-white bg-teal-700 hover:bg-teal-800 p-6 rounded-full shadow-lg focus:outline-none"
-                  >
-                    <Plus size={48} />
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="mb-4">
-                    <label className="block mb-2 font-medium text-gray-700">
-                      Pilih Tipe:
-                    </label>
-                    <select
-                      value={selectedOption}
-                      onChange={handleOptionChange}
-                      className="w-full border border-gray-300 p-2 rounded-md"
+          <div className="min-h-screen bg-gray-50 p-2 md:p-4 mt-5">
+            <div className="rounded-lg shadow-lg border border-gray-200 bg-white">
+              <div className="p-6 items-center mb-4 sm:mb-0 bg-teal-100">
+                <h1 className="text-teal-800 text-xl font-medium flex items-center gap-2">
+                  {" "}
+                  <FaPlus />
+                  Inputan Jenis Lain-lain
+                </h1>
+                <span>
+                  Gunakan form ini untuk mencatat transaksi keuangan kategori
+                  lain-lain. Transaksi yang disimpan akan dikaitkan dengan
+                  filter Cabang, Bulan, dan Tahun yang aktif pada tabel
+                  rekapitulasi.
+                </span>
+              </div>
+              <div>
+                {!showDropdown ? (
+                  <div className="flex justify-center mb-6 mt-4">
+                    <button
+                      onClick={handleAddClick}
+                      className="flex items-center gap-2 text-white bg-teal-700 hover:bg-teal-800 py-3 px-6 rounded-full shadow-lg focus:outline-none"
                     >
-                      <option value="">-- Pilih --</option>
-                      <option value="Provinsi">Provinsi</option>
-                      <option value="Kabupaten">Kabupaten</option>
-                      <option value="Cabang">Cabang</option>
-                    </select>
+                      <span className="text-base font-medium">
+                        Tambahkan Jenis Lain-lain
+                      </span>
+                      <Plus size={20} />
+                    </button>
                   </div>
+                ) : (
+                  <div className="space-y-6 mt-3 p-2">
+                    <div className="mb-4">
+                      <label className="block mb-2 font-medium text-gray-700">
+                        Pilih Tipe:
+                      </label>
+                      <select
+                        value={selectedOption}
+                        onChange={handleOptionChange}
+                        className="w-full border border-gray-300 p-2 rounded-md"
+                      >
+                        <option value="">-- Pilih --</option>
+                        <option value="Provinsi">Provinsi</option>
+                        <option value="Kabupaten">Kabupaten</option>
+                        <option value="Cabang">Cabang</option>
+                      </select>
+                    </div>
 
-                  {selectedOption && (
-                    <>
-                      <div>
-                        <label className="block mb-2 font-medium text-gray-700">
-                          Keterangan
-                        </label>
+                    {selectedOption && (
+                      <>
+                        <div>
+                          <label className="block mb-2 font-medium text-gray-700">
+                            Keterangan
+                          </label>
 
-                        {!isManualInput ? (
-                          <select
-                            value={keterangan}
-                            onChange={(e) => {
-                              if (e.target.value === "__manual__") {
-                                setKeterangan("");
-                                setIsManualInput(true);
-                              } else {
-                                setKeterangan(e.target.value);
-                              }
-                            }}
-                            className="w-full border border-gray-300 p-2 rounded-md"
-                          >
-                            <option value="">-- Pilih Keterangan --</option>
-                            {keteranganOptions.map((item, idx) => (
-                              <option key={idx} value={item}>
-                                {item}
+                          {!isManualInput ? (
+                            <select
+                              value={keterangan}
+                              onChange={(e) => {
+                                if (e.target.value === "__manual__") {
+                                  setKeterangan("");
+                                  setIsManualInput(true);
+                                } else {
+                                  setKeterangan(e.target.value);
+                                }
+                              }}
+                              className="w-full border border-gray-300 p-2 rounded-md"
+                            >
+                              <option value="">-- Pilih Keterangan --</option>
+                              {keteranganOptions.map((item, idx) => (
+                                <option key={idx} value={item}>
+                                  {item}
+                                </option>
+                              ))}
+                              <option value="__manual__">
+                                + Tambah Manual
                               </option>
-                            ))}
-                            <option value="__manual__">+ Tambah Manual</option>
-                          </select>
-                        ) : (
+                            </select>
+                          ) : (
+                            <input
+                              type="text"
+                              value={keterangan}
+                              onChange={(e) => setKeterangan(e.target.value)}
+                              className="w-full border border-gray-300 p-2 rounded-md mt-2"
+                              placeholder="Masukkan keterangan manual"
+                            />
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block mb-2 font-medium text-gray-700">
+                            Nominal
+                          </label>
                           <input
                             type="text"
-                            value={keterangan}
-                            onChange={(e) => setKeterangan(e.target.value)}
-                            className="w-full border border-gray-300 p-2 rounded-md mt-2"
-                            placeholder="Masukkan keterangan manual"
+                            value={nominal}
+                            onChange={(e) => {
+                              let input = e.target.value.replace(/[^0-9]/g, "");
+
+                              setRawNominal(input);
+                              setNominal(
+                                input
+                                  ? `Rp ${parseInt(input).toLocaleString(
+                                      "id-ID"
+                                    )}`
+                                  : ""
+                              );
+                            }}
+                            className="w-full border border-gray-300 p-2 rounded-md"
+                            placeholder="Masukkan nominal"
                           />
-                        )}
-                      </div>
+                        </div>
+                      </>
+                    )}
 
-                      <div>
-                        <label className="block mb-2 font-medium text-gray-700">
-                          Nominal
-                        </label>
-                        <input
-                          type="text"
-                          value={nominal}
-                          onChange={(e) => {
-                            let input = e.target.value.replace(/[^0-9]/g, "");
-
-                            setRawNominal(input);
-                            setNominal(
-                              input
-                                ? `Rp ${parseInt(input).toLocaleString(
-                                    "id-ID"
-                                  )}`
-                                : ""
-                            );
-                          }}
-                          className="w-full border border-gray-300 p-2 rounded-md"
-                          placeholder="Masukkan nominal"
-                        />
-                      </div>
-                    </>
-                  )}
-
-                  <div className="flex justify-center space-x-4 mt-6">
-                    <button
-                      onClick={isEditing ? handleUpdateForm : handleSubmitForm}
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg"
-                    >
-                      {isEditing ? "Update" : "Simpan"}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowDropdown(false);
-                        setSelectedOption("");
-                        setKeterangan("");
-                        setNominal("");
-                      }}
-                      className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-600"
-                    >
-                      Reset
-                    </button>
+                    <div className="flex justify-center space-x-4 mt-6">
+                      <button
+                        onClick={
+                          isEditing ? handleUpdateForm : handleSubmitForm
+                        }
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg"
+                      >
+                        {isEditing ? "Update" : "Simpan"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowDropdown(false);
+                          setSelectedOption("");
+                          setKeterangan("");
+                          setNominal("");
+                        }}
+                        className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-600"
+                      >
+                        Reset
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-            <div className="flex items-end justify-end mt-2 md:mt-0 gap-4">
-              <Button
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out mt-3 mr-6 w-24 gap-2"
-                onClick={printTable}
-              >
-                <span>Cetak</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
+
+            <div ref={tableRef} className="overflow-x-auto mt-8">
+              <div className="p-3 bg-teal-100 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-teal-900 flex items-center gap-2">
+                  {" "}
+                  <FaFileAlt className="text-xl" />
+                  Rekap Transaksi Lain-lain
+                </h2>
+
+                <Button
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold rounded transition duration-300 ease-in-out px-4 py-2 flex items-center gap-2"
+                  onClick={printTable}
                 >
-                  <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
-                  <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
-                </svg>
-              </Button>
-            </div>
-            <div ref={tableRef} className="overflow-x-auto">
+                  <span>Cetak</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
+                    <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
+                  </svg>
+                </Button>
+              </div>
+
               <table className="min-w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <thead className="text-sm text-gray-700 uppercase bg-gray-100 dark:bg-gray-800 dark:text-gray-400">
                   <tr>
