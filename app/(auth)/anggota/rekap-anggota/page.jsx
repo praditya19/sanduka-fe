@@ -180,6 +180,8 @@ function RekapAnggota() {
   const lastUpdatedMemberRef = useRef(null);
   const [resetKeys, setResetKeys] = useState([]);
   const [progress, setProgress] = useState(0);
+  const [notifDaspen, setNotifDaspen] = useState(null);
+  const [pesanDaspen, setPesanDaspen] = useState("");
 
   const currentYear = new Date().getFullYear();
   const years = Array.from(
@@ -839,6 +841,7 @@ function RekapAnggota() {
     setAddedCategories([]);
     setManualInputs([]);
     setResetKeys([]);
+    setSelectedKategori([]);
   };
   const handleCloseModal = () => {
     setShowUploadModal(false);
@@ -870,11 +873,18 @@ function RekapAnggota() {
     setDataIuran(null);
     setIsPopupVisible(false);
     setIdIuran(null);
+    setNotifDaspen(null);
 
     try {
       const fileResponse = await GlobalApi.getFileByNip(member.nip);
+      console.log(fileResponse);
       if (fileResponse?.sumbangan) {
         setDaspenValue(parseInt(fileResponse.sumbangan));
+      }
+      if (fileResponse?.dataDaspen === true) {
+        setNotifDaspen(true);
+      } else {
+        setNotifDaspen(false);
       }
     } catch (error) {
       console.error("Gagal mengambil file by NIP:", error);
@@ -2323,18 +2333,21 @@ function RekapAnggota() {
                         >
                           <td
                             className="p-3 border-b text-center"
-                            rowSpan={rowSpanCount}
+                            // rowSpan={rowSpanCount}
                           >
                             <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-100 text-teal-700 font-semibold">
                               {index + 1}
                             </div>
                           </td>
-                          <td className="p-3 border-b" rowSpan={rowSpanCount}>
+                          <td
+                            className="p-3 border-b"
+                            // rowSpan={rowSpanCount}
+                          >
                             {group.cabang}
                           </td>
                           <td
                             className="p-3 border-b font-medium"
-                            rowSpan={rowSpanCount}
+                            // rowSpan={rowSpanCount}
                           >
                             {group.unitKerja}
                           </td>
@@ -2358,7 +2371,7 @@ function RekapAnggota() {
                           </td>
                           <td
                             className="p-3 border-b text-center hidden lg:table-cell font-medium"
-                            rowSpan={rowSpanCount}
+                            // rowSpan={rowSpanCount}
                           >
                             {group.jumlah}
                           </td>
@@ -2436,6 +2449,10 @@ function RekapAnggota() {
                                     : null
                                 }
                               >
+                                <td></td>
+                                <td></td>
+                                <td></td>
+
                                 <td
                                   className="p-3 border-b"
                                   colSpan={isMobile ? 5 : 1}
@@ -2545,7 +2562,7 @@ function RekapAnggota() {
                                   </div>
                                 </td>
                                 <td
-                                  colSpan={2}
+                                  colSpan={3}
                                   className="p-3 border-b text-left hidden lg:table-cell"
                                 >
                                   <div className="flex justify-between py-1">
@@ -2919,7 +2936,14 @@ function RekapAnggota() {
                                   }
                                 >
                                   <option value="">-- Pilih --</option>
-                                  <option value="daspen">Daspen</option>
+                                  <option value="daspen">
+                                    Daspen{" "}
+                                    {notifDaspen === true
+                                      ? "__ (✓ Sinkron)"
+                                      : notifDaspen === false
+                                      ? "__ (× Tidak Sinkron)"
+                                      : "__ (× Tidak Sinkron)"}
+                                  </option>
                                   <option value="kalender">Kalender</option>
                                   <option value="derap">Derap</option>
                                   <option value="lainlain">Lain-Lain</option>
