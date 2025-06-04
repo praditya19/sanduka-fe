@@ -6,7 +6,16 @@ import HeaderMobile from "@/app/_components/HeaderMobile";
 import Sidebar from "@/app/_components/Sidebar";
 import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import { FaPlusCircle, FaMinusCircle, FaWhatsapp, FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaPlusCircle,
+  FaMinusCircle,
+  FaWhatsapp,
+  FaTimesCircle,
+  FaCheckCircle,
+  FaExclamationCircle,
+} from "react-icons/fa";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChair } from "@fortawesome/free-solid-svg-icons";
 import { Button } from "@/components/ui/button";
 import toast, { Toaster } from "react-hot-toast";
 import { saveAs } from "file-saver";
@@ -26,20 +35,20 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getBgColor = () => {
     switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
       default:
-        return 'bg-blue-100';
+        return "bg-blue-100";
     }
   };
 
   const getIcon = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case 'error':
+      case "error":
         return <FaExclamationCircle className="text-red-500 text-3xl" />;
       default:
         return null;
@@ -48,19 +57,24 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
   const getTextColor = () => {
     switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
       default:
-        return 'text-blue-800';
+        return "text-blue-800";
     }
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}>
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
@@ -70,17 +84,13 @@ const NotificationPopup = ({ type, message, onClose }) => {
         </button>
 
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
+          <div className="animate-bounce">{getIcon()}</div>
 
           <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
+            {type === "success" ? "Berhasil!" : "Gagal!"}
           </h3>
 
-          <div className={`${getTextColor()} text-center`}>
-            {message}
-          </div>
+          <div className={`${getTextColor()} text-center`}>{message}</div>
         </div>
       </div>
     </div>
@@ -123,7 +133,14 @@ const Page = () => {
   const [fotoBase64, setFotoBase64] = useState("");
   const profileImageUrl = "/profile.png";
 
-  const fetchPensiunData = async (page, size = 10, cabang = "", searchText = "", month = "", year = "") => {
+  const fetchPensiunData = async (
+    page,
+    size = 10,
+    cabang = "",
+    searchText = "",
+    month = "",
+    year = ""
+  ) => {
     setLoading(true);
     try {
       const fetchedData = await GlobalApi.getAllPensiun(
@@ -169,7 +186,7 @@ const Page = () => {
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchText(value);
-    setCurrentPage(1); 
+    setCurrentPage(1);
     fetchPensiunData(0, 10, selectedCabang, value, selectedMonth, selectedYear);
   };
 
@@ -193,7 +210,14 @@ const Page = () => {
   }, [searchText, pensiunList]);
 
   useEffect(() => {
-    fetchPensiunData(0, itemsPerPage, selectedCabang, searchText, selectedMonth, selectedYear);
+    fetchPensiunData(
+      0,
+      itemsPerPage,
+      selectedCabang,
+      searchText,
+      selectedMonth,
+      selectedYear
+    );
   }, [selectedCabang, selectedMonth, selectedYear]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -206,14 +230,28 @@ const Page = () => {
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage((prevPage) => prevPage + 1);
-      fetchPensiunData(currentPage + 1, itemsPerPage, selectedCabang, searchText, selectedMonth, selectedYear);
+      fetchPensiunData(
+        currentPage + 1,
+        itemsPerPage,
+        selectedCabang,
+        searchText,
+        selectedMonth,
+        selectedYear
+      );
     }
   };
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage((prevPage) => prevPage - 1);
-      fetchPensiunData(currentPage - 1, itemsPerPage, selectedCabang, searchText, selectedMonth, selectedYear);
+      fetchPensiunData(
+        currentPage - 1,
+        itemsPerPage,
+        selectedCabang,
+        searchText,
+        selectedMonth,
+        selectedYear
+      );
     }
   };
 
@@ -235,7 +273,14 @@ const Page = () => {
   const handlePageClick = async (pageNumber) => {
     if (pageNumber !== currentPage) {
       setCurrentPage(pageNumber);
-      fetchPensiunData(pageNumber - 1, itemsPerPage, selectedCabang, searchText, selectedMonth, selectedYear);
+      fetchPensiunData(
+        pageNumber - 1,
+        itemsPerPage,
+        selectedCabang,
+        searchText,
+        selectedMonth,
+        selectedYear
+      );
     }
   };
 
@@ -244,7 +289,14 @@ const Page = () => {
     setQueryCabang("");
     setShowDropdownCabang(false);
     setCurrentPage(1);
-    fetchPensiunData(0, itemsPerPage, cabang.kecamatan || "", searchText, selectedMonth, selectedYear);
+    fetchPensiunData(
+      0,
+      itemsPerPage,
+      cabang.kecamatan || "",
+      searchText,
+      selectedMonth,
+      selectedYear
+    );
   };
 
   useEffect(() => {
@@ -315,14 +367,39 @@ const Page = () => {
     const month = event.target.value;
     setSelectedMonth(month);
     setCurrentPage(1);
-    fetchPensiunData(0, itemsPerPage, selectedCabang, searchText, month, selectedYear);
+    fetchPensiunData(
+      0,
+      itemsPerPage,
+      selectedCabang,
+      searchText,
+      month,
+      selectedYear
+    );
   };
 
   const handleYearChange = (event) => {
     const year = event.target.value;
     setSelectedYear(year);
     setCurrentPage(1);
-    fetchPensiunData(0, itemsPerPage, selectedCabang, searchText, selectedMonth, year);
+    fetchPensiunData(
+      0,
+      itemsPerPage,
+      selectedCabang,
+      searchText,
+      selectedMonth,
+      year
+    );
+  };
+
+  const handlePensiunSegera = () => {
+    const now = new Date();
+    now.setMonth(now.getMonth() + 1);
+
+    const nextMonth = (now.getMonth() + 1).toString().padStart(2, "0");
+    const nextYear = now.getFullYear().toString();
+
+    setSelectedMonth(nextMonth);
+    setSelectedYear(nextYear);
   };
 
   useEffect(() => {
@@ -362,16 +439,16 @@ const Page = () => {
         bulan,
         tahun
       );
-  
+
       const jsonData = Array.isArray(response.data.content)
         ? response.data.content
         : [];
-  
+
       if (jsonData.length === 0) {
         alert("Tidak ada data untuk diunduh.");
         return;
       }
-  
+
       const filteredData = jsonData.map((row, index) => ({
         "No.": index + 1,
         "Prediksi Pensiun": formatDate(row.prediksiPensiun),
@@ -391,12 +468,12 @@ const Page = () => {
             : "Aktif",
         "Nomor HP": row.nomorHp || "-",
       }));
-  
+
       const worksheet = XLSX.utils.json_to_sheet(filteredData);
-  
+
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Data Pensiun");
-  
+
       XLSX.writeFile(workbook, `data_pensiun_${tahun}_${bulan || "all"}.xlsx`);
     } catch (error) {
       console.error("Gagal mendownload data:", error);
@@ -502,7 +579,7 @@ const Page = () => {
       setPopupVisible(false);
 
       setNotification({
-        type: 'success',
+        type: "success",
         message: `Anggota berhasil dipensiunkan.`,
       });
 
@@ -512,7 +589,7 @@ const Page = () => {
     } catch (error) {
       console.error("Gagal pensiun anggota:", error);
       setNotification({
-        type: 'error',
+        type: "error",
         message: `Anggota gagal dipensiunkan.`,
       });
     }
@@ -546,8 +623,9 @@ const Page = () => {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <main
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
           <div className="p-4 md:p-6 pt-20">
             <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 mb-6">
@@ -598,7 +676,8 @@ const Page = () => {
                               value={queryCabang}
                               onChange={(e) => {
                                 const value = e.target.value;
-                                if (value.trim().length > 0) setQueryCabang(value);
+                                if (value.trim().length > 0)
+                                  setQueryCabang(value);
                               }}
                               autoFocus
                             />
@@ -734,62 +813,74 @@ const Page = () => {
                     />
                   </svg>
                   <span className="font-medium">
-                    Jumlah Anggota: {totalAnggota} Orang {/* Tampilkan totalAnggota */}
+                    Jumlah Anggota: {totalAnggota} Orang{" "}
+                    {/* Tampilkan totalAnggota */}
                   </span>
                 </div>
 
-                <button
-                  className={`bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center transition-colors ${isLoading ? "opacity-70 cursor-not-allowed" : ""
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center justify-center transition-colors"
+                    onClick={handlePensiunSegera}
+                  >
+                    <FontAwesomeIcon icon={faChair} className="mr-2" />
+                    Pensiun Segera
+                  </button>
+
+                  <button
+                    className={`bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center transition-colors ${
+                      isLoading ? "opacity-70 cursor-not-allowed" : ""
                     }`}
-                  onClick={() =>
-                    !isLoading &&
-                    handleDownloadExcel(
-                      selectedCabang,
-                      selectedMonth,
-                      selectedYear
-                    )
-                  }
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <svg
-                      className="animate-spin h-5 w-5 text-white mr-2"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
+                    onClick={() =>
+                      !isLoading &&
+                      handleDownloadExcel(
+                        selectedCabang,
+                        selectedMonth,
+                        selectedYear
+                      )
+                    }
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <svg
+                        className="animate-spin h-5 w-5 text-white mr-2"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4a4 4 0 100 8H4z"
+                        ></path>
+                      </svg>
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
                         stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v4a4 4 0 100 8H4z"
-                      ></path>
-                    </svg>
-                  ) : (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                      />
-                    </svg>
-                  )}
-                  Download Excel
-                </button>
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                        />
+                      </svg>
+                    )}
+                    Download Excel
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -910,10 +1001,11 @@ const Page = () => {
                                 </div>
                                 <div className="mt-1">
                                   <span
-                                    className={`px-2 py-1 rounded-full text-xs font-medium ${pensiun.status === "Segera"
-                                      ? "bg-red-100 text-red-800"
-                                      : "bg-green-100 text-green-800"
-                                      }`}
+                                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                      pensiun.status === "Segera"
+                                        ? "bg-red-100 text-red-800"
+                                        : "bg-green-100 text-green-800"
+                                    }`}
                                   >
                                     {pensiun.keterangan === null
                                       ? pensiun.status === "Segera"
@@ -998,10 +1090,11 @@ const Page = () => {
                                       </div>
                                       <div className="mt-1">
                                         <span
-                                          className={`px-2 py-1 rounded-full text-xs font-medium ${pensiun.status === "Segera"
-                                            ? "bg-red-100 text-red-800"
-                                            : "bg-green-100 text-green-800"
-                                            }`}
+                                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                            pensiun.status === "Segera"
+                                              ? "bg-red-100 text-red-800"
+                                              : "bg-green-100 text-green-800"
+                                          }`}
                                         >
                                           {pensiun.keterangan === null
                                             ? pensiun.status === "Segera"
@@ -1104,10 +1197,11 @@ const Page = () => {
                         <button
                           key={page}
                           onClick={() => handlePageClick(page)}
-                          className={`px-3 py-1 border rounded-md text-sm ${page === currentPage
-                            ? "bg-teal-600 text-white border-teal-600"
-                            : "bg-white hover:bg-gray-50"
-                            }`}
+                          className={`px-3 py-1 border rounded-md text-sm ${
+                            page === currentPage
+                              ? "bg-teal-600 text-white border-teal-600"
+                              : "bg-white hover:bg-gray-50"
+                          }`}
                         >
                           {page}
                         </button>
