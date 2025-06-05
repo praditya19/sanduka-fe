@@ -10,6 +10,11 @@ import {
   faSearch,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
+import {
+  FaTimesCircle,
+  FaCheckCircle,
+  FaExclamationCircle,
+} from "react-icons/fa";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/app/_components/Sidebar";
@@ -145,6 +150,12 @@ export default function BankTransactionPage() {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [onProses, setOnProses] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [formData, setFormData] = useState({
+    file: null,
+    namaFile: "",
+    tanggalUntuk: "",
+  });
   const [jumlahPotonganBank, setJumlahPotonganBank] = useState(0);
   const [totalNominalPotonganBank, setTotalNominalPotonganBank] = useState(0);
   const [jumlahSetorTunai, setJumlahSetorTunai] = useState(0);
@@ -462,10 +473,18 @@ export default function BankTransactionPage() {
           }
           return prev + 10;
         });
+        setNotification({
+          type: "success",
+          message: `Data Berhasil Terupload!`,
+        });
       }, 300);
     } catch (error) {
       console.error("Upload gagal:", error);
       setLoader(false);
+      setNotification({
+        type: "error",
+        message: `Gagal Upload Data!`,
+      });
     }
   };
 
