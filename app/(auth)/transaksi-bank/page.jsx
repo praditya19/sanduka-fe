@@ -1974,7 +1974,23 @@ export default function BankTransactionPage() {
                           )
                         )}
                       </td>
-                      <td colSpan={3}></td>
+                      <td className="px-6 py-4 text-center">
+                        {formatRupiah(
+                          dataBalancing.reduce(
+                            (sum, item) => sum + item.potongan,
+                            0
+                          )
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {formatRupiah(
+                          dataBalancing.reduce(
+                            (sum, item) => sum + item.selisih,
+                            0
+                          )
+                        )}
+                      </td>
+                      <td></td>
                     </tr>
                   </tfoot>
                 </table>
