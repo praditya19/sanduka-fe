@@ -127,6 +127,7 @@ export default function BankTransactionPage() {
   const currentYear = today.getFullYear();
   const [searchQuery, setSearchQuery] = useState("");
   const [displayCount, setDisplayCount] = useState(10);
+  const [displayCountPotongan, setDisplayCountPotongan] = useState(10);
   const [data, setData] = useState([]);
   const [dataBalancing, setDataBalancing] = useState([]);
   const [month, setMonth] = useState(currentMonth.toString());
@@ -169,20 +170,47 @@ export default function BankTransactionPage() {
   const [searchBalancing, setSearchBalancing] = useState("");
 
   const handleFilter = async () => {
-    try {
-      const result = await GlobalApi.getTransaksiBank(
+  try {
+    let result;
+
+    if (displayCountPotongan === "all") {
+      // Ambil 1 data dulu untuk dapat totalElements
+      const tempResult = await GlobalApi.getTransaksiBank(
         month,
         year,
         searchQuery,
-        displayCount,
+        1,
+        0
+      );
+
+      const totalElements = tempResult.totalElements;
+
+      // Ambil semua data berdasarkan totalElements
+      result = await GlobalApi.getTransaksiBank(
+        month,
+        year,
+        searchQuery,
+        totalElements,
+        0
+      );
+    } else {
+      // Ambil data berdasarkan jumlah per halaman dan halaman saat ini
+      result = await GlobalApi.getTransaksiBank(
+        month,
+        year,
+        searchQuery,
+        displayCountPotongan,
         currentPage - 1
       );
-      setData(result.content);
-      setTotalPages(result.totalPages);
-    } catch (err) {
-      console.error("Gagal memuat data:", err);
     }
-  };
+
+    // Simpan hasil ke state
+    setData(result.content);
+    setTotalPages(result.totalPages);
+  } catch (err) {
+    console.error("Gagal memuat data:", err);
+  }
+};
 
   const getBalancingdata = async () => {
     try {
@@ -245,6 +273,7 @@ export default function BankTransactionPage() {
     searchBalancing,
     selectedCabang,
     selectedUnitKerja,
+    displayCountPotongan,
     currentPage,
     currentPageBalancing,
   ]);
@@ -1287,13 +1316,20 @@ export default function BankTransactionPage() {
                     </label>
                     <select
                       className="w-full h-10 text-base px-4 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
-                      value={displayCount}
-                      onChange={(e) => setDisplayCount(Number(e.target.value))}
+                      value={displayCountPotongan}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setDisplayCountPotongan(
+                          value === "all" ? "all" : Number(value)
+                        );
+                        setCurrentPage(1);
+                      }}
                     >
                       <option value={10}>10</option>
                       <option value={25}>25</option>
                       <option value={50}>50</option>
                       <option value={100}>100</option>
+                      <option value="all">All</option>
                     </select>
                   </div>
                 </div>
@@ -1373,6 +1409,23 @@ export default function BankTransactionPage() {
                       </tr>
                     )}
                   </tbody>
+                  <tfoot>
+                    <tr className="bg-gray-100">
+                      <td colSpan={4} className="px-6 py-4 text-center">
+                        Total
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {formatRupiah(
+                          data.reduce(
+                            (sum, item) => sum + item.potongan,
+                            0
+                          )
+                        )}
+                      </td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
                 </table>
                 <div className="p-4 border-t">
                   <div className="flex flex-wrap justify-center gap-2">
@@ -1742,7 +1795,7 @@ export default function BankTransactionPage() {
                         setDisplayCount(
                           value === "all" ? "all" : Number(value)
                         );
-                        setCurrentPageBalancing(1); // reset page
+                        setCurrentPageBalancing(1);
                       }}
                     >
                       <option value={10}>10</option>
