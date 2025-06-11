@@ -1173,7 +1173,6 @@ const getTransaksiBankBalancing = async (
   }
 };
 
-
 const getCountBalancing = async (bulan, tahun, cabang, unitKerja) => {
   const params = new URLSearchParams();
   params.append("bulan", bulan);
