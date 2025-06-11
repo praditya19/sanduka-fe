@@ -170,47 +170,47 @@ export default function BankTransactionPage() {
   const [searchBalancing, setSearchBalancing] = useState("");
 
   const handleFilter = async () => {
-  try {
-    let result;
+    try {
+      let result;
 
-    if (displayCountPotongan === "all") {
-      // Ambil 1 data dulu untuk dapat totalElements
-      const tempResult = await GlobalApi.getTransaksiBank(
-        month,
-        year,
-        searchQuery,
-        1,
-        0
-      );
+      if (displayCountPotongan === "all") {
+        // Ambil 1 data dulu untuk dapat totalElements
+        const tempResult = await GlobalApi.getTransaksiBank(
+          month,
+          year,
+          searchQuery,
+          1,
+          0
+        );
 
-      const totalElements = tempResult.totalElements;
+        const totalElements = tempResult.totalElements;
 
-      // Ambil semua data berdasarkan totalElements
-      result = await GlobalApi.getTransaksiBank(
-        month,
-        year,
-        searchQuery,
-        totalElements,
-        0
-      );
-    } else {
-      // Ambil data berdasarkan jumlah per halaman dan halaman saat ini
-      result = await GlobalApi.getTransaksiBank(
-        month,
-        year,
-        searchQuery,
-        displayCountPotongan,
-        currentPage - 1
-      );
+        // Ambil semua data berdasarkan totalElements
+        result = await GlobalApi.getTransaksiBank(
+          month,
+          year,
+          searchQuery,
+          totalElements,
+          0
+        );
+      } else {
+        // Ambil data berdasarkan jumlah per halaman dan halaman saat ini
+        result = await GlobalApi.getTransaksiBank(
+          month,
+          year,
+          searchQuery,
+          displayCountPotongan,
+          currentPage - 1
+        );
+      }
+
+      // Simpan hasil ke state
+      setData(result.content);
+      setTotalPages(result.totalPages);
+    } catch (err) {
+      console.error("Gagal memuat data:", err);
     }
-
-    // Simpan hasil ke state
-    setData(result.content);
-    setTotalPages(result.totalPages);
-  } catch (err) {
-    console.error("Gagal memuat data:", err);
-  }
-};
+  };
 
   const getBalancingdata = async () => {
     try {
@@ -701,7 +701,8 @@ export default function BankTransactionPage() {
       const firstResult = await GlobalApi.getTransaksiBankBalancing(
         null,
         null,
-        null,
+        year,
+        month,
         null,
         null,
         pageSize,
@@ -716,7 +717,8 @@ export default function BankTransactionPage() {
         const result = await GlobalApi.getTransaksiBankBalancing(
           null,
           null,
-          null,
+          year,
+          month,
           null,
           null,
           pageSize,
@@ -778,9 +780,25 @@ export default function BankTransactionPage() {
       setIsLoading(true);
       let allData = [];
       let currentPage = 0;
-      let isLastPage = false;
       const pageSize = 100;
 
+      // Ambil halaman pertama untuk mendapatkan totalPages
+      const firstResult = await GlobalApi.getTransaksiBankBalancing(
+        selectedCabang,
+        selectedUnitKerja,
+        year,
+        month,
+        paymentNote,
+        null, // tidak menggunakan keyword pencarian
+        pageSize,
+        currentPage
+      );
+
+      allData = [...allData, ...firstResult.content];
+      const totalPages = firstResult.totalPages; // <-- inilah yang kamu butuhkan
+      currentPage++;
+
+      // Loop sisanya
       while (currentPage < totalPages) {
         const result = await GlobalApi.getTransaksiBankBalancing(
           selectedCabang,
@@ -788,15 +806,16 @@ export default function BankTransactionPage() {
           year,
           month,
           paymentNote,
+          null,
           pageSize,
           currentPage
         );
 
         allData = [...allData, ...result.content];
-        isLastPage = result.last;
         currentPage++;
       }
 
+      // Hitung rekening duplikat
       const rekeningCount = {};
       allData.forEach((item) => {
         rekeningCount[item.rekening] = (rekeningCount[item.rekening] || 0) + 1;
@@ -832,7 +851,7 @@ export default function BankTransactionPage() {
       const blob = new Blob([excelBuffer], {
         type: "application/octet-stream",
       });
-      saveAs(blob, "balancing-potongan-semua.xlsx");
+      saveAs(blob, "balancing-potongan-ByFilter.xlsx");
     } catch (err) {
       console.error("Gagal mengekspor data:", err);
     } finally {
@@ -1416,10 +1435,7 @@ export default function BankTransactionPage() {
                       </td>
                       <td className="px-6 py-4 text-center">
                         {formatRupiah(
-                          data.reduce(
-                            (sum, item) => sum + item.potongan,
-                            0
-                          )
+                          data.reduce((sum, item) => sum + item.potongan, 0)
                         )}
                       </td>
                       <td></td>
@@ -1641,7 +1657,7 @@ export default function BankTransactionPage() {
                             <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" />
                             <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" />
                           </svg>
-                          Cetak Balancing Potongan
+                          Cetak Balancing ByFilter
                         </>
                       )}
                     </button>
@@ -2179,7 +2195,6 @@ export default function BankTransactionPage() {
                     className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
                       isLoading ? "opacity-60 cursor-not-allowed" : ""
                     }`}
-                    onClick={exportAllBalancingToExcel}
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -2367,7 +2382,6 @@ export default function BankTransactionPage() {
                         className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
                           isLoading ? "opacity-60 cursor-not-allowed" : ""
                         }`}
-                        onClick={exportAllBalancingToExcel}
                         disabled={isLoading}
                       >
                         {isLoading ? (
