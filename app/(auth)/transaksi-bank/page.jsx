@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   faArrowLeft,
   faChartBar,
@@ -168,6 +168,7 @@ export default function BankTransactionPage() {
   const [totalPagesBalancing, setTotalPagesBalancing] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [searchBalancing, setSearchBalancing] = useState("");
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
   const handleFilter = async () => {
     try {
@@ -932,6 +933,27 @@ export default function BankTransactionPage() {
     displayCount === "all"
       ? dataBalancing
       : dataBalancing.slice(startIndex, endIndex);
+
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+  const sortedData = useMemo(() => {
+    if (!sortConfig.key) return dataBalancing;
+
+    return [...dataBalancing].sort((a, b) => {
+      if (a[sortConfig.key] < b[sortConfig.key]) {
+        return sortConfig.direction === "asc" ? -1 : 1;
+      }
+      if (a[sortConfig.key] > b[sortConfig.key]) {
+        return sortConfig.direction === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [dataBalancing, sortConfig]);
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 md:p-4">
@@ -1857,59 +1879,269 @@ export default function BankTransactionPage() {
               </div>
 
               <div className="w-full">
-                <table className="min-w-full">
+                <table className="w-full">
                   <thead>
                     <tr className="bg-gray-50">
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                         No
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Cabang
+                      <th
+                        onClick={() => handleSort("cabang")}
+                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                      >
+                        Cabang{" "}
+                        <span
+                          className={`text-xs ${
+                            sortConfig.key === "cabang"
+                              ? "text-black"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          {sortConfig.direction === "desc" &&
+                          sortConfig.key === "cabang"
+                            ? "▼"
+                            : "▲"}
+                        </span>
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Unit Kerja
+                      <th
+                        onClick={() => handleSort("unitKerja")}
+                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                      >
+                        Unit Kerja{" "}
+                        <span
+                          className={`text-xs ${
+                            sortConfig.key === "unitKerja"
+                              ? "text-black"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          {sortConfig.direction === "desc" &&
+                          sortConfig.key === "unitKerja"
+                            ? "▼"
+                            : "▲"}
+                        </span>
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Nama
+                      <th
+                        onClick={() => handleSort("nama")}
+                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                      >
+                        Nama{" "}
+                        <span
+                          className={`text-xs ${
+                            sortConfig.key === "nama"
+                              ? "text-black"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          {sortConfig.direction === "desc" &&
+                          sortConfig.key === "nama"
+                            ? "▼"
+                            : "▲"}
+                        </span>
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                      <th
+                        onClick={() => handleSort("rekening")}
+                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                      >
                         Rekening
+                        <span
+                          className={`text-xs ${
+                            sortConfig.key === "rekening"
+                              ? "text-black"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          {sortConfig.direction === "desc" &&
+                          sortConfig.key === "rekening"
+                            ? "▼"
+                            : "▲"}
+                        </span>
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Iuran
+                      <th
+                        onClick={() => handleSort("totalIuranAnggota")}
+                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                      >
+                        Iuran{" "}
+                        <span
+                          className={`text-xs ${
+                            sortConfig.key === "totalIuranAnggota"
+                              ? "text-black"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          {sortConfig.direction === "desc" &&
+                          sortConfig.key === "totalIuranAnggota"
+                            ? "▼"
+                            : "▲"}
+                        </span>
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                      <th
+                        onClick={() => handleSort("totalIuranSanduka")}
+                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                      >
                         Sanduka
+                        <span
+                          className={`text-xs ${
+                            sortConfig.key === "totalIuranSanduka"
+                              ? "text-black"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          {sortConfig.direction === "desc" &&
+                          sortConfig.key === "totalIuranSanduka"
+                            ? "▼"
+                            : "▲"}
+                        </span>
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Daspen
+                      <th
+                        onClick={() => handleSort("totalIuranDaspen")}
+                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                      >
+                        Daspen{" "}
+                        <span
+                          className={`text-xs ${
+                            sortConfig.key === "totalIuranDaspen"
+                              ? "text-black"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          {sortConfig.direction === "desc" &&
+                          sortConfig.key === "totalIuranDaspen"
+                            ? "▼"
+                            : "▲"}
+                        </span>
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                      <th
+                        onClick={() => handleSort("totalIuranDerap")}
+                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                      >
                         Derap
+                        <span
+                          className={`text-xs ${
+                            sortConfig.key === "totalIuranDerap"
+                              ? "text-black"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          {sortConfig.direction === "desc" &&
+                          sortConfig.key === "totalIuranDerap"
+                            ? "▼"
+                            : "▲"}
+                        </span>
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                      <th
+                        onClick={() => handleSort("totalIuranKalender")}
+                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                      >
                         Kalender
+                        <span
+                          className={`text-xs ${
+                            sortConfig.key === "totalIuranKalender"
+                              ? "text-black"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          {sortConfig.direction === "desc" &&
+                          sortConfig.key === "totalIuranKalender"
+                            ? "▼"
+                            : "▲"}
+                        </span>
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                      <th
+                        onClick={() => handleSort("Lain-lain")}
+                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                      >
                         Lain-lain
+                        <span
+                          className={`text-xs ${
+                            sortConfig.key === "Lain-lain"
+                              ? "text-black"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          {sortConfig.direction === "desc" &&
+                          sortConfig.key === "Lain-lain"
+                            ? "▼"
+                            : "▲"}
+                        </span>
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                      <th
+                        onClick={() => handleSort("totalIuran")}
+                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                      >
                         Total Iuran
+                        <span
+                          className={`text-xs ${
+                            sortConfig.key === "totalIuran"
+                              ? "text-black"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          {sortConfig.direction === "desc" &&
+                          sortConfig.key === "totalIuran"
+                            ? "▼"
+                            : "▲"}
+                        </span>
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                      <th
+                        onClick={() => handleSort("potongan")}
+                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                      >
                         Potongan Bank
+                        <span
+                          className={`text-xs ${
+                            sortConfig.key === "potongan"
+                              ? "text-black"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          {sortConfig.direction === "desc" &&
+                          sortConfig.key === "potongan"
+                            ? "▼"
+                            : "▲"}
+                        </span>
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                      <th
+                        onClick={() => handleSort("selisih")}
+                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                      >
                         Selisih
+                        <span
+                          className={`text-xs ${
+                            sortConfig.key === "selisih"
+                              ? "text-black"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          {sortConfig.direction === "desc" &&
+                          sortConfig.key === "selisih"
+                            ? "▼"
+                            : "▲"}
+                        </span>
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                      <th
+                        onClick={() => handleSort("keterangan")}
+                        className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b"
+                      >
                         Keterangan
+                        <span
+                          className={`text-xs ${
+                            sortConfig.key === "keterangan"
+                              ? "text-black"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          {sortConfig.direction === "desc" &&
+                          sortConfig.key === "keterangan"
+                            ? "▼"
+                            : "▲"}
+                        </span>
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {dataBalancing.length > 0 ? (
-                      dataBalancing.map((item, index) => (
+                      sortedData.map((item, index) => (
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                             {displayCount === "all"
