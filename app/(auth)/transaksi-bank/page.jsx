@@ -175,7 +175,6 @@ export default function BankTransactionPage() {
       let result;
 
       if (displayCountPotongan === "all") {
-        // Ambil 1 data dulu untuk dapat totalElements
         const tempResult = await GlobalApi.getTransaksiBank(
           month,
           year,
@@ -186,7 +185,6 @@ export default function BankTransactionPage() {
 
         const totalElements = tempResult.totalElements;
 
-        // Ambil semua data berdasarkan totalElements
         result = await GlobalApi.getTransaksiBank(
           month,
           year,
@@ -195,7 +193,6 @@ export default function BankTransactionPage() {
           0
         );
       } else {
-        // Ambil data berdasarkan jumlah per halaman dan halaman saat ini
         result = await GlobalApi.getTransaksiBank(
           month,
           year,
@@ -205,7 +202,6 @@ export default function BankTransactionPage() {
         );
       }
 
-      // Simpan hasil ke state
       setData(result.content);
       setTotalPages(result.totalPages);
     } catch (err) {
@@ -218,7 +214,6 @@ export default function BankTransactionPage() {
       let result;
 
       if (displayCount === "all") {
-        // Pertama ambil totalElements dulu (misalnya dari halaman pertama)
         const tempResult = await GlobalApi.getTransaksiBankBalancing(
           selectedCabang,
           selectedUnitKerja,
@@ -232,7 +227,6 @@ export default function BankTransactionPage() {
 
         const totalElements = tempResult.totalElements;
 
-        // Lalu ambil semua data
         result = await GlobalApi.getTransaksiBankBalancing(
           selectedCabang,
           selectedUnitKerja,
@@ -783,23 +777,21 @@ export default function BankTransactionPage() {
       let currentPage = 0;
       const pageSize = 100;
 
-      // Ambil halaman pertama untuk mendapatkan totalPages
       const firstResult = await GlobalApi.getTransaksiBankBalancing(
         selectedCabang,
         selectedUnitKerja,
         year,
         month,
         paymentNote,
-        null, // tidak menggunakan keyword pencarian
+        null,
         pageSize,
         currentPage
       );
 
       allData = [...allData, ...firstResult.content];
-      const totalPages = firstResult.totalPages; // <-- inilah yang kamu butuhkan
+      const totalPages = firstResult.totalPages;
       currentPage++;
 
-      // Loop sisanya
       while (currentPage < totalPages) {
         const result = await GlobalApi.getTransaksiBankBalancing(
           selectedCabang,
@@ -816,7 +808,6 @@ export default function BankTransactionPage() {
         currentPage++;
       }
 
-      // Hitung rekening duplikat
       const rekeningCount = {};
       allData.forEach((item) => {
         rekeningCount[item.rekening] = (rekeningCount[item.rekening] || 0) + 1;
