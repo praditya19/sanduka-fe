@@ -1981,6 +1981,29 @@ function RekapAnggota() {
     );
   }
 
+  const getNextPotonganBulan = () => {
+  const today = new Date();
+  const tanggal = today.getDate();
+  let bulan = today.getMonth(); // 0 = Januari, 11 = Desember
+  let tahun = today.getFullYear();
+
+  // Jika tanggal 22 atau lebih, pindah ke bulan berikutnya
+  if (tanggal >= 22) {
+    bulan += 1;
+    if (bulan > 11) {
+      bulan = 0;
+      tahun += 1;
+    }
+  }
+
+  const namaBulan = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ];
+
+  return `${namaBulan[bulan]} ${tahun}`;
+  };
+  
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white p-2 md:p-6">
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
@@ -2474,7 +2497,9 @@ function RekapAnggota() {
                                           {member.nomorRekening}
                                         </div>
                                         <div className="text-sm text-teal-700 italic">
-                                          Potongan: {member.potongan}
+                                          Potongan untuk Bulan {getNextPotonganBulan()} : {parseInt(member.potongan).toLocaleString(
+                                            "id-ID"
+                                          )}
                                         </div>
                                         <div className="text-sm text-teal-700 italic">
                                           Status: {member.statusPotongan}
