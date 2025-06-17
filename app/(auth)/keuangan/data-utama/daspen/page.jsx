@@ -9,8 +9,8 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "@/app/_components/Sidebar";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import toast, { Toaster } from "react-hot-toast";
-import { FaTimesCircle, FaCheckCircle, FaExclamationCircle, FaDollarSign, FaSave } from "react-icons/fa";
-import { FaArrowTrendUp } from "react-icons/fa6";
+import { FaTimesCircle, FaCheckCircle, FaExclamationCircle, FaDollarSign, FaSave, FaList } from "react-icons/fa";
+import { FaArrowTrendUp, FaArrowRightArrowLeft } from "react-icons/fa6";
 import { IoReload } from "react-icons/io5";
 
 const PROVINSI_PERCENTAGE = 0.895;
@@ -441,9 +441,9 @@ export default function Daspen() {
     }
   };
 
-  const CircleValue = ({ count, amount, bgColor = "bg-blue-500" }) => (
+  const CircleValue = ({ count, amount, borderColor = "border-green-500", textColor = "text-green-500" }) => (
     <div className="flex flex-col items-center">
-      <div className={`w-8 h-8 ${bgColor} text-white rounded-full flex items-center justify-center text-xs font-bold mb-1`}>
+      <div className={`w-8 h-8 bg-white ${borderColor} ${textColor} border rounded-full flex items-center justify-center text-xs font-bold mb-1`}>
         {count}
       </div>
       <div className="text-xs">
@@ -454,18 +454,20 @@ export default function Daspen() {
 
   // Komponen untuk tombol action
   const ActionButtons = ({ onSetor, onDetail }) => (
-    <div className="flex gap-2">
+    <div className="flex flex-col gap-2">
       <button
         onClick={onSetor}
-        className="px-3 py-1 bg-white text-blue-500 border border-blue-500 text-xs rounded hover:bg-blue-100"
+        className="flex items-center justify-center gap-1 px-3 py-1 border border-blue-500 text-blue-500 text-xs rounded hover:bg-blue-100"
       >
-        Setor
+        <FaArrowRightArrowLeft className="w-4 h-4" />
+        <span>Setor</span>
       </button>
       <button
         onClick={onDetail}
-        className="px-3 py-1 bg-white text-purple-500 border border-purple-500 text-xs rounded hover:bg-purple-100"
+        className="flex items-center justify-center gap-1 px-3 py-1 border border-purple-500 text-purple-500 text-xs rounded hover:bg-purple-100"
       >
-        Detail
+        <FaList className="w-4 h-4" />
+        <span>Detail</span>
       </button>
     </div>
   );
@@ -1566,7 +1568,7 @@ export default function Daspen() {
                                 />
                               </td>
                               <td className="px-4 py-2 text-center">
-                                <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold mx-auto mb-1">
+                                <div className="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mx-auto mb-1">
                                   {(parseInt(row["Anggota Kategori I"] || 0) + parseInt(row["Anggota Kategori II"] || 0) + parseInt(row["Anggota Kategori III"] || 0))}
                                 </div>
                                 <div className="text-xs font-semibold">
@@ -1579,25 +1581,28 @@ export default function Daspen() {
                                 <CircleValue
                                   count={row["Realisasi Anggota Kategori I"] || row["Anggota Kategori I"] || 0}
                                   amount={row["Realisasi Sumbangan Kategori I"] || row["Sumbangan Kategori I"] || 0}
-                                  bgColor="bg-green-500"
+                                  borderColor="border-blue-500"
+                                  textColor="text-blue-500"
                                 />
                               </td>
                               <td className="px-4 py-2 text-center">
                                 <CircleValue
                                   count={row["Realisasi Anggota Kategori II"] || row["Anggota Kategori II"] || 0}
                                   amount={row["Realisasi Sumbangan Kategori II"] || row["Sumbangan Kategori II"] || 0}
-                                  bgColor="bg-green-500"
+                                  borderColor="border-blue-500"
+                                  textColor="text-blue-500"
                                 />
                               </td>
                               <td className="px-4 py-2 text-center">
                                 <CircleValue
                                   count={row["Realisasi Anggota Kategori III"] || row["Anggota Kategori III"] || 0}
                                   amount={row["Realisasi Sumbangan Kategori III"] || row["Sumbangan Kategori III"] || 0}
-                                  bgColor="bg-green-500"
+                                  borderColor="border-blue-500"
+                                  textColor="text-blue-500"
                                 />
                               </td>
                               <td className="px-4 py-2 text-center">
-                                <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold mx-auto mb-1">
+                                <div className="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mx-auto mb-1">
                                   {(parseInt(row["Realisasi Anggota Kategori I"] || row["Anggota Kategori I"] || 0) +
                                     parseInt(row["Realisasi Anggota Kategori II"] || row["Anggota Kategori II"] || 0) +
                                     parseInt(row["Realisasi Anggota Kategori III"] || row["Anggota Kategori III"] || 0))}
@@ -1887,86 +1892,85 @@ export default function Daspen() {
                   </div> */}
 
                   <div className="overflow-x-auto">
-                    <table className="min-w-full border" ref={tableRef}>
-                      <thead className="bg-gray-100">
+                    <table className="min-w-full">
+                      <thead className=" text-left">
                         <tr>
-                          <th className="border px-4 py-2">No.</th>
-                          <th className="border px-4 py-2">Cabang</th>
-                          <th className="border px-4 py-2">Unit Kerja</th>
-                          <th className="border px-4 py-2">Nama</th>
-                          <th className="border px-4 py-2">NIP</th>
-                          <th className="border px-4 py-2">Kategori Daspen</th>
-                          <th className="border px-4 py-2">Nominal Daspen</th>
-                          <th className="border px-4 py-2">Keterangan Pembayaran</th>
+                          <th className="px-4 py-2 text-gray-500">No.</th>
+                          <th className="px-4 py-2 text-gray-500">Cabang</th>
+                          <th className="px-4 py-2 text-gray-500">Unit Kerja</th>
+                          <th className="px-4 py-2 text-gray-500">Nama</th>
+                          <th className="px-4 py-2 text-gray-500">NIP</th>
+                          <th className="px-4 py-2 text-gray-500">Kategori Daspen</th>
+                          <th className="px-4 py-2 text-right text-gray-500">Nominal Daspen</th>
+                          <th className="px-4 py-2 text-gray-500">Keterangan Pembayaran</th>
                         </tr>
                       </thead>
-                      <tbody>
-                        {/* Data contoh - ganti dengan data dari API */}
-                        <tr>
-                          <td className="border px-4 py-2 text-center">1</td>
-                          <td className="border px-4 py-2">Cabang A</td>
-                          <td className="border px-4 py-2">SDN 1 Cabang A</td>
-                          <td className="border px-4 py-2">Anggota A1</td>
-                          <td className="border px-4 py-2">111222333</td>
-                          <td className="border px-4 py-2">Kategori I</td>
-                          <td className="border px-4 py-2 text-right">Rp 12.750</td>
-                          <td className="border px-4 py-2">
+                      <tbody className="divide-y divide-gray-200">
+                        <tr className="hover:bg-gray-50">
+                          <td className="px-4 py-4 text-center">1</td>
+                          <td className="px-4 py-4">Cabang A</td>
+                          <td className="px-4 py-4">SDN 1 Cabang A</td>
+                          <td className="px-4 py-4">Anggota A1</td>
+                          <td className="px-4 py-4">111222333</td>
+                          <td className="px-4 py-4">Kategori I</td>
+                          <td className="px-4 py-4 text-right">Rp 12.750</td>
+                          <td className="px-4 py-4">
                             <span className="bg-green-100 text-green-800 border border-green-500 px-2 py-1 rounded-2xl text-sm">
                               Potongan Bank
                             </span>
                           </td>
                         </tr>
-                        <tr>
-                          <td className="border px-4 py-2 text-center">2</td>
-                          <td className="border px-4 py-2">Cabang A</td>
-                          <td className="border px-4 py-2">SMPN 2 Cabang A</td>
-                          <td className="border px-4 py-2">Anggota A2</td>
-                          <td className="border px-4 py-2">444555666</td>
-                          <td className="border px-4 py-2">Kategori II</td>
-                          <td className="border px-4 py-2 text-right">Rp 17.000</td>
-                          <td className="border px-4 py-2">
+                        <tr className="hover:bg-gray-50">
+                          <td className="px-4 py-4 text-center">2</td>
+                          <td className="px-4 py-4">Cabang A</td>
+                          <td className="px-4 py-4">SMPN 2 Cabang A</td>
+                          <td className="px-4 py-4">Anggota A2</td>
+                          <td className="px-4 py-4">444555666</td>
+                          <td className="px-4 py-4">Kategori II</td>
+                          <td className="px-4 py-4 text-right">Rp 17.000</td>
+                          <td className="px-4 py-4">
                             <span className="bg-blue-100 text-blue-800 border border-blue-500 px-2 py-1 rounded-2xl text-sm">
                               Setoran Tunai
                             </span>
                           </td>
                         </tr>
-                        <tr>
-                          <td className="border px-4 py-2 text-center">3</td>
-                          <td className="border px-4 py-2">Cabang B</td>
-                          <td className="border px-4 py-2">SMAM 1 Cabang B</td>
-                          <td className="border px-4 py-2">Anggota B1</td>
-                          <td className="border px-4 py-2">777888999</td>
-                          <td className="border px-4 py-2">Kategori III</td>
-                          <td className="border px-4 py-2 text-right">Rp 21.250</td>
-                          <td className="border px-4 py-2">
+                        <tr className="hover:bg-gray-50">
+                          <td className="px-4 py-4 text-center">3</td>
+                          <td className="px-4 py-2">Cabang B</td>
+                          <td className="px-4 py-2">SMAM 1 Cabang B</td>
+                          <td className="px-4 py-2">Anggota B1</td>
+                          <td className="px-4 py-2">777888999</td>
+                          <td className="px-4 py-2">Kategori III</td>
+                          <td className="px-4 py-2 text-right">Rp 21.250</td>
+                          <td className="px-4 py-2">
                             <span className="bg-green-100 text-green-800 border border-green-500 px-2 py-1 rounded-2xl text-sm">
                               Potongan Bank
                             </span>
                           </td>
                         </tr>
-                        <tr>
-                          <td className="border px-4 py-2 text-center">4</td>
-                          <td className="border px-4 py-2">Cabang C</td>
-                          <td className="border px-4 py-2">TK-Perhwi Cabang C</td>
-                          <td className="border px-4 py-2">Anggota C1</td>
-                          <td className="border px-4 py-2">000111222</td>
-                          <td className="border px-4 py-2">Kategori I</td>
-                          <td className="border px-4 py-2 text-right">Rp 12.750</td>
-                          <td className="border px-4 py-2">
+                        <tr className="hover:bg-gray-50">
+                          <td className="px-4 py-2 text-center">4</td>
+                          <td className="px-4 py-2">Cabang C</td>
+                          <td className="px-4 py-2">TK-Perhwi Cabang C</td>
+                          <td className="px-4 py-2">Anggota C1</td>
+                          <td className="px-4 py-2">000111222</td>
+                          <td className="px-4 py-2">Kategori I</td>
+                          <td className="px-4 py-2 text-right">Rp 12.750</td>
+                          <td className="px-4 py-2">
                             <span className="bg-green-100 text-green-800 border border-green-500 px-2 py-1 rounded-2xl text-sm">
                               Potongan Bank
                             </span>
                           </td>
                         </tr>
-                        <tr>
-                          <td className="border px-4 py-2 text-center">5</td>
-                          <td className="border px-4 py-2">Cabang A</td>
-                          <td className="border px-4 py-2">SDN 1 Cabang A</td>
-                          <td className="border px-4 py-2">Anggota A3</td>
-                          <td className="border px-4 py-2">111222334</td>
-                          <td className="border px-4 py-2">Kategori I</td>
-                          <td className="border px-4 py-2 text-right">Rp 12.750</td>
-                          <td className="border px-4 py-2">
+                        <tr className="hover:bg-gray-50">
+                          <td className="px-4 py-2 text-center">5</td>
+                          <td className="px-4 py-2">Cabang A</td>
+                          <td className="px-4 py-2">SDN 1 Cabang A</td>
+                          <td className="px-4 py-2">Anggota A3</td>
+                          <td className="px-4 py-2">111222334</td>
+                          <td className="px-4 py-2">Kategori I</td>
+                          <td className="px-4 py-2 text-right">Rp 12.750</td>
+                          <td className="px-4 py-2">
                             <span className="bg-green-100 text-green-800 border border-green-500 px-2 py-1 rounded-2xl text-sm">
                               Potongan Bank
                             </span>

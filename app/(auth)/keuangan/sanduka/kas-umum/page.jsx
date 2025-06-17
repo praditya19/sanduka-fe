@@ -29,6 +29,8 @@ import {
     FaStickyNote,
     FaMoneyBill,
     FaRegTrashAlt,
+    FaBullseye,
+    FaDownload,
 } from "react-icons/fa";
 import { FaArrowTrendUp, FaArrowTrendDown, FaSliders } from "react-icons/fa6";
 import { LuListFilter } from "react-icons/lu";
@@ -140,6 +142,12 @@ function KasUmum() {
     const [showMonthDropdown, setShowMonthDropdown] = useState(false);
     const [showYearDropdown, setShowYearDropdown] = useState(false);
 
+    const [transactionToEdit, setTransactionToEdit] = useState(null);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [transactionToDelete, setTransactionToDelete] = useState(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+
     const [showSaldoAwalModal, setShowSaldoAwalModal] = useState(false);
     const [formSaldoAwal, setFormSaldoAwal] = useState({
         bulan: "06", // default Juni
@@ -158,7 +166,7 @@ function KasUmum() {
     const [posPengeluaranList, setPosPengeluaranList] = useState([
         "ATK", "Lain-lain", "Listrik", "PDAM"
     ]);
-
+    const saldoSebelumnya = 4037000000;
     const months = [
         { value: "01", label: "Januari" },
         { value: "02", label: "Februari" },
@@ -179,6 +187,28 @@ function KasUmum() {
     const getMonthName = (monthValue) => {
         const month = months.find((m) => m.value === monthValue);
         return month ? month.label : "";
+    };
+
+    const handleSaveChanges = (updatedTransaction) => {
+        // update di backend atau state
+        const updatedList = transactions.map((trx) =>
+            trx.id === updatedTransaction.id ? updatedTransaction : trx
+        );
+        setTransactions(updatedList);
+        setShowEditModal(false);
+
+        setNotification({
+            type: "success",
+            message: `Perubahan berhasil disimpan!`
+        });
+    };
+
+    const handleConfirmDelete = (id) => {
+        const updatedList = transactions.filter((trx) => trx.id !== id);
+        setTransactions(updatedList);
+        setShowDeleteModal(false);
+
+        // TODO: Tambahkan pemanggilan API untuk hapus di backend jika perlu
     };
 
     const handleSaldoAwalChange = (e) => {
@@ -245,6 +275,17 @@ function KasUmum() {
         const { name, value } = e.target;
         setFormPengeluaran((prev) => ({ ...prev, [name]: value }));
     };
+
+    const handleEditClick = (transaction) => {
+        setTransactionToEdit(transaction);
+        setShowEditModal(true);
+    };
+
+    const handleDeleteClick = (transaction) => {
+        setTransactionToDelete(transaction);
+        setShowDeleteModal(true);
+    };
+
 
     const resetPenerimaan = () => {
         setFormPenerimaan({
@@ -315,6 +356,303 @@ function KasUmum() {
         localStorage.setItem("isSidebarOpen", newSidebarState);
     };
 
+    // Add these functions to your KasUmum component
+
+    const handleExportExcel = () => {
+        try {
+            // Prepare data for Excel export
+            const excelData = [
+                // Header row
+                {
+                    'No': '',
+                    'Tanggal': '',
+                    'No Bukti': '',
+                    'Uraian': '',
+                    'Debit (Pemasukan)': '',
+                    'Kredit (Pengeluaran)': '',
+                    'Saldo': ''
+                },
+                // Title row
+                {
+                    'No': `BUKU KAS UMUM - ${getMonthName(monthFilter)} ${yearFilter}`,
+                    'Tanggal': '',
+                    'No Bukti': '',
+                    'Uraian': '',
+                    'Debit (Pemasukan)': '',
+                    'Kredit (Pengeluaran)': '',
+                    'Saldo': ''
+                },
+                // Empty row for spacing
+                {
+                    'No': '',
+                    'Tanggal': '',
+                    'No Bukti': '',
+                    'Uraian': '',
+                    'Debit (Pemasukan)': '',
+                    'Kredit (Pengeluaran)': '',
+                    'Saldo': ''
+                },
+                // Column headers
+                {
+                    'No': 'No',
+                    'Tanggal': 'Tanggal',
+                    'No Bukti': 'No Bukti',
+                    'Uraian': 'Uraian',
+                    'Debit (Pemasukan)': 'Debit (Pemasukan)',
+                    'Kredit (Pengeluaran)': 'Kredit (Pengeluaran)',
+                    'Saldo': 'Saldo'
+                }
+            ];
+
+            // Add transaction data
+            transactions.forEach((transaction, index) => {
+                excelData.push({
+                    'No': index + 1,
+                    'Tanggal': transaction.tanggal,
+                    'No Bukti': transaction.noBukti,
+                    'Uraian': transaction.uraian,
+                    'Debit (Pemasukan)': transaction.debit > 0 ? `Rp ${transaction.debit.toLocaleString('id-ID')}` : '',
+                    'Kredit (Pengeluaran)': transaction.kredit > 0 ? `Rp ${transaction.kredit.toLocaleString('id-ID')}` : '',
+                    'Saldo': `Rp ${transaction.saldo.toLocaleString('id-ID')}`
+                });
+            });
+
+            // Add summary rows
+            excelData.push(
+                // Empty row
+                {
+                    'No': '',
+                    'Tanggal': '',
+                    'No Bukti': '',
+                    'Uraian': '',
+                    'Debit (Pemasukan)': '',
+                    'Kredit (Pengeluaran)': '',
+                    'Saldo': ''
+                },
+                // Total row
+                {
+                    'No': '',
+                    'Tanggal': '',
+                    'No Bukti': '',
+                    'Uraian': 'TOTAL',
+                    'Debit (Pemasukan)': `Rp ${totalDebit.toLocaleString('id-ID')}`,
+                    'Kredit (Pengeluaran)': `Rp ${totalKredit.toLocaleString('id-ID')}`,
+                    'Saldo': `Rp ${saldoAkhir.toLocaleString('id-ID')}`
+                }
+            );
+
+            // Create workbook and worksheet
+            const ws = XLSX.utils.json_to_sheet(excelData, { skipHeader: true });
+            const wb = XLSX.utils.book_new();
+
+            // Set column widths
+            const colWidths = [
+                { wch: 5 },   // No
+                { wch: 15 },  // Tanggal
+                { wch: 30 },  // No Bukti
+                { wch: 50 },  // Uraian
+                { wch: 20 },  // Debit
+                { wch: 20 },  // Kredit
+                { wch: 20 }   // Saldo
+            ];
+            ws['!cols'] = colWidths;
+
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'Buku Kas Umum');
+
+            // Generate filename with current date
+            const currentDate = new Date();
+            const filename = `Buku_Kas_Umum_${getMonthName(monthFilter)}_${yearFilter}_${currentDate.getDate()}-${currentDate.getMonth() + 1}-${currentDate.getFullYear()}.xlsx`;
+
+            // Write and download file
+            XLSX.writeFile(wb, filename);
+
+            // Show success notification
+            setNotification({
+                type: "success",
+                message: `File Excel berhasil diunduh: ${filename}`
+            });
+
+        } catch (error) {
+            console.error('Error exporting to Excel:', error);
+            setNotification({
+                type: "error",
+                message: "Gagal mengekspor ke Excel. Silakan coba lagi."
+            });
+        }
+    };
+
+    const handlePrint = () => {
+        try {
+            const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Buku Kas Umum - ${getMonthName(monthFilter)} ${yearFilter}</title>
+            <style>
+                @media print {
+                    @page {
+                        size: A4 landscape;
+                        margin: 1cm;
+                    }
+                }
+
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 12px;
+                    margin: 0;
+                    padding: 20px;
+                    color: #000;
+                }
+
+                h1, h2, h3, p {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .title {
+                    text-align: center;
+                    margin-bottom: 10px;
+                }
+
+                .subtitle {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 10px;
+                }
+
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 10px;
+                    font-size: 11px;
+                }
+
+                thead th {
+                    background-color: #009688 !important;
+                    color: white !important;
+                    padding: 6px;
+                    border: 1px solid #ccc;
+                    text-align: center;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+
+                tbody td {
+                    border: 1px solid #ccc;
+                    padding: 6px;
+                    vertical-align: top;
+                }
+
+                .number {
+                    text-align: right;
+                }
+
+                .center {
+                    text-align: center;
+                }
+
+                .summary-row td {
+                    font-weight: bold;
+                    background-color: #f5f5f5;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="title">
+                <h2>BUKU KAS UMUM</h2>
+                <p>Periode: ${getMonthName(monthFilter)} ${yearFilter}</p>
+            </div>
+
+            <div class="subtitle">
+                <p><strong>Saldo Akhir Bulan Sebelumnya (${getMonthName(monthFilter - 1)} ${yearFilter}):</strong> Rp ${saldoSebelumnya.toLocaleString('id-ID')}</p>
+                <p>Dicetak pada: ${new Date().toLocaleString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            })}</p>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Tgl Transaksi</th>
+                        <th>No. Bukti</th>
+                        <th>Uraian</th>
+                        <th>Debet (Rp)</th>
+                        <th>Kredit (Rp)</th>
+                        <th>Saldo (Rp)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="center">01/06/${yearFilter}</td>
+                        <td colspan="2" class="center">SALDO AWAL</td>
+                        <td>Saldo Awal Periode ${getMonthName(monthFilter)} ${yearFilter}</td>
+                        <td class="number">Rp ${saldoSebelumnya.toLocaleString('id-ID')}</td>
+                        <td class="number">Rp 0</td>
+                        <td class="number">Rp ${saldoSebelumnya.toLocaleString('id-ID')}</td>
+                    </tr>
+
+                    ${transactions.map((transaction, index) => `
+                        <tr>
+                            <td class="center">${index + 1}</td>
+                            <td class="center">${transaction.tanggal}</td>
+                            <td>${transaction.noBukti}</td>
+                            <td>${transaction.uraian}</td>
+                            <td class="number">${transaction.debit > 0 ? 'Rp ' + transaction.debit.toLocaleString('id-ID') : 'Rp 0'}</td>
+                            <td class="number">${transaction.kredit > 0 ? 'Rp ' + transaction.kredit.toLocaleString('id-ID') : 'Rp 0'}</td>
+                            <td class="number">Rp ${transaction.saldo.toLocaleString('id-ID')}</td>
+                        </tr>
+                    `).join('')}
+
+                    <tr class="summary-row">
+                        <td colspan="4" class="center">TOTAL TRANSAKSI PERIODE INI</td>
+                        <td class="number">Rp ${totalDebit.toLocaleString('id-ID')}</td>
+                        <td class="number">Rp ${totalKredit.toLocaleString('id-ID')}</td>
+                        <td></td>
+                    </tr>
+                    <tr class="summary-row">
+                        <td colspan="6" class="center">SALDO AKHIR PERIODE INI</td>
+                        <td class="number">Rp ${saldoAkhir.toLocaleString('id-ID')}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </body>
+        </html>
+        `;
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+
+            printWindow.onload = function () {
+                printWindow.focus();
+                printWindow.print();
+                printWindow.onafterprint = function () {
+                    printWindow.close();
+                };
+            };
+
+            setNotification({
+                type: "success",
+                message: "Dokumen berhasil disiapkan untuk pencetakan"
+            });
+
+        } catch (error) {
+            console.error('Error printing:', error);
+            setNotification({
+                type: "error",
+                message: "Gagal mencetak dokumen. Silakan coba lagi."
+            });
+        }
+    };
+
     useEffect(() => {
         const handleResize = () => {
             setIsMobile(window.innerWidth <= 768);
@@ -352,13 +690,13 @@ function KasUmum() {
                         </h1>
 
                         <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                            <button
+                            {/* <button
                                 onClick={() => setShowSaldoAwalModal(true)}
                                 className="px-4 py-2 rounded border border-gray-300 bg-white text-black hover:bg-gray-100 transition flex items-center gap-2 text-sm font-medium"
                             >
                                 <FaWallet className="w-4 h-4" />
                                 <span>Set Saldo Awal</span>
-                            </button>
+                            </button> */}
 
                             <button
                                 onClick={() => setShowPosPenerimaanModal(true)}
@@ -539,7 +877,7 @@ function KasUmum() {
                                                 className="w-full p-2 border border-gray-300 rounded"
                                                 placeholder="0"
                                             />
-                                            {/* <p className="text-xs mt-1 text-gray-500">Terbilang: not Rupiah</p> */}
+                                            <p className="text-xs mt-1 text-gray-500 italic">Terbilang: nol Rupiah</p>
                                         </div>
                                     </div>
 
@@ -558,8 +896,15 @@ function KasUmum() {
                                         ></textarea>
                                     </div>
 
-                                    {/* Tombol Simpan & Reset */}
                                     <div className="flex justify-end space-x-2">
+                                        <button
+                                            // onClick={handleSesuaiTarget}
+                                            className="px-4 py-2 border border-green-600 text-green-600 rounded hover:bg-green-50 flex items-center"
+                                        >
+                                            <FaBullseye className="mr-2" />
+                                            Sesuai Target
+                                        </button>
+
                                         <button
                                             // onClick={handleSubmitPenerimaan}
                                             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center"
@@ -567,13 +912,14 @@ function KasUmum() {
                                             <FaSave className="mr-2" />
                                             Simpan Pemasukan
                                         </button>
-                                        <button
+
+                                        {/* <button
                                             onClick={resetPenerimaan}
                                             className="px-4 py-2 border border-gray-300 rounded bg-white text-gray-700 hover:bg-gray-50 flex items-center"
                                         >
                                             <FaUndo className="mr-2" />
                                             Reset
-                                        </button>
+                                        </button> */}
                                     </div>
                                 </div>
                             </>
@@ -662,7 +1008,7 @@ function KasUmum() {
                                             className="w-full p-2 border border-gray-300 rounded bg-white"
                                             placeholder="0"
                                         />
-                                        {/* <p className="text-xs mt-1 text-gray-500">Terbilang: not Rupiah</p> */}
+                                        <p className="text-xs mt-1 text-gray-500 italic">Terbilang: nol Rupiah</p>
                                     </div>
 
                                     <div className="md:col-span-2">
@@ -681,100 +1027,114 @@ function KasUmum() {
 
                                     <div className="md:col-span-2 flex justify-end space-x-2 pt-2">
                                         <button
+                                            // onClick={handleSesuaiTarget}
+                                            className="px-4 py-2 border border-red-600 text-red-600 rounded hover:bg-red-50 flex items-center"
+                                        >
+                                            <FaBullseye className="mr-2" />
+                                            Sesuai Target
+                                        </button>
+                                        <button
                                             // onClick={handleSubmitPengeluaran}
                                             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center"
                                         >
                                             <FaSave className="mr-2" />
                                             Simpan Pengeluaran
                                         </button>
-                                        <button
+                                        {/* <button
                                             onClick={resetPengeluaran}
                                             className="px-4 py-2 border border-gray-300 rounded bg-white text-gray-700 hover:bg-gray-50 flex items-center"
                                         >
                                             <FaUndo className="mr-2" />
                                             Reset
-                                        </button>
+                                        </button> */}
                                     </div>
                                 </div>
                             </div>
                         )}
                     </div>
                     <div className="bg-white rounded-lg shadow-md p-6 mt-6">
-                        <div className="rounded-lg shadow-md p-6 mt-6 bg-gray-100">
+                        <div className="rounded-lg shadow-md p-6 mt-6 bg-white">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                                <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                                    <LuListFilter className="text-gray-600" />
-                                    Daftar Transaksi - Juni 2025
+                                <h1 className="text-xl font-bold text-blue-600 flex items-center gap-2">
+                                    Tabel Transaksi Keuangan
                                 </h1>
 
                                 <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto items-center">
-                                    {/* Month Dropdown */}
-                                    <div className="relative">
-                                        <button
-                                            className="flex items-center px-3 py-2 border border-gray-300 rounded bg-white text-gray-700 w-24"
-                                            onClick={() => setShowMonthDropdown(!showMonthDropdown)}
-                                        >
-                                            <span>{getMonthName(monthFilter)}</span>
-                                            <FaChevronDown className="ml-7 text-sm" />
-                                        </button>
-                                        {showMonthDropdown && (
-                                            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow-lg">
-                                                {months.map((month) => (
-                                                    <div
-                                                        key={month.value}
-                                                        className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${monthFilter === month.value
-                                                            ? "bg-blue-50 text-blue-600"
-                                                            : ""
-                                                            }`}
-                                                        onClick={() => {
-                                                            setMonthFilter(month.value);
-                                                            setShowMonthDropdown(false);
-                                                        }}
-                                                    >
-                                                        {month.label}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
+                                    {/* Label + Month Dropdown */}
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-medium text-gray-800">Bulan:</span>
+                                        <div className="relative">
+                                            <button
+                                                className="flex items-center px-3 py-2 border border-gray-300 rounded bg-white text-gray-700 w-28"
+                                                onClick={() => setShowMonthDropdown(!showMonthDropdown)}
+                                            >
+                                                <span>{getMonthName(monthFilter)}</span>
+                                                <FaChevronDown className="ml-auto text-sm" />
+                                            </button>
+                                            {showMonthDropdown && (
+                                                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow-lg">
+                                                    {months.map((month) => (
+                                                        <div
+                                                            key={month.value}
+                                                            className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${monthFilter === month.value ? "bg-blue-50 text-blue-600" : ""
+                                                                }`}
+                                                            onClick={() => {
+                                                                setMonthFilter(month.value);
+                                                                setShowMonthDropdown(false);
+                                                            }}
+                                                        >
+                                                            {month.label}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
-                                    {/* Year Dropdown */}
-                                    <div className="relative">
-                                        <button
-                                            className="flex items-center px-3 py-2 border border-gray-300 rounded bg-white text-gray-700"
-                                            onClick={() => setShowYearDropdown(!showYearDropdown)}
-                                        >
-                                            <span>{yearFilter}</span>
-                                            <FaChevronDown className="ml-2 text-sm" />
-                                        </button>
-                                        {showYearDropdown && (
-                                            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow-lg">
-                                                {years.map((year) => (
-                                                    <div
-                                                        key={year}
-                                                        className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${yearFilter === year
-                                                            ? "bg-blue-50 text-blue-600"
-                                                            : ""
-                                                            }`}
-                                                        onClick={() => {
-                                                            setYearFilter(year);
-                                                            setShowYearDropdown(false);
-                                                        }}
-                                                    >
-                                                        {year}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
+                                    {/* Label + Year Dropdown */}
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-medium text-gray-800">Tahun:</span>
+                                        <div className="relative">
+                                            <button
+                                                className="flex items-center px-3 py-2 border border-gray-300 rounded bg-white text-gray-700 w-24"
+                                                onClick={() => setShowYearDropdown(!showYearDropdown)}
+                                            >
+                                                <span>{yearFilter}</span>
+                                                <FaChevronDown className="ml-auto text-sm" />
+                                            </button>
+                                            {showYearDropdown && (
+                                                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow-lg">
+                                                    {years.map((year) => (
+                                                        <div
+                                                            key={year}
+                                                            className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${yearFilter === year ? "bg-blue-50 text-blue-600" : ""
+                                                                }`}
+                                                            onClick={() => {
+                                                                setYearFilter(year);
+                                                                setShowYearDropdown(false);
+                                                            }}
+                                                        >
+                                                            {year}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
-                                    {/* Action Buttons */}
-                                    <button className="flex items-center px-4 py-2 bg-red-500 text-white rounded hover:bg-red-400 gap-2">
-                                        <FaRegTrashAlt />
-                                        <span>Hapus Data Periode Ini</span>
+                                    {/* Export & Print Buttons */}
+                                    <button
+                                        onClick={handleExportExcel}
+                                        className="flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-800 rounded hover:bg-gray-100 gap-2"
+                                    >
+                                        <FaDownload />
+                                        <span>Export Excel</span>
                                     </button>
 
-                                    <button className="flex items-center px-4 py-2 border border-blue-500 bg-white text-blue-500 rounded hover:bg-blue-100 gap-2">
+                                    <button
+                                        onClick={handlePrint}
+                                        className="flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-800 rounded hover:bg-gray-100 gap-2"
+                                    >
                                         <FaPrint />
                                         <span>Cetak Laporan</span>
                                     </button>
@@ -782,23 +1142,24 @@ function KasUmum() {
                             </div>
                         </div>
 
+
                         <div className="overflow-x-auto">
                             <table className="min-w-full">
                                 <thead className="border-b border-gray-30">
-                                    <tr className="text-left text-xs font-medium uppercase tracking-wider text-gray-600">
-                                        <th className="px-4 py-4">NO</th>
-                                        <th className="px-4 py-4">TGL TRANSAKSI</th>
-                                        <th className="px-4 py-4">NO. BUKTI</th>
-                                        <th className="px-4 py-4">URAIAN</th>
-                                        <th className="px-4 py-4 text-right">DEBET (Rp)</th>
-                                        <th className="px-4 py-4 text-right">KREDIT (Rp)</th>
-                                        <th className="px-4 py-4 text-right">SALDO (Rp)</th>
-                                        <th className="px-4 py-4 text-center">ACTION</th>
+                                    <tr className="text-left text-xs font-medium tracking-wider text-gray-600">
+                                        <th className="px-4 py-4">No</th>
+                                        <th className="px-4 py-4">Tanggal</th>
+                                        <th className="px-4 py-4">No. Bukti</th>
+                                        <th className="px-4 py-4">Uraian</th>
+                                        <th className="px-4 py-4 text-right">Debet (Rp)</th>
+                                        <th className="px-4 py-4 text-right">Kredit (Rp)</th>
+                                        <th className="px-4 py-4 text-right">Saldo (Rp)</th>
+                                        <th className="px-4 py-4 text-center">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-100">
                                     {/* SALDO AWAL sticky */}
-                                    <tr className="font-semibold sticky top-0 z-10">
+                                    {/* <tr className="font-semibold sticky top-0 z-10">
                                         <td className="p-3 text-center">-</td>
                                         <td className="p-3">01/06/2025</td>
                                         <td className="p-3">SALDO AWAL</td>
@@ -807,7 +1168,7 @@ function KasUmum() {
                                         <td className="p-3 text-right">Rp 0</td>
                                         <td className="p-3 text-right">Rp 4.037.000.000</td>
                                         <td className="p-3 text-center">-</td>
-                                    </tr>
+                                    </tr> */}
 
                                     {transactions.map((transaction) => (
                                         <tr key={transaction.id} className="hover:bg-gray-50">
@@ -826,10 +1187,16 @@ function KasUmum() {
                                             </td>
                                             <td className="p-3 text-center">
                                                 <div className="flex justify-center space-x-2">
-                                                    <button className="border border-black p-1 rounded hover:bg-blue-100 text-black">
+                                                    <button
+                                                        className="p-1 rounded hover:bg-blue-100 text-black"
+                                                        onClick={() => handleEditClick(transaction)}
+                                                    >
                                                         <FaEdit />
                                                     </button>
-                                                    <button className="border border-red-500 p-1 rounded hover:bg-red-100 text-red-600">
+                                                    <button
+                                                        className="p-1 rounded hover:bg-red-100 text-red-600"
+                                                        onClick={() => handleDeleteClick(transaction)}
+                                                    >
                                                         <FaRegTrashAlt />
                                                     </button>
                                                 </div>
@@ -1153,6 +1520,142 @@ function KasUmum() {
                                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
                             >
                                 Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showEditModal && transactionToEdit && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="relative bg-white rounded-lg shadow-xl w-[500px] max-w-full p-6">
+                        {/* Tombol X (Batal) */}
+                        <button
+                            onClick={() => setShowEditModal(false)}
+                            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                        >
+                            <FaTimesCircle className="w-5 h-5 hover:text-red-500" />
+                        </button>
+
+                        {/* Header Modal */}
+                        <h2 className="text-lg font-semibold mb-4">
+                            Edit Transaksi - {transactionToEdit.noBukti}
+                        </h2>
+
+                        {/* Form Edit */}
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium">Tanggal Transaksi</label>
+                                <input
+                                    type="date"
+                                    className="w-full border px-3 py-2 rounded"
+                                    value={transactionToEdit.tanggal}
+                                    onChange={(e) =>
+                                        setTransactionToEdit({ ...transactionToEdit, tanggal: e.target.value })
+                                    }
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium">No. Bukti</label>
+                                <input
+                                    type="text"
+                                    className="w-full border px-3 py-2 rounded bg-gray-100"
+                                    value={transactionToEdit.noBukti}
+                                    disabled
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium">Uraian</label>
+                                <textarea
+                                    className="w-full border px-3 py-2 rounded"
+                                    value={transactionToEdit.uraian}
+                                    onChange={(e) =>
+                                        setTransactionToEdit({ ...transactionToEdit, uraian: e.target.value })
+                                    }
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium">Debet (Rp)</label>
+                                <input
+                                    type="number"
+                                    className="w-full border px-3 py-2 rounded"
+                                    value={transactionToEdit.debit}
+                                    onChange={(e) =>
+                                        setTransactionToEdit({ ...transactionToEdit, debit: Number(e.target.value) })
+                                    }
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium">Kredit (Rp)</label>
+                                <input
+                                    type="number"
+                                    className="w-full border px-3 py-2 rounded"
+                                    value={transactionToEdit.kredit}
+                                    onChange={(e) =>
+                                        setTransactionToEdit({ ...transactionToEdit, kredit: Number(e.target.value) })
+                                    }
+                                />
+                            </div>
+                        </div>
+
+                        {/* Tombol Simpan & Batal */}
+                        <div className="mt-6 flex justify-end space-x-2">
+                            <button
+                                onClick={() => setShowEditModal(false)}
+                                className="px-4 py-2 border rounded hover:bg-gray-100"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                // onClick={handleUpdateTransaction}
+                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            >
+                                Simpan Perubahan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showDeleteModal && transactionToDelete && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="relative bg-white rounded-lg p-6 w-[500px]">
+                        {/* Tombol X */}
+                        <button
+                            onClick={() => setShowDeleteModal(false)}
+                            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                        >
+                            <FaTimesCircle className="w-5 h-5 hover:text-red-500" />
+                        </button>
+
+                        {/* Konten Modal */}
+                        <h2 className="text-lg font-semibold mb-2">Konfirmasi Hapus</h2>
+                        <p className="mb-2">
+                            Apakah Anda yakin ingin menghapus transaksi{" "}
+                            <span className="font-semibold">
+                                {transactionToDelete.noBukti}
+                            </span>
+                            ?
+                        </p>
+                        <p className="text-sm text-gray-500 mb-4">
+                            Uraian: {transactionToDelete.uraian}
+                        </p>
+                        <div className="flex justify-end space-x-2">
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                className="px-4 py-2 border rounded hover:bg-gray-100"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={() => handleConfirmDelete(transactionToDelete.id)}
+                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                            >
+                                Hapus
                             </button>
                         </div>
                     </div>
