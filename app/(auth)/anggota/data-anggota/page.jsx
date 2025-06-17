@@ -1994,7 +1994,7 @@ const DataTable = ({
                                           onClick={handleDeleteClick}
                                           className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
                                         >
-                                          Ya, Saya Sakin
+                                          Ya, Saya Yakin
                                         </button>
                                       </div>
                                     </div>
@@ -2477,7 +2477,7 @@ const DataTable = ({
                                         onClick={handleDeleteClick}
                                         className="bg-teal-700 text-white px-4 py-2 rounded-md hover:bg-teal-500 transition duration-200"
                                       >
-                                        Ya, Saya Sakin
+                                        Ya, Saya Yakin
                                       </button>
                                     </div>
                                   </div>

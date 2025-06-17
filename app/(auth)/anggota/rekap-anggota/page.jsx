@@ -2497,7 +2497,7 @@ function RekapAnggota() {
                                           {member.nomorRekening}
                                         </div>
                                         <div className="text-sm text-teal-700 italic">
-                                          Potongan untuk Bulan {getNextPotonganBulan()} : {parseInt(member.potongan).toLocaleString(
+                                          Inputan Tagihan untuk Bulan {getNextPotonganBulan()} : {parseInt(member.potongan).toLocaleString(
                                             "id-ID"
                                           )}
                                         </div>
@@ -2523,7 +2523,7 @@ function RekapAnggota() {
 
                                             return (
                                               <div className="text-sm text-teal-700 italic">
-                                                Selisih: Rp. {tanda}
+                                                update tanggal: Rp. {tanda}
                                                 {Math.abs(
                                                   selisih
                                                 ).toLocaleString("id-ID")}
