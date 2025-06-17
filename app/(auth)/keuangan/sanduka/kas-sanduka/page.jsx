@@ -8,8 +8,7 @@ import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Input } from "@/components/ui/input";
 import {
-  FaPlusCircle,
-  FaMinusCircle,
+  FaDollarSign,
   FaTimesCircle,
   FaCheckCircle,
   FaExclamationCircle,
@@ -19,10 +18,12 @@ import {
   FaPrint,
   FaFileExcel,
   FaEdit,
-  FaCalendarAlt,
+  FaWallet,
   FaChevronDown,
+  FaCalendarAlt,
+  FaPlusCircle,
 } from "react-icons/fa";
-import { FiTrash } from "react-icons/fi";
+import { FaArrowTrendUp, FaArrowTrendDown, FaSliders } from "react-icons/fa6";
 import { Button } from "@/components/ui/button";
 import { ClipLoader } from "react-spinners";
 import Image from "next/image";
@@ -129,7 +130,30 @@ function KasSanduka() {
   const [yearFilter, setYearFilter] = useState("2025");
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
   const [showYearDropdown, setShowYearDropdown] = useState(false);
+  const [showSaldoAwalModal, setShowSaldoAwalModal] = useState(false);
+  const [formSaldoAwal, setFormSaldoAwal] = useState({
+    bulan: "06", // default Juni
+    tahun: "2025",
+    nominal: 0,
+  });
 
+  const [showPosPenerimaanModal, setShowPosPenerimaanModal] = useState(false);
+  const [newPosPenerimaan, setNewPosPenerimaan] = useState("");
+  const [posPenerimaanList, setPosPenerimaanList] = useState([
+    "Daspen",
+    "Derap",
+    "Iuran PGRI",
+    "Kalender",
+  ]);
+
+  const [showPosPengeluaranModal, setShowPosPengeluaranModal] = useState(false);
+  const [newPosPengeluaran, setNewPosPengeluaran] = useState("");
+  const [posPengeluaranList, setPosPengeluaranList] = useState([
+    "ATK",
+    "Lain-lain",
+    "Listrik",
+    "PDAM",
+  ]);
   const months = [
     { value: "01", label: "Januari" },
     { value: "02", label: "Februari" },
@@ -150,6 +174,62 @@ function KasSanduka() {
   const getMonthName = (monthValue) => {
     const month = months.find((m) => m.value === monthValue);
     return month ? month.label : "";
+  };
+  const handleSaldoAwalChange = (e) => {
+    const { name, value } = e.target;
+    setFormSaldoAwal((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmitSaldoAwal = () => {
+    // Implementasi submit logic di sini
+    console.log("Saldo Awal Data:", formSaldoAwal);
+
+    // Tampilkan notifikasi success
+    setNotification({
+      type: "success",
+      message: `Saldo awal periode ${getMonthName(formSaldoAwal.bulan)} ${
+        formSaldoAwal.tahun
+      } berhasil disimpan!`,
+    });
+
+    // Tutup modal
+    setShowSaldoAwalModal(false);
+  };
+
+  const handleTambahPosPenerimaan = () => {
+    if (newPosPenerimaan.trim() !== "") {
+      setPosPenerimaanList((prev) => [...prev, newPosPenerimaan.trim()]);
+      setNewPosPenerimaan("");
+      // show success notification
+      setNotification({
+        type: "success",
+        // message: `Saldo awal periode ${getMonthName(formSaldoAwal.bulan)} ${formSaldoAwal.tahun} berhasil disimpan!`
+      });
+    }
+  };
+
+  const handleHapusPosPenerimaan = (index) => {
+    const deletedItem = posPenerimaanList[index];
+    setPosPenerimaanList((prev) => prev.filter((_, i) => i !== index));
+    // show success notification
+    setNotification({
+      type: "success",
+      // message: `Saldo awal periode ${getMonthName(formSaldoAwal.bulan)} ${formSaldoAwal.tahun} berhasil disimpan!`
+    });
+  };
+
+  const handleTambahPosPengeluaran = () => {
+    if (newPosPengeluaran.trim() !== "") {
+      setPosPengeluaranList((prev) => [...prev, newPosPengeluaran.trim()]);
+      setNewPosPengeluaran("");
+      // show success notification
+    }
+  };
+
+  const handleHapusPosPengeluaran = (index) => {
+    const deletedItem = posPengeluaranList[index];
+    setPosPengeluaranList((prev) => prev.filter((_, i) => i !== index));
+    // show success notification
   };
   const handlePenerimaanChange = (e) => {
     const { name, value } = e.target;
@@ -269,19 +349,28 @@ function KasSanduka() {
               </h1>
 
               <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                <Button className="px-4 py-2 rounded border border-black bg-white text-black hover:bg-teal-500 hover:text-white transition flex items-center justify-center gap-2 text-sm flex-1">
-                  <FaPlusCircle />
-                  <span>Saldo Awal Sanduka</span>
+                <Button
+                  className="px-4 py-2 rounded border border-black bg-white text-black hover:bg-teal-500 hover:text-white transition flex items-center justify-center gap-2 text-sm flex-1"
+                  onClick={() => setShowSaldoAwalModal(true)}
+                >
+                  <FaWallet className="w-4 h-4" />
+                  <span>Set Saldo Awal Sanduka</span>
                 </Button>
 
-                <Button className="px-4 py-2 rounded border border-black bg-white text-black hover:bg-teal-500 hover:text-white transition flex items-center justify-center gap-2 text-sm flex-1">
-                  <FaPlusCircle />
-                  <span>Kelola Pcs Penerimaan Sanduka</span>
+                <Button
+                  className="px-4 py-2 rounded border border-black bg-white text-black hover:bg-teal-500 hover:text-white transition flex items-center justify-center gap-2 text-sm flex-1"
+                  onClick={() => setShowPosPenerimaanModal(true)}
+                >
+                  <FaSliders className="w-4 h-4" />
+                  <span>Kelola Pos Penerimaan Sanduka</span>
                 </Button>
 
-                <Button className="px-4 py-2 rounded border border-black bg-white text-black hover:bg-teal-500 hover:text-white transition flex items-center justify-center gap-2 text-sm flex-1">
-                  <FaMinusCircle />
-                  <span>Kelola Pcs Pengeluaran Sanduka</span>
+                <Button
+                  className="px-4 py-2 rounded border border-black bg-white text-black hover:bg-teal-500 hover:text-white transition flex items-center justify-center gap-2 text-sm flex-1"
+                  onClick={() => setShowPosPengeluaranModal(true)}
+                >
+                  <FaSliders className="w-4 h-4" />
+                  <span>Kelola Pos Pengeluaran Sanduka</span>
                 </Button>
               </div>
             </div>
@@ -290,35 +379,55 @@ function KasSanduka() {
 
             {/* Ringkasan Saldo */}
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-700 mb-4">
+              <h2 className="text-xl font-semibold text-blue-700 mb-4 ">
                 Ringkasan Saldo Sanduka Periode: Juni 2025
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-gray-100 p-4 rounded-lg">
-                  <h3 className="text-gray-600 font-medium mb-2">
-                    Saldo Awal Juni 2025
-                  </h3>
-                  <p className="text-2xl font-bold">Rp 0</p>
+                <div className="bg-white p-4 rounded-lg shadow-sm border flex items-center justify-between">
+                  <div>
+                    <h3 className="text-gray-600 font-medium mb-1">
+                      Saldo Akhir Mei 2025
+                    </h3>
+                    <p className="text-xl font-bold text-black">
+                      Rp 4.037.000.000
+                    </p>
+                  </div>
+                  <FaCalendarAlt className="text-gray-400 w-6 h-6" />
                 </div>
-                <div className="bg-gray-100 p-4 rounded-lg">
-                  <h3 className="text-gray-600 font-medium mb-2">
-                    Total Pemasukan Sanduka Juni 2025
-                  </h3>
-                  <p className="text-2xl font-bold">Rp 0</p>
+                <div className="bg-white p-4 rounded-lg shadow-sm border flex items-center justify-between">
+                  <div>
+                    <h3 className="text-gray-600 font-medium mb-1">
+                      Total Pemasukan Juni 2025
+                    </h3>
+                    <p className="text-xl font-bold text-green-600">
+                      Rp 40.300.000
+                    </p>
+                  </div>
+                  <FaArrowTrendUp className="text-green-500 w-6 h-6" />
                 </div>
-                <div className="bg-gray-100 p-4 rounded-lg">
-                  <h3 className="text-gray-600 font-medium mb-2">
-                    Total Pengeluaran Sanduka Juni 2025
-                  </h3>
-                  <p className="text-2xl font-bold">Rp 45.000</p>
+                <div className="bg-white p-4 rounded-lg shadow-sm border flex items-center justify-between">
+                  <div>
+                    <h3 className="text-gray-600 font-medium mb-1">
+                      Total Pengeluaran Juni 2025
+                    </h3>
+                    <p className="text-xl font-bold text-red-600">
+                      Rp 4.000.000
+                    </p>
+                  </div>
+                  <FaArrowTrendDown className="text-red-500 w-6 h-6" />
                 </div>
 
-                <div className="bg-blue-100 p-4 rounded-lg">
-                  <h3 className="text-blue-800 font-medium mb-2">
-                    Saldo Akhir Sanduka Juni 2025
-                  </h3>
-                  <p className="text-2xl font-bold text-blue-900">Rp 255.000</p>
+                <div className="bg-white p-4 rounded-lg shadow-sm border flex items-center justify-between">
+                  <div>
+                    <h3 className="text-gray-600 font-medium mb-1">
+                      Saldo Akhir Juni 2025
+                    </h3>
+                    <p className="text-xl font-bold text-blue-600">
+                      Rp 4.073.300.000
+                    </p>
+                  </div>
+                  <FaDollarSign className="text-blue-500 w-6 h-6" />
                 </div>
               </div>
             </div>
@@ -327,26 +436,26 @@ function KasSanduka() {
           {/* Tab Navigation */}
           <div className="flex border-b border-gray-200 mt-6">
             <button
-              className={`py-2 px-4 rounded-lg font-medium relative flex-1 text-center ${
+              className={`py-2 px-4 rounded-lg font-medium relative flex items-center justify-center gap-2 flex-1 text-center transition ${
                 activeTab === "penerimaan"
-                  ? "text-white bg-green-500"
-                  : " hover:bg-green-50"
+                  ? "text-white bg-green-600"
+                  : "text-green-700 hover:bg-green-50"
               }`}
               onClick={() => setActiveTab("penerimaan")}
             >
+              <FaArrowTrendUp className="w-4 h-4" />
               Input Pemasukan Sanduka
-              {activeTab === "penerimaan"}
             </button>
             <button
-              className={`py-2 px-4 rounded-lg font-medium relative flex-1 text-center ${
+              className={`py-2 px-4 rounded-lg font-medium relative flex items-center justify-center gap-2 flex-1 text-center transition ${
                 activeTab === "pengeluaran"
-                  ? "text-white bg-red-500"
-                  : " hover:bg-red-50"
+                  ? "text-white bg-red-600"
+                  : "text-red-700 hover:bg-red-50"
               }`}
               onClick={() => setActiveTab("pengeluaran")}
             >
+              <FaArrowTrendDown className="w-4 h-4" />
               Input Pengeluaran Sanduka
-              {activeTab === "pengeluaran"}
             </button>
           </div>
 
@@ -354,9 +463,10 @@ function KasSanduka() {
             {/* Penerimaan Form */}
             {activeTab === "penerimaan" && (
               <>
-                <h1 className="bg-green-100 text-green-800 p-4 text-lg rounded">
+                <div className="bg-green-100 text-green-800 p-4 text-lg rounded font-semibold flex items-center gap-2">
+                  <FaArrowTrendUp />
                   Input Pemasukan Sanduka
-                </h1>
+                </div>
                 <div className="space-y-4 p-4 bg-green-50">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -473,9 +583,10 @@ function KasSanduka() {
             {/* Pengeluaran Form */}
             {activeTab === "pengeluaran" && (
               <>
-                <h1 className="bg-red-100 text-red-800 p-4 text-lg rounded">
+                <div className="bg-red-100 text-red-800 p-4 text-lg rounded font-semibold flex items-center gap-2">
+                  <FaArrowTrendDown />
                   Input Pengeluaran Sanduka
-                </h1>
+                </div>
                 <div className="space-y-4 p-4 bg-red-50">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -778,6 +889,314 @@ function KasSanduka() {
           </div>
         </div>
       </div>
+      {showSaldoAwalModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div
+            className="absolute inset-0 bg-black opacity-80"
+            onClick={() => setShowSaldoAwalModal(false)}
+          ></div>
+
+          <div className="relative bg-white rounded-lg shadow-xl z-10 w-[600px] max-w-md mx-4">
+            {/* Header Modal */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <FaWallet className="text-blue-600 w-4 h-4" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Set Saldo Awal Periode
+                </h3>
+              </div>
+
+              <button
+                onClick={() => setShowSaldoAwalModal(false)}
+                className="text-gray-400 hover:text-red-600 transition-colors"
+              >
+                <FaTimesCircle size={20} />
+              </button>
+            </div>
+
+            {/* Body Modal */}
+            <div className="p-4">
+              <p className="text-sm text-gray-600 mb-4">
+                Masukkan saldo awal untuk periode yang dipilih. Ini akan membuat
+                transaksi awal pemasukan "Saldo Awal".
+              </p>
+
+              <div className="space-y-4">
+                {/* Bulan & Tahun */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Bulan
+                    </label>
+                    <select
+                      name="bulan"
+                      value={formSaldoAwal.bulan}
+                      onChange={handleSaldoAwalChange}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      {months.map((month) => (
+                        <option key={month.value} value={month.value}>
+                          {month.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tahun
+                    </label>
+                    <select
+                      name="tahun"
+                      value={formSaldoAwal.tahun}
+                      onChange={handleSaldoAwalChange}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      {years.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Nominal */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <span className="flex items-center gap-1">
+                      <FaDollarSign className="w-3 h-3" />
+                      Nominal Saldo Awal (Rp)
+                    </span>
+                  </label>
+                  <input
+                    type="number"
+                    name="nominal"
+                    value={formSaldoAwal.nominal}
+                    onChange={handleSaldoAwalChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Modal */}
+            <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200">
+              <button
+                onClick={() => setShowSaldoAwalModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleSubmitSaldoAwal}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center gap-2"
+              >
+                <FaSave className="w-3 h-3" />
+                Simpan Saldo Awal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showPosPenerimaanModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div
+            className="absolute inset-0 bg-black opacity-80"
+            onClick={() => setShowPosPenerimaanModal(false)}
+          ></div>
+
+          <div className="relative bg-white rounded-lg shadow-xl z-10 w-[600px] max-w-md mx-4">
+            {/* Header Modal */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <FaSliders className="text-blue-600 w-4 h-4" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Kelola Pos Penerimaan
+                </h3>
+              </div>
+
+              <button
+                onClick={() => setShowPosPenerimaanModal(false)}
+                className="text-gray-400 hover:text-red-600 transition-colors"
+              >
+                <FaTimesCircle size={20} />
+              </button>
+            </div>
+
+            {/* Body Modal */}
+            <div className="p-4">
+              <p className="text-sm text-gray-600 mb-4">
+                Tambah atau hapus daftar Pos Penerimaan yang akan digunakan
+                dalam transaksi.
+              </p>
+
+              {/* Form Tambah Pos Baru */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nama Pos Penerimaan Baru
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newPosPenerimaan}
+                    onChange={(e) => setNewPosPenerimaan(e.target.value)}
+                    className="flex-1 p-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Contoh: Donasi Penerimaan"
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && handleTambahPosPenerimaan()
+                    }
+                  />
+                  <button
+                    onClick={handleTambahPosPenerimaan}
+                    className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-1"
+                  >
+                    <FaPlusCircle className="w-4 h-4" />
+                    Tambah
+                  </button>
+                </div>
+              </div>
+
+              {/* Daftar Pos Penerimaan */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Daftar Pos Penerimaan Saat Ini
+                </label>
+                <div className="border border-gray-200 rounded-md max-h-48 overflow-y-auto">
+                  {posPenerimaanList.map((pos, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+                    >
+                      <span className="text-sm text-gray-700">{pos}</span>
+                      <button
+                        onClick={() => handleHapusPosPenerimaan(index)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                        title="Hapus pos penerimaan"
+                      ></button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Pos bawaan sistem tidak dapat dihapus.
+                </p>
+              </div>
+            </div>
+
+            {/* Footer Modal */}
+            <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200">
+              <button
+                onClick={() => setShowPosPenerimaanModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showPosPengeluaranModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div
+            className="absolute inset-0 bg-black opacity-80"
+            onClick={() => setShowPosPengeluaranModal(false)}
+          ></div>
+          <div className="relative bg-white rounded-lg shadow-xl z-10 w-[600px] max-w-md mx-4">
+            {/* Header Modal */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <FaSliders className="text-blue-600 w-4 h-4" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Kelola Pos Pengeluaran
+                </h3>
+              </div>
+
+              <button
+                onClick={() => setShowPosPengeluaranModal(false)}
+                className="text-red-400 hover:text-gray-600 transition-colors"
+              >
+                <FaTimesCircle size={20} />
+              </button>
+            </div>
+
+            {/* Body Modal */}
+            <div className="p-4">
+              <p className="text-sm text-gray-600 mb-4">
+                Tambah atau hapus daftar Pos Pengeluaran yang akan digunakan
+                dalam transaksi.
+              </p>
+
+              {/* Form Tambah Pos Baru */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nama Pos Pengeluaran Baru
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newPosPengeluaran}
+                    onChange={(e) => setNewPosPengeluaran(e.target.value)}
+                    className="flex-1 p-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Contoh: Donasi Penerimaan"
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && handleTambahPosPengeluaran()
+                    }
+                  />
+                  <button
+                    onClick={handleTambahPosPengeluaran}
+                    className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-1"
+                  >
+                    <FaPlusCircle className="w-4 h-4" />
+                    Tambah
+                  </button>
+                </div>
+              </div>
+
+              {/* Daftar Pos Pengeluaran */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Daftar Pos Pengeluaran Saat Ini
+                </label>
+                <div className="border border-gray-200 rounded-md max-h-48 overflow-y-auto">
+                  {posPengeluaranList.map((pos, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+                    >
+                      <span className="text-sm text-gray-700">{pos}</span>
+                      <button
+                        onClick={() => handleHapusPosPengeluaran(index)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                        title="Hapus pos pengeluaran"
+                      ></button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Pos bawaan sistem tidak dapat dihapus.
+                </p>
+              </div>
+            </div>
+
+            {/* Footer Modal */}
+            <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200">
+              <button
+                onClick={() => setShowPosPenerimaanModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
