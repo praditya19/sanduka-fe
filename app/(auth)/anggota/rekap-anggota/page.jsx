@@ -454,6 +454,7 @@ function RekapAnggota() {
           kalender: 0,
           totalIuran: 0,
           nomorRekening: 0,
+          lastUpdatedAtIuranAnggota: "",
         };
       }
 
@@ -470,6 +471,7 @@ function RekapAnggota() {
         derap: parseFloat(item.derap) || 0,
         kalender: parseFloat(item.kalender) || 0,
         totalIuran: parseFloat(item.totalIuran) || 0,
+        lastUpdatedAtIuranAnggota: item.lastUpdatedAtIuranAnggota,
       });
 
       acc[unitKey].jumlah += 1;
@@ -514,6 +516,7 @@ function RekapAnggota() {
           bulan,
           tahun
         );
+        console.log(response)
       }
 
       const totalRow = response.find(
@@ -2500,6 +2503,9 @@ function RekapAnggota() {
                                           Inputan Tagihan untuk Bulan {getNextPotonganBulan()} : {parseInt(member.potongan).toLocaleString(
                                             "id-ID"
                                           )}
+                                        </div>
+                                        <div className="text-sm text-teal-700 italic">
+                                         Update tanggal: {member.lastUpdatedAtIuranAnggota}
                                         </div>
                                         {/* {member.potongan != null &&
                                           parseInt(member.potongan) !== 0 &&
