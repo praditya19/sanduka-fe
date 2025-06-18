@@ -2501,10 +2501,7 @@ function RekapAnggota() {
                                             "id-ID"
                                           )}
                                         </div>
-                                        <div className="text-sm text-teal-700 italic">
-                                          Status: {member.statusPotongan}
-                                        </div>
-                                        {member.potongan != null &&
+                                        {/* {member.potongan != null &&
                                           parseInt(member.potongan) !== 0 &&
                                           (() => {
                                             const total = parseInt(
@@ -2529,7 +2526,7 @@ function RekapAnggota() {
                                                 ).toLocaleString("id-ID")}
                                               </div>
                                             );
-                                          })()}
+                                          })()} */}
                                       </span>
                                     </div>
                                     <div className="lg:hidden space-y-2 mt-2 bg-white p-3 rounded-lg shadow-sm">
