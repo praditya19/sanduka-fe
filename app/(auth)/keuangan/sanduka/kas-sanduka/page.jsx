@@ -22,6 +22,13 @@ import {
   FaChevronDown,
   FaCalendarAlt,
   FaPlusCircle,
+  FaFolderOpen,
+  FaBoxOpen,
+  FaBuilding,
+  FaMoneyBill,
+  FaStickyNote,
+  FaBullseye,
+  FaDownload,
 } from "react-icons/fa";
 import { FaArrowTrendUp, FaArrowTrendDown, FaSliders } from "react-icons/fa6";
 import { Button } from "@/components/ui/button";
@@ -277,9 +284,9 @@ function KasSanduka() {
       noBukti: "PGLSKDK-20250615210333-SANDUKA",
       uraian:
         "Pengeluaran Sanduka Operasional Sanduka (Cash) untuk Juni 2025. Ket: -",
-      debit: 0,
-      kredit: 45000,
-      saldo: 255000,
+      debit: 350000000,
+      kredit: 390000,
+      saldo: 349910000,
     },
     // Add more transactions as needed
   ];
@@ -323,6 +330,342 @@ function KasSanduka() {
     };
   }, []);
 
+  const handleExportExcel = () => {
+    try {
+      // Prepare data for Excel export
+      const excelData = [
+        // Header row
+        {
+          No: "",
+          Tanggal: "",
+          "No Bukti": "",
+          Uraian: "",
+          "Debit (Pemasukan)": "",
+          "Kredit (Pengeluaran)": "",
+          Saldo: "",
+        },
+        // Title row
+        {
+          No: `BUKU KAS UMUM - ${getMonthName(monthFilter)} ${yearFilter}`,
+          Tanggal: "",
+          "No Bukti": "",
+          Uraian: "",
+          "Debit (Pemasukan)": "",
+          "Kredit (Pengeluaran)": "",
+          Saldo: "",
+        },
+        // Empty row for spacing
+        {
+          No: "",
+          Tanggal: "",
+          "No Bukti": "",
+          Uraian: "",
+          "Debit (Pemasukan)": "",
+          "Kredit (Pengeluaran)": "",
+          Saldo: "",
+        },
+        // Column headers
+        {
+          No: "No",
+          Tanggal: "Tanggal",
+          "No Bukti": "No Bukti",
+          Uraian: "Uraian",
+          "Debit (Pemasukan)": "Debit (Pemasukan)",
+          "Kredit (Pengeluaran)": "Kredit (Pengeluaran)",
+          Saldo: "Saldo",
+        },
+      ];
+
+      // Add transaction data
+      transactions.forEach((transaction, index) => {
+        excelData.push({
+          No: index + 1,
+          Tanggal: transaction.tanggal,
+          "No Bukti": transaction.noBukti,
+          Uraian: transaction.uraian,
+          "Debit (Pemasukan)":
+            transaction.debit > 0
+              ? `Rp ${transaction.debit.toLocaleString("id-ID")}`
+              : "",
+          "Kredit (Pengeluaran)":
+            transaction.kredit > 0
+              ? `Rp ${transaction.kredit.toLocaleString("id-ID")}`
+              : "",
+          Saldo: `Rp ${transaction.saldo.toLocaleString("id-ID")}`,
+        });
+      });
+
+      // Add summary rows
+      excelData.push(
+        // Empty row
+        {
+          No: "",
+          Tanggal: "",
+          "No Bukti": "",
+          Uraian: "",
+          "Debit (Pemasukan)": "",
+          "Kredit (Pengeluaran)": "",
+          Saldo: "",
+        },
+        // Total row
+        {
+          No: "",
+          Tanggal: "",
+          "No Bukti": "",
+          Uraian: "TOTAL",
+          "Debit (Pemasukan)": `Rp ${totalDebit.toLocaleString("id-ID")}`,
+          "Kredit (Pengeluaran)": `Rp ${totalKredit.toLocaleString("id-ID")}`,
+          Saldo: `Rp ${saldoAkhir.toLocaleString("id-ID")}`,
+        }
+      );
+
+      // Create workbook and worksheet
+      const ws = XLSX.utils.json_to_sheet(excelData, { skipHeader: true });
+      const wb = XLSX.utils.book_new();
+
+      // Set column widths
+      const colWidths = [
+        { wch: 5 }, // No
+        { wch: 15 }, // Tanggal
+        { wch: 30 }, // No Bukti
+        { wch: 50 }, // Uraian
+        { wch: 20 }, // Debit
+        { wch: 20 }, // Kredit
+        { wch: 20 }, // Saldo
+      ];
+      ws["!cols"] = colWidths;
+
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, "Buku Kas Umum");
+
+      // Generate filename with current date
+      const currentDate = new Date();
+      const filename = `Buku_Kas_Umum_${getMonthName(
+        monthFilter
+      )}_${yearFilter}_${currentDate.getDate()}-${
+        currentDate.getMonth() + 1
+      }-${currentDate.getFullYear()}.xlsx`;
+
+      // Write and download file
+      XLSX.writeFile(wb, filename);
+
+      // Show success notification
+      setNotification({
+        type: "success",
+        message: `File Excel berhasil diunduh: ${filename}`,
+      });
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      setNotification({
+        type: "error",
+        message: "Gagal mengekspor ke Excel. Silakan coba lagi.",
+      });
+    }
+  };
+  const handlePrint = () => {
+    try {
+      const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Buku Kas Umum - ${getMonthName(
+              monthFilter
+            )} ${yearFilter}</title>
+            <style>
+                @media print {
+                    @page {
+                        size: A4 landscape;
+                        margin: 1cm;
+                    }
+                }
+
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 12px;
+                    margin: 0;
+                    padding: 20px;
+                    color: #000;
+                }
+
+                h1, h2, h3, p {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .title {
+                    text-align: center;
+                    margin-bottom: 10px;
+                }
+
+                .subtitle {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 10px;
+                }
+
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 10px;
+                    font-size: 11px;
+                }
+
+                thead th {
+                    background-color: #009688 !important;
+                    color: white !important;
+                    padding: 6px;
+                    border: 1px solid #ccc;
+                    text-align: center;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+
+                tbody td {
+                    border: 1px solid #ccc;
+                    padding: 6px;
+                    vertical-align: top;
+                }
+
+                .number {
+                    text-align: right;
+                }
+
+                .center {
+                    text-align: center;
+                }
+
+                .summary-row td {
+                    font-weight: bold;
+                    background-color: #f5f5f5;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="title">
+                <h2>BUKU KAS UMUM</h2>
+                <p>Periode: ${getMonthName(monthFilter)} ${yearFilter}</p>
+            </div>
+
+            <div class="subtitle">
+                <p><strong>Saldo Akhir Bulan Sebelumnya (${getMonthName(
+                  monthFilter - 1
+                )} ${yearFilter}):</strong> Rp ${saldoSebelumnya.toLocaleString(
+        "id-ID"
+      )}</p>
+                <p>Dicetak pada: ${new Date().toLocaleString("id-ID", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                })}</p>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Tgl Transaksi</th>
+                        <th>No. Bukti</th>
+                        <th>Uraian</th>
+                        <th>Debet (Rp)</th>
+                        <th>Kredit (Rp)</th>
+                        <th>Saldo (Rp)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="center">01/06/${yearFilter}</td>
+                        <td colspan="2" class="center">SALDO AWAL</td>
+                        <td>Saldo Awal Periode ${getMonthName(
+                          monthFilter
+                        )} ${yearFilter}</td>
+                        <td class="number">Rp ${saldoSebelumnya.toLocaleString(
+                          "id-ID"
+                        )}</td>
+                        <td class="number">Rp 0</td>
+                        <td class="number">Rp ${saldoSebelumnya.toLocaleString(
+                          "id-ID"
+                        )}</td>
+                    </tr>
+
+                    ${transactions
+                      .map(
+                        (transaction, index) => `
+                        <tr>
+                            <td class="center">${index + 1}</td>
+                            <td class="center">${transaction.tanggal}</td>
+                            <td>${transaction.noBukti}</td>
+                            <td>${transaction.uraian}</td>
+                            <td class="number">${
+                              transaction.debit > 0
+                                ? "Rp " +
+                                  transaction.debit.toLocaleString("id-ID")
+                                : "Rp 0"
+                            }</td>
+                            <td class="number">${
+                              transaction.kredit > 0
+                                ? "Rp " +
+                                  transaction.kredit.toLocaleString("id-ID")
+                                : "Rp 0"
+                            }</td>
+                            <td class="number">Rp ${transaction.saldo.toLocaleString(
+                              "id-ID"
+                            )}</td>
+                        </tr>
+                    `
+                      )
+                      .join("")}
+
+                    <tr class="summary-row">
+                        <td colspan="4" class="center">TOTAL TRANSAKSI PERIODE INI</td>
+                        <td class="number">Rp ${totalDebit.toLocaleString(
+                          "id-ID"
+                        )}</td>
+                        <td class="number">Rp ${totalKredit.toLocaleString(
+                          "id-ID"
+                        )}</td>
+                        <td></td>
+                    </tr>
+                    <tr class="summary-row">
+                        <td colspan="6" class="center">SALDO AKHIR PERIODE INI</td>
+                        <td class="number">Rp ${saldoAkhir.toLocaleString(
+                          "id-ID"
+                        )}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </body>
+        </html>
+        `;
+
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+
+      printWindow.onload = function () {
+        printWindow.focus();
+        printWindow.print();
+        printWindow.onafterprint = function () {
+          printWindow.close();
+        };
+      };
+
+      setNotification({
+        type: "success",
+        message: "Dokumen berhasil disiapkan untuk pencetakan",
+      });
+    } catch (error) {
+      console.error("Error printing:", error);
+      setNotification({
+        type: "error",
+        message: "Gagal mencetak dokumen. Silakan coba lagi.",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white p-2 md:p-6">
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
@@ -351,14 +694,6 @@ function KasSanduka() {
               <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                 <Button
                   className="px-4 py-2 rounded border border-black bg-white text-black hover:bg-teal-500 hover:text-white transition flex items-center justify-center gap-2 text-sm flex-1"
-                  onClick={() => setShowSaldoAwalModal(true)}
-                >
-                  <FaWallet className="w-4 h-4" />
-                  <span>Set Saldo Awal Sanduka</span>
-                </Button>
-
-                <Button
-                  className="px-4 py-2 rounded border border-black bg-white text-black hover:bg-teal-500 hover:text-white transition flex items-center justify-center gap-2 text-sm flex-1"
                   onClick={() => setShowPosPenerimaanModal(true)}
                 >
                   <FaSliders className="w-4 h-4" />
@@ -384,7 +719,7 @@ function KasSanduka() {
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-white p-4 rounded-lg shadow-sm border flex items-center justify-between">
+                <div className="bg-blue-50 p-4 rounded-lg shadow-sm border flex items-center justify-between">
                   <div>
                     <h3 className="text-gray-600 font-medium mb-1">
                       Saldo Akhir Mei 2025
@@ -395,7 +730,7 @@ function KasSanduka() {
                   </div>
                   <FaCalendarAlt className="text-gray-400 w-6 h-6" />
                 </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm border flex items-center justify-between">
+                <div className="bg-green-50 p-4 rounded-lg shadow-sm border flex items-center justify-between">
                   <div>
                     <h3 className="text-gray-600 font-medium mb-1">
                       Total Pemasukan Juni 2025
@@ -406,7 +741,7 @@ function KasSanduka() {
                   </div>
                   <FaArrowTrendUp className="text-green-500 w-6 h-6" />
                 </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm border flex items-center justify-between">
+                <div className="bg-red-50 p-4 rounded-lg shadow-sm border flex items-center justify-between">
                   <div>
                     <h3 className="text-gray-600 font-medium mb-1">
                       Total Pengeluaran Juni 2025
@@ -417,8 +752,7 @@ function KasSanduka() {
                   </div>
                   <FaArrowTrendDown className="text-red-500 w-6 h-6" />
                 </div>
-
-                <div className="bg-white p-4 rounded-lg shadow-sm border flex items-center justify-between">
+                <div className="bg-blue-50 p-4 rounded-lg shadow-sm border flex items-center justify-between">
                   <div>
                     <h3 className="text-gray-600 font-medium mb-1">
                       Saldo Akhir Juni 2025
@@ -470,7 +804,9 @@ function KasSanduka() {
                 <div className="space-y-4 p-4 bg-green-50">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                        {" "}
+                        <FaCalendarAlt />
                         Tanggal Transaksi
                       </label>
                       <div className="p-2 border border-gray-300 rounded bg-gray-50">
@@ -479,7 +815,8 @@ function KasSanduka() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                        <FaFolderOpen />
                         Jenis Penerimaan
                       </label>
                       <select
@@ -495,7 +832,8 @@ function KasSanduka() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                        <FaBoxOpen />
                         Pos Penerimaan
                       </label>
                       <select
@@ -512,7 +850,8 @@ function KasSanduka() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                        <FaBuilding />
                         Cabang
                       </label>
                       <div className="p-2 border border-gray-300 rounded bg-gray-50">
@@ -523,7 +862,8 @@ function KasSanduka() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                        <FaCalendarAlt />
                         Setoran Untuk Bulan & Tahun
                       </label>
                       <input
@@ -535,7 +875,9 @@ function KasSanduka() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                        {" "}
+                        <FaMoneyBill />
                         Nominal (Rp)
                       </label>
                       <input
@@ -551,7 +893,8 @@ function KasSanduka() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                      <FaStickyNote />
                       Keterangan
                     </label>
                     <textarea
@@ -566,11 +909,11 @@ function KasSanduka() {
 
                   <div className="flex justify-end space-x-2">
                     <button
-                      onClick={resetPenerimaan}
-                      className="px-4 py-2 border border-gray-300 rounded bg-white text-gray-700 hover:bg-gray-50 flex items-center"
+                      // onClick={handleSesuaiTarget}
+                      className="px-4 py-2 border border-green-600 text-green-600 rounded hover:bg-green-50 flex items-center"
                     >
-                      <FaUndo className="mr-2" />
-                      Reset
+                      <FaBullseye className="mr-2" />
+                      Sesuai Target
                     </button>
                     <button className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 flex items-center">
                       <FaSave className="mr-2" />
@@ -590,7 +933,8 @@ function KasSanduka() {
                 <div className="space-y-4 p-4 bg-red-50">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                        <FaCalendarAlt />
                         Tanggal Transaksi
                       </label>
                       <div className="p-2 border border-gray-300 rounded bg-gray-50">
@@ -599,7 +943,9 @@ function KasSanduka() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                        {" "}
+                        <FaFolderOpen />
                         Jenis Pengeluaran
                       </label>
                       <select
@@ -615,7 +961,8 @@ function KasSanduka() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                        <FaBoxOpen />
                         Pos Pengeluaran
                       </label>
                       <select
@@ -632,7 +979,9 @@ function KasSanduka() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                        {" "}
+                        <FaBuilding />
                         Cabang
                       </label>
                       <div className="p-2 border border-gray-300 rounded bg-gray-50">
@@ -643,7 +992,8 @@ function KasSanduka() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                        <FaCalendarAlt />
                         Pengeluaran Untuk Bulan & Tahun
                       </label>
                       <input
@@ -655,7 +1005,9 @@ function KasSanduka() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                        {" "}
+                        <FaMoneyBill />
                         Nominal (Rp)
                       </label>
                       <input
@@ -671,7 +1023,9 @@ function KasSanduka() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                      {" "}
+                      <FaStickyNote />
                       Keterangan
                     </label>
                     <textarea
@@ -686,11 +1040,11 @@ function KasSanduka() {
 
                   <div className="flex justify-end space-x-2 pt-4">
                     <button
-                      onClick={resetPengeluaran}
-                      className="px-4 py-2 border border-gray-300 rounded bg-white text-gray-700 hover:bg-gray-50 flex items-center"
+                      // onClick={handleSesuaiTarget}
+                      className="px-4 py-2 border border-red-600 text-red-600 rounded hover:bg-red-50 flex items-center"
                     >
-                      <FaUndo className="mr-2" />
-                      Reset
+                      <FaBullseye className="mr-2" />
+                      Sesuai Target
                     </button>
                     <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center">
                       <FaSave className="mr-2" />
@@ -771,13 +1125,18 @@ function KasSanduka() {
                     )}
                   </div>
 
-                  {/* Action Buttons */}
-                  <button className="flex items-center px-4 py-2 border border-red-500 text-red-500 rounded hover:bg-red-50 gap-2">
-                    <FaTrash />
-                    <span>Hapus Data Periode</span>
+                  <button
+                    onClick={handleExportExcel}
+                    className="flex items-center px-4 py-2 border border-blue-300 bg-white text-blue-800 rounded hover:bg-blue-100 gap-2"
+                  >
+                    <FaDownload />
+                    <span>Export Excel</span>
                   </button>
 
-                  <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 gap-2">
+                  <button
+                    onClick={handlePrint}
+                    className="flex items-center px-4 py-2 border border-blue-300 bg-white text-blue-800 rounded hover:bg-blue-100 gap-2"
+                  >
                     <FaPrint />
                     <span>Cetak Laporan</span>
                   </button>
@@ -789,57 +1148,60 @@ function KasSanduka() {
               <table className="min-w-full border border-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider border">
+                    <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider">
                       NO
                     </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider border">
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">
                       TGL TRANSAKSI
                     </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider border">
+                    <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider">
                       NO. BUKTI
                     </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider border">
+                    <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider">
                       URAIAN
                     </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider border">
+                    <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider">
                       DEBET (Rp)
                     </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider border">
+                    <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider">
                       KREDIT (Rp)
                     </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider border">
+                    <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider">
                       SALDO (Rp)
                     </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider border">
+                    <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider">
                       ACTION
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white">
                   {transactions.map((transaction) => (
-                    <tr key={transaction.id}>
-                      <td className="p-3 text-center whitespace-nowrap text-sm  border">
+                    <tr
+                      key={transaction.id}
+                      className="border-b border-gray-300"
+                    >
+                      <td className="p-3 text-center whitespace-nowrap text-sm">
                         {transaction.id}
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm  border">
+                      <td className="px-4 py-2 whitespace-nowrap text-sm">
                         {transaction.tanggal}
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm  border">
+                      <td className="px-4 py-2 whitespace-nowrap text-sm">
                         {transaction.noBukti}
                       </td>
-                      <td className="px-4 py-2 text-sm  border">
+                      <td className="px-4 py-2 text-sm">
                         {transaction.uraian}
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm  border text-right">
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
                         {transaction.debit.toLocaleString("id-ID")}
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm  border text-right">
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
                         {transaction.kredit.toLocaleString("id-ID")}
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm  border text-right">
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
                         {transaction.saldo.toLocaleString("id-ID")}
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm  border">
+                      <td className="px-4 py-2 whitespace-nowrap text-sm">
                         <div className="flex space-x-2 justify-center text-base">
                           <button className="text-blue-500 hover:text-blue-700">
                             <FaEdit />
@@ -853,29 +1215,29 @@ function KasSanduka() {
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr>
-                    <td className="text-right p-3 font-bold" colSpan={4}>
+                  <tr className="border-b border-blue-300">
+                    <td className="text-right p-3" colSpan={4}>
                       TOTAL TRANSAKSI PERIODE INI
                     </td>
-                    <td>
+                    <td className="bg-green-50">
                       {" "}
-                      <p className=" font-bold text-right">
+                      <p className=" font-bold text-green-800 text-right">
                         Rp {totalDebit.toLocaleString("id-ID")}
                       </p>
                     </td>
-                    <td>
+                    <td className="bg-red-50">
                       {" "}
-                      <p className="font-bold text-right">
+                      <p className="font-bold text-red-800 text-right">
                         Rp {totalKredit.toLocaleString("id-ID")}
                       </p>
                     </td>
                   </tr>
                   <tr className="bg-blue-50 text-blue-800">
-                    <td className="text-right p-3 font-bold" colSpan={4}>
+                    <td className="text-right p-3 font-bold" colSpan={6}>
                       SALDO AKHIR PERIODE INI
                     </td>
-                    <td colSpan={2}></td>
-                    <td className="text-right">
+
+                    <td className="text-right bg-blue-200">
                       {" "}
                       <p className="text-lg font-bold text-blue-800">
                         Rp {saldoAkhir.toLocaleString("id-ID")}
@@ -889,119 +1251,6 @@ function KasSanduka() {
           </div>
         </div>
       </div>
-      {showSaldoAwalModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div
-            className="absolute inset-0 bg-black opacity-80"
-            onClick={() => setShowSaldoAwalModal(false)}
-          ></div>
-
-          <div className="relative bg-white rounded-lg shadow-xl z-10 w-[600px] max-w-md mx-4">
-            {/* Header Modal */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <FaWallet className="text-blue-600 w-4 h-4" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Set Saldo Awal Periode
-                </h3>
-              </div>
-
-              <button
-                onClick={() => setShowSaldoAwalModal(false)}
-                className="text-gray-400 hover:text-red-600 transition-colors"
-              >
-                <FaTimesCircle size={20} />
-              </button>
-            </div>
-
-            {/* Body Modal */}
-            <div className="p-4">
-              <p className="text-sm text-gray-600 mb-4">
-                Masukkan saldo awal untuk periode yang dipilih. Ini akan membuat
-                transaksi awal pemasukan "Saldo Awal".
-              </p>
-
-              <div className="space-y-4">
-                {/* Bulan & Tahun */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Bulan
-                    </label>
-                    <select
-                      name="bulan"
-                      value={formSaldoAwal.bulan}
-                      onChange={handleSaldoAwalChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      {months.map((month) => (
-                        <option key={month.value} value={month.value}>
-                          {month.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tahun
-                    </label>
-                    <select
-                      name="tahun"
-                      value={formSaldoAwal.tahun}
-                      onChange={handleSaldoAwalChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      {years.map((year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Nominal */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <span className="flex items-center gap-1">
-                      <FaDollarSign className="w-3 h-3" />
-                      Nominal Saldo Awal (Rp)
-                    </span>
-                  </label>
-                  <input
-                    type="number"
-                    name="nominal"
-                    value={formSaldoAwal.nominal}
-                    onChange={handleSaldoAwalChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Footer Modal */}
-            <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200">
-              <button
-                onClick={() => setShowSaldoAwalModal(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleSubmitSaldoAwal}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center gap-2"
-              >
-                <FaSave className="w-3 h-3" />
-                Simpan Saldo Awal
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       {showPosPenerimaanModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div
@@ -1038,7 +1287,7 @@ function KasSanduka() {
 
               {/* Form Tambah Pos Baru */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm text-gray-700 mb-2 font-bold">
                   Nama Pos Penerimaan Baru
                 </label>
                 <div className="flex gap-2">
@@ -1064,8 +1313,8 @@ function KasSanduka() {
 
               {/* Daftar Pos Penerimaan */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Daftar Pos Penerimaan Saat Ini
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Daftar Pos Penerimaan Sanduka Saat Ini
                 </label>
                 <div className="border border-gray-200 rounded-md max-h-48 overflow-y-auto">
                   {posPenerimaanList.map((pos, index) => (
@@ -1135,8 +1384,8 @@ function KasSanduka() {
 
               {/* Form Tambah Pos Baru */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nama Pos Pengeluaran Baru
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Nama Pos Pengeluaran Sanduka Baru
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -1161,8 +1410,8 @@ function KasSanduka() {
 
               {/* Daftar Pos Pengeluaran */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Daftar Pos Pengeluaran Saat Ini
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Daftar Pos Pengeluaran Sanduka Saat Ini
                 </label>
                 <div className="border border-gray-200 rounded-md max-h-48 overflow-y-auto">
                   {posPengeluaranList.map((pos, index) => (
