@@ -133,6 +133,8 @@ function KasSanduka() {
     nominal: 0,
     keterangan: "",
   });
+   const [posPenerimaanSanduka, setPosPenerimaanSanduka] = useState([]);
+   const [posPengeluaranSanduka, setPosPengeluaranSanduka] = useState([]);
   const [monthFilter, setMonthFilter] = useState("06");
   const [yearFilter, setYearFilter] = useState("2025");
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
@@ -146,12 +148,6 @@ function KasSanduka() {
 
   const [showPosPenerimaanModal, setShowPosPenerimaanModal] = useState(false);
   const [newPosPenerimaan, setNewPosPenerimaan] = useState("");
-  const [posPenerimaanList, setPosPenerimaanList] = useState([
-    "Daspen",
-    "Derap",
-    "Iuran PGRI",
-    "Kalender",
-  ]);
 
   const [showPosPengeluaranModal, setShowPosPengeluaranModal] = useState(false);
   const [newPosPengeluaran, setNewPosPengeluaran] = useState("");
@@ -182,6 +178,23 @@ function KasSanduka() {
     const month = months.find((m) => m.value === monthValue);
     return month ? month.label : "";
   };
+
+    useEffect(() => {
+  fetchData(); // panggil fungsi dari luar
+}, []);
+
+const fetchData = async () => {
+  try {
+    const penerimaan = await GlobalApi.getPosPenerimaanSanduka();
+    const pengeluaran = await GlobalApi.getPosPengeluaranSanduka();
+    setPosPenerimaanSanduka(penerimaan);
+    setPosPengeluaranSanduka(pengeluaran);
+  } catch (error) {
+    console.error("Gagal mengambil data pos sanduka:", error);
+  }
+};
+  
+    
   const handleSaldoAwalChange = (e) => {
     const { name, value } = e.target;
     setFormSaldoAwal((prev) => ({ ...prev, [name]: value }));
@@ -203,41 +216,86 @@ function KasSanduka() {
     setShowSaldoAwalModal(false);
   };
 
-  const handleTambahPosPenerimaan = () => {
-    if (newPosPenerimaan.trim() !== "") {
-      setPosPenerimaanList((prev) => [...prev, newPosPenerimaan.trim()]);
-      setNewPosPenerimaan("");
-      // show success notification
+   const handleTambahPosPenerimaan = async () => {
+    if (!newPosPenerimaan.trim()) return;
+    const data = {
+      namaPosPenerimaan: newPosPenerimaan.trim(),
+      isSistemDefault: false
+    };
+    try {
+      await GlobalApi.postPenerimaanSanduka(data);
       setNotification({
         type: "success",
-        // message: `Saldo awal periode ${getMonthName(formSaldoAwal.bulan)} ${formSaldoAwal.tahun} berhasil disimpan!`
+        message: "Berhasil Tambah!",
       });
-    }
+      setNewPosPenerimaan('');
+      fetchData();
+    } catch (error) {
+      setNotification({
+        type: "error",
+        message: "Gagal Tambah.",
+      });
+      alert('Gagal menambahkan pos penerimaan.');
+    } 
   };
 
-  const handleHapusPosPenerimaan = (index) => {
-    const deletedItem = posPenerimaanList[index];
-    setPosPenerimaanList((prev) => prev.filter((_, i) => i !== index));
-    // show success notification
+  const handleHapusPosPenerimaan = async (id) => {
+  try {
+    await GlobalApi.deletePosPenerimaanSanduka(id);
+      setNotification({
+        type: "success",
+        message: "Berhasil dihapus!",
+      });
+    fetchData();
+  } catch (error) {
     setNotification({
-      type: "success",
-      // message: `Saldo awal periode ${getMonthName(formSaldoAwal.bulan)} ${formSaldoAwal.tahun} berhasil disimpan!`
-    });
+        type: "error",
+        message: "Gagal hapus",
+      });
+    alert(error.message || "Gagal menghapus pos.");
+  }
   };
-
-  const handleTambahPosPengeluaran = () => {
-    if (newPosPengeluaran.trim() !== "") {
-      setPosPengeluaranList((prev) => [...prev, newPosPengeluaran.trim()]);
-      setNewPosPengeluaran("");
-      // show success notification
+  
+  const handleTambahPosPengeluaran =  async () => {
+    if (!newPosPengeluaran.trim()) return;
+    const data = {
+      namaPosPengeluaran: newPosPengeluaran.trim(),
+      isSistemDefault: false
+    };
+    try {
+      await GlobalApi.postPengeluaranSanduka(data);
+      setNotification({
+        type: "success",
+        message: "Berhasil Tambah!",
+      });
+      setNewPosPengeluaran('');
+      fetchData();
+    } catch (error) {
+      setNotification({
+        type: "error",
+        message: "Gagal Tambah.",
+      });
+      alert('Gagal menambahkan pos pengeluaran.');
     }
   };
 
-  const handleHapusPosPengeluaran = (index) => {
-    const deletedItem = posPengeluaranList[index];
-    setPosPengeluaranList((prev) => prev.filter((_, i) => i !== index));
-    // show success notification
+  const handleHapusPosPengeluaran = async (id) => {
+    try {
+    await GlobalApi.deletePosPengeluaranSanduka(id);
+      setNotification({
+        type: "success",
+        message: "Berhasil dihapus!",
+      });
+    fetchData();
+  } catch (error) {
+    setNotification({
+        type: "error",
+        message: "Gagal hapus",
+      });
+    alert(error.message || "Gagal menghapus pos.");
+    }
   };
+
   const handlePenerimaanChange = (e) => {
     const { name, value } = e.target;
     setFormPenerimaan((prev) => ({ ...prev, [name]: value }));
@@ -1252,7 +1310,7 @@ function KasSanduka() {
         </div>
       </div>
       {showPosPenerimaanModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
+        <div className="fixed inset-0 flex items-center justify-center ">
           <div
             className="absolute inset-0 bg-black opacity-80"
             onClick={() => setShowPosPenerimaanModal(false)}
@@ -1287,29 +1345,31 @@ function KasSanduka() {
 
               {/* Form Tambah Pos Baru */}
               <div className="mb-4">
-                <label className="block text-sm text-gray-700 mb-2 font-bold">
-                  Nama Pos Penerimaan Baru
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newPosPenerimaan}
-                    onChange={(e) => setNewPosPenerimaan(e.target.value)}
-                    className="flex-1 p-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Contoh: Donasi Penerimaan"
-                    onKeyPress={(e) =>
-                      e.key === "Enter" && handleTambahPosPenerimaan()
-                    }
-                  />
-                  <button
-                    onClick={handleTambahPosPenerimaan}
-                    className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-1"
-                  >
-                    <FaPlusCircle className="w-4 h-4" />
-                    Tambah
-                  </button>
-                </div>
-              </div>
+      <label className="block text-sm text-gray-700 mb-2 font-bold">
+        Nama Pos Penerimaan Baru
+      </label>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={newPosPenerimaan}
+          onChange={(e) => setNewPosPenerimaan(e.target.value)}
+          className="flex-1 p-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Contoh: Donasi Penerimaan"
+          onKeyDown={(e) =>
+            e.key === 'Enter' && handleTambahPosPenerimaan()
+          }
+        />
+        <button
+          onClick={handleTambahPosPenerimaan}
+         
+          className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+        >
+          <FaPlusCircle className="w-4 h-4" />
+          Tambah
+        </button>
+      </div>
+    </div>
+
 
               {/* Daftar Pos Penerimaan */}
               <div>
@@ -1317,19 +1377,27 @@ function KasSanduka() {
                   Daftar Pos Penerimaan Sanduka Saat Ini
                 </label>
                 <div className="border border-gray-200 rounded-md max-h-48 overflow-y-auto">
-                  {posPenerimaanList.map((pos, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
-                    >
-                      <span className="text-sm text-gray-700">{pos}</span>
-                      <button
-                        onClick={() => handleHapusPosPenerimaan(index)}
-                        className="text-red-500 hover:text-red-700 p-1"
-                        title="Hapus pos penerimaan"
-                      ></button>
-                    </div>
-                  ))}
+                 {Array.isArray(posPenerimaanSanduka) && posPenerimaanSanduka.length > 0 ? (
+  posPenerimaanSanduka.map((pos, index) => (
+    <div
+      key={pos.id || index}
+      className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+    >
+      <span className="text-sm text-gray-700">{pos.namaPosPenerimaan}</span>
+      {!pos.isSistemDefault && (
+  <button
+    onClick={() => handleHapusPosPenerimaan(pos.id)}
+    className="text-red-500 hover:text-red-700 p-1"
+    title="Hapus pos penerimaan"
+  >
+    🗑️
+  </button>
+)}
+    </div>
+  ))
+) : (
+  <div className="p-3 text-sm text-gray-500">Belum ada data pos penerimaan</div>
+)}
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
                   Pos bawaan sistem tidak dapat dihapus.
@@ -1350,7 +1418,7 @@ function KasSanduka() {
         </div>
       )}
       {showPosPengeluaranModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
+        <div className="fixed inset-0 flex items-center justify-center">
           <div
             className="absolute inset-0 bg-black opacity-80"
             onClick={() => setShowPosPengeluaranModal(false)}
@@ -1414,19 +1482,27 @@ function KasSanduka() {
                   Daftar Pos Pengeluaran Sanduka Saat Ini
                 </label>
                 <div className="border border-gray-200 rounded-md max-h-48 overflow-y-auto">
-                  {posPengeluaranList.map((pos, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
-                    >
-                      <span className="text-sm text-gray-700">{pos}</span>
-                      <button
-                        onClick={() => handleHapusPosPengeluaran(index)}
-                        className="text-red-500 hover:text-red-700 p-1"
-                        title="Hapus pos pengeluaran"
-                      ></button>
-                    </div>
-                  ))}
+                  {Array.isArray(posPengeluaranSanduka) && posPengeluaranSanduka.length > 0 ? (
+  posPengeluaranSanduka.map((pos, index) => (
+    <div
+      key={pos.id || index}
+      className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+    >
+      <span className="text-sm text-gray-700">{pos.namaPosPengeluaran}</span>
+      {!pos.isSistemDefault && (
+  <button
+    onClick={() => handleHapusPosPengeluaran(pos.id)}
+    className="text-red-500 hover:text-red-700 p-1"
+    title="Hapus pos pengeluaran"
+  >
+    🗑️
+  </button>
+)}
+    </div>
+  ))
+) : (
+  <div className="p-3 text-sm text-gray-500">Belum ada data pos pengeluaran</div>
+)}
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
                   Pos bawaan sistem tidak dapat dihapus.

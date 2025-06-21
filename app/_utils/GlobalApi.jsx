@@ -2376,6 +2376,87 @@ const exportTidakTerdaftarToExcel = async (cabang = "", unitKerja = "") => {
   }
 }
 
+// KAS Sanduka
+const postPenerimaanSanduka = async (data) => {
+  try {
+    const response = await axiosClient.post(`/api/pos-penerimaan`,data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error post penerimaan sanduka:", error);
+    throw error;
+  }
+};
+const postPengeluaranSanduka = async (data) => {
+  try {
+    const response = await axiosClient.post(`/api/pos-pengeluaran`,data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error post pengeluaran sanduka:", error);
+    throw error;
+  }
+};
+
+const getPosPenerimaanSanduka = async () => {
+  try {
+    const response = await axiosClient.get("/api/pos-penerimaan");
+    return response.data;
+  } catch (error) {
+    console.error("Error gagal ambil data pos penerimaan:", error);
+    throw error;
+  }
+};
+const getPosPengeluaranSanduka = async () => {
+  try {
+    const response = await axiosClient.get("/api/pos-pengeluaran");
+    return response.data;
+  } catch (error) {
+    console.error("Error gagal ambil data pos pengeluaran:", error);
+    throw error;
+  }
+};
+
+const deletePosPenerimaanSanduka = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/pos-penerimaan/${id}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
+const deletePosPengeluaranSanduka = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/pos-pengeluaran/${id}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
+// END
+
 // Export all functions
 export default {
   registerUser,
@@ -2506,6 +2587,7 @@ export default {
   getAllSidebarGallery,
   getSidebarGalleryById,
   getSidebarGalleryByCategory,
+  deletePosPenerimaanSanduka,
   deleteSidebarGallery,
   createNamaRanting,
   getNamaRantingCabang,
@@ -2544,5 +2626,10 @@ export default {
   postToBackup,
   countResponsesByPengaduanId,
   getTagihanAnggotaById,
-  exportTidakTerdaftarToExcel
+  exportTidakTerdaftarToExcel,
+  getPosPenerimaanSanduka,
+  getPosPengeluaranSanduka,
+  deletePosPengeluaranSanduka,
+  postPengeluaranSanduka,
+  postPenerimaanSanduka,
 };
