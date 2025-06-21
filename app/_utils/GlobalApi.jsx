@@ -2392,6 +2392,21 @@ const postPenerimaanSanduka = async (data) => {
     throw error;
   }
 };
+const postPengeluaranSanduka = async (data) => {
+  try {
+    const response = await axiosClient.post(`/api/pos-pengeluaran`,data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error post pengeluaran sanduka:", error);
+    throw error;
+  }
+};
 
 const getPosPenerimaanSanduka = async () => {
   try {
@@ -2409,6 +2424,35 @@ const getPosPengeluaranSanduka = async () => {
   } catch (error) {
     console.error("Error gagal ambil data pos pengeluaran:", error);
     throw error;
+  }
+};
+
+const deletePosPenerimaanSanduka = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/pos-penerimaan/${id}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
+const deletePosPengeluaranSanduka = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/pos-pengeluaran/${id}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
   }
 };
 // END
@@ -2543,6 +2587,7 @@ export default {
   getAllSidebarGallery,
   getSidebarGalleryById,
   getSidebarGalleryByCategory,
+  deletePosPenerimaanSanduka,
   deleteSidebarGallery,
   createNamaRanting,
   getNamaRantingCabang,
@@ -2584,5 +2629,7 @@ export default {
   exportTidakTerdaftarToExcel,
   getPosPenerimaanSanduka,
   getPosPengeluaranSanduka,
+  deletePosPengeluaranSanduka,
+  postPengeluaranSanduka,
   postPenerimaanSanduka,
 };
