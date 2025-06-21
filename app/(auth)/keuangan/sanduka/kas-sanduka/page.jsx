@@ -133,6 +133,8 @@ function KasSanduka() {
     nominal: 0,
     keterangan: "",
   });
+   const [posPenerimaanSanduka, setPosPenerimaanSanduka] = useState([]);
+   const [posPengeluaranSanduka, setPosPengeluaranSanduka] = useState([]);
   const [monthFilter, setMonthFilter] = useState("06");
   const [yearFilter, setYearFilter] = useState("2025");
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
@@ -182,6 +184,27 @@ function KasSanduka() {
     const month = months.find((m) => m.value === monthValue);
     return month ? month.label : "";
   };
+
+    useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const penerimaan = await GlobalApi.getPosPenerimaanSanduka();
+      const pengeluaran = await GlobalApi.getPosPengeluaranSanduka();
+
+      setPosPenerimaanSanduka(penerimaan.data);
+      setPosPengeluaranSanduka(pengeluaran.data);
+
+      console.log('Penerimaan:', penerimaan);
+      console.log('Pengeluaran:', pengeluaran);
+    } catch (error) {
+      console.error("Gagal mengambil data pos sanduka:", error);
+    }
+  };
+
+  fetchData();
+}, []);
+  
+    
   const handleSaldoAwalChange = (e) => {
     const { name, value } = e.target;
     setFormSaldoAwal((prev) => ({ ...prev, [name]: value }));

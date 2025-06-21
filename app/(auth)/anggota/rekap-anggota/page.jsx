@@ -516,7 +516,7 @@ function RekapAnggota() {
           bulan,
           tahun
         );
-        console.log(response)
+        console.log(response);
       }
 
       const totalRow = response.find(
@@ -1659,9 +1659,6 @@ function RekapAnggota() {
       "Kalender",
       "Lain-Lain",
       "Total",
-      "Potongan Bank",
-      "Selisih",
-      "Keterangan",
     ]);
 
     groupedData.forEach((group, index) => {
@@ -1688,9 +1685,6 @@ function RekapAnggota() {
             parseInt(member.kalender || 0),
             parseInt(member.lainlain || 0),
             total,
-            potongan,
-            nilaiSelisih,
-            member.statusPotongan || "-",
           ]);
         });
       }
@@ -1985,28 +1979,38 @@ function RekapAnggota() {
   }
 
   const getNextPotonganBulan = () => {
-  const today = new Date();
-  const tanggal = today.getDate();
-  let bulan = today.getMonth(); // 0 = Januari, 11 = Desember
-  let tahun = today.getFullYear();
+    const today = new Date();
+    const tanggal = today.getDate();
+    let bulan = today.getMonth(); // 0 = Januari, 11 = Desember
+    let tahun = today.getFullYear();
 
-  // Jika tanggal 22 atau lebih, pindah ke bulan berikutnya
-  if (tanggal >= 22) {
-    bulan += 1;
-    if (bulan > 11) {
-      bulan = 0;
-      tahun += 1;
+    // Jika tanggal 22 atau lebih, pindah ke bulan berikutnya
+    if (tanggal >= 22) {
+      bulan += 1;
+      if (bulan > 11) {
+        bulan = 0;
+        tahun += 1;
+      }
     }
-  }
 
-  const namaBulan = [
-    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-  ];
+    const namaBulan = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
 
-  return `${namaBulan[bulan]} ${tahun}`;
+    return `${namaBulan[bulan]} ${tahun}`;
   };
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white p-2 md:p-6">
       {isMobile ? <HeaderMobile /> : <HeaderMenu />}
@@ -2500,39 +2504,16 @@ function RekapAnggota() {
                                           {member.nomorRekening}
                                         </div>
                                         <div className="text-sm text-teal-700 italic">
-                                          Inputan Tagihan untuk Bulan {getNextPotonganBulan()} : {parseInt(member.potongan).toLocaleString(
-                                            "id-ID"
-                                          )}
+                                          Inputan Tagihan untuk Bulan{" "}
+                                          {getNextPotonganBulan()} :{" "}
+                                          {parseInt(
+                                            member.potongan
+                                          ).toLocaleString("id-ID")}
                                         </div>
                                         <div className="text-sm text-teal-700 italic">
-                                         Update tanggal: {member.lastUpdatedAtIuranAnggota}
+                                          Update tanggal:{" "}
+                                          {member.lastUpdatedAtIuranAnggota}
                                         </div>
-                                        {/* {member.potongan != null &&
-                                          parseInt(member.potongan) !== 0 &&
-                                          (() => {
-                                            const total = parseInt(
-                                              member.totalIuran
-                                            );
-                                            const potongan = parseInt(
-                                              member.potongan
-                                            );
-                                            const selisih = total - potongan;
-                                            const tanda =
-                                              selisih > 0
-                                                ? "-"
-                                                : selisih < 0
-                                                ? "+"
-                                                : "";
-
-                                            return (
-                                              <div className="text-sm text-teal-700 italic">
-                                                update tanggal: Rp. {tanda}
-                                                {Math.abs(
-                                                  selisih
-                                                ).toLocaleString("id-ID")}
-                                              </div>
-                                            );
-                                          })()} */}
                                       </span>
                                     </div>
                                     <div className="lg:hidden space-y-2 mt-2 bg-white p-3 rounded-lg shadow-sm">

@@ -2376,6 +2376,43 @@ const exportTidakTerdaftarToExcel = async (cabang = "", unitKerja = "") => {
   }
 }
 
+// KAS Sanduka
+const postPenerimaanSanduka = async (data) => {
+  try {
+    const response = await axiosClient.post(`/api/pos-penerimaan`,data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error post penerimaan sanduka:", error);
+    throw error;
+  }
+};
+
+const getPosPenerimaanSanduka = async () => {
+  try {
+    const response = await axiosClient.get("/api/pos-penerimaan");
+    return response.data;
+  } catch (error) {
+    console.error("Error gagal ambil data pos penerimaan:", error);
+    throw error;
+  }
+};
+const getPosPengeluaranSanduka = async () => {
+  try {
+    const response = await axiosClient.get("/api/pos-pengeluaran");
+    return response.data;
+  } catch (error) {
+    console.error("Error gagal ambil data pos pengeluaran:", error);
+    throw error;
+  }
+};
+// END
+
 // Export all functions
 export default {
   registerUser,
@@ -2544,5 +2581,8 @@ export default {
   postToBackup,
   countResponsesByPengaduanId,
   getTagihanAnggotaById,
-  exportTidakTerdaftarToExcel
+  exportTidakTerdaftarToExcel,
+  getPosPenerimaanSanduka,
+  getPosPengeluaranSanduka,
+  postPenerimaanSanduka,
 };
