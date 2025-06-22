@@ -110,19 +110,20 @@ const NotificationPopup = ({ type, message, onClose }) => {
 };
 
 function KasSanduka() {
+  const dropdownRef = useRef();
   const { token } = useAuth();
   const router = useRouter();
   const [notification, setNotification] = useState(null);
   const [activeTab, setActiveTab] = useState("penerimaan");
-  const [formPenerimaan, setFormPenerimaan] = useState({
-    tanggal: new Date().toISOString().split("T")[0],
-    posPenerimaan: "",
-    bulanTahun: "",
-    jenisPenerimaan: "",
-    cabang: "Tidak Ada Cabang (Sanduka Umum)",
-    nominal: 0,
-    keterangan: "",
-  });
+  const [tglPenerimaan, setTglPenerimaan] = useState("");
+  const [jenisPenerimaan, setJenisPenerimaan] = useState("");
+  const [PosPenerimaan, setPosPenerimaan] = useState("");
+  const [cabangPenerimaan, setCabangPenerimaan] = useState("");
+  const [setoranBulan, setSetoranBulan] = useState("");
+  const [setoranTahun, setSetoranTahun] = useState("");
+  const [nominalPenerimaan, setNominalPenerimaan] = useState("");
+  const [keteranganPenerimaan, setKeteranganPenerimaan] = useState("");
+  const [tablePenerimaan, setTablePenerimaan] = useState([]);
 
   const [formPengeluaran, setFormPengeluaran] = useState({
     tanggal: new Date().toISOString().split("T")[0],
@@ -133,19 +134,16 @@ function KasSanduka() {
     nominal: 0,
     keterangan: "",
   });
-   const [posPenerimaanSanduka, setPosPenerimaanSanduka] = useState([]);
-   const [posPengeluaranSanduka, setPosPengeluaranSanduka] = useState([]);
+  const [posPenerimaanSanduka, setPosPenerimaanSanduka] = useState([]);
+  const [posPengeluaranSanduka, setPosPengeluaranSanduka] = useState([]);
+  const [cabangList, setCabangList] = useState([]);
   const [monthFilter, setMonthFilter] = useState("06");
   const [yearFilter, setYearFilter] = useState("2025");
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
   const [showYearDropdown, setShowYearDropdown] = useState(false);
   const [showSaldoAwalModal, setShowSaldoAwalModal] = useState(false);
-  const [formSaldoAwal, setFormSaldoAwal] = useState({
-    bulan: "06", // default Juni
-    tahun: "2025",
-    nominal: 0,
-  });
-
+  const [searchCabang, setSearchCabang] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
   const [showPosPenerimaanModal, setShowPosPenerimaanModal] = useState(false);
   const [newPosPenerimaan, setNewPosPenerimaan] = useState("");
 
@@ -179,48 +177,119 @@ function KasSanduka() {
     return month ? month.label : "";
   };
 
-    useEffect(() => {
-  fetchData(); // panggil fungsi dari luar
-}, []);
+  useEffect(() => {
+    fetchData();
+    fetchCabangData();
+    fetchPenerimaan();
 
-const fetchData = async () => {
-  try {
-    const penerimaan = await GlobalApi.getPosPenerimaanSanduka();
-    const pengeluaran = await GlobalApi.getPosPengeluaranSanduka();
-    setPosPenerimaanSanduka(penerimaan);
-    setPosPengeluaranSanduka(pengeluaran);
-  } catch (error) {
-    console.error("Gagal mengambil data pos sanduka:", error);
-  }
-};
-  
-    
-  const handleSaldoAwalChange = (e) => {
-    const { name, value } = e.target;
-    setFormSaldoAwal((prev) => ({ ...prev, [name]: value }));
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const penerimaan = await GlobalApi.getPosPenerimaanSanduka();
+      const pengeluaran = await GlobalApi.getPosPengeluaranSanduka();
+      setPosPenerimaanSanduka(penerimaan);
+      setPosPengeluaranSanduka(pengeluaran);
+    } catch (error) {
+      console.error("Gagal mengambil data pos sanduka:", error);
+    }
   };
 
-  const handleSubmitSaldoAwal = () => {
-    // Implementasi submit logic di sini
-    console.log("Saldo Awal Data:", formSaldoAwal);
-
-    // Tampilkan notifikasi success
-    setNotification({
-      type: "success",
-      message: `Saldo awal periode ${getMonthName(formSaldoAwal.bulan)} ${
-        formSaldoAwal.tahun
-      } berhasil disimpan!`,
-    });
-
-    // Tutup modal
-    setShowSaldoAwalModal(false);
+  const fetchCabangData = async () => {
+    try {
+      const response = await GlobalApi.getCabang();
+      setCabangList(response.data);
+    } catch (error) {}
   };
 
-   const handleTambahPosPenerimaan = async () => {
+  const fetchPenerimaan = async () => {
+    try {
+      const data = await GlobalApi.getPenerimaanSanduka();
+      setTablePenerimaan(data);
+
+      let debitTotal = 0;
+      let kreditTotal = 0;
+
+      data.forEach((item) => {
+        debitTotal += item.debit || 0;
+        kreditTotal += item.kredit || 0;
+      });
+
+      const saldo = debitTotal - kreditTotal;
+
+      setTotalDebit(debitTotal);
+      setTotalKredit(kreditTotal);
+      setSaldoAkhir(saldo);
+    } catch (error) {
+      console.error("Gagal fetch data penerimaan:", error);
+    }
+  };
+
+  const handleSelect = (kecamatan) => {
+    setCabangPenerimaan((prev) => ({ ...prev, cabang: kecamatan }));
+    setShowDropdown(false);
+    setSearchCabang("");
+  };
+
+  const filteredCabang = cabangList.filter((c) =>
+    c?.kecamatan?.toLowerCase().includes(searchCabang.toLowerCase())
+  );
+
+  const formatRupiah = (value) => {
+    const numberString = value.replace(/[^,\d]/g, "");
+    const split = numberString.split(",");
+    let sisa = split[0].length % 3;
+    let rupiah = split[0].substr(0, sisa);
+    const ribuan = split[0].substr(sisa).match(/\d{3}/g);
+
+    if (ribuan) {
+      const separator = sisa ? "." : "";
+      rupiah += separator + ribuan.join(".");
+    }
+
+    return split[1] !== undefined ? rupiah + "," + split[1] : rupiah;
+  };
+
+  const handleSubmitPemasukan = async () => {
+    const payload = {
+      tanggalTransaksi: tglPenerimaan,
+      posPenerimaan: PosPenerimaan,
+      setoranBulan: Number(setoranBulan),
+      setoranTahun: Number(setoranTahun),
+      jenisPenerimaan,
+      cabang: cabangPenerimaan.cabang,
+      nominal: Number(nominalPenerimaan),
+      keterangan: keteranganPenerimaan,
+    };
+
+    try {
+      const response = await GlobalApi.postPemasukanSanduka(payload);
+      setNotification({
+        type: "success",
+        message: "Berhasil simpan pemasukan!",
+      });
+      fetchPenerimaan();
+    } catch (error) {
+      setNotification({
+        type: "error",
+        message: "Gagal backup dan export.",
+      });
+      console.error("Gagal simpan pemasukan:", error);
+    }
+  };
+
+  const handleTambahPosPenerimaan = async () => {
     if (!newPosPenerimaan.trim()) return;
     const data = {
       namaPosPenerimaan: newPosPenerimaan.trim(),
-      isSistemDefault: false
+      isSistemDefault: false,
     };
     try {
       await GlobalApi.postPenerimaanSanduka(data);
@@ -228,39 +297,39 @@ const fetchData = async () => {
         type: "success",
         message: "Berhasil Tambah!",
       });
-      setNewPosPenerimaan('');
+      setNewPosPenerimaan("");
       fetchData();
     } catch (error) {
       setNotification({
         type: "error",
         message: "Gagal Tambah.",
       });
-      alert('Gagal menambahkan pos penerimaan.');
-    } 
+      alert("Gagal menambahkan pos penerimaan.");
+    }
   };
 
   const handleHapusPosPenerimaan = async (id) => {
-  try {
-    await GlobalApi.deletePosPenerimaanSanduka(id);
+    try {
+      await GlobalApi.deletePosPenerimaanSanduka(id);
       setNotification({
         type: "success",
         message: "Berhasil dihapus!",
       });
-    fetchData();
-  } catch (error) {
-    setNotification({
+      fetchData();
+    } catch (error) {
+      setNotification({
         type: "error",
         message: "Gagal hapus",
       });
-    alert(error.message || "Gagal menghapus pos.");
-  }
+      alert(error.message || "Gagal menghapus pos.");
+    }
   };
-  
-  const handleTambahPosPengeluaran =  async () => {
+
+  const handleTambahPosPengeluaran = async () => {
     if (!newPosPengeluaran.trim()) return;
     const data = {
       namaPosPengeluaran: newPosPengeluaran.trim(),
-      isSistemDefault: false
+      isSistemDefault: false,
     };
     try {
       await GlobalApi.postPengeluaranSanduka(data);
@@ -268,66 +337,37 @@ const fetchData = async () => {
         type: "success",
         message: "Berhasil Tambah!",
       });
-      setNewPosPengeluaran('');
+      setNewPosPengeluaran("");
       fetchData();
     } catch (error) {
       setNotification({
         type: "error",
         message: "Gagal Tambah.",
       });
-      alert('Gagal menambahkan pos pengeluaran.');
+      alert("Gagal menambahkan pos pengeluaran.");
     }
   };
 
   const handleHapusPosPengeluaran = async (id) => {
     try {
-    await GlobalApi.deletePosPengeluaranSanduka(id);
+      await GlobalApi.deletePosPengeluaranSanduka(id);
       setNotification({
         type: "success",
         message: "Berhasil dihapus!",
       });
-    fetchData();
-  } catch (error) {
-    setNotification({
+      fetchData();
+    } catch (error) {
+      setNotification({
         type: "error",
         message: "Gagal hapus",
       });
-    alert(error.message || "Gagal menghapus pos.");
+      alert(error.message || "Gagal menghapus pos.");
     }
-  };
-
-  const handlePenerimaanChange = (e) => {
-    const { name, value } = e.target;
-    setFormPenerimaan((prev) => ({ ...prev, [name]: value }));
   };
 
   const handlePengeluaranChange = (e) => {
     const { name, value } = e.target;
     setFormPengeluaran((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const resetPenerimaan = () => {
-    setFormPenerimaan({
-      tanggal: new Date().toISOString().split("T")[0],
-      posPenerimaan: "",
-      bulanTahun: "",
-      jenisPenerimaan: "",
-      cabang: "Tidak Ada Cabang (Sanduka Umum)",
-      nominal: 0,
-      keterangan: "",
-    });
-  };
-
-  const resetPengeluaran = () => {
-    setFormPengeluaran({
-      tanggal: new Date().toISOString().split("T")[0],
-      posPengeluaran: "",
-      bulanTahun: "",
-      jenisPengeluaran: "",
-      cabang: "Tidak Ada Cabang (Sanduka Umum)",
-      nominal: 0,
-      keterangan: "",
-    });
   };
 
   const formatDate = (dateString) => {
@@ -346,7 +386,6 @@ const fetchData = async () => {
       kredit: 390000,
       saldo: 349910000,
     },
-    // Add more transactions as needed
   ];
 
   const totalDebit = transactions.reduce((sum, item) => sum + item.debit, 0);
@@ -863,15 +902,18 @@ const fetchData = async () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
-                        {" "}
                         <FaCalendarAlt />
                         Tanggal Transaksi
                       </label>
-                      <div className="p-2 border border-gray-300 rounded bg-gray-50">
-                        {formatDate(formPenerimaan.tanggal)}
-                      </div>
+                      <input
+                        type="date"
+                        name="tanggalTransaksi"
+                        value={tglPenerimaan}
+                        onChange={(e) => setTglPenerimaan(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded"
+                        placeholder="Pilih Tanggal"
+                      />
                     </div>
-
                     <div>
                       <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
                         <FaFolderOpen />
@@ -879,8 +921,8 @@ const fetchData = async () => {
                       </label>
                       <select
                         name="jenisPenerimaan"
-                        value={formPenerimaan.jenisPenerimaan}
-                        onChange={handlePenerimaanChange}
+                        value={jenisPenerimaan}
+                        onChange={(e) => setJenisPenerimaan(e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded"
                       >
                         <option value="">Pilih Jenis</option>
@@ -896,25 +938,70 @@ const fetchData = async () => {
                       </label>
                       <select
                         name="posPenerimaan"
-                        value={formPenerimaan.posPenerimaan}
-                        onChange={handlePenerimaanChange}
+                        value={PosPenerimaan}
+                        onChange={(e) => setPosPenerimaan(e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded"
                       >
                         <option value="">Pilih Pos</option>
-                        <option value="Iuran Anggota">Iuran Anggota</option>
-                        <option value="Donasi">Donasi</option>
-                        <option value="Lainnya">Lainnya</option>
+                        {posPenerimaanSanduka.map((pos) => (
+                          <option key={pos.id} value={pos.namaPosPenerimaan}>
+                            {pos.namaPosPenerimaan}
+                          </option>
+                        ))}
                       </select>
                     </div>
 
-                    <div>
+                    <div className="relative" ref={dropdownRef}>
                       <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
                         <FaBuilding />
                         Cabang
                       </label>
-                      <div className="p-2 border border-gray-300 rounded bg-gray-50">
-                        {formPenerimaan.cabang}
+
+                      {/* Trigger Button */}
+                      <div
+                        className="w-full p-2 border border-gray-300 rounded bg-white cursor-pointer"
+                        onClick={() => setShowDropdown((prev) => !prev)}
+                      >
+                        {cabangPenerimaan.cabang || "Pilih Cabang"}
                       </div>
+
+                      {/* Dropdown List */}
+                      {showDropdown && (
+                        <div className="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 shadow-md max-h-60 overflow-y-auto">
+                          <div className="p-2 border-b">
+                            <input
+                              type="text"
+                              placeholder="Cari cabang..."
+                              value={searchCabang}
+                              onChange={(e) => setSearchCabang(e.target.value)}
+                              className="w-full p-1 border border-gray-300 rounded text-sm"
+                            />
+                          </div>
+                          <div>
+                            <div
+                              onClick={() => handleSelect("")}
+                              className="p-2 hover:bg-gray-100 text-sm cursor-pointer"
+                            >
+                              Pilih Cabang
+                            </div>
+                            {filteredCabang.length > 0 ? (
+                              filteredCabang.map((cabang) => (
+                                <div
+                                  key={cabang.id}
+                                  onClick={() => handleSelect(cabang.kecamatan)}
+                                  className="p-2 hover:bg-gray-100 text-sm cursor-pointer"
+                                >
+                                  {cabang.kecamatan}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="p-2 text-sm text-gray-400">
+                                Tidak ditemukan
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -926,27 +1013,41 @@ const fetchData = async () => {
                       </label>
                       <input
                         type="month"
-                        name="bulanTahun"
-                        value={formPenerimaan.bulanTahun}
-                        onChange={handlePenerimaanChange}
                         className="w-full p-2 border border-gray-300 rounded"
+                        onChange={(e) => {
+                          const [setoranTahun, setoranBulan] =
+                            e.target.value.split("-");
+                          setSetoranTahun(setoranTahun);
+                          setSetoranBulan(setoranBulan);
+                        }}
                       />
                     </div>
+
                     <div>
                       <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                        {" "}
                         <FaMoneyBill />
                         Nominal (Rp)
                       </label>
                       <input
-                        type="number"
+                        type="text"
                         name="nominal"
-                        value={formPenerimaan.nominal}
-                        onChange={handlePenerimaanChange}
+                        value={formatRupiah(nominalPenerimaan)}
+                        onChange={(e) => {
+                          const rawValue = e.target.value.replace(
+                            /[^0-9]/g,
+                            ""
+                          );
+                          setNominalPenerimaan(rawValue);
+                        }}
                         className="w-full p-2 border border-gray-300 rounded"
                         placeholder="0"
                       />
-                      <p className="text-xs  mt-1">Terbilang: not Rupiah</p>
+                      <p className="text-xs mt-1">
+                        Terbilang:{" "}
+                        {nominalPenerimaan
+                          ? `Rp ${formatRupiah(nominalPenerimaan)}`
+                          : "not Rupiah"}
+                      </p>
                     </div>
                   </div>
 
@@ -957,23 +1058,23 @@ const fetchData = async () => {
                     </label>
                     <textarea
                       name="keterangan"
-                      value={formPenerimaan.keterangan}
-                      onChange={handlePenerimaanChange}
                       className="w-full p-2 border border-gray-300 rounded"
                       rows="3"
                       placeholder="Keterangan tambahan (mis: Iuran Sanduka anggota Mei 2024)"
+                      value={keteranganPenerimaan}
+                      onChange={(e) => setKeteranganPenerimaan(e.target.value)}
                     ></textarea>
                   </div>
 
                   <div className="flex justify-end space-x-2">
-                    <button
-                      // onClick={handleSesuaiTarget}
-                      className="px-4 py-2 border border-green-600 text-green-600 rounded hover:bg-green-50 flex items-center"
-                    >
+                    <button className="px-4 py-2 border border-green-600 text-green-600 rounded hover:bg-green-50 flex items-center">
                       <FaBullseye className="mr-2" />
                       Sesuai Target
                     </button>
-                    <button className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 flex items-center">
+                    <button
+                      className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 flex items-center"
+                      onClick={handleSubmitPemasukan}
+                    >
                       <FaSave className="mr-2" />
                       Simpan Pemasukan
                     </button>
@@ -1233,31 +1334,31 @@ const fetchData = async () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {transactions.map((transaction) => (
+                  {tablePenerimaan.map((transaction, index) => (
                     <tr
                       key={transaction.id}
                       className="border-b border-gray-300"
                     >
                       <td className="p-3 text-center whitespace-nowrap text-sm">
-                        {transaction.id}
+                        {index + 1}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm">
-                        {transaction.tanggal}
+                        {transaction.tanggalTransaksi}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm">
-                        {transaction.noBukti}
+                        {transaction.noBukti || "-"}
                       </td>
                       <td className="px-4 py-2 text-sm">
-                        {transaction.uraian}
+                        {transaction.keterangan}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                        {transaction.debit.toLocaleString("id-ID")}
+                        {transaction.debit?.toLocaleString("id-ID") || "0"}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                        {transaction.kredit.toLocaleString("id-ID")}
+                        {transaction.kredit?.toLocaleString("id-ID") || "0"}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                        {transaction.saldo.toLocaleString("id-ID")}
+                        {transaction.saldo?.toLocaleString("id-ID") || "0"}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm">
                         <div className="flex space-x-2 justify-center text-base">
@@ -1345,59 +1446,61 @@ const fetchData = async () => {
 
               {/* Form Tambah Pos Baru */}
               <div className="mb-4">
-      <label className="block text-sm text-gray-700 mb-2 font-bold">
-        Nama Pos Penerimaan Baru
-      </label>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={newPosPenerimaan}
-          onChange={(e) => setNewPosPenerimaan(e.target.value)}
-          className="flex-1 p-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Contoh: Donasi Penerimaan"
-          onKeyDown={(e) =>
-            e.key === 'Enter' && handleTambahPosPenerimaan()
-          }
-        />
-        <button
-          onClick={handleTambahPosPenerimaan}
-         
-          className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
-        >
-          <FaPlusCircle className="w-4 h-4" />
-          Tambah
-        </button>
-      </div>
-    </div>
+                <label className="block text-sm text-gray-700 mb-2 font-bold">
+                  Nama Pos Penerimaan Baru
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newPosPenerimaan}
+                    onChange={(e) => setNewPosPenerimaan(e.target.value)}
+                    className="flex-1 p-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Contoh: Donasi Penerimaan"
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && handleTambahPosPenerimaan()
+                    }
+                  />
+                  <button
+                    onClick={handleTambahPosPenerimaan}
+                    className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-1 disabled:opacity-50"
+                  >
+                    <FaPlusCircle className="w-4 h-4" />
+                    Tambah
+                  </button>
+                </div>
+              </div>
 
-
-              {/* Daftar Pos Penerimaan */}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">
                   Daftar Pos Penerimaan Sanduka Saat Ini
                 </label>
                 <div className="border border-gray-200 rounded-md max-h-48 overflow-y-auto">
-                 {Array.isArray(posPenerimaanSanduka) && posPenerimaanSanduka.length > 0 ? (
-  posPenerimaanSanduka.map((pos, index) => (
-    <div
-      key={pos.id || index}
-      className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
-    >
-      <span className="text-sm text-gray-700">{pos.namaPosPenerimaan}</span>
-      {!pos.isSistemDefault && (
-  <button
-    onClick={() => handleHapusPosPenerimaan(pos.id)}
-    className="text-red-500 hover:text-red-700 p-1"
-    title="Hapus pos penerimaan"
-  >
-    🗑️
-  </button>
-)}
-    </div>
-  ))
-) : (
-  <div className="p-3 text-sm text-gray-500">Belum ada data pos penerimaan</div>
-)}
+                  {Array.isArray(posPenerimaanSanduka) &&
+                  posPenerimaanSanduka.length > 0 ? (
+                    posPenerimaanSanduka.map((pos, index) => (
+                      <div
+                        key={pos.id || index}
+                        className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+                      >
+                        <span className="text-sm text-gray-700">
+                          {pos.namaPosPenerimaan}
+                        </span>
+                        {!pos.isSistemDefault && (
+                          <button
+                            onClick={() => handleHapusPosPenerimaan(pos.id)}
+                            className="text-red-500 hover:text-red-700 p-1"
+                            title="Hapus pos penerimaan"
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-3 text-sm text-gray-500">
+                      Belum ada data pos penerimaan
+                    </div>
+                  )}
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
                   Pos bawaan sistem tidak dapat dihapus.
@@ -1482,27 +1585,32 @@ const fetchData = async () => {
                   Daftar Pos Pengeluaran Sanduka Saat Ini
                 </label>
                 <div className="border border-gray-200 rounded-md max-h-48 overflow-y-auto">
-                  {Array.isArray(posPengeluaranSanduka) && posPengeluaranSanduka.length > 0 ? (
-  posPengeluaranSanduka.map((pos, index) => (
-    <div
-      key={pos.id || index}
-      className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
-    >
-      <span className="text-sm text-gray-700">{pos.namaPosPengeluaran}</span>
-      {!pos.isSistemDefault && (
-  <button
-    onClick={() => handleHapusPosPengeluaran(pos.id)}
-    className="text-red-500 hover:text-red-700 p-1"
-    title="Hapus pos pengeluaran"
-  >
-    🗑️
-  </button>
-)}
-    </div>
-  ))
-) : (
-  <div className="p-3 text-sm text-gray-500">Belum ada data pos pengeluaran</div>
-)}
+                  {Array.isArray(posPengeluaranSanduka) &&
+                  posPengeluaranSanduka.length > 0 ? (
+                    posPengeluaranSanduka.map((pos, index) => (
+                      <div
+                        key={pos.id || index}
+                        className="flex items-center justify-between p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+                      >
+                        <span className="text-sm text-gray-700">
+                          {pos.namaPosPengeluaran}
+                        </span>
+                        {!pos.isSistemDefault && (
+                          <button
+                            onClick={() => handleHapusPosPengeluaran(pos.id)}
+                            className="text-red-500 hover:text-red-700 p-1"
+                            title="Hapus pos pengeluaran"
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-3 text-sm text-gray-500">
+                      Belum ada data pos pengeluaran
+                    </div>
+                  )}
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
                   Pos bawaan sistem tidak dapat dihapus.

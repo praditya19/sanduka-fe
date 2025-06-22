@@ -149,7 +149,7 @@ function Pemasukan() {
     const { name, value } = e.target;
 
     if (name === "nominal") {
-      const numericValue = value.replace(/[^\d]/g, ""); // Menghapus semua karakter non-angka
+      const numericValue = value.replace(/[^\d]/g, "");
       setFormValues((prevValues) => ({
         ...prevValues,
         [name]: numericValue,
