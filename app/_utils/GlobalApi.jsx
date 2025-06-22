@@ -2407,6 +2407,41 @@ const postPengeluaranSanduka = async (data) => {
     throw error;
   }
 };
+const postPemasukanSanduka = async ({
+  tanggalTransaksi,
+  posPenerimaan,
+  setoranBulan,
+  setoranTahun,
+  jenisPenerimaan,
+  cabang,
+  nominal,
+  keterangan,
+}) => {
+  try {
+    const data = {
+      tanggalTransaksi,
+      posPenerimaan,
+      setoranBulan,
+      setoranTahun,
+      jenisPenerimaan,
+      cabang,
+      nominal,
+      keterangan,
+    };
+
+    const response = await axiosClient.post('/api/pemasukan-sanduka', data, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error post pemasukan sanduka:', error);
+    throw error;
+  }
+};
+
 
 const getPosPenerimaanSanduka = async () => {
   try {
@@ -2423,6 +2458,15 @@ const getPosPengeluaranSanduka = async () => {
     return response.data;
   } catch (error) {
     console.error("Error gagal ambil data pos pengeluaran:", error);
+    throw error;
+  }
+};
+const getPenerimaanSanduka = async () => {
+  try {
+    const response = await axiosClient.get("/api/pemasukan-sanduka");
+    return response.data;
+  } catch (error) {
+    console.error("Error gagal ambil data penerimaan:", error);
     throw error;
   }
 };
@@ -2624,10 +2668,12 @@ export default {
   countNewPengaduan,
   getTransaksiBank,
   postToBackup,
+  getPenerimaanSanduka,
   countResponsesByPengaduanId,
   getTagihanAnggotaById,
   exportTidakTerdaftarToExcel,
   getPosPenerimaanSanduka,
+  postPemasukanSanduka,
   getPosPengeluaranSanduka,
   deletePosPengeluaranSanduka,
   postPengeluaranSanduka,
