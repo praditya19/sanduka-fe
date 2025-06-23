@@ -1344,7 +1344,7 @@ function KasSanduka() {
                         })()}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm">
-                        {transaction.noBukti || "-"}
+                        {transaction.nomorBukti}
                       </td>
                       <td className="px-4 py-2 text-sm">
                         {transaction.keterangan}
@@ -1388,19 +1388,12 @@ function KasSanduka() {
                         Rp {totalKredit.toLocaleString("id-ID")}
                       </p>
                     </td>
-                  </tr>
-                  <tr className="bg-blue-50 text-blue-800">
-                    <td className="text-right p-3 font-bold" colSpan={6}>
-                      SALDO AKHIR PERIODE INI
-                    </td>
-
-                    <td className="text-right bg-blue-200">
+                    <td className="text-right bg-blue-50">
                       {" "}
                       <p className="text-lg font-bold text-blue-800">
                         Rp {saldoAkhir.toLocaleString("id-ID")}
                       </p>
                     </td>
-                    <td></td>
                   </tr>
                 </tfoot>
               </table>
