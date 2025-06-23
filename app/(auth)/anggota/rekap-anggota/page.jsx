@@ -182,6 +182,7 @@ function RekapAnggota() {
   const [progress, setProgress] = useState(0);
   const [notifDaspen, setNotifDaspen] = useState(null);
   const [pesanDaspen, setPesanDaspen] = useState("");
+  const [listNoRekening, setListNoRekening] = useState([]);
 
   const currentYear = new Date().getFullYear();
   const years = Array.from(
@@ -516,7 +517,6 @@ function RekapAnggota() {
           bulan,
           tahun
         );
-        console.log(response);
       }
 
       const totalRow = response.find(
@@ -556,7 +556,17 @@ function RekapAnggota() {
 
   useEffect(() => {
     fetchInitialData();
+    fetchNoRekening();
   }, [fetchInitialData]);
+
+  const fetchNoRekening = async () => {
+    try {
+      const data = await GlobalApi.getNoRekening();
+      setListNoRekening(data);
+    } catch (error) {
+      console.error("Gagal ambil daftar nomor rekening:", error);
+    }
+  };
 
   useEffect(() => {
     if (lastUpdatedMemberRef.current) {
@@ -877,10 +887,10 @@ function RekapAnggota() {
     setIsPopupVisible(false);
     setIdIuran(null);
     setNotifDaspen(null);
+    setNomorRekening("");
 
     try {
       const fileResponse = await GlobalApi.getFileByNip(member.nip);
-      console.log(fileResponse);
       if (fileResponse?.sumbangan) {
         setDaspenValue(parseInt(fileResponse.sumbangan));
       }
@@ -1260,6 +1270,20 @@ function RekapAnggota() {
     });
 
     try {
+      if (nomorRekening && nomorRekening.trim() !== "") {
+        const rekeningSudahTerdaftar = listNoRekening.includes(
+          nomorRekening.trim()
+        );
+
+        if (rekeningSudahTerdaftar) {
+          setNotification({
+            type: "error",
+            message: "Nomor rekening sudah digunakan oleh anggota lain.",
+          });
+          return;
+        }
+      }
+
       const response = await GlobalApi.postIuranAnggota(payload);
       await fetchInitialData();
       setNotification({
@@ -1286,49 +1310,58 @@ function RekapAnggota() {
   const handleUpdateClick = async () => {
     if (!dataNpa || !idIuran) return;
 
-    const payload = {
-      namaAnggota: dataNpa.namaLengkap,
-      tempatTanggalLahir: `${dataNpa.tempatLahir}, ${dataNpa.tanggalLahir?.[2]}-${dataNpa.tanggalLahir?.[1]}-${dataNpa.tanggalLahir?.[0]}`,
-      npa: dataNpa.npaPgri,
-      nip: dataNpa.nip,
-      nik: dataNpa.nik,
-      cabang: dataNpa.cabang,
-      unitKerja: dataNpa.unitKerja,
-      jabatan: dataNpa.jabatan,
-      nomorRekening: nomorRekening || "",
-    };
-
-    const capitalizeFirstLetter = (string) =>
-      string.charAt(0).toUpperCase() + string.slice(1);
-
-    groupedIuran.forEach((item) => {
-      const key = item.key;
-      const isReset = resetKeys.includes(key);
-      const iuran = isReset ? 0 : parseInt(item.iuran || 0);
-      const manual = isReset ? 0 : parseInt(nominalBaruList[key] || 0);
-      const total = iuran + manual;
-
-      payload[`iuran${capitalizeFirstLetter(key)}`] = iuran || 0;
-      payload[`manualIuran${capitalizeFirstLetter(key)}`] = manual || 0;
-      payload[`totalIuran${capitalizeFirstLetter(key)}`] = total || 0;
-    });
-
-    addedCategories.forEach((item) => {
-      const key = item.key.toLowerCase();
-      const oldVal = parseInt(newValues?.[key] || 0);
-      const manual = parseInt(manualInputs?.[key] || 0);
-      const total = oldVal + manual;
-
-      payload[`iuran${capitalizeFirstLetter(key)}`] = oldVal;
-      payload[`manualIuran${capitalizeFirstLetter(key)}`] = manual;
-      payload[`totalIuran${capitalizeFirstLetter(key)}`] = total;
-    });
-
-    // console.log("Data yang akan diupdate:", payload);
-
     try {
-      await GlobalApi.putIuranAnggota(idIuran, payload);
+      const rekeningSudahTerdaftar =
+        listNoRekening.includes(nomorRekening.trim()) &&
+        nomorRekening.trim() !== (dataIuran?.nomorRekening?.trim() || "");
 
+      if (rekeningSudahTerdaftar) {
+        setNotification({
+          type: "error",
+          message: "Nomor rekening sudah digunakan oleh anggota lain.",
+        });
+        return;
+      }
+
+      const payload = {
+        namaAnggota: dataNpa.namaLengkap,
+        tempatTanggalLahir: `${dataNpa.tempatLahir}, ${dataNpa.tanggalLahir?.[2]}-${dataNpa.tanggalLahir?.[1]}-${dataNpa.tanggalLahir?.[0]}`,
+        npa: dataNpa.npaPgri,
+        nip: dataNpa.nip,
+        nik: dataNpa.nik,
+        cabang: dataNpa.cabang,
+        unitKerja: dataNpa.unitKerja,
+        jabatan: dataNpa.jabatan,
+        nomorRekening: nomorRekening || "",
+      };
+
+      const capitalizeFirstLetter = (string) =>
+        string.charAt(0).toUpperCase() + string.slice(1);
+
+      groupedIuran.forEach((item) => {
+        const key = item.key;
+        const isReset = resetKeys.includes(key);
+        const iuran = isReset ? 0 : parseInt(item.iuran || 0);
+        const manual = isReset ? 0 : parseInt(nominalBaruList[key] || 0);
+        const total = iuran + manual;
+
+        payload[`iuran${capitalizeFirstLetter(key)}`] = iuran || 0;
+        payload[`manualIuran${capitalizeFirstLetter(key)}`] = manual || 0;
+        payload[`totalIuran${capitalizeFirstLetter(key)}`] = total || 0;
+      });
+
+      addedCategories.forEach((item) => {
+        const key = item.key.toLowerCase();
+        const oldVal = parseInt(newValues?.[key] || 0);
+        const manual = parseInt(manualInputs?.[key] || 0);
+        const total = oldVal + manual;
+
+        payload[`iuran${capitalizeFirstLetter(key)}`] = oldVal;
+        payload[`manualIuran${capitalizeFirstLetter(key)}`] = manual;
+        payload[`totalIuran${capitalizeFirstLetter(key)}`] = total;
+      });
+
+      await GlobalApi.putIuranAnggota(idIuran, payload);
       await fetchInitialData();
 
       setNotification({
@@ -1981,10 +2014,9 @@ function RekapAnggota() {
   const getNextPotonganBulan = () => {
     const today = new Date();
     const tanggal = today.getDate();
-    let bulan = today.getMonth(); // 0 = Januari, 11 = Desember
+    let bulan = today.getMonth();
     let tahun = today.getFullYear();
 
-    // Jika tanggal 22 atau lebih, pindah ke bulan berikutnya
     if (tanggal >= 22) {
       bulan += 1;
       if (bulan > 11) {
@@ -2666,7 +2698,7 @@ function RekapAnggota() {
                   })}
               </tbody>
               {isPopupVisible && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
                   <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl relative space-y-6 max-h-screen overflow-y-auto">
                     <button
                       type="button"

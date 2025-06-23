@@ -717,13 +717,17 @@ const getAllFiles = async (query = null, statusKeanggotaan = null) => {
   try {
     const params = new URLSearchParams();
     if (query) params.append("query", query);
-    if (statusKeanggotaan) params.append("statusKeanggotaan", statusKeanggotaan);
+    if (statusKeanggotaan)
+      params.append("statusKeanggotaan", statusKeanggotaan);
 
     const url = `/api/files/all?${params.toString()}`;
     const response = await axiosClient.get(url);
     return response.data;
   } catch (error) {
-    console.error("Gagal mengambil data file:", error?.response?.data || error.message);
+    console.error(
+      "Gagal mengambil data file:",
+      error?.response?.data || error.message
+    );
     throw error;
   }
 };
@@ -1447,7 +1451,13 @@ const getRekapAnggotaByCabang = async (cabang) => {
   }
 };
 
-const getNominalAggregatedData = async (cabang, unitKerja, namaAnggota, bulan, tahun) => {
+const getNominalAggregatedData = async (
+  cabang,
+  unitKerja,
+  namaAnggota,
+  bulan,
+  tahun
+) => {
   try {
     const params = new URLSearchParams();
     if (cabang) params.append("cabang", cabang);
@@ -1468,11 +1478,15 @@ const getNominalAggregatedData = async (cabang, unitKerja, namaAnggota, bulan, t
 
 const uploadSinkronBank = async (formData) => {
   try {
-    const response = await axiosClient.post("/api/potongan-gaji/upload", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const response = await axiosClient.post(
+      "/api/potongan-gaji/upload",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
 
     return response.data;
   } catch (error) {
@@ -1484,7 +1498,9 @@ const uploadSinkronBank = async (formData) => {
 const postToBackup = async (data, tagihanUntukBulan) => {
   try {
     const response = await axiosClient.post(
-      `/api/by-nominal/backup?tagihanUntukBulan=${encodeURIComponent(tagihanUntukBulan)}`,
+      `/api/by-nominal/backup?tagihanUntukBulan=${encodeURIComponent(
+        tagihanUntukBulan
+      )}`,
       data,
       {
         headers: {
@@ -1499,7 +1515,6 @@ const postToBackup = async (data, tagihanUntukBulan) => {
     throw error;
   }
 };
-
 
 const postIuranAnggota = async (data) => {
   try {
@@ -1526,10 +1541,7 @@ const getIuranAnggota = async (npa) => {
 
 const putIuranAnggota = async (id, payload) => {
   try {
-    const response = await axiosClient.put(
-      `/api/iuran-anggota/${id}`,
-      payload // <-- tambahkan payload di sini
-    );
+    const response = await axiosClient.put(`/api/iuran-anggota/${id}`, payload);
     return response.data;
   } catch (error) {
     console.error("Error saat update anggota: ", error);
@@ -1543,6 +1555,18 @@ const deleteIuranAnggota = async (id) => {
     return response.data;
   } catch (error) {
     console.error("Error delete iuran data: ", error);
+    throw error;
+  }
+};
+
+const getNoRekening = async () => {
+  try {
+    const response = await axiosClient.get(
+      `/api/iuran-anggota/all-nomor-rekening`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error ambil data no rekening:", error);
     throw error;
   }
 };
@@ -1739,7 +1763,6 @@ const getRantingSummary = async (
     if (Array.isArray(data)) {
       return {
         content: data.map((dataItem) => {
-
           return {
             cabang: dataItem.cabang,
             namaRanting: dataItem.namaRanting,
@@ -2346,9 +2369,7 @@ const countResponsesByPengaduanId = async (pengaduanId) => {
 
 const getTagihanAnggotaById = async (userId) => {
   try {
-    const response = await axiosClient.get(
-      `/api/auth/user/${userId}/tagihan`
-    );
+    const response = await axiosClient.get(`/api/auth/user/${userId}/tagihan`);
     return response.data;
   } catch (error) {
     throw error;
@@ -2357,10 +2378,13 @@ const getTagihanAnggotaById = async (userId) => {
 
 const exportTidakTerdaftarToExcel = async (cabang = "", unitKerja = "") => {
   try {
-    const response = await axiosClient.get(`/api/files/download-tidak-terdaftar`, {
-      params: { cabang, unitKerja },
-      responseType: "blob",
-    });
+    const response = await axiosClient.get(
+      `/api/files/download-tidak-terdaftar`,
+      {
+        params: { cabang, unitKerja },
+        responseType: "blob",
+      }
+    );
 
     // Buat file download
     const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -2370,22 +2394,19 @@ const exportTidakTerdaftarToExcel = async (cabang = "", unitKerja = "") => {
     document.body.appendChild(link);
     link.click();
     link.remove();
-
   } catch (error) {
     console.error("Gagal mengunduh file Excel:", error);
   }
-}
+};
 
 // KAS Sanduka
 const postPenerimaanSanduka = async (data) => {
   try {
-    const response = await axiosClient.post(`/api/pos-penerimaan`,data,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await axiosClient.post(`/api/pos-penerimaan`, data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Error post penerimaan sanduka:", error);
@@ -2394,13 +2415,11 @@ const postPenerimaanSanduka = async (data) => {
 };
 const postPengeluaranSanduka = async (data) => {
   try {
-    const response = await axiosClient.post(`/api/pos-pengeluaran`,data,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await axiosClient.post(`/api/pos-pengeluaran`, data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Error post pengeluaran sanduka:", error);
@@ -2429,19 +2448,18 @@ const postPemasukanSanduka = async ({
       keterangan,
     };
 
-    const response = await axiosClient.post('/api/pemasukan-sanduka', data, {
+    const response = await axiosClient.post("/api/pemasukan-sanduka", data, {
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
     return response.data;
   } catch (error) {
-    console.error('Error post pemasukan sanduka:', error);
+    console.error("Error post pemasukan sanduka:", error);
     throw error;
   }
 };
-
 
 const getPosPenerimaanSanduka = async () => {
   try {
@@ -2581,6 +2599,7 @@ export default {
   getKeteranganLainlain,
   updateRegisUser,
   getNoBukti,
+  getNoRekening,
   sendSesuaiJumlahTarget,
   getPemasukanUangMasukById,
   editPemasukanUangMasuk,
