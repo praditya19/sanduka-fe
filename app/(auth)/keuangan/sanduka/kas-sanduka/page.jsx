@@ -195,6 +195,10 @@ function KasSanduka() {
     try {
       const penerimaan = await GlobalApi.getPosPenerimaanSanduka();
       const pengeluaran = await GlobalApi.getPosPengeluaranSanduka();
+
+      const norek = await GlobalApi.getNoRekening();
+      console.log(norek);
+
       setPosPenerimaanSanduka(penerimaan);
       setPosPengeluaranSanduka(pengeluaran);
     } catch (error) {
@@ -429,9 +433,7 @@ function KasSanduka() {
 
   const handleExportExcel = () => {
     try {
-      // Prepare data for Excel export
       const excelData = [
-        // Header row
         {
           No: "",
           Tanggal: "",
@@ -441,7 +443,6 @@ function KasSanduka() {
           "Kredit (Pengeluaran)": "",
           Saldo: "",
         },
-        // Title row
         {
           No: `BUKU KAS UMUM - ${getMonthName(monthFilter)} ${yearFilter}`,
           Tanggal: "",
@@ -451,7 +452,6 @@ function KasSanduka() {
           "Kredit (Pengeluaran)": "",
           Saldo: "",
         },
-        // Empty row for spacing
         {
           No: "",
           Tanggal: "",
@@ -461,7 +461,6 @@ function KasSanduka() {
           "Kredit (Pengeluaran)": "",
           Saldo: "",
         },
-        // Column headers
         {
           No: "No",
           Tanggal: "Tanggal",
@@ -473,7 +472,6 @@ function KasSanduka() {
         },
       ];
 
-      // Add transaction data
       transactions.forEach((transaction, index) => {
         excelData.push({
           No: index + 1,
@@ -492,9 +490,7 @@ function KasSanduka() {
         });
       });
 
-      // Add summary rows
       excelData.push(
-        // Empty row
         {
           No: "",
           Tanggal: "",
@@ -504,7 +500,6 @@ function KasSanduka() {
           "Kredit (Pengeluaran)": "",
           Saldo: "",
         },
-        // Total row
         {
           No: "",
           Tanggal: "",
@@ -516,26 +511,22 @@ function KasSanduka() {
         }
       );
 
-      // Create workbook and worksheet
       const ws = XLSX.utils.json_to_sheet(excelData, { skipHeader: true });
       const wb = XLSX.utils.book_new();
 
-      // Set column widths
       const colWidths = [
-        { wch: 5 }, // No
-        { wch: 15 }, // Tanggal
-        { wch: 30 }, // No Bukti
-        { wch: 50 }, // Uraian
-        { wch: 20 }, // Debit
-        { wch: 20 }, // Kredit
-        { wch: 20 }, // Saldo
+        { wch: 5 },
+        { wch: 15 },
+        { wch: 30 },
+        { wch: 50 },
+        { wch: 20 },
+        { wch: 20 },
+        { wch: 20 },
       ];
       ws["!cols"] = colWidths;
 
-      // Add worksheet to workbook
       XLSX.utils.book_append_sheet(wb, ws, "Buku Kas Umum");
 
-      // Generate filename with current date
       const currentDate = new Date();
       const filename = `Buku_Kas_Umum_${getMonthName(
         monthFilter
@@ -543,10 +534,8 @@ function KasSanduka() {
         currentDate.getMonth() + 1
       }-${currentDate.getFullYear()}.xlsx`;
 
-      // Write and download file
       XLSX.writeFile(wb, filename);
 
-      // Show success notification
       setNotification({
         type: "success",
         message: `File Excel berhasil diunduh: ${filename}`,
@@ -1307,7 +1296,7 @@ function KasSanduka() {
               <table className="min-w-full border border-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider">
+                    <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider text-center">
                       NO
                     </th>
                     <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">
@@ -1343,7 +1332,16 @@ function KasSanduka() {
                         {index + 1}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm">
-                        {transaction.tanggalTransaksi}
+                        {(() => {
+                          const date = new Date(transaction.tanggalTransaksi);
+                          const day = String(date.getDate()).padStart(2, "0");
+                          const month = String(date.getMonth() + 1).padStart(
+                            2,
+                            "0"
+                          );
+                          const year = date.getFullYear();
+                          return `${day}-${month}-${year}`;
+                        })()}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm">
                         {transaction.noBukti || "-"}
@@ -1352,7 +1350,7 @@ function KasSanduka() {
                         {transaction.keterangan}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                        {transaction.debit?.toLocaleString("id-ID") || "0"}
+                        {transaction.nominal?.toLocaleString("id-ID") || "0"}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
                         {transaction.kredit?.toLocaleString("id-ID") || "0"}
