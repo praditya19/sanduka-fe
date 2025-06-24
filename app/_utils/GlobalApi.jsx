@@ -2489,9 +2489,23 @@ const getPenerimaanSanduka = async () => {
   }
 };
 
+const updatePemasukanKasSanduka = async (id, payload) => {
+  try {
+    const response = await axiosClient.put(`/api/defaultIuran/${id}`, payload, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating data:", error);
+    throw error;
+  }
+};
+
 const deletePosPenerimaanSanduka = async (id) => {
   try {
-    const response = await axiosClient.delete(`/api/pos-penerimaan/${id}`);
+    const response = await axiosClient.delete(`/api/pemasukan-sanduka/${id}`);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -2694,6 +2708,7 @@ export default {
   getPosPenerimaanSanduka,
   postPemasukanSanduka,
   getPosPengeluaranSanduka,
+  updatePemasukanKasSanduka,
   deletePosPengeluaranSanduka,
   postPengeluaranSanduka,
   postPenerimaanSanduka,

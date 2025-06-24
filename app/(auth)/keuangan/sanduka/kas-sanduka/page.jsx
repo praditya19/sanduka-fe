@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import HeaderMobile from "@/app/_components/HeaderMobile";
@@ -124,6 +124,12 @@ function KasSanduka() {
   const [nominalPenerimaan, setNominalPenerimaan] = useState("");
   const [keteranganPenerimaan, setKeteranganPenerimaan] = useState("");
   const [tablePenerimaan, setTablePenerimaan] = useState([]);
+  const [saldoAkhirBulanSebelumnya, setSaldoAkhirBulanSebelumnya] = useState(0);
+  const [filteredTransaksi, setFilteredTransaksi] = useState([]);
+  const [saldoAwalTransaksi, setSaldoAwalTransaksi] = useState(null);
+
+  const [filterBulan, setFilterBulan] = useState("06");
+  const [filterTahun, setFilterTahun] = useState(new Date().getFullYear());
 
   const [formPengeluaran, setFormPengeluaran] = useState({
     tanggal: new Date().toISOString().split("T")[0],
@@ -141,7 +147,6 @@ function KasSanduka() {
   const [yearFilter, setYearFilter] = useState("2025");
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
   const [showYearDropdown, setShowYearDropdown] = useState(false);
-  const [showSaldoAwalModal, setShowSaldoAwalModal] = useState(false);
   const [searchCabang, setSearchCabang] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [showPosPenerimaanModal, setShowPosPenerimaanModal] = useState(false);
@@ -149,6 +154,9 @@ function KasSanduka() {
 
   const [showPosPengeluaranModal, setShowPosPengeluaranModal] = useState(false);
   const [newPosPengeluaran, setNewPosPengeluaran] = useState("");
+  const [transactionToEdit, setTransactionToEdit] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+
   const [posPengeluaranList, setPosPengeluaranList] = useState([
     "ATK",
     "Lain-lain",
@@ -197,7 +205,6 @@ function KasSanduka() {
       const pengeluaran = await GlobalApi.getPosPengeluaranSanduka();
 
       const norek = await GlobalApi.getNoRekening();
-      console.log(norek);
 
       setPosPenerimaanSanduka(penerimaan);
       setPosPengeluaranSanduka(pengeluaran);
@@ -217,24 +224,75 @@ function KasSanduka() {
     try {
       const data = await GlobalApi.getPenerimaanSanduka();
       setTablePenerimaan(data);
-
-      let debitTotal = 0;
-      let kreditTotal = 0;
-
-      data.forEach((item) => {
-        debitTotal += item.debit || 0;
-        kreditTotal += item.kredit || 0;
-      });
-
-      const saldo = debitTotal - kreditTotal;
-
-      setTotalDebit(debitTotal);
-      setTotalKredit(kreditTotal);
-      setSaldoAkhir(saldo);
+      prosesData(data);
     } catch (error) {
       console.error("Gagal fetch data penerimaan:", error);
     }
   };
+
+  const hitungSaldo = (data, saldoAwal = 0) => {
+    let saldo = saldoAwal;
+    return data.map((item) => {
+      saldo += (item.nominal || 0) - (item.kredit || 0);
+      return { ...item, saldo };
+    });
+  };
+
+  const prosesData = (data) => {
+    // Cari transaksi saldo awal (berdasarkan nomor bukti PEMSKSAS)
+    const saldoAwalTransaksi = data.find((item) => {
+      return (
+        item.nomorBukti?.startsWith("PEMSKSAS") &&
+        String(item.setoranBulan).padStart(2, "0") === filterBulan &&
+        item.setoranTahun === Number(filterTahun)
+      );
+    });
+
+    // Set saldo awal berdasarkan transaksi saldo awal (jika ada)
+    setSaldoAkhirBulanSebelumnya(saldoAwalTransaksi?.nominal || 0);
+    setSaldoAwalTransaksi(saldoAwalTransaksi || null); // jika kamu menyimpan di state
+
+    // Hitung transaksi bulan ini
+    const transaksiBulanIni = data.filter((item) => {
+      const tgl = new Date(item.tanggalTransaksi);
+      const bulan = String(tgl.getMonth() + 1).padStart(2, "0");
+      const tahun = tgl.getFullYear();
+      const isSaldoAwal =
+        item.nomorBukti?.startsWith("PEMSKSAS") &&
+        String(item.setoranBulan).padStart(2, "0") === filterBulan &&
+        item.setoranTahun === Number(filterTahun);
+      return (
+        bulan === filterBulan && tahun === Number(filterTahun) && !isSaldoAwal
+      );
+    });
+
+    const transaksiDenganSaldo = hitungSaldo(
+      transaksiBulanIni,
+      saldoAwalTransaksi?.nominal || 0
+    );
+    setFilteredTransaksi(transaksiDenganSaldo);
+  };
+
+  useEffect(() => {
+    prosesData(tablePenerimaan);
+  }, [filterBulan, filterTahun]);
+
+  const [totalDebit, totalKredit, saldoAkhir] = React.useMemo(() => {
+    let totalDebet = 0;
+    let totalKredit = 0;
+
+    filteredTransaksi.forEach((item) => {
+      totalDebet += item.nominal || 0;
+      totalKredit += item.kredit || 0;
+    });
+
+    const akhir =
+      filteredTransaksi.length > 0
+        ? filteredTransaksi[filteredTransaksi.length - 1].saldo
+        : saldoAkhirBulanSebelumnya;
+
+    return [totalDebet, totalKredit, akhir];
+  }, [filteredTransaksi, saldoAkhirBulanSebelumnya]);
 
   const handleSelect = (kecamatan) => {
     setCabangPenerimaan((prev) => ({ ...prev, cabang: kecamatan }));
@@ -283,7 +341,7 @@ function KasSanduka() {
     } catch (error) {
       setNotification({
         type: "error",
-        message: "Gagal backup dan export.",
+        message: "Gagal simpan pemasukan.",
       });
       console.error("Gagal simpan pemasukan:", error);
     }
@@ -379,6 +437,28 @@ function KasSanduka() {
     return new Date(dateString).toLocaleDateString("id-ID", options);
   };
 
+  const handleEditClick = (transaction) => {
+    setTransactionToEdit(transaction);
+    setShowEditModal(true);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await GlobalApi.deletePosPenerimaanSanduka(id);
+      setNotification({
+        type: "success",
+        message: "Data berhasil dihapus!",
+      });
+      fetchPenerimaan();
+    } catch (error) {
+      setNotification({
+        type: "error",
+        message: "Gagal hapus data.",
+      });
+      toast.error(error.message);
+    }
+  };
+
   const transactions = [
     {
       id: 2,
@@ -391,11 +471,6 @@ function KasSanduka() {
       saldo: 349910000,
     },
   ];
-
-  const totalDebit = transactions.reduce((sum, item) => sum + item.debit, 0);
-  const totalKredit = transactions.reduce((sum, item) => sum + item.kredit, 0);
-  const saldoAkhir =
-    transactions.length > 0 ? transactions[transactions.length - 1].saldo : 0;
 
   //
   useEffect(() => {
@@ -1323,53 +1398,90 @@ function KasSanduka() {
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {tablePenerimaan.map((transaction, index) => (
-                    <tr
-                      key={transaction.id}
-                      className="border-b border-gray-300"
-                    >
-                      <td className="p-3 text-center whitespace-nowrap text-sm">
-                        {index + 1}
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm">
+                  {saldoAwalTransaksi && (
+                    <tr className="font-semibold bg-gray-100 text-sm">
+                      <td className="p-3 text-center">-</td>
+                      <td className="p-3">
                         {(() => {
-                          const date = new Date(transaction.tanggalTransaksi);
-                          const day = String(date.getDate()).padStart(2, "0");
-                          const month = String(date.getMonth() + 1).padStart(
-                            2,
-                            "0"
-                          );
-                          const year = date.getFullYear();
-                          return `${day}-${month}-${year}`;
+                          const [year, month, day] =
+                            saldoAwalTransaksi.tanggalTransaksi;
+                          return `${String(day).padStart(2, "0")}-${String(
+                            month
+                          ).padStart(2, "0")}-${year}`;
                         })()}
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm">
-                        {transaction.nomorBukti}
+                      <td className="p-3">{saldoAwalTransaksi.nomorBukti}</td>
+                      <td className="p-3">{saldoAwalTransaksi.keterangan}</td>
+                      <td className="p-3 text-right">
+                        {(saldoAwalTransaksi.nominal || 0).toLocaleString(
+                          "id-ID"
+                        )}
                       </td>
-                      <td className="px-4 py-2 text-sm">
-                        {transaction.keterangan}
+                      <td className="p-3 text-right">0</td>
+                      <td className="p-3 text-right">
+                        {(saldoAkhirBulanSebelumnya || 0).toLocaleString(
+                          "id-ID"
+                        )}
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                        {transaction.nominal?.toLocaleString("id-ID") || "0"}
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                        {transaction.kredit?.toLocaleString("id-ID") || "0"}
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
-                        {transaction.saldo?.toLocaleString("id-ID") || "0"}
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm">
-                        <div className="flex space-x-2 justify-center text-base">
-                          <button className="text-blue-500 hover:text-blue-700">
-                            <FaEdit />
-                          </button>
-                          <button className="text-red-500 hover:text-red-700">
-                            <FaTrash />
-                          </button>
-                        </div>
+                      <td className="p-3 text-center">-</td>
+                    </tr>
+                  )}
+
+                  {filteredTransaksi.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={8}
+                        className="text-center py-6 text-sm text-gray-400"
+                      >
+                        Tidak ada transaksi untuk bulan ini
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredTransaksi.map((transaction, index) => (
+                      <tr
+                        key={transaction.id}
+                        className="border-b border-gray-300"
+                      >
+                        <td className="p-3 text-center text-sm">{index + 1}</td>
+                        <td className="p-3 text-sm">
+                          {new Date(
+                            transaction.tanggalTransaksi
+                          ).toLocaleDateString("id-ID")}
+                        </td>
+                        <td className="p-3 text-sm">
+                          {transaction.nomorBukti}
+                        </td>
+                        <td className="p-3 text-sm">
+                          {transaction.keterangan}
+                        </td>
+                        <td className="p-3 text-right text-sm">
+                          {(transaction.nominal || 0).toLocaleString("id-ID")}
+                        </td>
+                        <td className="p-3 text-right text-sm">
+                          {(transaction.kredit || 0).toLocaleString("id-ID")}
+                        </td>
+                        <td className="p-3 text-right text-sm">
+                          {(transaction.saldo || 0).toLocaleString("id-ID")}
+                        </td>
+                        <td className="p-3 text-center text-sm">
+                          <div className="flex space-x-2 justify-center text-base">
+                            <button
+                              onClick={() => handleEditClick(transaction)}
+                              className="text-blue-500 hover:text-blue-700"
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(transaction.id)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
                 <tfoot>
                   <tr className="border-b border-blue-300">
@@ -1616,6 +1728,115 @@ function KasSanduka() {
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
               >
                 Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showEditModal && transactionToEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative bg-white rounded-lg shadow-xl w-[500px] max-w-full p-6">
+            {/* Tombol X (Batal) */}
+            <button
+              onClick={() => setShowEditModal(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+            >
+              <FaTimesCircle className="w-5 h-5 hover:text-red-500" />
+            </button>
+
+            {/* Header Modal */}
+            <h2 className="text-lg font-semibold mb-4">
+              Edit Transaksi - {transactionToEdit.noBukti}
+            </h2>
+
+            {/* Form Edit */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium">
+                  Tanggal Transaksi
+                </label>
+                <input
+                  type="date"
+                  className="w-full border px-3 py-2 rounded"
+                  value={transactionToEdit.tanggal}
+                  onChange={(e) =>
+                    setTransactionToEdit({
+                      ...transactionToEdit,
+                      tanggal: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">No. Bukti</label>
+                <input
+                  type="text"
+                  className="w-full border px-3 py-2 rounded bg-gray-100"
+                  value={transactionToEdit.noBukti}
+                  disabled
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">Uraian</label>
+                <textarea
+                  className="w-full border px-3 py-2 rounded"
+                  value={transactionToEdit.uraian}
+                  onChange={(e) =>
+                    setTransactionToEdit({
+                      ...transactionToEdit,
+                      uraian: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">Debet (Rp)</label>
+                <input
+                  type="number"
+                  className="w-full border px-3 py-2 rounded"
+                  value={transactionToEdit.debit}
+                  onChange={(e) =>
+                    setTransactionToEdit({
+                      ...transactionToEdit,
+                      debit: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">Kredit (Rp)</label>
+                <input
+                  type="number"
+                  className="w-full border px-3 py-2 rounded"
+                  value={transactionToEdit.kredit}
+                  onChange={(e) =>
+                    setTransactionToEdit({
+                      ...transactionToEdit,
+                      kredit: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Tombol Simpan & Batal */}
+            <div className="mt-6 flex justify-end space-x-2">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="px-4 py-2 border rounded hover:bg-gray-100"
+              >
+                Batal
+              </button>
+              <button
+                // onClick={handleUpdateTransaction}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center"
+              >
+                <FaSave className="mr-2" />
+                Simpan Perubahan
               </button>
             </div>
           </div>
