@@ -2400,7 +2400,7 @@ const exportTidakTerdaftarToExcel = async (cabang = "", unitKerja = "") => {
 };
 
 // KAS Sanduka
-const postPenerimaanSanduka = async (data) => {
+const postPosPenerimaanSanduka = async (data) => {
   try {
     const response = await axiosClient.post(`/api/pos-penerimaan`, data, {
       headers: {
@@ -2413,7 +2413,7 @@ const postPenerimaanSanduka = async (data) => {
     throw error;
   }
 };
-const postPengeluaranSanduka = async (data) => {
+const postPosPengeluaranSanduka = async (data) => {
   try {
     const response = await axiosClient.post(`/api/pos-pengeluaran`, data, {
       headers: {
@@ -2426,6 +2426,7 @@ const postPengeluaranSanduka = async (data) => {
     throw error;
   }
 };
+
 const postPemasukanSanduka = async ({
   tanggalTransaksi,
   posPenerimaan,
@@ -2460,6 +2461,19 @@ const postPemasukanSanduka = async ({
     throw error;
   }
 };
+const postPengeluaranSanduka = async (data) => {
+  try {
+    const response = await axiosClient.post("/api/pengeluaran-sanduka", data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error post pengeluaran sanduka:", error);
+    throw error;
+  }
+};
 
 const getPosPenerimaanSanduka = async () => {
   try {
@@ -2479,6 +2493,7 @@ const getPosPengeluaranSanduka = async () => {
     throw error;
   }
 };
+
 const getPenerimaanSanduka = async () => {
   try {
     const response = await axiosClient.get("/api/pemasukan-sanduka");
@@ -2529,6 +2544,24 @@ const deletePosPengeluaranSanduka = async (id) => {
     } else {
       throw new Error("Terjadi kesalahan pada jaringan");
     }
+  }
+};
+
+const postSesuaiTargetSanduka = async (tanggalTransaksi) => {
+  try {
+    const response = await axiosClient.post(
+      `/api/pemasukan-sanduka/generate?tanggalTransaksi=${tanggalTransaksi}`,
+      null,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error post penerimaan sanduka:", error);
+    throw error;
   }
 };
 // END
@@ -2705,11 +2738,13 @@ export default {
   countResponsesByPengaduanId,
   getTagihanAnggotaById,
   exportTidakTerdaftarToExcel,
+  postSesuaiTargetSanduka,
   getPosPenerimaanSanduka,
   postPemasukanSanduka,
   getPosPengeluaranSanduka,
   updatePemasukanKasSanduka,
-  deletePosPengeluaranSanduka,
   postPengeluaranSanduka,
-  postPenerimaanSanduka,
+  deletePosPengeluaranSanduka,
+  postPosPengeluaranSanduka,
+  postPosPenerimaanSanduka,
 };
