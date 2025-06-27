@@ -123,6 +123,18 @@ function KasSanduka() {
   const [setoranTahun, setSetoranTahun] = useState("");
   const [nominalPenerimaan, setNominalPenerimaan] = useState("");
   const [keteranganPenerimaan, setKeteranganPenerimaan] = useState("");
+
+  const [tglPengeluaran, setTglPengeluaran] = useState("");
+  const [jenisPengeluaran, setJenisPengeluaran] = useState("");
+  const [PosPengeluaran, setPosPengeluaran] = useState("");
+  const [cabangPengeluaran, setCabangPengeluaran] = useState("");
+  const [setoranBulanPengeluaran, setSetoranBulanPengeluaran] = useState("");
+  const [setoranTahunPengeluaran, setSetoranTahunPengeluaran] = useState("");
+  const [nominalPengeluaran, setNominalPengeluaran] = useState("");
+  const [keteranganPengeluaran, setKeteranganPengeluaran] = useState("");
+  const [yangMeninggal, setYangMeninggal] = useState("");
+  const [namaPenerima, setNamaPenerima] = useState("");
+
   const [tablePenerimaan, setTablePenerimaan] = useState([]);
   const [saldoAkhirBulanSebelumnya, setSaldoAkhirBulanSebelumnya] = useState(0);
   const [filteredTransaksi, setFilteredTransaksi] = useState([]);
@@ -131,15 +143,6 @@ function KasSanduka() {
   const [filterBulan, setFilterBulan] = useState("06");
   const [filterTahun, setFilterTahun] = useState(new Date().getFullYear());
 
-  const [formPengeluaran, setFormPengeluaran] = useState({
-    tanggal: new Date().toISOString().split("T")[0],
-    posPengeluaran: "",
-    bulanTahun: "",
-    jenisPengeluaran: "",
-    cabang: "Tidak Ada Cabang (Sanduka Umum)",
-    nominal: 0,
-    keterangan: "",
-  });
   const [posPenerimaanSanduka, setPosPenerimaanSanduka] = useState([]);
   const [posPengeluaranSanduka, setPosPengeluaranSanduka] = useState([]);
   const [cabangList, setCabangList] = useState([]);
@@ -295,7 +298,8 @@ function KasSanduka() {
   }, [filteredTransaksi, saldoAkhirBulanSebelumnya]);
 
   const handleSelect = (kecamatan) => {
-    setCabangPenerimaan((prev) => ({ ...prev, cabang: kecamatan }));
+    setCabangPenerimaan(kecamatan);
+    setCabangPengeluaran(kecamatan);
     setShowDropdown(false);
     setSearchCabang("");
   };
@@ -326,9 +330,9 @@ function KasSanduka() {
       setoranBulan: Number(setoranBulan),
       setoranTahun: Number(setoranTahun),
       jenisPenerimaan,
-      cabang: cabangPenerimaan.cabang,
+      cabang: cabangPenerimaan?.cabang ?? "",
       nominal: Number(nominalPenerimaan),
-      keterangan: keteranganPenerimaan,
+      keterangan: keteranganPenerimaan ?? "",
     };
 
     try {
@@ -346,6 +350,67 @@ function KasSanduka() {
       console.error("Gagal simpan pemasukan:", error);
     }
   };
+  const handleSubmitPengeluaran = async () => {
+    const payload = {
+      tanggalTransaksi: tglPengeluaran ?? "",
+      posPengeluaran: PosPengeluaran ?? "",
+      setoranBulan: setoranBulanPengeluaran
+        ? Number(setoranBulanPengeluaran)
+        : "",
+      setoranTahun: setoranTahunPengeluaran
+        ? Number(setoranTahunPengeluaran)
+        : "",
+      jenisPegeluaran: jenisPengeluaran ?? "",
+      cabang: cabangPengeluaran ?? "",
+      nominal: nominalPengeluaran ? Number(nominalPengeluaran) : "",
+      yangMeninggal:
+        PosPengeluaran === "Santunan Duka Anggota" ? yangMeninggal : "",
+      namaPenerima:
+        PosPengeluaran === "Santunan Duka Anggota" ? namaPenerima : "",
+      keterangan: keteranganPengeluaran ?? "",
+    };
+
+    try {
+      await GlobalApi.postPengeluaranSanduka(payload);
+      setNotification({
+        type: "success",
+        message: "Pengeluaran berhasil disimpan!",
+      });
+      // resetForm(); // jika ingin reset setelah simpan
+      // fetchPengeluaran();
+    } catch (error) {
+      setNotification({
+        type: "error",
+        message: "Gagal menyimpan pengeluaran.",
+      });
+      console.error("Gagal kirim pengeluaran:", error);
+    }
+  };
+
+  const handleSesuaiTarget = async () => {
+    if (!tglPenerimaan) {
+      setNotification({
+        type: "error",
+        message: "Tanggal transaksi belum dipilih.",
+      });
+      return;
+    }
+
+    try {
+      const response = await GlobalApi.postSesuaiTargetSanduka(tglPenerimaan);
+      setNotification({
+        type: "success",
+        message: "Data sesuai target berhasil dibuat!",
+      });
+      fetchPenerimaan();
+    } catch (error) {
+      setNotification({
+        type: "error",
+        message: "Gagal membuat data sesuai target.",
+      });
+      console.error("Gagal generate:", error);
+    }
+  };
 
   const handleTambahPosPenerimaan = async () => {
     if (!newPosPenerimaan.trim()) return;
@@ -354,7 +419,7 @@ function KasSanduka() {
       isSistemDefault: false,
     };
     try {
-      await GlobalApi.postPenerimaanSanduka(data);
+      await GlobalApi.postPosPenerimaanSanduka(data);
       setNotification({
         type: "success",
         message: "Berhasil Tambah!",
@@ -394,7 +459,7 @@ function KasSanduka() {
       isSistemDefault: false,
     };
     try {
-      await GlobalApi.postPengeluaranSanduka(data);
+      await GlobalApi.postPosPengeluaranSanduka(data);
       setNotification({
         type: "success",
         message: "Berhasil Tambah!",
@@ -459,6 +524,44 @@ function KasSanduka() {
     }
   };
 
+  const angkaTerbilang = (nilai) => {
+    const satuan = [
+      "",
+      "satu",
+      "dua",
+      "tiga",
+      "empat",
+      "lima",
+      "enam",
+      "tujuh",
+      "delapan",
+      "sembilan",
+      "sepuluh",
+      "sebelas",
+    ];
+
+    const terbilang = (n) => {
+      n = Math.floor(n);
+      if (n < 12) return satuan[n];
+      if (n < 20) return `${terbilang(n - 10)} belas`;
+      if (n < 100)
+        return `${terbilang(n / 10)} puluh ${terbilang(n % 10)}`.trim();
+      if (n < 200) return `seratus ${terbilang(n - 100)}`.trim();
+      if (n < 1000)
+        return `${terbilang(n / 100)} ratus ${terbilang(n % 100)}`.trim();
+      if (n < 2000) return `seribu ${terbilang(n - 1000)}`.trim();
+      if (n < 1000000)
+        return `${terbilang(n / 1000)} ribu ${terbilang(n % 1000)}`.trim();
+      if (n < 1000000000)
+        return `${terbilang(n / 1000000)} juta ${terbilang(
+          n % 1000000
+        )}`.trim();
+      return "Jumlah terlalu besar";
+    };
+
+    return `${terbilang(nilai)} rupiah`.replace(/\s+/g, " ");
+  };
+
   const transactions = [
     {
       id: 2,
@@ -471,7 +574,11 @@ function KasSanduka() {
       saldo: 349910000,
     },
   ];
+  // END
 
+  // PENGELUARAN
+
+  // END
   //
   useEffect(() => {
     if (!token) {
@@ -1026,7 +1133,7 @@ function KasSanduka() {
                         className="w-full p-2 border border-gray-300 rounded bg-white cursor-pointer"
                         onClick={() => setShowDropdown((prev) => !prev)}
                       >
-                        {cabangPenerimaan.cabang || "Pilih Cabang"}
+                        {cabangPenerimaan || "Pilih Cabang"}
                       </div>
 
                       {/* Dropdown List */}
@@ -1109,8 +1216,8 @@ function KasSanduka() {
                       <p className="text-xs mt-1">
                         Terbilang:{" "}
                         {nominalPenerimaan
-                          ? `Rp ${formatRupiah(nominalPenerimaan)}`
-                          : "not Rupiah"}
+                          ? angkaTerbilang(Number(nominalPenerimaan))
+                          : "Tidak ada nominal"}
                       </p>
                     </div>
                   </div>
@@ -1131,7 +1238,10 @@ function KasSanduka() {
                   </div>
 
                   <div className="flex justify-end space-x-2">
-                    <button className="px-4 py-2 border border-green-600 text-green-600 rounded hover:bg-green-50 flex items-center">
+                    <button
+                      className="px-4 py-2 border border-green-600 text-green-600 rounded hover:bg-green-50 flex items-center"
+                      onClick={handleSesuaiTarget}
+                    >
                       <FaBullseye className="mr-2" />
                       Sesuai Target
                     </button>
@@ -1160,9 +1270,15 @@ function KasSanduka() {
                         <FaCalendarAlt />
                         Tanggal Transaksi
                       </label>
-                      <div className="p-2 border border-gray-300 rounded bg-gray-50">
-                        {formatDate(formPengeluaran.tanggal)}
-                      </div>
+
+                      <input
+                        type="date"
+                        name="tanggalTransaksi"
+                        value={tglPengeluaran}
+                        onChange={(e) => setTglPengeluaran(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded"
+                        placeholder="Pilih Tanggal"
+                      />
                     </div>
 
                     <div>
@@ -1173,43 +1289,118 @@ function KasSanduka() {
                       </label>
                       <select
                         name="jenisPengeluaran"
-                        value={formPengeluaran.jenisPengeluaran}
-                        onChange={handlePengeluaranChange}
+                        value={jenisPengeluaran}
+                        onChange={(e) => setJenisPengeluaran(e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded"
                       >
                         <option value="">Pilih Jenis</option>
-                        <option value="Rutin">Rutin</option>
-                        <option value="Darurat">Darurat</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Tranfer">Tranfer</option>
                       </select>
                     </div>
 
                     <div>
+                      {/* Dropdown Pos Pengeluaran */}
                       <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
                         <FaBoxOpen />
                         Pos Pengeluaran
                       </label>
                       <select
                         name="posPengeluaran"
-                        value={formPengeluaran.posPengeluaran}
-                        onChange={handlePengeluaranChange}
+                        value={PosPengeluaran}
+                        onChange={(e) => setPosPengeluaran(e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded"
                       >
                         <option value="">Pilih Pos</option>
-                        <option value="Santunan">Santunan</option>
-                        <option value="Operasional">Operasional</option>
-                        <option value="Lainnya">Lainnya</option>
+                        {posPengeluaranSanduka.map((pos, index) => (
+                          <option key={index} value={pos.namaPosPengeluaran}>
+                            {pos.namaPosPengeluaran}
+                          </option>
+                        ))}
                       </select>
+
+                      {/* Form Tambahan Jika Pos = Santunan Duka Anggota */}
+                      {PosPengeluaran === "Santunan Duka Anggota" && (
+                        <div className="mt-4 space-y-4">
+                          <div>
+                            <label className="text-sm font-medium text-gray-700 mb-1 block">
+                              Nama yang Meninggal
+                            </label>
+                            <input
+                              type="text"
+                              value={yangMeninggal}
+                              onChange={(e) => setYangMeninggal(e.target.value)}
+                              className="w-full p-2 border border-gray-300 rounded"
+                              placeholder="Masukkan nama almarhum/almarhumah"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700 mb-1 block">
+                              Nama Penerima
+                            </label>
+                            <input
+                              type="text"
+                              value={namaPenerima}
+                              onChange={(e) => setNamaPenerima(e.target.value)}
+                              className="w-full p-2 border border-gray-300 rounded"
+                              placeholder="Masukkan nama penerima santunan"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    <div>
+                    <div className="relative" ref={dropdownRef}>
                       <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                        {" "}
                         <FaBuilding />
                         Cabang
                       </label>
-                      <div className="p-2 border border-gray-300 rounded bg-gray-50">
-                        {formPengeluaran.cabang}
+
+                      {/* Trigger Button */}
+                      <div
+                        className="w-full p-2 border border-gray-300 rounded bg-white cursor-pointer"
+                        onClick={() => setShowDropdown((prev) => !prev)}
+                      >
+                        {cabangPengeluaran || "Pilih Cabang"}
                       </div>
+
+                      {/* Dropdown List */}
+                      {showDropdown && (
+                        <div className="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 shadow-md max-h-60 overflow-y-auto">
+                          <div className="p-2 border-b">
+                            <input
+                              type="text"
+                              placeholder="Cari cabang..."
+                              value={searchCabang}
+                              onChange={(e) => setSearchCabang(e.target.value)}
+                              className="w-full p-1 border border-gray-300 rounded text-sm"
+                            />
+                          </div>
+                          <div>
+                            <div
+                              onClick={() => handleSelect("")}
+                              className="p-2 hover:bg-gray-100 text-sm cursor-pointer"
+                            >
+                              Pilih Cabang
+                            </div>
+                            {filteredCabang.length > 0 ? (
+                              filteredCabang.map((cabang) => (
+                                <div
+                                  key={cabang.id}
+                                  onClick={() => handleSelect(cabang.kecamatan)}
+                                  className="p-2 hover:bg-gray-100 text-sm cursor-pointer"
+                                >
+                                  {cabang.kecamatan}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="p-2 text-sm text-gray-400">
+                                Tidak ditemukan
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1222,8 +1413,14 @@ function KasSanduka() {
                       <input
                         type="month"
                         name="bulanTahun"
-                        value={formPengeluaran.bulanTahun}
-                        onChange={handlePengeluaranChange}
+                        value={`${setoranTahunPengeluaran}-${setoranBulanPengeluaran
+                          .toString()
+                          .padStart(2, "0")}`}
+                        onChange={(e) => {
+                          const [year, month] = e.target.value.split("-");
+                          setSetoranTahunPengeluaran(year);
+                          setSetoranBulanPengeluaran(month);
+                        }}
                         className="w-full p-2 border border-gray-300 rounded"
                       />
                     </div>
@@ -1234,14 +1431,26 @@ function KasSanduka() {
                         Nominal (Rp)
                       </label>
                       <input
-                        type="number"
+                        type="text"
                         name="nominal"
-                        value={formPengeluaran.nominal}
-                        onChange={handlePengeluaranChange}
+                        value={formatRupiah(nominalPengeluaran)}
+                        onChange={(e) => {
+                          const rawValue = e.target.value.replace(
+                            /[^0-9]/g,
+                            ""
+                          );
+                          setNominalPengeluaran(rawValue);
+                        }}
                         className="w-full p-2 border border-gray-300 rounded"
                         placeholder="0"
                       />
-                      <p className="text-xs  mt-1">Terbilang: not Rupiah</p>
+
+                      <p className="text-xs mt-1">
+                        Terbilang:{" "}
+                        {nominalPengeluaran
+                          ? angkaTerbilang(Number(nominalPengeluaran))
+                          : "Tidak ada nominal"}
+                      </p>
                     </div>
                   </div>
 
@@ -1253,8 +1462,8 @@ function KasSanduka() {
                     </label>
                     <textarea
                       name="keterangan"
-                      value={formPengeluaran.keterangan}
-                      onChange={handlePengeluaranChange}
+                      value={keteranganPengeluaran}
+                      onChange={(e) => setKeteranganPengeluaran(e.target.value)}
                       className="w-full p-2 border border-gray-300 rounded"
                       rows="3"
                       placeholder="Keterangan tambahan (mis: Santunan duka Bpk. Fulan)"
@@ -1269,7 +1478,10 @@ function KasSanduka() {
                       <FaBullseye className="mr-2" />
                       Sesuai Target
                     </button>
-                    <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center">
+                    <button
+                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center"
+                      onClick={handleSubmitPengeluaran}
+                    >
                       <FaSave className="mr-2" />
                       Simpan Pengeluaran
                     </button>
