@@ -2400,6 +2400,18 @@ const exportTidakTerdaftarToExcel = async (cabang = "", unitKerja = "") => {
 };
 
 // KAS Sanduka
+const getTableKasSanduka = async (bulan, tahun) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/rekap-transaksi-sanduka?bulan=${bulan}&tahun=${tahun}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching table kas sanduka:", error);
+    throw error;
+  }
+};
+
 const postPosPenerimaanSanduka = async (data) => {
   try {
     const response = await axiosClient.post(`/api/pos-penerimaan`, data, {
@@ -2744,6 +2756,7 @@ export default {
   getPosPengeluaranSanduka,
   updatePemasukanKasSanduka,
   postPengeluaranSanduka,
+  getTableKasSanduka,
   deletePosPengeluaranSanduka,
   postPosPengeluaranSanduka,
   postPosPenerimaanSanduka,
