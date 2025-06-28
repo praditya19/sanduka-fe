@@ -1657,7 +1657,8 @@ function KasSanduka() {
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {/* {saldoAwalTransaksi && (
+                  {/* Baris SALDO AWAL (tampil terpisah, hanya jika ada) */}
+                  {saldoAwalTransaksi && (
                     <tr className="font-semibold bg-gray-100 text-sm">
                       <td className="p-3 text-center">-</td>
                       <td className="p-3">
@@ -1672,50 +1673,31 @@ function KasSanduka() {
                       <td className="p-3">{saldoAwalTransaksi.nomorBukti}</td>
                       <td className="p-3">{saldoAwalTransaksi.keterangan}</td>
                       <td className="p-3 text-right">
-  {(saldoAwalTransaksi.debet || 0).toLocaleString("id-ID")}
-</td>
+                        {(saldoAwalTransaksi.debet || 0).toLocaleString(
+                          "id-ID"
+                        )}
+                      </td>
                       <td className="p-3 text-right">0</td>
                       <td className="p-3 text-right">
-                        {(saldoAkhirBulanSebelumnya || 0).toLocaleString(
+                        {(saldoAwalTransaksi.saldo || 0).toLocaleString(
                           "id-ID"
                         )}
                       </td>
                       <td className="p-3 text-center">-</td>
                     </tr>
-                  )} */}
+                  )}
 
-                  {filteredTransaksi.map((transaction, index) => {
-                    const isSaldoAwal = transaction.nomorBukti
-                      ?.toLowerCase()
-                      .includes("saldo awal sanduka");
-                    if (isSaldoAwal) {
-                      const [year, month, day] = transaction.tanggalTransaksi;
-                      return (
-                        <tr
-                          key={transaction.id}
-                          className="font-semibold bg-gray-100 text-sm"
-                        >
-                          <td className="p-3 text-center">-</td>
-                          <td className="p-3">{`${String(day).padStart(
-                            2,
-                            "0"
-                          )}-${String(month).padStart(2, "0")}-${year}`}</td>
-                          <td className="p-3">{transaction.nomorBukti}</td>
-                          <td className="p-3">{transaction.keterangan}</td>
-                          <td className="p-3 text-right">
-                            {(transaction.debet || 0).toLocaleString("id-ID")}
-                          </td>
-                          <td className="p-3 text-right">0</td>
-                          <td className="p-3 text-right">
-                            {(transaction.saldo || 0).toLocaleString("id-ID")}
-                          </td>
-                          <td className="p-3 text-center">-</td>
-                        </tr>
-                      );
-                    }
-
-                    // Untuk transaksi biasa
-                    return (
+                  {/* Loop transaksi tanpa saldo awal */}
+                  {filteredTransaksi
+                    .filter(
+                      (item) =>
+                        !item.nomorBukti
+                          ?.toLowerCase()
+                          .includes("saldo awal sanduka") ||
+                        item.id === "virtual-saldo-awal" // biar tidak disaring jika saldo awal virtual sudah dipisah
+                    )
+                    .filter((item) => item.id !== saldoAwalTransaksi?.id) // ini penting untuk buang duplikat
+                    .map((transaction, index) => (
                       <tr
                         key={transaction.id}
                         className="border-b border-gray-300"
@@ -1758,8 +1740,7 @@ function KasSanduka() {
                           </div>
                         </td>
                       </tr>
-                    );
-                  })}
+                    ))}
                 </tbody>
                 <tfoot>
                   <tr className="border-b border-blue-300">
