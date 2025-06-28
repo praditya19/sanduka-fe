@@ -1694,15 +1694,15 @@ function KasSanduka() {
                         !item.nomorBukti
                           ?.toLowerCase()
                           .includes("saldo awal sanduka") ||
-                        item.id === "virtual-saldo-awal" // biar tidak disaring jika saldo awal virtual sudah dipisah
+                        item.id === "virtual-saldo-awal"
                     )
-                    .filter((item) => item.id !== saldoAwalTransaksi?.id) // ini penting untuk buang duplikat
+                    .filter((item) => item.id !== saldoAwalTransaksi?.id)
                     .map((transaction, index) => (
                       <tr
                         key={transaction.id}
                         className="border-b border-gray-300"
                       >
-                        <td className="p-3 text-center text-sm">{index}</td>
+                        <td className="p-3 text-center text-sm">{index + 1}</td>
                         <td className="p-3 text-sm">
                           {new Date(
                             transaction.tanggalTransaksi
