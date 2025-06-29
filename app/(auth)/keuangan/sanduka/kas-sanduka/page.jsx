@@ -257,7 +257,8 @@ function KasSanduka() {
         tempDate.setMonth(tempDate.getMonth() - 1);
       }
 
-      const hasilHitungSebelum = hitungSaldo(prevMonthData, 0);
+const pemasukanSaja = prevMonthData.filter((item) => item.jenis === "PEMASUKAN");
+const hasilHitungSebelum = hitungSaldo(pemasukanSaja, 0);
       const saldoAkhirSebelumnya =
         hasilHitungSebelum.length > 0
           ? hasilHitungSebelum[hasilHitungSebelum.length - 1].saldo
@@ -284,17 +285,18 @@ function KasSanduka() {
     const tahun = Number(yearFilter);
 
     let saldoAwalTransaksi = data.find((item) => {
-      const nomorBuktiLower = String(item.nomorBukti).toLowerCase();
-      const itemBulan =
-        item.setoranBulan || new Date(item.tanggalTransaksi).getMonth() + 1;
-      const itemTahun =
-        item.setoranTahun || new Date(item.tanggalTransaksi).getFullYear();
-      return (
-        nomorBuktiLower.includes("saldo awal sanduka") &&
-        itemBulan === bulan &&
-        itemTahun === tahun
-      );
-    });
+  const nomorBuktiLower = String(item.nomorBukti).toLowerCase();
+  const itemBulan =
+    item.setoranBulan || new Date(item.tanggalTransaksi).getMonth() + 1;
+  const itemTahun =
+    item.setoranTahun || new Date(item.tanggalTransaksi).getFullYear();
+  return (
+    item.jenis === "PEMASUKAN" && // hanya pemasukan
+    nomorBuktiLower.includes("saldo awal sanduka") &&
+    itemBulan === bulan &&
+    itemTahun === tahun
+  );
+});
 
     let transaksiWithSaldoAwal = [...data];
     if (!saldoAwalTransaksi) {
@@ -334,8 +336,8 @@ function KasSanduka() {
   };
 
   useEffect(() => {
-    prosesData(tableKasSanduka);
-  }, [monthFilter, yearFilter, tableKasSanduka]);
+  fetchPenerimaan();
+}, [monthFilter, yearFilter]);
 
   const [totalDebit, totalKredit, saldoAkhir] = React.useMemo(() => {
     let totalDebet = 0;
@@ -1706,8 +1708,13 @@ function KasSanduka() {
                           .includes("saldo awal sanduka") ||
                         item.id === "virtual-saldo-awal"
                     )
-                    .filter((item) => item.id !== saldoAwalTransaksi?.id)
-                    .map((transaction, index) => (
+.filter(
+  (item) =>
+    !(
+      item.nomorBukti === saldoAwalTransaksi?.nomorBukti &&
+      item.jenis === saldoAwalTransaksi?.jenis
+    )
+)                    .map((transaction, index) => (
                       <tr
                         key={transaction.id}
                         className="border-b border-gray-300"
