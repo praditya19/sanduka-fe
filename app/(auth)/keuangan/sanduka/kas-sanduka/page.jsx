@@ -302,7 +302,7 @@ function KasSanduka() {
         id: "virtual-saldo-awal",
         tanggalTransaksi: [tahun, bulan, 1],
         nomorBukti: "SALDO AWAL SANDUKA",
-        keterangan: `Saldo Awal Sanduka Periode ${monthFilter}-${yearFilter}`,
+        keterangan: `Saldo Sanduka Periode ${monthFilter}-${yearFilter}`,
         debet: saldoAwalManual,
         kredit: 0,
         saldo: saldoAwalManual,
@@ -558,15 +558,24 @@ function KasSanduka() {
     setShowEditModal(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id, jenis) => {
     try {
-      await GlobalApi.deletePosPenerimaanSanduka(id);
+      if (jenis === "PEMASUKAN") {
+        await GlobalApi.deletePemasukanSanduka(id);
+      } else if (jenis === "PENGELUARAN") {
+        await GlobalApi.deletePengeluaranSanduka(id);
+      } else {
+        throw new Error("Jenis transaksi tidak dikenali");
+      }
+
       setNotification({
         type: "success",
         message: "Data berhasil dihapus!",
       });
+
       fetchPenerimaan();
     } catch (error) {
+      console.error("Gagal menghapus:", error);
       setNotification({
         type: "error",
         message: "Gagal hapus data.",
@@ -1541,7 +1550,8 @@ function KasSanduka() {
             <div className="bg-white rounded-lg shadow-md p-6 mt-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h1 className="text-2xl font-bold text-gray-800">
-                  Daftar Transaksi Sanduka - Juni 2025
+                  Daftar Transaksi Sanduka - {getMonthName(monthFilter)}{" "}
+                  {yearFilter}
                 </h1>
 
                 <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto items-center">
@@ -1732,7 +1742,9 @@ function KasSanduka() {
                               <FaEdit />
                             </button>
                             <button
-                              onClick={() => handleDelete(transaction.id)}
+                              onClick={() =>
+                                handleDelete(transaction.id, transaction.jenis)
+                              }
                               className="text-red-500 hover:text-red-700"
                             >
                               <FaTrash />
