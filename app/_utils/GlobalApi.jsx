@@ -2532,7 +2532,7 @@ const updatePemasukanKasSanduka = async (id, payload) => {
 
 const deletePosPenerimaanSanduka = async (id) => {
   try {
-    const response = await axiosClient.delete(`/api/pemasukan-sanduka/${id}`);
+    const response = await axiosClient.delete(`/api/pos-pemasukan/${id}`);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -2547,6 +2547,35 @@ const deletePosPenerimaanSanduka = async (id) => {
 const deletePosPengeluaranSanduka = async (id) => {
   try {
     const response = await axiosClient.delete(`/api/pos-pengeluaran/${id}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
+
+const deletePemasukanSanduka = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/pemasukan-sanduka/${id}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
+const deletePengeluaranSanduka = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/pengeluaran-sanduka/${id}`);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -2670,6 +2699,7 @@ export default {
   deleteUser,
   getCalculateSandukaBaru,
   getCalculateSandukaMeninggal,
+  deletePemasukanSanduka,
   getCalculateSandukaPensiun,
   getCalculateSandukaKeluar,
   getTotalAnggotaStatistik,
@@ -2753,6 +2783,7 @@ export default {
   postSesuaiTargetSanduka,
   getPosPenerimaanSanduka,
   postPemasukanSanduka,
+  deletePengeluaranSanduka,
   getPosPengeluaranSanduka,
   updatePemasukanKasSanduka,
   postPengeluaranSanduka,
