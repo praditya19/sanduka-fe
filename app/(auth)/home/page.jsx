@@ -397,7 +397,7 @@ export default function IconGrid() {
         setJumlahMeninggal(deceasedData.length);
 
         const detailedData = await Promise.all(
-          deceasedData.map(async (deceased) => {
+          deceasedData.map(async (deceased, index) => {
             try {
               const userResponse = await GlobalApi.searchUsersByName(
                 deceased.namaLengkap
@@ -409,7 +409,10 @@ export default function IconGrid() {
                 userResponse?.data?.users &&
                 userResponse.data.users.length > 0
               ) {
-                const userData = userResponse.data.users[0];
+                // Cari user yang paling cocok berdasarkan nama
+                const userData = userResponse.data.users.find(user =>
+                  user.namaLengkap?.toLowerCase() === deceased.namaLengkap?.toLowerCase()
+                ) || userResponse.data.users[0];
 
                 if (userData.foto) {
                   try {
@@ -440,22 +443,29 @@ export default function IconGrid() {
                   nomorHpPelapor:
                     userData.nomorHpPelapor || deceased.nomorHpPelapor,
                   foto: decodedFoto || null,
+                  originalIndex: index
                 };
               }
-              return deceased;
+              return {
+                ...deceased,
+                foto: null,
+                originalIndex: index
+              };
             } catch (error) {
               console.error(
                 `Error fetching details for ${deceased.namaLengkap}:`,
                 error
               );
-              return deceased;
+              return {
+                ...deceased,
+                foto: null,
+                originalIndex: index
+              };
             }
           })
         );
 
         setAnggotaMeninggal(detailedData);
-
-        setFotoMeninggal(detailedData.map((data) => data.foto));
       } catch (error) {
         console.error("Error fetching combined user data:", error);
       }
@@ -712,8 +722,8 @@ export default function IconGrid() {
                 <div className="flex justify-center mb-2">
                   <Image
                     src={
-                      fotoMeninggal[index]
-                        ? `data:image/jpeg;base64,${fotoMeninggal[index]}`
+                      currentData.foto
+                        ? `data:image/jpeg;base64,${currentData.foto}`
                         : profileImageUrl
                     }
                     width={80}
@@ -791,69 +801,69 @@ export default function IconGrid() {
   const filteredIcons =
     role === "USER"
       ? icons
-          .filter((item) =>
-            [
-              "Lapor",
-              "Teman Unit",
-              "Ketentuan",
-              "Bantuan",
-              "History data",
-              "Pengaduan",
-            ].includes(item.label)
-          )
-          .concat({
-            icon: faUser,
-            label: "Detail Anggota",
-            href: "/anggota/detail-anggota",
-            color: "text-blue-500",
-            bgHover: "hover:bg-blue-100",
-            iconColor: "text-blue-600",
-          })
-          .concat({
-            icon: faUserPen,
-            label: "Edit Anggota",
-            href: "/anggota/edit-anggota",
-            color: "text-orange-500",
-            bgHover: "hover:bg-blue-100",
-            iconColor: "text-blue-600",
-          })
-          .concat({
-            icon: faRightLeft,
-            label: "Mutasi",
-            href: "/anggota/data-anggota/mutasiCabangUnit",
-            color: "text-cyan-500",
-          })
-          .concat({
-            icon: faFileAlt,
-            label: "Daspen",
-            href: "/daspen",
-            color: "text-teal-700",
-          })
+        .filter((item) =>
+          [
+            "Lapor",
+            "Teman Unit",
+            "Ketentuan",
+            "Bantuan",
+            "History data",
+            "Pengaduan",
+          ].includes(item.label)
+        )
+        .concat({
+          icon: faUser,
+          label: "Detail Anggota",
+          href: "/anggota/detail-anggota",
+          color: "text-blue-500",
+          bgHover: "hover:bg-blue-100",
+          iconColor: "text-blue-600",
+        })
+        .concat({
+          icon: faUserPen,
+          label: "Edit Anggota",
+          href: "/anggota/edit-anggota",
+          color: "text-orange-500",
+          bgHover: "hover:bg-blue-100",
+          iconColor: "text-blue-600",
+        })
+        .concat({
+          icon: faRightLeft,
+          label: "Mutasi",
+          href: "/anggota/data-anggota/mutasiCabangUnit",
+          color: "text-cyan-500",
+        })
+        .concat({
+          icon: faFileAlt,
+          label: "Daspen",
+          href: "/daspen",
+          color: "text-teal-700",
+        })
 
-          .concat({
-            icon: faFileInvoiceDollar,
-            label: "Tagihan",
-            href: "/tagihan",
-            color: "text-blue-700",
-          })
-          .sort((a, b) => {
-            const order = [
-              "Lapor",
-              "Tagihan",
-              "Detail Anggota",
-              "Edit Anggota",
-              "Mutasi",
-              "Daspen",
-              "Ketentuan",
-              "Bantuan",
-              "Teman Unit",
-              "Pengaduan",
-            ];
-            return order.indexOf(a.label) - order.indexOf(b.label);
-          })
+        .concat({
+          icon: faFileInvoiceDollar,
+          label: "Tagihan",
+          href: "/tagihan",
+          color: "text-blue-700",
+        })
+        .sort((a, b) => {
+          const order = [
+            "Lapor",
+            "Tagihan",
+            "Detail Anggota",
+            "Edit Anggota",
+            "Mutasi",
+            "Daspen",
+            "Ketentuan",
+            "Bantuan",
+            "Teman Unit",
+            "Pengaduan",
+          ];
+          return order.indexOf(a.label) - order.indexOf(b.label);
+        })
       : role === "SUPER ADMIN"
-      ? icons
-      : icons.filter((item) => item.label !== "Galeri");
+        ? icons
+        : icons.filter((item) => item.label !== "Galeri");
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -865,9 +875,8 @@ export default function IconGrid() {
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <main
-          className={`transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "ml-64" : "ml-0"
-          }`}
+          className={`transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
+            }`}
         >
           {notification && (
             <NotificationPopup
@@ -1092,11 +1101,10 @@ export default function IconGrid() {
                       className="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 transition-all duration-300 cursor-pointer"
                     >
                       <div
-                        className={`w-14 h-14 ${
-                          item.color.includes("text-")
-                            ? item.color.replace("text-", "bg-") + "/10"
-                            : "bg-gray-100"
-                        } rounded-full flex items-center justify-center mb-3 shadow-sm`}
+                        className={`w-14 h-14 ${item.color.includes("text-")
+                          ? item.color.replace("text-", "bg-") + "/10"
+                          : "bg-gray-100"
+                          } rounded-full flex items-center justify-center mb-3 shadow-sm`}
                       >
                         <FontAwesomeIcon
                           icon={item.icon}
@@ -1164,8 +1172,8 @@ export default function IconGrid() {
                             <div className="mx-auto w-20 h-20 rounded-full overflow-hidden border-2 border-white mb-3">
                               <Image
                                 src={
-                                  fotoMeninggal[index]
-                                    ? `data:image/jpeg;base64,${fotoMeninggal[index]}`
+                                  currentData.foto
+                                    ? `data:image/jpeg;base64,${currentData.foto}`
                                     : profileImageUrl
                                 }
                                 width={80}
