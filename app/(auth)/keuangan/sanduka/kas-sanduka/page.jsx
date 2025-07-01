@@ -158,14 +158,21 @@ function KasSanduka() {
   const [newPosPengeluaran, setNewPosPengeluaran] = useState("");
   const [transactionToEdit, setTransactionToEdit] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
-
-  const [posPengeluaranList, setPosPengeluaranList] = useState([
-    "ATK",
-    "Lain-lain",
-    "Listrik",
-    "PDAM",
-  ]);
-
+  const [editForm, setEditForm] = useState({
+    id: "",
+    tanggalTransaksi: "",
+    nomorBukti: "",
+    pos: "",
+    setoranBulan: "",
+    setoranTahun: "",
+    jenis: "",
+    cabang: "",
+    nominal: "",
+    keterangan: "",
+    yangMeninggal: "",
+    namaPenerima: "",
+  });
+  const [editJenis, setEditJenis] = useState("");
   const now = new Date();
   const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
   const currentYear = now.getFullYear();
@@ -257,8 +264,10 @@ function KasSanduka() {
         tempDate.setMonth(tempDate.getMonth() - 1);
       }
 
-const pemasukanSaja = prevMonthData.filter((item) => item.jenis === "PEMASUKAN");
-const hasilHitungSebelum = hitungSaldo(pemasukanSaja, 0);
+      const pemasukanSaja = prevMonthData.filter(
+        (item) => item.jenis === "PEMASUKAN"
+      );
+      const hasilHitungSebelum = hitungSaldo(pemasukanSaja, 0);
       const saldoAkhirSebelumnya =
         hasilHitungSebelum.length > 0
           ? hasilHitungSebelum[hasilHitungSebelum.length - 1].saldo
@@ -285,18 +294,18 @@ const hasilHitungSebelum = hitungSaldo(pemasukanSaja, 0);
     const tahun = Number(yearFilter);
 
     let saldoAwalTransaksi = data.find((item) => {
-  const nomorBuktiLower = String(item.nomorBukti).toLowerCase();
-  const itemBulan =
-    item.setoranBulan || new Date(item.tanggalTransaksi).getMonth() + 1;
-  const itemTahun =
-    item.setoranTahun || new Date(item.tanggalTransaksi).getFullYear();
-  return (
-    item.jenis === "PEMASUKAN" && // hanya pemasukan
-    nomorBuktiLower.includes("saldo awal sanduka") &&
-    itemBulan === bulan &&
-    itemTahun === tahun
-  );
-});
+      const nomorBuktiLower = String(item.nomorBukti).toLowerCase();
+      const itemBulan =
+        item.setoranBulan || new Date(item.tanggalTransaksi).getMonth() + 1;
+      const itemTahun =
+        item.setoranTahun || new Date(item.tanggalTransaksi).getFullYear();
+      return (
+        item.jenis === "PEMASUKAN" &&
+        nomorBuktiLower.includes("saldo awal sanduka") &&
+        itemBulan === bulan &&
+        itemTahun === tahun
+      );
+    });
 
     let transaksiWithSaldoAwal = [...data];
     if (!saldoAwalTransaksi) {
@@ -336,8 +345,8 @@ const hasilHitungSebelum = hitungSaldo(pemasukanSaja, 0);
   };
 
   useEffect(() => {
-  fetchPenerimaan();
-}, [monthFilter, yearFilter]);
+    fetchPenerimaan();
+  }, [monthFilter, yearFilter]);
 
   const [totalDebit, totalKredit, saldoAkhir] = React.useMemo(() => {
     let totalDebet = 0;
@@ -550,14 +559,113 @@ const hasilHitungSebelum = hitungSaldo(pemasukanSaja, 0);
     }
   };
 
-  const formatDate = (dateString) => {
-    const options = { day: "numeric", month: "short", year: "numeric" };
-    return new Date(dateString).toLocaleDateString("id-ID", options);
+  const handleEditClick = async (id, jenis) => {
+    try {
+      setEditJenis(jenis);
+      let data;
+
+      if (jenis === "PEMASUKAN") {
+        data = await GlobalApi.getPemasukanKasSandukaById(id);
+        const tanggal = `${data.tanggalTransaksi[0]}-${String(
+          data.tanggalTransaksi[1]
+        ).padStart(2, "0")}-${String(data.tanggalTransaksi[2]).padStart(
+          2,
+          "0"
+        )}`;
+
+        setEditForm({
+          id: data.id,
+          tanggalTransaksi: tanggal,
+          nomorBukti: data.nomorBukti,
+          pos: data.posPenerimaan,
+          setoranBulan: data.setoranBulan,
+          setoranTahun: data.setoranTahun,
+          jenis: data.jenisPenerimaan,
+          cabang: data.cabang,
+          nominal: data.nominal,
+          keterangan: data.keterangan,
+          yangMeninggal: "",
+          namaPenerima: "",
+        });
+      } else if (jenis === "PENGELUARAN") {
+        data = await GlobalApi.getPengeluaranKasSandukaById(id);
+        const tanggal = `${data.tanggalTransaksi[0]}-${String(
+          data.tanggalTransaksi[1]
+        ).padStart(2, "0")}-${String(data.tanggalTransaksi[2]).padStart(
+          2,
+          "0"
+        )}`;
+
+        setEditForm({
+          id: data.id,
+          tanggalTransaksi: tanggal,
+          nomorBukti: data.nomorBukti,
+          pos: data.posPengeluaran,
+          setoranBulan: data.setoranBulan,
+          setoranTahun: data.setoranTahun,
+          jenis: data.jenisPegeluaran,
+          cabang: data.cabang,
+          nominal: data.nominal,
+          keterangan: data.keterangan,
+          yangMeninggal: data.yangMeninggal,
+          namaPenerima: data.namaPenerima,
+        });
+      }
+
+      setShowEditModal(true);
+    } catch (error) {
+      console.error("Gagal mengambil data:", error);
+    }
   };
 
-  const handleEditClick = (transaction) => {
-    setTransactionToEdit(transaction);
-    setShowEditModal(true);
+  const handleSaveEdit = async () => {
+    try {
+      const [year, month, day] = editForm.tanggalTransaksi.split("-");
+
+      if (editJenis === "PEMASUKAN") {
+        const payload = {
+          id: editForm.id,
+          tanggalTransaksi: editForm.tanggalTransaksi,
+          posPenerimaan: editForm.pos,
+          setoranBulan: Number(month),
+          setoranTahun: Number(year),
+          jenisPenerimaan: editForm.jenis,
+          cabang: editForm.cabang,
+          nominal: Number(editForm.nominal),
+          keterangan: editForm.keterangan,
+        };
+
+        await GlobalApi.updatePemasukanKasSanduka(editForm.id, payload);
+      } else if (editJenis === "PENGELUARAN") {
+        const payload = {
+          tanggalTransaksi: editForm.tanggalTransaksi,
+          posPengeluaran: editForm.pos,
+          setoranBulan: Number(month),
+          setoranTahun: Number(year),
+          jenisPegeluaran: editForm.jenis,
+          cabang: editForm.cabang,
+          nominal: Number(editForm.nominal),
+          yangMeninggal: editForm.yangMeninggal,
+          namaPenerima: editForm.namaPenerima,
+          keterangan: editForm.keterangan,
+        };
+
+        await GlobalApi.updatePengeluaranKasSanduka(editForm.id, payload);
+      }
+
+      setNotification({
+        type: "success",
+        message: "Data berhasil diperbarui!",
+      });
+      setShowEditModal(false);
+      fetchPenerimaan();
+    } catch (error) {
+      console.error("Gagal menyimpan perubahan:", error);
+      setNotification({
+        type: "error",
+        message: "Gagal menyimpan perubahan.",
+      });
+    }
   };
 
   const handleDelete = async (id, jenis) => {
@@ -1708,13 +1816,14 @@ const hasilHitungSebelum = hitungSaldo(pemasukanSaja, 0);
                           .includes("saldo awal sanduka") ||
                         item.id === "virtual-saldo-awal"
                     )
-.filter(
-  (item) =>
-    !(
-      item.nomorBukti === saldoAwalTransaksi?.nomorBukti &&
-      item.jenis === saldoAwalTransaksi?.jenis
-    )
-)                    .map((transaction, index) => (
+                    .filter(
+                      (item) =>
+                        !(
+                          item.nomorBukti === saldoAwalTransaksi?.nomorBukti &&
+                          item.jenis === saldoAwalTransaksi?.jenis
+                        )
+                    )
+                    .map((transaction, index) => (
                       <tr
                         key={transaction.id}
                         className="border-b border-gray-300"
@@ -1743,7 +1852,12 @@ const hasilHitungSebelum = hitungSaldo(pemasukanSaja, 0);
                         <td className="p-3 text-center text-sm">
                           <div className="flex space-x-2 justify-center text-base">
                             <button
-                              onClick={() => handleEditClick(transaction)}
+                              onClick={() =>
+                                handleEditClick(
+                                  transaction.id,
+                                  transaction.jenis
+                                )
+                              }
                               className="text-blue-500 hover:text-blue-700"
                             >
                               <FaEdit />
@@ -2011,8 +2125,8 @@ const hasilHitungSebelum = hitungSaldo(pemasukanSaja, 0);
           </div>
         </div>
       )}
-      {showEditModal && transactionToEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      {showEditModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="relative bg-white rounded-lg shadow-xl w-[500px] max-w-full p-6">
             {/* Tombol X (Batal) */}
             <button
@@ -2024,7 +2138,7 @@ const hasilHitungSebelum = hitungSaldo(pemasukanSaja, 0);
 
             {/* Header Modal */}
             <h2 className="text-lg font-semibold mb-4">
-              Edit Transaksi - {transactionToEdit.noBukti}
+              {/* Edit Transaksi - {transactionToEdit.noBukti} */}
             </h2>
 
             {/* Form Edit */}
@@ -2036,11 +2150,11 @@ const hasilHitungSebelum = hitungSaldo(pemasukanSaja, 0);
                 <input
                   type="date"
                   className="w-full border px-3 py-2 rounded"
-                  value={transactionToEdit.tanggal}
+                  value={editForm.tanggalTransaksi}
                   onChange={(e) =>
-                    setTransactionToEdit({
-                      ...transactionToEdit,
-                      tanggal: e.target.value,
+                    setEditForm({
+                      ...editForm,
+                      tanggalTransaksi: e.target.value,
                     })
                   }
                 />
@@ -2051,7 +2165,7 @@ const hasilHitungSebelum = hitungSaldo(pemasukanSaja, 0);
                 <input
                   type="text"
                   className="w-full border px-3 py-2 rounded bg-gray-100"
-                  value={transactionToEdit.noBukti}
+                  value={editForm.nomorBukti}
                   disabled
                 />
               </div>
@@ -2060,45 +2174,84 @@ const hasilHitungSebelum = hitungSaldo(pemasukanSaja, 0);
                 <label className="block text-sm font-medium">Uraian</label>
                 <textarea
                   className="w-full border px-3 py-2 rounded"
-                  value={transactionToEdit.uraian}
+                  value={editForm.keterangan}
                   onChange={(e) =>
-                    setTransactionToEdit({
-                      ...transactionToEdit,
-                      uraian: e.target.value,
-                    })
+                    setEditForm({ ...editForm, keterangan: e.target.value })
                   }
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium">Debet (Rp)</label>
-                <input
-                  type="number"
-                  className="w-full border px-3 py-2 rounded"
-                  value={transactionToEdit.debit}
-                  onChange={(e) =>
-                    setTransactionToEdit({
-                      ...transactionToEdit,
-                      debit: Number(e.target.value),
-                    })
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium">Kredit (Rp)</label>
-                <input
-                  type="number"
-                  className="w-full border px-3 py-2 rounded"
-                  value={transactionToEdit.kredit}
-                  onChange={(e) =>
-                    setTransactionToEdit({
-                      ...transactionToEdit,
-                      kredit: Number(e.target.value),
-                    })
-                  }
-                />
-              </div>
+              {editJenis === "PEMASUKAN" ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Debet (Rp)
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full border px-3 py-2 rounded"
+                     value={
+      editForm.nominal === 0
+        ? ""
+        : editForm.nominal
+            .toString()
+            .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+    }
+    onChange={(e) => {
+      const raw = e.target.value.replace(/\./g, "");
+      const num = Number(raw);
+      setEditForm({ ...editForm, nominal: isNaN(num) ? 0 : num });
+    }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Kredit (Rp)
+                    </label>
+                    <input
+                      type="number"
+                      className="w-full border px-3 py-2 rounded"
+                      value={0}
+                      disabled
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Debet (Rp)
+                    </label>
+                    <input
+                      type="number"
+                      className="w-full border px-3 py-2 rounded"
+                      value={0}
+                      disabled
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">
+                      Kredit (Rp)
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full border px-3 py-2 rounded"
+                      value={
+      editForm.nominal === 0
+        ? ""
+        : editForm.nominal
+            .toString()
+            .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+    }
+    onChange={(e) => {
+      const raw = e.target.value.replace(/\./g, "");
+      const num = Number(raw);
+      setEditForm({ ...editForm, nominal: isNaN(num) ? 0 : num });
+    }}
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Tombol Simpan & Batal */}
@@ -2110,8 +2263,8 @@ const hasilHitungSebelum = hitungSaldo(pemasukanSaja, 0);
                 Batal
               </button>
               <button
-                // onClick={handleUpdateTransaction}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center"
+                onClick={handleSaveEdit}
               >
                 <FaSave className="mr-2" />
                 Simpan Perubahan

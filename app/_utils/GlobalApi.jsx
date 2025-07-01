@@ -2516,9 +2516,39 @@ const getPenerimaanSanduka = async () => {
   }
 };
 
+const getPemasukanKasSandukaById = async (id) => {
+  try {
+    const response = await axiosClient.get(`/api/pemasukan-sanduka/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 const updatePemasukanKasSanduka = async (id, payload) => {
   try {
-    const response = await axiosClient.put(`/api/defaultIuran/${id}`, payload, {
+    const response = await axiosClient.put(`/api/pemasukan-sanduka/${id}`, payload, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating data:", error);
+    throw error;
+  }
+};
+
+const getPengeluaranKasSandukaById = async (id) => {
+  try {
+    const response = await axiosClient.get(`/api/pengeluaran-sanduka/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+const updatePengeluaranKasSanduka = async (id, payload) => {
+  try {
+    const response = await axiosClient.put(`/api/pengeluaran-sanduka/${id}`, payload, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -2784,11 +2814,14 @@ export default {
   getPosPenerimaanSanduka,
   postPemasukanSanduka,
   deletePengeluaranSanduka,
+  getPemasukanKasSandukaById,
   getPosPengeluaranSanduka,
   updatePemasukanKasSanduka,
   postPengeluaranSanduka,
+  getPengeluaranKasSandukaById,
   getTableKasSanduka,
   deletePosPengeluaranSanduka,
+  updatePengeluaranKasSanduka,
   postPosPengeluaranSanduka,
   postPosPenerimaanSanduka,
 };
