@@ -358,8 +358,11 @@ function KasSanduka() {
       await fetchData();
       await fetchCabangData();
       await fetchPenerimaan();
+    };
 
-      const today = new Date();
+    init();
+
+    const today = new Date();
       const formattedDate = today.toISOString().split("T")[0];
       const year = today.getFullYear();
       const month = String(today.getMonth() + 1).padStart(2, "0");
@@ -371,11 +374,8 @@ function KasSanduka() {
       setSetoranTahunPengeluaran(year.toString());
       setSetoranBulanPengeluaran(month);
       setDefaultMonth(`${year}-${month}`);
-      setDefaultMonthPengeluaran(`${year}-${month}`);
-    };
-
-    init();
-
+    setDefaultMonthPengeluaran(`${year}-${month}`);
+    
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setShowDropdown(false);
