@@ -4,6 +4,8 @@ import Link from "next/link";
 import Pemasukan from "../sanduka/pemasukan/page";
 import Pengeluaran from "./pengeluaran/page";
 import Laporan from "../sanduka/laporan/page";
+import KasSanduka from "../sanduka/kas-sanduka/page";
+import Kwitansi from "../sanduka/kwitansi/page";
 import { useRouter } from "next/navigation";
 import { faArrowLeft, faBars } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -114,6 +116,12 @@ export default function Sanduka() {
         <nav className="container mt-12">
           <ul className="flex flex-wrap space-x-4 md:space-x-6">
             <NavItem
+              isActive={activeTab === "kasSanduka"}
+              onClick={() => handleTabChange("kasSanduka")}
+            >
+              Kas Sanduka
+            </NavItem>
+            <NavItem
               isActive={activeTab === "pemasukan"}
               onClick={() => handleTabChange("pemasukan")}
             >
@@ -159,15 +167,20 @@ export default function Sanduka() {
             >
               Laporan
             </NavItem>
-            <NavItem>
-              <Link href="/keuangan/sanduka/kwitansi">Kwitansi</Link>
+            <NavItem
+              isActive={activeTab === "kwitansi"}
+              onClick={() => handleTabChange("kwitansi")}
+            >
+              Kwitansi
             </NavItem>
           </ul>
         </nav>
 
+        {activeTab === "kasSanduka" && <KasSanduka />}
         {activeTab === "pemasukan" && <Pemasukan />}
         {activeTab === "pengeluaran" && <Pengeluaran />}
         {activeTab === "laporan" && <Laporan />}
+        {activeTab === "kwitansi" && <Kwitansi />}
       </div>
     </div>
   );
