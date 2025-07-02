@@ -2562,7 +2562,7 @@ const updatePengeluaranKasSanduka = async (id, payload) => {
 
 const deletePosPenerimaanSanduka = async (id) => {
   try {
-    const response = await axiosClient.delete(`/api/pos-pemasukan/${id}`);
+    const response = await axiosClient.delete(`/api/pos-penerimaan/${id}`);
     return response.data;
   } catch (error) {
     if (error.response) {
