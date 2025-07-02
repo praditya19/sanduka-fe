@@ -122,6 +122,7 @@ function KasSanduka() {
   const [cabangPenerimaan, setCabangPenerimaan] = useState("");
   const [setoranBulan, setSetoranBulan] = useState("");
   const [setoranTahun, setSetoranTahun] = useState("");
+  const [defaultMonth, setDefaultMonth] = useState("");
   const [nominalPenerimaan, setNominalPenerimaan] = useState("");
   const [keteranganPenerimaan, setKeteranganPenerimaan] = useState("");
 
@@ -131,6 +132,7 @@ function KasSanduka() {
   const [cabangPengeluaran, setCabangPengeluaran] = useState("");
   const [setoranBulanPengeluaran, setSetoranBulanPengeluaran] = useState("");
   const [setoranTahunPengeluaran, setSetoranTahunPengeluaran] = useState("");
+  const [defaultMonthPengeluaran, setDefaultMonthPengeluaran] = useState("");
   const [nominalPengeluaran, setNominalPengeluaran] = useState("");
   const [keteranganPengeluaran, setKeteranganPengeluaran] = useState("");
   const [yangMeninggal, setYangMeninggal] = useState("");
@@ -204,20 +206,6 @@ function KasSanduka() {
     return month ? month.label : "";
   };
 
-  useEffect(() => {
-    fetchData();
-    fetchCabangData();
-    fetchPenerimaan();
-
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setShowDropdown(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [monthFilter, yearFilter]);
-
   const fetchData = async () => {
     try {
       const penerimaan = await GlobalApi.getPosPenerimaanSanduka();
@@ -243,39 +231,43 @@ function KasSanduka() {
     try {
       const bulan = Number(monthFilter);
       const tahun = Number(yearFilter);
-
       const currentMonthData = await GlobalApi.getTableKasSanduka(bulan, tahun);
-
-      const currentDate = new Date(tahun, bulan - 1, 1);
+      let saldoAkhirSebelumnya = 0;
       const maret2021 = new Date(2021, 2, 1);
 
-      let prevMonthData = [];
-
-      let tempDate = new Date(currentDate);
+      let tempDate = new Date(tahun, bulan - 1, 1);
       tempDate.setMonth(tempDate.getMonth() - 1);
+
+      let allPreviousData = [];
 
       while (tempDate >= maret2021) {
         const b = tempDate.getMonth() + 1;
         const y = tempDate.getFullYear();
-
         const data = await GlobalApi.getTableKasSanduka(b, y);
-        prevMonthData = [...prevMonthData, ...data];
-
+        allPreviousData.push(...data);
         tempDate.setMonth(tempDate.getMonth() - 1);
       }
 
-      const pemasukanSaja = prevMonthData.filter(
+      // Hitung saldo akhir dari semua transaksi sebelumnya (PEMASUKAN saja)
+      const pemasukanSaja = allPreviousData.filter(
         (item) => item.jenis === "PEMASUKAN"
       );
-      const hasilHitungSebelum = hitungSaldo(pemasukanSaja, 0);
-      const saldoAkhirSebelumnya =
-        hasilHitungSebelum.length > 0
-          ? hasilHitungSebelum[hasilHitungSebelum.length - 1].saldo
-          : 0;
+      const hasilSaldo = hitungSaldo(pemasukanSaja, 0);
+      if (hasilSaldo.length > 0) {
+        saldoAkhirSebelumnya = hasilSaldo[hasilSaldo.length - 1].saldo || 0;
+      }
+      const dataBulanIni = currentMonthData.filter((item) => {
+        const [year, month] = Array.isArray(item.tanggalTransaksi)
+          ? item.tanggalTransaksi
+          : new Date(item.tanggalTransaksi)
+              .toISOString()
+              .split("T")[0]
+              .split("-")
+              .map(Number);
+        return Number(month) === bulan && Number(year) === tahun;
+      });
 
-      setSaldoAkhirBulanSebelumnya(saldoAkhirSebelumnya);
-
-      prosesData(currentMonthData, saldoAkhirSebelumnya);
+      prosesData(dataBulanIni, saldoAkhirSebelumnya);
     } catch (error) {
       console.error("Gagal fetch data penerimaan:", error);
     }
@@ -294,11 +286,17 @@ function KasSanduka() {
     const tahun = Number(yearFilter);
 
     let saldoAwalTransaksi = data.find((item) => {
-      const nomorBuktiLower = String(item.nomorBukti).toLowerCase();
+      const nomorBuktiLower = String(item.nomorBukti || "").toLowerCase();
       const itemBulan =
-        item.setoranBulan || new Date(item.tanggalTransaksi).getMonth() + 1;
+        item.setoranBulan ||
+        (Array.isArray(item.tanggalTransaksi)
+          ? item.tanggalTransaksi[1]
+          : new Date(item.tanggalTransaksi).getMonth() + 1);
       const itemTahun =
-        item.setoranTahun || new Date(item.tanggalTransaksi).getFullYear();
+        item.setoranTahun ||
+        (Array.isArray(item.tanggalTransaksi)
+          ? item.tanggalTransaksi[0]
+          : new Date(item.tanggalTransaksi).getFullYear());
       return (
         item.jenis === "PEMASUKAN" &&
         nomorBuktiLower.includes("saldo awal sanduka") &&
@@ -308,17 +306,22 @@ function KasSanduka() {
     });
 
     let transaksiWithSaldoAwal = [...data];
+
     if (!saldoAwalTransaksi) {
       saldoAwalTransaksi = {
         id: "virtual-saldo-awal",
         tanggalTransaksi: [tahun, bulan, 1],
         nomorBukti: "SALDO AWAL SANDUKA",
-        keterangan: `Saldo Sanduka Periode ${monthFilter}-${yearFilter}`,
+        keterangan: `Saldo Sanduka Periode ${String(bulan).padStart(
+          2,
+          "0"
+        )}-${tahun}`,
         debet: saldoAwalManual,
         kredit: 0,
         saldo: saldoAwalManual,
         setoranBulan: bulan,
         setoranTahun: tahun,
+        jenis: "PEMASUKAN",
         isVirtual: true,
       };
       transaksiWithSaldoAwal = [saldoAwalTransaksi, ...data];
@@ -327,13 +330,19 @@ function KasSanduka() {
     setSaldoAwalTransaksi(saldoAwalTransaksi);
 
     const transaksiBulanIni = transaksiWithSaldoAwal.filter((item) => {
-      const tgl = new Date(item.tanggalTransaksi);
-      const bulanItem = tgl.getMonth() + 1;
-      const tahunItem = tgl.getFullYear();
-      const isSaldoAwal = String(item.nomorBukti)
+      const [year, month] = Array.isArray(item.tanggalTransaksi)
+        ? item.tanggalTransaksi
+        : new Date(item.tanggalTransaksi)
+            .toISOString()
+            .split("T")[0]
+            .split("-")
+            .map(Number);
+
+      const isSaldoAwal = String(item.nomorBukti || "")
         .toLowerCase()
         .includes("saldo awal sanduka");
-      return bulanItem === bulan && tahunItem === tahun && !isSaldoAwal;
+
+      return Number(month) === bulan && Number(year) === tahun && !isSaldoAwal;
     });
 
     const transaksiDenganSaldo = hitungSaldo(
@@ -345,7 +354,36 @@ function KasSanduka() {
   };
 
   useEffect(() => {
-    fetchPenerimaan();
+    const init = async () => {
+      await fetchData();
+      await fetchCabangData();
+      await fetchPenerimaan();
+
+      const today = new Date();
+      const formattedDate = today.toISOString().split("T")[0];
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+
+      setTglPenerimaan(formattedDate);
+      setTglPengeluaran(formattedDate);
+      setSetoranTahun(year.toString());
+      setSetoranBulan(month);
+      setSetoranTahunPengeluaran(year.toString());
+      setSetoranBulanPengeluaran(month);
+      setDefaultMonth(`${year}-${month}`);
+      setDefaultMonthPengeluaran(`${year}-${month}`);
+    };
+
+    init();
+
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [monthFilter, yearFilter]);
 
   const [totalDebit, totalKredit, saldoAkhir] = React.useMemo(() => {
@@ -391,7 +429,38 @@ function KasSanduka() {
     return split[1] !== undefined ? rupiah + "," + split[1] : rupiah;
   };
 
+  const resetForm = () => {
+    setJenisPenerimaan("");
+    setPosPenerimaan("");
+    setCabangPenerimaan("");
+    setSearchCabang("");
+    setShowDropdown(false);
+    setNominalPenerimaan("");
+    setKeteranganPenerimaan("");
+  };
+
   const handleSubmitPemasukan = async () => {
+    const namaBulan = [
+      "",
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
+    const bulanNama = namaBulan[Number(setoranBulan)];
+
+    const autoKeterangan = `Pemasukan Sanduka ${PosPenerimaan} Cabang ${cabangPenerimaan} (${jenisPenerimaan}) untuk ${bulanNama} ${setoranTahun}. Ket${
+      keteranganPenerimaan ? ` ${keteranganPenerimaan}` : " -"
+    }`;
+
     const payload = {
       tanggalTransaksi: tglPenerimaan,
       posPenerimaan: PosPenerimaan,
@@ -400,7 +469,7 @@ function KasSanduka() {
       jenisPenerimaan,
       cabang: cabangPenerimaan?.cabang ?? "",
       nominal: Number(nominalPenerimaan),
-      keterangan: keteranganPenerimaan ?? "",
+      keterangan: autoKeterangan,
     };
 
     try {
@@ -410,6 +479,7 @@ function KasSanduka() {
         message: "Berhasil simpan pemasukan!",
       });
       fetchPenerimaan();
+      resetForm();
     } catch (error) {
       setNotification({
         type: "error",
@@ -1351,11 +1421,12 @@ function KasSanduka() {
                       <input
                         type="month"
                         className="w-full p-2 border border-gray-300 rounded"
+                        value={defaultMonth}
                         onChange={(e) => {
-                          const [setoranTahun, setoranBulan] =
-                            e.target.value.split("-");
-                          setSetoranTahun(setoranTahun);
-                          setSetoranBulan(setoranBulan);
+                          const [tahun, bulan] = e.target.value.split("-");
+                          setSetoranTahun(tahun);
+                          setSetoranBulan(bulan);
+                          setDefaultMonth(e.target.value);
                         }}
                       />
                     </div>
@@ -1579,9 +1650,7 @@ function KasSanduka() {
                       <input
                         type="month"
                         name="bulanTahun"
-                        value={`${setoranTahunPengeluaran}-${setoranBulanPengeluaran
-                          .toString()
-                          .padStart(2, "0")}`}
+                        value={defaultMonthPengeluaran}
                         onChange={(e) => {
                           const [year, month] = e.target.value.split("-");
                           setSetoranTahunPengeluaran(year);
@@ -1777,7 +1846,7 @@ function KasSanduka() {
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {/* Baris SALDO AWAL (tampil terpisah, hanya jika ada) */}
+                  {/* Baris SALDO AWAL */}
                   {saldoAwalTransaksi && (
                     <tr className="font-semibold bg-gray-100 text-sm">
                       <td className="p-3 text-center">-</td>
@@ -1807,22 +1876,23 @@ function KasSanduka() {
                     </tr>
                   )}
 
-                  {/* Loop transaksi tanpa saldo awal */}
+                  {/* Transaksi selain saldo awal */}
                   {filteredTransaksi
-                    .filter(
-                      (item) =>
-                        !item.nomorBukti
-                          ?.toLowerCase()
-                          .includes("saldo awal sanduka") ||
-                        item.id === "virtual-saldo-awal"
-                    )
-                    .filter(
-                      (item) =>
-                        !(
-                          item.nomorBukti === saldoAwalTransaksi?.nomorBukti &&
-                          item.jenis === saldoAwalTransaksi?.jenis
-                        )
-                    )
+                    .filter((item) => {
+                      const isSaldoAwal = item.nomorBukti
+                        ?.toLowerCase()
+                        .includes("saldo awal sanduka");
+                      const [year, month] = Array.isArray(item.tanggalTransaksi)
+                        ? [item.tanggalTransaksi[0], item.tanggalTransaksi[1]]
+                        : new Date(item.tanggalTransaksi)
+                            .toISOString()
+                            .split("T")[0]
+                            .split("-")
+                            .map(Number);
+                      const matchBulan = month === Number(monthFilter);
+                      const matchTahun = year === Number(yearFilter);
+                      return !isSaldoAwal && matchBulan && matchTahun;
+                    })
                     .map((transaction, index) => (
                       <tr
                         key={transaction.id}
@@ -1875,6 +1945,7 @@ function KasSanduka() {
                       </tr>
                     ))}
                 </tbody>
+
                 <tfoot>
                   <tr className="border-b border-blue-300">
                     <td className="text-right p-3" colSpan={4}>
@@ -2190,18 +2261,21 @@ function KasSanduka() {
                     <input
                       type="text"
                       className="w-full border px-3 py-2 rounded"
-                     value={
-      editForm.nominal === 0
-        ? ""
-        : editForm.nominal
-            .toString()
-            .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-    }
-    onChange={(e) => {
-      const raw = e.target.value.replace(/\./g, "");
-      const num = Number(raw);
-      setEditForm({ ...editForm, nominal: isNaN(num) ? 0 : num });
-    }}
+                      value={
+                        editForm.nominal === 0
+                          ? ""
+                          : editForm.nominal
+                              .toString()
+                              .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                      }
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\./g, "");
+                        const num = Number(raw);
+                        setEditForm({
+                          ...editForm,
+                          nominal: isNaN(num) ? 0 : num,
+                        });
+                      }}
                     />
                   </div>
                   <div>
@@ -2237,17 +2311,20 @@ function KasSanduka() {
                       type="text"
                       className="w-full border px-3 py-2 rounded"
                       value={
-      editForm.nominal === 0
-        ? ""
-        : editForm.nominal
-            .toString()
-            .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-    }
-    onChange={(e) => {
-      const raw = e.target.value.replace(/\./g, "");
-      const num = Number(raw);
-      setEditForm({ ...editForm, nominal: isNaN(num) ? 0 : num });
-    }}
+                        editForm.nominal === 0
+                          ? ""
+                          : editForm.nominal
+                              .toString()
+                              .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                      }
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\./g, "");
+                        const num = Number(raw);
+                        setEditForm({
+                          ...editForm,
+                          nominal: isNaN(num) ? 0 : num,
+                        });
+                      }}
                     />
                   </div>
                 </>
