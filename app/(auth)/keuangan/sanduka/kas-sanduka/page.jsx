@@ -170,6 +170,11 @@ function KasSanduka() {
   });
   const [editJenis, setEditJenis] = useState("");
   const [loading, setLoading] = useState(false);
+  const [rincianOperasional, setRincianOperasional] = useState({
+    pemasukan: 0,
+    pengeluaran: 0,
+    hasil15: 0,
+  });
   const now = new Date();
   const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
   const currentYear = now.getFullYear();
@@ -225,6 +230,56 @@ function KasSanduka() {
       const response = await GlobalApi.getCabang();
       setCabangList(response.data);
     } catch (error) {}
+  };
+
+  const handleAutoNominal = async () => {
+    if (!tglPengeluaran) return;
+
+    try {
+      setLoading(true);
+
+      const [year, month] = new Date(tglPengeluaran)
+        .toISOString()
+        .split("T")[0]
+        .split("-")
+        .map(Number);
+
+      const currentMonthData = await GlobalApi.getTableKasSanduka(month, year);
+
+      const dataBulanIni = currentMonthData.filter((item) => {
+        const [y, m] = Array.isArray(item.tanggalTransaksi)
+          ? item.tanggalTransaksi
+          : new Date(item.tanggalTransaksi)
+              .toISOString()
+              .split("T")[0]
+              .split("-")
+              .map(Number);
+        return Number(m) === month && Number(y) === year;
+      });
+
+      const totalPemasukan = dataBulanIni
+        .filter((item) => item.jenis === "PEMASUKAN")
+        .reduce((sum, item) => sum + Number(item.debet || 0), 0);
+
+      const totalPengeluaran = dataBulanIni
+        .filter((item) => item.jenis === "PENGELUARAN")
+        .reduce((sum, item) => sum + Number(item.kredit || 0), 0);
+
+      const nominalOperasional = Math.round(
+        (totalPemasukan - totalPengeluaran) * 0.15
+      );
+
+      setNominalPengeluaran(nominalOperasional.toString());
+      setRincianOperasional({
+        pemasukan: totalPemasukan,
+        pengeluaran: totalPengeluaran,
+        hasil15: nominalOperasional,
+      });
+    } catch (error) {
+      console.error("Gagal hitung nominal operasional:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchPenerimaan = async () => {
@@ -433,7 +488,10 @@ function KasSanduka() {
   );
 
   const formatRupiah = (value) => {
-    const numberString = value.replace(/[^,\d]/g, "");
+    if (value === null || value === undefined) return "";
+
+    const stringValue = value.toString();
+    const numberString = stringValue.replace(/[^,\d]/g, "");
     const split = numberString.split(",");
     let sisa = split[0].length % 3;
     let rupiah = split[0].substr(0, sisa);
@@ -444,7 +502,8 @@ function KasSanduka() {
       rupiah += separator + ribuan.join(".");
     }
 
-    return split[1] !== undefined ? rupiah + "," + split[1] : rupiah;
+    rupiah = split[1] !== undefined ? rupiah + "," + split[1] : rupiah;
+    return rupiah ? "Rp " + rupiah : "";
   };
 
   const resetForm = () => {
@@ -1599,7 +1658,12 @@ function KasSanduka() {
                       <select
                         name="posPengeluaran"
                         value={PosPengeluaran}
-                        onChange={(e) => setPosPengeluaran(e.target.value)}
+                        onChange={(e) => {
+                          setPosPengeluaran(e.target.value);
+                          if (e.target.value === "Operasional Sanduka") {
+                            handleAutoNominal();
+                          }
+                        }}
                         className="w-full p-2 border border-gray-300 rounded"
                       >
                         <option value="">Pilih Pos</option>
@@ -1785,13 +1849,24 @@ function KasSanduka() {
                         className="w-full p-2 border border-gray-300 rounded"
                         placeholder="0"
                       />
-
                       <p className="text-xs mt-1">
                         Terbilang:{" "}
                         {nominalPengeluaran
                           ? angkaTerbilang(Number(nominalPengeluaran))
                           : "Tidak ada nominal"}
                       </p>
+                      {PosPengeluaran === "Operasional Sanduka" && (
+                        <div className="text-xs text-green-600 mt-1 italic bg-gray-50 p-2 rounded">
+                          <div>Perhitungan: 15% x saldo bulan berjalan.</div>
+                          <div>
+                            15% x ({formatRupiah(rincianOperasional.pemasukan)}{" "}
+                            - {formatRupiah(rincianOperasional.pengeluaran)}) ={" "}
+                            <span className="font-semibold">
+                              {formatRupiah(rincianOperasional.hasil15)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
