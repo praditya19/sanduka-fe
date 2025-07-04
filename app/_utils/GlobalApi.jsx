@@ -1344,10 +1344,10 @@ const getNamaKwitansi = async (year, month) => {
     const response = await axiosClient.get(`/api/auth/users-deceased`, {
       params: { year, month },
     });
-    return response.data; // Mengembalikan data dari respons
+    return response.data;
   } catch (error) {
     console.error("Error fetching users deceased:", error);
-    throw error; // Melempar error agar dapat ditangani di luar
+    throw error;
   }
 };
 // Generate Kwitansi

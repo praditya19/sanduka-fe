@@ -138,13 +138,9 @@ function KasSanduka() {
   const [yangMeninggal, setYangMeninggal] = useState("");
   const [namaPenerima, setNamaPenerima] = useState("");
 
-  const [tableKasSanduka, setTableKasSanduka] = useState([]);
   const [saldoAkhirBulanSebelumnya, setSaldoAkhirBulanSebelumnya] = useState(0);
   const [filteredTransaksi, setFilteredTransaksi] = useState([]);
   const [saldoAwalTransaksi, setSaldoAwalTransaksi] = useState(null);
-
-  const [filterBulan, setFilterBulan] = useState("06");
-  const [filterTahun, setFilterTahun] = useState(new Date().getFullYear());
 
   const [posPenerimaanSanduka, setPosPenerimaanSanduka] = useState([]);
   const [posPengeluaranSanduka, setPosPengeluaranSanduka] = useState([]);
@@ -158,12 +154,10 @@ function KasSanduka() {
 
   const [showPosPengeluaranModal, setShowPosPengeluaranModal] = useState(false);
   const [newPosPengeluaran, setNewPosPengeluaran] = useState("");
-  const [transactionToEdit, setTransactionToEdit] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editForm, setEditForm] = useState({
     id: "",
     tanggalTransaksi: "",
-    nomorBukti: "",
     pos: "",
     setoranBulan: "",
     setoranTahun: "",
@@ -175,10 +169,16 @@ function KasSanduka() {
     namaPenerima: "",
   });
   const [editJenis, setEditJenis] = useState("");
+  const [loading, setLoading] = useState(false);
   const now = new Date();
   const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
   const currentYear = now.getFullYear();
-
+  const [bulanMeninggal, setBulanMeninggal] = useState("");
+  const [tahunMeninggal, setTahunMeninggal] = useState("");
+  const tahunOptions = Array.from({ length: 5 }, (_, i) =>
+    (currentYear - i).toString()
+  );
+  const [listMeninggal, setListMeninggal] = useState([]);
   const [monthFilter, setMonthFilter] = useState(currentMonth);
   const [yearFilter, setYearFilter] = useState(currentYear);
   const years = Array.from(
@@ -229,6 +229,7 @@ function KasSanduka() {
 
   const fetchPenerimaan = async () => {
     try {
+      setLoading(true);
       const bulan = Number(monthFilter);
       const tahun = Number(yearFilter);
       const currentMonthData = await GlobalApi.getTableKasSanduka(bulan, tahun);
@@ -248,7 +249,6 @@ function KasSanduka() {
         tempDate.setMonth(tempDate.getMonth() - 1);
       }
 
-      // Hitung saldo akhir dari semua transaksi sebelumnya (PEMASUKAN saja)
       const pemasukanSaja = allPreviousData.filter(
         (item) => item.jenis === "PEMASUKAN"
       );
@@ -270,6 +270,22 @@ function KasSanduka() {
       prosesData(dataBulanIni, saldoAkhirSebelumnya);
     } catch (error) {
       console.error("Gagal fetch data penerimaan:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchNamaKwitansi = async () => {
+    if (bulanMeninggal && tahunMeninggal) {
+      try {
+        const data = await GlobalApi.getNamaKwitansi(
+          tahunMeninggal,
+          bulanMeninggal
+        );
+        setListMeninggal(data);
+      } catch (err) {
+        setListMeninggal([]);
+      }
     }
   };
 
@@ -363,19 +379,21 @@ function KasSanduka() {
     init();
 
     const today = new Date();
-      const formattedDate = today.toISOString().split("T")[0];
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, "0");
+    const formattedDate = today.toISOString().split("T")[0];
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
 
-      setTglPenerimaan(formattedDate);
-      setTglPengeluaran(formattedDate);
-      setSetoranTahun(year.toString());
-      setSetoranBulan(month);
-      setSetoranTahunPengeluaran(year.toString());
-      setSetoranBulanPengeluaran(month);
-      setDefaultMonth(`${year}-${month}`);
+    setTglPenerimaan(formattedDate);
+    setTglPengeluaran(formattedDate);
+    setSetoranTahun(year.toString());
+    setSetoranBulan(month);
+    setSetoranTahunPengeluaran(year.toString());
+    setSetoranBulanPengeluaran(month);
+    setDefaultMonth(`${year}-${month}`);
     setDefaultMonthPengeluaran(`${year}-${month}`);
-    
+
+    fetchNamaKwitansi();
+
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setShowDropdown(false);
@@ -384,7 +402,7 @@ function KasSanduka() {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [monthFilter, yearFilter]);
+  }, [monthFilter, yearFilter, bulanMeninggal, tahunMeninggal]);
 
   const [totalDebit, totalKredit, saldoAkhir] = React.useMemo(() => {
     let totalDebet = 0;
@@ -437,6 +455,20 @@ function KasSanduka() {
     setShowDropdown(false);
     setNominalPenerimaan("");
     setKeteranganPenerimaan("");
+
+    setJenisPengeluaran("");
+    setPosPengeluaran("");
+    setCabangPengeluaran("");
+    setSearchCabang("");
+    setShowDropdown(false);
+    setNominalPengeluaran("");
+    setKeteranganPengeluaran("");
+    setYangMeninggal("");
+    setNamaPenerima("");
+
+    setBulanMeninggal("");
+    setTahunMeninggal("");
+    setListMeninggal("");
   };
 
   const handleSubmitPemasukan = async () => {
@@ -489,6 +521,27 @@ function KasSanduka() {
     }
   };
   const handleSubmitPengeluaran = async () => {
+    const namaBulan = [
+      "",
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
+    const bulanNama = namaBulan[Number(setoranBulanPengeluaran)];
+
+    const autoKeterangan = `Pengeluaran Sanduka ${PosPengeluaran} Cabang ${cabangPengeluaran} (${jenisPengeluaran}) untuk ${bulanNama} ${setoranTahunPengeluaran}. Ket${
+      keteranganPengeluaran ? ` ${keteranganPengeluaran}` : " -"
+    }`;
+
     const payload = {
       tanggalTransaksi: tglPengeluaran ?? "",
       posPengeluaran: PosPengeluaran ?? "",
@@ -505,7 +558,7 @@ function KasSanduka() {
         PosPengeluaran === "Santunan Duka Anggota" ? yangMeninggal : "",
       namaPenerima:
         PosPengeluaran === "Santunan Duka Anggota" ? namaPenerima : "",
-      keterangan: keteranganPengeluaran ?? "",
+      keterangan: autoKeterangan,
     };
 
     try {
@@ -515,6 +568,7 @@ function KasSanduka() {
         message: "Pengeluaran berhasil disimpan!",
       });
       fetchPenerimaan();
+      resetForm();
     } catch (error) {
       setNotification({
         type: "error",
@@ -1561,15 +1615,66 @@ function KasSanduka() {
                         <div className="mt-4 space-y-4">
                           <div>
                             <label className="text-sm font-medium text-gray-700 mb-1 block">
+                              Bulan yang Meninggal
+                            </label>
+                            <select
+                              value={bulanMeninggal}
+                              onChange={(e) =>
+                                setBulanMeninggal(e.target.value)
+                              }
+                              className="w-full p-2 border border-gray-300 rounded"
+                            >
+                              <option value="">Pilih bulan</option>
+                              {months.map((bulan) => (
+                                <option key={bulan.value} value={bulan.value}>
+                                  {bulan.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700 mb-1 block">
+                              Tahun yang Meninggal
+                            </label>
+                            <select
+                              value={tahunMeninggal}
+                              onChange={(e) =>
+                                setTahunMeninggal(e.target.value)
+                              }
+                              className="w-full p-2 border border-gray-300 rounded"
+                            >
+                              <option value="">Pilih tahun</option>
+                              {tahunOptions.map((tahun) => (
+                                <option key={tahun} value={tahun}>
+                                  {tahun}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700 mb-1 block">
                               Nama yang Meninggal
                             </label>
-                            <input
-                              type="text"
+                            <select
                               value={yangMeninggal}
                               onChange={(e) => setYangMeninggal(e.target.value)}
                               className="w-full p-2 border border-gray-300 rounded"
-                              placeholder="Masukkan nama almarhum/almarhumah"
-                            />
+                            >
+                              <option value="">
+                                Pilih nama almarhum/almarhumah
+                              </option>
+                              {listMeninggal.map((item, index) => (
+                                <option key={index} value={item.namaLengkap}>
+                                  {item.namaLengkap}
+                                </option>
+                              ))}
+                              {/* {Array.isArray(listMeninggal) &&
+  listMeninggal.map((item, index) => (
+    <option key={item.id} value={item.namaLengkap}>
+      {item.namaLengkap}
+    </option>
+))} */}
+                            </select>
                           </div>
                           <div>
                             <label className="text-sm font-medium text-gray-700 mb-1 block">
@@ -1655,6 +1760,7 @@ function KasSanduka() {
                           const [year, month] = e.target.value.split("-");
                           setSetoranTahunPengeluaran(year);
                           setSetoranBulanPengeluaran(month);
+                          setDefaultMonthPengeluaran(e.target.value);
                         }}
                         className="w-full p-2 border border-gray-300 rounded"
                       />
@@ -1846,104 +1952,141 @@ function KasSanduka() {
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {/* Baris SALDO AWAL */}
-                  {saldoAwalTransaksi && (
-                    <tr className="font-semibold bg-gray-100 text-sm">
-                      <td className="p-3 text-center">-</td>
-                      <td className="p-3">
-                        {(() => {
-                          const [year, month, day] =
-                            saldoAwalTransaksi.tanggalTransaksi;
-                          return `${String(day).padStart(2, "0")}-${String(
-                            month
-                          ).padStart(2, "0")}-${year}`;
-                        })()}
+                  {loading ? (
+                    <tr>
+                      <td colSpan="8" className="py-4 px-4">
+                        <div className="flex justify-center items-center h-20">
+                          <ClipLoader color="#3498db" size={50} />
+                        </div>
                       </td>
-                      <td className="p-3">{saldoAwalTransaksi.nomorBukti}</td>
-                      <td className="p-3">{saldoAwalTransaksi.keterangan}</td>
-                      <td className="p-3 text-right">
-                        {(saldoAwalTransaksi.debet || 0).toLocaleString(
-                          "id-ID"
-                        )}
-                      </td>
-                      <td className="p-3 text-right">0</td>
-                      <td className="p-3 text-right">
-                        {(saldoAwalTransaksi.saldo || 0).toLocaleString(
-                          "id-ID"
-                        )}
-                      </td>
-                      <td className="p-3 text-center">-</td>
                     </tr>
-                  )}
-
-                  {/* Transaksi selain saldo awal */}
-                  {filteredTransaksi
-                    .filter((item) => {
-                      const isSaldoAwal = item.nomorBukti
-                        ?.toLowerCase()
-                        .includes("saldo awal sanduka");
-                      const [year, month] = Array.isArray(item.tanggalTransaksi)
-                        ? [item.tanggalTransaksi[0], item.tanggalTransaksi[1]]
-                        : new Date(item.tanggalTransaksi)
-                            .toISOString()
-                            .split("T")[0]
-                            .split("-")
-                            .map(Number);
-                      const matchBulan = month === Number(monthFilter);
-                      const matchTahun = year === Number(yearFilter);
-                      return !isSaldoAwal && matchBulan && matchTahun;
-                    })
-                    .map((transaction, index) => (
-                      <tr
-                        key={transaction.id}
-                        className="border-b border-gray-300"
+                  ) : filteredTransaksi.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan="8"
+                        className="text-center py-4 text-gray-500"
                       >
-                        <td className="p-3 text-center text-sm">{index + 1}</td>
-                        <td className="p-3 text-sm">
-                          {new Date(
-                            transaction.tanggalTransaksi
-                          ).toLocaleDateString("id-ID")}
-                        </td>
-                        <td className="p-3 text-sm">
-                          {transaction.nomorBukti}
-                        </td>
-                        <td className="p-3 text-sm">
-                          {transaction.keterangan}
-                        </td>
-                        <td className="p-3 text-right text-sm">
-                          {(transaction.debet || 0).toLocaleString("id-ID")}
-                        </td>
-                        <td className="p-3 text-right text-sm">
-                          {(transaction.kredit || 0).toLocaleString("id-ID")}
-                        </td>
-                        <td className="p-3 text-right text-sm">
-                          {(transaction.saldo || 0).toLocaleString("id-ID")}
-                        </td>
-                        <td className="p-3 text-center text-sm">
-                          <div className="flex space-x-2 justify-center text-base">
-                            <button
-                              onClick={() =>
-                                handleEditClick(
-                                  transaction.id,
-                                  transaction.jenis
-                                )
-                              }
-                              className="text-blue-500 hover:text-blue-700"
-                            >
-                              <FaEdit />
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleDelete(transaction.id, transaction.jenis)
-                              }
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <FaTrash />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                        Tidak ada data transaksi.
+                      </td>
+                    </tr>
+                  ) : (
+                    <>
+                      {/* Baris SALDO AWAL */}
+                      {saldoAwalTransaksi && (
+                        <tr className="font-semibold bg-gray-100 text-sm">
+                          <td className="p-3 text-center">-</td>
+                          <td className="p-3">
+                            {(() => {
+                              const [year, month, day] =
+                                saldoAwalTransaksi.tanggalTransaksi;
+                              return `${String(day).padStart(2, "0")}-${String(
+                                month
+                              ).padStart(2, "0")}-${year}`;
+                            })()}
+                          </td>
+                          <td className="p-3">
+                            {saldoAwalTransaksi.nomorBukti}
+                          </td>
+                          <td className="p-3">
+                            {saldoAwalTransaksi.keterangan}
+                          </td>
+                          <td className="p-3 text-right">
+                            {(saldoAwalTransaksi.debet || 0).toLocaleString(
+                              "id-ID"
+                            )}
+                          </td>
+                          <td className="p-3 text-right">0</td>
+                          <td className="p-3 text-right">
+                            {(saldoAwalTransaksi.saldo || 0).toLocaleString(
+                              "id-ID"
+                            )}
+                          </td>
+                          <td className="p-3 text-center">-</td>
+                        </tr>
+                      )}
+
+                      {/* Transaksi selain saldo awal */}
+                      {filteredTransaksi
+                        .filter((item) => {
+                          const isSaldoAwal = item.nomorBukti
+                            ?.toLowerCase()
+                            .includes("saldo awal sanduka");
+                          const [year, month] = Array.isArray(
+                            item.tanggalTransaksi
+                          )
+                            ? [
+                                item.tanggalTransaksi[0],
+                                item.tanggalTransaksi[1],
+                              ]
+                            : new Date(item.tanggalTransaksi)
+                                .toISOString()
+                                .split("T")[0]
+                                .split("-")
+                                .map(Number);
+                          const matchBulan = month === Number(monthFilter);
+                          const matchTahun = year === Number(yearFilter);
+                          return !isSaldoAwal && matchBulan && matchTahun;
+                        })
+                        .map((transaction, index) => (
+                          <tr
+                            key={transaction.id}
+                            className="border-b border-gray-300"
+                          >
+                            <td className="p-3 text-center text-sm">
+                              {index + 1}
+                            </td>
+                            <td className="p-3 text-sm">
+                              {new Date(
+                                transaction.tanggalTransaksi
+                              ).toLocaleDateString("id-ID")}
+                            </td>
+                            <td className="p-3 text-sm">
+                              {transaction.nomorBukti}
+                            </td>
+                            <td className="p-3 text-sm">
+                              {transaction.keterangan}
+                            </td>
+                            <td className="p-3 text-right text-sm">
+                              {(transaction.debet || 0).toLocaleString("id-ID")}
+                            </td>
+                            <td className="p-3 text-right text-sm">
+                              {(transaction.kredit || 0).toLocaleString(
+                                "id-ID"
+                              )}
+                            </td>
+                            <td className="p-3 text-right text-sm">
+                              {(transaction.saldo || 0).toLocaleString("id-ID")}
+                            </td>
+                            <td className="p-3 text-center text-sm">
+                              <div className="flex space-x-2 justify-center text-base">
+                                <button
+                                  onClick={() =>
+                                    handleEditClick(
+                                      transaction.id,
+                                      transaction.jenis
+                                    )
+                                  }
+                                  className="text-blue-500 hover:text-blue-700"
+                                >
+                                  <FaEdit />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleDelete(
+                                      transaction.id,
+                                      transaction.jenis
+                                    )
+                                  }
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  <FaTrash />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                    </>
+                  )}
                 </tbody>
 
                 <tfoot>

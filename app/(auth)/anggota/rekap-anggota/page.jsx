@@ -518,7 +518,6 @@ function RekapAnggota() {
           tahun
         );
       }
-
       const totalRow = response.find(
         (item) => item.cabang === "Total" && !item.unitKerja
       );
