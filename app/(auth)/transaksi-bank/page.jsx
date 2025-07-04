@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { ClipLoader } from "react-spinners";
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -169,8 +170,11 @@ export default function BankTransactionPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [searchBalancing, setSearchBalancing] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const [loadingFilter, setLoadingFilter] = useState(false);
+  const [loadingBalancing, setLoadingBalancing] = useState(false);
 
   const handleFilter = async () => {
+    setLoadingFilter(true);
     try {
       let result;
 
@@ -206,10 +210,13 @@ export default function BankTransactionPage() {
       setTotalPages(result.totalPages);
     } catch (err) {
       console.error("Gagal memuat data:", err);
+    } finally {
+      setLoadingFilter(false);
     }
   };
 
   const getBalancingdata = async () => {
+    setLoadingBalancing(true);
     try {
       let result;
 
@@ -254,6 +261,8 @@ export default function BankTransactionPage() {
       setTotalPagesBalancing(result.totalPages);
     } catch (err) {
       console.error("Gagal memuat data:", err);
+    } finally {
+      setLoadingBalancing(false);
     }
   };
   useEffect(() => {
@@ -1395,7 +1404,15 @@ export default function BankTransactionPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {data.length > 0 ? (
+                    {loadingFilter ? (
+                      <tr>
+                        <td colSpan={8} className="py-8 text-center">
+                          <div className="flex justify-center items-center h-16">
+                            <ClipLoader color="#3498db" size={40} />
+                          </div>
+                        </td>
+                      </tr>
+                    ) : data.length > 0 ? (
                       data.map((item, index) => (
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
@@ -2131,7 +2148,13 @@ export default function BankTransactionPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {dataBalancing.length > 0 ? (
+                    {loadingBalancing ? (
+                      <tr>
+                        <td colSpan={8} className="text-center py-8">
+                          <ClipLoader color="#3498db" size={40} />
+                        </td>
+                      </tr>
+                    ) : dataBalancing.length > 0 ? (
                       sortedData.map((item, index) => (
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
@@ -2808,6 +2831,7 @@ export default function BankTransactionPage() {
                             </th>
                           </tr>
                         </thead>
+                        {/* Rekap (blm kepake) */}
                         <tbody>
                           {dataBalancing.length > 0 ? (
                             dataBalancing.map((item, index) => (
