@@ -5,7 +5,7 @@ import Pemasukan from "../sanduka/pemasukan/page";
 import Pengeluaran from "./pengeluaran/page";
 import Laporan from "../sanduka/laporan/page";
 import KasSanduka from "../sanduka/kas-sanduka/page";
-import Kwitansi from "../sanduka/kwitansi/page";
+import Kwitansi from "../sanduka/lapor/rekap-lapor/page";
 import { useRouter } from "next/navigation";
 import { faArrowLeft, faBars } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
