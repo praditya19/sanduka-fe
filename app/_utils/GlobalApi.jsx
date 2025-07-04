@@ -2638,6 +2638,85 @@ const postSesuaiTargetSanduka = async (tanggalTransaksi) => {
 };
 // END
 
+// KAS UMUM
+const createPosPenerimaanUmum = async (data) => {
+  try {
+    const response = await axiosClient.post(`/api/pos-penerimaan-kas-umum`, data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error create penerimaan umum:", error);
+    throw error;
+  }
+};
+
+const getPosPenerimaanUmum = async () => {
+  try {
+    const response = await axiosClient.get("/api/pos-penerimaan-kas-umum");
+    return response.data;
+  } catch (error) {
+    console.error("Error gagal ambil data pos umum:", error);
+    throw error;
+  }
+};
+
+const deletePosPenerimaanUmum = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/pos-penerimaan-kas-umum/${id}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
+
+const createPosPengeluaranUmum = async (data) => {
+  try {
+    const response = await axiosClient.post(`/api/pos-pengeluaran-kas-umum`, data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error post pengeluaran umum:", error);
+    throw error;
+  }
+};
+
+const getPosPengeluaranUmum = async () => {
+  try {
+    const response = await axiosClient.get("/api/pos-pengeluaran-kas-umum");
+    return response.data;
+  } catch (error) {
+    console.error("Error gagal ambil data pos pengeluaran:", error);
+    throw error;
+  }
+};
+
+const deletePosPengeluaranUmum = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/pos-pengeluaran/${id}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
+
 // Export all functions
 export default {
   registerUser,
@@ -2825,4 +2904,10 @@ export default {
   updatePengeluaranKasSanduka,
   postPosPengeluaranSanduka,
   postPosPenerimaanSanduka,
+  createPosPenerimaanUmum,
+  getPosPenerimaanUmum,
+  deletePosPenerimaanUmum,
+  createPosPengeluaranUmum,
+  getPosPengeluaranUmum,
+  deletePosPengeluaranUmum,
 };
