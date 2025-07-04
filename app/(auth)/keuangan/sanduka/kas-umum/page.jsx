@@ -113,6 +113,49 @@ const NotificationPopup = ({ type, message, onClose }) => {
     );
 };
 
+function toTerbilang(nilai) {
+    const angka = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan"];
+    const satuan = ["", "ribu", "juta", "miliar", "triliun"];
+
+    if (nilai === 0) return "nol Rupiah";
+
+    let hasil = "";
+    let satuanIndex = 0;
+
+    while (nilai > 0) {
+        const bagian = nilai % 1000;
+        if (bagian > 0) {
+            let str = "";
+            const ratus = Math.floor(bagian / 100);
+            const puluhSatuan = bagian % 100;
+            const puluh = Math.floor(puluhSatuan / 10);
+            const satu = puluhSatuan % 10;
+
+            if (ratus > 0) {
+                str += ratus === 1 ? "seratus " : angka[ratus] + " ratus ";
+            }
+
+            if (puluhSatuan > 0) {
+                if (puluh === 1) {
+                    if (satu === 0) str += "sepuluh ";
+                    else if (satu === 1) str += "sebelas ";
+                    else str += angka[satu] + " belas ";
+                } else {
+                    if (puluh > 0) str += angka[puluh] + " puluh ";
+                    if (satu > 0) str += angka[satu] + " ";
+                }
+            }
+
+            hasil = str + satuan[satuanIndex] + " " + hasil;
+        }
+
+        nilai = Math.floor(nilai / 1000);
+        satuanIndex++;
+    }
+
+    return hasil.charAt(0).toUpperCase() + hasil.slice(1) + " Rupiah";
+}
+
 function KasUmum() {
     const { token } = useAuth();
     const router = useRouter();
@@ -123,7 +166,7 @@ function KasUmum() {
         posPenerimaan: "",
         bulanTahun: "",
         jenisPenerimaan: "",
-        cabang: "Tidak Ada Cabang (Sanduka Umum)",
+        cabang: "",
         nominal: 0,
         keterangan: "",
     });
@@ -133,7 +176,7 @@ function KasUmum() {
         posPengeluaran: "",
         bulanTahun: "",
         jenisPengeluaran: "",
-        cabang: "Tidak Ada Cabang (Sanduka Umum)",
+        cabang: "",
         nominal: 0,
         keterangan: "",
     });
@@ -146,7 +189,10 @@ function KasUmum() {
     const [showEditModal, setShowEditModal] = useState(false);
     const [transactionToDelete, setTransactionToDelete] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-
+    const [cabangList, setCabangList] = useState([]);
+    const [searchCabang, setSearchCabang] = useState("");
+    const [showDropdown, setShowDropdown] = useState(false);
+    const dropdownRef = useRef();;
 
     const [showSaldoAwalModal, setShowSaldoAwalModal] = useState(false);
     const [formSaldoAwal, setFormSaldoAwal] = useState({
@@ -154,7 +200,7 @@ function KasUmum() {
         tahun: "2025",
         nominal: 0
     });
-
+    const [terbilang, setTerbilang] = useState("nol Rupiah");
     const [showPosPenerimaanModal, setShowPosPenerimaanModal] = useState(false);
     const [newPosPenerimaan, setNewPosPenerimaan] = useState("");
     const [posPenerimaanList, setPosPenerimaanList] = useState([
@@ -230,41 +276,125 @@ function KasUmum() {
         setShowSaldoAwalModal(false);
     };
 
-    const handleTambahPosPenerimaan = () => {
-        if (newPosPenerimaan.trim() !== "") {
-            setPosPenerimaanList(prev => [...prev, newPosPenerimaan.trim()]);
-            setNewPosPenerimaan("");
-            // show success notification
+    useEffect(() => {
+        const nominal = parseInt(formPenerimaan.nominal || 0);
+        setTerbilang(toTerbilang(nominal));
+    }, [formPenerimaan.nominal]);
+
+    const handleTambahPosPenerimaan = async () => {
+        if (!newPosPenerimaan.trim()) return;
+        const data = {
+            namaPosPenerimaan: newPosPenerimaan.trim(),
+            isSistemDefault: false,
+        };
+        try {
+            await GlobalApi.createPosPenerimaanUmum(data);
             setNotification({
                 type: "success",
-                // message: `Saldo awal periode ${getMonthName(formSaldoAwal.bulan)} ${formSaldoAwal.tahun} berhasil disimpan!`
+                message: "Berhasil Tambah!",
             });
+            setNewPosPenerimaan("");
+            fetchData();
+        } catch (error) {
+            setNotification({
+                type: "error",
+                message: "Gagal Tambah.",
+            });
+            alert("Gagal menambahkan pos penerimaan.");
         }
     };
 
-    const handleHapusPosPenerimaan = (index) => {
-        const deletedItem = posPenerimaanList[index];
-        setPosPenerimaanList(prev => prev.filter((_, i) => i !== index));
-        // show success notification
-        setNotification({
-            type: "success",
-            // message: `Saldo awal periode ${getMonthName(formSaldoAwal.bulan)} ${formSaldoAwal.tahun} berhasil disimpan!`
-        });
+    const handleHapusPosPenerimaan = async (index) => {
+        try {
+            await GlobalApi.deletePosPenerimaanUmum(index);
+            setNotification({
+                type: "success",
+                message: "Berhasil dihapus!",
+            });
+            fetchData();
+        } catch (error) {
+            setNotification({
+                type: "error",
+                message: "Gagal hapus",
+            });
+            alert(error.message || "Gagal menghapus pos.");
+        }
     };
 
-    const handleTambahPosPengeluaran = () => {
-        if (newPosPengeluaran.trim() !== "") {
-            setPosPengeluaranList(prev => [...prev, newPosPengeluaran.trim()]);
+    const handleTambahPosPengeluaran = async () => {
+        if (!newPosPengeluaran.trim()) return;
+        const data = {
+            namaPosPengeluaran: newPosPengeluaran.trim(),
+            isSistemDefault: false,
+        };
+        try {
+            await GlobalApi.createPosPengeluaranUmum(data);
+            setNotification({
+                type: "success",
+                message: "Berhasil Tambah!",
+            });
             setNewPosPengeluaran("");
-            // show success notification
+            fetchData();
+        } catch (error) {
+            setNotification({
+                type: "error",
+                message: "Gagal Tambah.",
+            });
+            alert("Gagal menambahkan pos pengeluaran.");
         }
     };
 
-    const handleHapusPosPengeluaran = (index) => {
-        const deletedItem = posPengeluaranList[index];
-        setPosPengeluaranList(prev => prev.filter((_, i) => i !== index));
-        // show success notification
+    const handleHapusPosPengeluaran = async (index) => {
+        try {
+            await GlobalApi.deletePosPengeluaranUmum(index);
+            setNotification({
+                type: "success",
+                message: "Berhasil dihapus!",
+            });
+            fetchData();
+        } catch (error) {
+            setNotification({
+                type: "error",
+                message: "Gagal hapus",
+            });
+            alert(error.message || "Gagal menghapus pos.");
+        }
     };
+
+    const fetchData = async () => {
+        try {
+            const penerimaan = await GlobalApi.getPosPenerimaanUmum();
+            const pengeluaran = await GlobalApi.getPosPengeluaranUmum();
+
+            setPosPenerimaanList(penerimaan.map(item => item.namaPosPenerimaan));
+            setPosPengeluaranList(pengeluaran.map(item => item.namaPosPengeluaran));
+        } catch (error) {
+            console.error("Gagal mengambil data pos umum:", error);
+        }
+    };
+
+    const fetchCabangData = async () => {
+        try {
+            const response = await GlobalApi.getCabang();
+            setCabangList(response.data);
+        } catch (error) {
+            console.error("Gagal mengambil data cabang:", error);
+        }
+    };
+
+    const handleSelectCabang = (cabang) => {
+        if (activeTab === "penerimaan") {
+            setFormPenerimaan(prev => ({ ...prev, cabang: cabang.kecamatan || "Tidak Ada Cabang (Sanduka Umum)" }));
+        } else {
+            setFormPengeluaran(prev => ({ ...prev, cabang: cabang.kecamatan || "Tidak Ada Cabang (Sanduka Umum)" }));
+        }
+        setShowDropdown(false);
+        setSearchCabang("");
+    };
+
+    const filteredCabang = cabangList.filter((c) =>
+        c?.kecamatan?.toLowerCase().includes(searchCabang.toLowerCase())
+    )
 
     const handlePenerimaanChange = (e) => {
         const { name, value } = e.target;
@@ -293,7 +423,7 @@ function KasUmum() {
             posPenerimaan: "",
             bulanTahun: "",
             jenisPenerimaan: "",
-            cabang: "Tidak Ada Cabang (Sanduka Umum)",
+            cabang: "",
             nominal: 0,
             keterangan: "",
         });
@@ -305,7 +435,7 @@ function KasUmum() {
             posPengeluaran: "",
             bulanTahun: "",
             jenisPengeluaran: "",
-            cabang: "Tidak Ada Cabang (Sanduka Umum)",
+            cabang: "",
             nominal: 0,
             keterangan: "",
         });
@@ -340,6 +470,8 @@ function KasUmum() {
         if (!token) {
             router.push("/sign-in");
         }
+        fetchData();
+        fetchCabangData(); // Add this line
     }, [token, router]);
 
     useEffect(() => {
@@ -837,17 +969,66 @@ function KasUmum() {
                                                 <option value="Iuran Anggota">Iuran Anggota</option>
                                                 <option value="Donasi">Donasi</option>
                                                 <option value="Lainnya">Lainnya</option>
+                                                {posPenerimaanList.map((pos, index) => (
+                                                    <option key={index} value={pos}>
+                                                        {pos}
+                                                    </option>
+                                                ))}
                                             </select>
                                         </div>
 
                                         {/* Cabang */}
-                                        <div>
-                                            <label className="text-sm font-medium mb-1 flex items-center gap-2">
+                                        <div className="relative" ref={dropdownRef}>
+                                            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
                                                 <FaBuilding /> Cabang
                                             </label>
-                                            <div className="p-2 border border-gray-300 rounded bg-gray-50">
-                                                {formPenerimaan.cabang}
+
+                                            <div
+                                                className="w-full p-2 border border-gray-300 rounded bg-white cursor-pointer flex justify-between items-center"
+                                                onClick={() => setShowDropdown((prev) => !prev)}
+                                            >
+                                                <span className="text-sm text-gray-700">
+                                                    {activeTab === "penerimaan" ? formPenerimaan.cabang?.kecamatan || "Pilih Cabang" : formPengeluaran.cabang?.kecamatan || "Pilih Cabang"}
+                                                </span>
+                                                <FaChevronDown className="text-gray-500" />
                                             </div>
+
+                                            {showDropdown && (
+                                                <div className="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 shadow-md max-h-60 overflow-y-auto">
+                                                    <div className="p-2 border-b">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Cari cabang..."
+                                                            value={searchCabang}
+                                                            onChange={(e) => setSearchCabang(e.target.value)}
+                                                            className="w-full p-1 border border-gray-300 rounded text-sm"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <div
+                                                            onClick={() => handleSelectCabang({ kecamatan: "Tidak Ada Cabang (Sanduka Umum)" })}
+                                                            className="p-2 hover:bg-gray-100 text-sm cursor-pointer"
+                                                        >
+                                                            Tidak Ada Cabang (Sanduka Umum)
+                                                        </div>
+                                                        {filteredCabang.length > 0 ? (
+                                                            filteredCabang.map((cabang) => (
+                                                                <div
+                                                                    key={cabang.id}
+                                                                    onClick={() => handleSelectCabang(cabang)}
+                                                                    className="p-2 hover:bg-gray-100 text-sm cursor-pointer"
+                                                                >
+                                                                    {cabang.kecamatan}
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <div className="p-2 text-sm text-gray-400">
+                                                                Tidak ditemukan
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
@@ -877,7 +1058,7 @@ function KasUmum() {
                                                 className="w-full p-2 border border-gray-300 rounded"
                                                 placeholder="0"
                                             />
-                                            <p className="text-xs mt-1 text-gray-500 italic">Terbilang: nol Rupiah</p>
+                                            <p className="text-xs mt-1 text-gray-500 italic">Terbilang: {terbilang}</p>
                                         </div>
                                     </div>
 
@@ -968,19 +1149,67 @@ function KasUmum() {
                                             className="w-full p-2 border border-gray-300 rounded bg-white"
                                         >
                                             <option value="">Pilih Pos</option>
-                                            <option value="Santunan">Santunan</option>
-                                            <option value="Operasional">Operasional</option>
+                                            <option value="Iuran Anggota">Iuran Anggota</option>
+                                            <option value="Donasi">Donasi</option>
                                             <option value="Lainnya">Lainnya</option>
+                                            {posPengeluaranList.map((pos, index) => (
+                                                <option key={index} value={pos}>
+                                                    {pos}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
 
-                                    <div>
-                                        <label className="text-sm font-medium mb-1 flex items-center gap-2">
+                                    <div className="relative" ref={dropdownRef}>
+                                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
                                             <FaBuilding /> Cabang
                                         </label>
-                                        <div className="p-2 border border-gray-300 rounded bg-white">
-                                            {formPengeluaran.cabang || "Tidak Ada Cabang (Umum)"}
+                                        <div
+                                            className="w-full p-2 border border-gray-300 rounded bg-white cursor-pointer flex justify-between items-center"
+                                            onClick={() => setShowDropdown((prev) => !prev)}
+                                        >
+                                            <span className="text-sm text-gray-700">
+                                                {activeTab === "penerimaan" ? formPenerimaan.cabang?.kecamatan || "Pilih Cabang" : formPengeluaran.cabang?.kecamatan || "Pilih Cabang"}
+                                            </span>
+                                            <FaChevronDown className="text-gray-500" />
                                         </div>
+
+                                        {showDropdown && (
+                                            <div className="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 shadow-md max-h-60 overflow-y-auto">
+                                                <div className="p-2 border-b">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Cari cabang..."
+                                                        value={searchCabang}
+                                                        onChange={(e) => setSearchCabang(e.target.value)}
+                                                        className="w-full p-1 border border-gray-300 rounded text-sm"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <div
+                                                        onClick={() => handleSelectCabang({ kecamatan: "Tidak Ada Cabang (Sanduka Umum)" })}
+                                                        className="p-2 hover:bg-gray-100 text-sm cursor-pointer"
+                                                    >
+                                                        Tidak Ada Cabang (Sanduka Umum)
+                                                    </div>
+                                                    {filteredCabang.length > 0 ? (
+                                                        filteredCabang.map((cabang) => (
+                                                            <div
+                                                                key={cabang.id}
+                                                                onClick={() => handleSelectCabang(cabang)}
+                                                                className="p-2 hover:bg-gray-100 text-sm cursor-pointer"
+                                                            >
+                                                                {cabang.kecamatan}
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="p-2 text-sm text-gray-400">
+                                                            Tidak ditemukan
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div>
@@ -1008,7 +1237,7 @@ function KasUmum() {
                                             className="w-full p-2 border border-gray-300 rounded bg-white"
                                             placeholder="0"
                                         />
-                                        <p className="text-xs mt-1 text-gray-500 italic">Terbilang: nol Rupiah</p>
+                                        <p className="text-xs mt-1 text-gray-500 italic">Terbilang: {terbilang}</p>
                                     </div>
 
                                     <div className="md:col-span-2">
@@ -1611,7 +1840,7 @@ function KasUmum() {
                                 Batal
                             </button>
                             <button
-                                // onClick={handleUpdateTransaction}
+                                onClick={() => handleSaveChanges(transactionToEdit)}
                                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                             >
                                 Simpan Perubahan
