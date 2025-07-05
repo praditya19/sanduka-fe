@@ -2717,6 +2717,171 @@ const deletePosPengeluaranUmum = async (id) => {
   }
 };
 
+const createPemasukanUmum = async ({
+  tanggalTransaksi,
+  posPenerimaan,
+  setoranBulan,
+  setoranTahun,
+  jenisPenerimaan,
+  cabang,
+  nominal,
+  keterangan,
+}) => {
+  try {
+    const data = {
+      tanggalTransaksi,
+      posPenerimaan,
+      setoranBulan,
+      setoranTahun,
+      jenisPenerimaan,
+      cabang,
+      nominal,
+      keterangan,
+    };
+
+    const response = await axiosClient.post("/api/pemasukan-organisasi", data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error create pemasukan kas umum:", error);
+    throw error;
+  }
+};
+
+const getPemasukanUmum = async () => {
+  try {
+    const response = await axiosClient.get("/api/pemasukan-organisasi");
+    return response.data;
+  } catch (error) {
+    console.error("Error gagal ambil data penerimaan:", error);
+    throw error;
+  }
+};
+
+const getPemasukanUmumById = async (id) => {
+  try {
+    const response = await axiosClient.get(`/api/pemasukan-organisasi/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const updatePemasukanUmum = async (id, payload) => {
+  try {
+    const response = await axiosClient.put(`/api/pemasukan-organisasi/${id}`, payload, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating data:", error);
+    throw error;
+  }
+};
+
+const deletePemasukanUmum = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/pemasukan-organisasi/${id}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
+
+const postSesuaiTargetUmum = async (tanggalTransaksi) => {
+  try {
+    const response = await axiosClient.post(
+      `/api/pemasukan-organisasi/generate?tanggalTransaksi=${tanggalTransaksi}`,
+      null,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error post penerimaan sanduka:", error);
+    throw error;
+  }
+};
+
+const createPengeluaranUmum = async (data) => {
+  try {
+    const response = await axiosClient.post("/api/pengeluaran-organisasi", data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error create pengeluaran kas umum:", error);
+    throw error;
+  }
+};
+
+const getPengeluaranUmum = async (id) => {
+  try {
+    const response = await axiosClient.get("/api/pengeluaran-organisasi");
+    return response.data;
+  } catch (error) {
+    console.error("Error gagal ambil data pengeluaran:", error);
+    throw error;
+  }
+};
+
+const getPengeluaranUmumById = async (id) => {
+  try {
+    const response = await axiosClient.get(`/api/pengeluaran-organisasi/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const updatePengeluaranUmum = async (id, payload) => {
+  try {
+    const response = await axiosClient.put(`/api/pengeluaran-organisasi/${id}`, payload, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating data:", error);
+    throw error;
+  }
+};
+
+const deletePengeluaranUmum = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/pengeluaran-organisasi/${id}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
+
+// END
+
 // Export all functions
 export default {
   registerUser,
@@ -2910,4 +3075,15 @@ export default {
   createPosPengeluaranUmum,
   getPosPengeluaranUmum,
   deletePosPengeluaranUmum,
+  createPemasukanUmum,
+  getPemasukanUmum,
+  getPemasukanUmumById,
+  updatePemasukanUmum,
+  deletePemasukanUmum,
+  postSesuaiTargetUmum,
+  createPengeluaranUmum,
+  getPengeluaranUmum,
+  getPengeluaranUmumById,
+  updatePengeluaranUmum,
+  deletePengeluaranUmum,
 };

@@ -281,6 +281,31 @@ function KasUmum() {
         setTerbilang(toTerbilang(nominal));
     }, [formPenerimaan.nominal]);
 
+    const handleSesuaiTarget = async () => {
+        if (!tglPenerimaan) {
+            setNotification({
+                type: "error",
+                message: "Tanggal transaksi belum dipilih.",
+            });
+            return;
+        }
+
+        try {
+            const response = await GlobalApi.postSesuaiTargetUmum(tglPenerimaan);
+            setNotification({
+                type: "success",
+                message: "Data sesuai target berhasil dibuat!",
+            });
+            fetchPenerimaan();
+        } catch (error) {
+            setNotification({
+                type: "error",
+                message: "Gagal membuat data sesuai target.",
+            });
+            console.error("Gagal generate:", error);
+        }
+    };
+
     const handleTambahPosPenerimaan = async () => {
         if (!newPosPenerimaan.trim()) return;
         const data = {
@@ -406,16 +431,139 @@ function KasUmum() {
         setFormPengeluaran((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleEditClick = (transaction) => {
-        setTransactionToEdit(transaction);
-        setShowEditModal(true);
+    const handleEditClick = async (id, jenis) => {
+        try {
+            setEditJenis(jenis);
+            let data;
+
+            if (jenis === "PEMASUKAN") {
+                data = await GlobalApi.getPemasukanUmumById(id);
+                const tanggal = `${data.tanggalTransaksi[0]}-${String(
+                    data.tanggalTransaksi[1]
+                ).padStart(2, "0")}-${String(data.tanggalTransaksi[2]).padStart(
+                    2,
+                    "0"
+                )}`;
+
+                setEditForm({
+                    id: data.id,
+                    tanggalTransaksi: tanggal,
+                    nomorBukti: data.nomorBukti,
+                    pos: data.posPenerimaan,
+                    setoranBulan: data.setoranBulan,
+                    setoranTahun: data.setoranTahun,
+                    jenis: data.jenisPenerimaan,
+                    cabang: data.cabang,
+                    nominal: data.nominal,
+                    keterangan: data.keterangan,
+                    yangMeninggal: "",
+                    namaPenerima: "",
+                });
+            } else if (jenis === "PENGELUARAN") {
+                data = await GlobalApi.getPengeluaranUmumById(id);
+                const tanggal = `${data.tanggalTransaksi[0]}-${String(
+                    data.tanggalTransaksi[1]
+                ).padStart(2, "0")}-${String(data.tanggalTransaksi[2]).padStart(
+                    2,
+                    "0"
+                )}`;
+
+                setEditForm({
+                    id: data.id,
+                    tanggalTransaksi: tanggal,
+                    nomorBukti: data.nomorBukti,
+                    pos: data.posPengeluaran,
+                    setoranBulan: data.setoranBulan,
+                    setoranTahun: data.setoranTahun,
+                    jenis: data.jenisPegeluaran,
+                    cabang: data.cabang,
+                    nominal: data.nominal,
+                    keterangan: data.keterangan,
+                    yangMeninggal: data.yangMeninggal,
+                    namaPenerima: data.namaPenerima,
+                });
+            }
+
+            setShowEditModal(true);
+        } catch (error) {
+            console.error("Gagal mengambil data:", error);
+        }
     };
 
-    const handleDeleteClick = (transaction) => {
-        setTransactionToDelete(transaction);
-        setShowDeleteModal(true);
+    const handleSaveEdit = async () => {
+        try {
+            const [year, month, day] = editForm.tanggalTransaksi.split("-");
+
+            if (editJenis === "PEMASUKAN") {
+                const payload = {
+                    id: editForm.id,
+                    tanggalTransaksi: editForm.tanggalTransaksi,
+                    posPenerimaan: editForm.pos,
+                    setoranBulan: Number(month),
+                    setoranTahun: Number(year),
+                    jenisPenerimaan: editForm.jenis,
+                    cabang: editForm.cabang,
+                    nominal: Number(editForm.nominal),
+                    keterangan: editForm.keterangan,
+                };
+
+                await GlobalApi.updatePemasukanUmum(editForm.id, payload);
+            } else if (editJenis === "PENGELUARAN") {
+                const payload = {
+                    tanggalTransaksi: editForm.tanggalTransaksi,
+                    posPengeluaran: editForm.pos,
+                    setoranBulan: Number(month),
+                    setoranTahun: Number(year),
+                    jenisPegeluaran: editForm.jenis,
+                    cabang: editForm.cabang,
+                    nominal: Number(editForm.nominal),
+                    yangMeninggal: editForm.yangMeninggal,
+                    namaPenerima: editForm.namaPenerima,
+                    keterangan: editForm.keterangan,
+                };
+
+                await GlobalApi.updatePengeluaranUmum(editForm.id, payload);
+            }
+
+            setNotification({
+                type: "success",
+                message: "Data berhasil diperbarui!",
+            });
+            setShowEditModal(false);
+            fetchPenerimaan();
+        } catch (error) {
+            console.error("Gagal menyimpan perubahan:", error);
+            setNotification({
+                type: "error",
+                message: "Gagal menyimpan perubahan.",
+            });
+        }
     };
 
+    const handleDeleteClick = async (id, jenis) => {
+        try {
+            if (jenis === "PEMASUKAN") {
+                await GlobalApi.deletePemasukanUmum(id);
+            } else if (jenis === "PENGELUARAN") {
+                await GlobalApi.deletePengeluaranUmum(id);
+            } else {
+                throw new Error("Jenis transaksi tidak dikenali");
+            }
+
+            setNotification({
+                type: "success",
+                message: "Data berhasil dihapus!",
+            });
+
+            fetchPenerimaan();
+        } catch (error) {
+            console.error("Gagal menghapus:", error);
+            setNotification({
+                type: "error",
+                message: "Gagal hapus data.",
+            });
+        }
+    };
 
     const resetPenerimaan = () => {
         setFormPenerimaan({
@@ -427,6 +575,112 @@ function KasUmum() {
             nominal: 0,
             keterangan: "",
         });
+    };
+
+    const handleSubmitPemasukan = async () => {
+        const namaBulan = [
+            "",
+            "Januari",
+            "Februari",
+            "Maret",
+            "April",
+            "Mei",
+            "Juni",
+            "Juli",
+            "Agustus",
+            "September",
+            "Oktober",
+            "November",
+            "Desember",
+        ];
+        const bulanNama = namaBulan[Number(setoranBulan)];
+
+        const autoKeterangan = `Pemasukan Umum ${PosPenerimaan} Cabang ${cabangPenerimaan} (${jenisPenerimaan}) untuk ${bulanNama} ${setoranTahun}. Ket${keteranganPenerimaan ? ` ${keteranganPenerimaan}` : " -"
+            }`;
+
+        const payload = {
+            tanggalTransaksi: tglPenerimaan,
+            posPenerimaan: PosPenerimaan,
+            setoranBulan: Number(setoranBulan),
+            setoranTahun: Number(setoranTahun),
+            jenisPenerimaan,
+            cabang: cabangPenerimaan?.cabang ?? "",
+            nominal: Number(nominalPenerimaan),
+            keterangan: autoKeterangan,
+        };
+
+        try {
+            const response = await GlobalApi.createPemasukanUmum(payload);
+            setNotification({
+                type: "success",
+                message: "Berhasil simpan pemasukan!",
+            });
+            fetchPenerimaan();
+            resetForm();
+        } catch (error) {
+            setNotification({
+                type: "error",
+                message: "Gagal simpan pemasukan.",
+            });
+            console.error("Gagal simpan pemasukan:", error);
+        }
+    };
+
+    const handleSubmitPengeluaran = async () => {
+        const namaBulan = [
+            "",
+            "Januari",
+            "Februari",
+            "Maret",
+            "April",
+            "Mei",
+            "Juni",
+            "Juli",
+            "Agustus",
+            "September",
+            "Oktober",
+            "November",
+            "Desember",
+        ];
+        const bulanNama = namaBulan[Number(setoranBulanPengeluaran)];
+
+        const autoKeterangan = `Pengeluaran Umum ${PosPengeluaran} Cabang ${cabangPengeluaran} (${jenisPengeluaran}) untuk ${bulanNama} ${setoranTahunPengeluaran}. Ket${keteranganPengeluaran ? ` ${keteranganPengeluaran}` : " -"
+            }`;
+
+        const payload = {
+            tanggalTransaksi: tglPengeluaran ?? "",
+            posPengeluaran: PosPengeluaran ?? "",
+            setoranBulan: setoranBulanPengeluaran
+                ? Number(setoranBulanPengeluaran)
+                : "",
+            setoranTahun: setoranTahunPengeluaran
+                ? Number(setoranTahunPengeluaran)
+                : "",
+            jenisPegeluaran: jenisPengeluaran ?? "",
+            cabang: cabangPengeluaran ?? "",
+            nominal: nominalPengeluaran ? Number(nominalPengeluaran) : "",
+            yangMeninggal:
+                PosPengeluaran === "Santunan Duka Anggota" ? yangMeninggal : "",
+            namaPenerima:
+                PosPengeluaran === "Santunan Duka Anggota" ? namaPenerima : "",
+            keterangan: autoKeterangan,
+        };
+
+        try {
+            await GlobalApi.createPengeluaranUmum(payload);
+            setNotification({
+                type: "success",
+                message: "Pengeluaran berhasil disimpan!",
+            });
+            fetchPenerimaan();
+            resetForm();
+        } catch (error) {
+            setNotification({
+                type: "error",
+                message: "Gagal menyimpan pengeluaran.",
+            });
+            console.error("Gagal kirim pengeluaran:", error);
+        }
     };
 
     const resetPengeluaran = () => {
@@ -1079,7 +1333,7 @@ function KasUmum() {
 
                                     <div className="flex justify-end space-x-2">
                                         <button
-                                            // onClick={handleSesuaiTarget}
+                                            onClick={handleSesuaiTarget}
                                             className="px-4 py-2 border border-green-600 text-green-600 rounded hover:bg-green-50 flex items-center"
                                         >
                                             <FaBullseye className="mr-2" />
@@ -1087,7 +1341,7 @@ function KasUmum() {
                                         </button>
 
                                         <button
-                                            // onClick={handleSubmitPenerimaan}
+                                            onClick={handleSubmitPemasukan}
                                             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center"
                                         >
                                             <FaSave className="mr-2" />
@@ -1256,14 +1510,14 @@ function KasUmum() {
 
                                     <div className="md:col-span-2 flex justify-end space-x-2 pt-2">
                                         <button
-                                            // onClick={handleSesuaiTarget}
+                                            onClick={handleSesuaiTarget}
                                             className="px-4 py-2 border border-red-600 text-red-600 rounded hover:bg-red-50 flex items-center"
                                         >
                                             <FaBullseye className="mr-2" />
                                             Sesuai Target
                                         </button>
                                         <button
-                                            // onClick={handleSubmitPengeluaran}
+                                            onClick={handleSubmitPengeluaran}
                                             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center"
                                         >
                                             <FaSave className="mr-2" />
@@ -1840,7 +2094,7 @@ function KasUmum() {
                                 Batal
                             </button>
                             <button
-                                onClick={() => handleSaveChanges(transactionToEdit)}
+                                onClick={handleSaveEdit}
                                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                             >
                                 Simpan Perubahan
