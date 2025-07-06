@@ -2880,6 +2880,18 @@ const deletePengeluaranUmum = async (id) => {
   }
 };
 
+const getTableUmum = async (bulan, tahun) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/rekap-transaksi-organisasi?bulan=${bulan}&tahun=${tahun}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching table kas umum:", error);
+    throw error;
+  }
+};
+
 // END
 
 // Export all functions
@@ -3086,4 +3098,5 @@ export default {
   getPengeluaranUmumById,
   updatePengeluaranUmum,
   deletePengeluaranUmum,
+  getTableUmum,
 };
