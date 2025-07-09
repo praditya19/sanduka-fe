@@ -282,6 +282,20 @@ function KasSanduka() {
     }
   };
 
+  const fetchNamaKwitansi = async () => {
+    if (bulanMeninggal && tahunMeninggal) {
+      try {
+        const data = await GlobalApi.getNamaKwitansi(
+          tahunMeninggal,
+          bulanMeninggal
+        );
+        setListMeninggal(data);
+      } catch (err) {
+        setListMeninggal([]);
+      }
+    }
+  };
+
   const fetchPenerimaan = async () => {
     try {
       setLoading(true);
@@ -304,12 +318,9 @@ function KasSanduka() {
         tempDate.setMonth(tempDate.getMonth() - 1);
       }
 
-      const pemasukanSaja = allPreviousData.filter(
-        (item) => item.jenis === "PEMASUKAN"
-      );
-      const hasilSaldo = hitungSaldo(pemasukanSaja, 0);
-      if (hasilSaldo.length > 0) {
-        saldoAkhirSebelumnya = hasilSaldo[hasilSaldo.length - 1].saldo || 0;
+      const hasilSaldo = hitungSaldo(allPreviousData, 0);
+    if (hasilSaldo.length > 0) {
+      saldoAkhirSebelumnya = hasilSaldo[hasilSaldo.length - 1].saldo || 0;
       }
       const dataBulanIni = currentMonthData.filter((item) => {
         const [year, month] = Array.isArray(item.tanggalTransaksi)
@@ -327,20 +338,6 @@ function KasSanduka() {
       console.error("Gagal fetch data penerimaan:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchNamaKwitansi = async () => {
-    if (bulanMeninggal && tahunMeninggal) {
-      try {
-        const data = await GlobalApi.getNamaKwitansi(
-          tahunMeninggal,
-          bulanMeninggal
-        );
-        setListMeninggal(data);
-      } catch (err) {
-        setListMeninggal([]);
-      }
     }
   };
 
