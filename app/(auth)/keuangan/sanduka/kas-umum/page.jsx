@@ -2276,7 +2276,7 @@ function KasUmum() {
                             className="text-red-500 hover:text-red-700 p-1"
                             title="Hapus pos penerimaan"
                           >
-                            🗑️
+                            <FaTrash />
                           </button>
                         )}
                       </div>
@@ -2386,7 +2386,7 @@ function KasUmum() {
                             className="text-red-500 hover:text-red-700 p-1"
                             title="Hapus pos pengeluaran"
                           >
-                            🗑️
+                            <FaTrash />
                           </button>
                         )}
                       </div>
