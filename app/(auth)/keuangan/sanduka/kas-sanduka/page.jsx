@@ -33,9 +33,7 @@ import {
 import { FaArrowTrendUp, FaArrowTrendDown, FaSliders } from "react-icons/fa6";
 import { Button } from "@/components/ui/button";
 import { ClipLoader } from "react-spinners";
-import Image from "next/image";
 import * as XLSX from "xlsx";
-import { subMonths, endOfMonth } from "date-fns";
 
 const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
@@ -111,6 +109,7 @@ const NotificationPopup = ({ type, message, onClose }) => {
 };
 
 function KasSanduka() {
+  const tableRef = useRef();
   const dropdownRef = useRef();
   const { token } = useAuth();
   const router = useRouter();
@@ -973,323 +972,169 @@ function KasSanduka() {
 
   const handleExportExcel = () => {
     try {
-      const excelData = [
-        {
-          No: "",
-          Tanggal: "",
-          "No Bukti": "",
-          Uraian: "",
-          "Debit (Pemasukan)": "",
-          "Kredit (Pengeluaran)": "",
-          Saldo: "",
-        },
-        {
-          No: `BUKU KAS UMUM - ${getMonthName(monthFilter)} ${yearFilter}`,
-          Tanggal: "",
-          "No Bukti": "",
-          Uraian: "",
-          "Debit (Pemasukan)": "",
-          "Kredit (Pengeluaran)": "",
-          Saldo: "",
-        },
-        {
-          No: "",
-          Tanggal: "",
-          "No Bukti": "",
-          Uraian: "",
-          "Debit (Pemasukan)": "",
-          "Kredit (Pengeluaran)": "",
-          Saldo: "",
-        },
-        {
-          No: "No",
-          Tanggal: "Tanggal",
-          "No Bukti": "No Bukti",
-          Uraian: "Uraian",
-          "Debit (Pemasukan)": "Debit (Pemasukan)",
-          "Kredit (Pengeluaran)": "Kredit (Pengeluaran)",
-          Saldo: "Saldo",
-        },
-      ];
+      const excelData = [];
 
-      transactions.forEach((transaction, index) => {
-        excelData.push({
-          No: index + 1,
-          Tanggal: transaction.tanggal,
-          "No Bukti": transaction.noBukti,
-          Uraian: transaction.uraian,
-          "Debit (Pemasukan)":
-            transaction.debit > 0
-              ? `Rp ${transaction.debit.toLocaleString("id-ID")}`
-              : "",
-          "Kredit (Pengeluaran)":
-            transaction.kredit > 0
-              ? `Rp ${transaction.kredit.toLocaleString("id-ID")}`
-              : "",
-          Saldo: `Rp ${transaction.saldo.toLocaleString("id-ID")}`,
+      excelData.push([
+        `BUKU KAS SANDUKA - ${getMonthName(monthFilter)} ${yearFilter}`,
+      ]);
+      excelData.push([]);
+      excelData.push([
+        "No",
+        "Tanggal",
+        "No Bukti",
+        "Uraian",
+        "Debit (Pemasukan)",
+        "Kredit (Pengeluaran)",
+        "Saldo",
+      ]);
+
+      if (saldoAwalTransaksi) {
+        const [y, m, d] = saldoAwalTransaksi.tanggalTransaksi;
+        excelData.push([
+          "-",
+          `${String(d).padStart(2, "0")}-${String(m).padStart(2, "0")}-${y}`,
+          saldoAwalTransaksi.nomorBukti,
+          saldoAwalTransaksi.keterangan,
+          saldoAwalTransaksi.debet.toLocaleString("id-ID"),
+          "0",
+          saldoAwalTransaksi.saldo.toLocaleString("id-ID"),
+        ]);
+      }
+
+      filteredTransaksi
+        .filter((item) => {
+          const isSaldoAwal = item.nomorBukti
+            ?.toLowerCase()
+            .includes("saldo awal sanduka");
+          const [y, m] = Array.isArray(item.tanggalTransaksi)
+            ? [item.tanggalTransaksi[0], item.tanggalTransaksi[1]]
+            : new Date(item.tanggalTransaksi)
+                .toISOString()
+                .split("T")[0]
+                .split("-")
+                .map(Number);
+          return (
+            !isSaldoAwal &&
+            m === Number(monthFilter) &&
+            y === Number(yearFilter)
+          );
+        })
+        .forEach((transaction, index) => {
+          excelData.push([
+            index + 1,
+            new Date(transaction.tanggalTransaksi).toLocaleDateString("id-ID"),
+            transaction.nomorBukti,
+            transaction.keterangan,
+            transaction.debet.toLocaleString("id-ID"),
+            transaction.kredit.toLocaleString("id-ID"),
+            transaction.saldo.toLocaleString("id-ID"),
+          ]);
         });
-      });
 
-      excelData.push(
-        {
-          No: "",
-          Tanggal: "",
-          "No Bukti": "",
-          Uraian: "",
-          "Debit (Pemasukan)": "",
-          "Kredit (Pengeluaran)": "",
-          Saldo: "",
-        },
-        {
-          No: "",
-          Tanggal: "",
-          "No Bukti": "",
-          Uraian: "TOTAL",
-          "Debit (Pemasukan)": `Rp ${totalDebit.toLocaleString("id-ID")}`,
-          "Kredit (Pengeluaran)": `Rp ${totalKredit.toLocaleString("id-ID")}`,
-          Saldo: `Rp ${saldoAkhir.toLocaleString("id-ID")}`,
-        }
-      );
+      excelData.push([]);
+      excelData.push([
+        "",
+        "",
+        "",
+        "TOTAL",
+        `Rp ${totalDebit.toLocaleString("id-ID")}`,
+        `Rp ${totalKredit.toLocaleString("id-ID")}`,
+        `Rp ${saldoAkhir.toLocaleString("id-ID")}`,
+      ]);
 
-      const ws = XLSX.utils.json_to_sheet(excelData, { skipHeader: true });
+      const ws = XLSX.utils.aoa_to_sheet(excelData);
       const wb = XLSX.utils.book_new();
-
-      const colWidths = [
-        { wch: 5 },
-        { wch: 15 },
-        { wch: 30 },
-        { wch: 50 },
-        { wch: 20 },
-        { wch: 20 },
-        { wch: 20 },
-      ];
-      ws["!cols"] = colWidths;
-
       XLSX.utils.book_append_sheet(wb, ws, "Buku Kas Umum");
 
-      const currentDate = new Date();
-      const filename = `Buku_Kas_Umum_${getMonthName(
-        monthFilter
-      )}_${yearFilter}_${currentDate.getDate()}-${
-        currentDate.getMonth() + 1
-      }-${currentDate.getFullYear()}.xlsx`;
-
-      XLSX.writeFile(wb, filename);
-
-      setNotification({
-        type: "success",
-        message: `File Excel berhasil diunduh: ${filename}`,
-      });
-    } catch (error) {
-      console.error("Error exporting to Excel:", error);
-      setNotification({
-        type: "error",
-        message: "Gagal mengekspor ke Excel. Silakan coba lagi.",
-      });
+      XLSX.writeFile(
+        wb,
+        `Buku_Kas_Sanduka_${getMonthName(monthFilter)}_${yearFilter}.xlsx`
+      );
+      setNotification({ type: "success", message: "Excel berhasil diunduh." });
+    } catch (err) {
+      console.error(err);
+      setNotification({ type: "error", message: "Gagal ekspor Excel." });
     }
   };
   const handlePrint = () => {
-    try {
-      const printContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Buku Kas Umum - ${getMonthName(
-              monthFilter
-            )} ${yearFilter}</title>
-            <style>
-                @media print {
-                    @page {
-                        size: A4 landscape;
-                        margin: 1cm;
-                    }
-                }
-
-                body {
-                    font-family: Arial, sans-serif;
-                    font-size: 12px;
-                    margin: 0;
-                    padding: 20px;
-                    color: #000;
-                }
-
-                h1, h2, h3, p {
-                    margin: 0;
-                    padding: 0;
-                }
-
-                .title {
-                    text-align: center;
-                    margin-bottom: 10px;
-                }
-
-                .subtitle {
-                    display: flex;
-                    justify-content: space-between;
-                    margin-bottom: 10px;
-                }
-
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 10px;
-                    font-size: 11px;
-                }
-
-                thead th {
-                    background-color: #009688 !important;
-                    color: white !important;
-                    padding: 6px;
-                    border: 1px solid #ccc;
-                    text-align: center;
-                    -webkit-print-color-adjust: exact;
-                    print-color-adjust: exact;
-                }
-
-                tbody td {
-                    border: 1px solid #ccc;
-                    padding: 6px;
-                    vertical-align: top;
-                }
-
-                .number {
-                    text-align: right;
-                }
-
-                .center {
-                    text-align: center;
-                }
-
-                .summary-row td {
-                    font-weight: bold;
-                    background-color: #f5f5f5;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="title">
-                <h2>BUKU KAS UMUM</h2>
-                <p>Periode: ${getMonthName(monthFilter)} ${yearFilter}</p>
-            </div>
-
-            <div class="subtitle">
-                <p><strong>Saldo Akhir Bulan Sebelumnya (${getMonthName(
-                  monthFilter - 1
-                )} ${yearFilter}):</strong> Rp ${saldoSebelumnya.toLocaleString(
-        "id-ID"
-      )}</p>
-                <p>Dicetak pada: ${new Date().toLocaleString("id-ID", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                })}</p>
-            </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Tgl Transaksi</th>
-                        <th>No. Bukti</th>
-                        <th>Uraian</th>
-                        <th>Debet (Rp)</th>
-                        <th>Kredit (Rp)</th>
-                        <th>Saldo (Rp)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="center">01/06/${yearFilter}</td>
-                        <td colspan="2" class="center">SALDO AWAL</td>
-                        <td>Saldo Awal Periode ${getMonthName(
-                          monthFilter
-                        )} ${yearFilter}</td>
-                        <td class="number">Rp ${saldoSebelumnya.toLocaleString(
-                          "id-ID"
-                        )}</td>
-                        <td class="number">Rp 0</td>
-                        <td class="number">Rp ${saldoSebelumnya.toLocaleString(
-                          "id-ID"
-                        )}</td>
-                    </tr>
-
-                    ${transactions
-                      .map(
-                        (transaction, index) => `
-                        <tr>
-                            <td class="center">${index + 1}</td>
-                            <td class="center">${transaction.tanggal}</td>
-                            <td>${transaction.noBukti}</td>
-                            <td>${transaction.uraian}</td>
-                            <td class="number">${
-                              transaction.debit > 0
-                                ? "Rp " +
-                                  transaction.debit.toLocaleString("id-ID")
-                                : "Rp 0"
-                            }</td>
-                            <td class="number">${
-                              transaction.kredit > 0
-                                ? "Rp " +
-                                  transaction.kredit.toLocaleString("id-ID")
-                                : "Rp 0"
-                            }</td>
-                            <td class="number">Rp ${transaction.saldo.toLocaleString(
-                              "id-ID"
-                            )}</td>
-                        </tr>
-                    `
-                      )
-                      .join("")}
-
-                    <tr class="summary-row">
-                        <td colspan="4" class="center">TOTAL TRANSAKSI PERIODE INI</td>
-                        <td class="number">Rp ${totalDebit.toLocaleString(
-                          "id-ID"
-                        )}</td>
-                        <td class="number">Rp ${totalKredit.toLocaleString(
-                          "id-ID"
-                        )}</td>
-                        <td></td>
-                    </tr>
-                    <tr class="summary-row">
-                        <td colspan="6" class="center">SALDO AKHIR PERIODE INI</td>
-                        <td class="number">Rp ${saldoAkhir.toLocaleString(
-                          "id-ID"
-                        )}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </body>
-        </html>
-        `;
-
-      const printWindow = window.open("", "_blank");
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-
-      printWindow.onload = function () {
-        printWindow.focus();
-        printWindow.print();
-        printWindow.onafterprint = function () {
-          printWindow.close();
-        };
-      };
-
-      setNotification({
-        type: "success",
-        message: "Dokumen berhasil disiapkan untuk pencetakan",
-      });
-    } catch (error) {
-      console.error("Error printing:", error);
-      setNotification({
-        type: "error",
-        message: "Gagal mencetak dokumen. Silakan coba lagi.",
-      });
-    }
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(`
+    <html>
+      <head>
+        <title>Kas Sanduka</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          table { width: 100%; border-collapse: collapse; font-size: 12px; }
+          th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+          th { background-color: #eee; }
+        </style>
+      </head>
+      <body>
+        <h2 style="text-align:center">BUKU KAS SANDUKA</h2>
+        <div class="subtitle" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+  <div><strong>Periode:</strong> ${getMonthName(
+    monthFilter
+  )} ${yearFilter}</div>
+  <div><strong>Dicetak pada:</strong> ${new Date().toLocaleString("id-ID", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  })}</div>
+</div>
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Tanggal</th>
+              <th>No. Bukti</th>
+              <th>Uraian</th>
+              <th>Debet (Rp)</th>
+              <th>Kredit (Rp)</th>
+              <th>Saldo (Rp)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredTransaksi
+              .map((t, i) => {
+                return `
+                  <tr>
+                    <td>${i + 1}</td>
+                    <td>${new Date(t.tanggalTransaksi).toLocaleDateString(
+                      "id-ID"
+                    )}</td>
+                    <td>${t.nomorBukti}</td>
+                    <td>${t.keterangan}</td>
+                    <td>${(t.debet || 0).toLocaleString("id-ID")}</td>
+                    <td>${(t.kredit || 0).toLocaleString("id-ID")}</td>
+                    <td>${(t.saldo || 0).toLocaleString("id-ID")}</td>
+                  </tr>`;
+              })
+              .join("")}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4"><strong>Total</strong></td>
+              <td><strong>Rp ${totalDebit.toLocaleString("id-ID")}</strong></td>
+              <td><strong>Rp ${totalKredit.toLocaleString(
+                "id-ID"
+              )}</strong></td>
+              <td><strong>Rp ${saldoAkhir.toLocaleString("id-ID")}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </body>
+    </html>
+  `);
+    printWindow.document.close();
+    printWindow.onload = function () {
+      printWindow.focus();
+      printWindow.print();
+      printWindow.onafterprint = () => printWindow.close();
+    };
   };
 
   return (
@@ -2006,7 +1851,10 @@ function KasSanduka() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-200">
+              <table
+                ref={tableRef}
+                className="min-w-full border border-gray-200"
+              >
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-4 py-2 text-left text-xs font-medium  uppercase tracking-wider text-center">
