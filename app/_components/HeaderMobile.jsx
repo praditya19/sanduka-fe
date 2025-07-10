@@ -44,7 +44,7 @@ const HeaderMobile = () => {
     try {
       let idToFetch = userId;
 
-      if (userRole === "ADMIN" && npa) {
+      if ((userRole === "ADMIN" || userRole === "SUPER ADMIN") && npa) {
         const npaResponse = await GlobalApi.cekNpa(npa);
         if (npaResponse && npaResponse.id) {
           idToFetch = npaResponse.id;

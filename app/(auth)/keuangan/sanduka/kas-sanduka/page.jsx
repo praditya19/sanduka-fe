@@ -319,8 +319,8 @@ function KasSanduka() {
       }
 
       const hasilSaldo = hitungSaldo(allPreviousData, 0);
-    if (hasilSaldo.length > 0) {
-      saldoAkhirSebelumnya = hasilSaldo[hasilSaldo.length - 1].saldo || 0;
+      if (hasilSaldo.length > 0) {
+        saldoAkhirSebelumnya = hasilSaldo[hasilSaldo.length - 1].saldo || 0;
       }
       const dataBulanIni = currentMonthData.filter((item) => {
         const [year, month] = Array.isArray(item.tanggalTransaksi)
@@ -594,9 +594,34 @@ function KasSanduka() {
     ];
     const bulanNama = namaBulan[Number(setoranBulanPengeluaran)];
 
-    const autoKeterangan = `Pengeluaran Sanduka ${PosPengeluaran} Cabang ${cabangPengeluaran} (${jenisPengeluaran}) untuk ${bulanNama} ${setoranTahunPengeluaran}. Ket${
-      keteranganPengeluaran ? ` ${keteranganPengeluaran}` : " -"
-    }`;
+    //     const baseKeterangan = `Pengeluaran Sanduka ${PosPengeluaran} Cabang ${cabangPengeluaran} (${jenisPengeluaran}) untuk ${bulanNama} ${setoranTahunPengeluaran}.`;
+
+    // const tambahanKet = keteranganPengeluaran ? ` ${keteranganPengeluaran}` : " -";
+
+    // const detailDuka =
+    //   PosPengeluaran === "Santunan Duka Anggota"
+    //     ? ` Nama yang meninggal: ${yangMeninggal || "-"}, Penerima: ${namaPenerima || "-"}`
+    //     : "";
+
+    // const autoKeterangan = `${baseKeterangan} Ket${tambahanKet}${detailDuka}`;
+    const baseKeterangan = `Pengeluaran Sanduka ${PosPengeluaran} Cabang ${cabangPengeluaran} (${jenisPengeluaran}) untuk ${bulanNama} ${setoranTahunPengeluaran}.`;
+
+    let autoKeterangan = "";
+
+    if (PosPengeluaran === "Santunan Duka Anggota") {
+      const ketTambahan = keteranganPengeluaran
+        ? ` ${keteranganPengeluaran}`
+        : "";
+      const detailDuka = ` Nama yang meninggal: ${
+        yangMeninggal || ""
+      }, Penerima: ${namaPenerima || ""}`;
+      autoKeterangan = `${baseKeterangan} Ket${ketTambahan}${detailDuka}`;
+    } else {
+      const ketTambahan = keteranganPengeluaran
+        ? ` ${keteranganPengeluaran}`
+        : " -";
+      autoKeterangan = `${baseKeterangan} Ket${ketTambahan}`;
+    }
 
     const payload = {
       tanggalTransaksi: tglPengeluaran ?? "",
@@ -910,19 +935,6 @@ function KasSanduka() {
 
     return `${terbilang(nilai)} rupiah`.replace(/\s+/g, " ");
   };
-
-  const transactions = [
-    {
-      id: 2,
-      tanggal: "15/06/2025",
-      noBukti: "PGLSKDK-20250615210333-SANDUKA",
-      uraian:
-        "Pengeluaran Sanduka Operasional Sanduka (Cash) untuk Juni 2025. Ket: -",
-      debit: 350000000,
-      kredit: 390000,
-      saldo: 349910000,
-    },
-  ];
   // END
 
   //
@@ -2272,7 +2284,7 @@ function KasSanduka() {
                             className="text-red-500 hover:text-red-700 p-1"
                             title="Hapus pos penerimaan"
                           >
-                           <FaTrash />
+                            <FaTrash />
                           </button>
                         )}
                       </div>
