@@ -7,7 +7,7 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Input } from "@/components/ui/input";
-import * as XLSX from "xlsx";
+import * as XLSX from 'xlsx-js-style';
 
 const CekData = () => {
   const [selectedCabang, setSelectedCabang] = useState("");
@@ -53,10 +53,11 @@ const CekData = () => {
       setData(result.content);
       setTotalPages(result.totalPages || 0);
       setTotalElements(result.totalElements);
-      return result.content;
+      return result.content; // Return content for Excel download
     } catch (error) {
       console.error("Error fetching history data:", error);
       setData([]);
+      return []; // Return empty array on error
     } finally {
       setIsLoading(false);
     }
@@ -67,21 +68,24 @@ const CekData = () => {
     const storedCabang = sessionStorage.getItem("cabang");
     setRole(storedRole || "");
 
+    const initialFetchCabang = storedRole === "ADMIN" && storedCabang ? storedCabang : selectedCabang;
+    const initialFetchUnitKerja = storedRole === "ADMIN" ? "" : selectedUnitKerja; // Admin might not have a selectedUnitKerja filter initially
+
     if (storedRole === "ADMIN" && storedCabang) {
       setSelectedCabang(storedCabang);
       filterUnitKerjaForCabang(storedCabang);
-      fetchData(currentPage, pageSize, storedCabang);
-    } else {
-      fetchData(
-        currentPage,
-        pageSize,
-        selectedCabang,
-        selectedUnitKerja,
-        searchNama
-      );
     }
+    // Always fetch data on initial load and page changes
+    fetchData(
+      currentPage,
+      pageSize,
+      initialFetchCabang,
+      initialFetchUnitKerja,
+      searchNama
+    );
 
-    const fetchInitialData = async () => {
+
+    const fetchInitialDropdownData = async () => {
       try {
         const [cabangRes, unitKerjaRes] = await Promise.all([
           GlobalApi.getCabang(),
@@ -92,11 +96,11 @@ const CekData = () => {
         setFilteredCabangList(cabangRes.data);
         setUnitKerjaList(unitKerjaRes.data);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching dropdown data:", error);
       }
     };
 
-    fetchInitialData();
+    fetchInitialDropdownData();
 
     const handleClickOutside = (event) => {
       if (cabangRef.current && !cabangRef.current.contains(event.target)) {
@@ -123,17 +127,19 @@ const CekData = () => {
     };
   }, [currentPage, pageSize]);
 
+  // This useEffect ensures filterUnitKerjaForCabang runs when unitKerjaList is populated
   useEffect(() => {
-    if (selectedCabang) {
+    if (selectedCabang && unitKerjaList.length > 0) {
       setSelectedUnitKerja("");
       setUnitKerjaInput("");
       filterUnitKerjaForCabang(selectedCabang);
     }
-  }, [selectedCabang]);
+  }, [selectedCabang, unitKerjaList]);
+
 
   const filterUnitKerjaForCabang = (cabang) => {
     const filtered = unitKerjaList.filter(
-      (unitKerja) => unitKerja.cabang.toLowerCase() === cabang.toLowerCase()
+      (unitKerja) => unitKerja.cabang?.toLowerCase() === cabang?.toLowerCase()
     );
     setFilteredUnitKerja(filtered);
   };
@@ -160,67 +166,72 @@ const CekData = () => {
     if (selectedCabang) {
       const filtered = unitKerjaList.filter(
         (unitKerja) =>
-          unitKerja.cabang.toLowerCase() === selectedCabang.toLowerCase() &&
-          unitKerja.unitKerja.toLowerCase().includes(input.toLowerCase())
+          unitKerja.cabang?.toLowerCase() === selectedCabang?.toLowerCase() &&
+          unitKerja.unitKerja?.toLowerCase().includes(input.toLowerCase())
       );
       setFilteredUnitKerja(filtered);
       setShowUnitKerjaDropdown(true);
+    } else {
+      setFilteredUnitKerja([]); // Clear unit kerja if no cabang selected
+      setShowUnitKerjaDropdown(false);
     }
   };
 
   const handleCabangSearch = (query) => {
     const filtered = originalCabangList.filter((cabang) =>
-      cabang.kecamatan.toLowerCase().includes(query.toLowerCase())
+      cabang.kecamatan?.toLowerCase().includes(query.toLowerCase())
     );
     setFilteredCabangList(filtered);
   };
 
   const handleSelectCabang = async (cabang) => {
-    setSelectedCabang(cabang.kecamatan);
+    const newCabang = cabang?.kecamatan || "";
+    setSelectedCabang(newCabang);
     setShowCabangDropdown(false);
 
-    const filtered = unitKerjaList.filter(
-      (unitKerja) =>
-        unitKerja.cabang &&
-        unitKerja.cabang.toLowerCase() === cabang.kecamatan.toLowerCase()
-    );
-    setFilteredUnitKerja(filtered);
-    fetchData(0, pageSize, cabang.kecamatan, "", "");
+    if (newCabang) {
+      const filtered = unitKerjaList.filter(
+        (unitKerja) => unitKerja.cabang?.toLowerCase() === newCabang.toLowerCase()
+      );
+      setFilteredUnitKerja(filtered);
+    } else {
+      setFilteredUnitKerja([]);
+    }
+    fetchData(0, pageSize, newCabang, selectedUnitKerja, searchNama);
+    setCurrentPage(0); // Reset page to 0 when filter changes
   };
 
   const handleUnitKerjaSearch = (searchTerm) => {
+    const allFilteredByCabang = unitKerjaList.filter(
+      (unitKerja) => unitKerja.cabang?.toLowerCase() === selectedCabang?.toLowerCase()
+    );
+
     if (searchTerm === "") {
-      const allFiltered = unitKerjaList.filter(
-        (unitKerja) => unitKerja.cabang === selectedCabang
-      );
-      setFilteredUnitKerja(allFiltered);
+      setFilteredUnitKerja(allFilteredByCabang);
     } else {
-      const filtered = unitKerjaList.filter(
-        (unitKerja) =>
-          unitKerja.unitKerja
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) &&
-          unitKerja.cabang === selectedCabang
+      const filtered = allFilteredByCabang.filter(
+        (unitKerja) => unitKerja.unitKerja?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredUnitKerja(filtered);
     }
-
     setShowUnitKerjaDropdown(true);
   };
 
   const handleUnitKerjaSelect = (unitKerja) => {
-    setSelectedUnitKerja(unitKerja.unitKerja);
-    setUnitKerjaInput(unitKerja.unitKerja);
+    const newUnitKerja = unitKerja?.unitKerja || "";
+    setSelectedUnitKerja(newUnitKerja);
+    setUnitKerjaInput(newUnitKerja);
     setShowUnitKerjaDropdown(false);
-    console.log(unitKerja.unitKerja);
+    console.log("Selected Unit Kerja:", newUnitKerja);
 
-    fetchData(0, pageSize, "", unitKerja.unitKerja, "");
+    fetchData(0, pageSize, selectedCabang, newUnitKerja, searchNama);
+    setCurrentPage(0);
   };
 
   const handlePageChange = (page) => {
     if (page >= 0 && page < totalPages) {
       setCurrentPage(page);
-      fetchData(page, pageSize, selectedCabang);
+      fetchData(page, pageSize, selectedCabang, selectedUnitKerja, searchNama);
     }
   };
 
@@ -229,86 +240,94 @@ const CekData = () => {
   };
 
   const handleNamaChange = (e) => {
-    const query = e.target.value.toLowerCase();
-    setSearchNama(e.target.value.toLowerCase());
-    fetchData(0, pageSize, "", "", query);
+    const query = e.target.value;
+    setSearchNama(query);
+    fetchData(0, pageSize, selectedCabang, selectedUnitKerja, query);
+    setCurrentPage(0);
   };
 
   const renderTableBody = () => {
     return (
       <tbody className="text-center">
-        {data.map((item, index) => {
-          const namaList = item.nama.split(" | ");
-          const npaList = item.npa.split(" | ");
-          const namaKtaList = item.ktaDigitalNama.split(" | ");
-          const namaSandukaList = item.sandukaNama.split(" | ");
-          const namaDaspenList = item.daspenNama.split(" | ");
+        {data.length > 0 ? (
+          data.map((item, index) => {
+            const namaList = (item.nama || '').split(" | ").filter(Boolean);
+            const npaList = (item.npa || '').split(" | ").filter(Boolean);
+            const namaKtaList = (item.ktaDigitalNama || '').split(" | ").filter(Boolean);
+            const namaSandukaList = (item.sandukaNama || '').split(" | ").filter(Boolean);
+            const namaDaspenList = (item.daspenNama || '').split(" | ").filter(Boolean);
 
-          return (
-            <tr
-              key={index}
-              className={`border-b ${
-                index % 2 === 0 ? "bg-gray-50" : "bg-white"
-              } hover:bg-gray-200 transition duration-150`}
-            >
-              <td className="py-2 px-4 border">{index + 1}</td>
-              <td className="py-2 px-4 border">{item.cabang}</td>
-              <td className="py-2 px-4 border">{item.unitKerja}</td>
-              <td className="py-2 px-4 border whitespace-pre-line text-left">
-                {namaList.map((nama, idx) => (
-                  <div key={idx}>
-                    {idx + 1}. {nama}
-                  </div>
-                ))}
-              </td>
-              <td className="py-2 px-4 border whitespace-pre-line text-left">
-                {npaList.map((npa, idx) => {
-                  return (
+            return (
+              <tr
+                key={index}
+                className={`border-b ${index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                  } hover:bg-gray-200 transition duration-150`}
+              >
+                <td className="py-2 px-4 border">{index + 1}</td>
+                <td className="py-2 px-4 border">{item.cabang || '-'}</td>
+                <td className="py-2 px-4 border">{item.unitKerja || '-'}</td>
+                <td className="py-2 px-4 border whitespace-pre-line text-left">
+                  {namaList.map((nama, idx) => (
                     <div key={idx}>
-                      {idx + 1}. {npa}
+                      {idx + 1}. {nama}
                     </div>
-                  );
-                })}
-              </td>
-              <td className="py-2 px-4 border whitespace-pre-line text-left">
-                {namaKtaList.map((namaKta, idx) => {
-                  return (
-                    <div key={idx}>
-                      {idx + 1}. {namaKta}
-                    </div>
-                  );
-                })}
-              </td>
-              <td className="py-2 px-4 border text-center">
-                {item.ktaDigitalJumlah}
-              </td>
-              <td className="py-2 px-4 border whitespace-pre-line text-left">
-                {namaSandukaList.map((namaSanduka, idx) => {
-                  return (
-                    <div key={idx}>
-                      {idx + 1}. {namaSanduka}
-                    </div>
-                  );
-                })}
-              </td>
-              <td className="py-2 px-4 border text-center">
-                {item.sandukaJumlah}
-              </td>
-              <td className="py-2 px-4 border whitespace-pre-line text-left">
-                {namaDaspenList.map((namaDaspen, idx) => {
-                  return (
-                    <div key={idx}>
-                      {idx + 1}. {namaDaspen}
-                    </div>
-                  );
-                })}
-              </td>
-              <td className="py-2 px-4 border text-center">
-                {item.daspenJumlah}
-              </td>
-            </tr>
-          );
-        })}
+                  ))}
+                </td>
+                <td className="py-2 px-4 border whitespace-pre-line text-left">
+                  {npaList.map((npa, idx) => {
+                    return (
+                      <div key={idx}>
+                        {idx + 1}. {npa}
+                      </div>
+                    );
+                  })}
+                </td>
+                <td className="py-2 px-4 border whitespace-pre-line text-left">
+                  {namaKtaList.map((namaKta, idx) => {
+                    return (
+                      <div key={idx}>
+                        {idx + 1}. {namaKta}
+                      </div>
+                    );
+                  })}
+                </td>
+                <td className="py-2 px-4 border text-center">
+                  {item.ktaDigitalJumlah || 0}
+                </td>
+                <td className="py-2 px-4 border whitespace-pre-line text-left">
+                  {namaSandukaList.map((namaSanduka, idx) => {
+                    return (
+                      <div key={idx}>
+                        {idx + 1}. {namaSanduka}
+                      </div>
+                    );
+                  })}
+                </td>
+                <td className="py-2 px-4 border text-center">
+                  {item.sandukaJumlah || 0}
+                </td>
+                <td className="py-2 px-4 border whitespace-pre-line text-left">
+                  {namaDaspenList.map((namaDaspen, idx) => {
+                    return (
+                      <div key={idx}>
+                        {idx + 1}. {namaDaspen}
+                      </div>
+                    );
+                  })}
+                </td>
+                <td className="py-2 px-4 border text-center">
+                  {item.daspenJumlah || 0}
+                </td>
+              </tr>
+            );
+          })
+        ) : (
+          <tr>
+            <td colSpan="11" className="py-4 text-center text-gray-500">
+              {isLoading ? "Loading data..." : "Tidak ada data yang tersedia."}
+            </td>
+          </tr>
+        )}
       </tbody>
     );
   };
@@ -349,11 +368,10 @@ const CekData = () => {
               key={pageNumber}
               onClick={() => handlePageChange(pageNumber)}
               disabled={isLoading}
-              className={`px-3 py-1 border rounded-md ${
-                pageNumber === currentPage
-                  ? "bg-blue-500 text-white"
-                  : "bg-white hover:bg-gray-50"
-              }`}
+              className={`px-3 py-1 border rounded-md ${pageNumber === currentPage
+                ? "bg-blue-500 text-white"
+                : "bg-white hover:bg-gray-50"
+                }`}
             >
               {pageNumber + 1}
             </button>
@@ -382,20 +400,22 @@ const CekData = () => {
   const handleDownloadExcel = async () => {
     setIsLoading(true);
     try {
-      const filteredDataForPrint = await fetchData(
-        currentPage,
-        totalElements,
+      // Fetch ALL data, not just current page, for the Excel download
+      // Pass totalElements as size to get all data matching current filters
+      const allFilteredDataForPrint = await fetchData(
+        0, // Start from page 0
+        totalElements, // Fetch all elements based on current filters
         selectedCabang,
         selectedUnitKerja,
         searchNama
       );
 
-      if (!filteredDataForPrint || filteredDataForPrint.length === 0) {
+      if (!allFilteredDataForPrint || allFilteredDataForPrint.length === 0) {
         setIsLoading(false);
+        alert("Tidak ada data untuk dicetak.");
         return;
       }
 
-      // Define headers
       const headers = [
         "No",
         "Cabang",
@@ -410,28 +430,80 @@ const CekData = () => {
         "Jumlah Daspen",
       ];
 
-      const data = filteredDataForPrint.map((item, index) => [
+      const formatMultiLineStringForExcel = (value) => {
+        if (!value) {
+          return "-";
+        }
+
+        const parts = String(value).split(" | ").filter(Boolean);
+
+        if (parts.length === 0) {
+          return "-";
+        }
+
+        return parts.map((part, idx) => `${idx + 1}. ${part.trim()}`).join('\n');
+      };
+
+      const excelDataRows = allFilteredDataForPrint.map((item, index) => [
         index + 1,
         item.cabang || "-",
         item.unitKerja || "-",
-        item.nama || "-",
-        item.npa || "-",
-        item.ktaDigitalNama || "-",
+        formatMultiLineStringForExcel(item.nama),
+        formatMultiLineStringForExcel(item.npa),
+        formatMultiLineStringForExcel(item.ktaDigitalNama),
         item.ktaDigitalJumlah || 0,
-        item.sandukaNama || "-",
+        formatMultiLineStringForExcel(item.sandukaNama),
         item.sandukaJumlah || 0,
-        item.daspenNama || "-",
+        formatMultiLineStringForExcel(item.daspenNama),
         item.daspenJumlah || 0,
       ]);
 
-      const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
+      const worksheet = XLSX.utils.aoa_to_sheet([headers, ...excelDataRows]);
+      allFilteredDataForPrint.forEach((item, originalIndex) => {
+        const excelRowIndex = originalIndex + 1;
+        const columnsToWrap = [
+          { key: 'nama', colIndex: 3 },
+          { key: 'npa', colIndex: 4 },
+          { key: 'ktaDigitalNama', colIndex: 5 },
+          { key: 'sandukaNama', colIndex: 7 },
+          { key: 'daspenNama', colIndex: 9 },
+        ];
+
+        columnsToWrap.forEach(col => {
+          const cellValue = item[col.key];
+          if (cellValue && String(cellValue).includes(' | ')) {
+            const cellRef = XLSX.utils.encode_cell({ r: excelRowIndex, c: col.colIndex });
+            if (worksheet[cellRef]) {
+              worksheet[cellRef].s = { alignment: { wrapText: true, vertical: 'top' } };
+            }
+          }
+        });
+      });
+
+      const columnWidths = headers.map((header, index) => {
+        let maxWidth = header.length;
+        excelDataRows.forEach(row => {
+          const cellContent = String(row[index] || '');
+          const lines = cellContent.split('\n');
+          lines.forEach(line => {
+            if (line.length > maxWidth) {
+              maxWidth = line.length;
+            }
+          });
+        });
+        return { wch: maxWidth + 2 };
+      });
+      worksheet['!cols'] = columnWidths;
+
 
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Data Anggota");
 
       XLSX.writeFile(workbook, "Kroscek_Data.xlsx");
+
     } catch (error) {
       console.error("Error during Excel download process:", error);
+      alert("Terjadi kesalahan saat mengunduh file Excel. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
     }
@@ -470,9 +542,8 @@ const CekData = () => {
                     value={selectedCabang}
                     readOnly
                     onClick={handleCabangClick}
-                    className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition duration-150 ${
-                      role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
-                    }`}
+                    className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition duration-150 ${role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
+                      }`}
                     placeholder="Pilih Cabang"
                     disabled={role === "ADMIN"}
                   />
@@ -516,9 +587,8 @@ const CekData = () => {
                     onChange={handleUnitKerjaChange}
                     onFocus={handleUnitKerjaFocus}
                     placeholder="Pilih Unit Kerja"
-                    className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition ${
-                      !selectedCabang ? "bg-gray-100 cursor-not-allowed" : ""
-                    }`}
+                    className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition ${!selectedCabang ? "bg-gray-100 cursor-not-allowed" : ""
+                      }`}
                     disabled={!selectedCabang}
                   />
                   {showUnitKerjaDropdown && (
