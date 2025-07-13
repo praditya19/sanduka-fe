@@ -12,6 +12,7 @@ import {
 import GlobalApi from "../_utils/GlobalApi";
 import { useRouter } from "next/navigation";
 import { useMute } from "../MuteContext";
+import PencarianAnggota from "../_components/PencarianAnggota";
 
 const HeaderMobile = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,6 +31,7 @@ const HeaderMobile = () => {
   const [fotoBase64, setFotoBase64] = useState(null);
   const [loading, setLoading] = useState(true);
   const { isMuted, handleMuteToggle } = useMute();
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   const fetchUserData = async () => {
     const userId = sessionStorage.getItem("userId");
@@ -93,6 +95,14 @@ const HeaderMobile = () => {
     setNotificationCount(0);
   };
 
+  const handleSearchClick = () => {
+    setIsSearchModalOpen(true);
+  };
+
+  const handleCloseSearchModal = () => {
+    setIsSearchModalOpen(false);
+  };
+
   const toggleProfileMenu = () => {
     setIsProfileMenuOpen((prev) => !prev);
   };
@@ -110,7 +120,7 @@ const HeaderMobile = () => {
     sessionStorage.clear();
     localStorage.clear();
     window.location.href = "/";
-};
+  };
 
   const getEditProfilePath = () => {
     const userRole = sessionStorage.getItem("role");
@@ -186,116 +196,123 @@ const HeaderMobile = () => {
   }, [isProfileMenuOpen]);
 
   return (
-    <header className="bg-teal-500 text-white text-lg font-bold px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-      <div className="flex justify-between w-full">
-        {/* Left Section: Back Button and Title */}
-        <div className="flex items-center">
-          <FontAwesomeIcon
-            icon={faArrowLeft}
-            size="sm"
-            onClick={handleBackClick}
-            className="cursor-pointer text-black mr-4"
-          />
-          <Link href="/home">
-            <Image src="/sanduka.png" width={70} height={60} alt="logo" />
-          </Link>
-        </div>
-        <div className="flex space-x-4 items-center ">
-          <div className="flex space-x-4 items-center ml-3">
-            {/* Only show email icon for ADMIN and SUPER ADMIN */}
-            {(role === "ADMIN" || role === "SUPER ADMIN") && (
-              <Link href="/pensiun">
-                <button className="relative">
-                  <FontAwesomeIcon
-                    icon={faEnvelope}
-                    className="w-5 h-5 text-gray-700"
-                  />
-                  {emailCount > 0 && (
-                    <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
-                      {emailCount}
-                    </span>
-                  )}
-                </button>
-              </Link>
-            )}
-            <button onClick={handleNotificationClick} className="relative">
-              <FontAwesomeIcon
-                icon={faBell}
-                className="w-5 h-5 text-gray-700"
-              />
-              {notificationCount > 0 && (
-                <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
-                  {notificationCount}
-                </span>
+    <>
+      <header className="bg-teal-500 text-white text-lg font-bold px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+        <div className="flex justify-between w-full">
+          {/* Left Section: Back Button and Title */}
+          <div className="flex items-center">
+            <FontAwesomeIcon
+              icon={faArrowLeft}
+              size="sm"
+              onClick={handleBackClick}
+              className="cursor-pointer text-black mr-4"
+            />
+            <Link href="/home">
+              <Image src="/sanduka.png" width={70} height={60} alt="logo" />
+            </Link>
+          </div>
+          <div className="flex space-x-4 items-center ">
+            <div className="flex space-x-4 items-center ml-3">
+              {/* Only show email icon for ADMIN and SUPER ADMIN */}
+              {(role === "ADMIN" || role === "SUPER ADMIN") && (
+                <Link href="/pensiun">
+                  <button className="relative">
+                    <FontAwesomeIcon
+                      icon={faEnvelope}
+                      className="w-5 h-5 text-gray-700"
+                    />
+                    {emailCount > 0 && (
+                      <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+                        {emailCount}
+                      </span>
+                    )}
+                  </button>
+                </Link>
               )}
-            </button>
-
-            {/* Conditionally render search icon based on role */}
-            {(role === "ADMIN" || role === "SUPER ADMIN") && (
-              <Link href="/anggota/pencarian-anggota">
+              <button onClick={handleNotificationClick} className="relative">
                 <FontAwesomeIcon
-                  icon={faSearch}
+                  icon={faBell}
                   className="w-5 h-5 text-gray-700"
                 />
-              </Link>
-            )}
-          </div>
-          {/* Profile Image and Menu */}
-          <div
-            ref={profileMenuRef}
-            className="relative flex items-center space-x-2"
-          >
-            <div className="text-right flex flex-col">
-              <p className="text-sm font-semibold text-gray-800">
-                {sessionStorage.getItem("nama") || "Nama Pengguna"}
-              </p>
-              <p className="text-xs text-gray-500">
-                {sessionStorage.getItem("cabang") || "Cabang Belum Terdaftar"}
-              </p>
+                {notificationCount > 0 && (
+                  <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+                    {notificationCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Conditionally render search icon based on role */}
+              {(role === "ADMIN" || role === "SUPER ADMIN") && (
+                <button onClick={handleSearchClick}>
+                  <FontAwesomeIcon
+                    icon={faSearch}
+                    className="w-5 h-5 text-gray-700"
+                  />
+                </button>
+              )}
             </div>
-            <button
-              onClick={toggleProfileMenu}
-              className="relative flex items-center justify-center focus:outline-none w-12 h-12 rounded-full border-2 border-gray-300 hover:border-blue-500 shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
+            {/* Profile Image and Menu */}
+            <div
+              ref={profileMenuRef}
+              className="relative flex items-center space-x-2"
             >
-              <Image
-                src={
-                  fotoBase64
-                    ? `data:image/jpeg;base64,${fotoBase64}`
-                    : profileImageUrl
-                }
-                width={100}
-                height={100}
-                alt={`Foto User`}
-                className="w-full h-full rounded-full object-cover object-top"
-                unoptimized={true}
-              />
-            </button>
-            {isProfileMenuOpen && (
-              <div className="absolute right-0 mt-44 w-48 bg-white shadow-md rounded-md z-10">
-                <Link
-                  href={getEditProfilePath()}
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-                >
-                  Edit Profile
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-                >
-                  Logout
-                </button>
-                <button
-                  onClick={handleMuteToggle}
-                  className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-                >
-                  {isMuted ? "Hidupkan Suara" : "Matikan Suara"} Notifikasi
-                </button>
+              <div className="text-right flex flex-col">
+                <p className="text-sm font-semibold text-gray-800">
+                  {sessionStorage.getItem("nama") || "Nama Pengguna"}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {sessionStorage.getItem("cabang") || "Cabang Belum Terdaftar"}
+                </p>
               </div>
-            )}
+              <button
+                onClick={toggleProfileMenu}
+                className="relative flex items-center justify-center focus:outline-none w-12 h-12 rounded-full border-2 border-gray-300 hover:border-blue-500 shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
+              >
+                <Image
+                  src={
+                    fotoBase64
+                      ? `data:image/jpeg;base64,${fotoBase64}`
+                      : profileImageUrl
+                  }
+                  width={100}
+                  height={100}
+                  alt={`Foto User`}
+                  className="w-full h-full rounded-full object-cover object-top"
+                  unoptimized={true}
+                />
+              </button>
+              {isProfileMenuOpen && (
+                <div className="absolute right-0 mt-44 w-48 bg-white shadow-md rounded-md z-10">
+                  <Link
+                    href={getEditProfilePath()}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                  >
+                    Edit Profile
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                  >
+                    Logout
+                  </button>
+                  <button
+                    onClick={handleMuteToggle}
+                    className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                  >
+                    {isMuted ? "Hidupkan Suara" : "Matikan Suara"} Notifikasi
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Search Modal */}
+      {isSearchModalOpen && (
+        <PencarianAnggota isOpen={isSearchModalOpen} onClose={handleCloseSearchModal} />
+      )}
+    </>
   );
 };
 
