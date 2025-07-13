@@ -12,8 +12,9 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import GlobalApi from "../_utils/GlobalApi";
 import { useMute } from "../MuteContext";
+import PencarianAnggota from "../_components/PencarianAnggota";
 
-const HeaderHome = () => {
+const HeaderMenu = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
@@ -32,10 +33,14 @@ const HeaderHome = () => {
   const [statusSegeraCount, setStatusSegeraCount] = useState(0);
   const { isMuted, handleMuteToggle } = useMute();
   const [isIconBlinking, setIsIconBlinking] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [pensiunList, setPensiunList] = useState([]);
+  const [filteredPensiunList, setFilteredPensiunList] = useState([]);
+  const [loader, setLoader] = useState(false);
 
+  // Fetch Pensiun Data
   useEffect(() => {
     const fetchPensiunData = async () => {
-      setLoader(true);
       try {
         const pensiunResponse = await GlobalApi.getAllPensiun();
 
@@ -55,22 +60,9 @@ const HeaderHome = () => {
         const countSegera = segeraItems.length;
 
         sessionStorage.setItem("statusSegera", countSegera.toString());
-
         setStatusSegeraCount(countSegera);
-        setPensiunList(allPensiunList);
-
-        const finalFilteredPensiunList = allPensiunList.filter((item) => {
-          if (item.keterangan === null) {
-            return item.status === "Segera";
-          }
-          return item.keterangan !== "Pensiun";
-        });
-
-        setFilteredPensiunList(finalFilteredPensiunList);
       } catch (error) {
         console.error("Terjadi kesalahan saat mengambil data pensiun:", error);
-      } finally {
-        setLoader(false);
       }
     };
 
@@ -85,6 +77,7 @@ const HeaderHome = () => {
     }
   }, [isLoggedIn]);
 
+  // Fetch User Data
   const fetchUserData = async () => {
     const userId = sessionStorage.getItem("userId");
     const userRole = sessionStorage.getItem("role");
@@ -131,6 +124,7 @@ const HeaderHome = () => {
   };
 
   const router = useRouter();
+  
   const handleBackClick = () => {
     sessionStorage.removeItem("anggotaId");
     sessionStorage.removeItem("idTagihan");
@@ -148,8 +142,20 @@ const HeaderHome = () => {
     setNotificationCount(0);
   };
 
+  const handleSearchClick = () => {
+    setIsSearchModalOpen(true);
+  };
+
+  const handleCloseSearchModal = () => {
+    setIsSearchModalOpen(false);
+  };
+
   const toggleProfileMenu = () => {
     setIsProfileMenuOpen((prev) => !prev);
+  };
+
+  const toggleMobileMenu = () => {
+    setIsOpen((prev) => !prev);
   };
 
   const handleClickOutside = (event) => {
@@ -174,6 +180,7 @@ const HeaderHome = () => {
       : "/anggota/edit-anggota";
   };
 
+  // Fetch notifications
   useEffect(() => {
     const fetchNotificationCount = async () => {
       try {
@@ -191,12 +198,14 @@ const HeaderHome = () => {
     return () => clearInterval(intervalId);
   }, []);
 
+  // Handle notifications and sounds
   useEffect(() => {
     fetchUserData();
 
     if (isMuted) {
       return;
     }
+    
     const storedStatusSegeraCount = sessionStorage.getItem("statusSegera");
     if (storedStatusSegeraCount) {
       setEmailCount(parseInt(storedStatusSegeraCount));
@@ -217,6 +226,7 @@ const HeaderHome = () => {
       };
       playNotificationSound();
     }
+    
     if (notificationCount > 1) {
       setIsIconBlinking(true);
     } else {
@@ -229,6 +239,7 @@ const HeaderHome = () => {
     isMuted,
   ]);
 
+  // Handle click outside for profile menu
   useEffect(() => {
     if (isProfileMenuOpen) {
       document.addEventListener("mousedown", handleClickOutside);
@@ -241,185 +252,295 @@ const HeaderHome = () => {
   }, [isProfileMenuOpen]);
 
   return (
-    <nav className="bg-teal-500 shadow-md fixed top-0 inset-x-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-12">
-          <div className="flex items-center space-x-4">
-            <FontAwesomeIcon
-              icon={faArrowLeft}
-              size="sm"
-              onClick={handleBackClick}
-              className="cursor-pointer"
-            />
-            {/* Logo */}
-            <Link
-              href="/home"
-              onClick={() => sessionStorage.removeItem("anggotaId")}
-            >
-              <Image src="/sanduka.png" width={70} height={60} alt="logo" />
-            </Link>
-          </div>
+    <>
+      <nav className="bg-teal-500 shadow-md fixed top-0 inset-x-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-12">
+            <div className="flex items-center space-x-4">
+              <FontAwesomeIcon
+                icon={faArrowLeft}
+                size="sm"
+                onClick={handleBackClick}
+                className="cursor-pointer text-white hover:text-gray-200 transition-colors"
+              />
+              {/* Logo */}
+              <Link
+                href="/home"
+                onClick={() => sessionStorage.removeItem("anggotaId")}
+              >
+                <Image src="/sanduka.png" width={70} height={60} alt="logo" />
+              </Link>
+            </div>
 
-          <div className="hidden md:block">
-            <ul className="flex space-x-6 items-center">
-              {/* Icon Email */}
-              {sessionStorage.getItem("role") !== "USER" && (
+            {/* Desktop Menu */}
+            <div className="hidden md:block">
+              <ul className="flex space-x-6 items-center">
+                {/* Icon Email */}
+                {sessionStorage.getItem("role") !== "USER" && (
+                  <li
+                    className={`relative ${
+                      emailCount > 1 ? "animate-blink" : ""
+                    }`}
+                  >
+                    <button
+                      className="relative hover:scale-110 transition-transform"
+                      onClick={() => (window.location.href = "/pensiun")}
+                    >
+                      <FontAwesomeIcon
+                        icon={faEnvelope}
+                        className="w-5 h-5 text-white hover:text-gray-200"
+                      />
+                      {emailCount > 0 && (
+                        <span className="absolute -top-2 -right-2 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-white bg-red-600 rounded-full">
+                          {emailCount}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                )}
+                
+                {/* Icon Bell */}
                 <li
                   className={`relative ${
-                    emailCount > 1 ? "animate-blink" : ""
+                    notificationCount > 1 ? "animate-blink" : ""
                   }`}
                 >
+                  <button 
+                    onClick={handleNotificationClick} 
+                    className="relative hover:scale-110 transition-transform"
+                  >
+                    <FontAwesomeIcon
+                      icon={faBell}
+                      className="w-5 h-5 text-white hover:text-gray-200"
+                    />
+                    {notificationCount > 0 && (
+                      <span className="absolute -top-2 -right-2 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-white bg-red-600 rounded-full">
+                        {notificationCount}
+                      </span>
+                    )}
+                  </button>
+                </li>
+                
+                {/* Search Icon */}
+                <li>
+                  <button 
+                    onClick={handleSearchClick}
+                    className="hover:scale-110 transition-transform"
+                  >
+                    <FontAwesomeIcon
+                      icon={faSearch}
+                      className="w-5 h-5 text-white hover:text-gray-200"
+                    />
+                  </button>
+                </li>
+                
+                {/* Profile Section */}
+                <li
+                  className="relative flex items-center space-x-4"
+                  ref={profileMenuRef}
+                >
+                  {/* Nama dan Cabang */}
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-white">
+                      {sessionStorage.getItem("nama") || "Nama Pengguna"}
+                    </p>
+                    <p className="text-xs text-gray-200">
+                      {sessionStorage.getItem("cabang") ||
+                        "Cabang Belum Terdaftar"}
+                    </p>
+                  </div>
+                  
+                  {/* Gambar Profil */}
                   <button
-                    className="relative"
+                    onClick={toggleProfileMenu}
+                    className="relative flex items-center justify-center focus:outline-none w-10 h-10 rounded-full border-2 border-white hover:border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
+                  >
+                    <Image
+                      src={
+                        fotoBase64
+                          ? `data:image/jpeg;base64,${fotoBase64}`
+                          : profileImageUrl
+                      }
+                      width={40}
+                      height={40}
+                      alt={`Foto User`}
+                      className="w-full h-full rounded-full object-cover object-top"
+                      unoptimized={true}
+                    />
+                  </button>
+                  
+                  {/* Profile Dropdown */}
+                  {isProfileMenuOpen && (
+                    <div className="absolute right-0 mt-36 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                      <Link
+                        href={getEditProfilePath()}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                      >
+                        Edit Profile
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                      >
+                        Logout
+                      </button>
+                      <button
+                        onClick={handleMuteToggle}
+                        className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                      >
+                        {isMuted ? "Unmute" : "Mute"} Notifications
+                      </button>
+                    </div>
+                  )}
+                </li>
+              </ul>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <button
+                onClick={toggleMobileMenu}
+                className="text-white hover:text-gray-200 focus:outline-none"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        <div className={`${isOpen ? "block" : "hidden"} md:hidden bg-teal-600`}>
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <ul className="flex flex-col space-y-3">
+              {/* Mobile Email Icon */}
+              {sessionStorage.getItem("role") !== "USER" && (
+                <li className="relative">
+                  <button
                     onClick={() => (window.location.href = "/pensiun")}
+                    className="relative w-full text-left flex items-center space-x-3 px-3 py-2 text-white hover:bg-teal-700 rounded-md"
                   >
                     <FontAwesomeIcon
                       icon={faEnvelope}
-                      className="w-5 h-5 text-gray-700"
+                      className="w-5 h-5"
                     />
+                    <span>Email</span>
                     {emailCount > 0 && (
-                      <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+                      <span className="inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-white bg-red-600 rounded-full">
                         {emailCount}
                       </span>
                     )}
                   </button>
                 </li>
               )}
-              {/* Icon Bell */}
-              <li
-                className={`relative ${
-                  notificationCount > 1 ? "animate-blink" : ""
-                }`}
-              >
-                <button onClick={handleNotificationClick} className="relative">
+              
+              {/* Mobile Bell Icon */}
+              <li className="relative">
+                <button
+                  onClick={handleNotificationClick}
+                  className="relative w-full text-left flex items-center space-x-3 px-3 py-2 text-white hover:bg-teal-700 rounded-md"
+                >
                   <FontAwesomeIcon
                     icon={faBell}
-                    className="w-5 h-5 text-gray-700"
+                    className="w-5 h-5"
                   />
+                  <span>Notifikasi</span>
                   {notificationCount > 0 && (
-                    <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
+                    <span className="inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-white bg-red-600 rounded-full">
                       {notificationCount}
                     </span>
                   )}
                 </button>
               </li>
+              
+              {/* Mobile Search */}
               <li>
-                <Link href="/anggota/pencarian-anggota">
+                <button
+                  onClick={handleSearchClick}
+                  className="w-full text-left flex items-center space-x-3 px-3 py-2 text-white hover:bg-teal-700 rounded-md"
+                >
                   <FontAwesomeIcon
                     icon={faSearch}
-                    className="w-5 h-5 text-gray-700"
+                    className="w-5 h-5"
                   />
-                </Link>
-              </li>
-              <li
-                className="relative flex items-center space-x-4"
-                ref={profileMenuRef}
-              >
-                {/* Nama dan Cabang */}
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-800">
-                    {sessionStorage.getItem("nama") || "Nama Pengguna"}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {sessionStorage.getItem("cabang") ||
-                      "Cabang Belum Terdaftar"}
-                  </p>
-                </div>
-                {/* Gambar Profil */}
-                <button
-                  onClick={toggleProfileMenu}
-                  className="relative flex items-center justify-center focus:outline-none w-12 h-12 rounded-full border-2 border-gray-300 hover:border-blue-500 shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
-                >
-                  <Image
-                    src={
-                      fotoBase64
-                        ? `data:image/jpeg;base64,${fotoBase64}`
-                        : profileImageUrl
-                    }
-                    width={100}
-                    height={100}
-                    alt={`Foto User`}
-                    className="w-full h-full rounded-full object-cover object-top"
-                    unoptimized={true}
-                  />
+                  <span>Cari Anggota</span>
                 </button>
-                {isProfileMenuOpen && (
-                  <div className="absolute right-0 mt-36 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                    <Link
-                      href={getEditProfilePath()}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-                    >
-                      Edit Profile
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-                    >
-                      Logout
-                    </button>
-                    <button
-                      onClick={handleMuteToggle}
-                      className="text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-                    >
-                      {isMuted ? "Unmute" : "Mute"} Notifications
-                    </button>
-                  </div>
-                )}
               </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile menu */}
-      <div className={`${isOpen ? "block" : "hidden"} md:hidden`}>
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          <ul className="flex flex-col space-y-1">
-            <li className="relative">
-              <button
-                onClick={handleNotificationClick}
-                className="relative w-full text-left"
-              >
-                <FontAwesomeIcon
-                  icon={faBell}
-                  className="w-5 h-5 text-gray-700"
-                />
-                {notificationCount > 0 && (
-                  <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-semibold text-red-100 bg-red-600 rounded-full">
-                    {notificationCount}
-                  </span>
-                )}
-              </button>
-            </li>
-            <li>
-              <Link href="/anggota/pencarian-anggota">
-                <FontAwesomeIcon
-                  icon={faSearch}
-                  className="w-5 h-5 text-gray-700"
-                />
-              </Link>
-            </li>
-            <li className="relative flex justify-end">
-              <Link href="/update-profile" className="text-blue-500">
+              
+              {/* Mobile Profile */}
+              <li className="relative flex items-center space-x-3 px-3 py-2">
                 <Image
                   src={
                     fotoBase64
                       ? `data:image/jpeg;base64,${fotoBase64}`
                       : profileImageUrl
                   }
-                  width={100}
-                  height={100}
+                  width={40}
+                  height={40}
                   alt={`Foto User`}
-                  className="w-full h-full rounded-full object-cover object-top"
+                  className="w-10 h-10 rounded-full object-cover object-top border-2 border-white"
                   unoptimized={true}
                 />
-              </Link>
-            </li>
-          </ul>
+                <div className="text-white">
+                  <p className="text-sm font-semibold">
+                    {sessionStorage.getItem("nama") || "Nama Pengguna"}
+                  </p>
+                  <p className="text-xs text-gray-200">
+                    {sessionStorage.getItem("cabang") || "Cabang Belum Terdaftar"}
+                  </p>
+                </div>
+              </li>
+              
+              {/* Mobile Menu Items */}
+              <li>
+                <Link
+                  href={getEditProfilePath()}
+                  className="block px-3 py-2 text-white hover:bg-teal-700 rounded-md"
+                >
+                  Edit Profile
+                </Link>
+              </li>
+              <li>
+                <button
+                  onClick={handleMuteToggle}
+                  className="w-full text-left px-3 py-2 text-white hover:bg-teal-700 rounded-md"
+                >
+                  {isMuted ? "Unmute" : "Mute"} Notifications
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-3 py-2 text-white hover:bg-teal-700 rounded-md"
+                >
+                  Logout
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* Search Modal */}
+      {isSearchModalOpen && (
+        <PencarianAnggota 
+          isOpen={isSearchModalOpen} 
+          onClose={handleCloseSearchModal} 
+        />
+      )}
+    </>
   );
 };
 
-export default HeaderHome;
+export default HeaderMenu;
