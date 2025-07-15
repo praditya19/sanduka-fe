@@ -485,41 +485,44 @@ export default function BankTransactionPage() {
   };
 
   const handleSubmitUpload = async (e) => {
-    e.preventDefault();
-    setLoader(true);
+  e.preventDefault();
+  setLoader(true);
 
-    const uploadData = new FormData();
-    uploadData.append("file", formData.file);
-    uploadData.append("namaFile", formData.namaFile);
-    uploadData.append("tanggalUntuk", formData.tanggalUntuk);
+  const uploadData = new FormData();
+  uploadData.append("file", formData.file);
+  uploadData.append("namaFile", formData.namaFile);
+  uploadData.append("tanggalUntuk", formData.tanggalUntuk);
 
-    try {
-      const response = await GlobalApi.uploadSinkronBank(uploadData);
-      const interval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setLoader(false);
-            setShowUploadModal(false);
-            setProgress(0);
-            return 100;
-          }
-          return prev + 10;
-        });
-        setNotification({
-          type: "success",
-          message: `Data Berhasil Terupload!`,
-        });
-      }, 300);
-    } catch (error) {
-      console.error("Upload gagal:", error);
-      setLoader(false);
-      setNotification({
-        type: "error",
-        message: `Gagal Upload Data!`,
+  try {
+    const response = await GlobalApi.uploadSinkronBank(uploadData);
+
+    setNotification({
+      type: "success",
+      message: response?.data?.message || "Data Berhasil Terupload!",
+    });
+
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setLoader(false);
+          setShowUploadModal(false);
+          setProgress(0);
+          return 100;
+        }
+        return prev + 10;
       });
-    }
-  };
+    }, 300);
+  } catch (error) {
+    console.error("Upload gagal:", error);
+    setLoader(false);
+    setNotification({
+      type: "error",
+      message:
+        error?.response?.data?.message || "Gagal Upload Data!",
+    });
+  }
+};
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
