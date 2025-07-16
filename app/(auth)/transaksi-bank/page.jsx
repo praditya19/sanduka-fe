@@ -495,11 +495,17 @@ export default function BankTransactionPage() {
 
   try {
     const response = await GlobalApi.uploadSinkronBank(uploadData);
+ console.log("Response upload:", response);
+   const fullMessage = response || "";
+const shortMessage = fullMessage.split("Detail kegagalan:")[0].trim();
 
-    setNotification({
-      type: "success",
-      message: response?.data?.message || "Data Berhasil Terupload!",
-    });
+// Tambahkan newline eksplisit (opsional, hanya jika perlu)
+const formattedMessage = shortMessage.replace(/\\n/g, "\n"); // jika server pakai `\n` literal
+
+  setNotification({
+  type: "success",
+  message: formattedMessage, // ini akan menampilkan per baris jika CSS mendukung
+});
 
     const interval = setInterval(() => {
       setProgress((prev) => {
@@ -518,8 +524,7 @@ export default function BankTransactionPage() {
     setLoader(false);
     setNotification({
       type: "error",
-      message:
-        error?.response?.data?.message || "Gagal Upload Data!",
+      message:"Gagal Upload Data!",
     });
   }
 };
