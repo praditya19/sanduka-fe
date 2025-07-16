@@ -485,49 +485,49 @@ export default function BankTransactionPage() {
   };
 
   const handleSubmitUpload = async (e) => {
-  e.preventDefault();
-  setLoader(true);
+    e.preventDefault();
+    setLoader(true);
 
-  const uploadData = new FormData();
-  uploadData.append("file", formData.file);
-  uploadData.append("namaFile", formData.namaFile);
-  uploadData.append("tanggalUntuk", formData.tanggalUntuk);
+    const uploadData = new FormData();
+    uploadData.append("file", formData.file);
+    uploadData.append("namaFile", formData.namaFile);
+    uploadData.append("tanggalUntuk", formData.tanggalUntuk);
 
-  try {
-    const response = await GlobalApi.uploadSinkronBank(uploadData);
- console.log("Response upload:", response);
-   const fullMessage = response || "";
-const shortMessage = fullMessage.split("Detail kegagalan:")[0].trim();
+    try {
+      const response = await GlobalApi.uploadSinkronBank(uploadData);
+      console.log("Response upload:", response);
+      const fullMessage = response || "";
+      const shortMessage = fullMessage.split("Detail kegagalan:")[0].trim();
 
-// Tambahkan newline eksplisit (opsional, hanya jika perlu)
-const formattedMessage = shortMessage.replace(/\\n/g, "\n"); // jika server pakai `\n` literal
+      // Tambahkan newline eksplisit (opsional, hanya jika perlu)
+      const formattedMessage = shortMessage.replace(/\\n/g, "\n"); // jika server pakai `\n` literal
 
-  setNotification({
-  type: "success",
-  message: formattedMessage, // ini akan menampilkan per baris jika CSS mendukung
-});
-
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setLoader(false);
-          setShowUploadModal(false);
-          setProgress(0);
-          return 100;
-        }
-        return prev + 10;
+      setNotification({
+        type: "success",
+        message: formattedMessage, // ini akan menampilkan per baris jika CSS mendukung
       });
-    }, 300);
-  } catch (error) {
-    console.error("Upload gagal:", error);
-    setLoader(false);
-    setNotification({
-      type: "error",
-      message:"Gagal Upload Data!",
-    });
-  }
-};
+
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setLoader(false);
+            setShowUploadModal(false);
+            setProgress(0);
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 300);
+    } catch (error) {
+      console.error("Upload gagal:", error);
+      setLoader(false);
+      setNotification({
+        type: "error",
+        message: "Gagal Upload Data!",
+      });
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
@@ -1411,7 +1411,7 @@ const formattedMessage = shortMessage.replace(/\\n/g, "\n"); // jika server paka
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody>
                     {loadingFilter ? (
                       <tr>
                         <td colSpan={8} className="py-8 text-center">
@@ -1422,7 +1422,12 @@ const formattedMessage = shortMessage.replace(/\\n/g, "\n"); // jika server paka
                       </tr>
                     ) : data.length > 0 ? (
                       data.map((item, index) => (
-                        <tr key={index}>
+                        <tr
+                          key={index}
+                          className={
+                            index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                          }
+                        >
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                             {(currentPage - 1) * displayCount + index + 1}
                           </td>
@@ -1467,7 +1472,7 @@ const formattedMessage = shortMessage.replace(/\\n/g, "\n"); // jika server paka
                     )}
                   </tbody>
                   <tfoot>
-                    <tr className="bg-gray-100">
+                    <tr className="bg-gray-200">
                       <td colSpan={4} className="px-6 py-4 text-center">
                         Total
                       </td>
@@ -2164,7 +2169,12 @@ const formattedMessage = shortMessage.replace(/\\n/g, "\n"); // jika server paka
                       </tr>
                     ) : dataBalancing.length > 0 ? (
                       sortedData.map((item, index) => (
-                        <tr key={index}>
+                        <tr
+                          key={index}
+                          className={
+                            index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                          }
+                        >
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                             {displayCount === "all"
                               ? index + 1
@@ -2211,8 +2221,19 @@ const formattedMessage = shortMessage.replace(/\\n/g, "\n"); // jika server paka
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                             {formatRupiah(item.selisih)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {item.keterangan}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                            <span
+                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+      ${
+        item.keterangan === "Sukses"
+          ? "bg-green-200 text-green-800"
+          : item.keterangan === "Tunai"
+          ? "bg-yellow-200 text-yellow-800"
+          : "bg-red-200 text-red-800"
+      }`}
+                            >
+                              {item.keterangan}
+                            </span>
                           </td>
                         </tr>
                       ))
@@ -2237,7 +2258,7 @@ const formattedMessage = shortMessage.replace(/\\n/g, "\n"); // jika server paka
                     )}
                   </tbody>
                   <tfoot>
-                    <tr className="bg-gray-100">
+                    <tr className="bg-gray-200">
                       <td colSpan={5} className="px-6 py-4 text-center">
                         Total
                       </td>
