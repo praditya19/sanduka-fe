@@ -1194,6 +1194,17 @@ const getCountBalancing = async (bulan, tahun, cabang, unitKerja) => {
     throw error;
   }
 };
+const deleteTransaksiBank = async (tanggal) => {
+  try {
+    const response = await axiosClient.delete(`/api/potongan-gaji/delete-by-tanggal`, {
+      params: { tanggal },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error delete iuran data: ", error);
+    throw error;
+  }
+};
 // End
 // Sanduka
 // Pemasukan & Pengeluaran Sanduka
@@ -3084,6 +3095,7 @@ export default {
   createPosPenerimaanUmum,
   getPosPenerimaanUmum,
   deletePosPenerimaanUmum,
+  deleteTransaksiBank,
   createPosPengeluaranUmum,
   getPosPengeluaranUmum,
   deletePosPengeluaranUmum,

@@ -103,6 +103,7 @@ export default function BankTransactionPage() {
   const [paymentNote, setPaymentNote] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [loader, setLoader] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
@@ -158,6 +159,7 @@ export default function BankTransactionPage() {
     namaFile: "",
     tanggalUntuk: "",
   });
+  const [resetData, setResetData] = useState("");
   const [jumlahPotonganBank, setJumlahPotonganBank] = useState(0);
   const [totalNominalPotonganBank, setTotalNominalPotonganBank] = useState(0);
   const [jumlahSetorTunai, setJumlahSetorTunai] = useState(0);
@@ -495,7 +497,6 @@ export default function BankTransactionPage() {
 
     try {
       const response = await GlobalApi.uploadSinkronBank(uploadData);
-      console.log("Response upload:", response);
       const fullMessage = response || "";
       const shortMessage = fullMessage.split("Detail kegagalan:")[0].trim();
 
@@ -519,6 +520,8 @@ export default function BankTransactionPage() {
           return prev + 10;
         });
       }, 300);
+      handleFilter();
+      getBalancingdata();
     } catch (error) {
       console.error("Upload gagal:", error);
       setLoader(false);
@@ -526,6 +529,37 @@ export default function BankTransactionPage() {
         type: "error",
         message: "Gagal Upload Data!",
       });
+    }
+  };
+  const handleDeleteUpload = async (e) => {
+    e.preventDefault();
+    if (!resetData) return alert("Silakan pilih tanggal untuk reset data.");
+
+    setLoader(true);
+    setProgress(0);
+
+    try {
+      await GlobalApi.deleteTransaksiBank(resetData);
+      setProgress(100);
+
+      handleCloseModalDelete();
+      setResetData("");
+
+      setNotification({
+        type: "success",
+        message: "Data berhasil direset!",
+      });
+      handleFilter();
+      getBalancingdata();
+    } catch (error) {
+      console.error("Gagal reset data:", error);
+      setNotification({
+        type: "error",
+        message: "Gagal hapus data.",
+      });
+    } finally {
+      setLoader(false);
+      setProgress(0);
     }
   };
 
@@ -536,10 +570,16 @@ export default function BankTransactionPage() {
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
+
+    setResetData(e.target.value);
   };
 
   const handleCloseModal = () => {
     setShowUploadModal(false);
+  };
+  const handleCloseModalDelete = () => {
+    setShowDeleteModal(false);
+     setResetData("");
   };
 
   const formatTanggal = (tanggalArray) => {
@@ -1019,9 +1059,16 @@ export default function BankTransactionPage() {
                     Data berdasarkan filter pada tab aktif di bawah.
                   </p>
                 </div>
+
                 {typeof window !== "undefined" &&
                   sessionStorage.getItem("role") === "SUPER ADMIN" && (
-                    <div>
+                    <div className="flex gap-2 ml-auto">
+                      <button
+                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 transition"
+                        onClick={() => setShowDeleteModal(true)}
+                      >
+                        Reset Data
+                      </button>
                       <button
                         className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-500 transition"
                         onClick={() => setShowUploadModal(true)}
@@ -1094,6 +1141,68 @@ export default function BankTransactionPage() {
             </div>
           </div>
 
+          {showDeleteModal && (
+            <>
+              <div
+                className="fixed inset-0 bg-black opacity-50 z-40"
+                onClick={handleCloseModalDelete}
+              ></div>
+              <div className="fixed inset-0 flex items-center justify-center z-50">
+                <div className="bg-white shadow-lg rounded-lg p-6 w-11/12 md:w-1/2 relative">
+                  <button
+                    className="absolute top-2 right-2 text-gray-500"
+                    onClick={handleCloseModalDelete}
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                  <h2 className="text-xl font-bold mb-4">Reset Data</h2>
+                  <form onSubmit={handleDeleteUpload}>
+                    <div className="mb-4">
+                      <label className="block text-gray-700 text-sm font-bold mb-2">
+                        Reset Untuk Bulan:
+                      </label>
+                      <input
+                        type="date"
+                        name="resetUntukBulan"
+                        value={resetData}
+                        onChange={handleInputChange}
+                        className="form-input block w-full mt-1 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent"
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={handleCloseModalDelete}
+                        className="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded-lg mr-2"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="bg-green-600 hover:bg-green-800 text-white py-2 px-4 rounded-lg"
+                        disabled={loader}
+                      >
+                        {loader ? `Deleting... ${progress}%` : "Submit"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </>
+          )}
           {showUploadModal && (
             <>
               <div
