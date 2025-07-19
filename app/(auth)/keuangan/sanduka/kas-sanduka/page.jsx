@@ -116,6 +116,7 @@ function KasSanduka() {
   const [notification, setNotification] = useState(null);
   const [activeTab, setActiveTab] = useState("penerimaan");
   const [tglPenerimaan, setTglPenerimaan] = useState("");
+  const [ringkasan, setRingkasan] = useState(null);
   const [jenisPenerimaan, setJenisPenerimaan] = useState("");
   const [PosPenerimaan, setPosPenerimaan] = useState("");
   const [cabangPenerimaan, setCabangPenerimaan] = useState("");
@@ -179,6 +180,8 @@ function KasSanduka() {
   const currentYear = now.getFullYear();
   const [bulanMeninggal, setBulanMeninggal] = useState("");
   const [tahunMeninggal, setTahunMeninggal] = useState("");
+   const bulanSekarang = String(now.getMonth() + 1).padStart(2, "0");
+  const tahunSekarang = now.getFullYear();
   const tahunOptions = Array.from({ length: 5 }, (_, i) =>
     (currentYear - i).toString()
   );
@@ -205,11 +208,26 @@ function KasSanduka() {
     { value: "12", label: "Desember" },
   ];
 
+   const labelBulan = months.find((m) => m.value === bulanSekarang)?.label || "-";
+  const labelBulanSebelumnya =
+    months.find((m) => m.value === String(Number(bulanSekarang) - 1).padStart(2, "0"))?.label || "-";
+  
+  
+
   const getMonthName = (monthValue) => {
     const month = months.find((m) => m.value === monthValue);
     return month ? month.label : "";
   };
 
+  const fetchRingkasan = async () => {
+      try {
+        const data = await GlobalApi.getRingaksanKasSanduka(bulanSekarang, tahunSekarang);
+        setRingkasan(data);
+      } catch (error) {
+        console.error("Gagal memuat ringkasan saldo:", error);
+      }
+  };
+  
   const fetchData = async () => {
     try {
       const penerimaan = await GlobalApi.getPosPenerimaanSanduka();
@@ -444,7 +462,7 @@ function KasSanduka() {
     setDefaultMonthPengeluaran(`${year}-${month}`);
 
     fetchNamaKwitansi();
-
+fetchRingkasan();
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setShowDropdown(false);
@@ -453,7 +471,7 @@ function KasSanduka() {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [monthFilter, yearFilter, bulanMeninggal, tahunMeninggal]);
+  }, [monthFilter, yearFilter, bulanMeninggal, tahunMeninggal,bulanSekarang, tahunSekarang]);
 
   const [totalDebit, totalKredit, saldoAkhir] = React.useMemo(() => {
     let totalDebet = 0;
@@ -544,7 +562,7 @@ function KasSanduka() {
     ];
     const bulanNama = namaBulan[Number(setoranBulan)];
 
-    const autoKeterangan = `Pemasukan Sanduka ${PosPenerimaan} Cabang ${cabangPenerimaan} (${jenisPenerimaan}) untuk ${bulanNama} ${setoranTahun}. Ket${
+    const autoKeterangan = `Pemasukan Sanduka ${PosPenerimaan} Cabang ${cabangPenerimaan} (${jenisPenerimaan}) untuk ${bulanNama} ${setoranTahun}. Ket:${
       keteranganPenerimaan ? ` ${keteranganPenerimaan}` : " -"
     }`;
 
@@ -614,12 +632,12 @@ function KasSanduka() {
       const detailDuka = ` Nama yang meninggal: ${
         yangMeninggal || ""
       }, Penerima: ${namaPenerima || ""}`;
-      autoKeterangan = `${baseKeterangan} Ket${ketTambahan}${detailDuka}`;
+      autoKeterangan = `${baseKeterangan} Ket:${ketTambahan}${detailDuka}`;
     } else {
       const ketTambahan = keteranganPengeluaran
         ? ` ${keteranganPengeluaran}`
         : " -";
-      autoKeterangan = `${baseKeterangan} Ket${ketTambahan}`;
+      autoKeterangan = `${baseKeterangan} Ket:${ketTambahan}`;
     }
 
     const payload = {
@@ -1186,17 +1204,17 @@ function KasSanduka() {
             {/* Ringkasan Saldo */}
             <div className="mb-8">
               <h2 className="text-xl font-semibold text-blue-700 mb-4 ">
-                Ringkasan Saldo Sanduka Periode: Juni 2025
+                Ringkasan Saldo Sanduka Periode: {[labelBulan]} {tahunSekarang}
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div className="bg-blue-50 p-4 rounded-lg shadow-sm border flex items-center justify-between">
                   <div>
                     <h3 className="text-gray-600 font-medium mb-1">
-                      Saldo Akhir Mei 2025
+                      Saldo Akhir {[labelBulanSebelumnya]} {tahunSekarang}
                     </h3>
                     <p className="text-xl font-bold text-black">
-                      Rp 4.037.000.000
+                      {formatRupiah(ringkasan.saldoAwal)}
                     </p>
                   </div>
                   <FaCalendarAlt className="text-gray-400 w-6 h-6" />
@@ -1204,10 +1222,10 @@ function KasSanduka() {
                 <div className="bg-green-50 p-4 rounded-lg shadow-sm border flex items-center justify-between">
                   <div>
                     <h3 className="text-gray-600 font-medium mb-1">
-                      Total Pemasukan Juni 2025
+                      Total Pemasukan {[labelBulan]} {tahunSekarang}
                     </h3>
                     <p className="text-xl font-bold text-green-600">
-                      Rp 40.300.000
+                       {formatRupiah(ringkasan.totalPemasukan)}
                     </p>
                   </div>
                   <FaArrowTrendUp className="text-green-500 w-6 h-6" />
@@ -1215,10 +1233,10 @@ function KasSanduka() {
                 <div className="bg-red-50 p-4 rounded-lg shadow-sm border flex items-center justify-between">
                   <div>
                     <h3 className="text-gray-600 font-medium mb-1">
-                      Total Pengeluaran Juni 2025
+                      Total Pengeluaran {[labelBulan]} {tahunSekarang}
                     </h3>
                     <p className="text-xl font-bold text-red-600">
-                      Rp 4.000.000
+                      {formatRupiah(ringkasan.totalPengeluaran)}
                     </p>
                   </div>
                   <FaArrowTrendDown className="text-red-500 w-6 h-6" />
@@ -1226,10 +1244,10 @@ function KasSanduka() {
                 <div className="bg-blue-50 p-4 rounded-lg shadow-sm border flex items-center justify-between">
                   <div>
                     <h3 className="text-gray-600 font-medium mb-1">
-                      Saldo Akhir Juni 2025
+                      Saldo Akhir {[labelBulan]} {tahunSekarang}
                     </h3>
                     <p className="text-xl font-bold text-blue-600">
-                      Rp 4.073.300.000
+                      {formatRupiah(ringkasan.saldoAkhir)}
                     </p>
                   </div>
                   <FaDollarSign className="text-blue-500 w-6 h-6" />
