@@ -8,6 +8,7 @@ import Kwitansi from "../organisasi/kwitansi/page";
 import { faArrowLeft, faBars } from "@fortawesome/free-solid-svg-icons";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import KasUmum from "./kas-umum/page";
 
 export default function Sanduka() {
   const [activeTab, setActiveTab] = useState("pemasukan");
@@ -90,6 +91,12 @@ export default function Sanduka() {
         <nav className="container mt-12">
           <ul className="flex flex-wrap space-x-4 md:space-x-6">
             <NavItem
+              isActive={activeTab === "kasUmum"}
+              onClick={() => handleTabChange("kasUmum")}
+            >
+              Kas Sanduka
+            </NavItem>
+            <NavItem
               isActive={activeTab === "pemasukan"}
               onClick={() => handleTabChange("pemasukan")}
             >
@@ -116,6 +123,7 @@ export default function Sanduka() {
           </ul>
         </nav>
 
+        {activeTab === "kasUmum" && <KasUmum />}
         {activeTab === "pemasukan" && <Pemasukan />}
         {activeTab === "pengeluaran" && <Pengeluaran />}
         {activeTab === "lapor" && <Lapor />}
