@@ -2647,6 +2647,18 @@ const postSesuaiTargetSanduka = async (tanggalTransaksi) => {
     throw error;
   }
 };
+
+const getRingaksanKasSanduka = async (bulan, tahun) => {
+  try {
+    const response = await axiosClient.get(
+      `/api/ringkasan-saldo?bulan=${bulan}&tahun=${tahun}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching table kas sanduka:", error);
+    throw error;
+  }
+};
 // END
 
 // KAS UMUM
@@ -3104,6 +3116,7 @@ export default {
   getPemasukanUmumById,
   updatePemasukanUmum,
   deletePemasukanUmum,
+  getRingaksanKasSanduka,
   postSesuaiTargetUmum,
   createPengeluaranUmum,
   getPengeluaranUmum,
