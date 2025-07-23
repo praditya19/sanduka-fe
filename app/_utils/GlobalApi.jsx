@@ -1528,6 +1528,24 @@ const postToBackup = async (data, tagihanUntukBulan) => {
   }
 };
 
+const postToBackupByNominal = async (tahun, bulan) => {
+  try {
+    const response = await axiosClient.post(
+      `/api/by-nominal/backup-bynominal?tahun=${encodeURIComponent(tahun)}&bulan=${encodeURIComponent(bulan)}`,
+      {}, // body kosong jika tidak diperlukan
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error posting to backup-bynominal API:", error);
+    throw error;
+  }
+};
+
 const postIuranAnggota = async (data) => {
   try {
     const response = await axiosClient.post("/api/iuran-anggota", data, {
@@ -3112,6 +3130,7 @@ export default {
   getPosPengeluaranUmum,
   deletePosPengeluaranUmum,
   createPemasukanUmum,
+  postToBackupByNominal,
   getPemasukanUmum,
   getPemasukanUmumById,
   updatePemasukanUmum,
