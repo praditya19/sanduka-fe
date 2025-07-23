@@ -173,6 +173,7 @@ function RekapAnggota() {
   const [selectedKeterangan, setSelectedKeterangan] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
   const [popupBackup, setPopupBackup] = useState(false);
+  const [popupBackupRekapByNominal, setPopupRekapByNominal] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -205,8 +206,9 @@ function RekapAnggota() {
     "Desember",
   ];
 
-  const [selectedBulan, setSelectedBulan] = useState("");
-  const [selectedTahun, setSelectedTahun] = useState("");
+  const now = new Date();
+  const [selectedBulan, setSelectedBulan] = useState(now.getMonth() + 1);
+  const [selectedTahun, setSelectedTahun] = useState(now.getFullYear());
 
   const filteredMonths = selectedTahun === 2025 ? months.slice(4) : months;
 
@@ -1805,6 +1807,44 @@ function RekapAnggota() {
     }
   };
 
+  const handleBackupByNominal = async () => {
+    const now = new Date();
+    const bulan = now.getMonth() + 1;
+    const tahun = now.getFullYear();
+
+    try {
+      const response = await GlobalApi.postToBackupByNominal(tahun, bulan);
+      const fullMessage = response || "";
+      const shortMessage = fullMessage.split("Detail kegagalan:")[0].trim();
+      const formattedMessage = shortMessage.replace(/\\n/g, "\n");
+
+      setNotification({
+        type: "success",
+        message: formattedMessage,
+      });
+      setPopupRekapByNominal(false);
+      await fetchInitialData();
+    } catch (error) {
+      let errorMessage =
+        error?.response?.data ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "Gagal backup bulan sebelumnya.";
+
+      if (typeof errorMessage === "object") {
+        errorMessage = JSON.stringify(errorMessage);
+      }
+      errorMessage = errorMessage.split("Detail kegagalan:")[0].trim();
+      errorMessage = errorMessage.replace(/\\n/g, "\n");
+
+      setNotification({
+        type: "error",
+        message: errorMessage,
+      });
+    }
+    setPopupRekapByNominal(false);
+  };
+
   const handleRekapClick = () => {
     setOpen((prev) => !prev);
   };
@@ -2109,7 +2149,7 @@ function RekapAnggota() {
                         className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3"
                         onClick={() => setPopupBackup(true)}
                       >
-                        <span>Backup Data</span>
+                        <span>Backup Tagihan</span>
                       </button>
                     )}
 
@@ -2152,6 +2192,14 @@ function RekapAnggota() {
                         </div>
                       )}
                     </div>
+                    {sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                      <button
+                        className="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md transition-all duration-200 flex items-center gap-3"
+                        onClick={() => setPopupRekapByNominal(true)}
+                      >
+                        <span>Backup By-Nominal</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -2344,7 +2392,29 @@ function RekapAnggota() {
                 </div>
               </div>
             )}
-
+            {popupBackupRekapByNominal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                  <h2 className="text-lg font-semibold mb-4 text-center">
+                    Apakah anda ingin membackup data di bulan sebelumnya?
+                  </h2>
+                  <div className="flex justify-center gap-4 mt-6">
+                    <button
+                      className="px-4 py-2 bg-red-400 hover:bg-red-500 text-white rounded"
+                      onClick={() => setPopupRekapByNominal(false)}
+                    >
+                      Tidak
+                    </button>
+                    <button
+                      className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded"
+                      onClick={handleBackupByNominal}
+                    >
+                      Ya
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             <table className="w-full table-auto bg-white">
               <thead>
                 <tr>
