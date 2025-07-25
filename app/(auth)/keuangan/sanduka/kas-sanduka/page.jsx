@@ -116,7 +116,12 @@ function KasSanduka() {
   const [notification, setNotification] = useState(null);
   const [activeTab, setActiveTab] = useState("penerimaan");
   const [tglPenerimaan, setTglPenerimaan] = useState("");
-  const [ringkasan, setRingkasan] = useState(null);
+  const [ringkasan, setRingkasan] = useState({
+  saldoAwal: 0,
+  totalPemasukan: 0,
+  totalPengeluaran: 0,
+  saldoAkhir: 0,
+});
   const [jenisPenerimaan, setJenisPenerimaan] = useState("");
   const [PosPenerimaan, setPosPenerimaan] = useState("");
   const [cabangPenerimaan, setCabangPenerimaan] = useState("");
