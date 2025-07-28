@@ -1657,11 +1657,22 @@ function RekapAnggota() {
     }
   };
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     if (!groupedData || groupedData.length === 0) {
       console.error("Data kosong, tidak dapat export ke Excel");
       return;
     }
+
+    let anggotaAll = [];
+    try {
+      anggotaAll = await GlobalApi.getIuranAnggotaAll();
+    } catch (err) {
+      console.error("Gagal ambil data anggota untuk nomor rekening:", err);
+    }
+    const npaToRekeningMap = {};
+    anggotaAll.forEach((item) => {
+      npaToRekeningMap[item.npa] = item.nomorRekening;
+    });
 
     const bulanSekarang = new Date();
     const bulanBerikutnya = new Date(
@@ -1697,6 +1708,8 @@ function RekapAnggota() {
     groupedData.forEach((group, index) => {
       if (group.members && group.members.length > 0) {
         group.members.forEach((member, memberIndex) => {
+          const nomorRekeningFinal =
+            npaToRekeningMap[member.npaPgri] || member.nomorRekening || "-";
           const total = parseInt(member.totalIuran || 0);
           const potongan = parseInt(member.potongan || 0);
           const selisih = total - potongan;
@@ -1710,7 +1723,7 @@ function RekapAnggota() {
             memberIndex === 0 ? group.unitKerja : "",
             member.namaAnggota,
             member.nip || "-",
-            member.nomorRekening || "-",
+            nomorRekeningFinal,
             parseInt(member.pgri || 0),
             parseInt(member.sanduka || 0),
             parseInt(member.daspen || 0),
