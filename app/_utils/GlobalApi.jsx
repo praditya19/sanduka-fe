@@ -1532,7 +1532,7 @@ const postToBackupByNominal = async (tahun, bulan) => {
   try {
     const response = await axiosClient.post(
       `/api/by-nominal/backup-bynominal?tahun=${encodeURIComponent(tahun)}&bulan=${encodeURIComponent(bulan)}`,
-      {}, // body kosong jika tidak diperlukan
+      {},
       {
         headers: {
           "Content-Type": "application/json",
@@ -1560,6 +1560,14 @@ const postIuranAnggota = async (data) => {
   }
 };
 
+const getIuranAnggotaAll = async () => {
+  try {
+    const response = await axiosClient.get(`/api/iuran-anggota`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 const getIuranAnggota = async (npa) => {
   try {
     const response = await axiosClient.get(`/api/iuran-anggota/npa/${npa}`);
@@ -3083,6 +3091,7 @@ export default {
   deleteKalender,
   updateKalender,
   deleteTargetDaspen,
+  getIuranAnggotaAll,
   updateTargetDaspen,
   deleteDerap,
   updateDerap,
