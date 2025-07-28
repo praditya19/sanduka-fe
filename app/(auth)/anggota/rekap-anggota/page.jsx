@@ -1482,165 +1482,188 @@ function RekapAnggota() {
         return;
       }
 
+      let anggotaAll = [];
+      try {
+        anggotaAll = await GlobalApi.getIuranAnggotaAll();
+      } catch (err) {
+        console.error("Gagal ambil data anggota untuk nomor rekening:", err);
+      }
+      const npaToRekeningMap = {};
+      anggotaAll.forEach((item) => {
+        npaToRekeningMap[item.npa] = item.nomorRekening;
+      });
+
       const titleText = `Rekap By Nominal${
         selectedCabang ? ` Cabang ${selectedCabang}` : ""
       }${selectedUnitKerja ? ` Unit Kerja ${selectedUnitKerja}` : ""}`;
 
       const htmlContent = `
-        <html>
-          <head>
-            <title>Rekap By Nominal</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 20px; }
-              .title { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 20px; }
-              table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-              th, td { border: 1px solid #000; padding: 8px; text-align: center; }
-              th { background-color: #00796b; color: white; }
-              .total-row { font-weight: bold; background-color: #f5f5f5; }
-              .member-list { text-align: left; padding-left: 20px; }
-              @media print {
-                .no-print { display: none; }
-                table { page-break-inside: auto; }
-                tr { page-break-inside: avoid; page-break-after: auto; }
-                thead { display: table-header-group; }
-                th { color: #00796b; }
-                tfoot { display: table-footer-group; }
-              }
-              @page { margin: 15mm; }
-            </style>
-          </head>
-          <body>
-            <div class="title">${titleText}</div>
-            <table>
-              <thead>
-                <tr>
-                  <th rowspan="2">No</th>
-                  <th rowspan="2">Cabang</th>
-                  <th rowspan="2">Unit Kerja</th>
-                  <th rowspan="2">Nama Anggota</th>
-                  <th rowspan="2">Jumlah Anggota</th>
-                  <th colspan="6">Jumlah</th>
-                  <th rowspan="2">Total</th>
-                </tr>
-                <tr>
-                  <th>PGRI</th>
-                  <th>Sanduka</th>
-                  <th>Daspen</th>
-                  <th>Derap</th>
-                  <th>Kalender</th>
-                  <th>Lain-Lain</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${groupedData
-                  ?.map((group, index) => {
-                    const members = group.members || [];
-                    return members
-                      ?.map(
-                        (member, memberIndex) => `
-                    <tr>
-                      ${
-                        memberIndex === 0
-                          ? `
-                        <td rowspan="${members.length}">${index + 1}</td>
-                        <td rowspan="${members.length}">${group.cabang}</td>
-                        <td rowspan="${members.length}">${group.unitKerja}</td>
-                      `
-                          : ""
-                      }
-                      <td class="member-list">
-                      <div>${member.namaAnggota}</div>
-                      <div>${member.nip || "-"}</div>
-                      <div>${member.nomorRekening || "-"}</div>
-                      </td>
-                      ${
-                        memberIndex === 0
-                          ? `<td rowspan="${members.length}">${
-                              group.jumlah || 0
-                            }</td>`
-                          : ""
-                      }
-                      <td>Rp. ${parseInt(member.pgri || 0).toLocaleString(
-                        "id-ID"
-                      )}</td>
-                      <td>Rp. ${parseInt(member.sanduka || 0).toLocaleString(
-                        "id-ID"
-                      )}</td>
-                      <td>Rp. ${parseInt(member.daspen || 0).toLocaleString(
-                        "id-ID"
-                      )}</td>
-                      <td>Rp. ${parseInt(member.derap || 0).toLocaleString(
-                        "id-ID"
-                      )}</td>
-                      <td>Rp. ${parseInt(member.kalender || 0).toLocaleString(
-                        "id-ID"
-                      )}</td>
-                      <td>Rp. ${parseInt(member.lainlain || 0).toLocaleString(
-                        "id-ID"
-                      )}</td>
-                      <td>Rp. ${parseInt(member.totalIuran || 0).toLocaleString(
-                        "id-ID"
-                      )}</td>
-                    </tr>
-                  `
-                      )
-                      .join("");
-                  })
-                  .join("")}
-                <tr class="total-row">
+      <html>
+        <head>
+          <title>Rekap By Nominal</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .title { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th, td { border: 1px solid #000; padding: 8px; text-align: center; }
+            th { background-color: #00796b; color: white; }
+            .total-row { font-weight: bold; background-color: #f5f5f5; }
+            .member-list { text-align: left; padding-left: 20px; }
+            @media print {
+              .no-print { display: none; }
+              table { page-break-inside: auto; }
+              tr { page-break-inside: avoid; page-break-after: auto; }
+              thead { display: table-header-group; }
+              th { color: #00796b; }
+              tfoot { display: table-footer-group; }
+            }
+            @page { margin: 15mm; }
+          </style>
+        </head>
+        <body>
+          <div class="title">${titleText}</div>
+          <table>
+            <thead>
+              <tr>
+                <th rowspan="2">No</th>
+                <th rowspan="2">Cabang</th>
+                <th rowspan="2">Unit Kerja</th>
+                <th rowspan="2">Nama Anggota</th>
+                <th rowspan="2">Jumlah Anggota</th>
+                <th colspan="6">Jumlah</th>
+                <th rowspan="2">Total</th>
+              </tr>
+              <tr>
+                <th>PGRI</th>
+                <th>Sanduka</th>
+                <th>Daspen</th>
+                <th>Derap</th>
+                <th>Kalender</th>
+                <th>Lain-Lain</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${groupedData
+                ?.map((group, index) => {
+                  const members = group.members || [];
+                  return members
+                    ?.map((member, memberIndex) => {
+                      const nomorRekeningFinal =
+                        npaToRekeningMap[member.npaPgri] ||
+                        member.nomorRekening ||
+                        "-";
+                      return `
+                          <tr>
+                            ${
+                              memberIndex === 0
+                                ? `
+                              <td rowspan="${members.length}">${index + 1}</td>
+                              <td rowspan="${members.length}">${
+                                    group.cabang
+                                  }</td>
+                              <td rowspan="${members.length}">${
+                                    group.unitKerja
+                                  }</td>
+                            `
+                                : ""
+                            }
+                            <td class="member-list">
+                              <div>${member.namaAnggota}</div>
+                              <div>${member.nip || "-"}</div>
+                              <div>${nomorRekeningFinal}</div>
+                            </td>
+                            ${
+                              memberIndex === 0
+                                ? `<td rowspan="${members.length}">${
+                                    group.jumlah || 0
+                                  }</td>`
+                                : ""
+                            }
+                            <td>Rp. ${parseInt(member.pgri || 0).toLocaleString(
+                              "id-ID"
+                            )}</td>
+                            <td>Rp. ${parseInt(
+                              member.sanduka || 0
+                            ).toLocaleString("id-ID")}</td>
+                            <td>Rp. ${parseInt(
+                              member.daspen || 0
+                            ).toLocaleString("id-ID")}</td>
+                            <td>Rp. ${parseInt(
+                              member.derap || 0
+                            ).toLocaleString("id-ID")}</td>
+                            <td>Rp. ${parseInt(
+                              member.kalender || 0
+                            ).toLocaleString("id-ID")}</td>
+                            <td>Rp. ${parseInt(
+                              member.lainlain || 0
+                            ).toLocaleString("id-ID")}</td>
+                            <td>Rp. ${parseInt(
+                              member.totalIuran || 0
+                            ).toLocaleString("id-ID")}</td>
+                          </tr>
+                        `;
+                    })
+                    .join("");
+                })
+                .join("")}
+              <tr class="total-row">
                 <td colspan="4" style="text-align: center">Total Keseluruhan :</td>
-                  <td>
-  ${groupedData.reduce((sum, group) => sum + parseInt(group.jumlah || 0), 0)}
-</td>
-<td>
-  Rp. ${groupedData
-    .flatMap((g) => g.members || [])
-    .reduce((sum, m) => sum + parseInt(m.pgri || 0), 0)
-    .toLocaleString("id-ID")}
-</td>
-<td>
-  Rp. ${groupedData
-    .flatMap((g) => g.members || [])
-    .reduce((sum, m) => sum + parseInt(m.sanduka || 0), 0)
-    .toLocaleString("id-ID")}
-</td>
-<td>
-  Rp. ${groupedData
-    .flatMap((g) => g.members || [])
-    .reduce((sum, m) => sum + parseInt(m.daspen || 0), 0)
-    .toLocaleString("id-ID")}
-</td>
-<td>
-  Rp. ${groupedData
-    .flatMap((g) => g.members || [])
-    .reduce((sum, m) => sum + parseInt(m.derap || 0), 0)
-    .toLocaleString("id-ID")}
-</td>
-<td>
-  Rp. ${groupedData
-    .flatMap((g) => g.members || [])
-    .reduce((sum, m) => sum + parseInt(m.kalender || 0), 0)
-    .toLocaleString("id-ID")}
-</td>
-<td>
-  Rp. ${groupedData
-    .flatMap((g) => g.members || [])
-    .reduce((sum, m) => sum + parseInt(m.lainlain || 0), 0)
-    .toLocaleString("id-ID")}
-</td>
-<td>
-  Rp. ${groupedData
-    .flatMap((g) => g.members || [])
-    .reduce((sum, m) => sum + parseInt(m.totalIuran || 0), 0)
-    .toLocaleString("id-ID")}
-</td>
-                </tr>
-              </tbody>
-            </table>
-          </body>
-        </html>
-      `;
+                <td>
+                  ${groupedData.reduce(
+                    (sum, group) => sum + parseInt(group.jumlah || 0),
+                    0
+                  )}
+                </td>
+                <td>
+                  Rp. ${groupedData
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.pgri || 0), 0)
+                    .toLocaleString("id-ID")}
+                </td>
+                <td>
+                  Rp. ${groupedData
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.sanduka || 0), 0)
+                    .toLocaleString("id-ID")}
+                </td>
+                <td>
+                  Rp. ${groupedData
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.daspen || 0), 0)
+                    .toLocaleString("id-ID")}
+                </td>
+                <td>
+                  Rp. ${groupedData
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.derap || 0), 0)
+                    .toLocaleString("id-ID")}
+                </td>
+                <td>
+                  Rp. ${groupedData
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.kalender || 0), 0)
+                    .toLocaleString("id-ID")}
+                </td>
+                <td>
+                  Rp. ${groupedData
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.lainlain || 0), 0)
+                    .toLocaleString("id-ID")}
+                </td>
+                <td>
+                  Rp. ${groupedData
+                    .flatMap((g) => g.members || [])
+                    .reduce((sum, m) => sum + parseInt(m.totalIuran || 0), 0)
+                    .toLocaleString("id-ID")}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
 
+      // Buat iframe untuk print/download PDF
       const printFrame = document.createElement("iframe");
       printFrame.style.display = "none";
       printFrame.srcdoc = htmlContent;
