@@ -1291,7 +1291,6 @@ function RekapAnggota() {
         type: "success",
         message: "Data berhasil disimpan!",
       });
-      // console.log("Data yang akan diupdate:", payload);
 
       setIsPopupVisible(false);
       setAddedCategories([]);
@@ -1871,20 +1870,29 @@ function RekapAnggota() {
     setOpen(false);
   };
 
-  const NorekExcel = () => {
+  const NorekExcel = async () => {
     if (!groupedData || groupedData.length === 0) {
       console.error("Data kosong, tidak dapat export ke Excel");
       return;
     }
 
-    const excelData = [];
+    let anggotaAll = [];
+    try {
+      anggotaAll = await GlobalApi.getIuranAnggotaAll();
+    } catch (err) {
+      console.error("Gagal ambil data anggota untuk nomor rekening:", err);
+    }
+    const npaToRekeningMap = {};
+    anggotaAll.forEach((item) => {
+      npaToRekeningMap[item.npa] = item.nomorRekening;
+    });
 
+    const excelData = [];
     const today = new Date();
     const bulanNama = today.toLocaleDateString("id-ID", {
       month: "long",
       year: "numeric",
     });
-
     const tanggalDownload = today.toLocaleDateString("id-ID", {
       day: "2-digit",
       month: "2-digit",
@@ -1919,7 +1927,9 @@ function RekapAnggota() {
     groupedData.forEach((group) => {
       if (group.members && group.members.length > 0) {
         group.members.forEach((member) => {
-          if (member.nomorRekening && member.nomorRekening.trim() !== "") {
+          const nomorRekeningFinal =
+            npaToRekeningMap[member.npaPgri] || member.nomorRekening || "";
+          if (nomorRekeningFinal && nomorRekeningFinal.trim() !== "") {
             const tagihan = parseInt(member.totalIuran || 0);
             totalTagihanSemua += tagihan;
             hasValidData = true;
@@ -1927,7 +1937,7 @@ function RekapAnggota() {
               rowNumber++,
               group.cabang,
               member.namaAnggota,
-              member.nomorRekening,
+              nomorRekeningFinal,
               tagihan,
               "",
             ]);
@@ -2462,24 +2472,13 @@ function RekapAnggota() {
                             index % 2 === 0 ? "bg-white" : "bg-teal-50"
                           }
                         >
-                          <td
-                            className="p-3 border-b text-center"
-                            // rowSpan={rowSpanCount}
-                          >
+                          <td className="p-3 border-b text-center">
                             <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-teal-100 text-teal-700 font-semibold">
                               {index + 1}
                             </div>
                           </td>
-                          <td
-                            className="p-3 border-b"
-                            // rowSpan={rowSpanCount}
-                          >
-                            {group.cabang}
-                          </td>
-                          <td
-                            className="p-3 border-b font-medium"
-                            // rowSpan={rowSpanCount}
-                          >
+                          <td className="p-3 border-b">{group.cabang}</td>
+                          <td className="p-3 border-b font-medium">
                             {group.unitKerja}
                           </td>
                           <td className="p-3 border-b text-center">
@@ -2500,10 +2499,7 @@ function RekapAnggota() {
                               )}
                             </Button>
                           </td>
-                          <td
-                            className="p-3 border-b text-center hidden lg:table-cell font-medium"
-                            // rowSpan={rowSpanCount}
-                          >
+                          <td className="p-3 border-b text-center hidden lg:table-cell font-medium">
                             {group.jumlah}
                           </td>
                           <td
