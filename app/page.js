@@ -142,31 +142,14 @@ export default function Home() {
         </div>
       )}
 
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="text-center">
-          <img
-            src="https://www.freeiconspng.com/uploads/maintenance-icon-32.jpg"
-            alt="Maintenance"
-            className="mx-auto w-48 md:w-72"
-          />
-          <h1 className="text-2xl md:text-4xl font-bold mt-6 text-gray-800">
-            Aplikasi Sedang Dalam Perawatan
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Kami sedang melakukan perbaikan sistem. Silakan kembali beberapa
-            waktu lagi.
-          </p>
-        </div>
-      </div>
-
-      {/* <Header />
+      <Header />
       <Slider />
       <div className="relative z-40 mt-0 md:-mt-24 -mt-16">
         <LayananKami />
       </div>
       <GaleriKegiatan />
       <Flowchart />
-      <Footer /> */}
+      <Footer />
     </div>
   );
 }
