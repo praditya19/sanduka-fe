@@ -135,54 +135,66 @@ const Page = () => {
   }, []);
 
   const fetchCalculateSanduka = async () => {
-    try {
-      const data = await GlobalApi.getCalculateSanduka(
-        selectedBulan,
-        selectedTahun,
-        selectedCabang || null
+  try {
+    const data = await GlobalApi.getCalculateSanduka(
+      selectedBulan,
+      selectedTahun,
+      selectedCabang || null
+    );
+
+    if (Array.isArray(data)) {
+      // Filter cabang bukan "KABUPATEN"
+      const filteredData = data
+        .filter((item) => item.cabang !== "KABUPATEN")
+        .map((item) => ({
+          ...item,
+          dataSekarang:
+            (item.dataLalu || 0) +
+            (item.baru || 0) -
+            (item.pensiun || 0) -
+            (item.meninggal || 0) -
+            (item.keluarAnggota || 0) +
+            (item.pindahCabangMasuk || 0) -
+            (item.pindahCabangKeluar || 0),
+        }));
+
+      setTableData(filteredData);
+
+      const totalMasuk = filteredData.reduce(
+        (sum, item) => sum + (item.baru || 0),
+        0
+      );
+      const totalKeluar = filteredData.reduce(
+        (sum, item) =>
+          sum +
+          (item.pensiun || 0) +
+          (item.meninggal || 0) +
+          (item.keluarAnggota || 0),
+        0
+      );
+      const totalSekarang = filteredData.reduce(
+        (sum, item) => sum + (item.dataSekarang || 0),
+        0
       );
 
-      if (Array.isArray(data)) {
-        // Filter data to exclude rows where cabang is 'KABUPATEN'
-        const filteredData = data.filter((item) => item.cabang !== "KABUPATEN");
-
-        setTableData(filteredData);
-
-        const totalMasuk = filteredData.reduce(
-          (sum, item) => sum + (item.baru || 0),
-          0
-        );
-        const totalKeluar = filteredData.reduce(
-          (sum, item) =>
-            sum +
-            (item.pensiun || 0) +
-            (item.meninggal || 0) +
-            (item.keluarAnggota || 0),
-          0
-        );
-        const totalSekarang = filteredData.reduce(
-          (sum, item) => sum + (item.dataSekarang || 0),
-          0
-        );
-
-        setAnggotaMasuk(totalMasuk);
-        setAnggotaKeluar(totalKeluar);
-        setTotalAnggota(totalSekarang);
-      } else {
-        console.error("API response is not an array:", data);
-        setTableData([]);
-        setAnggotaMasuk(0);
-        setAnggotaKeluar(0);
-        setTotalAnggota(0);
-      }
-    } catch (error) {
-      console.error("Error fetching calculate-sanduka data:", error);
+      setAnggotaMasuk(totalMasuk);
+      setAnggotaKeluar(totalKeluar);
+      setTotalAnggota(totalSekarang);
+    } else {
+      console.error("API response is not an array:", data);
       setTableData([]);
       setAnggotaMasuk(0);
       setAnggotaKeluar(0);
       setTotalAnggota(0);
     }
-  };
+  } catch (error) {
+    console.error("Error fetching calculate-sanduka data:", error);
+    setTableData([]);
+    setAnggotaMasuk(0);
+    setAnggotaKeluar(0);
+    setTotalAnggota(0);
+  }
+};
 
   useEffect(() => {
     fetchCalculateSanduka();
