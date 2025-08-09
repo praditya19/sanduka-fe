@@ -455,6 +455,7 @@ function RekapAnggota() {
           daspen: 0,
           derap: 0,
           kalender: 0,
+          sumbangan: 0,
           totalIuran: 0,
           nomorRekening: 0,
           lastUpdatedAtIuranAnggota: "",
@@ -473,6 +474,7 @@ function RekapAnggota() {
         daspen: parseFloat(item.daspen) || 0,
         derap: parseFloat(item.derap) || 0,
         kalender: parseFloat(item.kalender) || 0,
+        sumbangan: parseFloat(item.sumbangan) || 0,
         totalIuran: parseFloat(item.totalIuran) || 0,
         lastUpdatedAtIuranAnggota: item.lastUpdatedAtIuranAnggota,
       });
@@ -483,6 +485,7 @@ function RekapAnggota() {
       acc[unitKey].daspen += parseFloat(item.daspen) || 0;
       acc[unitKey].derap += parseFloat(item.derap) || 0;
       acc[unitKey].kalender += parseFloat(item.kalender) || 0;
+      acc[unitKey].sumbangan += parseFloat(item.sumbangan) || 0;
       acc[unitKey].totalIuran += parseFloat(item.totalIuran) || 0;
 
       return acc;
@@ -920,14 +923,36 @@ function RekapAnggota() {
       }
 
       try {
-        const iuranResponse = await GlobalApi.getIuranAnggota(member.npaPgri);
-        setDataIuran(iuranResponse);
+        const allIuran = await GlobalApi.getIuranAnggotaAll(
+          selectedBulan,
+          selectedTahun
+        );
 
-        if (iuranResponse?.id) {
-          setIdIuran(iuranResponse.id);
-        }
-        if (iuranResponse?.nomorRekening) {
-          setNomorRekening(iuranResponse.nomorRekening);
+        const filteredByNpa = allIuran.filter(
+          (item) => item.npa === member.npaPgri
+        );
+
+        if (filteredByNpa.length > 0) {
+          const sortedByDate = filteredByNpa.sort((a, b) => {
+            const dateA = new Date(...a.createdAt);
+            const dateB = new Date(...b.createdAt);
+            return dateB - dateA;
+          });
+
+          const latestData = sortedByDate[0];
+
+          setDataIuran(latestData);
+
+          if (latestData?.id) {
+            setIdIuran(latestData.id);
+          }
+          if (latestData?.nomorRekening) {
+            setNomorRekening(latestData.nomorRekening);
+          }
+        } else {
+          console.warn("Tidak ditemukan data iuran untuk NPA:", member.npaPgri);
+          setDataIuran(null);
+          setIdIuran(null);
         }
       } catch (error) {
         console.error("Gagal mengambil data iuran anggota:", error);
@@ -1181,26 +1206,26 @@ function RekapAnggota() {
     let iuranDerap = formKetiga?.iuranDerap || 0;
     let totalIuranLainLain = 0;
 
+    const kategoriUtama = ["derap", "kalender"];
+
     addedCategories.forEach((item) => {
-      const oldValue = newValues[item.key] ?? 0;
-      const inputValue = manualInputs[item.key] ?? 0;
+      const keyLower = item.key?.toLowerCase();
+      const oldValue = parseInt(newValues[item.key] || 0);
+      const inputValue = parseInt(manualInputs[item.key] || 0);
       const totalValue = oldValue + inputValue;
 
-      if (item.label?.toLowerCase() === "kalender") {
+      if (keyLower === "kalender") {
         otomatisValueKalender = oldValue;
         manualValueKalender = inputValue;
         totalKalender = totalValue;
-      }
-      if (item.label?.toLowerCase() === "derap") {
+      } else if (keyLower === "derap") {
         otomatisValueDerap = oldValue;
         manualValueDerap = inputValue;
         iuranDerap = totalValue;
-      }
-
-      if (item.key?.toLowerCase() === "lainlain") {
-        otomatisValueLainLain = oldValue;
-        manualValueLainLain = inputValue;
-        totalIuranLainLain = totalValue;
+      } else {
+        otomatisValueLainLain += oldValue;
+        manualValueLainLain += inputValue;
+        totalIuranLainLain += totalValue;
       }
     });
 
@@ -1272,11 +1297,14 @@ function RekapAnggota() {
 
     try {
       if (nomorRekening && nomorRekening.trim() !== "") {
-        const rekeningSudahTerdaftar = listNoRekening.includes(
-          nomorRekening.trim()
-        );
+        const rekeningBaru = nomorRekening.trim();
+        const rekeningLama = selectedMember?.nomorRekening?.trim();
 
-        if (rekeningSudahTerdaftar) {
+        const rekeningSudahTerdaftar = listNoRekening.includes(rekeningBaru);
+
+        const samaDenganYangLama = rekeningBaru === rekeningLama;
+
+        if (rekeningSudahTerdaftar && !samaDenganYangLama) {
           setNotification({
             type: "error",
             message: "Nomor rekening sudah digunakan oleh anggota lain.",
@@ -1284,7 +1312,6 @@ function RekapAnggota() {
           return;
         }
       }
-
       const response = await GlobalApi.postIuranAnggota(payload);
       await fetchInitialData();
       setNotification({
@@ -1482,12 +1509,33 @@ function RekapAnggota() {
         return;
       }
 
+      const bulan = selectedBulan || new Date().getMonth() + 1;
+      const tahun = selectedTahun || new Date().getFullYear();
+
       let anggotaAll = [];
       try {
-        anggotaAll = await GlobalApi.getIuranAnggotaAll();
+        const allData = await GlobalApi.getIuranAnggotaAll(bulan, tahun);
+
+        const latestPerNpa = Object.values(
+          allData.reduce((acc, item) => {
+            if (!acc[item.npa]) {
+              acc[item.npa] = item;
+            } else {
+              const existingDate = new Date(...acc[item.npa].createdAt);
+              const currentDate = new Date(...item.createdAt);
+              if (currentDate > existingDate) {
+                acc[item.npa] = item;
+              }
+            }
+            return acc;
+          }, {})
+        );
+
+        anggotaAll = latestPerNpa;
       } catch (err) {
         console.error("Gagal ambil data anggota untuk nomor rekening:", err);
       }
+
       const npaToRekeningMap = {};
       anggotaAll.forEach((item) => {
         npaToRekeningMap[item.npa] = item.nomorRekening;
@@ -1595,7 +1643,7 @@ function RekapAnggota() {
                               member.kalender || 0
                             ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
-                              member.lainlain || 0
+                              member.sumbangan || 0
                             ).toLocaleString("id-ID")}</td>
                             <td>Rp. ${parseInt(
                               member.totalIuran || 0
@@ -1663,7 +1711,6 @@ function RekapAnggota() {
       </html>
     `;
 
-      // Buat iframe untuk print/download PDF
       const printFrame = document.createElement("iframe");
       printFrame.style.display = "none";
       printFrame.srcdoc = htmlContent;
@@ -1686,12 +1733,33 @@ function RekapAnggota() {
       return;
     }
 
+    const bulan = selectedBulan || new Date().getMonth() + 1;
+    const tahun = selectedTahun || new Date().getFullYear();
+
     let anggotaAll = [];
     try {
-      anggotaAll = await GlobalApi.getIuranAnggotaAll();
+      const allData = await GlobalApi.getIuranAnggotaAll(bulan, tahun);
+
+      const latestPerNpa = Object.values(
+        allData.reduce((acc, item) => {
+          if (!acc[item.npa]) {
+            acc[item.npa] = item;
+          } else {
+            const existingDate = new Date(...acc[item.npa].createdAt);
+            const currentDate = new Date(...item.createdAt);
+            if (currentDate > existingDate) {
+              acc[item.npa] = item;
+            }
+          }
+          return acc;
+        }, {})
+      );
+
+      anggotaAll = latestPerNpa;
     } catch (err) {
       console.error("Gagal ambil data anggota untuk nomor rekening:", err);
     }
+
     const npaToRekeningMap = {};
     anggotaAll.forEach((item) => {
       npaToRekeningMap[item.npa] = item.nomorRekening;
@@ -1752,7 +1820,7 @@ function RekapAnggota() {
             parseInt(member.daspen || 0),
             parseInt(member.derap || 0),
             parseInt(member.kalender || 0),
-            parseInt(member.lainlain || 0),
+            parseInt(member.sumbangan || 0),
             total,
           ]);
         });
@@ -1912,12 +1980,33 @@ function RekapAnggota() {
       return;
     }
 
+    const bulan = selectedBulan || new Date().getMonth() + 1;
+    const tahun = selectedTahun || new Date().getFullYear();
+
     let anggotaAll = [];
     try {
-      anggotaAll = await GlobalApi.getIuranAnggotaAll();
+      const allData = await GlobalApi.getIuranAnggotaAll(bulan, tahun);
+
+      const latestPerNpa = Object.values(
+        allData.reduce((acc, item) => {
+          if (!acc[item.npa]) {
+            acc[item.npa] = item;
+          } else {
+            const existingDate = new Date(...acc[item.npa].createdAt);
+            const currentDate = new Date(...item.createdAt);
+            if (currentDate > existingDate) {
+              acc[item.npa] = item;
+            }
+          }
+          return acc;
+        }, {})
+      );
+
+      anggotaAll = latestPerNpa;
     } catch (err) {
       console.error("Gagal ambil data anggota untuk nomor rekening:", err);
     }
+
     const npaToRekeningMap = {};
     anggotaAll.forEach((item) => {
       npaToRekeningMap[item.npa] = item.nomorRekening;
@@ -2583,7 +2672,12 @@ function RekapAnggota() {
                             </div>
                             <div className="flex justify-between py-1">
                               <span>Lain-lain:</span>
-                              <span className="text-gray-700">Rp. 0</span>
+                              <span className="text-gray-700">
+                                Rp.{" "}
+                                {parseInt(group.sumbangan).toLocaleString(
+                                  "id-ID"
+                                )}
+                              </span>
                             </div>
                           </td>
 
@@ -2760,7 +2854,12 @@ function RekapAnggota() {
                                   </div>
                                   <div className="flex justify-between py-1">
                                     <span>Lain-lain:</span>
-                                    <span className="text-gray-700">Rp. 0</span>
+                                    <span className="text-gray-700">
+                                      Rp.{" "}
+                                      {parseInt(
+                                        member.sumbangan
+                                      ).toLocaleString("id-ID")}
+                                    </span>
                                   </div>
                                 </td>
                                 <td className="p-3 border-b text-center hidden lg:table-cell">
@@ -3161,7 +3260,7 @@ function RekapAnggota() {
                           if (loadButton) return;
                           setLoadButton(true);
                           try {
-                            if (idIuran) {
+                            if (idIuran && addedCategories.length === 0) {
                               await handleUpdateClick();
                             } else {
                               await handleSaveClick();
@@ -3196,118 +3295,14 @@ function RekapAnggota() {
                             </svg>
                             Loading...
                           </>
+                        ) : addedCategories.length > 0 ? (
+                          "Save"
                         ) : idIuran ? (
                           "Update"
                         ) : (
                           "Save"
                         )}
                       </button>
-                      {/* <button
-                        type="button"
-                        className={`flex items-center justify-center bg-blue-600 text-white font-bold py-2 px-4 rounded ${
-                          loadButton
-                            ? "opacity-60 cursor-not-allowed"
-                            : "hover:bg-blue-700"
-                        }`}
-                        onClick={async () => {
-                          if (loadButton) return;
-                          setLoadButton(true);
-                          try {
-                            await handleUpdateClick(); // hanya menjalankan fungsi update
-                          } finally {
-                            setLoadButton(false);
-                          }
-                        }}
-                        disabled={loadButton}
-                      >
-                        {loadButton ? (
-                          <>
-                            <svg
-                              className="animate-spin h-5 w-5 mr-2"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              />
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                              />
-                            </svg>
-                            Loading...
-                          </>
-                        ) : (
-                          "Update"
-                        )}
-                      </button> */}
-                      {/* <button
-                        type="button"
-                        className={`flex items-center justify-center bg-blue-600 text-white font-bold py-2 px-4 rounded ${
-                          loadButton
-                            ? "opacity-60 cursor-not-allowed"
-                            : "hover:bg-blue-700"
-                        }`}
-                        onClick={async () => {
-                          if (loadButton) return;
-                          setLoadButton(true);
-                          try {
-                            if (idIuran) {
-                              await handleUpdateClick();
-                            } else {
-                              await handleSaveClick();
-                            }
-                          } finally {
-                            setLoadButton(false);
-                          }
-                        }}
-                        disabled={loadButton}
-                      >
-                        {loadButton ? (
-                          <>
-                            <svg
-                              className="animate-spin h-5 w-5 mr-2"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              />
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                              />
-                            </svg>
-                            Loading...
-                          </>
-                        ) : idIuran ? (
-                          "Update"
-                        ) : (
-                          "Save"
-                        )}
-                      </button>   */}
-
-                      {/* <button
-                        type="button"
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                        onClick={idIuran ? handleUpdateClick : handleSaveClick}
-                      >
-                        {idIuran ? "Update" : "Save"}
-                      </button> */}
                     </div>
                   </div>
                 </div>

@@ -143,7 +143,6 @@ const Page = () => {
     );
 
     if (Array.isArray(data)) {
-      // Filter cabang bukan "KABUPATEN"
       const filteredData = data
         .filter((item) => item.cabang !== "KABUPATEN")
         .map((item) => ({
@@ -801,56 +800,6 @@ const Page = () => {
                       </tbody>
                     </table>
                   </div>
-
-                  {/* Pagination can be uncommented and styled if needed */}
-                  {/* {tableData.length > itemsPerPage && (
-                <div className="flex justify-center mt-6 gap-1">
-                  <button
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    First
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Prev
-                  </button>
-
-                  {getVisiblePages().map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 border rounded-md text-sm ${page === currentPage
-                          ? "bg-blue-500 text-white"
-                          : "bg-white hover:bg-gray-50"
-                        }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Next
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Last
-                  </button>
-                </div>
-              )} */}
                 </div>
 
                 <div className="my-6 border-t border-gray-200"></div>
