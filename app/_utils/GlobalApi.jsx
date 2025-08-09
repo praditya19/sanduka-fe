@@ -1560,9 +1560,14 @@ const postIuranAnggota = async (data) => {
   }
 };
 
-const getIuranAnggotaAll = async () => {
+const getIuranAnggotaAll = async (bulan, tahun) => {
   try {
-    const response = await axiosClient.get(`/api/iuran-anggota`);
+    const response = await axiosClient.get(`/api/iuran-anggota`, {
+      params: {
+        bulan: bulan,
+        tahun: tahun
+      }
+    });
     return response.data;
   } catch (error) {
     throw error;
