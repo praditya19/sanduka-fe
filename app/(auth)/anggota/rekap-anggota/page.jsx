@@ -2783,6 +2783,41 @@ function RekapAnggota() {
                                           </span>
                                         )}
                                       </div>
+                                      <div className="flex justify-between px-4">
+                                        <span className="font-medium text-teal-700">
+                                          Derap:
+                                        </span>
+                                        <span>
+                                          Rp.{" "}
+                                          {parseInt(
+                                            member.derap
+                                          ).toLocaleString("id-ID")}
+                                        </span>
+                                      </div>
+
+                                      <div className="flex justify-between px-4">
+                                        <span className="font-medium text-teal-700">
+                                          Kalender:
+                                        </span>
+                                        <span>
+                                          Rp.{" "}
+                                          {parseInt(
+                                            member.kalender
+                                          ).toLocaleString("id-ID")}
+                                        </span>
+                                      </div>
+
+                                      <div className="flex justify-between px-4">
+                                        <span className="font-medium text-teal-700">
+                                          Lain-lain:
+                                        </span>
+                                        <span>
+                                          Rp.{" "}
+                                          {parseInt(
+                                            member.sumbangan
+                                          ).toLocaleString("id-ID")}
+                                        </span>
+                                      </div>
                                       <div className="flex justify-between px-4 font-medium bg-teal-100 p-2 rounded-lg">
                                         <span className="text-teal-800">
                                           Total:
