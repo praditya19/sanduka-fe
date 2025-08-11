@@ -2734,7 +2734,7 @@ function RekapAnggota() {
                                           Inputan Tagihan untuk Bulan{" "}
                                           {getNextPotonganBulan()} :{" "}
                                           {parseInt(
-                                            member.potongan
+                                            member.totalIuran
                                           ).toLocaleString("id-ID")}
                                         </div>
                                         <div className="text-sm text-teal-700 italic">
