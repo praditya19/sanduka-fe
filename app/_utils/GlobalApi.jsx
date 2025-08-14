@@ -106,6 +106,24 @@ const getJumlahSantunan = async () => {
     throw error;
   }
 };
+const getSantunanDiberikan = async () => {
+  try {
+    const response = await axiosClient.get(`/api/pengeluaran-sanduka/count-santunan-diberikan`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching jumlah santunan:", error);
+    throw error;
+  }
+};
+const getTotalSantunan = async () => {
+  try {
+    const response = await axiosClient.get(`/api/pengeluaran-sanduka/count-santunan-duka`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching jumlah santunan:", error);
+    throw error;
+  }
+};
 const searchUsersByName = (namaLengkap) => {
   return axiosClient.get(
     `/api/auth/search-users?namaLengkap=${encodeURIComponent(namaLengkap)}`
@@ -3089,6 +3107,7 @@ export default {
   uploadFileRegister,
   updateLainlain,
   deleteUnitKerjaRanting,
+  getTotalSantunan,
   deleteNamaRanting,
   getRekapRanting,
   addPesertaEvent,
@@ -3127,6 +3146,7 @@ export default {
   postPemasukanSanduka,
   deletePengeluaranSanduka,
   getPemasukanKasSandukaById,
+  getSantunanDiberikan,
   getPosPengeluaranSanduka,
   updatePemasukanKasSanduka,
   postPengeluaranSanduka,
