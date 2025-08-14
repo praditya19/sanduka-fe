@@ -117,11 +117,11 @@ function KasSanduka() {
   const [activeTab, setActiveTab] = useState("penerimaan");
   const [tglPenerimaan, setTglPenerimaan] = useState("");
   const [ringkasan, setRingkasan] = useState({
-  saldoAwal: 0,
-  totalPemasukan: 0,
-  totalPengeluaran: 0,
-  saldoAkhir: 0,
-});
+    saldoAwal: 0,
+    totalPemasukan: 0,
+    totalPengeluaran: 0,
+    saldoAkhir: 0,
+  });
   const [jenisPenerimaan, setJenisPenerimaan] = useState("");
   const [PosPenerimaan, setPosPenerimaan] = useState("");
   const [cabangPenerimaan, setCabangPenerimaan] = useState("");
@@ -185,7 +185,7 @@ function KasSanduka() {
   const currentYear = now.getFullYear();
   const [bulanMeninggal, setBulanMeninggal] = useState("");
   const [tahunMeninggal, setTahunMeninggal] = useState("");
-   const bulanSekarang = String(now.getMonth() + 1).padStart(2, "0");
+  const bulanSekarang = String(now.getMonth() + 1).padStart(2, "0");
   const tahunSekarang = now.getFullYear();
   const tahunOptions = Array.from({ length: 5 }, (_, i) =>
     (currentYear - i).toString()
@@ -213,11 +213,12 @@ function KasSanduka() {
     { value: "12", label: "Desember" },
   ];
 
-   const labelBulan = months.find((m) => m.value === bulanSekarang)?.label || "-";
+  const labelBulan =
+    months.find((m) => m.value === bulanSekarang)?.label || "-";
   const labelBulanSebelumnya =
-    months.find((m) => m.value === String(Number(bulanSekarang) - 1).padStart(2, "0"))?.label || "-";
-  
-  
+    months.find(
+      (m) => m.value === String(Number(bulanSekarang) - 1).padStart(2, "0")
+    )?.label || "-";
 
   const getMonthName = (monthValue) => {
     const month = months.find((m) => m.value === monthValue);
@@ -225,14 +226,17 @@ function KasSanduka() {
   };
 
   const fetchRingkasan = async () => {
-      try {
-        const data = await GlobalApi.getRingaksanKasSanduka(bulanSekarang, tahunSekarang);
-        setRingkasan(data);
-      } catch (error) {
-        console.error("Gagal memuat ringkasan saldo:", error);
-      }
+    try {
+      const data = await GlobalApi.getRingaksanKasSanduka(
+        bulanSekarang,
+        tahunSekarang
+      );
+      setRingkasan(data);
+    } catch (error) {
+      console.error("Gagal memuat ringkasan saldo:", error);
+    }
   };
-  
+
   const fetchData = async () => {
     try {
       const penerimaan = await GlobalApi.getPosPenerimaanSanduka();
@@ -467,7 +471,7 @@ function KasSanduka() {
     setDefaultMonthPengeluaran(`${year}-${month}`);
 
     fetchNamaKwitansi();
-fetchRingkasan();
+    fetchRingkasan();
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setShowDropdown(false);
@@ -476,7 +480,14 @@ fetchRingkasan();
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [monthFilter, yearFilter, bulanMeninggal, tahunMeninggal,bulanSekarang, tahunSekarang]);
+  }, [
+    monthFilter,
+    yearFilter,
+    bulanMeninggal,
+    tahunMeninggal,
+    bulanSekarang,
+    tahunSekarang,
+  ]);
 
   const [totalDebit, totalKredit, saldoAkhir] = React.useMemo(() => {
     let totalDebet = 0;
@@ -1230,7 +1241,7 @@ fetchRingkasan();
                       Total Pemasukan {[labelBulan]} {tahunSekarang}
                     </h3>
                     <p className="text-xl font-bold text-green-600">
-                       {formatRupiah(ringkasan.totalPemasukan)}
+                      {formatRupiah(ringkasan.totalPemasukan)}
                     </p>
                   </div>
                   <FaArrowTrendUp className="text-green-500 w-6 h-6" />
@@ -1999,7 +2010,21 @@ fetchRingkasan();
                               {transaction.nomorBukti}
                             </td>
                             <td className="p-3 text-sm">
-                              {transaction.keterangan}
+                              <div>{transaction.keterangan}</div>
+
+                              {transaction.yangMeninggal && (
+                                <div>
+                                  <span>Yang Meninggal:</span>{" "}
+                                  {transaction.yangMeninggal}
+                                </div>
+                              )}
+
+                              {transaction.namaPenerima && (
+                                <div>
+                                  <span>Nama Penerima:</span>{" "}
+                                  {transaction.namaPenerima}
+                                </div>
+                              )}
                             </td>
                             <td className="p-3 text-right text-sm">
                               {(transaction.debet || 0).toLocaleString("id-ID")}
