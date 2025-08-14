@@ -72,7 +72,7 @@ const MutationNotification = ({ type, message, details, onClose }) => {
           <p className={`${getTextColor()} text-center text-lg`}>
             {message}
           </p>
-          
+
           {details && (
             <div className="mt-3 w-full">
               {Object.entries(details).map(([key, value]) => (
@@ -132,36 +132,36 @@ const MutasiModal = ({ isOpen, onClose, selectedMember }) => {
 
   const handleCreateHistory = async () => {
     const now = new Date();
-    
+
     // Format date components
     const hari = now.toLocaleDateString("id-ID", { weekday: "long" });
     const tanggal = now.toISOString().split("T")[0];
     const jam = now.toTimeString().split(" ")[0];
     const bulan = now.toLocaleString("id-ID", { month: "long" });
     const tahun = now.getFullYear();
-  
+
     // Get user details from session storage
     const userRole = sessionStorage.getItem("role");
-    const namaLengkapUser = userRole === "USER" 
-      ? selectedMember.namaLengkap 
+    const namaLengkapUser = userRole === "USER"
+      ? selectedMember.namaLengkap
       : sessionStorage.getItem("nama");
-  
+
     const historyData = {
       hari,
       tanggal,
       jam,
       npa: selectedMember.npaPgri || "N/A",
       nama: selectedMember.namaLengkap,
-      cabang: selectedMember.cabang, 
+      cabang: selectedMember.cabang,
       uraian: "Pindah Cabang",
-      masuk: cabang, 
-      keluar: selectedMember.cabang, 
+      masuk: cabang,
+      keluar: selectedMember.cabang,
       bulan,
       tahun,
-      cabang_ke_2: cabang, 
+      cabang_ke_2: cabang,
       user: namaLengkapUser,
     };
-  
+
     try {
       await GlobalApi.createHistoryData(historyData);
       console.log("History data created successfully");
@@ -205,7 +205,7 @@ const MutasiModal = ({ isOpen, onClose, selectedMember }) => {
       }, 4000);
     } catch (error) {
       console.error("Error saat memutasikan anggota:", error);
-      
+
       setNotification({
         type: 'error',
         message: `Terjadi kesalahan: ${error?.response?.data?.message || "Silakan coba lagi."}`,
@@ -230,11 +230,11 @@ const MutasiModal = ({ isOpen, onClose, selectedMember }) => {
       }
 
       if (modalRef.current && !modalRef.current.contains(event.target)) {
-        const isSelectDropdown = event.target.closest('select') || 
-                                event.target.tagName === 'OPTION' ||
-                                event.target.closest('[role="listbox"]') ||
-                                event.target.closest('.select-dropdown');
-        
+        const isSelectDropdown = event.target.closest('select') ||
+          event.target.tagName === 'OPTION' ||
+          event.target.closest('[role="listbox"]') ||
+          event.target.closest('.select-dropdown');
+
         if (!isSelectDropdown) {
           handleClose();
         }
@@ -265,7 +265,7 @@ const MutasiModal = ({ isOpen, onClose, selectedMember }) => {
           onClose={() => setNotification(null)}
         />
       )}
-      
+
       <div
         ref={modalRef}
         className="bg-white p-4 rounded shadow-lg w-full sm:w-3/4 md:w-2/4 lg:w-2/5 max-h-[90vh] overflow-y-auto"
@@ -295,7 +295,7 @@ const MutasiModal = ({ isOpen, onClose, selectedMember }) => {
           <select
             value={cabang}
             onChange={(e) => {
-              e.stopPropagation(); 
+              e.stopPropagation();
               setCabang(e.target.value);
               setSelectedUnitKerja("");
               const filteredUnits = unitKerjaOptions.filter(
@@ -303,8 +303,8 @@ const MutasiModal = ({ isOpen, onClose, selectedMember }) => {
               );
               setFilteredUnitKerjaOptions(filteredUnits);
             }}
-            onMouseDown={(e) => e.stopPropagation()} 
-            onFocus={(e) => e.stopPropagation()} 
+            onMouseDown={(e) => e.stopPropagation()}
+            onFocus={(e) => e.stopPropagation()}
             className="border border-teal-500 rounded-lg p-2 w-full bg-white shadow-sm"
           >
             <option value="">Pilih Cabang</option>
@@ -321,11 +321,11 @@ const MutasiModal = ({ isOpen, onClose, selectedMember }) => {
           <select
             value={selectedUnitKerja}
             onChange={(e) => {
-              e.stopPropagation(); 
+              e.stopPropagation();
               setSelectedUnitKerja(e.target.value);
             }}
-            onMouseDown={(e) => e.stopPropagation()} 
-            onFocus={(e) => e.stopPropagation()} 
+            onMouseDown={(e) => e.stopPropagation()}
+            onFocus={(e) => e.stopPropagation()}
             className="border border-teal-500 rounded-lg p-2 w-full bg-white shadow-sm"
             disabled={!cabang}
           >
@@ -400,7 +400,7 @@ const PencarianAnggota = ({ isOpen, onClose }) => {
   const searchByNpa = async (npaValue) => {
     try {
       const member = await GlobalApi.cekNpa(npaValue);
-      
+
       if (member) {
         const detailedMember = await GlobalApi.getUserById(member.id);
         if (detailedMember) {
@@ -431,13 +431,13 @@ const PencarianAnggota = ({ isOpen, onClose }) => {
         namaValue, // keyword (nama)
         "Aktif" // statusKeanggotaan
       );
-      
+
       if (response && response.content && response.content.length > 0) {
         const detailedMembers = response.content.map(member => ({
           ...member,
           isVerified: member.isVerified || false,
         }));
-        
+
         return detailedMembers;
       } else {
         throw new Error("Data Tidak Ditemukan");
@@ -449,17 +449,17 @@ const PencarianAnggota = ({ isOpen, onClose }) => {
 
   const onSearch = async () => {
     if (!searchInput.trim()) return;
-    
+
     setLoader(true);
     setError("");
     setFilteredMembers([]);
     setSelectedMember(null);
-    
+
     try {
       let results = [];
-      
+
       const isNpa = /^\d+$/.test(searchInput.trim());
-      
+
       if (isNpa) {
         // Search by NPA
         results = await searchByNpa(searchInput);
@@ -467,13 +467,13 @@ const PencarianAnggota = ({ isOpen, onClose }) => {
         // Search by name using getAllAnggota with keyword
         results = await searchByName(searchInput);
       }
-      
+
       setFilteredMembers(results);
-      
+
       if (results.length === 1) {
         setSelectedMember(results[0]);
       }
-      
+
     } catch (err) {
       console.error("Search error:", err);
       setError(err.message || "Data Tidak Ditemukan");
@@ -533,16 +533,16 @@ const PencarianAnggota = ({ isOpen, onClose }) => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.body.style.overflow = 'auto';
     };
-  }, [isOpen, showMutasi]); 
+  }, [isOpen, showMutasi]);
 
   // Handle ESC key
   useEffect(() => {
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
         if (showMutasi) {
-          setShowMutasi(false); 
+          setShowMutasi(false);
         } else {
-          handleClose(); 
+          handleClose();
         }
       }
     };
@@ -554,7 +554,7 @@ const PencarianAnggota = ({ isOpen, onClose }) => {
     return () => {
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [isOpen, showMutasi]); 
+  }, [isOpen, showMutasi]);
 
   if (!isOpen) return null;
 
@@ -563,7 +563,7 @@ const PencarianAnggota = ({ isOpen, onClose }) => {
       <div
         ref={modalRef}
         className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()} 
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b border-gray-200">
@@ -595,7 +595,7 @@ const PencarianAnggota = ({ isOpen, onClose }) => {
               onKeyPress={handleKeyPress}
               className="w-full"
             />
-            
+
             <Button
               onClick={onSearch}
               disabled={!searchInput.trim() || loader}
@@ -629,9 +629,13 @@ const PencarianAnggota = ({ isOpen, onClose }) => {
                     onClick={() => selectMember(member)}
                     className="p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-teal-50 hover:border-teal-300 transition-colors"
                   >
-                    <div className="font-medium">{member.namaLengkap}</div>
-                    <div className="text-sm text-gray-600">
-                      {member.cabang} • {member.jabatan}
+                    <div className="font-medium text-lg">{member.namaLengkap}</div>
+
+                    <div className="mt-1 text-sm">
+                      <div className="font-semibold text-teal-700">{member.cabang}</div>
+                      <div className="text-sm text-gray-600">
+                        {member.jabatan} • {member.unitKerja}
+                      </div>
                     </div>
                   </div>
                 ))}
