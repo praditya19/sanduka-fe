@@ -122,7 +122,7 @@ export default function Sanduka() {
             >
               Kas Sanduka
             </NavItem>
-            <NavItem
+            {/* <NavItem
               isActive={activeTab === "pemasukan"}
               onClick={() => handleTabChange("pemasukan")}
             >
@@ -133,7 +133,7 @@ export default function Sanduka() {
               onClick={() => handleTabChange("pengeluaran")}
             >
               Pengeluaran
-            </NavItem>
+            </NavItem> */}
             <li className="relative">
               <button
                 onClick={() => toggleDropdown("lapor")}
@@ -178,8 +178,8 @@ export default function Sanduka() {
         </nav>
 
         {activeTab === "kasSanduka" && <KasSanduka />}
-        {activeTab === "pemasukan" && <Pemasukan />}
-        {activeTab === "pengeluaran" && <Pengeluaran />}
+        {/* {activeTab === "pemasukan" && <Pemasukan />} */}
+        {/* {activeTab === "pengeluaran" && <Pengeluaran />} */}
         {activeTab === "laporan" && <Laporan />}
         {activeTab === "kwitansi" && <Kwitansi />}
       </div>
