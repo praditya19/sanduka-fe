@@ -347,18 +347,9 @@ export default function IconGrid() {
 
     const fetchData = async () => {
       try {
-        const responseDiterima = await GlobalApi.getRekapLaporDiterima();
-        const fetchedDataDiterima = responseDiterima || [];
+        const responseDiterima = await GlobalApi.getTotalSantunan();
 
-        setDataDiterima(fetchedDataDiterima);
-
-        setDataCount(fetchedDataDiterima.length);
-
-        const total = fetchedDataDiterima.reduce((acc, item) => {
-          const nominal = parseFloat(item.Nominal) || 0;
-          return acc + nominal;
-        }, 0);
-        setTotalNominal(total);
+        setTotalNominal(responseDiterima);
 
         console.log("Data Lapor Diterima:", fetchedDataDiterima);
       } catch (error) {
@@ -370,16 +361,10 @@ export default function IconGrid() {
 
     const fetchJumlahSantunan = async () => {
       try {
-        const data = await GlobalApi.getJumlahSantunan();
-        setJumlahSantunan(data[0].jumlah);
-        setFormattedAmount(data[0].totalUangSantunan);
+        const data = await GlobalApi.getSantunanDiberikan();
 
-        const formatted = new Intl.NumberFormat("id-ID", {
-          style: "currency",
-          currency: "IDR",
-        }).format(data[0].totalUangSantunan);
+        setJumlahSantunan(data);
 
-        setFormattedAmount(formatted);
       } catch (error) {
         console.error("Error:", error);
       }
@@ -1037,7 +1022,7 @@ export default function IconGrid() {
                           Sanduka Diberikan
                         </h3>
                         <p className="text-2xl font-bold text-orange-600 mt-2">
-                          {dataCount}{" "}
+                          {jumlahSantunan}{" "}
                           <span className="text-sm font-medium text-gray-500">
                             Orang
                           </span>
