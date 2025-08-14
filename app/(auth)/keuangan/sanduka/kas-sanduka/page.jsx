@@ -141,6 +141,7 @@ function KasSanduka() {
   const [nominalPengeluaran, setNominalPengeluaran] = useState("");
   const [keteranganPengeluaran, setKeteranganPengeluaran] = useState("");
   const [yangMeninggal, setYangMeninggal] = useState("");
+  const [manualYangMeninggal, setManualYangMeninggal] = useState("");
   const [namaPenerima, setNamaPenerima] = useState("");
 
   const [saldoAkhirBulanSebelumnya, setSaldoAkhirBulanSebelumnya] = useState(0);
@@ -627,16 +628,9 @@ function KasSanduka() {
     ];
     const bulanNama = namaBulan[Number(setoranBulanPengeluaran)];
 
-    //     const baseKeterangan = `Pengeluaran Sanduka ${PosPengeluaran} Cabang ${cabangPengeluaran} (${jenisPengeluaran}) untuk ${bulanNama} ${setoranTahunPengeluaran}.`;
-
-    // const tambahanKet = keteranganPengeluaran ? ` ${keteranganPengeluaran}` : " -";
-
-    // const detailDuka =
-    //   PosPengeluaran === "Santunan Duka Anggota"
-    //     ? ` Nama yang meninggal: ${yangMeninggal || "-"}, Penerima: ${namaPenerima || "-"}`
-    //     : "";
-
-    // const autoKeterangan = `${baseKeterangan} Ket${tambahanKet}${detailDuka}`;
+      const finalYangMeninggal =
+      yangMeninggal === "_manual" ? manualYangMeninggal : yangMeninggal;
+    
     const baseKeterangan = `Pengeluaran Sanduka ${PosPengeluaran} Cabang ${cabangPengeluaran} (${jenisPengeluaran}) untuk ${bulanNama} ${setoranTahunPengeluaran}.`;
 
     let autoKeterangan = "";
@@ -645,9 +639,7 @@ function KasSanduka() {
       const ketTambahan = keteranganPengeluaran
         ? ` ${keteranganPengeluaran}`
         : "";
-      const detailDuka = ` Nama yang meninggal: ${
-        yangMeninggal || ""
-      }, Penerima: ${namaPenerima || ""}`;
+       const detailDuka = ` Nama yang meninggal: ${finalYangMeninggal || ""}, Penerima: ${namaPenerima || ""}`;
       autoKeterangan = `${baseKeterangan} Ket:${ketTambahan}${detailDuka}`;
     } else {
       const ketTambahan = keteranganPengeluaran
@@ -669,7 +661,7 @@ function KasSanduka() {
       cabang: cabangPengeluaran ?? "",
       nominal: nominalPengeluaran ? Number(nominalPengeluaran) : "",
       yangMeninggal:
-        PosPengeluaran === "Santunan Duka Anggota" ? yangMeninggal : "",
+        PosPengeluaran === "Santunan Duka Anggota" ? finalYangMeninggal : "",
       namaPenerima:
         PosPengeluaran === "Santunan Duka Anggota" ? namaPenerima : "",
       keterangan: autoKeterangan,
@@ -1604,30 +1596,33 @@ function KasSanduka() {
                             </select>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-700 mb-1 block">
-                              Nama yang Meninggal
-                            </label>
-                            <select
-                              value={yangMeninggal}
-                              onChange={(e) => setYangMeninggal(e.target.value)}
-                              className="w-full p-2 border border-gray-300 rounded"
-                            >
-                              <option value="">
-                                Pilih nama almarhum/almarhumah
-                              </option>
-                              {listMeninggal.map((item, index) => (
-                                <option key={index} value={item.namaLengkap}>
-                                  {item.namaLengkap}
-                                </option>
-                              ))}
-                              {/* {Array.isArray(listMeninggal) &&
-  listMeninggal.map((item, index) => (
-    <option key={item.id} value={item.namaLengkap}>
-      {item.namaLengkap}
-    </option>
-))} */}
-                            </select>
-                          </div>
+  <label className="text-sm font-medium text-gray-700 mb-1 block">
+    Nama yang Meninggal
+  </label>
+  <select
+    value={yangMeninggal}
+    onChange={(e) => setYangMeninggal(e.target.value)}
+    className="w-full p-2 border border-gray-300 rounded"
+  >
+    <option value="">Pilih nama almarhum/almarhumah</option>
+    {listMeninggal.map((item, index) => (
+      <option key={index} value={item.namaLengkap}>
+        {item.namaLengkap}
+      </option>
+    ))}
+    <option value="_manual">Tulis manual</option>
+  </select>
+
+  {yangMeninggal === "_manual" && (
+    <input
+      type="text"
+      placeholder="Ketik nama almarhum/almarhumah"
+      value={manualYangMeninggal}
+      onChange={(e) => setManualYangMeninggal(e.target.value)}
+      className="w-full p-2 border border-gray-300 rounded mt-2"
+    />
+  )}
+</div>
                           <div>
                             <label className="text-sm font-medium text-gray-700 mb-1 block">
                               Nama Penerima
@@ -2372,6 +2367,23 @@ function KasSanduka() {
                   onChange={(e) =>
                     setEditForm({ ...editForm, keterangan: e.target.value })
                   }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">Yang Meninggal</label>
+                <input
+                  type="text"
+                  className="w-full border px-3 py-2 rounded bg-gray-100"
+                  value={editForm.yangMeninggal}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Nama Penerima</label>
+                <input
+                  type="text"
+                  className="w-full border px-3 py-2 rounded bg-gray-100"
+                  value={editForm.namaPenerima}
                 />
               </div>
 
