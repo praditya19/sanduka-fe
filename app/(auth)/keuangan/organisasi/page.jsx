@@ -94,9 +94,9 @@ export default function Sanduka() {
               isActive={activeTab === "kasUmum"}
               onClick={() => handleTabChange("kasUmum")}
             >
-              Kas Sanduka
+              Kas Umum
             </NavItem>
-            <NavItem
+            {/* <NavItem
               isActive={activeTab === "pemasukan"}
               onClick={() => handleTabChange("pemasukan")}
             >
@@ -107,7 +107,7 @@ export default function Sanduka() {
               onClick={() => handleTabChange("pengeluaran")}
             >
               Pengeluaran
-            </NavItem>
+            </NavItem> */}
             <NavItem
               isActive={activeTab === "lapor"}
               onClick={() => handleTabChange("lapor")}
@@ -124,8 +124,8 @@ export default function Sanduka() {
         </nav>
 
         {activeTab === "kasUmum" && <KasUmum />}
-        {activeTab === "pemasukan" && <Pemasukan />}
-        {activeTab === "pengeluaran" && <Pengeluaran />}
+        {/* {activeTab === "pemasukan" && <Pemasukan />} */}
+        {/* {activeTab === "pengeluaran" && <Pengeluaran />} */}
         {activeTab === "lapor" && <Lapor />}
         {activeTab === "kwitansi" && <Kwitansi />}
       </div>
