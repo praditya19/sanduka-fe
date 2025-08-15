@@ -191,6 +191,7 @@ function KasSanduka() {
   const tahunOptions = Array.from({ length: 5 }, (_, i) =>
     (currentYear - i).toString()
   );
+  const [allDataLapor, setAllDataLapor] = useState([]);
   const [listMeninggal, setListMeninggal] = useState([]);
   const [monthFilter, setMonthFilter] = useState(currentMonth);
   const [yearFilter, setYearFilter] = useState(currentYear);
@@ -309,19 +310,58 @@ function KasSanduka() {
     }
   };
 
-  const fetchNamaKwitansi = async () => {
-    if (bulanMeninggal && tahunMeninggal) {
+  useEffect(() => {
+  if (PosPengeluaran === "Santunan Duka Anggota") {
+    const fetchAllData = async () => {
       try {
-        const data = await GlobalApi.getNamaKwitansi(
-          tahunMeninggal,
-          bulanMeninggal
-        );
-        setListMeninggal(data);
+        const data = await GlobalApi.getAllDataLapor();
+        setAllDataLapor(data);
       } catch (err) {
-        setListMeninggal([]);
+        console.error("Gagal ambil data lapor:", err);
+        setAllDataLapor([]);
       }
-    }
-  };
+    };
+    fetchAllData();
+  }
+}, [PosPengeluaran]);
+
+// 2️⃣ Filter data berdasarkan bulan dan tahun yang dipilih
+useEffect(() => {
+  if (bulanMeninggal && tahunMeninggal) {
+    const filtered = allDataLapor.filter(item => {
+      if (!Array.isArray(item.tanggalPelaporan) || item.tanggalPelaporan.length < 2) {
+        return false; // skip kalau tidak valid
+      }
+      const [tahun, bulan] = item.tanggalPelaporan;
+      return (
+        String(tahun) === String(tahunMeninggal) &&
+        String(bulan).padStart(2, "0") === String(bulanMeninggal).padStart(2, "0")
+      );
+    });
+
+    const formattedList = filtered.map(item => ({
+      namaLengkap: item.namaAnggotaTerlapor
+    }));
+
+    setListMeninggal(formattedList);
+  } else {
+    setListMeninggal([]);
+  }
+}, [bulanMeninggal, tahunMeninggal, allDataLapor]);
+  
+  // const fetchNamaKwitansi = async () => {
+  //   if (bulanMeninggal && tahunMeninggal) {
+  //     try {
+  //       const data = await GlobalApi.getNamaKwitansi(
+  //         tahunMeninggal,
+  //         bulanMeninggal
+  //       );
+  //       setListMeninggal(data);
+  //     } catch (err) {
+  //       setListMeninggal([]);
+  //     }
+  //   }
+  // };
 
   const fetchPenerimaan = async () => {
     try {
@@ -457,6 +497,7 @@ function KasSanduka() {
 
     init();
 
+     if (!tglPenerimaan) {
     const today = new Date();
     const formattedDate = today.toISOString().split("T")[0];
     const year = today.getFullYear();
@@ -470,8 +511,9 @@ function KasSanduka() {
     setSetoranBulanPengeluaran(month);
     setDefaultMonth(`${year}-${month}`);
     setDefaultMonthPengeluaran(`${year}-${month}`);
+  }
 
-    fetchNamaKwitansi();
+    // fetchNamaKwitansi();
     fetchRingkasan();
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
