@@ -1525,19 +1525,12 @@ const uploadSinkronBank = async (formData) => {
   }
 };
 
-const postToBackup = async (data, tagihanUntukBulan) => {
+const postToBackup = async (tagihanUntukBulan) => {
   try {
-    const response = await axiosClient.post(
-      `/api/by-nominal/backup?tagihanUntukBulan=${encodeURIComponent(
-        tagihanUntukBulan
-      )}`,
-      data,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+      const response = await axiosClient.post(
+        `/api/by-nominal/backup?tagihanUntukBulan=${tagihanUntukBulan}`,
+        {}
+      );
     return response.data;
   } catch (error) {
     console.error("Error posting to backup API:", error);

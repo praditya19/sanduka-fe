@@ -547,10 +547,10 @@ function RekapAnggota() {
       setGroupedData(processed);
       setData(regularData);
       setOriginalRekapData(regularData);
-      const allUnits = new Set(
-        processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
-      );
-      setExpandedRows(allUnits);
+      // const allUnits = new Set(
+      //   processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
+      // );
+      // setExpandedRows(allUnits);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching initial data:", error);
@@ -611,11 +611,11 @@ function RekapAnggota() {
       setGroupedData(processed);
       setData(filteredData);
       calculateTotals(filteredData);
-      // setExpandedRows(new Set());
-      const allUnits = new Set(
-        processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
-      );
-      setExpandedRows(allUnits);
+      setExpandedRows(new Set());
+      // const allUnits = new Set(
+      //   processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
+      // );
+      // setExpandedRows(allUnits);
     } else {
       const filteredData = originalRekapData.filter(
         (item) =>
@@ -1887,29 +1887,30 @@ function RekapAnggota() {
   };
 
   const handleBackupData = async () => {
-    if (!selectedDate) {
-      alert("Silakan pilih bulan tagihan terlebih dahulu.");
-      return;
-    }
+  if (!selectedDate) {
+    alert("Silakan pilih bulan tagihan terlebih dahulu.");
+    return;
+  }
 
-    try {
-      await GlobalApi.postToBackup(groupedData, selectedDate);
+  try {
+    const result = await GlobalApi.postToBackup(selectedDate);
+    console.log("Backup berhasil:", selectedDate);
 
-      setNotification({
+    setNotification({
         type: "success",
         message: "Backup berhasil!",
       });
       setPopupBackup(false);
       exportToExcel();
-    } catch (error) {
-      setNotification({
+  } catch (error) {
+    setNotification({
         type: "error",
         message: "Gagal backup dan export.",
-      });
-      console.error("Gagal backup dan export:", error);
-    }
-  };
-
+    });
+    console.error("Gagal backup dan export:", error);
+  }
+};
+    
   const handleBackupByNominal = async () => {
     const now = new Date();
     const bulan = now.getMonth() + 1;
