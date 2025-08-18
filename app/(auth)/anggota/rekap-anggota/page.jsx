@@ -547,10 +547,10 @@ function RekapAnggota() {
       setGroupedData(processed);
       setData(regularData);
       setOriginalRekapData(regularData);
-      // const allUnits = new Set(
-      //   processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
-      // );
-      // setExpandedRows(allUnits);
+      const allUnits = new Set(
+        processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
+      );
+      setExpandedRows(allUnits);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching initial data:", error);
@@ -611,11 +611,11 @@ function RekapAnggota() {
       setGroupedData(processed);
       setData(filteredData);
       calculateTotals(filteredData);
-      setExpandedRows(new Set());
-      // const allUnits = new Set(
-      //   processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
-      // );
-      // setExpandedRows(allUnits);
+      // setExpandedRows(new Set());
+      const allUnits = new Set(
+        processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
+      );
+      setExpandedRows(allUnits);
     } else {
       const filteredData = originalRekapData.filter(
         (item) =>
@@ -1894,7 +1894,6 @@ function RekapAnggota() {
 
   try {
     const result = await GlobalApi.postToBackup(selectedDate);
-    console.log("Backup berhasil:", selectedDate);
 
     setNotification({
         type: "success",
