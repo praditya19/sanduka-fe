@@ -547,10 +547,10 @@ function RekapAnggota() {
       setGroupedData(processed);
       setData(regularData);
       setOriginalRekapData(regularData);
-      const allUnits = new Set(
-        processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
-      );
-      setExpandedRows(allUnits);
+      // const allUnits = new Set(
+      //   processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
+      // );
+      // setExpandedRows(allUnits);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching initial data:", error);
@@ -611,11 +611,11 @@ function RekapAnggota() {
       setGroupedData(processed);
       setData(filteredData);
       calculateTotals(filteredData);
-      // setExpandedRows(new Set());
-      const allUnits = new Set(
-        processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
-      );
-      setExpandedRows(allUnits);
+      setExpandedRows(new Set());
+      // const allUnits = new Set(
+      //   processed.map((group) => group.unitKerja || "Tidak Ada Unit Kerja")
+      // );
+      // setExpandedRows(allUnits);
     } else {
       const filteredData = originalRekapData.filter(
         (item) =>
@@ -1879,9 +1879,16 @@ function RekapAnggota() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "RekapData");
 
-    const fileName = `Rekap_By_Nominal${
-      selectedCabang ? `_Cabang_${selectedCabang}` : ""
-    }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
+    const waktuDownload = new Date().toLocaleString("id-ID", {
+  dateStyle: "short",
+  timeStyle: "medium",
+});
+
+const safeWaktuDownload = waktuDownload.replace(/[/:]/g, "-").replace(/[ ]/g, "_");
+
+const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
+  selectedCabang ? `_Cabang_${selectedCabang}` : ""
+}${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
 
     XLSX.writeFile(wb, fileName);
   };
