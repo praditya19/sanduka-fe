@@ -1212,6 +1212,37 @@ const getCountBalancing = async (bulan, tahun, cabang, unitKerja) => {
     throw error;
   }
 };
+
+const getBalancingById = async (id) => {
+  try {
+    const response = await axiosClient.get(`/api/target-iuran-anggota/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data by id:", error);
+    throw error;
+  }
+};
+
+const updateBalancing = async (id, payload) => {
+  try {
+    const response = await axiosClient.put(`/api/target-iuran-anggota/${id}`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error saat update anggota: ", error);
+    throw error;
+  }
+};
+
+const deleteBalancing = async (tagihanUntukBulan) => {
+  try {
+    const response = await axiosClient.delete(`/api/target-iuran-anggota/by-bulan/${tagihanUntukBulan}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error delete iuran data: ", error);
+    throw error;
+  }
+};
+
 const deleteTransaksiBank = async (tanggal) => {
   try {
     const response = await axiosClient.delete(`/api/potongan-gaji/delete-by-tanggal`, {
@@ -3166,7 +3197,10 @@ export default {
   createPengeluaranUmum,
   getPengeluaranUmum,
   getPengeluaranUmumById,
+  getBalancingById,
+  updateBalancing,
   updatePengeluaranUmum,
   deletePengeluaranUmum,
+  deleteBalancing,
   getTableUmum,
 };

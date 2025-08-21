@@ -14,6 +14,8 @@ import {
   FaTimesCircle,
   FaCheckCircle,
   FaExclamationCircle,
+  FaEdit,
+  FaTrash,
 } from "react-icons/fa";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
@@ -99,7 +101,8 @@ const NotificationPopup = ({ type, message, onClose }) => {
 
 export default function BankTransactionPage() {
   const [activeTab, setActiveTab] = useState("potongan");
-  const [branch, setBranch] = useState("Semua Cabang");
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editData, setEditData] = useState(null);
   const [paymentNote, setPaymentNote] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -500,12 +503,11 @@ export default function BankTransactionPage() {
       const fullMessage = response || "";
       const shortMessage = fullMessage.split("Detail kegagalan:")[0].trim();
 
-      // Tambahkan newline eksplisit (opsional, hanya jika perlu)
-      const formattedMessage = shortMessage.replace(/\\n/g, "\n"); // jika server pakai `\n` literal
+      const formattedMessage = shortMessage.replace(/\\n/g, "\n"); 
 
       setNotification({
         type: "success",
-        message: formattedMessage, // ini akan menampilkan per baris jika CSS mendukung
+        message: formattedMessage, 
       });
 
       const interval = setInterval(() => {
@@ -579,7 +581,7 @@ export default function BankTransactionPage() {
   };
   const handleCloseModalDelete = () => {
     setShowDeleteModal(false);
-     setResetData("");
+    setResetData("");
   };
 
   const formatTanggal = (tanggalArray) => {
@@ -593,6 +595,18 @@ export default function BankTransactionPage() {
     return `${dd}/${mm}/${year}`;
   };
 
+  const handleEditClick = async (id) => {
+  try {
+    const data = await GlobalApi.getBalancingById(id);
+    console.log("Data balancing by ID:", data);
+
+    setEditData(data);     // simpan data ke state (kalau nanti mau ditampilkan di form)
+    setShowEditModal(true); // buka modal
+  } catch (err) {
+    console.error("Gagal ambil data balancing:", err);
+  }
+  };
+  
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (cabangRef.current && !cabangRef.current.contains(event.target)) {
@@ -1059,24 +1073,6 @@ export default function BankTransactionPage() {
                     Data berdasarkan filter pada tab aktif di bawah.
                   </p>
                 </div>
-
-                {typeof window !== "undefined" &&
-                  sessionStorage.getItem("role") === "SUPER ADMIN" && (
-                    <div className="flex gap-2 ml-auto">
-                      <button
-                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 transition"
-                        onClick={() => setShowDeleteModal(true)}
-                      >
-                        Reset Data
-                      </button>
-                      <button
-                        className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-500 transition"
-                        onClick={() => setShowUploadModal(true)}
-                      >
-                        Upload Data
-                      </button>
-                    </div>
-                  )}
               </div>
             </div>
 
@@ -1318,7 +1314,7 @@ export default function BankTransactionPage() {
               <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-gray-800">
                   Data Potongan Bank
-                </h2>
+                </h2> 
                 <div className="flex gap-3">
                   <button
                     className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
@@ -1414,6 +1410,23 @@ export default function BankTransactionPage() {
                       </>
                     )}
                   </button>
+                  {typeof window !== "undefined" &&
+                  sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                    <div className="flex gap-2 ml-auto">
+                      <button
+                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 transition"
+                        onClick={() => setShowDeleteModal(true)}
+                      >
+                        Reset Potongan
+                      </button>
+                      <button
+                        className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-500 transition"
+                        onClick={() => setShowUploadModal(true)}
+                      >
+                        Upload Data
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1813,6 +1826,17 @@ export default function BankTransactionPage() {
                         </>
                       )}
                     </button>
+                    {/* {typeof window !== "undefined" &&
+                  sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                    <div className="flex gap-2 ml-auto">
+                      <button
+                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 transition"
+                        onClick={() => setShowDeleteModal(true)}
+                      >
+                        Delete Balancing
+                      </button>
+                    </div>
+                  )} */}
                   </div>
                 </div>
               </div>
@@ -2267,6 +2291,9 @@ export default function BankTransactionPage() {
                             : "▲"}
                         </span>
                       </th>
+                      <th className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        Action
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2343,6 +2370,16 @@ export default function BankTransactionPage() {
                             >
                               {item.keterangan}
                             </span>
+                          </td>
+                          <td className="p-3 text-center text-sm">
+                            <div className="flex space-x-2 justify-center text-base">
+                              <button className="text-blue-500 hover:text-blue-700"  onClick={() => handleEditClick(item.id)} >
+                                <FaEdit />
+                              </button>
+                              <button className="text-red-500 hover:text-red-700">
+                                <FaTrash />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -3168,6 +3205,177 @@ export default function BankTransactionPage() {
           )}
         </div>
       </div>
+      {showEditModal && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="relative bg-white rounded-lg shadow-xl w-[500px] max-w-full p-6">
+                  {/* Tombol X (Batal) */}
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                  >
+                    <FaTimesCircle className="w-5 h-5 hover:text-red-500" />
+                  </button>
+      
+                  {/* Header Modal */}
+                  <h2 className="text-lg font-semibold mb-4">
+                    {/* Edit Transaksi - {transactionToEdit.noBukti} */}
+                  </h2>
+      
+                  {/* Form Edit */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium">
+                        Tanggal Transaksi
+                      </label>
+                      <input
+                        type="date"
+                        className="w-full border px-3 py-2 rounded"
+                        value={editForm.tanggalTransaksi}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            tanggalTransaksi: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+      
+                    <div>
+                      <label className="block text-sm font-medium">No. Bukti</label>
+                      <input
+                        type="text"
+                        className="w-full border px-3 py-2 rounded bg-gray-100"
+                        value={editForm.nomorBukti}
+                        disabled
+                      />
+                    </div>
+      
+                    <div>
+                      <label className="block text-sm font-medium">Uraian</label>
+                      <textarea
+                        className="w-full border px-3 py-2 rounded"
+                        value={editForm.keterangan}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, keterangan: e.target.value })
+                        }
+                      />
+                    </div>
+      
+                    <div>
+                      <label className="block text-sm font-medium">Yang Meninggal</label>
+                      <input
+                        type="text"
+                        className="w-full border px-3 py-2 rounded bg-gray-100"
+                        value={editForm.yangMeninggal}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium">Nama Penerima</label>
+                      <input
+                        type="text"
+                        className="w-full border px-3 py-2 rounded bg-gray-100"
+                        value={editForm.namaPenerima}
+                      />
+                    </div>
+      
+                    {editJenis === "PEMASUKAN" ? (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium">
+                            Debet (Rp)
+                          </label>
+                          <input
+                            type="text"
+                            className="w-full border px-3 py-2 rounded"
+                            value={
+                              editForm.nominal === 0
+                                ? ""
+                                : editForm.nominal
+                                    .toString()
+                                    .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                            }
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/\./g, "");
+                              const num = Number(raw);
+                              setEditForm({
+                                ...editForm,
+                                nominal: isNaN(num) ? 0 : num,
+                              });
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium">
+                            Kredit (Rp)
+                          </label>
+                          <input
+                            type="number"
+                            className="w-full border px-3 py-2 rounded"
+                            value={0}
+                            disabled
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium">
+                            Debet (Rp)
+                          </label>
+                          <input
+                            type="number"
+                            className="w-full border px-3 py-2 rounded"
+                            value={0}
+                            disabled
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium">
+                            Kredit (Rp)
+                          </label>
+                          <input
+                            type="text"
+                            className="w-full border px-3 py-2 rounded"
+                            value={
+                              editForm.nominal === 0
+                                ? ""
+                                : editForm.nominal
+                                    .toString()
+                                    .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                            }
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/\./g, "");
+                              const num = Number(raw);
+                              setEditForm({
+                                ...editForm,
+                                nominal: isNaN(num) ? 0 : num,
+                              });
+                            }}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+      
+                  {/* Tombol Simpan & Batal */}
+                  <div className="mt-6 flex justify-end space-x-2">
+                    <button
+                      onClick={() => setShowEditModal(false)}
+                      className="px-4 py-2 border rounded hover:bg-gray-100"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center"
+                      onClick={handleSaveEdit}
+                    >
+                      <FaSave className="mr-2" />
+                      Simpan Perubahan
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
     </div>
   );
 }
