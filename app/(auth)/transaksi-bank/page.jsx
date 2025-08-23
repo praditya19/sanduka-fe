@@ -16,6 +16,7 @@ import {
   FaExclamationCircle,
   FaEdit,
   FaTrash,
+  FaSave,
 } from "react-icons/fa";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
@@ -107,6 +108,7 @@ export default function BankTransactionPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteBalancing, setShowDeleteBalancing] = useState(false);
   const [loader, setLoader] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
@@ -163,6 +165,7 @@ export default function BankTransactionPage() {
     tanggalUntuk: "",
   });
   const [resetData, setResetData] = useState("");
+  const [resetUntukBulan, setResetUntukBulan] = useState("");
   const [jumlahPotonganBank, setJumlahPotonganBank] = useState(0);
   const [totalNominalPotonganBank, setTotalNominalPotonganBank] = useState(0);
   const [jumlahSetorTunai, setJumlahSetorTunai] = useState(0);
@@ -177,6 +180,8 @@ export default function BankTransactionPage() {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [loadingFilter, setLoadingFilter] = useState(false);
   const [loadingBalancing, setLoadingBalancing] = useState(false);
+  const updatedRowRef = useRef(null);
+  const [updatedId, setUpdatedId] = useState(null);
 
   const handleFilter = async () => {
     setLoadingFilter(true);
@@ -503,11 +508,11 @@ export default function BankTransactionPage() {
       const fullMessage = response || "";
       const shortMessage = fullMessage.split("Detail kegagalan:")[0].trim();
 
-      const formattedMessage = shortMessage.replace(/\\n/g, "\n"); 
+      const formattedMessage = shortMessage.replace(/\\n/g, "\n");
 
       setNotification({
         type: "success",
-        message: formattedMessage, 
+        message: formattedMessage,
       });
 
       const interval = setInterval(() => {
@@ -565,6 +570,50 @@ export default function BankTransactionPage() {
     }
   };
 
+  const handleDelete = async (e) => {
+    e.preventDefault();
+    if (!resetUntukBulan) {
+      alert("Pilih bulan terlebih dahulu!");
+      return;
+    }
+
+    try {
+      setLoader(true);
+      setProgress(0);
+
+      const tagihanUntukBulan = resetUntukBulan;
+      await GlobalApi.deleteBalancing(
+        `/api/target-iuran-anggota/by-bulan/${tagihanUntukBulan}`,
+        {
+          onDownloadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const percentCompleted = Math.round(
+                (progressEvent.loaded * 100) / progressEvent.total
+              );
+              setProgress(percentCompleted);
+            }
+          },
+        }
+      );
+
+      setNotification({
+        type: "success",
+        message: "Data berhasil dihapus!",
+      });
+      setShowDeleteBalancing(false);
+      setResetUntukBulan("");
+      getBalancingdata();
+    } catch (err) {
+      console.error("Gagal menghapus data:", err);
+      setNotification({
+        type: "error",
+        message: "Gagal hapus data.",
+      });
+    } finally {
+      setLoader(false);
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "file") {
@@ -596,17 +645,99 @@ export default function BankTransactionPage() {
   };
 
   const handleEditClick = async (id) => {
-  try {
-    const data = await GlobalApi.getBalancingById(id);
-    console.log("Data balancing by ID:", data);
+    try {
+      const data = await GlobalApi.getBalancingById(id);
 
-    setEditData(data);     // simpan data ke state (kalau nanti mau ditampilkan di form)
-    setShowEditModal(true); // buka modal
-  } catch (err) {
-    console.error("Gagal ambil data balancing:", err);
-  }
+      setEditData(data);
+      setShowEditModal(true);
+    } catch (err) {
+      console.error("Gagal ambil data balancing:", err);
+    }
   };
-  
+
+  const handleSaveEdit = async () => {
+    if (!editData || !editData.id) {
+      alert("Data tidak valid!");
+      return;
+    }
+
+    try {
+      const payload = {
+        namaAnggota: editData.namaAnggota,
+        tempatTanggalLahir: editData.tempatTanggalLahir,
+        npa: editData.npa,
+        nip: editData.nip,
+        nik: editData.nik,
+        cabang: editData.cabang,
+        unitKerja: editData.unitKerja,
+        jabatan: editData.jabatan,
+        nomorRekening: editData.nomorRekening,
+
+        // iuran anggota
+        iuranAnggota: editData.iuranAnggota || 0,
+        manualIuranAnggota: editData.manualIuranAnggota || 0,
+        totalIuranAnggota:
+          (editData.iuranAnggota || 0) + (editData.manualIuranAnggota || 0),
+
+        // iuran sanduka
+        iuranSanduka: editData.iuranSanduka || 0,
+        manualIuranSanduka: editData.manualIuranSanduka || 0,
+        totalIuranSanduka:
+          (editData.iuranSanduka || 0) + (editData.manualIuranSanduka || 0),
+
+        // iuran daspen
+        iuranDaspen: editData.iuranDaspen || 0,
+        manualIuranDaspen: editData.manualIuranDaspen || 0,
+        totalIuranDaspen:
+          (editData.iuranDaspen || 0) + (editData.manualIuranDaspen || 0),
+
+        // iuran derap
+        iuranDerap: editData.iuranDerap || 0,
+        manualIuranDerap: editData.manualIuranDerap || 0,
+        totalIuranDerap:
+          (editData.iuranDerap || 0) + (editData.manualIuranDerap || 0),
+
+        // iuran kalender
+        iuranKalender: editData.iuranKalender || 0,
+        manualIuranKalender: editData.manualIuranKalender || 0,
+        totalIuranKalender:
+          (editData.iuranKalender || 0) + (editData.manualIuranKalender || 0),
+
+        // iuran sumbangan
+        iuranSumbangan: editData.iuranSumbangan || 0,
+        manualIuranSumbangan: editData.manualIuranSumbangan || 0,
+        totalIuranSumbangan:
+          (editData.iuranSumbangan || 0) + (editData.manualIuranSumbangan || 0),
+
+        // tagihan untuk bulan (array [YYYY, MM, DD])
+        tagihanUntukBulan: editData.tagihanUntukBulan,
+      };
+      await GlobalApi.updateBalancing(editData.id, payload);
+
+      setNotification({
+        type: "success",
+        message: "Data berhasil diperbarui!",
+      });
+      setShowEditModal(false);
+      setUpdatedId(editData.id);
+      await getBalancingdata();
+      setTimeout(() => {
+        if (updatedRowRef.current) {
+          updatedRowRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+      }, 300);
+    } catch (err) {
+      console.error("Gagal update data:", err);
+      setNotification({
+        type: "error",
+        message: "Terjadi kesalahan saat update data.",
+      });
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (cabangRef.current && !cabangRef.current.contains(event.target)) {
@@ -1199,6 +1330,68 @@ export default function BankTransactionPage() {
               </div>
             </>
           )}
+          {showDeleteBalancing && (
+            <>
+              <div
+                className="fixed inset-0 bg-black opacity-50 z-40"
+                onClick={() => setShowDeleteBalancing(false)}
+              ></div>
+              <div className="fixed inset-0 flex items-center justify-center z-50">
+                <div className="bg-white shadow-lg rounded-lg p-6 w-11/12 md:w-1/2 relative">
+                  <button
+                    className="absolute top-2 right-2 text-gray-500"
+                    onClick={() => setShowDeleteBalancing(false)}
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                  <h2 className="text-xl font-bold mb-4">Hapus Data</h2>
+                  <form onSubmit={handleDelete}>
+                    <div className="mb-4">
+                      <label className="block text-gray-700 text-sm font-bold mb-2">
+                        Hapus Untuk Bulan:
+                      </label>
+                      <input
+                        type="date"
+                        name="resetUntukBulan"
+                        value={resetUntukBulan}
+                        onChange={(e) => setResetUntukBulan(e.target.value)}
+                        className="form-input block w-full mt-1 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent"
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setShowDeleteBalancing(false)}
+                        className="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded-lg mr-2"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="bg-green-600 hover:bg-green-800 text-white py-2 px-4 rounded-lg"
+                        disabled={loader}
+                      >
+                        {loader ? `Deleting... ${progress}%` : "Submit"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </>
+          )}
           {showUploadModal && (
             <>
               <div
@@ -1314,7 +1507,7 @@ export default function BankTransactionPage() {
               <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-gray-800">
                   Data Potongan Bank
-                </h2> 
+                </h2>
                 <div className="flex gap-3">
                   <button
                     className={`px-4 py-2 rounded border border-black hover:bg-teal-500 hover:text-white transition flex items-center gap-2 text-sm ${
@@ -1411,22 +1604,22 @@ export default function BankTransactionPage() {
                     )}
                   </button>
                   {typeof window !== "undefined" &&
-                  sessionStorage.getItem("role") === "SUPER ADMIN" && (
-                    <div className="flex gap-2 ml-auto">
-                      <button
-                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 transition"
-                        onClick={() => setShowDeleteModal(true)}
-                      >
-                        Reset Potongan
-                      </button>
-                      <button
-                        className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-500 transition"
-                        onClick={() => setShowUploadModal(true)}
-                      >
-                        Upload Data
-                      </button>
-                    </div>
-                  )}
+                    sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                      <div className="flex gap-2 ml-auto">
+                        <button
+                          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 transition"
+                          onClick={() => setShowDeleteModal(true)}
+                        >
+                          Reset Potongan
+                        </button>
+                        <button
+                          className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-500 transition"
+                          onClick={() => setShowUploadModal(true)}
+                        >
+                          Upload Data
+                        </button>
+                      </div>
+                    )}
                 </div>
               </div>
 
@@ -1826,17 +2019,17 @@ export default function BankTransactionPage() {
                         </>
                       )}
                     </button>
-                    {/* {typeof window !== "undefined" &&
-                  sessionStorage.getItem("role") === "SUPER ADMIN" && (
-                    <div className="flex gap-2 ml-auto">
-                      <button
-                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 transition"
-                        onClick={() => setShowDeleteModal(true)}
-                      >
-                        Delete Balancing
-                      </button>
-                    </div>
-                  )} */}
+                    {typeof window !== "undefined" &&
+                      sessionStorage.getItem("role") === "SUPER ADMIN" && (
+                        <div className="flex gap-2 ml-auto">
+                          <button
+                            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 transition"
+                            onClick={() => setShowDeleteBalancing(true)}
+                          >
+                            Delete Balancing
+                          </button>
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>
@@ -2306,10 +2499,11 @@ export default function BankTransactionPage() {
                     ) : dataBalancing.length > 0 ? (
                       sortedData.map((item, index) => (
                         <tr
-                          key={index}
-                          className={
+                          key={item.id}
+                          ref={item.id === updatedId ? updatedRowRef : null}
+                          className={`${
                             index % 2 === 0 ? "bg-white" : "bg-gray-100"
-                          }
+                          }`}
                         >
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                             {displayCount === "all"
@@ -2373,7 +2567,10 @@ export default function BankTransactionPage() {
                           </td>
                           <td className="p-3 text-center text-sm">
                             <div className="flex space-x-2 justify-center text-base">
-                              <button className="text-blue-500 hover:text-blue-700"  onClick={() => handleEditClick(item.id)} >
+                              <button
+                                className="text-blue-500 hover:text-blue-700"
+                                onClick={() => handleEditClick(item.id)}
+                              >
                                 <FaEdit />
                               </button>
                               <button className="text-red-500 hover:text-red-700">
@@ -3205,177 +3402,406 @@ export default function BankTransactionPage() {
           )}
         </div>
       </div>
-      {showEditModal && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                <div className="relative bg-white rounded-lg shadow-xl w-[500px] max-w-full p-6">
-                  {/* Tombol X (Batal) */}
-                  <button
-                    onClick={() => setShowEditModal(false)}
-                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                  >
-                    <FaTimesCircle className="w-5 h-5 hover:text-red-500" />
-                  </button>
-      
-                  {/* Header Modal */}
-                  <h2 className="text-lg font-semibold mb-4">
-                    {/* Edit Transaksi - {transactionToEdit.noBukti} */}
-                  </h2>
-      
-                  {/* Form Edit */}
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium">
-                        Tanggal Transaksi
-                      </label>
-                      <input
-                        type="date"
-                        className="w-full border px-3 py-2 rounded"
-                        value={editForm.tanggalTransaksi}
-                        onChange={(e) =>
-                          setEditForm({
-                            ...editForm,
-                            tanggalTransaksi: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-      
-                    <div>
-                      <label className="block text-sm font-medium">No. Bukti</label>
-                      <input
-                        type="text"
-                        className="w-full border px-3 py-2 rounded bg-gray-100"
-                        value={editForm.nomorBukti}
-                        disabled
-                      />
-                    </div>
-      
-                    <div>
-                      <label className="block text-sm font-medium">Uraian</label>
-                      <textarea
-                        className="w-full border px-3 py-2 rounded"
-                        value={editForm.keterangan}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, keterangan: e.target.value })
-                        }
-                      />
-                    </div>
-      
-                    <div>
-                      <label className="block text-sm font-medium">Yang Meninggal</label>
-                      <input
-                        type="text"
-                        className="w-full border px-3 py-2 rounded bg-gray-100"
-                        value={editForm.yangMeninggal}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium">Nama Penerima</label>
-                      <input
-                        type="text"
-                        className="w-full border px-3 py-2 rounded bg-gray-100"
-                        value={editForm.namaPenerima}
-                      />
-                    </div>
-      
-                    {editJenis === "PEMASUKAN" ? (
-                      <>
-                        <div>
-                          <label className="block text-sm font-medium">
-                            Debet (Rp)
-                          </label>
-                          <input
-                            type="text"
-                            className="w-full border px-3 py-2 rounded"
-                            value={
-                              editForm.nominal === 0
-                                ? ""
-                                : editForm.nominal
-                                    .toString()
-                                    .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-                            }
-                            onChange={(e) => {
-                              const raw = e.target.value.replace(/\./g, "");
-                              const num = Number(raw);
-                              setEditForm({
-                                ...editForm,
-                                nominal: isNaN(num) ? 0 : num,
-                              });
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium">
-                            Kredit (Rp)
-                          </label>
-                          <input
-                            type="number"
-                            className="w-full border px-3 py-2 rounded"
-                            value={0}
-                            disabled
-                          />
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div>
-                          <label className="block text-sm font-medium">
-                            Debet (Rp)
-                          </label>
-                          <input
-                            type="number"
-                            className="w-full border px-3 py-2 rounded"
-                            value={0}
-                            disabled
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium">
-                            Kredit (Rp)
-                          </label>
-                          <input
-                            type="text"
-                            className="w-full border px-3 py-2 rounded"
-                            value={
-                              editForm.nominal === 0
-                                ? ""
-                                : editForm.nominal
-                                    .toString()
-                                    .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-                            }
-                            onChange={(e) => {
-                              const raw = e.target.value.replace(/\./g, "");
-                              const num = Number(raw);
-                              setEditForm({
-                                ...editForm,
-                                nominal: isNaN(num) ? 0 : num,
-                              });
-                            }}
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-      
-                  {/* Tombol Simpan & Batal */}
-                  <div className="mt-6 flex justify-end space-x-2">
-                    <button
-                      onClick={() => setShowEditModal(false)}
-                      className="px-4 py-2 border rounded hover:bg-gray-100"
-                    >
-                      Batal
-                    </button>
-                    <button
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center"
-                      onClick={handleSaveEdit}
-                    >
-                      <FaSave className="mr-2" />
-                      Simpan Perubahan
-                    </button>
-                  </div>
-                </div>
+      {showEditModal && editData && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative bg-white rounded-lg shadow-xl w-[600px] max-w-full p-6 overflow-y-auto max-h-[90vh] mt-16">
+            {/* Tombol X */}
+            <button
+              onClick={() => setShowEditModal(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+            >
+              <FaTimesCircle className="w-5 h-5 hover:text-red-500" />
+            </button>
+
+            <h2 className="text-lg font-semibold mb-4">Edit Data Balancing</h2>
+
+            <div className="space-y-4">
+              {/* Nama Anggota */}
+              <div>
+                <label className="block text-sm font-medium">
+                  Nama Anggota
+                </label>
+                <input
+                  type="text"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.namaAnggota || ""}
+                  onChange={(e) =>
+                    setEditData({ ...editData, namaAnggota: e.target.value })
+                  }
+                />
               </div>
-            )}
+
+              {/* Tempat Tanggal Lahir */}
+              <div>
+                <label className="block text-sm font-medium">
+                  Tempat Tanggal Lahir
+                </label>
+                <input
+                  type="text"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.tempatTanggalLahir || ""}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      tempatTanggalLahir: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              {/* NPA */}
+              <div>
+                <label className="block text-sm font-medium">NPA</label>
+                <input
+                  type="text"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.npa || ""}
+                  onChange={(e) =>
+                    setEditData({ ...editData, npa: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* NIP */}
+              <div>
+                <label className="block text-sm font-medium">NIP</label>
+                <input
+                  type="text"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.nip || ""}
+                  onChange={(e) =>
+                    setEditData({ ...editData, nip: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* NIK */}
+              <div>
+                <label className="block text-sm font-medium">NIK</label>
+                <input
+                  type="text"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.nik || ""}
+                  onChange={(e) =>
+                    setEditData({ ...editData, nik: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Cabang */}
+              <div>
+                <label className="block text-sm font-medium">Cabang</label>
+                <input
+                  type="text"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.cabang || ""}
+                  onChange={(e) =>
+                    setEditData({ ...editData, cabang: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Unit Kerja */}
+              <div>
+                <label className="block text-sm font-medium">Unit Kerja</label>
+                <input
+                  type="text"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.unitKerja || ""}
+                  onChange={(e) =>
+                    setEditData({ ...editData, unitKerja: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Jabatan */}
+              <div>
+                <label className="block text-sm font-medium">Jabatan</label>
+                <input
+                  type="text"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.jabatan || ""}
+                  onChange={(e) =>
+                    setEditData({ ...editData, jabatan: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Nomor Rekening */}
+              <div>
+                <label className="block text-sm font-medium">
+                  Nomor Rekening
+                </label>
+                <input
+                  type="text"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.nomorRekening || ""}
+                  onChange={(e) =>
+                    setEditData({ ...editData, nomorRekening: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Iuran Anggota */}
+              <div>
+                <label className="block text-sm font-medium">
+                  Iuran Anggota
+                </label>
+                <input
+                  type="number"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.iuranAnggota || 0}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      iuranAnggota: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              {/* Manual Iuran Anggota */}
+              <div>
+                <label className="block text-sm font-medium">
+                  Manual Iuran Anggota
+                </label>
+                <input
+                  type="number"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.manualIuranAnggota || 0}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      manualIuranAnggota: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              {/* Iuran Sanduka */}
+              <div>
+                <label className="block text-sm font-medium">
+                  Iuran Sanduka
+                </label>
+                <input
+                  type="number"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.iuranSanduka || 0}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      iuranSanduka: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              {/* Manual Iuran Sanduka */}
+              <div>
+                <label className="block text-sm font-medium">
+                  Manual Iuran Sanduka
+                </label>
+                <input
+                  type="number"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.manualIuranSanduka || 0}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      manualIuranSanduka: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">
+                  Iuran Daspen
+                </label>
+                <input
+                  type="number"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.iuranDaspen || 0}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      iuranDaspen: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              {/* Manual Iuran Sanduka */}
+              <div>
+                <label className="block text-sm font-medium">
+                  Manual Iuran Daspen
+                </label>
+                <input
+                  type="number"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.manualIuranDaspen || 0}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      manualIuranDaspen: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">Iuran Derap</label>
+                <input
+                  type="number"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.iuranDerap || 0}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      iuranDerap: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              {/* Manual Iuran Sanduka */}
+              <div>
+                <label className="block text-sm font-medium">
+                  Manual Iuran Derap
+                </label>
+                <input
+                  type="number"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.manualIuranDerap || 0}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      manualIuranDerap: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">Iuran Derap</label>
+                <input
+                  type="number"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.iuranKalender || 0}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      iuranKalender: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              {/* Manual Iuran Sanduka */}
+              <div>
+                <label className="block text-sm font-medium">
+                  Manual Iuran Derap
+                </label>
+                <input
+                  type="number"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.manualIuranKalender || 0}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      manualIuranKalender: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium">Iuran Derap</label>
+                <input
+                  type="number"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.iuranSumbangan || 0}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      iuranSumbangan: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              {/* Manual Iuran Sanduka */}
+              <div>
+                <label className="block text-sm font-medium">
+                  Manual Iuran Derap
+                </label>
+                <input
+                  type="number"
+                  className="w-full border px-3 py-2 rounded"
+                  value={editData.manualIuranSumbangan || 0}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      manualIuranSumbangan: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              {/* dst: buat input untuk iuranDaspen, Derap, Kalender, Sumbangan sama pola seperti di atas */}
+
+              {/* Tagihan Untuk Bulan */}
+              <div>
+                <label className="block text-sm font-medium">
+                  Tagihan Untuk Bulan
+                </label>
+                <input
+                  type="date"
+                  className="w-full border px-3 py-2 rounded"
+                  value={
+                    editData.tagihanUntukBulan
+                      ? new Date(
+                          editData.tagihanUntukBulan[0],
+                          editData.tagihanUntukBulan[1] - 1,
+                          editData.tagihanUntukBulan[2]
+                        )
+                          .toISOString()
+                          .split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) => {
+                    const d = new Date(e.target.value);
+                    setEditData({
+                      ...editData,
+                      tagihanUntukBulan: [
+                        d.getFullYear(),
+                        d.getMonth() + 1,
+                        d.getDate(),
+                      ],
+                    });
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Tombol Simpan & Batal */}
+            <div className="mt-6 flex justify-end space-x-2">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="px-4 py-2 border rounded hover:bg-gray-100"
+              >
+                Batal
+              </button>
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center"
+                onClick={handleSaveEdit}
+              >
+                <FaSave className="mr-2" />
+                Simpan Perubahan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
