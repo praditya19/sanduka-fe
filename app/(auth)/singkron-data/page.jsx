@@ -1,91 +1,99 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
-import { faMinusCircle, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
-import { FaTrash } from "react-icons/fa";
+import { faMinusCircle, faPlusCircle, faArrowLeft, faSort, faSortUp, faSortDown } from "@fortawesome/free-solid-svg-icons";
+import { FaTrash, FaBars, FaTimes, FaCheckCircle, FaExclamationCircle, FaDownload, FaUpload, FaSearch, FaFilter } from "react-icons/fa";
+import { FiGrid, FiList } from 'react-icons/fi';
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
-import { FaTimesCircle, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import HeaderMenu from "@/app/_components/HeaderMenu";
 import GlobalApi from "@/app/_utils/GlobalApi";
 import { Input } from "@/components/ui/input";
-import { FaBars, FaTimes } from "react-icons/fa";
 import Modal from "react-modal";
 
-const NotificationPopup = ({ type, message, onClose }) => {
+// --- Sub-component: Notification Toast ---
+const NotificationToast = ({ type, message, onClose }) => {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose();
-    }, 3000);
-
+    const timer = setTimeout(onClose, 4000);
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  const getBgColor = () => {
-    switch (type) {
-      case 'success':
-        return 'bg-green-100';
-      case 'error':
-        return 'bg-red-100';
-      default:
-        return 'bg-blue-100';
-    }
+  const styles = {
+    success: { bg: 'bg-green-500', icon: <FaCheckCircle /> },
+    error: { bg: 'bg-red-500', icon: <FaExclamationCircle /> },
+    info: { bg: 'bg-blue-500', icon: <FaExclamationCircle /> },
   };
 
-  const getIcon = () => {
-    switch (type) {
-      case 'success':
-        return <FaCheckCircle className="text-green-500 text-3xl" />;
-      case 'error':
-        return <FaExclamationCircle className="text-red-500 text-3xl" />;
-      default:
-        return null;
-    }
-  };
-
-  const getTextColor = () => {
-    switch (type) {
-      case 'success':
-        return 'text-green-800';
-      case 'error':
-        return 'text-red-800';
-      default:
-        return 'text-blue-800';
-    }
-  };
+  const selectedStyle = styles[type] || styles.info;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-[9999]">
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
-      <div className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-[9999] w-96 text-center transform transition-all duration-300 ease-in-out`}>
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
-          aria-label="Close"
-        >
-          <FaTimesCircle size={24} />
-        </button>
-
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-bounce">
-            {getIcon()}
-          </div>
-
-          <h3 className={`text-xl font-bold ${getTextColor()}`}>
-            {type === 'success' ? 'Berhasil!' : 'Gagal!'}
-          </h3>
-
-          <div className={`${getTextColor()} text-center`}>
-            {message}
-          </div>
-        </div>
+    <div className={`fixed top-5 right-5 z-[9999] flex items-center p-4 rounded-lg shadow-lg text-white ${selectedStyle.bg} transform transition-all duration-300 ease-in-out animate-slideInRight`}>
+      <div className="text-2xl mr-3">{selectedStyle.icon}</div>
+      <div>
+        <p className="font-bold">{type.charAt(0).toUpperCase() + type.slice(1)}</p>
+        <p>{message}</p>
       </div>
+      <button onClick={onClose} className="ml-4 text-white hover:text-gray-200">
+        <FaTimes />
+      </button>
     </div>
   );
 };
 
+// --- Sub-component: Stat Card ---
+const StatCard = ({ icon, label, value, loading }) => (
+  <div className="bg-white p-6 rounded-xl shadow-md flex items-center space-x-4 transition hover:shadow-lg hover:-translate-y-1">
+    <div className="bg-teal-100 text-teal-700 p-3 rounded-full">
+      {icon}
+    </div>
+    <div>
+      <p className="text-sm font-medium text-gray-500">{label}</p>
+      {loading ? (
+        <div className="h-6 bg-gray-200 rounded-md w-16 animate-pulse mt-1"></div>
+      ) : (
+        <p className="text-2xl font-bold text-gray-800">{value}</p>
+      )}
+    </div>
+  </div>
+);
+
+
+// --- Sub-component: Skeleton Loader for Table ---
+const TableSkeleton = () => (
+  <tbody>
+    {[...Array(5)].map((_, i) => (
+      <tr key={i} className="animate-pulse">
+        <td className="py-4 px-6"><div className="h-4 bg-gray-200 rounded"></div></td>
+        <td className="py-4 px-6"><div className="h-4 bg-gray-200 rounded"></div></td>
+        <td className="py-4 px-6"><div className="h-4 bg-gray-200 rounded"></div></td>
+        <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded"></div></td>
+        <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded"></div></td>
+        <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded"></div></td>
+        <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded-full w-12 h-6"></div></td>
+        <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded-full w-12 h-6"></div></td>
+        <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+        <td className="py-4 px-6 hidden md:table-cell"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
+        <td className="py-4 px-6 hidden md:table-cell"><div className="h-8 bg-gray-200 rounded-full w-8"></div></td>
+        <td className="py-4 px-6 hidden md:table-cell"><div className="h-8 bg-gray-200 rounded-md w-8"></div></td>
+      </tr>
+    ))}
+  </tbody>
+);
+
+// --- Sub-component: Empty State for Table ---
+const EmptyState = () => (
+  <div className="text-center py-16 px-6 bg-white rounded-lg">
+    <svg className="mx-auto h-24 w-24 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+      <path vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+    </svg>
+    <h3 className="mt-4 text-xl font-semibold text-gray-800">Data Tidak Ditemukan</h3>
+    <p className="mt-2 text-gray-500">Ubah filter pencarian Anda atau tambahkan data baru.</p>
+  </div>
+);
+
+
+// --- Main Component: SyncData ---
 const SyncData = () => {
   const [cabangList, setCabangList] = useState([]);
   const [selectedCabang, setSelectedCabang] = useState("");
@@ -99,27 +107,20 @@ const SyncData = () => {
   const [filteredUnitKerja, setFilteredUnitKerja] = useState([]);
   const [unitKerjaInput, setUnitKerjaInput] = useState("");
   const [showUnitKerjaDropdown, setShowUnitKerjaDropdown] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [data, setData] = useState([]);
-  const tableRef = useRef();
-  const [formData, setFormData] = useState({
-    file: null,
-    category: "",
-  });
+  const [formData, setFormData] = useState({ file: null, category: "" });
   const [loader, setLoader] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [itemsPerPage] = useState(10);
-  const [displayedPages, setDisplayedPages] = useState([1, 2, 3]);
-  const [visiblePages, setVisiblePages] = useState([1, 2, 3]);
-  const totalData = data.length;
+  const itemsPerPage = 10;
+  const [visiblePages, setVisiblePages] = useState([]);
   const [role, setRole] = useState("");
-  const [filteredTotalFiles, setFilteredTotalFiles] = useState(0);
+  const [filteredTotalFiles, setFilteredTotalFiles] = useState({ totalDaspen: 0, totalKtaDigital: 0 });
   const [progress, setProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [searchNama, setSearchNama] = useState("");
   const [isMobile, setIsMobile] = useState(false);
@@ -129,8 +130,12 @@ const SyncData = () => {
   const [statusKeanggotaan, setStatusKeanggotaan] = useState("");
   const [showActions, setShowActions] = useState(false);
   const [sortField, setSortField] = useState(null);
-  const [sortOrder, setSortOrder] = useState("asc"); // atau "desc"
+  const [sortOrder, setSortOrder] = useState("asc");
 
+  // Atur app element untuk react-modal (penting untuk aksesibilitas)
+  useEffect(() => {
+    Modal.setAppElement('body');
+  }, []);
 
   useEffect(() => {
     const storedRole = sessionStorage.getItem("role");
@@ -142,43 +147,6 @@ const SyncData = () => {
       filterUnitKerjaForCabang(storedCabang);
     }
   }, []);
-
-  const filterUnitKerjaForCabang = (cabang) => {
-    const filtered = unitKerjaList.filter(
-      (unitKerja) => unitKerja.cabang.toLowerCase() === cabang.toLowerCase()
-    );
-    setFilteredUnitKerja(filtered);
-  };
-
-  const paginateData = (data) => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return data.slice(startIndex, endIndex);
-  };
-
-  useEffect(() => {
-    setTotalPages(Math.ceil(totalData / itemsPerPage));
-  }, [totalData]);
-
-  useEffect(() => {
-    updateVisiblePages(currentPage);
-  }, [currentPage, totalPages]);
-
-  const updateVisiblePages = (current) => {
-    if (current === 1) {
-      setVisiblePages([1, 2, 3].filter((page) => page <= totalPages));
-    } else if (current === totalPages) {
-      setVisiblePages(
-        [current - 2, current - 1, current].filter((page) => page > 0)
-      );
-    } else {
-      setVisiblePages(
-        [current - 1, current, current + 1].filter(
-          (page) => page > 0 && page <= totalPages
-        )
-      );
-    }
-  };
 
   useEffect(() => {
     const fetchCabangData = async () => {
@@ -204,6 +172,64 @@ const SyncData = () => {
     };
     fetchUnitKerjaData();
   }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const result = await GlobalApi.getAllFiles();
+        setData(result);
+      } catch (error) {
+        console.error("Error fetching files:", error);
+        setNotification({ type: 'error', message: 'Gagal memuat data utama.' });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchTotalFiles = async () => {
+      try {
+        const result = await GlobalApi.getAllTotalData();
+        setFilteredTotalFiles(result);
+      } catch (error) {
+        console.error("Error fetching total files:", error);
+      }
+    };
+    fetchTotalFiles();
+  }, []);
+
+  const filterUnitKerjaForCabang = (cabang) => {
+    const filtered = unitKerjaList.filter(
+      (unitKerja) => unitKerja.cabang.toLowerCase() === cabang.toLowerCase()
+    );
+    setFilteredUnitKerja(filtered);
+  };
+
+  const paginateData = (data) => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return data.slice(startIndex, startIndex + itemsPerPage);
+  };
+
+  useEffect(() => {
+    updateVisiblePages(currentPage, totalPages);
+  }, [currentPage, totalPages]);
+
+  const updateVisiblePages = (current, total) => {
+    if (total <= 5) {
+      setVisiblePages(Array.from({ length: total }, (_, i) => i + 1));
+      return;
+    }
+    if (current <= 3) {
+      setVisiblePages([1, 2, 3, 4, '...', total]);
+    } else if (current >= total - 2) {
+      setVisiblePages([1, '...', total - 3, total - 2, total - 1, total]);
+    } else {
+      setVisiblePages([1, '...', current - 1, current, current + 1, '...', total]);
+    }
+  };
 
   const handleUnitKerjaFocus = () => {
     if (selectedCabang) {
@@ -251,36 +277,15 @@ const SyncData = () => {
     setFilteredCabangList(filtered);
   };
 
-  const handleSelectCabang = async (cabang) => {
+  const handleSelectCabang = (cabang) => {
     setSelectedCabang(cabang.kecamatan);
     setShowCabangDropdown(false);
-
     const filtered = unitKerjaList.filter(
       (unitKerja) =>
         unitKerja.cabang &&
         unitKerja.cabang.toLowerCase() === cabang.kecamatan.toLowerCase()
     );
     setFilteredUnitKerja(filtered);
-  };
-
-  const handleUnitKerjaSearch = (searchTerm) => {
-    if (searchTerm === "") {
-      const allFiltered = unitKerjaList.filter(
-        (unitKerja) => unitKerja.cabang === selectedCabang
-      );
-      setFilteredUnitKerja(allFiltered);
-    } else {
-      const filtered = unitKerjaList.filter(
-        (unitKerja) =>
-          unitKerja.unitKerja
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) &&
-          unitKerja.cabang === selectedCabang
-      );
-      setFilteredUnitKerja(filtered);
-    }
-
-    setShowUnitKerjaDropdown(true);
   };
 
   const handleUnitKerjaSelect = (unitKerja) => {
@@ -291,148 +296,69 @@ const SyncData = () => {
   };
 
   useEffect(() => {
-    setSelectedUnitKerja("");
-    setUnitKerjaInput("");
-  }, [selectedCabang]);
-
-  useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        unitKerjaRef.current &&
-        !unitKerjaRef.current.contains(event.target)
-      ) {
-        setShowUnitKerjaDropdown(false);
-      }
+      if (cabangRef.current && !cabangRef.current.contains(event.target)) setShowCabangDropdown(false);
+      if (unitKerjaRef.current && !unitKerjaRef.current.contains(event.target)) setShowUnitKerjaDropdown(false);
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (cabangRef.current && !cabangRef.current.contains(event.target)) {
-        setShowCabangDropdown(false);
-      }
-      if (
-        unitKerjaRef.current &&
-        !unitKerjaRef.current.contains(event.target)
-      ) {
-        setShowUnitKerjaDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleSort = (field) => {
     const newSortOrder = sortField === field && sortOrder === 'asc' ? 'desc' : 'asc';
-
     setSortField(field);
     setSortOrder(newSortOrder);
   };
 
-  const sortAndFilterData = () => {
+  const SortIcon = ({ field }) => {
+    if (sortField !== field) return <FontAwesomeIcon icon={faSort} className="ml-2 text-gray-400" />;
+    if (sortOrder === 'asc') return <FontAwesomeIcon icon={faSortUp} className="ml-2" />;
+    return <FontAwesomeIcon icon={faSortDown} className="ml-2" />;
+  };
+
+  const sortedAndFilteredData = React.useMemo(() => {
     let result = [...data];
 
+    // Filter
+    result = result.filter((item) => {
+      const statusMatch = statusKeanggotaan ? item.statusKeanggotaan?.toLowerCase() === statusKeanggotaan.toLowerCase() : true;
+      const cabangMatch = selectedCabang ? item.cabang === selectedCabang : true;
+      const unitKerjaMatch = selectedUnitKerja ? item.unitKerja?.toLowerCase() === selectedUnitKerja?.toLowerCase() : true;
+      const namaMatch = searchNama ? (
+        item.namaAnggota?.toLowerCase().includes(searchNama) ||
+        item.npa?.toLowerCase().includes(searchNama) ||
+        item.nip?.toLowerCase().includes(searchNama)
+      ) : true;
+      return cabangMatch && unitKerjaMatch && namaMatch && statusMatch;
+    });
+
+    // Sort
     if (sortField) {
       result.sort((a, b) => {
         let valA = a[sortField] ?? '';
         let valB = b[sortField] ?? '';
-
         if (typeof valA === 'boolean' && typeof valB === 'boolean') {
-          return sortOrder === 'asc'
-            ? (valA === valB ? 0 : valA ? 1 : -1)
-            : (valA === valB ? 0 : valA ? -1 : 1);
+          return sortOrder === 'asc' ? (valA === valB ? 0 : valA ? 1 : -1) : (valA === valB ? 0 : valA ? -1 : 1);
         }
-
         if (!isNaN(valA) && !isNaN(valB)) {
-          return sortOrder === 'asc'
-            ? Number(valA) - Number(valB)
-            : Number(valB) - Number(valA);
+          return sortOrder === 'asc' ? Number(valA) - Number(valB) : Number(valB) - Number(valA);
         }
-
-        valA = String(valA).toLowerCase();
-        valB = String(valB).toLowerCase();
-
-        if (sortOrder === 'asc') {
-          return valA.localeCompare(valB);
-        } else {
-          return valB.localeCompare(valA);
-        }
+        return sortOrder === 'asc' ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
       });
     }
-
-    result = result.filter((item) => {
-      const statusMatch = statusKeanggotaan
-        ? item.statusKeanggotaan?.toLowerCase() === statusKeanggotaan.toLowerCase()
-        : true;
-
-      const cabangMatch = selectedCabang ? item.cabang === selectedCabang : true;
-      const unitKerjaMatch = selectedUnitKerja
-        ? item.unitKerja?.toLowerCase() === selectedUnitKerja?.toLowerCase()
-        : true;
-
-      const namaMatch = searchNama
-        ? item.namaAnggota?.toLowerCase().includes(searchNama.toLowerCase()) ||
-        item.npa?.toLowerCase().includes(searchNama.toLowerCase()) ||
-        item.nip?.toLowerCase().includes(searchNama.toLowerCase())
-        : true;
-
-      return cabangMatch && unitKerjaMatch && namaMatch && statusMatch;
-    });
-
     return result;
-  };
+  }, [data, statusKeanggotaan, selectedCabang, selectedUnitKerja, searchNama, sortField, sortOrder]);
 
-  const filteredData = sortAndFilterData();
-  const paginatedData = paginateData(filteredData);
+
+  const paginatedData = paginateData(sortedAndFilteredData);
 
   useEffect(() => {
-    setTotalPages(Math.ceil(filteredData.length / itemsPerPage));
-  }, [filteredData, itemsPerPage]);
+    setTotalPages(Math.ceil(sortedAndFilteredData.length / itemsPerPage));
+  }, [sortedAndFilteredData, itemsPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCabang, searchTerm]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const result = await GlobalApi.getAllFiles();
-        setData(result);
-        setTotalPages(Math.ceil(result.length / itemsPerPage));
-
-        const uniqueCabang = [...new Set(result.map((item) => item.cabang))];
-        setCabangList(
-          uniqueCabang.map((cabang, id) => ({ id, kecamatan: cabang }))
-        );
-      } catch (error) {
-        console.error("Error fetching files:", error);
-      }
-    };
-    fetchData();
-  }, [itemsPerPage]);
-
-  const fetchTotalFiles = async () => {
-    try {
-      const result = await GlobalApi.getAllTotalData();
-      setFilteredTotalFiles(result);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching files:", error);
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTotalFiles();
-  }, []);
+  }, [selectedCabang, searchNama, selectedUnitKerja, statusKeanggotaan]);
 
   const handleInputChange = (e) => {
     const { name, value, type, files } = e.target;
@@ -444,913 +370,380 @@ const SyncData = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.file || !formData.category) {
+      setNotification({ type: 'error', message: 'Harap lengkapi file dan kategori.' });
+      return;
+    }
     setLoader(true);
     setProgress(0);
     setIsUploading(true);
 
-    let fileToSend = formData.file;
+    const dataToSend = new FormData();
+    dataToSend.append("file", formData.file);
+    dataToSend.append("category", formData.category);
 
-    const submissionCabang =
-      role === "ADMIN" ? sessionStorage.getItem("cabang") : formData.cabang;
-
-    if (
-      fileToSend &&
-      (fileToSend.type ===
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-        fileToSend.type === "application/vnd.ms-excel")
-    ) {
-      const dataToSend = new FormData();
-      dataToSend.append("file", fileToSend);
-      dataToSend.append("category", formData.category);
-      dataToSend.append("cabang", submissionCabang);
-      dataToSend.append("unitKerja", formData.unitKerja);
-      dataToSend.append("namaAnggota", formData.namaLengkap);
-      dataToSend.append("npaNip", formData.npaNip);
-      dataToSend.append("nomorHp", formData.nomorHp);
-      dataToSend.append("dataSanduka", formData.dataSanduka);
-      dataToSend.append("dataKtaDigital", formData.dataKtaDigital);
-      dataToSend.append("dataDaspen", formData.dataDaspen);
-      dataToSend.append("verifikasi", formData.verifikasi);
-
-      try {
-        const response = await GlobalApi.uploadFile(dataToSend);
-        setNotification({
-          type: 'success',
-          message: `File berhasil dikirim!`,
-        });
-      } catch (error) {
-        setIsUploading(false);
-        setNotification({
-          type: 'error',
-          message: `File Gagal dikirim!`,
-        });
-        console.error(
-          "Error submitting data:",
-          error.response?.data || error.message
-        );
-      }
-    } else {
-      setNotification({
-        type: 'error',
-        message: `Format file tidak sesuai. Harap upload file Excel!.`,
-      });
-    }
-
-    setLoader(false);
-  };
-
-  const getProgressFile = async () => {
     try {
-      const response = await GlobalApi.getProgressFile();
-      return Number(response) || 0;
+      await GlobalApi.uploadFile(dataToSend);
+      setNotification({ type: 'success', message: 'File berhasil diunggah!' });
     } catch (error) {
-      return 0;
+      setNotification({ type: 'error', message: 'Gagal mengunggah file.' });
+      console.error("Error submitting data:", error.response?.data || error.message);
+    } finally {
+      setLoader(false);
+      setIsUploading(false);
+      setIsUploadModalOpen(false);
     }
   };
 
-  useEffect(() => {
-    let intervalId;
-
-    if (isUploading) {
-      intervalId = setInterval(async () => {
-        const currentProgress = await getProgressFile();
-        setProgress(currentProgress);
-
-        if (currentProgress >= 100) {
-          setIsUploading(false);
-          setIsModalOpen(false);
-          setTimeout(() => {
-            window.location.reload();
-          }, 3000);
-        }
-      }, 1000);
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [isUploading]);
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setShowModal(false);
-    setSelectedTemplate(null);
-  };
-
-  const handleBackClick = () => {
-    router.back();
-  };
+  const handleBackClick = () => router.back();
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
     handleResize();
     window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const handleNamaChange = (e) => {
-    setSearchNama(e.target.value.toLowerCase());
-  };
+  const handleNamaChange = (e) => setSearchNama(e.target.value.toLowerCase());
 
-  const renderTableBody = () => {
-    return (
-      <tbody className="text-center">
-        {paginatedData.map((item, index) => {
-          const actualIndex = (currentPage - 1) * itemsPerPage + index + 1;
-          return (
-            <React.Fragment key={item.id || index}>
-              <tr
-                className={`bg-white border-b ${index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                  } hover:bg-gray-200 transition duration-150`}
-              >
-                <td className="py-4 px-6">
-                  <div className="flex items-center justify-between">
-                    <span>{actualIndex}</span>
-                    {isMobile && (
-                      <FontAwesomeIcon
-                        icon={
-                          expandedRow === actualIndex
-                            ? faMinusCircle
-                            : faPlusCircle
-                        }
-                        className="text-blue-500 cursor-pointer ml-2"
-                        size="lg"
-                        onClick={() => toggleExpandRow(actualIndex)}
-                      />
-                    )}
-                  </div>
-                </td>
-                <td className="py-4 px-6">{item.cabang}</td>
-                <td className="py-4 px-6">{item.unitKerja}</td>
-                {!isMobile && (
-                  <>
-                    <td className="py-4 px-6">{item.namaAnggota}</td>
-                    <td className="py-4 px-6">{item.npa || "-"}</td>
-                    <td className="py-4 px-6">{item.nip}</td>
-                    <td className="py-4 px-6">
-                      <span
-                        className={`inline-block px-2 py-1 rounded ${item.dataKtaDigital
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                          }`}
-                      >
-                        {item.dataKtaDigital ? "YES" : "NO"}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span
-                        className={`inline-block px-2 py-1 rounded ${item.dataDaspen
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                          }`}
-                      >
-                        {item.dataDaspen ? "YES" : "NO"}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      {item.verifikasi === null ? (
-                        <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
-                          Belum Sinkronisasi
-                        </span>
-                      ) : item.verifikasi ? (
-                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
-                          Sudah Sinkronisasi
-                        </span>
-                      ) : (
-                        ""
-                      )}
-                    </td>
-                    <td className="py-4 px-6">{item.statusKeanggotaan}</td>
-                    <td className="py-4 px-6">
-                      <button
-                        onClick={() =>
-                          window.open(`https://wa.me/${item.nomorHp}`, "_blank")
-                        }
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
-                      >
-                        <FontAwesomeIcon icon={faWhatsapp} size="lg" />
-                      </button>
-                    </td>
-                    <td className="py-4 px-6">
-                      <Button
-                        className="bg-red-500 p-2 border rounded-md"
-                        title="Hapus"
-                        type="button"
-                        onClick={() => handleDeleteClick(item.id)}
-                      >
-                        <FaTrash className="w-4 h-4" />
-                      </Button>
-                    </td>
-                  </>
-                )}
-              </tr>
-              {expandedRow === actualIndex && (
-                <tr>
-                  <td colSpan="9" className="px-4 py-4 bg-gray-50">
-                    <div className="flex flex-col items-center space-y-4">
-                      <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
-                        <div className="text-left">
-                          <h3 className="font-semibold">Nama:</h3>
-                          <p>{item.namaAnggota}</p>
-                        </div>
-                        <div className="text-left">
-                          <h3 className="font-semibold">Npa:</h3>
-                          <p>{item.npa || "-"}</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
-                        <div className="text-left">
-                          <h3 className="font-semibold">Nip:</h3>
-                          <p>{item.nip}</p>
-                        </div>
-                        <div className="text-left">
-                          <h3 className="font-semibold">Data Kta Digital:</h3>
-                          <p
-                            className={`inline-block px-2 py-1 rounded ${item.dataKtaDigital
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                              }`}
-                          >
-                            {item.dataKtaDigital ? "YES" : "NO"}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
-                        <div className="text-left">
-                          <h3 className="font-semibold">Data Daspen:</h3>
-                          <p
-                            className={`inline-block px-2 py-1 rounded ${item.dataDaspen
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                              }`}
-                          >
-                            {item.dataDaspen ? "YES" : "NO"}
-                          </p>
-                        </div>
-                        <div className="text-left">
-                          <h3 className="font-semibold">Keterangan:</h3>
-                          <p>
-                            {item.verifikasi === null ? (
-                              <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
-                                Belum Sinkronisasi
-                              </span>
-                            ) : item.verifikasi ? (
-                              <span className="bg-green-100 text-green-800 px-2 py-1 rounded">
-                                Sudah Sinkronisasi
-                              </span>
-                            ) : (
-                              ""
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
-                        <div className="text-left">
-                          <div className="text-left">
-                            <h3 className="font-semibold">Status Keanggotaan:</h3>
-                            <p>{item.statusKeanggotaan}</p>
-                          </div>
-                        </div>
-                        <div>
-                          <h3 className="text-left">Action:</h3>
-                          <div className="text-left flex items-center gap-2">
-                            <button
-                              onClick={() =>
-                                window.open(
-                                  `https://wa.me/${item.nomorHp}`,
-                                  "_blank"
-                                )
-                              }
-                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-full flex items-center justify-center"
-                            >
-                              <FontAwesomeIcon icon={faWhatsapp} size="lg" />
-                            </button>
-                            <Button
-                              className="bg-red-500 p-2 border rounded-md"
-                              title="Hapus"
-                              type="button"
-                              onClick={() => handleDeleteClick(item.id)}
-                            >
-                              <FaTrash className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </React.Fragment>
-          );
-        })}
-      </tbody>
-    );
-  };
-
-  const toggleExpandRow = (index) => {
-    setExpandedRow(expandedRow === index ? null : index);
-  };
-
-  useEffect(() => {
-    updateDisplayedPages(currentPage);
-  }, [currentPage]);
-
-  const updateDisplayedPages = (current) => {
-    let pages = [];
-    if (current <= 2) {
-      pages = [1, 2, 3];
-    } else if (current >= totalPages - 1) {
-      pages = [totalPages - 2, totalPages - 1, totalPages];
-    } else {
-      pages = [current - 1, current, current + 1];
-    }
-    pages = pages.filter((page) => page > 0 && page <= totalPages);
-    setDisplayedPages(pages);
-  };
+  const toggleExpandRow = (index) => setExpandedRow(expandedRow === index ? null : index);
 
   const renderPagination = () => {
+    if (totalPages <= 1) return null;
     return (
-      <div className="flex justify-center mt-4 gap-2">
-        <button
-          onClick={() => setCurrentPage(1)}
-          disabled={currentPage === 1}
-          className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
-        >
-          First
-        </button>
-        <button
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-          className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
-        >
-          Prev
-        </button>
-
-        {visiblePages.map((page) => (
-          <button
-            key={page}
-            onClick={() => setCurrentPage(page)}
-            className={`px-3 py-1 border rounded-md ${page === currentPage
-              ? "bg-blue-500 text-white"
-              : "bg-white hover:bg-gray-50"
-              }`}
-          >
-            {page}
-          </button>
-        ))}
-
-        <button
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-          }
-          disabled={currentPage === totalPages}
-          className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
-        >
-          Next
-        </button>
-        <button
-          onClick={() => setCurrentPage(totalPages)}
-          disabled={currentPage === totalPages}
-          className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50"
-        >
-          Last
-        </button>
+      <div className="flex justify-center items-center mt-6 gap-2 flex-wrap mb-5">
+        <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 transition">First</button>
+        <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 transition">Prev</button>
+        {visiblePages.map((page, index) =>
+          page === '...' ? (
+            <span key={index} className="px-3 py-1">...</span>
+          ) : (
+            <button key={index} onClick={() => setCurrentPage(page)} className={`px-3 py-1 border rounded-md transition ${page === currentPage ? 'bg-teal-600 text-white' : 'bg-white hover:bg-gray-50'}`}>{page}</button>
+          )
+        )}
+        <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 transition">Next</button>
+        <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="px-3 py-1 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50 transition">Last</button>
       </div>
     );
   };
 
   const handleDeleteClick = async (id) => {
-    try {
-      if (!id) {
-        setNotification({
-          type: 'error',
-          message: `Id tidak ditemukan!`,
-        });
-        return;
+    if (window.confirm("Apakah Anda yakin ingin menghapus data ini?")) {
+      try {
+        await GlobalApi.deleteFiles(id);
+        setNotification({ type: 'success', message: 'Data berhasil dihapus!' });
+        setData(data.filter(item => item.id !== id));
+      } catch (error) {
+        setNotification({ type: 'error', message: 'Gagal menghapus data.' });
       }
-
-      const result = await GlobalApi.deleteFiles(id);
-
-      setNotification({
-        type: 'success',
-        message: `File berhasil dihapus!`,
-      });
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 3000);
-
-      setTimeout(() => {
-        setIsPopupVisible(false);
-      }, 3000);
-    } catch (error) {
-      setNotification({
-        type: 'success',
-        message: `Gagal menghapus file!`,
-      });
     }
   };
-
-  const openModal = () => setShowModal(true);
-  const closeModal = () => setShowModal(false);
 
   const handleDownloadTemplate = () => {
-    if (selectedTemplate) {
-      downloadTemplate(selectedTemplate);
-    }
-    closeModal();
+    if (!selectedTemplate) return;
+    const urls = {
+      daspen: "https://docs.google.com/spreadsheets/d/19YgMVfGCOq4iK4vNzGTpr3ezPVrsKROb/edit?usp=sharing&ouid=104657245264175519758&rtpof=true&sd=true",
+      kta: "https://docs.google.com/spreadsheets/d/1WGxbFRHjtAGxhSC77OEdyXTYAs8R98F6/edit?usp=sharing&ouid=104657245264175519758&rtpof=true&sd=true",
+    };
+    window.open(urls[selectedTemplate], "_blank");
+    setShowTemplateModal(false);
   };
 
-  const downloadTemplate = (template) => {
-    if (template === "daspen") {
-      window.open(
-        "https://docs.google.com/spreadsheets/d/19YgMVfGCOq4iK4vNzGTpr3ezPVrsKROb/edit?usp=sharing&ouid=104657245264175519758&rtpof=true&sd=true",
-        "_blank"
-      );
-    } else if (template === "kta") {
-      window.open(
-        "https://docs.google.com/spreadsheets/d/1WGxbFRHjtAGxhSC77OEdyXTYAs8R98F6/edit?usp=sharing&ouid=104657245264175519758&rtpof=true&sd=true",
-        "_blank"
-      );
-    } else {
-      console.error("Template tidak ditemukan.");
+  const handleDownloadRekap = () => GlobalApi.exportTidakTerdaftarToExcel(selectedCabang, selectedUnitKerja);
+
+  const getStatusPill = (status) => {
+    switch (status) {
+      case 'Terdaftar': return <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Terdaftar</span>;
+      case 'Tidak Terdaftar': return <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tidak Terdaftar</span>;
+      default: return <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">{status}</span>;
     }
   };
 
-  const handleCekData = () => {
-    router.push("/singkron-data/cek-data");
-  };
+  const getBooleanPill = (value) => value ?
+    <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">YES</span> :
+    <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">NO</span>;
 
-  const handleStatusChange = (value) => {
-    setStatusKeanggotaan(value);
-  };
-
-  const toggleActions = () => {
-    setShowActions(!showActions);
-  };
-
-  const handleDownloadRekap = () => {
-    GlobalApi.exportTidakTerdaftarToExcel(selectedCabang, selectedUnitKerja);
+  const getVerificationPill = (value) => {
+    if (value === null) return <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Belum Dicek</span>;
+    return value ?
+      <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Sinkron</span> :
+      <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tidak Sinkron</span>;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
-      {notification && (
-        <NotificationPopup
-          type={notification.type}
-          message={notification.message}
-          onClose={() => setNotification(null)}
-        />
-      )}
+    <div className="min-h-screen bg-gray-100">
+      {notification && <NotificationToast type={notification.type} message={notification.message} onClose={() => setNotification(null)} />}
+
       {isMobile ? (
-        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
-          <div className="container mx-auto flex items-center justify-between">
-            <div className="flex items-center">
-              <FontAwesomeIcon
-                icon={faArrowLeft}
-                size="sm"
-                onClick={handleBackClick}
-                className="cursor-pointer mr-4"
-              />
-              <h1 className="text-base">Sinkronsisasi</h1>
-            </div>
+        <header className="bg-teal-700 text-white py-4 px-4 shadow-md fixed top-0 left-0 w-full z-50 flex items-center justify-between">
+          <div className="flex items-center">
+            <FontAwesomeIcon icon={faArrowLeft} size="lg" onClick={handleBackClick} className="cursor-pointer mr-4" />
+            <h1 className="text-xl font-bold">Sinkronisasi Data</h1>
           </div>
+          <button aria-label="Tampilkan menu aksi" className="p-2" onClick={() => setShowActions(true)}>
+            <FaBars size={22} />
+          </button>
         </header>
       ) : (
         <HeaderMenu />
       )}
-      <div>
-        <div>
-          <div className="min-h-screen flex-grow bg-gray-50 py-10 pt-16">
-            {isModalOpen && (
-              <>
-                <div
-                  className="fixed inset-0 bg-black opacity-50 z-40"
-                  onClick={handleCloseModal}
-                ></div>
-                <div className="fixed inset-0 flex items-center justify-center z-50">
-                  <div className="bg-white shadow-lg rounded-lg p-6 w-11/12 md:w-1/2 relative">
-                    <button
-                      className="absolute top-2 right-2 text-gray-500"
-                      onClick={handleCloseModal}
-                    >
-                      <svg
-                        className="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                    <h2 className="text-xl font-bold mb-4">Upload Data</h2>
-                    <form onSubmit={handleSubmit}>
-                      <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
-                          Upload File
-                        </label>
-                        <input
-                          type="file"
-                          name="file"
-                          onChange={handleInputChange}
-                          className="block w-full mt-1"
-                        />
-                      </div>
-                      <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2">
-                          Kategori
-                        </label>
-                        <select
-                          className="form-select block w-full mt-1 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-transparent"
-                          name="category"
-                          onChange={handleInputChange}
-                        >
-                          <option value="">-- Pilih Kategori --</option>
-                          <option value="DASPEN">Daspen </option>
-                          <option value="KTA_DIGITAL"> KTA Digital</option>
-                        </select>
-                      </div>
-                      <div className="flex justify-end">
-                        <Button
-                          type="button"
-                          onClick={() => setIsModalOpen(false)}
-                          className="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded-lg mr-2"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          type="submit"
-                          className="bg-green-600 hover:bg-green-800 text-white py-2 px-4 rounded-lg"
-                          disabled={loader}
-                        >
-                          {loader ? `Uploading... ${progress}%` : "Submit"}
-                        </Button>
-                      </div>
-                    </form>
-                  </div>
+
+      <main className="p-4 md:p-8 pt-24 md:pt-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6 mt-10">
+            <StatCard icon={<FiList size={24} />} label="Total Data Daspen" value={filteredTotalFiles.totalDaspen.toLocaleString('id-ID')} loading={!filteredTotalFiles.totalDaspen && loading} />
+            <StatCard icon={<FiGrid size={24} />} label="Total Data KTA Digital" value={filteredTotalFiles.totalKtaDigital.toLocaleString('id-ID')} loading={!filteredTotalFiles.totalKtaDigital && loading} />
+            <StatCard
+              icon={<FaFilter size={24} />}
+              label="Data Tampil"
+              value={(filteredTotalFiles.totalDaspen + filteredTotalFiles.totalKtaDigital).toLocaleString('id-ID')}
+              loading={(!filteredTotalFiles.totalDaspen && !filteredTotalFiles.totalKtaDigital && loading)}
+            />
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow-md mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <h2 className="text-xl font-semibold text-gray-700">Filter & Pencarian</h2>
+              {!isMobile && (
+                <div className="relative">
+                  <button aria-label="Tampilkan menu aksi" className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition" onClick={() => setShowActions(true)}>
+                    <FaBars />
+                    <span>Tindakan</span>
+                  </button>
                 </div>
-              </>
-            )}
-
-            <div className="flex flex-col lg:flex-row items-start justify-between gap-4 mb-4">
-              {/* Filter Controls */}
-              <div className="flex-1 w-full">
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 w-full">
-                  {/* Cabang Filter */}
-                  <div className="relative w-full" ref={cabangRef}>
-                    <Input
-                      type="text"
-                      value={selectedCabang}
-                      readOnly
-                      onClick={handleCabangClick}
-                      className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition duration-150 ${role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""
-                        }`}
-                      placeholder="Pilih Cabang"
-                      disabled={role === "ADMIN"}
-                    />
-                    {showCabangDropdown && role !== "ADMIN" && (
-                      <div className="absolute z-10 border rounded-md bg-white shadow-md mt-2 w-full">
-                        <ul className="max-h-44 overflow-y-auto">
-                          <li className="py-2 px-3">
-                            <Input
-                              type="text"
-                              onChange={(e) => handleCabangSearch(e.target.value)}
-                              className="block w-full px-3 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none"
-                              placeholder="Cari atau ketik Cabang..."
-                              autoFocus
-                            />
-                          </li>
-                          <li
-                            onClick={() => handleSelectCabang({ kecamatan: "" })}
-                            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                          >
-                            Pilih Cabang
-                          </li>
-                          {filteredCabangList.map((cabang) => (
-                            <li
-                              key={cabang.id}
-                              onClick={() => handleSelectCabang(cabang)}
-                              className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                            >
-                              {cabang.kecamatan}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+              )}
+            </div>
+            <div className="border-t my-4"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="relative w-full" ref={cabangRef}>
+                <Input type="text" value={selectedCabang} readOnly onClick={handleCabangClick} className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition duration-150 ${role === "ADMIN" ? "bg-gray-100 cursor-not-allowed" : ""}`} placeholder="Pilih Cabang" disabled={role === "ADMIN"} />
+                {showCabangDropdown && role !== "ADMIN" && (
+                  <div className="absolute z-20 border rounded-md bg-white shadow-md mt-2 w-full">
+                    <ul className="max-h-44 overflow-y-auto">
+                      <li className="p-2"><Input type="text" onChange={(e) => handleCabangSearch(e.target.value)} className="block w-full" placeholder="Cari Cabang..." autoFocus /></li>
+                      <li onClick={() => handleSelectCabang({ kecamatan: "" })} className="px-4 py-2 cursor-pointer hover:bg-gray-100">Pilih Cabang</li>
+                      {filteredCabangList.map((cabang) => (
+                        <li key={cabang.id} onClick={() => handleSelectCabang(cabang)} className="px-4 py-2 cursor-pointer hover:bg-gray-100">{cabang.kecamatan}</li>
+                      ))}
+                    </ul>
                   </div>
-
-                  {/* Unit Kerja Filter */}
-                  <div className="relative w-full" ref={unitKerjaRef}>
-                    <Input
-                      type="text"
-                      value={unitKerjaInput}
-                      onChange={handleUnitKerjaChange}
-                      onFocus={handleUnitKerjaFocus}
-                      placeholder="Pilih Unit Kerja"
-                      className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition ${!selectedCabang ? "bg-gray-100 cursor-not-allowed" : ""
-                        }`}
-                      disabled={!selectedCabang}
-                    />
-                    {showUnitKerjaDropdown && (
-                      <div className="absolute z-10 border rounded-md bg-white shadow-md mt-2 w-full">
-                        <ul className="max-h-44 overflow-y-auto">
-                          <li className="py-2 px-3">
-                            <Input
-                              type="text"
-                              onChange={(e) =>
-                                handleUnitKerjaSearch(e.target.value)
-                              }
-                              placeholder="Cari atau ketik Unit Kerja..."
-                              autoFocus
-                              className="block w-full px-3 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none"
-                            />
-                          </li>
-                          <li
-                            onClick={() => handleUnitKerjaSelect({ unitKerja: "" })}
-                            className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                          >
-                            Pilih Unit Kerja
-                          </li>
-                          {filteredUnitKerja.length > 0 ? (
-                            filteredUnitKerja.map((unitKerja) => (
-                              <li
-                                key={unitKerja.id}
-                                onClick={() => handleUnitKerjaSelect(unitKerja)}
-                                className="px-4 py-2 cursor-pointer hover:bg-gray-200"
-                              >
-                                {unitKerja.unitKerja}
-                              </li>
-                            ))
-                          ) : (
-                            <li className="px-4 py-2 text-gray-500 cursor-default">
-                              Tidak ada hasil
-                            </li>
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Search Filter */}
-                  <div className="w-full">
-                    <Input
-                      type="text"
-                      className="block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none"
-                      placeholder="Cari Data"
-                      onChange={handleNamaChange}
-                    />
-                  </div>
-
-                  {/* Dropdown Status Keanggotaan */}
-                  <div className="w-full">
-                    <select
-                      onChange={(e) => handleStatusChange(e.target.value)}
-                      className="block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none"
-                      defaultValue=""
-                    >
-                      <option value="">Pilih Semua</option>
-                      <option value="Terdaftar">Terdaftar</option>
-                      <option value="Tidak Terdaftar">Tidak Terdaftar</option>
-                    </select>
-                  </div>
-
-                </div>
-              </div>
-
-              {/* Data Totals */}
-              <div className="flex flex-col gap-1 min-w-max text-sm">
-                <span>
-                  {loading
-                    ? "Loading..."
-                    : `Total Data Daspen: ${filteredTotalFiles.totalDaspen}`}
-                </span>
-                <span>
-                  {loading
-                    ? "Loading..."
-                    : `Total Data Kta Digital: ${filteredTotalFiles.totalKtaDigital}`}
-                </span>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="relative">
-                {/* Tombol hamburger */}
-                <button
-                  aria-label="Tampilkan menu aksi"
-                  className="p-2 text-white bg-gray-700 rounded-md hover:bg-gray-800"
-                  onClick={toggleActions}
-                >
-                  <FaBars />
-                </button>
-
-                {showActions && (
-                  <div
-                    className="fixed inset-0 bg-black bg-opacity-40 z-40"
-                    onClick={toggleActions}
-                  ></div>
                 )}
-
-                <div
-                  className={`fixed top-0 right-0 h-full w-72 max-w-sm bg-white shadow-2xl p-4 z-50 transition-transform duration-300 transform ${showActions ? "translate-x-0" : "translate-x-full"
-                    }`}
-                >
-                  <div className="flex justify-end mb-4">
-                    <button
-                      aria-label="Tutup menu aksi"
-                      className="text-gray-600 text-2xl hover:text-red-500"
-                      onClick={toggleActions}
-                    >
-                      <FaTimes />
-                    </button>
+              </div>
+              <div className="relative w-full" ref={unitKerjaRef}>
+                <Input type="text" value={unitKerjaInput} onChange={handleUnitKerjaChange} onFocus={handleUnitKerjaFocus} placeholder="Pilih Unit Kerja" className={`block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none transition ${!selectedCabang ? "bg-gray-100 cursor-not-allowed" : ""}`} disabled={!selectedCabang} />
+                {showUnitKerjaDropdown && (
+                  <div className="absolute z-20 border rounded-md bg-white shadow-md mt-2 w-full">
+                    <ul className="max-h-44 overflow-y-auto">
+                      <li className="p-2"><Input type="text" value={unitKerjaInput} onChange={handleUnitKerjaChange} placeholder="Cari Unit Kerja..." autoFocus className="block w-full" /></li>
+                      <li onClick={() => handleUnitKerjaSelect({ unitKerja: "" })} className="px-4 py-2 cursor-pointer hover:bg-gray-100">Pilih Unit Kerja</li>
+                      {filteredUnitKerja.length > 0 ? (
+                        filteredUnitKerja.map((unitKerja) => (
+                          <li key={unitKerja.id} onClick={() => handleUnitKerjaSelect(unitKerja)} className="px-4 py-2 cursor-pointer hover:bg-gray-100">{unitKerja.unitKerja}</li>
+                        ))
+                      ) : (
+                        <li className="px-4 py-2 text-gray-500">Tidak ada hasil</li>
+                      )}
+                    </ul>
                   </div>
-
-                  <div className="flex flex-col gap-4">
-                    {/* Tombol Download Template */}
-                    <Button
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={openModal}
-                    >
-                      Download Template
-                    </Button>
-
-                    {/* Modal Pilih Template */}
-                    <Modal
-                      isOpen={showModal}
-                      onRequestClose={closeModal}
-                      contentLabel="Pilih Template"
-                      className="fixed inset-0 flex items-center justify-center p-4 z-[100]"
-                      overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-[90]"
-                    >
-                      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md z-[101]">
-                        <div className="flex justify-between items-center mb-4">
-                          <h2 className="text-xl font-bold">Pilih Template untuk Download</h2>
-                          <button
-                            aria-label="Tutup modal"
-                            className="text-2xl font-bold text-gray-700 hover:text-red-500"
-                            onClick={closeModal}
-                          >
-                            ×
-                          </button>
-                        </div>
-
-                        <div className="flex flex-col gap-4">
-                          <button
-                            className="w-full bg-teal-700 hover:bg-teal-500 text-white px-4 py-2 rounded-md"
-                            onClick={() => setSelectedTemplate("daspen")}
-                          >
-                            Template Daspen
-                          </button>
-                          <button
-                            className="w-full bg-teal-700 hover:bg-teal-500 text-white px-4 py-2 rounded-md"
-                            onClick={() => setSelectedTemplate("kta")}
-                          >
-                            Template KTA Digital
-                          </button>
-                        </div>
-
-                        {selectedTemplate && (
-                          <div className="mt-4">
-                            <Button
-                              className="w-full bg-teal-700 hover:bg-teal-500 text-white px-4 py-2 rounded-md"
-                              onClick={handleDownloadTemplate}
-                            >
-                              Download {selectedTemplate === "daspen" ? "Template Daspen" : "Template KTA Digital"}
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </Modal>
-
-                    {/* Tombol Upload Data */}
-                    <Button
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                      onClick={() => setIsModalOpen(true)}
-                    >
-                      Upload Data
-                    </Button>
-
-                    {/* Tombol Cek Data */}
-                    <Button
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                      onClick={handleCekData}
-                    >
-                      Cek Data
-                    </Button>
-
-                    {/* Tombol Rekap Anggota */}
-                    {role === 'SUPER ADMIN' && (
-                      <Button
-                        className="bg-yellow-600 hover:bg-yellow-700 text-white"
-                        onClick={handleDownloadRekap}
-                      >
-                        Rekap Anggota
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                )}
+              </div>
+              <div className="w-full">
+                <Input type="text" className="block w-full px-4 py-2 border rounded-md" placeholder="Cari Nama / NPA / NIP" onChange={handleNamaChange} />
+              </div>
+              <div className="w-full">
+                <select onChange={(e) => setStatusKeanggotaan(e.target.value)} className="block w-full px-4 py-2 border rounded-md focus:ring focus:ring-blue-300 focus:outline-none" defaultValue="">
+                  <option value="">Semua Status</option>
+                  <option value="Terdaftar di KTA Digital dan Daspen">Terdaftar di KTA Digital dan Daspen</option>
+                  <option value="Terdaftar di KTA Digital">Terdaftar di KTA Digital</option>
+                  <option value="Terdaftar di Daspen">Terdaftar di Daspen</option>
+                </select>
               </div>
             </div>
+          </div>
 
-            <div
-              ref={tableRef}
-              className="overflow-x-auto relative shadow-md sm:rounded-lg"
-            >
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="overflow-x-auto">
               <table className="w-full text-sm text-left text-gray-500">
-                <thead className="text-xs text-white uppercase bg-teal-700 text-center">
+                <thead className="text-xs text-white uppercase bg-teal-700 sticky top-0 z-10">
                   <tr>
-                    <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('id')}>
-                      No
-                      {sortField === 'id' && (
-                        <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
-                      )}
-                    </th>
-                    <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('cabang')}>
-                      Cabang
-                      {sortField === 'cabang' && (
-                        <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
-                      )}
-                    </th>
-                    <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('unitKerja')}>
-                      Unit Kerja
-                      {sortField === 'unitKerja' && (
-                        <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
-                      )}
-                    </th>
+                    <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('id')}>No <SortIcon field="id" /></th>
+                    <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('cabang')}>Cabang <SortIcon field="cabang" /></th>
+                    <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('unitKerja')}>Unit Kerja <SortIcon field="unitKerja" /></th>
                     {!isMobile && (
                       <>
-                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('namaAnggota')}>
-                          Nama
-                          {sortField === 'namaAnggota' && (
-                            <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
-                          )}
-                        </th>
-                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('npa')}>
-                          NPA
-                          {sortField === 'npa' && (
-                            <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
-                          )}
-                        </th>
-                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('nip')}>
-                          NIP
-                          {sortField === 'nip' && (
-                            <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
-                          )}
-                        </th>
-                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('dataKtaDigital')}>
-                          Data KTA Digital
-                          {sortField === 'dataKtaDigital' && (
-                            <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
-                          )}
-                        </th>
-                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('dataDaspen')}>
-                          Data Daspen
-                          {sortField === 'dataDaspen' && (
-                            <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
-                          )}
-                        </th>
-                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('verifikasi')}>
-                          Keterangan
-                          {sortField === 'verifikasi' && (
-                            <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
-                          )}
-                        </th>
-                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('statusKeanggotaan')}>
-                          Status Keanggotaan
-                          {sortField === 'statusKeanggotaan' && (
-                            <span className="ml-1">{sortOrder === 'asc' ? '▲' : '▼'}</span>
-                          )}
-                        </th>
-                        <th scope="col" className="py-3 px-6">
-                          Wa
-                        </th>
-                        <th scope="col" className="py-3 px-6">
-                          Aksi
-                        </th>
+                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('namaAnggota')}>Nama <SortIcon field="namaAnggota" /></th>
+                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('npa')}>NPA <SortIcon field="npa" /></th>
+                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('nip')}>NIP <SortIcon field="nip" /></th>
+                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('dataKtaDigital')}>KTA Digital <SortIcon field="dataKtaDigital" /></th>
+                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('dataDaspen')}>Daspen <SortIcon field="dataDaspen" /></th>
+                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('verifikasi')}>Verifikasi <SortIcon field="verifikasi" /></th>
+                        <th scope="col" className="py-3 px-6 cursor-pointer" onClick={() => handleSort('statusKeanggotaan')}>Status <SortIcon field="statusKeanggotaan" /></th>
+                        <th scope="col" className="py-3 px-6">Kontak</th>
+                        <th scope="col" className="py-3 px-6">Aksi</th>
                       </>
                     )}
                   </tr>
                 </thead>
-                {renderTableBody()}
+                {loading ? <TableSkeleton /> : (
+                  <tbody className="text-center">
+                    {paginatedData.map((item, index) => {
+                      const actualIndex = (currentPage - 1) * itemsPerPage + index + 1;
+                      return (
+                        <React.Fragment key={item.id || index}>
+                          <tr className="bg-white border-b hover:bg-gray-50">
+                            <td className="py-4 px-6">
+                              <div className="flex items-center justify-between">
+                                <span>{actualIndex}</span>
+                                {isMobile && <FontAwesomeIcon icon={expandedRow === actualIndex ? faMinusCircle : faPlusCircle} className="text-teal-500 cursor-pointer" size="lg" onClick={() => toggleExpandRow(actualIndex)} />}
+                              </div>
+                            </td>
+                            <td className="py-4 px-6">{item.cabang}</td>
+                            <td className="py-4 px-6">{item.unitKerja}</td>
+                            {!isMobile && (
+                              <>
+                                <td className="py-4 px-6 text-left">{item.namaAnggota}</td>
+                                <td className="py-4 px-6">{item.npa || "-"}</td>
+                                <td className="py-4 px-6">{item.nip}</td>
+                                <td className="py-4 px-6">{getBooleanPill(item.dataKtaDigital)}</td>
+                                <td className="py-4 px-6">{getBooleanPill(item.dataDaspen)}</td>
+                                <td className="py-4 px-6">{getVerificationPill(item.verifikasi)}</td>
+                                <td className="py-4 px-6">{getStatusPill(item.statusKeanggotaan)}</td>
+                                <td className="py-4 px-6"><a href={`https://wa.me/${item.nomorHp}`} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-600"><FontAwesomeIcon icon={faWhatsapp} size="2x" /></a></td>
+                                <td className="py-4 px-6"><button onClick={() => handleDeleteClick(item.id)} className="text-red-500 hover:text-red-700"><FaTrash size={18} /></button></td>
+                              </>
+                            )}
+                          </tr>
+                          {/* Mobile expanded row content can be added here */}
+                        </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                )}
               </table>
+              {!loading && paginatedData.length === 0 && <EmptyState />}
             </div>
             {renderPagination()}
           </div>
         </div>
+      </main>
+
+      {/* Action Menu (Slide-in Panel) */}
+      <div className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl p-6 z-[60] transition-transform duration-300 transform ${showActions ? "translate-x-0" : "translate-x-full"}`}>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-gray-800">Menu Tindakan</h2>
+          <button aria-label="Tutup menu aksi" className="text-gray-500 hover:text-red-500" onClick={() => setShowActions(false)}><FaTimes size={24} /></button>
+        </div>
+        <div className="flex flex-col gap-4">
+          <Button onClick={() => setShowTemplateModal(true)} className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2"><FaDownload /> Download Template</Button>
+          <Button onClick={() => setIsUploadModalOpen(true)} className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"><FaUpload /> Upload Data</Button>
+          <Button onClick={() => router.push("/singkron-data/cek-data")} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center gap-2"><FaSearch /> Cek Data</Button>
+          {role === 'SUPER ADMIN' && <Button onClick={handleDownloadRekap} className="w-full bg-yellow-600 hover:bg-yellow-700 text-white">Rekap Anggota</Button>}
+        </div>
       </div>
+      {showActions && <div className="fixed inset-0 bg-black bg-opacity-50 z-50" onClick={() => setShowActions(false)}></div>}
+
+      {/* MODAL UNTUK UPLOAD DATA */}
+      <Modal
+        isOpen={isUploadModalOpen}
+        onRequestClose={() => setIsUploadModalOpen(false)}
+        contentLabel="Upload Data"
+        className="fixed inset-0 flex items-center justify-center p-4 z-[100]"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-60 z-[90]"
+      >
+        <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg transform transition-all duration-300 ease-in-out">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-gray-800">Upload Data Anggota</h2>
+            <button onClick={() => setIsUploadModalOpen(false)} className="text-gray-500 hover:text-gray-800">
+              <FaTimes size={20} />
+            </button>
+          </div>
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Kategori Data</label>
+                <select
+                  name="category"
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"
+                >
+                  <option value="">-- Pilih Kategori --</option>
+                  <option value="DASPEN">Daspen</option>
+                  <option value="KTA_DIGITAL">KTA Digital</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Upload File Excel</label>
+                <Input
+                  type="file"
+                  name="file"
+                  onChange={handleInputChange}
+                  required
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
+                  accept=".xls,.xlsx"
+                />
+              </div>
+              {isUploading && (
+                <div>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div className="bg-teal-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div>
+                  </div>
+                  <p className="text-center text-sm text-gray-600 mt-1">{`Uploading... ${progress}%`}</p>
+                </div>
+              )}
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button type="button" onClick={() => setIsUploadModalOpen(false)} className="bg-gray-200 text-gray-800 hover:bg-gray-300">
+                Batal
+              </Button>
+              <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white" disabled={loader}>
+                {loader ? 'Mengunggah...' : 'Submit'}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+
+      {/* MODAL UNTUK DOWNLOAD TEMPLATE */}
+      <Modal
+        isOpen={showTemplateModal}
+        onRequestClose={() => setShowTemplateModal(false)}
+        contentLabel="Pilih Template"
+        className="fixed inset-0 flex items-center justify-center p-4 z-[100]"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-60 z-[90]"
+      >
+        <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md transform transition-all duration-300 ease-in-out">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-gray-800">Download Template</h2>
+            <button onClick={() => setShowTemplateModal(false)} className="text-gray-500 hover:text-gray-800">
+              <FaTimes size={20} />
+            </button>
+          </div>
+          <div className="flex flex-col gap-4">
+            <button
+              className={`w-full p-4 rounded-lg text-left transition ${selectedTemplate === 'daspen' ? 'bg-teal-100 ring-2 ring-teal-500 text-teal-800' : 'bg-gray-50 hover:bg-gray-100'}`}
+              onClick={() => setSelectedTemplate("daspen")}
+            >
+              <p className="font-bold">Template Daspen</p>
+              <p className="text-sm">Gunakan ini untuk data iuran Daspen.</p>
+            </button>
+            <button
+              className={`w-full p-4 rounded-lg text-left transition ${selectedTemplate === 'kta' ? 'bg-teal-100 ring-2 ring-teal-500 text-teal-800' : 'bg-gray-50 hover:bg-gray-100'}`}
+              onClick={() => setSelectedTemplate("kta")}
+            >
+              <p className="font-bold">Template KTA Digital</p>
+              <p className="text-sm">Gunakan ini untuk data KTA Digital.</p>
+            </button>
+          </div>
+          {selectedTemplate && (
+            <div className="mt-6">
+              <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white" onClick={handleDownloadTemplate}>
+                Download Template {selectedTemplate === 'daspen' ? 'Daspen' : 'KTA Digital'}
+              </Button>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };
