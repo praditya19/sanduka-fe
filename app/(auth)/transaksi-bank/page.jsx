@@ -3683,7 +3683,7 @@ export default function BankTransactionPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium">Iuran Derap</label>
+                <label className="block text-sm font-medium">Iuran Kalender</label>
                 <input
                   type="number"
                   className="w-full border px-3 py-2 rounded"
@@ -3700,7 +3700,7 @@ export default function BankTransactionPage() {
               {/* Manual Iuran Sanduka */}
               <div>
                 <label className="block text-sm font-medium">
-                  Manual Iuran Derap
+                  Manual Iuran Kalender
                 </label>
                 <input
                   type="number"
@@ -3716,7 +3716,7 @@ export default function BankTransactionPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium">Iuran Derap</label>
+                <label className="block text-sm font-medium">Iuran Sumbangan</label>
                 <input
                   type="number"
                   className="w-full border px-3 py-2 rounded"
@@ -3733,7 +3733,7 @@ export default function BankTransactionPage() {
               {/* Manual Iuran Sanduka */}
               <div>
                 <label className="block text-sm font-medium">
-                  Manual Iuran Derap
+                  Manual Iuran Sumbangan
                 </label>
                 <input
                   type="number"
