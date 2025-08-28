@@ -101,6 +101,12 @@ const GaleriKegiatan = () => {
   const [fileName, setFileName] = useState("");
   const profileImageUrl = "/profile.png";
   const [fotoBase64, setFotoBase64] = useState(null);
+  
+  // Pindahkan state expandedItems ke level komponen utama
+  const [expandedItems, setExpandedItems] = useState({});
+
+  const [nonEventGalleries, setNonEventGalleries] = useState([]);
+  const [eventGalleries, setEventGalleries] = useState([]);
 
   useEffect(() => {
     fetchEventGalleries();
@@ -273,23 +279,63 @@ const GaleriKegiatan = () => {
     }, 100);
   };
 
-  // const validateForm = () => {
-  //   let isValid = true;
+  // Fungsi untuk menghapus tag HTML dari teks
+  const stripHtml = (html) => {
+    if (!html) return "";
+    const tmp = document.createElement("DIV");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+  };
 
-  //   if (!jabatan.trim()) {
-  //     setJabatanError("Jabatan organisasi wajib diisi");
-  //     isValid = false;
-  //   } else {
-  //     setJabatanError("");
-  //   }
+  // Fungsi untuk memotong teks HTML
+  const truncateHtml = (html, maxLength) => {
+    if (!html) return "";
+    const tmp = document.createElement("DIV");
+    tmp.innerHTML = html;
+    const text = tmp.textContent || tmp.innerText || "";
 
-  //   return isValid;
-  // };
+    if (text.length <= maxLength) return html;
 
+    let truncated = "";
+    let currentLength = 0;
+    const words = text.split(" ");
 
+    for (const word of words) {
+      if (currentLength + word.length <= maxLength - 3) {
+        truncated += word + " ";
+        currentLength += word.length + 1;
+      } else {
+        break;
+      }
+    }
 
-  const [nonEventGalleries, setNonEventGalleries] = useState([]);
-  const [eventGalleries, setEventGalleries] = useState([]);
+    return truncated.trim() + "...";
+  };
+
+  const toggleExpand = (itemId) => {
+    setExpandedItems((prev) => ({
+      ...prev,
+      [itemId]: !prev[itemId],
+    }));
+  };
+
+  const processHTML = (htmlContent) => {
+    if (!htmlContent) return '';
+
+    const urlRegex = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/g;
+
+    const processedContent = htmlContent.replace(urlRegex, (url) => {
+      const href = url.startsWith('www.') ? `http://${url}` : url;
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${url}</a>`;
+    });
+
+    return processedContent;
+  };
+
+  const renderHTML = (htmlContent) => {
+    const processedContent = processHTML(htmlContent);
+    return { __html: processedContent };
+  };
 
   if (isLoading) {
     return (
@@ -324,27 +370,8 @@ const GaleriKegiatan = () => {
     );
   }
 
-  const processHTML = (htmlContent) => {
-    if (!htmlContent) return '';
-
-    const urlRegex = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/g;
-
-    const processedContent = htmlContent.replace(urlRegex, (url) => {
-      const href = url.startsWith('www.') ? `http://${url}` : url;
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">${url}</a>`;
-    });
-
-    return processedContent;
-  };
-
-  const renderHTML = (htmlContent) => {
-    const processedContent = processHTML(htmlContent);
-    return { __html: processedContent };
-  };
-
   const GallerySwiper = ({ items, title, showRegisterButton = false }) => {
-    const [expandedItems, setExpandedItems] = useState({});
-    const maxDescriptionLength = 150;
+    const maxDescriptionLength = 250;
 
     // Fungsi untuk merender deskripsi
     const renderDescription = (item) => {
@@ -379,44 +406,6 @@ const GaleriKegiatan = () => {
           </button>
         </>
       );
-    };
-
-    // Fungsi untuk menghapus tag HTML dari teks
-    const stripHtml = (html) => {
-      const tmp = document.createElement("DIV");
-      tmp.innerHTML = html;
-      return tmp.textContent || tmp.innerText || "";
-    };
-
-    // Fungsi untuk memotong teks HTML
-    const truncateHtml = (html, maxLength) => {
-      const tmp = document.createElement("DIV");
-      tmp.innerHTML = html;
-      const text = tmp.textContent || tmp.innerText || "";
-
-      if (text.length <= maxLength) return html;
-
-      let truncated = "";
-      let currentLength = 0;
-      const words = text.split(" ");
-
-      for (const word of words) {
-        if (currentLength + word.length <= maxLength - 3) {
-          truncated += word + " ";
-          currentLength += word.length + 1;
-        } else {
-          break;
-        }
-      }
-
-      return truncated.trim() + "...";
-    };
-
-    const toggleExpand = (itemId) => {
-      setExpandedItems((prev) => ({
-        ...prev,
-        [itemId]: !prev[itemId],
-      }));
     };
 
     return (
@@ -473,10 +462,7 @@ const GaleriKegiatan = () => {
                     </div>
                   ) : (
                     <div>
-                      <div
-                        className="text-lg font-medium prose max-w-none"
-                        dangerouslySetInnerHTML={renderHTML(item.deskripsi)}
-                      ></div>
+                      {renderDescription(item)}
                     </div>
                   )}
                   {showRegisterButton && userData?.role === "USER" && (
@@ -544,10 +530,6 @@ const GaleriKegiatan = () => {
     const handleSubmitRegistration = async () => {
       if (!currentEvent || isSubmitting) return;
 
-      // if (!validateForm()) {
-      //   return;
-      // }
-
       try {
         setIsSubmitting(true);
 
@@ -571,8 +553,6 @@ const GaleriKegiatan = () => {
         formData.append("jabatan", jabatan.trim());
         formData.append("nomorHp", userDataDaftar.nomorHp);
         formData.append("namaEvent", currentEvent.namaEvent);
-        // formData.append("komisi", komisi || "");
-        // formData.append("ranting", ranting || "");
 
         if (fotoBase64) {
           const blob = await fetch(`data:image/jpeg;base64,${fotoBase64}`).then((res) => res.blob());
@@ -714,40 +694,6 @@ const GaleriKegiatan = () => {
                 <p className="text-red-500 text-sm mt-1">{jabatanError}</p>
               )}
             </div>
-
-            {/* <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors col-span-1 sm:col-span-2">
-              <label className="text-sm text-gray-600" htmlFor="komisi">
-                Komisi
-              </label>
-              <input
-                id="komisi"
-                type="text"
-                value={komisi}
-                onChange={(e) => setKomisi(e.target.value)}
-                placeholder="Masukkan komisi (jika ada)"
-                className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {komisiError && (
-                <p className="text-red-500 text-sm mt-1">{komisiError}</p>
-              )}
-            </div> */}
-
-            {/* <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors col-span-1 sm:col-span-2">
-              <label className="text-sm text-gray-600" htmlFor="ranting">
-                Ranting
-              </label>
-              <input
-                id="ranting"
-                type="text"
-                value={ranting}
-                onChange={(e) => setRanting(e.target.value)}
-                placeholder="Masukkan ranting (jika ada)"
-                className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {rantingError && (
-                <p className="text-red-500 text-sm mt-1">{rantingError}</p>
-              )}
-            </div> */}
 
             <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors col-span-1 sm:col-span-2">
               <label className="text-sm text-gray-600" htmlFor="uploadFile">
