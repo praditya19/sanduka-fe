@@ -182,6 +182,7 @@ export default function BankTransactionPage() {
   const [loadingBalancing, setLoadingBalancing] = useState(false);
   const updatedRowRef = useRef(null);
   const [updatedId, setUpdatedId] = useState(null);
+  const cekRole = sessionStorage.getItem("role");
 
   const handleFilter = async () => {
     setLoadingFilter(true);
@@ -2484,9 +2485,11 @@ export default function BankTransactionPage() {
                             : "▲"}
                         </span>
                       </th>
-                      <th className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        Action
-                      </th>
+                      {cekRole === "SUPER ADMIN" && (
+                        <th className="cursor-pointer px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                          Action
+                        </th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -2566,17 +2569,19 @@ export default function BankTransactionPage() {
                             </span>
                           </td>
                           <td className="p-3 text-center text-sm">
-                            <div className="flex space-x-2 justify-center text-base">
-                              <button
-                                className="text-blue-500 hover:text-blue-700"
-                                onClick={() => handleEditClick(item.id)}
-                              >
-                                <FaEdit />
-                              </button>
-                              <button className="text-red-500 hover:text-red-700">
-                                <FaTrash />
-                              </button>
-                            </div>
+                            {cekRole === "SUPER ADMIN" && (
+                              <div className="flex space-x-2 justify-center text-base">
+                                <button
+                                  className="text-blue-500 hover:text-blue-700"
+                                  onClick={() => handleEditClick(item.id)}
+                                >
+                                  <FaEdit />
+                                </button>
+                                <button className="text-red-500 hover:text-red-700">
+                                  <FaTrash />
+                                </button>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))
@@ -3683,7 +3688,9 @@ export default function BankTransactionPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium">Iuran Kalender</label>
+                <label className="block text-sm font-medium">
+                  Iuran Kalender
+                </label>
                 <input
                   type="number"
                   className="w-full border px-3 py-2 rounded"
@@ -3716,7 +3723,9 @@ export default function BankTransactionPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium">Iuran Sumbangan</label>
+                <label className="block text-sm font-medium">
+                  Iuran Sumbangan
+                </label>
                 <input
                   type="number"
                   className="w-full border px-3 py-2 rounded"
