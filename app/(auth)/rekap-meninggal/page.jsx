@@ -1,165 +1,298 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
-import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import HeaderMenu from "@/app/_components/HeaderMenu";
-import HeaderMobile from "@/app/_components/HeaderMobile";
+import { faFilter, faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { useRouter } from "next/navigation";
 import Sidebar from "@/app/_components/Sidebar";
-import { useAuth } from "@/app/AuthContext";
 import GlobalApi from "@/app/_utils/GlobalApi";
-import Image from "next/image";
-import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
+import toast, { Toaster } from "react-hot-toast";
+import { Input } from "@/components/ui/input";
+import {
+  FaTimesCircle,
+  FaCheckCircle,
+  FaTimes,
+  FaExclamationCircle,
+} from "react-icons/fa";
+import Kwitansi from "@/app/_components/Kwitansi";
 import { ClipLoader } from "react-spinners";
 
-const Page = () => {
-  const [filter, setFilter] = useState("");
-  const [filteredData, setFilteredData] = useState([]);
-  const [selectedMonth, setSelectedMonth] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
-  const [data, setData] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [expandedIndex, setExpandedIndex] = useState(null);
-
-  const router = useRouter();
-  const { token } = useAuth();
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const profileImageUrl = "/profile.png";
-  const [fotoBase64, setFotoBase64] = useState([]);
-
+const NotificationPopup = ({ type, message, onClose }) => {
   useEffect(() => {
-    if (!token) {
-      router.push("/sign-in");
-    } else {
-      const fetchData = async () => {
-        try {
-          const fetchedData = await GlobalApi.getAllDataLapor();
-          setData(fetchedData);
-          console.log(fetchedData);
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
 
-          const fotoBase64Array = [];
+    return () => clearTimeout(timer);
+  }, [onClose]);
 
-          if (fetchedData && fetchedData.length > 0) {
-            fetchedData.forEach((item) => {
-              if (item.foto) {
-                try {
-                  const decodedString = atob(item.foto);
-                  fotoBase64Array.push(decodedString);
-                } catch (error) {
-                  console.error("Error decoding Base64:", error);
-                  fotoBase64Array.push(null);
-                }
-              } else {
-                fotoBase64Array.push(null);
-              }
-            });
-          } else {
-            console.warn("No data found.");
-          }
-
-          setFotoBase64(fotoBase64Array);
-          setLoading(false);
-        } catch (error) {
-          console.error("Failed to fetch data:", error.message);
-        }
-      };
-
-      const handleResize = () => {
-        setIsMobile(window.innerWidth <= 768);
-      };
-
-      fetchData();
-      handleResize();
-
-      window.addEventListener("resize", handleResize);
-
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
+  const getBgColor = () => {
+    switch (type) {
+      case "success":
+        return "bg-green-100";
+      case "error":
+        return "bg-red-100";
+      default:
+        return "bg-blue-100";
     }
-  }, [itemsPerPage, token, router]);
-
-  useEffect(() => {
-    let filtered = data;
-
-    if (filter) {
-      const lowercasedFilter = filter.toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          (item.namaPelapor?.toLowerCase() || "").includes(lowercasedFilter) ||
-          (item.namaAnggotaTerlapor?.toLowerCase() || "").includes(
-            lowercasedFilter
-          ) ||
-          (item.cabangPelapor?.toLowerCase() || "").includes(lowercasedFilter)
-      );
-    }
-
-    if (selectedMonth) {
-      filtered = filtered.filter((item) => {
-        const itemMonth = new Date(item.waktuMeninggalTerlapor).getMonth() + 1;
-        return itemMonth === parseInt(selectedMonth);
-      });
-    }
-
-    if (selectedYear) {
-      filtered = filtered.filter((item) => {
-        const itemYear = new Date(item.waktuMeninggalTerlapor).getFullYear();
-        return itemYear === parseInt(selectedYear);
-      });
-    }
-
-    // Sort by waktuMeninggalTerlapor (newest to oldest)
-    filtered.sort((a, b) => {
-      const dateA = new Date(a.waktuMeninggalTerlapor);
-      const dateB = new Date(b.waktuMeninggalTerlapor);
-      return dateB - dateA; // Newest first
-    });
-
-    setFilteredData(filtered);
-  }, [filter, selectedMonth, selectedYear, data]);
-
-  const calculateAge = (birthDateArray) => {
-    if (!birthDateArray || birthDateArray.length < 3) return null;
-
-    const [year, month, day] = birthDateArray;
-    const today = new Date();
-    const birthDate = new Date(year, month - 1, day);
-
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-
-    return age;
   };
 
-  const currentData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const getIcon = () => {
+    switch (type) {
+      case "success":
+        return <FaCheckCircle className="text-green-500 text-3xl" />;
+      case "error":
+        return <FaExclamationCircle className="text-red-500 text-3xl" />;
+      default:
+        return null;
+    }
+  };
+
+  const getTextColor = () => {
+    switch (type) {
+      case "success":
+        return "text-green-800";
+      case "error":
+        return "text-red-800";
+      default:
+        return "text-blue-800";
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div
+        className="absolute inset-0 bg-black opacity-50"
+        onClick={onClose}
+      ></div>
+      <div
+        className={`relative ${getBgColor()} rounded-lg p-8 shadow-xl z-10 w-96 text-center transform transition-all duration-300 ease-in-out`}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-red-700 transition-colors"
+          aria-label="Close"
+        >
+          <FaTimesCircle size={24} />
+        </button>
+
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-bounce">{getIcon()}</div>
+
+          <h3 className={`text-xl font-bold ${getTextColor()}`}>
+            {type === "success" ? "Berhasil!" : "Gagal!"}
+          </h3>
+
+          <div className={`${getTextColor()} text-center`}>{message}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Page = () => {
+  const dropdownRef = useRef(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [userDetails, setUserDetails] = useState({ id: null, npaPgri: null });
+  const [dataLaporDiterima, setDataLaporDiterima] = useState([]);
+  const [dataLaporBelum, setDataLaporBelum] = useState([]);
+  const [displayedDataLapor, setDisplayedDataLapor] = useState([]);
+  const [bulanList, setBulanList] = useState([]);
+  const [selectedBulan, setSelectedBulan] = useState("");
+  const [cabangList, setCabangList] = useState([]);
+  const currentYear = new Date().getFullYear();
+  const startYear = 2020;
+  const [selectedYear, setSelectedYear] = useState("");
+  const [filterStatus, setFilterStatus] = useState("Terima");
+  const [selectedCabang, setSelectedCabang] = useState("");
+  const [filterText, setFilterText] = useState("");
+  const [showFilterInput, setShowFilterInput] = useState(false);
+  const [filteredCabangList, setFilteredCabangList] = useState(cabangList);
+  const [isPopupVisible, setPopupVisible] = useState(false);
+  const [notification, setNotification] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const cekRole = sessionStorage.getItem("role");
+
+  // Kwitansi
+  const [showPopup, setShowPopup] = useState(false);
+
+  const handleKwitansiClick = () => {
+    setShowPopup(true);
+  };
+
+  const handleClosePopup = () => {
+    setShowPopup(false);
+  };
+
+  useEffect(() => {
+    const fetchDataLapor = async () => {
+      setIsLoading(true);
+      try {
+        let response;
+        if (!selectedBulan && !selectedYear && !selectedCabang) {
+          response = await GlobalApi.getRekapLaporDiterima();
+        } else {
+          response = await GlobalApi.getRekapLaporDiterima(
+            selectedBulan,
+            selectedYear,
+            selectedCabang
+          );
+        }
+        setDataLaporDiterima(response || []);
+        setDisplayedDataLapor(response || []);
+      } catch (error) {
+        console.error("Error fetching data lapor diterima:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDataLapor();
+  }, [selectedBulan, selectedYear, selectedCabang]);
+
+  useEffect(() => {
+    const fetchDataBelum = async () => {
+      setIsLoading(true);
+      try {
+        const response = await GlobalApi.getRekapLaporBelom();
+        const fetchedDataBelum = response || [];
+        setDataLaporBelum(fetchedDataBelum);
+      } catch (error) {
+        console.error("Error fetching data lapor belum:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDataBelum();
+  }, []);
+
+  useEffect(() => {
+    const fetchCabangData = async () => {
+      try {
+        const response = await GlobalApi.getCabang();
+        setCabangList(response.data);
+      } catch (error) {
+        console.error("Error fetching cabang data:", error);
+      }
+    };
+
+    fetchCabangData();
+  }, []);
+
+  useEffect(() => {
+    const fetchBulan = async () => {
+      try {
+        const response = await GlobalApi.getBulan();
+        setBulanList(response.data);
+      } catch (error) {
+        console.error("Error fetching bulan:", error);
+      }
+    };
+
+    fetchBulan();
+  }, []);
+
+  const years = Array.from(
+    { length: currentYear - startYear + 1 },
+    (_, index) => startYear + index
   );
 
-  const getVisiblePages = () => {
-    const startPage = Math.max(1, currentPage - 1);
-    const endPage = Math.min(totalPages, startPage + 2);
-    return Array.from(
-      { length: endPage - startPage + 1 },
-      (_, i) => startPage + i
-    );
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setShowFilterInput(false);
+    }
   };
 
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleCabangSelect = (cabang) => {
+    setSelectedCabang(cabang ? cabang.kecamatan : "");
+    setShowFilterInput(false);
+    setFilterText("");
+  };
+
+  const handleFilterChange = (event) => {
+    setFilterText(event.target.value);
+    const filtered = cabangList.filter((cabang) =>
+      cabang.kecamatan.toLowerCase().includes(event.target.value.toLowerCase())
+    );
+    setFilteredCabangList(filtered);
+  };
+
+  const handleFocus = () => {
+    setShowFilterInput(true);
+    setFilteredCabangList(cabangList);
+  };
+
+  const handleCabangChange = (e) => {
+    setSelectedCabang(e.target.value);
+  };
+
+  const handleBulanChange = (e) => {
+    setSelectedBulan(e.target.value);
+  };
+
+  const handleYearChange = (e) => {
+    setSelectedYear(e.target.value);
+  };
+
+  useEffect(() => {
+    if (filterStatus === "Terima") {
+      setDisplayedDataLapor(dataLaporDiterima);
+    } else if (filterStatus === "Belum") {
+      setDisplayedDataLapor(dataLaporBelum);
+    } else {
+      setDisplayedDataLapor([]);
     }
+  }, [filterStatus, dataLaporDiterima, dataLaporBelum]);
+
+  const handlePrint = () => {
+    const tableContent = document.getElementById("table-to-print").innerHTML;
+
+    const title = `<h2 class="text-center text-xl font-bold mb-4">Rekap Lapor Meninggal</h2>`;
+
+    const updatedTable = tableContent.replace(
+      /<th class="py-3 px-4 text-center border-b">Action<\/th>(.*?)<\/tr>/,
+      ""
+    );
+    const tableWithoutActionColumn = updatedTable.replace(
+      /<td class="py-3 px-4 space-x-2 text-center">(.*?)<\/td>/g,
+      ""
+    );
+
+    const tableWithBlackHeader = tableWithoutActionColumn.replace(
+      /<th /g,
+      `<th style="color: black;" `
+    );
+
+    const printContent = title + tableWithBlackHeader;
+    const originalContent = document.body.innerHTML;
+
+    document.body.innerHTML = printContent;
+
+    window.print();
+
+    document.body.innerHTML = originalContent;
+    window.location.reload();
+  };
+
+  useEffect(() => {
+    const sidebarState = localStorage.getItem("isSidebarOpen") === "true";
+    setIsSidebarOpen(sidebarState);
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const router = useRouter();
+
+  const handleBackClick = () => {
+    router.back();
   };
 
   const toggleSidebar = () => {
@@ -168,294 +301,303 @@ const Page = () => {
     localStorage.setItem("isSidebarOpen", newSidebarState);
   };
 
-  const handleExpand = (index) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
-  };
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <ClipLoader color="#3498db" size={50} />
-      </div>
-    );
-  }
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   return (
-    <div>
-      {isMobile ? <HeaderMobile /> : <HeaderMenu />}
-      <div className="flex flex-col md:flex-row">
+    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
+      {notification && (
+        <NotificationPopup
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
+      {isMobile ? (
+        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+          <div className="container mx-auto flex items-center justify-between">
+            <div className="flex items-center">
+              <FontAwesomeIcon
+                icon={faArrowLeft}
+                size="sm"
+                onClick={handleBackClick}
+                className="cursor-pointer mr-4"
+              />
+              <h1 className="text-base">Rekap Lapor Sanduka</h1>
+            </div>
+          </div>
+        </header>
+      ) : (
+        <header className="bg-teal-700 text-white text-lg font-bold py-3 px-3 md:px-12 shadow-md fixed top-0 left-0 w-full z-50 flex items-center">
+          <div className="container mx-auto flex items-center justify-between">
+            <div className="flex items-center">
+              <FontAwesomeIcon
+                icon={faArrowLeft}
+                size="sm"
+                onClick={handleBackClick}
+                className="cursor-pointer mr-4"
+              />
+              <h1 className="text-base">Rekap Lapor Sanduka</h1>
+            </div>
+          </div>
+        </header>
+      )}
+      <div>
         <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
         <div
-          className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? "ml-64" : "ml-0"
-            }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
         >
-          <div className="flex justify-center bg-red-600 py-2 rounded-b-lg shadow-md sm:mt-14 mt-12 sm:-mb-5 -mb-10">
-            <h1 className="text-xl font-semibold text-white">
-              Rekap Meninggal
-            </h1>
-          </div>
-          <div className="w-full p-4 container shadow-lg rounded-lg mt-5 sm:mt-0">
-            <div className="rounded-md flex flex-col py-4">
-              <div className="container px-2">
-                <div className="w-full flex flex-col md:flex-row md:items-center justify-between mb-4 text-sm">
-                  <div className="flex flex-col md:flex-row md:items-center mb-4 md:mb-0 w-full">
-                    <div className="relative flex items-center mb-2 md:mb-0 w-full md:max-w-sm">
-                      <FontAwesomeIcon
-                        icon={faMagnifyingGlass}
-                        className="absolute left-3 top-2.5 w-4 h-4 text-gray-500"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Search"
-                        value={filter}
-                        onChange={(e) => setFilter(e.target.value)}
-                        className="p-2 pl-10 border rounded w-full"
-                      />
+          <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+            <div className="p-4 mt-5">
+              <h1 className="text-teal-700 font-bold text-xl mb-4">
+                REKAP LAPOR SANDUKA
+              </h1>
+
+              <div className="flex flex-wrap sm:flex-nowrap sm:space-x-4 items-center justify-between">
+                <div className="relative w-full sm:w-64">
+                  <label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="cabang"
+                  >
+                    Pilih Cabang
+                  </label>
+                  <Input
+                    className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    type="text"
+                    placeholder="Pilih Cabang"
+                    value={selectedCabang}
+                    readOnly
+                    onFocus={handleFocus}
+                  />
+                  {showFilterInput && (
+                    <div className="absolute bg-white border rounded w-full mt-1 z-10 shadow-lg">
+                      <ul className="max-h-44 overflow-y-auto">
+                        <li className="py-2 px-2">
+                          <Input
+                            className="w-full shadow border rounded py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            type="text"
+                            placeholder="Cari Cabang..."
+                            value={filterText}
+                            onChange={handleFilterChange}
+                            autoFocus
+                          />
+                        </li>
+
+                        <li
+                          className="p-2 px-2 hover:bg-gray-100 cursor-pointer text-gray-500"
+                          onClick={() => handleCabangSelect(null)}
+                        >
+                          Pilih Cabang
+                        </li>
+
+                        {filteredCabangList.map((cabang) => (
+                          <li
+                            key={cabang.id}
+                            className="p-2 px-2 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => handleCabangSelect(cabang)}
+                          >
+                            {cabang.kecamatan}
+                          </li>
+                        ))}
+
+                        {filteredCabangList.length === 0 && (
+                          <div className="p-2 text-gray-500 text-center">
+                            Cabang tidak ditemukan
+                          </div>
+                        )}
+                      </ul>
                     </div>
-                    <select
-                      value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(e.target.value)}
-                      className="p-2 border rounded md:ml-4 mb-2 md:mb-0 w-full md:w-auto"
-                    >
-                      <option value="">Semua Bulan</option>
-                      {Array.from({ length: 12 }, (_, i) => i + 1).map(
-                        (month) => (
-                          <option key={month} value={month}>
-                            {new Date(0, month - 1).toLocaleString("default", {
-                              month: "long",
-                            })}
-                          </option>
-                        )
-                      )}
-                    </select>
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(e.target.value)}
-                      className="p-2 border rounded md:ml-4 mb-2 md:mb-0 w-full md:w-auto"
-                    >
-                      <option value="">Semua Tahun</option>
-                      {[
-                        ...new Set(
-                          data.map((item) =>
-                            new Date(item.waktuMeninggalTerlapor).getFullYear()
-                          )
-                        ),
-                      ].map((year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={itemsPerPage}
-                      onChange={(e) =>
-                        setItemsPerPage(parseInt(e.target.value))
-                      }
-                      className="p-2 border rounded md:ml-4 mb-2 md:mb-0 w-full md:w-auto"
-                    >
-                      <option value={10}>10</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
-                  </div>
-                  <button
-                    onClick={() => window.print()}
-                    className="p-2 px-4 bg-blue-500 text-white rounded w-full md:w-auto"
+                  )}
+                </div>
+
+                <div className="w-full sm:w-64">
+                  <label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="bulan"
+                  >
+                    Pilih Bulan
+                  </label>
+                  <select
+                    className="bg-white p-2 rounded border w-full"
+                    id="bulan"
+                    name="bulan"
+                    value={selectedBulan}
+                    onChange={handleBulanChange}
+                  >
+                    <option value="">-- Bulan --</option>
+                    {bulanList.map((bulan) => (
+                      <option key={bulan.angkaBulan} value={bulan.angkaBulan}>
+                        {bulan.namaBulan}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="w-full sm:w-64">
+                  <label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="tahun"
+                  >
+                    Pilih Tahun
+                  </label>
+                  <select
+                    className="bg-white p-2 rounded border w-full"
+                    id="tahun"
+                    name="tahun"
+                    value={selectedYear}
+                    onChange={handleYearChange}
+                  >
+                    <option value="">-- Tahun --</option>
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="w-full sm:w-64">
+                  <label
+                    className="block text-gray-700 text-sm font-semibold mb-2"
+                    htmlFor="status"
+                  >
+                    Status
+                  </label>
+                  <select
+                    className="bg-white p-2 rounded border w-full"
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                  >
+                    <option value="Terima">Terima</option>
+                    <option value="Belum">Belum</option>
+                  </select>
+                </div>
+
+                <div className="w-full sm:w-auto mt-4 sm:mt-0 flex gap-3">
+                  <Button
+                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition duration-300 w-full sm:w-auto"
+                    onClick={handlePrint}
                   >
                     Cetak
-                  </button>
-                </div>
-                {/* Table */}
-                <div className="overflow-x-auto">
-                  <table className="w-full table-auto text-sm mb-8 border-collapse border border-gray-300">
-                    <thead className="bg-teal-700 text-white">
-                      <tr>
-                        <th className="border border-gray-300 p-2 text-center font-bold uppercase">
-                          No
-                        </th>
-                        <th className="border border-gray-300 p-2 text-center font-bold uppercase">
-                          Data Meninggal
-                        </th>
-                        <th className="border border-gray-300 p-2 text-center font-bold uppercase">
-                          Data Pelapor
-                        </th>
-                        <th className="border border-gray-300 p-2 text-center font-bold uppercase hidden lg:table-cell">
-                          Keterangan
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {currentData.length > 0 ? (
-                        currentData.map((item, index) => (
-                          <React.Fragment key={item.id}>
-                            {/* Main Row */}
-                            <tr
-                              className={
-                                index % 2 === 0 ? "bg-gray-200" : "bg-white"
-                              }
-                            >
-                              <td className="text-center border px-4 py-2">
-                                {(currentPage - 1) * itemsPerPage + index + 1}
-                                <button
-                                  onClick={() => handleExpand(index)}
-                                  className="ml-2 text-blue-500 lg:hidden"
-                                >
-                                  {expandedIndex === index ? (
-                                    <FaMinusCircle />
-                                  ) : (
-                                    <FaPlusCircle />
-                                  )}
-                                </button>
-                              </td>
+                  </Button>
 
-                              <td className="border px-4 py-2">
-                                <div className="text-xs">
-                                  {item.namaAnggotaTerlapor}
-                                </div>
-                                <div className="text-xs">
-                                  {item.tanggalLahir
-                                    ? calculateAge(item.tanggalLahir)
-                                    : "Tanggal lahir tidak tersedia"}{" "}
-                                  Tahun
-                                </div>
-                                <div className="text-xs">
-                                  {item.cabangKhususTerlapor}
-                                </div>
-                                <div className="text-xs">
-                                  {item.alamatTerlapor}
-                                </div>
-                                <div className="text-xs">
-                                  {item.unitKerjaTerlapor}
-                                </div>
-                                <div className="text-xs">
-                                  {item.jabatanTerlapor}
-                                </div>
-                                <div className="text-xs">
-                                  Tanggal Meninggal:{" "}
-                                  {item.waktuMeninggalTerlapor
-                                    ? item.waktuMeninggalTerlapor.join("-")
-                                    : "Waktu tidak tersedia"}
-                                </div>
-                              </td>
-
-                              <td className="border px-4 py-2">
-                                <div className="text-xs">
-                                  {item.namaPelapor}
-                                </div>
-                                <div className="text-xs">
-                                  {item.jabatanPelapor ||
-                                    "Jabatan tidak tersedia"}
-                                </div>
-                                <div className="text-xs">
-                                  {item.jamLapor}
-                                  {", "}
-                                  {item.tanggalPelaporan
-                                    ? item.tanggalPelaporan.join("-")
-                                    : "Tanggal tidak tersedia"}
-                                </div>
-                                <div className="text-xs">
-                                  {item.cabangPelapor}
-                                </div>
-                                <div className="text-xs">
-                                  {item.nomorHpPelapor}
-                                </div>
-                              </td>
-
-                              <td className="border px-4 py-2 hidden lg:table-cell">
-                                {item.keteranganTerlapor ||
-                                  "Keterangan tidak tersedia"}
-                                <br />
-                                Diterimakan (Sesuaikan jika ada)
-                              </td>
-                            </tr>
-
-                            {expandedIndex === index && (
-                              <tr className="lg:hidden bg-gray-100">
-                                <td colSpan="4" className="border px-4 py-2">
-                                  <div className="text-xs">
-                                    <strong>Cabang:</strong>{" "}
-                                    {item.cabangKhususTerlapor ||
-                                      "Cabang tidak tersedia"}
-                                  </div>
-                                  <div className="text-xs">
-                                    <strong>Keterangan:</strong>{" "}
-                                    {item.keteranganTerlapor ||
-                                      "Keterangan tidak tersedia"}
-                                  </div>
-                                  <div className="text-xs">
-                                    <strong>Diterimakan:</strong> Diterimakan
-                                    (Sesuaikan jika ada)
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                          </React.Fragment>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="7" className="text-center p-4">
-                            No data available.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-                {/* Pagination Controls */}
-                <div className="flex justify-center mt-4 gap-1">
-                  <button
-                    onClick={() => handlePageChange(1)}
-                    disabled={currentPage === 1 || totalPages === 0}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    First
-                  </button>
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1 || totalPages === 0}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Prev
-                  </button>
-
-                  {getVisiblePages().map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => handlePageChange(page)}
-                      className={`px-3 py-1 border rounded text-sm ${page === currentPage
-                          ? "bg-blue-500 text-white"
-                          : "bg-white hover:bg-gray-50"
-                        }`}
-                      disabled={totalPages === 0}
+                  {cekRole === "SUPER ADMIN" && (
+                    <Button
+                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300 w-full sm:w-auto"
+                      onClick={handleKwitansiClick}
                     >
-                      {page}
-                    </button>
-                  ))}
-
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Next
-                  </button>
-                  <button
-                    onClick={() => handlePageChange(totalPages)}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                    className="px-3 py-1 border rounded bg-white hover:bg-gray-50 disabled:opacity-50 text-sm"
-                  >
-                    Last
-                  </button>
+                      Cetak Kwitansi
+                    </Button>
+                  )}
                 </div>
               </div>
+            </div>
+
+            {showPopup && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                <div className="bg-white rounded-lg shadow-lg border border-gray-200 w-11/12 h-4/5 overflow-y-scroll relative">
+                  <Kwitansi />
+                  <div className="absolute top-1 right-1">
+                    <button
+                      onClick={handleClosePopup}
+                      className="absolute right-2 p-2 bg-white rounded-full"
+                    >
+                      <FaTimes className="h-6 w-6 text-red-600" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div
+              id="table-to-print"
+              className="overflow-x-auto shadow-lg rounded-lg"
+            >
+              <table className="min-w-full bg-white text-sm border-collapse">
+                <thead className="bg-teal-700 text-white">
+                  <tr>
+                    <th className="py-3 px-4 text-center border-b">No</th>
+                    <th className="py-3 px-4 text-center border-b">
+                      Date lapor
+                    </th>
+                    <th className="py-3 px-4 text-center border-b">
+                      Data Meninggal
+                    </th>
+                    <th className="py-3 px-4 text-center border-b">Cabang</th>
+                    <th className="py-3 px-4 text-center border-b">
+                      Keterangan
+                    </th>
+                    <th className="py-3 px-4 text-center border-b">
+                      Diterimakan
+                    </th>
+                    <th className="py-3 px-4 text-center border-b">Nominal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan="8" className="text-center py-16">
+                        <div className="flex justify-center items-center">
+                          <ClipLoader color="#3498db" size={50} />
+                          <span className="ml-4 text-gray-600">
+                            Memuat data...
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : Array.isArray(displayedDataLapor) &&
+                    displayedDataLapor.length > 0 ? (
+                    displayedDataLapor.map((item, index) => (
+                      <tr
+                        key={index}
+                        className="border-t text-sm hover:bg-teal-100 transition-colors"
+                      >
+                        <td className="py-3 px-4 text-center">{index + 1}</td>
+                        <td className="py-3 px-4">
+                          {item.Date_lapor || "N/A"}
+                        </td>
+                        <td className="py-3 px-4">{item.Data_Meninggal}</td>
+                        <td className="py-3 px-4 text-center">{item.Cabang}</td>
+                        <td className="py-3 px-4 text-center">
+                          {item.Keterangan}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          {filterStatus === "Terima"
+                            ? `Diterimakan (${item.Nama_Penerima})`
+                            : "Belum Diterimakan"}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          {filterStatus === "Terima"
+                            ? new Intl.NumberFormat("id-ID", {
+                                style: "currency",
+                                currency: "IDR",
+                              }).format(item.Nominal)
+                            : "-"}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" className="text-center py-2">
+                        No data available
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
