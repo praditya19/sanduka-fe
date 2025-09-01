@@ -2192,7 +2192,7 @@ function RekapAnggota() {
             isSidebarOpen ? "ml-64" : "ml-0"
           }`}
         >
-          <div className="w-full min-h-screen bg-gray-50 mt-7 -mb-[25%]">
+          <div className="w-full min-h-screen bg-gray-50 mt-7 -mb-[22%]">
             {!isMobile && (
               <div className="w-full">
                 {/* Navbar */}
@@ -2455,7 +2455,7 @@ function RekapAnggota() {
 
                         {/* Pembayaran */}
                         <td className="p-3 border-b text-center">
-                          <span className="bg-emerald-100 text-emerald-700 py-1 px-3 rounded-full">
+                          <span className="bg-emerald-100 text-emerald-700 py-1 px-3 rounded-full text-sm">
                             Rp.{" "}
                             {parseInt(group.totalIuran).toLocaleString("id-ID")}
                           </span>
