@@ -1196,19 +1196,75 @@ const getTransaksiBankBalancing = async (
   }
 };
 
-const getCountBalancing = async (bulan, tahun, cabang, unitKerja) => {
+const getCountAnggotaPotonganBank = async (bulan, tahun) => {
   const params = new URLSearchParams();
   params.append("bulan", bulan);
   params.append("tahun", tahun);
-  if (cabang) params.append("cabang", cabang);
-  if (unitKerja) params.append("unitKerja", unitKerja);
 
-  const url = `/api/potongan-gaji/balancing/summary?${params.toString()}`;
+  const url = `/api/potongan-gaji/count-anggota-potongan-bank?${params.toString()}`;
   try {
     const response = await axiosClient.get(url);
     return response.data;
   } catch (error) {
     console.error("Error fetching Potongan Gaji Summary:", error);
+    throw error;
+  }
+};
+
+const getCountAnggotaSetorTunai = async ({
+  cabang,
+  unitKerja,
+  bulan,
+  tahun,
+  search,
+}) => {
+  const params = new URLSearchParams();
+
+  if (cabang) params.append("cabang", cabang);
+  if (unitKerja) params.append("unitKerja", unitKerja);
+
+  const now = new Date();
+  params.append("bulan", bulan || now.getMonth() + 1);
+  params.append("tahun", tahun || now.getFullYear());
+
+  if (search) params.append("search", search);
+
+  const url = `/api/potongan-gaji/count-anggota-setor-tunai?${params.toString()}`;
+
+  try {
+    const response = await axiosClient.get(url);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error fetching Setor Tunai Summary:", error);
+    throw error;
+  }
+};
+
+const getCountAnggotaTerfilter = async ({
+  cabang,
+  unitKerja,
+  bulan,
+  tahun,
+  search,
+}) => {
+  const params = new URLSearchParams();
+
+  if (cabang) params.append("cabang", cabang);
+  if (unitKerja) params.append("unitKerja", unitKerja);
+
+  const now = new Date();
+  params.append("bulan", bulan || now.getMonth() + 1);
+  params.append("tahun", tahun || now.getFullYear());
+
+  if (search) params.append("search", search);
+
+  const url = `/api/potongan-gaji/count-total-anggota-terfilter?${params.toString()}`;
+
+  try {
+    const response = await axiosClient.get(url);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error fetching Setor Tunai Summary:", error);
     throw error;
   }
 };
@@ -3156,7 +3212,9 @@ export default {
   postIuranAnggota,
   uploadSinkronBank,
   getTransaksiBankBalancing,
-  getCountBalancing,
+  getCountAnggotaPotonganBank,
+  getCountAnggotaSetorTunai,
+  getCountAnggotaTerfilter,
   countNewPengaduan,
   getTransaksiBank,
   postToBackup,

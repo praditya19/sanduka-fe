@@ -279,6 +279,9 @@ export default function BankTransactionPage() {
   useEffect(() => {
     handleFilter();
     getBalancingdata();
+    getPotonganBank();
+    getSetorTunai();
+    getAnggotaTerfilter();
   }, [
     month,
     year,
@@ -293,34 +296,49 @@ export default function BankTransactionPage() {
     currentPageBalancing,
   ]);
 
-  const getTotalBalancing = async () => {
-    const now = new Date();
-    const bulan = now.getMonth() + 1;
-    const tahun = now.getFullYear();
-    const cabang = selectedCabang || "";
-    const unitKerja = unitKerjaInput || "";
-
+  const getPotonganBank = async () => {
     try {
-      const data = await GlobalApi.getCountBalancing(
-        bulan,
-        tahun,
-        cabang,
-        unitKerja
-      );
-      setJumlahPotonganBank(data.jumlahPotonganBank || 0);
-      setTotalNominalPotonganBank(data.totalNominalPotonganBank || 0);
-      setJumlahSetorTunai(data.jumlahSetorTunai || 0);
-      setTotalNominalSetorTunai(data.totalNominalSetorTunai || 0);
-      setTotalTerfilter(data.totalTerfilter || 0);
-      setTotalNominalTerfilter(data.totalNominalTerfilter || 0);
+      const data = await GlobalApi.getCountAnggotaPotonganBank(month, year);
+      setJumlahPotonganBank(data.jumlahAnggota || 0);
+      setTotalNominalPotonganBank(data.totalNominal || 0);
     } catch (error) {
-      console.error("❌ Gagal mengambil data balancing:", error);
+      console.error("❌ Gagal mengambil data potongan bank:", error);
     }
   };
 
-  useEffect(() => {
-    getTotalBalancing();
-  }, [selectedCabang, unitKerjaInput]);
+  const getSetorTunai = async () => {
+  try {
+    const data = await GlobalApi.getCountAnggotaSetorTunai({
+      cabang: selectedCabang || null,
+      unitKerja: unitKerjaInput || null,
+      search: searchBalancing || null,
+      bulan: month || null,
+      tahun: year || null,
+    });
+
+    setJumlahSetorTunai(data.jumlahAnggota || 0);
+      setTotalNominalSetorTunai(data.totalNominal || 0);
+  } catch (error) {
+    console.error("❌ Gagal fetch:", error);
+  }
+  };
+
+  const getAnggotaTerfilter = async () => {
+  try {
+    const data = await GlobalApi.getCountAnggotaTerfilter({
+      cabang: selectedCabang || null,
+      unitKerja: unitKerjaInput || null,
+      search: searchBalancing || null,
+      bulan: month || null,
+      tahun: year || null,
+    });
+
+    setTotalTerfilter(data.jumlahAnggota || 0);
+      setTotalNominalTerfilter(data.totalNominal || 0);
+  } catch (error) {
+    console.error("❌ Gagal fetch:", error);
+  }
+  };
 
   const formatRupiah = (angka) => {
     const parsed = Number(angka);
@@ -2168,6 +2186,23 @@ export default function BankTransactionPage() {
                         </option>
                       ))}
                     </select>
+                  </div>        
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cari Anggota/Rekening
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={searchBalancing}
+                        onChange={(e) => setSearchBalancing(e.target.value)}
+                        className="w-full h-10 text-base px-4 pr-12 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
+                        placeholder="Ketik nama atau rekening"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
+                        <FontAwesomeIcon icon={faSearch} />
+                      </span>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -2190,23 +2225,6 @@ export default function BankTransactionPage() {
                       <option value={100}>100</option>
                       <option value="all">All</option>
                     </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Cari Anggota/Rekening
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={searchBalancing}
-                        onChange={(e) => setSearchBalancing(e.target.value)}
-                        className="w-full h-10 text-base px-4 pr-12 rounded-lg border border-gray-300 focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition-all"
-                        placeholder="Ketik nama atau rekening"
-                      />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
-                        <FontAwesomeIcon icon={faSearch} />
-                      </span>
-                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
