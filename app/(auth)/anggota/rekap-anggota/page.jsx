@@ -184,6 +184,7 @@ function RekapAnggota() {
   const [notifDaspen, setNotifDaspen] = useState(null);
   const [pesanDaspen, setPesanDaspen] = useState("");
   const [listNoRekening, setListNoRekening] = useState([]);
+  const [iuranSumbanganList, setIuranSumbanganList] = useState([]);
 
   const currentYear = new Date().getFullYear();
   const years = Array.from(
@@ -326,6 +327,25 @@ function RekapAnggota() {
     setSearchCabang(query);
   };
 
+  const handleUnitKerjaSearch = (searchTerm) => {
+    setSearchUnitKerja(searchTerm);
+    if (searchTerm === "") {
+      const allFiltered = unitKerjaList.filter(
+        (unitKerja) => unitKerja.cabang === selectedCabang
+      );
+      setFilteredUnitKerja(allFiltered);
+    } else {
+      const filtered = unitKerjaList.filter(
+        (unitKerja) =>
+          unitKerja.unitKerja
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) &&
+          unitKerja.cabang === selectedCabang
+      );
+      setFilteredUnitKerja(filtered);
+    }
+  };
+
   const handleSelectCabang = async (cabang) => {
     setSelectedCabang(cabang.kecamatan);
     setShowCabangDropdown(false);
@@ -374,25 +394,6 @@ function RekapAnggota() {
       setFilteredUnitKerja(filtered);
     } catch (error) {
       console.error("Error fetching rekap data:", error);
-    }
-  };
-
-  const handleUnitKerjaSearch = (searchTerm) => {
-    setSearchUnitKerja(searchTerm);
-    if (searchTerm === "") {
-      const allFiltered = unitKerjaList.filter(
-        (unitKerja) => unitKerja.cabang === selectedCabang
-      );
-      setFilteredUnitKerja(allFiltered);
-    } else {
-      const filtered = unitKerjaList.filter(
-        (unitKerja) =>
-          unitKerja.unitKerja
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) &&
-          unitKerja.cabang === selectedCabang
-      );
-      setFilteredUnitKerja(filtered);
     }
   };
 
@@ -459,6 +460,10 @@ function RekapAnggota() {
           totalIuran: 0,
           nomorRekening: 0,
           lastUpdatedAtIuranAnggota: "",
+          sumbanganDetail: {
+            "Cetak Kartu Biasa": 25000,
+            "IURAN HUT 80 PGRI": 30000,
+          },
         };
       }
 
@@ -487,6 +492,15 @@ function RekapAnggota() {
       acc[unitKey].kalender += parseFloat(item.kalender) || 0;
       acc[unitKey].sumbangan += parseFloat(item.sumbangan) || 0;
       acc[unitKey].totalIuran += parseFloat(item.totalIuran) || 0;
+
+      if (Array.isArray(item.iuranSumbanganList)) {
+        item.iuranSumbanganList.forEach((s) => {
+          if (!acc[unitKey].sumbanganDetail[s.jenis]) {
+            acc[unitKey].sumbanganDetail[s.jenis] = 0;
+          }
+          acc[unitKey].sumbanganDetail[s.jenis] += s.jumlah;
+        });
+      }
 
       return acc;
     }, {});
@@ -904,7 +918,7 @@ function RekapAnggota() {
         setNotifDaspen(false);
       }
     } catch (error) {
-      console.error("Gagal mengambil file by NIP:", error);
+      console.error("❌ Gagal mengambil file by NIP:", error);
     }
 
     try {
@@ -912,12 +926,12 @@ function RekapAnggota() {
       setSelectedMember(member);
       setDataNpa(response[0]);
 
-      if (response[0].foto) {
+      if (response[0]?.foto) {
         try {
           const decodedString = atob(response[0].foto);
           setFotoBase64(decodedString);
         } catch (error) {
-          console.error("Error decoding Base64:", error);
+          console.error("❌ Error decoding Base64:", error);
           setFotoBase64(null);
         }
       }
@@ -940,6 +954,7 @@ function RekapAnggota() {
           });
 
           const latestData = sortedByDate[0];
+          console.log("🆕 Latest Iuran Data:", latestData);
 
           setDataIuran(latestData);
 
@@ -950,16 +965,21 @@ function RekapAnggota() {
             setNomorRekening(latestData.nomorRekening);
           }
         } else {
-          console.warn("Tidak ditemukan data iuran untuk NPA:", member.npaPgri);
+          console.warn(
+            "⚠️ Tidak ditemukan data iuran untuk NPA:",
+            member.npaPgri
+          );
           setDataIuran(null);
           setIdIuran(null);
         }
       } catch (error) {
-        console.error("Gagal mengambil data iuran anggota:", error);
+        console.error("❌ Gagal mengambil data iuran anggota:", error);
 
         if (error.response?.status === 500) {
-          console.warn("Server error 500: menggunakan fallback data");
+          console.warn("⚠️ Server error 500: menggunakan fallback data");
           const pgriData = JSON.parse(sessionStorage.getItem("PGRIData"));
+          console.log("📦 Fallback PGRI Data:", pgriData);
+
           const totalIuranPGRI =
             parseInt(pgriData.pb || 0) +
             parseInt(pgriData.propinsi || 0) +
@@ -978,13 +998,15 @@ function RekapAnggota() {
             totalIuranDaspen: daspenFromMember,
           };
 
+          console.log("📦 Fallback Data Iuran:", fallbackData);
+
           setDataIuran(fallbackData);
           setIdIuran(null);
         }
       }
       setIsPopupVisible(true);
     } catch (error) {
-      console.error("Error saat cek NPA:", error);
+      console.error("❌ Error saat cek NPA:", error);
     }
   };
 
@@ -1013,16 +1035,9 @@ function RekapAnggota() {
   const groupIuranData = (dataIuran) => {
     if (!dataIuran) return [];
 
-    const keys = [
-      "Anggota",
-      "Daspen",
-      "Derap",
-      "Kalender",
-      "Sanduka",
-      "Sumbangan",
-    ];
+    const keys = ["Anggota", "Daspen", "Derap", "Kalender", "Sanduka"];
 
-    return keys
+    let result = keys
       .map((key) => {
         const keySuffix = key === "Anggota" ? "Anggota" : key;
         return {
@@ -1033,6 +1048,19 @@ function RekapAnggota() {
         };
       })
       .filter((item) => item.iuran !== undefined);
+
+    if (Array.isArray(dataIuran.iuranSumbanganList)) {
+      const sumbanganItems = dataIuran.iuranSumbanganList.map((sumb) => ({
+        key: sumb.jenis,
+        iuran: sumb.jumlah,
+        manual: 0,
+        total: sumb.jumlah,
+      }));
+
+      result = [...result, ...sumbanganItems];
+    }
+
+    return result;
   };
 
   useEffect(() => {
@@ -1061,12 +1089,17 @@ function RekapAnggota() {
 
   const handleSave = async () => {
     if (selectedKategori) {
-      if (!addedCategories.find((cat) => cat.key === selectedKategori)) {
+      const uniqueKey =
+        selectedKategori === "lainlain" && selectedKeterangan
+          ? `${selectedKeterangan}`
+          : selectedKategori;
+
+      if (!addedCategories.find((cat) => cat.key === uniqueKey)) {
         const labelMap = {
           iuran: "Iuran",
           derap: "Derap",
           kalender: "Kalender",
-          lainLain: "Lain-Lain",
+          lainlain: "Lain-Lain",
           daspen: "Daspen",
         };
 
@@ -1134,8 +1167,8 @@ function RekapAnggota() {
           ...prev,
           {
             label: labelMap[selectedKategori],
-            key: selectedKategori,
-            ...(selectedKategori === "lain-lain" && selectedKeterangan
+            key: uniqueKey,
+            ...(selectedKategori === "lainlain" && selectedKeterangan
               ? { keterangan: selectedKeterangan }
               : {}),
           },
@@ -1143,16 +1176,17 @@ function RekapAnggota() {
 
         setNewValues((prev) => ({
           ...prev,
-          [selectedKategori]: initialValue,
+          [uniqueKey]: initialValue,
         }));
 
         setFormKetiga((prev) => ({
           ...prev,
-          [selectedKategori]: initialValue,
+          [uniqueKey]: initialValue,
         }));
       }
 
       setSelectedKategori("");
+      setSelectedKeterangan("");
       setShowDropdown(false);
     }
   };
@@ -1178,7 +1212,7 @@ function RekapAnggota() {
       const autoValue = parseInt(item.iuran || 0);
       const inputValue = nominalBaruList[item.key] ?? 0;
 
-      if (item.key?.toLowerCase() === "sanduka") {
+      if ((item.key || "").toLowerCase() === "sanduka") {
         otomatisValueSanduka = autoValue;
         manualValueSanduka = inputValue;
         iuranSanduka = autoValue + inputValue;
@@ -1194,25 +1228,27 @@ function RekapAnggota() {
         iuranDaspen = autoValue + inputValue;
       }
     });
+
     let otomatisValueKalender = 0;
     let otomatisValueDerap = 0;
-    let otomatisValueLainLain = 0;
 
     let manualValueKalender = 0;
     let manualValueDerap = 0;
-    let manualValueLainLain = 0;
 
     let totalKalender = 0;
     let iuranDerap = formKetiga?.iuranDerap || 0;
-    let totalIuranLainLain = 0;
 
-    const kategoriUtama = ["derap", "kalender"];
+    let iuranSumbanganList = [];
+    let manualValueLainLain = 0;
+    let totalIuranLainLain = 0;
 
     addedCategories.forEach((item) => {
       const keyLower = item.key?.toLowerCase();
       const oldValue = parseInt(newValues[item.key] || 0);
       const inputValue = parseInt(manualInputs[item.key] || 0);
       const totalValue = oldValue + inputValue;
+
+      if (totalValue <= 0) return;
 
       if (keyLower === "kalender") {
         otomatisValueKalender = oldValue;
@@ -1222,8 +1258,16 @@ function RekapAnggota() {
         otomatisValueDerap = oldValue;
         manualValueDerap = inputValue;
         iuranDerap = totalValue;
+      } else if (
+        keyLower === "sanduka" ||
+        keyLower === "anggota" ||
+        keyLower === "daspen"
+      ) {
       } else {
-        otomatisValueLainLain += oldValue;
+        iuranSumbanganList.push({
+          jenis: item.keterangan || item.label,
+          jumlah: totalValue,
+        });
         manualValueLainLain += inputValue;
         totalIuranLainLain += totalValue;
       }
@@ -1260,40 +1304,12 @@ function RekapAnggota() {
       manualIuranKalender: manualValueKalender || 0,
       totalIuranKalender: totalKalender || 0,
 
-      iuranSumbangan: otomatisValueLainLain || 0,
+      iuranSumbanganList: iuranSumbanganList,
       manualIuranSumbangan: manualValueLainLain || 0,
       totalIuranSumbangan: totalIuranLainLain || 0,
-
-      keuangan: [],
     };
 
-    groupedIuran.forEach((item) => {
-      const nominalBaru = parseInt(nominalBaruList[item.key] || 0);
-      const nominalLama = parseInt(selectedMember?.[item.key] || 0);
-
-      if (nominalBaru > 0) {
-        payload.keuangan.push({
-          kategori: item.key,
-          nominalLama,
-          nominalBaru,
-          total: nominalLama + nominalBaru,
-        });
-      }
-    });
-
-    addedCategories.forEach((item) => {
-      const nominalBaru = manualInputs[item.key] || 0;
-      const nominalLama = newValues[item.key] || 0;
-
-      if (nominalBaru > 0) {
-        payload.keuangan.push({
-          kategori: item.label,
-          nominalLama,
-          nominalBaru,
-          total: nominalLama + nominalBaru,
-        });
-      }
-    });
+    console.log("📦 Data yang akan dikirim:", payload);
 
     try {
       if (nomorRekening && nomorRekening.trim() !== "") {
@@ -1301,7 +1317,6 @@ function RekapAnggota() {
         const rekeningLama = selectedMember?.nomorRekening?.trim();
 
         const rekeningSudahTerdaftar = listNoRekening.includes(rekeningBaru);
-
         const samaDenganYangLama = rekeningBaru === rekeningLama;
 
         if (rekeningSudahTerdaftar && !samaDenganYangLama) {
@@ -1880,43 +1895,45 @@ function RekapAnggota() {
     XLSX.utils.book_append_sheet(wb, ws, "RekapData");
 
     const waktuDownload = new Date().toLocaleString("id-ID", {
-  dateStyle: "short",
-  timeStyle: "medium",
-});
+      dateStyle: "short",
+      timeStyle: "medium",
+    });
 
-const safeWaktuDownload = waktuDownload.replace(/[/:]/g, "-").replace(/[ ]/g, "_");
+    const safeWaktuDownload = waktuDownload
+      .replace(/[/:]/g, "-")
+      .replace(/[ ]/g, "_");
 
-const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
-  selectedCabang ? `_Cabang_${selectedCabang}` : ""
-}${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
+    const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
+      selectedCabang ? `_Cabang_${selectedCabang}` : ""
+    }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
 
     XLSX.writeFile(wb, fileName);
   };
 
   const handleBackupData = async () => {
-  if (!selectedDate) {
-    alert("Silakan pilih bulan tagihan terlebih dahulu.");
-    return;
-  }
+    if (!selectedDate) {
+      alert("Silakan pilih bulan tagihan terlebih dahulu.");
+      return;
+    }
 
-  try {
-    const result = await GlobalApi.postToBackup(selectedDate);
+    try {
+      const result = await GlobalApi.postToBackup(selectedDate);
 
-    setNotification({
+      setNotification({
         type: "success",
         message: "Backup berhasil!",
       });
       setPopupBackup(false);
       exportToExcel();
-  } catch (error) {
-    setNotification({
+    } catch (error) {
+      setNotification({
         type: "error",
         message: "Gagal backup dan export.",
-    });
-    console.error("Gagal backup dan export:", error);
-  }
-};
-    
+      });
+      console.error("Gagal backup dan export:", error);
+    }
+  };
+
   const handleBackupByNominal = async () => {
     const now = new Date();
     const bulan = now.getMonth() + 1;
@@ -3034,32 +3051,37 @@ const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
                             return (
                               <div
                                 key={idx}
-                                className="space-y-1 px-3 py-2 rounded-md"
+                                className={`space-y-1 px-3 py-2 rounded-md ${
+                                  item.isSumbanganDetail
+                                    ? "ml-6 bg-purple-50"
+                                    : ""
+                                }`}
                               >
                                 <div className="flex items-center justify-between">
                                   <span className="font-medium">
                                     {item.key}
                                   </span>
-                                  <button
-                                    type="button"
-                                    className="text-red-500 hover:text-red-700"
-                                    onClick={() => {
-                                      setResetKeys((prev) => [
-                                        ...prev,
-                                        item.key,
-                                      ]);
-                                      setNominalBaruList((prev) => ({
-                                        ...prev,
-                                        [item.key]: 0,
-                                      }));
-                                    }}
-                                  >
-                                    <FiTrash />
-                                  </button>
+                                  {!item.isSumbanganDetail && (
+                                    <button
+                                      type="button"
+                                      className="text-red-500 hover:text-red-700"
+                                      onClick={() => {
+                                        setResetKeys((prev) => [
+                                          ...prev,
+                                          item.key,
+                                        ]);
+                                        setNominalBaruList((prev) => ({
+                                          ...prev,
+                                          [item.key]: 0,
+                                        }));
+                                      }}
+                                    >
+                                      <FiTrash />
+                                    </button>
+                                  )}
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-2 mt-2">
-                                  {/* Iuran Sekarang */}
                                   <input
                                     type="text"
                                     readOnly
@@ -3069,42 +3091,50 @@ const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
                                     className="border px-2 py-1 rounded bg-gray-200 text-center"
                                   />
 
-                                  {/* Form 2: Input manual */}
-                                  <input
-                                    type="text"
-                                    placeholder="Tambahan cabang"
-                                    value={
-                                      inputValue === 0
-                                        ? ""
-                                        : `Rp. ${inputValue.toLocaleString(
-                                            "id-ID"
-                                          )}`
-                                    }
-                                    onChange={(e) => {
-                                      const angka =
-                                        parseInt(
-                                          e.target.value.replace(/[^\d]/g, "")
-                                        ) || 0;
-                                      setNominalBaruList((prev) => ({
-                                        ...prev,
-                                        [item.key]: angka,
-                                      }));
-                                    }}
-                                    className="border px-2 py-1 rounded text-center"
-                                  />
-                                  <input
-                                    type="text"
-                                    readOnly
-                                    value={`Rp. ${totalValue.toLocaleString(
-                                      "id-ID"
-                                    )}`}
-                                    className="border px-2 py-1 rounded bg-gray-200 text-center"
-                                  />
+                                  {!item.isSumbanganDetail && (
+                                    <>
+                                      <input
+                                        type="text"
+                                        placeholder="Tambahan cabang"
+                                        value={
+                                          inputValue === 0
+                                            ? ""
+                                            : `Rp. ${inputValue.toLocaleString(
+                                                "id-ID"
+                                              )}`
+                                        }
+                                        onChange={(e) => {
+                                          const angka =
+                                            parseInt(
+                                              e.target.value.replace(
+                                                /[^\d]/g,
+                                                ""
+                                              )
+                                            ) || 0;
+                                          setNominalBaruList((prev) => ({
+                                            ...prev,
+                                            [item.key]: angka,
+                                          }));
+                                        }}
+                                        className="border px-2 py-1 rounded text-center"
+                                      />
+
+                                      <input
+                                        type="text"
+                                        readOnly
+                                        value={`Rp. ${totalValue.toLocaleString(
+                                          "id-ID"
+                                        )}`}
+                                        className="border px-2 py-1 rounded bg-gray-200 text-center"
+                                      />
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             );
                           })}
 
+                        {/* 🔹 Tambahan kategori manual */}
                         {addedCategories.map((item, idx) => {
                           const oldValue = newValues[item.key] ?? 0;
                           const inputValue = manualInputs[item.key] ?? 0;
