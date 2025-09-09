@@ -373,6 +373,19 @@ const GaleriKegiatan = () => {
   const GallerySwiper = ({ items, title, showRegisterButton = false }) => {
     const maxDescriptionLength = 250;
 
+    const getAutoplayConfig = () => {
+      if (title === "Event") {
+        return { 
+          delay: 10000,
+          disableOnInteraction: false 
+        };
+      }
+      return { 
+        delay: 3000, // 3 detik untuk Galeri Kegiatan (tetap sama)
+        disableOnInteraction: false 
+      };
+    };
+
     // Fungsi untuk merender deskripsi
     const renderDescription = (item) => {
       const plainText = item.deskripsi ? stripHtml(item.deskripsi) : "";
@@ -421,7 +434,7 @@ const GaleriKegiatan = () => {
             spaceBetween={30}
             slidesPerView={1}
             pagination={{ clickable: true }}
-            autoplay={{ delay: 3000, disableOnInteraction: false }}
+            autoplay={getAutoplayConfig()}
             className="w-full"
           >
             {items.map((item) => (
@@ -466,17 +479,17 @@ const GaleriKegiatan = () => {
                     </div>
                   )}
                   {showRegisterButton && userData?.role === "USER" && (
-                    <div className="mt-3">
+                    <div className="mt-4">
                       {registrationStatus[item.id] ? (
-                        <div className="inline-block px-6 py-2 bg-yellow-500 text-white rounded-md font-medium">
+                        <div className="inline-block px-8 py-3 bg-yellow-500 text-white rounded-lg font-semibold text-base shadow-md">
                           {registrationStatus[item.id]}
                         </div>
                       ) : (
                         <button
                           onClick={() => handleRegister(item.id)}
-                          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors"
+                          className="px-10 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                         >
-                          Daftar
+                          Daftar Event
                         </button>
                       )}
                     </div>
