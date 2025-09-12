@@ -101,7 +101,7 @@ const GaleriKegiatan = () => {
   const [fileName, setFileName] = useState("");
   const profileImageUrl = "/profile.png";
   const [fotoBase64, setFotoBase64] = useState(null);
-  
+
   // Pindahkan state expandedItems ke level komponen utama
   const [expandedItems, setExpandedItems] = useState({});
 
@@ -374,16 +374,15 @@ const GaleriKegiatan = () => {
     const maxDescriptionLength = 250;
 
     const getAutoplayConfig = () => {
-      if (title === "Event") {
-        return { 
-          delay: 10000,
-          disableOnInteraction: false 
+      // Hanya "Galeri Kegiatan" yang menggunakan autoplay
+      if (title === "Galeri Kegiatan") {
+        return {
+          delay: 3000,
+          disableOnInteraction: false
         };
       }
-      return { 
-        delay: 3000, // 3 detik untuk Galeri Kegiatan (tetap sama)
-        disableOnInteraction: false 
-      };
+      // Event tidak menggunakan autoplay (manual scroll only)
+      return false;
     };
 
     // Fungsi untuk merender deskripsi
@@ -430,9 +429,10 @@ const GaleriKegiatan = () => {
           </div>
         ) : (
           <Swiper
-            modules={[Navigation, Pagination, Autoplay]}
+            modules={[Navigation, Pagination, ...(getAutoplayConfig() ? [Autoplay] : [])]}
             spaceBetween={30}
             slidesPerView={1}
+            navigation={true}
             pagination={{ clickable: true }}
             autoplay={getAutoplayConfig()}
             className="w-full"
@@ -520,12 +520,29 @@ const GaleriKegiatan = () => {
     const handleFileChange = (e) => {
       const file = e.target.files[0];
       if (file) {
-        const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
-        if (allowedTypes.includes(file.type)) {
+        // Tambahkan tipe MIME untuk video
+        const allowedTypes = [
+          "application/pdf",
+          "image/jpeg",
+          "image/png",
+          "image/jpg",
+          "video/mp4",
+          "video/avi",
+          "video/quicktime",
+          "video/x-msvideo",
+          "video/mpeg",
+          "video/webm"
+        ];
+
+        // Tambahkan ekstensi file yang didukung
+        const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.mp4', '.avi', '.mov', '.mpeg', '.webm'];
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+
+        if (allowedTypes.includes(file.type) && allowedExtensions.includes(fileExtension)) {
           setUploadFile(file);
           setFileName(file.name);
         } else {
-          alert("Format file tidak didukung. Pilih file PDF, JPG, PNG, atau JPEG.");
+          alert("Format file tidak didukung. Pilih file PDF, JPG, PNG, JPEG, atau video (MP4, AVI, MOV, MPEG, WEBM).");
           e.target.value = null;
           setFileName("");
           setUploadFile(null);
@@ -710,14 +727,14 @@ const GaleriKegiatan = () => {
 
             <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors col-span-1 sm:col-span-2">
               <label className="text-sm text-gray-600" htmlFor="uploadFile">
-                Upload Dokumen (opsional)
+                Upload Dokumen atau Video (opsional)
               </label>
               <div className="flex flex-col space-y-2">
                 <input
                   ref={fileInputRef}
                   type="file"
                   onChange={handleFileChange}
-                  accept=".pdf,.jpg,.jpeg,.png"
+                  accept=".pdf,.jpg,.jpeg,.png,.mp4,.avi,.mov,.mpeg,.webm"
                   className="hidden"
                 />
                 <div className="w-full mt-1 border border-gray-300 rounded-md overflow-hidden flex">
@@ -756,7 +773,9 @@ const GaleriKegiatan = () => {
                   </div>
                 )}
               </div>
-              <p className="text-xs text-gray-500 mt-1">Format yang didukung: PDF, JPG, PNG, JPEG</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Format yang didukung: PDF, JPG, PNG, JPEG, MP4, AVI, MOV, MPEG, WEBM
+              </p>
             </div>
           </div>
 
