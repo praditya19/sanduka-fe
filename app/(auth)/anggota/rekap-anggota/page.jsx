@@ -1242,6 +1242,14 @@ function RekapAnggota() {
     let manualValueLainLain = 0;
     let totalIuranLainLain = 0;
 
+    if (dataIuran?.iuranSumbanganList?.length > 0) {
+      iuranSumbanganList = dataIuran.iuranSumbanganList.map((item) => ({
+        jenis: item.jenis,
+        jumlah: item.jumlah,
+      }));
+      totalIuranLainLain = dataIuran.totalIuranSumbangan || 0;
+    }
+
     addedCategories.forEach((item) => {
       const keyLower = item.key?.toLowerCase();
       const oldValue = parseInt(newValues[item.key] || 0);
@@ -1258,11 +1266,24 @@ function RekapAnggota() {
         otomatisValueDerap = oldValue;
         manualValueDerap = inputValue;
         iuranDerap = totalValue;
-      } else if (
-        keyLower === "sanduka" ||
-        keyLower === "anggota" ||
-        keyLower === "daspen"
-      ) {
+      } else if (keyLower === "sanduka") {
+        if (iuranSanduka === 0) {
+          otomatisValueSanduka = oldValue;
+          manualValueSanduka = inputValue;
+          iuranSanduka = totalValue;
+        }
+      } else if (keyLower === "anggota") {
+        if (iuranAnggota === 0) {
+          otomatisValuePgri = oldValue;
+          manualValuepgri = inputValue;
+          iuranAnggota = totalValue;
+        }
+      } else if (keyLower === "daspen") {
+        if (iuranDaspen === 0) {
+          otomatisValueDaspen = oldValue;
+          manualValueDaspen = inputValue;
+          iuranDaspen = totalValue;
+        }
       } else {
         iuranSumbanganList.push({
           jenis: item.keterangan || item.label,
