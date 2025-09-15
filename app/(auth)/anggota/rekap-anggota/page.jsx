@@ -3330,12 +3330,12 @@ function RekapAnggota() {
                     </div>
 
                     <div className="flex justify-end gap-4 pt-4">
-                      <button
+                      {/* <button
                         className="bg-red-700 hover:bg-red-600 text-white px-6 py-2 rounded-md"
                         onClick={handleReset}
                       >
                         RESET
-                      </button>
+                      </button> */}
                       <button
                         className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
                         onClick={closePopup}
