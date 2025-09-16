@@ -1764,172 +1764,190 @@ function RekapAnggota() {
   };
 
   const exportToExcel = async () => {
-    if (!groupedData || groupedData.length === 0) {
-      console.error("Data kosong, tidak dapat export ke Excel");
-      return;
-    }
+  if (!groupedData || groupedData.length === 0) {
+    console.error("Data kosong, tidak dapat export ke Excel");
+    return;
+  }
 
-    const bulan = selectedBulan || new Date().getMonth() + 1;
-    const tahun = selectedTahun || new Date().getFullYear();
+  const bulan = selectedBulan || new Date().getMonth() + 1;
+  const tahun = selectedTahun || new Date().getFullYear();
 
-    let anggotaAll = [];
-    try {
-      const allData = await GlobalApi.getIuranAnggotaAll(bulan, tahun);
+  let anggotaAll = [];
+  try {
+    const allData = await GlobalApi.getIuranAnggotaAll(bulan, tahun);
 
-      const latestPerNpa = Object.values(
-        allData.reduce((acc, item) => {
-          if (!acc[item.npa]) {
+    // ambil data terbaru per NPA + hitung totalSumbangan
+    const latestPerNpa = Object.values(
+      allData.reduce((acc, item) => {
+        if (!acc[item.npa]) {
+          acc[item.npa] = item;
+        } else {
+          const existingDate = new Date(...acc[item.npa].createdAt);
+          const currentDate = new Date(...item.createdAt);
+          if (currentDate > existingDate) {
             acc[item.npa] = item;
-          } else {
-            const existingDate = new Date(...acc[item.npa].createdAt);
-            const currentDate = new Date(...item.createdAt);
-            if (currentDate > existingDate) {
-              acc[item.npa] = item;
-            }
           }
-          return acc;
-        }, {})
-      );
+        }
 
-      anggotaAll = latestPerNpa;
-    } catch (err) {
-      console.error("Gagal ambil data anggota untuk nomor rekening:", err);
+        // tambahkan field totalSumbangan
+        acc[item.npa].totalSumbangan = (item.iuranSumbanganList || []).reduce(
+          (sum, s) => sum + (s.jumlah || 0),
+          0
+        );
+
+        return acc;
+      }, {})
+    );
+
+    anggotaAll = latestPerNpa;
+  } catch (err) {
+    console.error("Gagal ambil data anggota untuk nomor rekening:", err);
+  }
+
+  const npaToRekeningMap = {};
+  const npaToSumbanganMap = {};
+  anggotaAll.forEach((item) => {
+    npaToRekeningMap[item.npa] = item.nomorRekening;
+    npaToSumbanganMap[item.npa] = item.totalSumbangan || 0;
+  });
+
+  const bulanSekarang = new Date();
+  const bulanBerikutnya = new Date(
+    bulanSekarang.getFullYear(),
+    bulanSekarang.getMonth() + 1
+  );
+  const namaBulan = bulanBerikutnya.toLocaleString("id-ID", {
+    month: "long",
+    year: "numeric",
+  });
+
+  const excelData = [];
+
+  excelData.push([`Tagihan Untuk Bulan ${namaBulan}`]);
+  excelData.push([]);
+
+  excelData.push([
+    "No",
+    "Cabang",
+    "Unit Kerja",
+    "Nama Anggota",
+    "NIP",
+    "Nomor Rekening",
+    "PGRI",
+    "Sanduka",
+    "Daspen",
+    "Derap",
+    "Kalender",
+    "Lain-Lain",
+    "Total",
+  ]);
+
+  groupedData.forEach((group, index) => {
+    if (group.members && group.members.length > 0) {
+      group.members.forEach((member, memberIndex) => {
+        const nomorRekeningFinal =
+          npaToRekeningMap[member.npaPgri] || member.nomorRekening || "-";
+
+        const lainLain =
+          npaToSumbanganMap[member.npaPgri] ||
+          (member.iuranSumbanganList
+            ? member.iuranSumbanganList.reduce(
+                (sum, s) => sum + (s.jumlah || 0),
+                0
+              )
+            : 0);
+
+        const total = parseInt(member.totalIuran || 0);
+
+        excelData.push([
+          memberIndex === 0 ? index + 1 : "",
+          memberIndex === 0 ? group.cabang : "",
+          memberIndex === 0 ? group.unitKerja : "",
+          member.namaAnggota,
+          member.nip || "-",
+          nomorRekeningFinal,
+          parseInt(member.pgri || 0),
+          parseInt(member.sanduka || 0),
+          parseInt(member.daspen || 0),
+          parseInt(member.derap || 0),
+          parseInt(member.kalender || 0),
+          lainLain,
+          total,
+        ]);
+      });
     }
+  });
 
-    const npaToRekeningMap = {};
-    anggotaAll.forEach((item) => {
-      npaToRekeningMap[item.npa] = item.nomorRekening;
-    });
+  const totalPgri = groupedData.reduce(
+    (sum, g) => sum + parseInt(g.pgri || 0),
+    0
+  );
+  const totalSanduka = groupedData.reduce(
+    (sum, g) => sum + parseInt(g.sanduka || 0),
+    0
+  );
+  const totalDaspen = groupedData.reduce(
+    (sum, g) => sum + parseInt(g.daspen || 0),
+    0
+  );
+  const totalDerap = groupedData.reduce(
+    (sum, g) => sum + parseInt(g.derap || 0),
+    0
+  );
+  const totalKalender = groupedData.reduce(
+    (sum, g) => sum + parseInt(g.kalender || 0),
+    0
+  );
 
-    const bulanSekarang = new Date();
-    const bulanBerikutnya = new Date(
-      bulanSekarang.getFullYear(),
-      bulanSekarang.getMonth() + 1
-    );
-    const namaBulan = bulanBerikutnya.toLocaleString("id-ID", {
-      month: "long",
-      year: "numeric",
-    });
+  // total lain-lain dari semua anggota (pakai map yang sudah dibuat)
+  const totalLainlain = Object.values(npaToSumbanganMap).reduce(
+    (sum, val) => sum + val,
+    0
+  );
 
-    const excelData = [];
+  const totalIuran = groupedData.reduce(
+    (sum, g) => sum + parseInt(g.totalIuran || 0),
+    0
+  );
 
-    excelData.push([`Tagihan Untuk Bulan ${namaBulan}`]);
-    excelData.push([]);
+  excelData.push([
+    "",
+    "",
+    "",
+    "Total Keseluruhan:",
+    "",
+    "",
+    totalPgri,
+    totalSanduka,
+    totalDaspen,
+    totalDerap,
+    totalKalender,
+    totalLainlain,
+    totalIuran,
+    "",
+    "",
+    "",
+  ]);
 
-    excelData.push([
-      "No",
-      "Cabang",
-      "Unit Kerja",
-      "Nama Anggota",
-      "NIP",
-      "Nomor Rekening",
-      "PGRI",
-      "Sanduka",
-      "Daspen",
-      "Derap",
-      "Kalender",
-      "Lain-Lain",
-      "Total",
-    ]);
+  const ws = XLSX.utils.aoa_to_sheet(excelData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "RekapData");
 
-    groupedData.forEach((group, index) => {
-      if (group.members && group.members.length > 0) {
-        group.members.forEach((member, memberIndex) => {
-          const nomorRekeningFinal =
-            npaToRekeningMap[member.npaPgri] || member.nomorRekening || "-";
-          const total = parseInt(member.totalIuran || 0);
-          const potongan = parseInt(member.potongan || 0);
-          const selisih = total - potongan;
-          const tanda = selisih > 0 ? "-" : selisih < 0 ? "+" : "";
-          const nilaiSelisih =
-            potongan !== 0 ? `${tanda}${Math.abs(selisih)}` : "";
+  const waktuDownload = new Date().toLocaleString("id-ID", {
+    dateStyle: "short",
+    timeStyle: "medium",
+  });
 
-          excelData.push([
-            memberIndex === 0 ? index + 1 : "",
-            memberIndex === 0 ? group.cabang : "",
-            memberIndex === 0 ? group.unitKerja : "",
-            member.namaAnggota,
-            member.nip || "-",
-            nomorRekeningFinal,
-            parseInt(member.pgri || 0),
-            parseInt(member.sanduka || 0),
-            parseInt(member.daspen || 0),
-            parseInt(member.derap || 0),
-            parseInt(member.kalender || 0),
-            parseInt(member.sumbangan || 0),
-            total,
-          ]);
-        });
-      }
-    });
+  const safeWaktuDownload = waktuDownload
+    .replace(/[/:]/g, "-")
+    .replace(/[ ]/g, "_");
 
-    const totalPgri = groupedData.reduce(
-      (sum, g) => sum + parseInt(g.pgri || 0),
-      0
-    );
-    const totalSanduka = groupedData.reduce(
-      (sum, g) => sum + parseInt(g.sanduka || 0),
-      0
-    );
-    const totalDaspen = groupedData.reduce(
-      (sum, g) => sum + parseInt(g.daspen || 0),
-      0
-    );
-    const totalDerap = groupedData.reduce(
-      (sum, g) => sum + parseInt(g.derap || 0),
-      0
-    );
-    const totalKalender = groupedData.reduce(
-      (sum, g) => sum + parseInt(g.kalender || 0),
-      0
-    );
-    const totalLainlain = groupedData.reduce(
-      (sum, g) => sum + parseInt(g.lainlain || 0),
-      0
-    );
-    const totalIuran = groupedData.reduce(
-      (sum, g) => sum + parseInt(g.totalIuran || 0),
-      0
-    );
+  const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
+    selectedCabang ? `_Cabang_${selectedCabang}` : ""
+  }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
 
-    excelData.push([
-      "",
-      "",
-      "",
-      "Total Keseluruhan:",
-      "",
-      "",
-      totalPgri,
-      totalSanduka,
-      totalDaspen,
-      totalDerap,
-      totalKalender,
-      totalLainlain,
-      totalIuran,
-      "",
-      "",
-      "",
-    ]);
-
-    const ws = XLSX.utils.aoa_to_sheet(excelData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "RekapData");
-
-    const waktuDownload = new Date().toLocaleString("id-ID", {
-      dateStyle: "short",
-      timeStyle: "medium",
-    });
-
-    const safeWaktuDownload = waktuDownload
-      .replace(/[/:]/g, "-")
-      .replace(/[ ]/g, "_");
-
-    const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
-      selectedCabang ? `_Cabang_${selectedCabang}` : ""
-    }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
-
-    XLSX.writeFile(wb, fileName);
-  };
+  XLSX.writeFile(wb, fileName);
+};
 
   const handleBackupData = async () => {
     if (!selectedDate) {
