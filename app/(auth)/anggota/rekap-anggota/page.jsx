@@ -1371,22 +1371,10 @@ function RekapAnggota() {
   };
 
   const handleUpdateClick = async () => {
-    if (!dataNpa || !idIuran) return;
+  if (!dataNpa || !idIuran) return;
 
-    try {
-      const rekeningSudahTerdaftar =
-        listNoRekening.includes(nomorRekening.trim()) &&
-        nomorRekening.trim() !== (dataIuran?.nomorRekening?.trim() || "");
-
-      if (rekeningSudahTerdaftar) {
-        setNotification({
-          type: "error",
-          message: "Nomor rekening sudah digunakan oleh anggota lain.",
-        });
-        return;
-      }
-
-      const payload = {
+  try {
+    const payload = {
         namaAnggota: dataNpa.namaLengkap,
         tempatTanggalLahir: `${dataNpa.tempatLahir}, ${dataNpa.tanggalLahir?.[2]}-${dataNpa.tanggalLahir?.[1]}-${dataNpa.tanggalLahir?.[0]}`,
         npa: dataNpa.npaPgri,
@@ -1413,39 +1401,132 @@ function RekapAnggota() {
         payload[`totalIuran${capitalizeFirstLetter(key)}`] = total || 0;
       });
 
-      addedCategories.forEach((item) => {
-        const key = item.key.toLowerCase();
-        const oldVal = parseInt(newValues?.[key] || 0);
-        const manual = parseInt(manualInputs?.[key] || 0);
-        const total = oldVal + manual;
+    // 🔹 Update iuranSumbanganList
+    payload.iuranSumbanganList = dataIuran.iuranSumbanganList.map((item) => {
+  const tambahan = nominalBaruList[item.jenis] || 0;
 
-        payload[`iuran${capitalizeFirstLetter(key)}`] = oldVal;
-        payload[`manualIuran${capitalizeFirstLetter(key)}`] = manual;
-        payload[`totalIuran${capitalizeFirstLetter(key)}`] = total;
-      });
+  // kalau item masuk resetKeys → selalu paksa 0
+  const jumlahBaru = resetKeys.includes(item.jenis)
+    ? 0
+    : item.jumlah + tambahan;
 
-      await GlobalApi.putIuranAnggota(idIuran, payload);
-      await fetchInitialData();
+  console.log(
+    `Sumbangan: ${item.jenis}, Awal: ${item.jumlah}, Tambahan: ${tambahan}, Reset: ${resetKeys.includes(item.jenis)}, Akhir: ${jumlahBaru}`
+  );
 
-      setNotification({
-        type: "success",
-        message: "Data berhasil diupdate!",
-      });
-      setIsPopupVisible(false);
-      setResetKeys([]);
-      setAddedCategories([]);
-      setManualInputs([]);
-      setSelectedKategori("");
-      setLastUpdatedMemberNip(dataNpa.nip);
-    } catch (error) {
-      console.error("Gagal update data:", error);
-      setNotification({
-        type: "error",
-        message: "Gagal update data.",
-      });
-    }
+  return {
+    ...item,
+    jumlah: jumlahBaru,
   };
+});
 
+
+    // 🔹 Hitung total iuran sumbangan dari list yang sudah diupdate
+    payload.totalIuranSumbangan = payload.iuranSumbanganList.reduce(
+      (acc, curr) => acc + curr.jumlah,
+      0
+    );
+
+    console.log("Data yang akan diupdate:", payload);
+
+    await GlobalApi.putIuranAnggota(idIuran, payload);
+    await fetchInitialData();
+
+    setNotification({
+      type: "success",
+      message: "Data berhasil diupdate!",
+    });
+    setIsPopupVisible(false);
+    setResetKeys([]);
+    setAddedCategories([]);
+    setManualInputs([]);
+    setSelectedKategori("");
+    setLastUpdatedMemberNip(dataNpa.nip);
+  } catch (error) {
+    console.error("Gagal update data:", error);
+    setNotification({
+      type: "error",
+      message: "Gagal update data.",
+    });
+  }
+};
+
+  // const handleUpdateClick = async () => {
+  //   if (!dataNpa || !idIuran) return;
+
+  //   try {
+  //     const rekeningSudahTerdaftar =
+  //       listNoRekening.includes(nomorRekening.trim()) &&
+  //       nomorRekening.trim() !== (dataIuran?.nomorRekening?.trim() || "");
+
+  //     if (rekeningSudahTerdaftar) {
+  //       setNotification({
+  //         type: "error",
+  //         message: "Nomor rekening sudah digunakan oleh anggota lain.",
+  //       });
+  //       return;
+  //     }
+
+  //     const payload = {
+  //       namaAnggota: dataNpa.namaLengkap,
+  //       tempatTanggalLahir: `${dataNpa.tempatLahir}, ${dataNpa.tanggalLahir?.[2]}-${dataNpa.tanggalLahir?.[1]}-${dataNpa.tanggalLahir?.[0]}`,
+  //       npa: dataNpa.npaPgri,
+  //       nip: dataNpa.nip,
+  //       nik: dataNpa.nik,
+  //       cabang: dataNpa.cabang,
+  //       unitKerja: dataNpa.unitKerja,
+  //       jabatan: dataNpa.jabatan,
+  //       nomorRekening: nomorRekening || "",
+  //     };
+
+  //     const capitalizeFirstLetter = (string) =>
+  //       string.charAt(0).toUpperCase() + string.slice(1);
+
+  //     groupedIuran.forEach((item) => {
+  //       const key = item.key;
+  //       const isReset = resetKeys.includes(key);
+  //       const iuran = isReset ? 0 : parseInt(item.iuran || 0);
+  //       const manual = isReset ? 0 : parseInt(nominalBaruList[key] || 0);
+  //       const total = iuran + manual;
+
+  //       payload[`iuran${capitalizeFirstLetter(key)}`] = iuran || 0;
+  //       payload[`manualIuran${capitalizeFirstLetter(key)}`] = manual || 0;
+  //       payload[`totalIuran${capitalizeFirstLetter(key)}`] = total || 0;
+  //     });
+
+  //     addedCategories.forEach((item) => {
+  //       const key = item.key.toLowerCase();
+  //       const oldVal = parseInt(newValues?.[key] || 0);
+  //       const manual = parseInt(manualInputs?.[key] || 0);
+  //       const total = oldVal + manual;
+
+  //       payload[`iuran${capitalizeFirstLetter(key)}`] = oldVal;
+  //       payload[`manualIuran${capitalizeFirstLetter(key)}`] = manual;
+  //       payload[`totalIuran${capitalizeFirstLetter(key)}`] = total;
+  //     });
+
+  //     await GlobalApi.putIuranAnggota(idIuran, payload);
+  //     await fetchInitialData();
+
+  //     setNotification({
+  //       type: "success",
+  //       message: "Data berhasil diupdate!",
+  //     });
+  //     setIsPopupVisible(false);
+  //     setResetKeys([]);
+  //     setAddedCategories([]);
+  //     setManualInputs([]);
+  //     setSelectedKategori("");
+  //     setLastUpdatedMemberNip(dataNpa.nip);
+  //   } catch (error) {
+  //     console.error("Gagal update data:", error);
+  //     setNotification({
+  //       type: "error",
+  //       message: "Gagal update data.",
+  //     });
+  //   }
+  // };
+  
   const calculateGrandTotal = () => {
     let total = 0;
 
