@@ -2046,9 +2046,15 @@ function RekapAnggota() {
     try {
       const allData = await GlobalApi.getIuranAnggotaAll(bulan, tahun);
 
-      // ambil data terbaru per NPA
+      // filter hanya data sesuai bulan & tahun
+      const filteredData = allData.filter((item) => {
+        const d = new Date(item.createdAt);
+        return d.getMonth() + 1 === bulan && d.getFullYear() === tahun;
+      });
+
+      // ambil data terbaru per NPA (berdasarkan createdAt)
       const latestPerNpa = Object.values(
-        allData.reduce((acc, item) => {
+        filteredData.reduce((acc, item) => {
           if (!acc[item.npa]) {
             acc[item.npa] = item;
           } else {
@@ -3954,7 +3960,6 @@ function RekapAnggota() {
                     Total Keseluruhan:
                   </td>
                   <td className="p-3 text-center hidden lg:table-cell">
-                    {/* Total Jumlah Anggota */}
                     {groupedData.reduce(
                       (sum, g) => sum + parseInt(g.jumlah),
                       0
@@ -3965,66 +3970,70 @@ function RekapAnggota() {
                     className="p-3 text-left hidden lg:table-cell"
                   >
                     <div className="flex justify-between py-1">
-                      {" "}
-                      <span className="text-xs">PGRI:</span>{" "}
+                      <span className="text-xs">PGRI:</span>
                       <span className="text-xs">
                         Rp.{" "}
                         {groupedData
-                          .reduce((sum, g) => sum + parseInt(g.pgri), 0)
+                          .reduce((sum, g) => sum + parseInt(g.pgri || 0), 0)
                           .toLocaleString("id-ID")}
                       </span>
                     </div>
                     <div className="flex justify-between py-1">
-                      {" "}
-                      <span className="text-xs">Sanduka:</span>{" "}
+                      <span className="text-xs">Sanduka:</span>
                       <span className="text-xs">
                         Rp.{" "}
                         {groupedData
-                          .reduce((sum, g) => sum + parseInt(g.sanduka), 0)
+                          .reduce((sum, g) => sum + parseInt(g.sanduka || 0), 0)
                           .toLocaleString("id-ID")}
                       </span>
                     </div>
                     <div className="flex justify-between py-1">
-                      {" "}
-                      <span className="text-xs">Daspen:</span>{" "}
+                      <span className="text-xs">Daspen:</span>
                       <span className="text-xs">
                         Rp.{" "}
                         {groupedData
-                          .reduce((sum, g) => sum + parseInt(g.daspen), 0)
+                          .reduce((sum, g) => sum + parseInt(g.daspen || 0), 0)
                           .toLocaleString("id-ID")}
                       </span>
                     </div>
                     <div className="flex justify-between py-1">
-                      {" "}
-                      <span className="text-xs">Derap:</span>{" "}
+                      <span className="text-xs">Derap:</span>
                       <span className="text-xs">
                         Rp.{" "}
                         {groupedData
-                          .reduce((sum, g) => sum + parseInt(g.derap), 0)
+                          .reduce((sum, g) => sum + parseInt(g.derap || 0), 0)
                           .toLocaleString("id-ID")}
                       </span>
                     </div>
                     <div className="flex justify-between py-1">
-                      {" "}
-                      <span className="text-xs">Kalender:</span>{" "}
+                      <span className="text-xs">Kalender:</span>
                       <span className="text-xs">
                         Rp.{" "}
                         {groupedData
-                          .reduce((sum, g) => sum + parseInt(g.kalender), 0)
+                          .reduce(
+                            (sum, g) => sum + parseInt(g.kalender || 0),
+                            0
+                          )
                           .toLocaleString("id-ID")}
                       </span>
                     </div>
                     <div className="flex justify-between py-1">
-                      {" "}
-                      <span className="text-xs">Lain-lain:</span>{" "}
-                      <span className="text-xs">Rp. 0</span>
+                      <span className="text-xs">Lain-lain:</span>
+                      <span className="text-xs">
+                        Rp.{" "}
+                        {groupedData
+                          .reduce(
+                            (sum, g) => sum + parseInt(g.sumbangan || 0),
+                            0
+                          )
+                          .toLocaleString("id-ID")}
+                      </span>
                     </div>
                   </td>
-
                   <td className="p-3 text-center">
                     Rp.{" "}
                     {groupedData
-                      .reduce((sum, g) => sum + parseInt(g.totalIuran), 0)
+                      .reduce((sum, g) => sum + parseInt(g.totalIuran || 0), 0)
                       .toLocaleString("id-ID")}
                   </td>
                   <td className="p-3 text-center"></td>
