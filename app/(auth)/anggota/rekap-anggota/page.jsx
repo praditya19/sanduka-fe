@@ -2146,19 +2146,6 @@ function RekapAnggota() {
       "Total",
     ]);
 
-    hasilFinal.sort((a, b) => {
-      const cabangA = (a.cabang || "").toUpperCase();
-      const cabangB = (b.cabang || "").toUpperCase();
-      if (cabangA < cabangB) return -1;
-      if (cabangA > cabangB) return 1;
-
-      const namaA = (a.namaAnggota || "").toUpperCase();
-      const namaB = (b.namaAnggota || "").toUpperCase();
-      if (namaA < namaB) return -1;
-      if (namaA > namaB) return 1;
-      return 0;
-    });
-
     let no = 1;
     hasilFinal.forEach((item) => {
       const pgri = parseInt(
