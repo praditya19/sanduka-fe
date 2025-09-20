@@ -954,7 +954,7 @@ function RekapAnggota() {
           });
 
           const latestData = sortedByDate[0];
-          console.log("🆕 Latest Iuran Data:", latestData);
+          // console.log("🆕 Latest Iuran Data:", latestData);
 
           setDataIuran(latestData);
 
@@ -978,7 +978,7 @@ function RekapAnggota() {
         if (error.response?.status === 500) {
           console.warn("⚠️ Server error 500: menggunakan fallback data");
           const pgriData = JSON.parse(sessionStorage.getItem("PGRIData"));
-          console.log("📦 Fallback PGRI Data:", pgriData);
+          // console.log("📦 Fallback PGRI Data:", pgriData);
 
           const totalIuranPGRI =
             parseInt(pgriData.pb || 0) +
@@ -998,7 +998,7 @@ function RekapAnggota() {
             totalIuranDaspen: daspenFromMember,
           };
 
-          console.log("📦 Fallback Data Iuran:", fallbackData);
+          // console.log("📦 Fallback Data Iuran:", fallbackData);
 
           setDataIuran(fallbackData);
           setIdIuran(null);
@@ -1330,7 +1330,7 @@ function RekapAnggota() {
       totalIuranSumbangan: totalIuranLainLain || 0,
     };
 
-    console.log("📦 Data yang akan dikirim:", payload);
+    // console.log("📦 Data yang akan dikirim:", payload);
 
     try {
       if (nomorRekening && nomorRekening.trim() !== "") {
@@ -1371,10 +1371,10 @@ function RekapAnggota() {
   };
 
   const handleUpdateClick = async () => {
-  if (!dataNpa || !idIuran) return;
+    if (!dataNpa || !idIuran) return;
 
-  try {
-    const payload = {
+    try {
+      const payload = {
         namaAnggota: dataNpa.namaLengkap,
         tempatTanggalLahir: `${dataNpa.tempatLahir}, ${dataNpa.tanggalLahir?.[2]}-${dataNpa.tanggalLahir?.[1]}-${dataNpa.tanggalLahir?.[0]}`,
         npa: dataNpa.npaPgri,
@@ -1401,55 +1401,58 @@ function RekapAnggota() {
         payload[`totalIuran${capitalizeFirstLetter(key)}`] = total || 0;
       });
 
-    // 🔹 Update iuranSumbanganList
-    payload.iuranSumbanganList = dataIuran.iuranSumbanganList.map((item) => {
-  const tambahan = nominalBaruList[item.jenis] || 0;
+      // 🔹 Update iuranSumbanganList
+      payload.iuranSumbanganList = dataIuran.iuranSumbanganList.map((item) => {
+        const tambahan = nominalBaruList[item.jenis] || 0;
 
-  // kalau item masuk resetKeys → selalu paksa 0
-  const jumlahBaru = resetKeys.includes(item.jenis)
-    ? 0
-    : item.jumlah + tambahan;
+        // kalau item masuk resetKeys → selalu paksa 0
+        const jumlahBaru = resetKeys.includes(item.jenis)
+          ? 0
+          : item.jumlah + tambahan;
 
-  console.log(
-    `Sumbangan: ${item.jenis}, Awal: ${item.jumlah}, Tambahan: ${tambahan}, Reset: ${resetKeys.includes(item.jenis)}, Akhir: ${jumlahBaru}`
-  );
+        // console.log(
+        //   `Sumbangan: ${item.jenis}, Awal: ${
+        //     item.jumlah
+        //   }, Tambahan: ${tambahan}, Reset: ${resetKeys.includes(
+        //     item.jenis
+        //   )}, Akhir: ${jumlahBaru}`
+        // );
 
-  return {
-    ...item,
-    jumlah: jumlahBaru,
+        return {
+          ...item,
+          jumlah: jumlahBaru,
+        };
+      });
+
+      // 🔹 Hitung total iuran sumbangan dari list yang sudah diupdate
+      payload.totalIuranSumbangan = payload.iuranSumbanganList.reduce(
+        (acc, curr) => acc + curr.jumlah,
+        0
+      );
+
+      // console.log("Data yang akan diupdate:", payload);
+
+      await GlobalApi.putIuranAnggota(idIuran, payload);
+      await fetchInitialData();
+
+      setNotification({
+        type: "success",
+        message: "Data berhasil diupdate!",
+      });
+      setIsPopupVisible(false);
+      setResetKeys([]);
+      setAddedCategories([]);
+      setManualInputs([]);
+      setSelectedKategori("");
+      setLastUpdatedMemberNip(dataNpa.nip);
+    } catch (error) {
+      console.error("Gagal update data:", error);
+      setNotification({
+        type: "error",
+        message: "Gagal update data.",
+      });
+    }
   };
-});
-
-
-    // 🔹 Hitung total iuran sumbangan dari list yang sudah diupdate
-    payload.totalIuranSumbangan = payload.iuranSumbanganList.reduce(
-      (acc, curr) => acc + curr.jumlah,
-      0
-    );
-
-    console.log("Data yang akan diupdate:", payload);
-
-    await GlobalApi.putIuranAnggota(idIuran, payload);
-    await fetchInitialData();
-
-    setNotification({
-      type: "success",
-      message: "Data berhasil diupdate!",
-    });
-    setIsPopupVisible(false);
-    setResetKeys([]);
-    setAddedCategories([]);
-    setManualInputs([]);
-    setSelectedKategori("");
-    setLastUpdatedMemberNip(dataNpa.nip);
-  } catch (error) {
-    console.error("Gagal update data:", error);
-    setNotification({
-      type: "error",
-      message: "Gagal update data.",
-    });
-  }
-};
 
   // const handleUpdateClick = async () => {
   //   if (!dataNpa || !idIuran) return;
@@ -1526,7 +1529,7 @@ function RekapAnggota() {
   //     });
   //   }
   // };
-  
+
   const calculateGrandTotal = () => {
     let total = 0;
 
@@ -1844,191 +1847,431 @@ function RekapAnggota() {
     }
   };
 
+  //   const exportToExcel = async () => {
+  //   if (!groupedData || groupedData.length === 0) {
+  //     console.error("Data kosong, tidak dapat export ke Excel");
+  //     return;
+  //   }
+
+  //   const bulan = selectedBulan || new Date().getMonth() + 1;
+  //   const tahun = selectedTahun || new Date().getFullYear();
+
+  //   let anggotaAll = [];
+  //   try {
+  //     const allData = await GlobalApi.getIuranAnggotaAll(bulan, tahun);
+
+  //     // ambil data terbaru per NPA + hitung totalSumbangan
+  //     const latestPerNpa = Object.values(
+  //       allData.reduce((acc, item) => {
+  //         if (!acc[item.npa]) {
+  //           acc[item.npa] = item;
+  //         } else {
+  //           const existingDate = new Date(...acc[item.npa].createdAt);
+  //           const currentDate = new Date(...item.createdAt);
+  //           if (currentDate > existingDate) {
+  //             acc[item.npa] = item;
+  //           }
+  //         }
+
+  //         // tambahkan field totalSumbangan
+  //         acc[item.npa].totalSumbangan = (item.iuranSumbanganList || []).reduce(
+  //           (sum, s) => sum + (s.jumlah || 0),
+  //           0
+  //         );
+
+  //         return acc;
+  //       }, {})
+  //     );
+
+  //     anggotaAll = latestPerNpa;
+  //   } catch (err) {
+  //     console.error("Gagal ambil data anggota untuk nomor rekening:", err);
+  //   }
+
+  //   const npaToRekeningMap = {};
+  //   const npaToSumbanganMap = {};
+  //   anggotaAll.forEach((item) => {
+  //     npaToRekeningMap[item.npa] = item.nomorRekening;
+  //     npaToSumbanganMap[item.npa] = item.totalSumbangan || 0;
+  //   });
+
+  //   const bulanSekarang = new Date();
+  //   const bulanBerikutnya = new Date(
+  //     bulanSekarang.getFullYear(),
+  //     bulanSekarang.getMonth() + 1
+  //   );
+  //   const namaBulan = bulanBerikutnya.toLocaleString("id-ID", {
+  //     month: "long",
+  //     year: "numeric",
+  //   });
+
+  //   const excelData = [];
+
+  //   excelData.push([`Tagihan Untuk Bulan ${namaBulan}`]);
+  //   excelData.push([]);
+
+  //   excelData.push([
+  //     "No",
+  //     "Cabang",
+  //     "Unit Kerja",
+  //     "Nama Anggota",
+  //     "NIP",
+  //     "Nomor Rekening",
+  //     "PGRI",
+  //     "Sanduka",
+  //     "Daspen",
+  //     "Derap",
+  //     "Kalender",
+  //     "Lain-Lain",
+  //     "Total",
+  //   ]);
+
+  //   groupedData.forEach((group, index) => {
+  //     if (group.members && group.members.length > 0) {
+  //       group.members.forEach((member, memberIndex) => {
+  //         const nomorRekeningFinal =
+  //           npaToRekeningMap[member.npaPgri] || member.nomorRekening || "-";
+
+  //         const lainLain =
+  //           npaToSumbanganMap[member.npaPgri] ||
+  //           (member.iuranSumbanganList
+  //             ? member.iuranSumbanganList.reduce(
+  //                 (sum, s) => sum + (s.jumlah || 0),
+  //                 0
+  //               )
+  //             : 0);
+
+  //         const total = parseInt(member.totalIuran || 0);
+
+  //         excelData.push([
+  //           memberIndex === 0 ? index + 1 : "",
+  //           memberIndex === 0 ? group.cabang : "",
+  //           memberIndex === 0 ? group.unitKerja : "",
+  //           member.namaAnggota,
+  //           member.nip || "-",
+  //           nomorRekeningFinal,
+  //           parseInt(member.pgri || 0),
+  //           parseInt(member.sanduka || 0),
+  //           parseInt(member.daspen || 0),
+  //           parseInt(member.derap || 0),
+  //           parseInt(member.kalender || 0),
+  //           lainLain,
+  //           total,
+  //         ]);
+  //       });
+  //     }
+  //   });
+
+  //   const totalPgri = groupedData.reduce(
+  //     (sum, g) => sum + parseInt(g.pgri || 0),
+  //     0
+  //   );
+  //   const totalSanduka = groupedData.reduce(
+  //     (sum, g) => sum + parseInt(g.sanduka || 0),
+  //     0
+  //   );
+  //   const totalDaspen = groupedData.reduce(
+  //     (sum, g) => sum + parseInt(g.daspen || 0),
+  //     0
+  //   );
+  //   const totalDerap = groupedData.reduce(
+  //     (sum, g) => sum + parseInt(g.derap || 0),
+  //     0
+  //   );
+  //   const totalKalender = groupedData.reduce(
+  //     (sum, g) => sum + parseInt(g.kalender || 0),
+  //     0
+  //   );
+
+  //   // total lain-lain dari semua anggota (pakai map yang sudah dibuat)
+  //   const totalLainlain = Object.values(npaToSumbanganMap).reduce(
+  //     (sum, val) => sum + val,
+  //     0
+  //   );
+
+  //   const totalIuran = groupedData.reduce(
+  //     (sum, g) => sum + parseInt(g.totalIuran || 0),
+  //     0
+  //   );
+
+  //   excelData.push([
+  //     "",
+  //     "",
+  //     "",
+  //     "Total Keseluruhan:",
+  //     "",
+  //     "",
+  //     totalPgri,
+  //     totalSanduka,
+  //     totalDaspen,
+  //     totalDerap,
+  //     totalKalender,
+  //     totalLainlain,
+  //     totalIuran,
+  //     "",
+  //     "",
+  //     "",
+  //   ]);
+
+  //   const ws = XLSX.utils.aoa_to_sheet(excelData);
+  //   const wb = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(wb, ws, "RekapData");
+
+  //   const waktuDownload = new Date().toLocaleString("id-ID", {
+  //     dateStyle: "short",
+  //     timeStyle: "medium",
+  //   });
+
+  //   const safeWaktuDownload = waktuDownload
+  //     .replace(/[/:]/g, "-")
+  //     .replace(/[ ]/g, "_");
+
+  //   const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
+  //     selectedCabang ? `_Cabang_${selectedCabang}` : ""
+  //   }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
+
+  //   XLSX.writeFile(wb, fileName);
+  // };
+
   const exportToExcel = async () => {
-  if (!groupedData || groupedData.length === 0) {
-    console.error("Data kosong, tidak dapat export ke Excel");
-    return;
-  }
-
-  const bulan = selectedBulan || new Date().getMonth() + 1;
-  const tahun = selectedTahun || new Date().getFullYear();
-
-  let anggotaAll = [];
-  try {
-    const allData = await GlobalApi.getIuranAnggotaAll(bulan, tahun);
-
-    // ambil data terbaru per NPA + hitung totalSumbangan
-    const latestPerNpa = Object.values(
-      allData.reduce((acc, item) => {
-        if (!acc[item.npa]) {
-          acc[item.npa] = item;
-        } else {
-          const existingDate = new Date(...acc[item.npa].createdAt);
-          const currentDate = new Date(...item.createdAt);
-          if (currentDate > existingDate) {
-            acc[item.npa] = item;
-          }
-        }
-
-        // tambahkan field totalSumbangan
-        acc[item.npa].totalSumbangan = (item.iuranSumbanganList || []).reduce(
-          (sum, s) => sum + (s.jumlah || 0),
-          0
-        );
-
-        return acc;
-      }, {})
-    );
-
-    anggotaAll = latestPerNpa;
-  } catch (err) {
-    console.error("Gagal ambil data anggota untuk nomor rekening:", err);
-  }
-
-  const npaToRekeningMap = {};
-  const npaToSumbanganMap = {};
-  anggotaAll.forEach((item) => {
-    npaToRekeningMap[item.npa] = item.nomorRekening;
-    npaToSumbanganMap[item.npa] = item.totalSumbangan || 0;
-  });
-
-  const bulanSekarang = new Date();
-  const bulanBerikutnya = new Date(
-    bulanSekarang.getFullYear(),
-    bulanSekarang.getMonth() + 1
-  );
-  const namaBulan = bulanBerikutnya.toLocaleString("id-ID", {
-    month: "long",
-    year: "numeric",
-  });
-
-  const excelData = [];
-
-  excelData.push([`Tagihan Untuk Bulan ${namaBulan}`]);
-  excelData.push([]);
-
-  excelData.push([
-    "No",
-    "Cabang",
-    "Unit Kerja",
-    "Nama Anggota",
-    "NIP",
-    "Nomor Rekening",
-    "PGRI",
-    "Sanduka",
-    "Daspen",
-    "Derap",
-    "Kalender",
-    "Lain-Lain",
-    "Total",
-  ]);
-
-  groupedData.forEach((group, index) => {
-    if (group.members && group.members.length > 0) {
-      group.members.forEach((member, memberIndex) => {
-        const nomorRekeningFinal =
-          npaToRekeningMap[member.npaPgri] || member.nomorRekening || "-";
-
-        const lainLain =
-          npaToSumbanganMap[member.npaPgri] ||
-          (member.iuranSumbanganList
-            ? member.iuranSumbanganList.reduce(
-                (sum, s) => sum + (s.jumlah || 0),
-                0
-              )
-            : 0);
-
-        const total = parseInt(member.totalIuran || 0);
-
-        excelData.push([
-          memberIndex === 0 ? index + 1 : "",
-          memberIndex === 0 ? group.cabang : "",
-          memberIndex === 0 ? group.unitKerja : "",
-          member.namaAnggota,
-          member.nip || "-",
-          nomorRekeningFinal,
-          parseInt(member.pgri || 0),
-          parseInt(member.sanduka || 0),
-          parseInt(member.daspen || 0),
-          parseInt(member.derap || 0),
-          parseInt(member.kalender || 0),
-          lainLain,
-          total,
-        ]);
-      });
+    if (!groupedData || groupedData.length === 0) {
+      console.error("❌ Data tabel kosong, tidak dapat export ke Excel");
+      return;
     }
-  });
 
-  const totalPgri = groupedData.reduce(
-    (sum, g) => sum + parseInt(g.pgri || 0),
-    0
-  );
-  const totalSanduka = groupedData.reduce(
-    (sum, g) => sum + parseInt(g.sanduka || 0),
-    0
-  );
-  const totalDaspen = groupedData.reduce(
-    (sum, g) => sum + parseInt(g.daspen || 0),
-    0
-  );
-  const totalDerap = groupedData.reduce(
-    (sum, g) => sum + parseInt(g.derap || 0),
-    0
-  );
-  const totalKalender = groupedData.reduce(
-    (sum, g) => sum + parseInt(g.kalender || 0),
-    0
-  );
+    const bulan = selectedBulan || new Date().getMonth() + 1;
+    const tahun = selectedTahun || new Date().getFullYear();
 
-  // total lain-lain dari semua anggota (pakai map yang sudah dibuat)
-  const totalLainlain = Object.values(npaToSumbanganMap).reduce(
-    (sum, val) => sum + val,
-    0
-  );
+    let anggotaAll = [];
+    try {
+      const allData = await GlobalApi.getIuranAnggotaAll(bulan, tahun);
 
-  const totalIuran = groupedData.reduce(
-    (sum, g) => sum + parseInt(g.totalIuran || 0),
-    0
-  );
+      // ambil data terbaru per NPA
+      const latestPerNpa = Object.values(
+        allData.reduce((acc, item) => {
+          if (!acc[item.npa]) {
+            acc[item.npa] = item;
+          } else {
+            const existingDate = new Date(acc[item.npa].createdAt);
+            const currentDate = new Date(item.createdAt);
+            if (currentDate > existingDate) {
+              acc[item.npa] = item;
+            }
+          }
 
-  excelData.push([
-    "",
-    "",
-    "",
-    "Total Keseluruhan:",
-    "",
-    "",
-    totalPgri,
-    totalSanduka,
-    totalDaspen,
-    totalDerap,
-    totalKalender,
-    totalLainlain,
-    totalIuran,
-    "",
-    "",
-    "",
-  ]);
+          // hitung total sumbangan
+          acc[item.npa].totalSumbangan = (item.iuranSumbanganList || []).reduce(
+            (sum, s) => sum + (s.jumlah || 0),
+            0
+          );
 
-  const ws = XLSX.utils.aoa_to_sheet(excelData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "RekapData");
+          return acc;
+        }, {})
+      );
 
-  const waktuDownload = new Date().toLocaleString("id-ID", {
-    dateStyle: "short",
-    timeStyle: "medium",
-  });
+      anggotaAll = latestPerNpa;
+      // console.log("📌 Data dari API (anggotaAll):", anggotaAll);
+    } catch (err) {
+      console.error("❌ Gagal ambil data anggota dari API:", err);
+    }
 
-  const safeWaktuDownload = waktuDownload
-    .replace(/[/:]/g, "-")
-    .replace(/[ ]/g, "_");
+    // 👉 loop masuk ke group.members lalu match berdasarkan npaPgri
+    let hasilFinal = [];
+    groupedData.forEach((group) => {
+      if (group.members && group.members.length > 0) {
+        group.members.forEach((member) => {
+          const match = anggotaAll.find((d) => d.npa === member.npaPgri);
+          if (match) {
+            // console.log(
+            //   `✅ Match ditemukan untuk NPA ${member.npaPgri}:`,
+            //   match
+            // );
+            hasilFinal.push({
+              ...member,
+              cabang: group.cabang,
+              unitKerja: group.unitKerja,
+              ...match,
+            });
+          } else {
+            console.warn(
+              `⚠️ Tidak ada match di API untuk NPA ${member.npaPgri}`
+            );
+            hasilFinal.push({
+              ...member,
+              cabang: group.cabang,
+              unitKerja: group.unitKerja,
+            });
+          }
+        });
+      }
+    });
 
-  const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
-    selectedCabang ? `_Cabang_${selectedCabang}` : ""
-  }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
+    // console.log("📌 Hasil gabungan (hasilFinal):", hasilFinal);
 
-  XLSX.writeFile(wb, fileName);
-};
+    if (hasilFinal.length === 0) {
+      alert(
+        "Tidak ada data yang cocok antara tabel dan API (NPA tidak match)."
+      );
+      return;
+    }
+
+    // judul bulan depan
+    const bulanSekarang = new Date();
+    const bulanBerikutnya = new Date(
+      bulanSekarang.getFullYear(),
+      bulanSekarang.getMonth() + 1
+    );
+    const namaBulan = bulanBerikutnya.toLocaleString("id-ID", {
+      month: "long",
+      year: "numeric",
+    });
+
+    const excelData = [];
+    excelData.push([`Tagihan Untuk Bulan ${namaBulan}`]);
+    excelData.push([]);
+
+    excelData.push([
+      "No",
+      "Cabang",
+      "Unit Kerja",
+      "Nama Anggota",
+      "NIP",
+      "Nomor Rekening",
+      "PGRI",
+      "Sanduka",
+      "Daspen",
+      "Derap",
+      "Kalender",
+      "Lain-Lain",
+      "Total",
+    ]);
+
+    hasilFinal.sort((a, b) => {
+      const cabangA = (a.cabang || "").toUpperCase();
+      const cabangB = (b.cabang || "").toUpperCase();
+      if (cabangA < cabangB) return -1;
+      if (cabangA > cabangB) return 1;
+
+      const namaA = (a.namaAnggota || "").toUpperCase();
+      const namaB = (b.namaAnggota || "").toUpperCase();
+      if (namaA < namaB) return -1;
+      if (namaA > namaB) return 1;
+      return 0;
+    });
+
+    let no = 1;
+    hasilFinal.forEach((item) => {
+      const pgri = parseInt(
+        item.pgri || item.totalIuranAnggota || item.iuranAnggota || 0
+      );
+      const sanduka = parseInt(
+        item.sanduka || item.totalIuranSanduka || item.iuranSanduka || 0
+      );
+      const daspen = parseInt(
+        item.daspen || item.totalIuranDaspen || item.iuranDaspen || 0
+      );
+      const derap = parseInt(
+        item.derap || item.totalIuranDerap || item.iuranDerap || 0
+      );
+      const kalender = parseInt(
+        item.kalender || item.totalIuranKalender || item.iuranKalender || 0
+      );
+      const lain = parseInt(item.sumbangan || item.totalSumbangan || 0);
+      const total = pgri + sanduka + daspen + derap + kalender + lain;
+
+      excelData.push([
+        no++,
+        item.cabang,
+        item.unitKerja,
+        item.namaAnggota,
+        item.nip,
+        item.nomorRekening || "-",
+        pgri,
+        sanduka,
+        daspen,
+        derap,
+        kalender,
+        lain,
+        total,
+      ]);
+    });
+
+    // total keseluruhan
+    const totalPgri = hasilFinal.reduce(
+      (sum, g) =>
+        sum + parseInt(g.pgri || g.totalIuranAnggota || g.iuranAnggota || 0),
+      0
+    );
+    const totalSanduka = hasilFinal.reduce(
+      (sum, g) =>
+        sum + parseInt(g.sanduka || g.totalIuranSanduka || g.iuranSanduka || 0),
+      0
+    );
+    const totalDaspen = hasilFinal.reduce(
+      (sum, g) =>
+        sum + parseInt(g.daspen || g.totalIuranDaspen || g.iuranDaspen || 0),
+      0
+    );
+    const totalDerap = hasilFinal.reduce(
+      (sum, g) =>
+        sum + parseInt(g.derap || g.totalIuranDerap || g.iuranDerap || 0),
+      0
+    );
+    const totalKalender = hasilFinal.reduce(
+      (sum, g) =>
+        sum +
+        parseInt(g.kalender || g.totalIuranKalender || g.iuranKalender || 0),
+      0
+    );
+    const totalLainlain = hasilFinal.reduce(
+      (sum, g) => sum + parseInt(g.sumbangan || g.totalSumbangan || 0),
+      0
+    );
+    const totalIuran =
+      totalPgri +
+      totalSanduka +
+      totalDaspen +
+      totalDerap +
+      totalKalender +
+      totalLainlain;
+
+    excelData.push([]);
+    excelData.push([
+      "",
+      "",
+      "",
+      "Total Keseluruhan:",
+      "",
+      "",
+      totalPgri,
+      totalSanduka,
+      totalDaspen,
+      totalDerap,
+      totalKalender,
+      totalLainlain,
+      totalIuran,
+    ]);
+
+    // buat file Excel
+    const ws = XLSX.utils.aoa_to_sheet(excelData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "RekapData");
+
+    const waktuDownload = new Date().toLocaleString("id-ID", {
+      dateStyle: "short",
+      timeStyle: "medium",
+    });
+
+    const safeWaktuDownload = waktuDownload
+      .replace(/[/:]/g, "-")
+      .replace(/[ ]/g, "_");
+
+    const fileName = `Backupbynominal_${namaBulan}_${safeWaktuDownload}${
+      selectedCabang ? `_Cabang_${selectedCabang}` : ""
+    }${selectedUnitKerja ? `_Unit_Kerja_${selectedUnitKerja}` : ""}.xlsx`;
+
+    XLSX.writeFile(wb, fileName);
+  };
 
   const handleBackupData = async () => {
     if (!selectedDate) {
