@@ -268,72 +268,71 @@ export default function Tagihan() {
         </div>
   
         <section style="margin-top: 25px; background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
-          <h3 style="color: #2c3e50; font-size: 16px; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 1px solid #e0e0e0;">
-            <i style="margin-right: 8px;">&#128100;</i> Informasi Anggota
-          </h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="width: 180px; padding: 8px 0; color: #7f8c8d;">Nama</td>
-              <td style="width: 20px; padding: 8px 0; color: #7f8c8d;">:</td>
-              <td style="padding: 8px 0; font-weight: 500;">${dataIuran.namaLengkap}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; color: #7f8c8d;">Tempat, Tanggal Lahir</td>
-              <td style="padding: 8px 0; color: #7f8c8d;">:</td>
-              <td style="padding: 8px 0;">${dataIuran.tempatTanggalLahir}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; color: #7f8c8d;">Unit Kerja</td>
-              <td style="padding: 8px 0; color: #7f8c8d;">:</td>
-              <td style="padding: 8px 0;">${dataIuran.unitKerja}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; color: #7f8c8d;">Cabang</td>
-              <td style="padding: 8px 0; color: #7f8c8d;">:</td>
-              <td style="padding: 8px 0;">${dataIuran.cabang}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; color: #7f8c8d;">Jabatan</td>
-              <td style="padding: 8px 0; color: #7f8c8d;">:</td>
-              <td style="padding: 8px 0;">${dataIuran.jabatan}</td>
-            </tr>
-          </table>
-        </section>
-  
-        <section style="margin-top: 25px; background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
-          <h3 style="color: #2c3e50; font-size: 16px; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 1px solid #e0e0e0;">
-            <i style="margin-right: 8px;">&#128181;</i> Rincian Tagihan
-          </h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="width: 40px; padding: 10px 5px; color: #7f8c8d;">1.</td>
-              <td style="padding: 10px 5px; color: #7f8c8d;">Iuran Anggota</td>
-              <td style="width: 20px; padding: 10px 5px; color: #7f8c8d;">:</td>
-              <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.pgri?.toLocaleString('id-ID') || '0'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 10px 5px; color: #7f8c8d;">2.</td>
-              <td style="padding: 10px 5px; color: #7f8c8d;">Sanduka</td>
-              <td style="padding: 10px 5px; color: #7f8c8d;">:</td>
-              <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.sanduka?.toLocaleString('id-ID') || '0'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 10px 5px; color: #7f8c8d;">3.</td>
-              <td style="padding: 10px 5px; color: #7f8c8d;">Daspen</td>
-              <td style="padding: 10px 5px; color: #7f8c8d;">:</td>
-              <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.daspen?.toLocaleString('id-ID') || '0'}</td>
-            </tr>
-          </table>
-          <div style="margin-top: 20px; background-color: #2c3e50; color: white; padding: 12px 15px; border-radius: 6px; display: flex; justify-content: space-between;">
-            <span style="font-weight: bold; font-size: 15px;">Total Tagihan</span>
-            <span style="font-weight: bold; font-size: 15px;">Rp. ${(
+  <h3 style="color: #2c3e50; font-size: 16px; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 1px solid #e0e0e0;">
+    <i style="margin-right: 8px;">&#128181;</i> Rincian Tagihan
+  </h3>
+  <table style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td style="width: 40px; padding: 10px 5px; color: #7f8c8d;">1.</td>
+      <td style="padding: 10px 5px; color: #7f8c8d;">Iuran Anggota</td>
+      <td style="width: 20px; padding: 10px 5px; color: #7f8c8d;">:</td>
+      <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.pgri?.toLocaleString('id-ID') || '0'}</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px 5px; color: #7f8c8d;">2.</td>
+      <td style="padding: 10px 5px; color: #7f8c8d;">Sanduka</td>
+      <td style="padding: 10px 5px; color: #7f8c8d;">:</td>
+      <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.sanduka?.toLocaleString('id-ID') || '0'}</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px 5px; color: #7f8c8d;">3.</td>
+      <td style="padding: 10px 5px; color: #7f8c8d;">Daspen</td>
+      <td style="padding: 10px 5px; color: #7f8c8d;">:</td>
+      <td style="text-align: right; padding: 10px 5px;">Rp. ${dataIuran.daspen?.toLocaleString('id-ID') || '0'}</td>
+    </tr>
+
+    ${dataIuran.sumbangan > 0
+        ? `
+        <tr>
+          <td style="padding: 10px 5px; color: #7f8c8d;">4.</td>
+          <td style="padding: 10px 5px; color: #7f8c8d;">Sumbangan</td>
+          <td style="padding: 10px 5px; color: #7f8c8d;">:</td>
+        </tr>
+        ${dataIuran.detailSumbangan?.length > 0
+          ? `<tr>
+                <td></td>
+                <td colspan="3" style="padding: 8px 5px 8px 20px;">
+                  <ul style="margin: 0; padding-left: 20px; color: #555; font-size: 13px; list-style-type: disc;">
+                    ${dataIuran.detailSumbangan
+            .map(
+              (item) =>
+                `<li style="margin-bottom: 4px; display: flex; justify-content: space-between;">
+                            <span>${item.namaSumbangan}</span>
+                            <span style="font-weight: 500;">Rp. ${item.jumlah.toLocaleString('id-ID')}</span>
+                          </li>`
+            )
+            .join("")}
+                  </ul>
+                </td>
+              </tr>`
+          : ""
+        }
+        `
+        : ""
+      }
+  </table>
+
+  <div style="margin-top: 20px; background-color: #2c3e50; color: white; padding: 12px 15px; border-radius: 6px; display: flex; justify-content: space-between;">
+    <span style="font-weight: bold; font-size: 15px;">Total Tagihan</span>
+    <span style="font-weight: bold; font-size: 15px;">Rp. ${(
         (dataIuran.pgri || 0) +
         (dataIuran.sanduka || 0) +
-        (dataIuran.daspen || 0)
+        (dataIuran.daspen || 0) +
+        (dataIuran.sumbangan || 0)
       ).toLocaleString('id-ID')}</span>
-          </div>
-        </section>
-        
+  </div>
+</section>
+      
         <footer style="margin-top: 40px; text-align: center; font-size: 12px; color: #95a5a6; padding-top: 20px; border-top: 1px solid #f0f0f0;">
           Dokumen ini diterbitkan secara elektronik dan sah tanpa tanda tangan
         </footer>
@@ -686,19 +685,29 @@ export default function Tagihan() {
                             )}
 
                             {dataIuran.sumbangan > 0 && (
-                              <div className="flex justify-between items-center p-2 hover:bg-indigo-50 rounded-lg transition-colors">
-                                <div className="flex items-center">
-                                  <div className="w-3 h-3 bg-indigo-500 rounded-full mr-3"></div>
-                                  <span className="text-gray-700 font-medium">
-                                    Sumbangan
-                                  </span>
+                              <div className="p-2 rounded-lg hover:bg-pink-50 transition-colors">
+                                <div className="flex justify-between items-center">
+                                  <div className="flex items-center">
+                                    <div className="w-3 h-3 bg-pink-500 rounded-full mr-3"></div>
+                                    <span className="text-gray-700 font-medium">Sumbangan</span>
+                                  </div>
                                 </div>
-                                <span className="font-semibold text-gray-900">
-                                  Rp.{" "}
-                                  {dataIuran.sumbangan?.toLocaleString(
-                                    "id-ID"
-                                  )}
-                                </span>
+
+                                {dataIuran?.detailSumbangan?.length > 0 && (
+                                  <div className="mt-2 ml-6 border-l-2 border-pink-300 pl-3 space-y-1">
+                                    {dataIuran.detailSumbangan.map((item) => (
+                                      <div
+                                        key={item.id}
+                                        className="flex justify-between text-gray-700"
+                                      >
+                                        <span className="text-sm">• {item.namaSumbangan}</span>
+                                        <span className="font-semibold text-gray-900 text-base">
+                                          Rp. {item.jumlah.toLocaleString("id-ID")}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
