@@ -1090,9 +1090,11 @@ function RekapAnggota() {
   const handleSave = async () => {
     if (selectedKategori) {
       const uniqueKey =
-        selectedKategori === "lainlain" && selectedKeterangan
-          ? `${selectedKeterangan}`
-          : selectedKategori;
+  selectedKategori === "lainlain" && selectedKeterangan
+    ? `${selectedKeterangan}`
+    : selectedKategori === "pgri"
+    ? "anggota"
+    : selectedKategori;
 
       if (!addedCategories.find((cat) => cat.key === uniqueKey)) {
         const labelMap = {
@@ -1101,6 +1103,8 @@ function RekapAnggota() {
           kalender: "Kalender",
           lainlain: "Lain-Lain",
           daspen: "Daspen",
+           pgri: "Anggota",
+        sanduka: "Sanduka",
         };
 
         let initialValue = 0;
@@ -1162,7 +1166,13 @@ function RekapAnggota() {
         if (selectedKategori === "daspen") {
           initialValue = parseInt(daspenValue || 0);
         }
+  if (selectedKategori === "pgri") {
+        initialValue = 8000; 
+      }
 
+      if (selectedKategori === "sanduka") {
+        initialValue = 3000; 
+      }
         setAddedCategories((prev) => [
           ...prev,
           {
@@ -3605,6 +3615,8 @@ function RekapAnggota() {
                                   }
                                 >
                                   <option value="">-- Pilih --</option>
+                                   <option value="pgri">PGRI</option>
+  <option value="sanduka">Sanduka</option>
                                   <option value="daspen">
                                     Daspen{" "}
                                     {notifDaspen === true
