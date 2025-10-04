@@ -101,12 +101,14 @@ const GaleriKegiatan = () => {
   const [fileName, setFileName] = useState("");
   const profileImageUrl = "/profile.png";
   const [fotoBase64, setFotoBase64] = useState(null);
-
-  // Pindahkan state expandedItems ke level komponen utama
   const [expandedItems, setExpandedItems] = useState({});
-
   const [nonEventGalleries, setNonEventGalleries] = useState([]);
   const [eventGalleries, setEventGalleries] = useState([]);
+
+  // State baru untuk popup lihat semua event dan detail event
+  const [showAllEventsPopup, setShowAllEventsPopup] = useState(false);
+  const [showEventDetailPopup, setShowEventDetailPopup] = useState(false);
+  const [selectedEventDetail, setSelectedEventDetail] = useState(null);
 
   useEffect(() => {
     fetchEventGalleries();
@@ -141,6 +143,22 @@ const GaleriKegiatan = () => {
       setRegistrationStatus(newRegistrationStatus);
     }
   }, [userData, eventParticipants, galleries]);
+
+  useEffect(() => {
+    if (userData && eventParticipants.length > 0 && eventGalleries.length > 0) {
+      const userNpa = userData.npaPgri;
+      const newRegistrationStatus = {};
+
+      eventGalleries.forEach(event => {
+        const isRegistered = eventParticipants.some(
+          participant => participant.npa === userNpa && participant.namaEvent === event.namaEvent
+        );
+        newRegistrationStatus[event.id] = isRegistered ? "Sudah Terdaftar" : null;
+      });
+
+      setRegistrationStatus(newRegistrationStatus);
+    }
+  }, [userData, eventParticipants, eventGalleries]);
 
   const fetchUserData = async () => {
     try {
@@ -279,7 +297,14 @@ const GaleriKegiatan = () => {
     }, 100);
   };
 
-  // Fungsi untuk menghapus tag HTML dari teks
+  // Fungsi untuk membuka detail event dari popup lihat semua
+  const handleEventClick = (event) => {
+    setSelectedEventDetail(event);
+    setCurrentEvent(event);
+    setShowAllEventsPopup(false);
+    setShowEventDetailPopup(true);
+  };
+
   const stripHtml = (html) => {
     if (!html) return "";
     const tmp = document.createElement("DIV");
@@ -287,7 +312,6 @@ const GaleriKegiatan = () => {
     return tmp.textContent || tmp.innerText || "";
   };
 
-  // Fungsi untuk memotong teks HTML
   const truncateHtml = (html, maxLength) => {
     if (!html) return "";
     const tmp = document.createElement("DIV");
@@ -374,18 +398,15 @@ const GaleriKegiatan = () => {
     const maxDescriptionLength = 250;
 
     const getAutoplayConfig = () => {
-      // Hanya "Galeri Kegiatan" yang menggunakan autoplay
       if (title === "Galeri Kegiatan") {
         return {
           delay: 3000,
           disableOnInteraction: false
         };
       }
-      // Event tidak menggunakan autoplay (manual scroll only)
       return false;
     };
 
-    // Fungsi untuk merender deskripsi
     const renderDescription = (item) => {
       const plainText = item.deskripsi ? stripHtml(item.deskripsi) : "";
       const isLongText = plainText.length > maxDescriptionLength;
@@ -422,7 +443,19 @@ const GaleriKegiatan = () => {
 
     return (
       <div className="mb-12">
-        <h2 className="text-xl font-bold mb-6 text-center">{title}</h2>
+        <div className="mb-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-bold">{title}</h2>
+            {title === "Event" && items.length > 0 && (
+              <button
+                onClick={() => setShowAllEventsPopup(true)}
+                className="text-blue-600 hover:text-blue-800 text-sm font-semibold transition-colors hover:underline"
+              >
+                Lihat Semua
+              </button>
+            )}
+          </div>
+        </div>
         {items.length === 0 ? (
           <div className="text-center text-gray-600">
             {title === "Event" && "Tidak ada event apa pun untuk saat ini."}
@@ -435,71 +468,510 @@ const GaleriKegiatan = () => {
             navigation={true}
             pagination={{ clickable: true }}
             autoplay={getAutoplayConfig()}
+            loop={true}
             className="w-full"
           >
             {items.map((item) => (
-              <SwiperSlide key={item.id} className="flex flex-col items-center">
-                <div className="relative w-full rounded-lg shadow-md bg-white flex justify-center">
-                  <div
-                    className="w-full"
-                    style={{
-                      height: "0",
-                      paddingBottom: "56.25%",
-                      position: "relative",
-                    }}
-                  >
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.deskripsi || "Gallery image"}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 80vw, 70vw"
-                      className="object-contain rounded-lg"
-                      priority={true}
-                      quality={90}
-                      style={{
-                        maxHeight: "100%",
-                        maxWidth: "100%",
-                      }}
-                      onError={(e) => {
-                        e.currentTarget.src = "/placeholder-image.jpg";
-                        e.currentTarget.className = "object-cover";
-                      }}
-                    />
-                  </div>
+              <SwiperSlide key={item.id} className="flex flex-col items-center pb-12">
+                <div
+                  className="relative w-full max-w-md mx-auto rounded-lg shadow-md bg-white cursor-pointer hover:shadow-lg transition-shadow overflow-hidden"
+                  onClick={() => title === "Event" && handleEventClick(item)}
+                  style={{ height: '400px' }}
+                >
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.deskripsi || "Gallery image"}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, 500px"
+                    className="object-contain"
+                    priority={true}
+                    quality={90}
+                  />
                 </div>
                 <div className="mt-4 text-center w-full px-2 sm:px-4 md:px-8">
                   {item.category === "EVENT" ? (
                     <div>
                       <p className="text-lg font-medium">{item.namaEvent}</p>
-                      {renderDescription(item)}
                     </div>
                   ) : (
                     <div>
                       {renderDescription(item)}
                     </div>
                   )}
-                  {showRegisterButton && userData?.role === "USER" && (
-                    <div className="mt-4">
-                      {registrationStatus[item.id] ? (
-                        <div className="inline-block px-8 py-3 bg-yellow-500 text-white rounded-lg font-semibold text-base shadow-md">
-                          {registrationStatus[item.id]}
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => handleRegister(item.id)}
-                          className="px-10 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                        >
-                          Daftar Event
-                        </button>
-                      )}
-                    </div>
-                  )}
                 </div>
               </SwiperSlide>
             ))}
-            <div className="swiper-pagination !relative mt-10"></div>
+            <div className="swiper-pagination !relative mt-6"></div>
           </Swiper>
         )}
+      </div>
+    );
+  };
+
+  // Popup untuk menampilkan semua event
+  const AllEventsPopup = () => {
+    if (!showAllEventsPopup) return null;
+
+    return (
+      <div className="fixed inset-0 flex items-center justify-center z-[1000]">
+        <div className="absolute inset-0 bg-black opacity-50" onClick={() => setShowAllEventsPopup(false)}></div>
+        <div className="relative bg-white rounded-lg shadow-xl z-[1001] w-full max-w-6xl mx-4 transform transition-all duration-300 ease-in-out overflow-hidden" style={{ maxHeight: '90vh' }}>
+          <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center z-10">
+            <h3 className="text-2xl font-bold">Semua Event</h3>
+            <button
+              onClick={() => setShowAllEventsPopup(false)}
+              className="text-red-600 hover:text-red-800 transition-colors"
+              aria-label="Close"
+            >
+              <FaTimesCircle size={28} />
+            </button>
+          </div>
+          
+          <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {eventGalleries.map((event) => (
+                <div
+                  key={event.id}
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer transform hover:scale-105 duration-200"
+                  onClick={() => handleEventClick(event)}
+                >
+                  <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                    <Image
+                      src={event.imageUrl}
+                      alt={event.namaEvent || "Event image"}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h4 className="text-lg font-semibold mb-2 line-clamp-2">{event.namaEvent}</h4>
+                    <div 
+                      className="text-gray-600 text-sm line-clamp-3"
+                      dangerouslySetInnerHTML={renderHTML(event.deskripsi)}
+                    ></div>
+                    {registrationStatus[event.id] && (
+                      <div className="mt-3">
+                        <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
+                          {registrationStatus[event.id]}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Popup untuk menampilkan detail event beserta form pendaftaran
+  const EventDetailPopup = () => {
+    if (!showEventDetailPopup || !selectedEventDetail) return null;
+
+    const [fileName, setFileName] = useState("");
+    const [uploadFile, setUploadFile] = useState(null);
+    const [jabatan, setJabatan] = useState("");
+    const [jabatanError, setJabatanError] = useState("");
+    const fileInputRef = useRef(null);
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+    const truncateWords = (text, maxWords) => {
+      const words = text.trim().split(/\s+/);
+      if (words.length <= maxWords) return text;
+      return words.slice(0, maxWords).join(' ') + '...';
+    };
+
+    const truncateHtmlByWords = (html, maxWords) => {
+      if (!html) return "";
+
+      const tmp = document.createElement("DIV");
+      tmp.innerHTML = html;
+      const text = tmp.textContent || tmp.innerText || "";
+      const words = text.trim().split(/\s+/);
+
+      if (words.length <= maxWords) return html;
+
+      // Jika perlu dipotong, kita ambil X kata pertama dari text
+      const truncatedText = words.slice(0, maxWords).join(' ');
+
+      // Kita traverse HTML dan potong berdasarkan jumlah kata
+      let wordCount = 0;
+      const targetWords = maxWords;
+
+      function traverseAndTruncate(node) {
+        if (wordCount >= targetWords) return null;
+
+        if (node.nodeType === Node.TEXT_NODE) {
+          const nodeWords = node.textContent.trim().split(/\s+/).filter(w => w);
+          if (wordCount + nodeWords.length <= targetWords) {
+            wordCount += nodeWords.length;
+            return node.cloneNode(true);
+          } else {
+            const remainingWords = targetWords - wordCount;
+            const truncated = nodeWords.slice(0, remainingWords).join(' ') + '...';
+            wordCount = targetWords;
+            const newNode = document.createTextNode(truncated);
+            return newNode;
+          }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const clone = node.cloneNode(false);
+          for (let child of node.childNodes) {
+            if (wordCount >= targetWords) break;
+            const processedChild = traverseAndTruncate(child);
+            if (processedChild) clone.appendChild(processedChild);
+          }
+          return clone;
+        }
+        return null;
+      }
+
+      const result = document.createElement("DIV");
+      for (let child of tmp.childNodes) {
+        if (wordCount >= targetWords) break;
+        const processedChild = traverseAndTruncate(child);
+        if (processedChild) result.appendChild(processedChild);
+      }
+
+      return result.innerHTML;
+    };
+
+    const handleFileChange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const allowedTypes = [
+          "application/pdf",
+          "image/jpeg",
+          "image/png",
+          "image/jpg",
+          "video/mp4",
+          "video/avi",
+          "video/quicktime",
+          "video/x-msvideo",
+          "video/mpeg",
+          "video/webm"
+        ];
+
+        const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.mp4', '.avi', '.mov', '.mpeg', '.webm'];
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+
+        if (allowedTypes.includes(file.type) && allowedExtensions.includes(fileExtension)) {
+          setUploadFile(file);
+          setFileName(file.name);
+        } else {
+          alert("Format file tidak didukung. Pilih file PDF, JPG, PNG, JPEG, atau video (MP4, AVI, MOV, MPEG, WEBM).");
+          e.target.value = null;
+          setFileName("");
+          setUploadFile(null);
+        }
+      } else {
+        setFileName("");
+        setUploadFile(null);
+      }
+    };
+
+    const handleCustomButtonClick = () => {
+      fileInputRef.current.click();
+    };
+
+    const handleSubmitRegistration = async () => {
+      if (!currentEvent || isSubmitting) return;
+
+      try {
+        setIsSubmitting(true);
+
+        const userId = sessionStorage.getItem("userId");
+        if (!userId) {
+          throw new Error("User ID not found");
+        }
+
+        const userDataDaftar = await GlobalApi.getUserById(userId);
+
+        if (!userDataDaftar) {
+          throw new Error("Could not retrieve user data");
+        }
+
+        const formData = new FormData();
+        formData.append("namaLengkap", userDataDaftar.namaLengkap || userDataDaftar.nama);
+        formData.append("npa", userDataDaftar.npaPgri);
+        formData.append("email", userDataDaftar.email);
+        formData.append("cabang", userDataDaftar.cabang);
+        formData.append("unitKerja", userDataDaftar.unitKerja);
+        formData.append("jabatan", jabatan.trim());
+        formData.append("nomorHp", userDataDaftar.nomorHp);
+        formData.append("namaEvent", currentEvent.namaEvent);
+
+        if (fotoBase64) {
+          const blob = await fetch(`data:image/jpeg;base64,${fotoBase64}`).then((res) => res.blob());
+          formData.append("foto", blob, "profile.jpg");
+        }
+
+        if (uploadFile) {
+          formData.append("upload", uploadFile, fileName);
+        }
+
+        await GlobalApi.addPesertaEvent(formData);
+
+        setRegistrationStatus(prev => ({
+          ...prev,
+          [currentEvent.id]: "Sudah Terdaftar"
+        }));
+
+        await fetchEventParticipants();
+
+        setShowEventDetailPopup(false);
+        setNotification({
+          type: 'success',
+          message: `Selamat! Anda telah berhasil terdaftar untuk event "${currentEvent.namaEvent}".`
+        });
+
+      } catch (error) {
+        console.error("Error submitting registration:", error);
+        setNotification({
+          type: 'error',
+          message: 'Maaf, pendaftaran event gagal. Silakan coba lagi atau hubungi administrator jika masalah berlanjut.'
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    const isRegistered = registrationStatus[selectedEventDetail.id];
+
+    return (
+      <div className="fixed inset-0 flex items-center justify-center z-[1000]">
+        <div className="absolute inset-0 bg-black opacity-50" onClick={() => setShowEventDetailPopup(false)}></div>
+        <div className="relative bg-white rounded-lg shadow-xl z-[1001] w-full max-w-4xl mx-4 transform transition-all duration-300 ease-in-out overflow-hidden" style={{ maxHeight: '90vh' }}>
+          <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-end items-center z-10">
+            <button
+              onClick={() => setShowEventDetailPopup(false)}
+              className="text-red-600 hover:text-red-800 transition-colors"
+              aria-label="Close"
+            >
+              <FaTimesCircle size={28} />
+            </button>
+          </div>
+
+          <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Kolom Kiri: Detail Event */}
+              <div>
+                <div className="relative w-full rounded-lg overflow-hidden shadow-md mb-4">
+                  <Image
+                    src={selectedEventDetail.imageUrl}
+                    alt={selectedEventDetail.namaEvent}
+                    width={800}
+                    height={600}
+                    className="w-full h-auto object-contain"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    style={{ maxHeight: '500px' }}
+                  />
+                </div>
+                <div className="prose max-w-none">
+                  <h4 className="text-xl sm:text-2xl font-bold mb-3">{selectedEventDetail.namaEvent}</h4>
+                  <h5 className="text-lg font-semibold mb-2 text-gray-700">Deskripsi Event</h5>
+                  <div
+                    className="text-gray-700"
+                    dangerouslySetInnerHTML={
+                      renderHTML(
+                        isDescriptionExpanded
+                          ? selectedEventDetail.deskripsi
+                          : truncateHtmlByWords(selectedEventDetail.deskripsi, 100)
+                      )
+                    }
+                  ></div>
+                  {stripHtml(selectedEventDetail.deskripsi).split(/\s+/).length > 100 && (
+                    <button
+                      onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                      className="text-blue-600 hover:text-blue-800 mt-2 text-sm font-medium focus:outline-none transition-colors"
+                    >
+                      {isDescriptionExpanded ? "Lihat lebih sedikit" : "Lihat lebih banyak"}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Kolom Kanan: Form Pendaftaran */}
+              {userData?.role === "USER" && (
+                <div className="bg-gray-50 rounded-lg p-6">
+                  {isRegistered ? (
+                    <div className="text-center">
+                      <div className="inline-block px-8 py-3 bg-yellow-500 text-white rounded-lg font-semibold text-base shadow-md mb-4">
+                        {isRegistered}
+                      </div>
+                      <p className="text-gray-600">Anda sudah terdaftar untuk event ini.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <h4 className="text-xl font-bold mb-4 text-center">Form Pendaftaran Event</h4>
+
+                      {/* User Photo Section */}
+                      <div className="flex justify-center mb-4">
+                        <div className="relative flex items-center justify-center w-24 h-24 rounded-full border-2 border-gray-300 shadow-md overflow-hidden">
+                          {fotoBase64 ? (
+                            <Image
+                              src={
+                                fotoBase64
+                                  ? `data:image/jpeg;base64,${fotoBase64}`
+                                  : profileImageUrl
+                              }
+                              width={100}
+                              height={100}
+                              alt={`Foto User`}
+                              className="w-full h-full rounded-full object-cover object-top"
+                              unoptimized={true}
+                            />
+                          ) : (
+                            <Image
+                              src={profileImageUrl}
+                              width={100}
+                              height={100}
+                              alt="Foto User"
+                              className="w-full h-full rounded-full object-cover object-top"
+                              unoptimized={true}
+                            />
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="bg-white p-3 rounded-md">
+                          <p className="text-sm text-gray-600">Nama Lengkap</p>
+                          <p className="text-gray-800 font-medium">
+                            {userData?.namaLengkap || userData?.nama || "Loading..."}
+                          </p>
+                        </div>
+
+                        <div className="bg-white p-3 rounded-md">
+                          <p className="text-sm text-gray-600">NPA PGRI</p>
+                          <p className="text-gray-800 font-medium">
+                            {userData?.npaPgri || "Loading..."}
+                          </p>
+                        </div>
+
+                        <div className="bg-white p-3 rounded-md">
+                          <p className="text-sm text-gray-600">Email</p>
+                          <p className="text-gray-800 font-medium">
+                            {userData?.email || "Loading..."}
+                          </p>
+                        </div>
+
+                        <div className="bg-white p-3 rounded-md">
+                          <p className="text-sm text-gray-600">Cabang</p>
+                          <p className="text-gray-800 font-medium">
+                            {userData?.cabang || "Loading..."}
+                          </p>
+                        </div>
+
+                        <div className="bg-white p-3 rounded-md">
+                          <p className="text-sm text-gray-600">Unit Kerja</p>
+                          <p className="text-gray-800 font-medium">
+                            {userData?.unitKerja || "Loading..."}
+                          </p>
+                        </div>
+
+                        <div className="bg-white p-3 rounded-md">
+                          <p className="text-sm text-gray-600">Nomor HP</p>
+                          <p className="text-gray-800 font-medium">
+                            {userData?.nomorHp || "Loading..."}
+                          </p>
+                        </div>
+
+                        <div className="bg-white p-3 rounded-md">
+                          <label className="text-sm text-gray-600" htmlFor="jabatan">
+                            Jabatan Organisasi PGRI <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            id="jabatan"
+                            type="text"
+                            value={jabatan}
+                            onChange={(e) => setJabatan(e.target.value)}
+                            placeholder="Masukkan jabatan organisasi PGRI"
+                            className="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                          />
+                          {jabatanError && (
+                            <p className="text-red-500 text-sm mt-1">{jabatanError}</p>
+                          )}
+                        </div>
+
+                        <div className="bg-white p-3 rounded-md">
+                          <label className="text-sm text-gray-600" htmlFor="uploadFile">
+                            Upload Dokumen atau Video (opsional)
+                          </label>
+                          <div className="flex flex-col space-y-2">
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              onChange={handleFileChange}
+                              accept=".pdf,.jpg,.jpeg,.png,.mp4,.avi,.mov,.mpeg,.webm"
+                              className="hidden"
+                            />
+                            <div className="w-full mt-1 border border-gray-300 rounded-md overflow-hidden flex">
+                              <button
+                                type="button"
+                                onClick={handleCustomButtonClick}
+                                className="bg-gray-100 hover:bg-gray-200 py-2 px-4 border-r border-gray-300 text-gray-700 font-medium transition-colors"
+                              >
+                                Choose File
+                              </button>
+                              <div className="flex-1 px-3 py-2 text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap">
+                                {fileName || "No file chosen"}
+                              </div>
+                            </div>
+
+                            {fileName && (
+                              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start">
+                                <div className="flex-grow">
+                                  <p className="text-sm text-blue-700 break-words">
+                                    <span className="font-medium">File terpilih:</span> {fileName}
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    setFileName("");
+                                    setUploadFile(null);
+                                    if (fileInputRef.current) {
+                                      fileInputRef.current.value = "";
+                                    }
+                                  }}
+                                  className="text-red-500 hover:text-red-700 ml-2"
+                                  aria-label="Remove file"
+                                >
+                                  <FaTimesCircle size={18} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Format yang didukung: PDF, JPG, PNG, JPEG, MP4, AVI, MOV, MPEG, WEBM
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={handleSubmitRegistration}
+                        disabled={isSubmitting}
+                        className="mt-6 w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold transition-colors disabled:bg-blue-400 transform hover:scale-105 duration-200"
+                      >
+                        {isSubmitting ? (
+                          <div className="flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                            Mendaftar...
+                          </div>
+                        ) : (
+                          'Daftar Event'
+                        )}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
@@ -520,7 +992,6 @@ const GaleriKegiatan = () => {
     const handleFileChange = (e) => {
       const file = e.target.files[0];
       if (file) {
-        // Tambahkan tipe MIME untuk video
         const allowedTypes = [
           "application/pdf",
           "image/jpeg",
@@ -534,7 +1005,6 @@ const GaleriKegiatan = () => {
           "video/webm"
         ];
 
-        // Tambahkan ekstensi file yang didukung
         const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.mp4', '.avi', '.mov', '.mpeg', '.webm'];
         const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
 
@@ -635,7 +1105,6 @@ const GaleriKegiatan = () => {
             Mendaftar Event: {currentEvent.namaEvent || "Undefined Event"}
           </h3>
 
-          {/* User Photo Section */}
           <div className="flex justify-center mb-4">
             <div className="relative flex items-center justify-center w-24 h-24 rounded-full border-2 border-gray-300 shadow-md overflow-hidden">
               {fotoBase64 ? (
@@ -810,11 +1279,13 @@ const GaleriKegiatan = () => {
           <GallerySwiper
             items={eventGalleries}
             title="Event"
-            showRegisterButton={true}
+            showRegisterButton={false}
           />
         </div>
       </div>
       {showPopup && <Popup setUploadFile={setUploadFile} />}
+      {showAllEventsPopup && <AllEventsPopup />}
+      {showEventDetailPopup && <EventDetailPopup />}
       {notification && (
         <NotificationPopup
           type={notification.type}
