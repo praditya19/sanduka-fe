@@ -164,11 +164,17 @@ const GaleriKegiatan = () => {
     try {
       const userId = sessionStorage.getItem("userId");
       const role = sessionStorage.getItem("role");
+      const npa = sessionStorage.getItem("npa");
 
       if (userId) {
         let response;
         if (role === "ADMIN" || role === "SUPER ADMIN") {
-          response = await GlobalApi.getAdminById(userId);
+          if (npa) {
+            response = await GlobalApi.getUserByNpa(npa);
+          } else {
+            console.error("NPA not found in session storage");
+            return;
+          }
         } else if (role === "USER") {
           response = await GlobalApi.getUserById(userId);
         }
@@ -281,8 +287,21 @@ const GaleriKegiatan = () => {
 
     try {
       const userId = sessionStorage.getItem("userId");
+      const role = sessionStorage.getItem("role");
+      const npa = sessionStorage.getItem("npa");
+
       if (userId) {
-        const userDataDaftar = await GlobalApi.getUserById(userId);
+        let userDataDaftar;
+        if (role === "ADMIN" || role === "SUPER ADMIN") {
+          if (npa) {
+            userDataDaftar = await GlobalApi.getUserByNpa(npa);
+          } else {
+            console.error("NPA not found in session storage");
+            return;
+          }
+        } else {
+          userDataDaftar = await GlobalApi.getUserById(userId);
+        }
         setUserData(userDataDaftar);
       }
     } catch (error) {
@@ -296,8 +315,7 @@ const GaleriKegiatan = () => {
       setShowPopup(true);
     }, 100);
   };
-
-  // Fungsi untuk membuka detail event dari popup lihat semua
+  
   const handleEventClick = (event) => {
     setSelectedEventDetail(event);
     setCurrentEvent(event);
@@ -526,7 +544,7 @@ const GaleriKegiatan = () => {
               <FaTimesCircle size={28} />
             </button>
           </div>
-          
+
           <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 80px)' }}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {eventGalleries.map((event) => (
@@ -546,7 +564,7 @@ const GaleriKegiatan = () => {
                   </div>
                   <div className="p-4">
                     <h4 className="text-lg font-semibold mb-2 line-clamp-2">{event.namaEvent}</h4>
-                    <div 
+                    <div
                       className="text-gray-600 text-sm line-clamp-3"
                       dangerouslySetInnerHTML={renderHTML(event.deskripsi)}
                     ></div>
@@ -683,11 +701,23 @@ const GaleriKegiatan = () => {
         setIsSubmitting(true);
 
         const userId = sessionStorage.getItem("userId");
+        const role = sessionStorage.getItem("role");
+        const npa = sessionStorage.getItem("npa");
+
         if (!userId) {
           throw new Error("User ID not found");
         }
 
-        const userDataDaftar = await GlobalApi.getUserById(userId);
+        let userDataDaftar;
+        if (role === "ADMIN" || role === "SUPER ADMIN") {
+          if (npa) {
+            userDataDaftar = await GlobalApi.getUserByNpa(npa);
+          } else {
+            throw new Error("NPA not found in session storage");
+          }
+        } else {
+          userDataDaftar = await GlobalApi.getUserById(userId);
+        }
 
         if (!userDataDaftar) {
           throw new Error("Could not retrieve user data");
@@ -700,7 +730,7 @@ const GaleriKegiatan = () => {
         formData.append("cabang", userDataDaftar.cabang);
         formData.append("unitKerja", userDataDaftar.unitKerja);
         formData.append("jabatan", jabatan.trim());
-        formData.append("nomorHp", userDataDaftar.nomorHp);
+        formData.append("nomorHp", userDataDaftar.nomorHp || userDataDaftar.noHp);
         formData.append("namaEvent", currentEvent.namaEvent);
 
         if (fotoBase64) {
@@ -794,7 +824,7 @@ const GaleriKegiatan = () => {
               </div>
 
               {/* Kolom Kanan: Form Pendaftaran */}
-              {userData?.role === "USER" && (
+              {userData && (
                 <div className="bg-gray-50 rounded-lg p-6">
                   {isRegistered ? (
                     <div className="text-center">
@@ -875,7 +905,7 @@ const GaleriKegiatan = () => {
                         <div className="bg-white p-3 rounded-md">
                           <p className="text-sm text-gray-600">Nomor HP</p>
                           <p className="text-gray-800 font-medium">
-                            {userData?.nomorHp || "Loading..."}
+                            {userData?.noHp || userData?.nomorHp || "Loading..."}
                           </p>
                         </div>
 
@@ -1034,11 +1064,23 @@ const GaleriKegiatan = () => {
         setIsSubmitting(true);
 
         const userId = sessionStorage.getItem("userId");
+        const role = sessionStorage.getItem("role");
+        const npa = sessionStorage.getItem("npa");
+
         if (!userId) {
           throw new Error("User ID not found");
         }
 
-        const userDataDaftar = await GlobalApi.getUserById(userId);
+        let userDataDaftar;
+        if (role === "ADMIN" || role === "SUPER ADMIN") {
+          if (npa) {
+            userDataDaftar = await GlobalApi.getUserByNpa(npa);
+          } else {
+            throw new Error("NPA not found in session storage");
+          }
+        } else {
+          userDataDaftar = await GlobalApi.getUserById(userId);
+        }
 
         if (!userDataDaftar) {
           throw new Error("Could not retrieve user data");
@@ -1051,7 +1093,7 @@ const GaleriKegiatan = () => {
         formData.append("cabang", userDataDaftar.cabang);
         formData.append("unitKerja", userDataDaftar.unitKerja);
         formData.append("jabatan", jabatan.trim());
-        formData.append("nomorHp", userDataDaftar.nomorHp);
+        formData.append("nomorHp", userDataDaftar.nomorHp || userDataDaftar.noHp);
         formData.append("namaEvent", currentEvent.namaEvent);
 
         if (fotoBase64) {
@@ -1169,10 +1211,10 @@ const GaleriKegiatan = () => {
               </p>
             </div>
 
-            <div className="bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors">
+            <div className="bg-white p-3 rounded-md">
               <p className="text-sm text-gray-600">Nomor HP</p>
               <p className="text-gray-800 font-medium">
-                {userData?.nomorHp || "Loading..."}
+                {userData?.nomorHp || userData?.noHp || "Loading..."}
               </p>
             </div>
 
