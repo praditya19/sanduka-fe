@@ -220,6 +220,23 @@ const getUserById = async (userId) => {
   }
 };
 
+const getUserByNpa = async (npa) => {
+  try {
+    const response = await axiosClient.get(`/api/auth/npa/${npa}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      console.error("Error Response:", error.response);
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      console.error("Error Request:", error);
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
+
 const getFileByNip = async (nip) => {
   try {
     const response = await axiosClient.get(`/api/files/nip/${nip}`);
@@ -1614,10 +1631,10 @@ const uploadSinkronBank = async (formData) => {
 
 const postToBackup = async (tagihanUntukBulan) => {
   try {
-      const response = await axiosClient.post(
-        `/api/by-nominal/backup?tagihanUntukBulan=${tagihanUntukBulan}`,
-        {}
-      );
+    const response = await axiosClient.post(
+      `/api/by-nominal/backup?tagihanUntukBulan=${tagihanUntukBulan}`,
+      {}
+    );
     return response.data;
   } catch (error) {
     console.error("Error posting to backup API:", error);
@@ -3064,6 +3081,7 @@ export default {
   cekNpa,
   searchUsers,
   getUserById,
+  getUserByNpa,
   getAllAdmin,
   createAdmin,
   deleteAdmin,
