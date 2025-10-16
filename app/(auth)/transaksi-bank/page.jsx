@@ -307,37 +307,37 @@ export default function BankTransactionPage() {
   };
 
   const getSetorTunai = async () => {
-  try {
-    const data = await GlobalApi.getCountAnggotaSetorTunai({
-      cabang: selectedCabang || null,
-      unitKerja: unitKerjaInput || null,
-      search: searchBalancing || null,
-      bulan: month || null,
-      tahun: year || null,
-    });
+    try {
+      const data = await GlobalApi.getCountAnggotaSetorTunai({
+        cabang: selectedCabang || null,
+        unitKerja: unitKerjaInput || null,
+        search: searchBalancing || null,
+        bulan: month || null,
+        tahun: year || null,
+      });
 
-    setJumlahSetorTunai(data.jumlahAnggota || 0);
+      setJumlahSetorTunai(data.jumlahAnggota || 0);
       setTotalNominalSetorTunai(data.totalNominal || 0);
-  } catch (error) {
-    console.error("❌ Gagal fetch:", error);
-  }
+    } catch (error) {
+      console.error("❌ Gagal fetch:", error);
+    }
   };
 
   const getAnggotaTerfilter = async () => {
-  try {
-    const data = await GlobalApi.getCountAnggotaTerfilter({
-      cabang: selectedCabang || null,
-      unitKerja: unitKerjaInput || null,
-      search: searchBalancing || null,
-      bulan: month || null,
-      tahun: year || null,
-    });
+    try {
+      const data = await GlobalApi.getCountAnggotaTerfilter({
+        cabang: selectedCabang || null,
+        unitKerja: unitKerjaInput || null,
+        search: searchBalancing || null,
+        bulan: month || null,
+        tahun: year || null,
+      });
 
-    setTotalTerfilter(data.jumlahAnggota || 0);
+      setTotalTerfilter(data.jumlahAnggota || 0);
       setTotalNominalTerfilter(data.totalNominal || 0);
-  } catch (error) {
-    console.error("❌ Gagal fetch:", error);
-  }
+    } catch (error) {
+      console.error("❌ Gagal fetch:", error);
+    }
   };
 
   const formatRupiah = (angka) => {
@@ -2186,7 +2186,7 @@ export default function BankTransactionPage() {
                         </option>
                       ))}
                     </select>
-                  </div>        
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Cari Anggota/Rekening
@@ -2561,7 +2561,7 @@ export default function BankTransactionPage() {
                             {formatRupiah(item.totalIuranKalender)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                            {formatRupiah(item.totalIuranKalender)}
+                            {formatRupiah(item.totalIuranSumbangan)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                             {formatRupiah(item.totalIuran)}
