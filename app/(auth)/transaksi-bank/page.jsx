@@ -2671,7 +2671,7 @@ export default function BankTransactionPage() {
                       <td className="px-6 py-4 text-center">
                         {formatRupiah(
                           dataBalancing.reduce(
-                            (sum, item) => sum + item.totalIuranKalender,
+                            (sum, item) => sum + item.totalIuranSumbangan,
                             0
                           )
                         )}
