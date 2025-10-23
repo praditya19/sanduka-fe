@@ -182,6 +182,12 @@ export default function IconGrid() {
       href: "/anggota/rekap-anggota",
       color: "text-gray-500",
     },
+    // {
+    //   icon: faUbuntu,
+    //   label: "New By Nominal",
+    //   href: "/by-nominal",
+    //   color: "text-blue-500",
+    // },
     {
       icon: faSyncAlt,
       label: "Sinkronisasi",

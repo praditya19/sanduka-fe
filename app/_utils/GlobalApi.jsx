@@ -3058,7 +3058,40 @@ const getTableUmum = async (bulan, tahun) => {
     throw error;
   }
 };
+// END
 
+// New By Nominal
+const getAllByNominal = async () => {
+  try {
+    const response = await axiosClient.get("/api/by-nominal-new");
+    return response.data;
+  } catch (error) {
+    console.error("Error gagal ambil data Bynominal:", error);
+    throw error;
+  }
+};
+
+const importByNominal = async (file, tagihanUntukBulan) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file); 
+    formData.append('tagihanUntukBulan', tagihanUntukBulan);
+
+    const response = await axiosClient.post(
+      `/api/by-nominal/import`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error posting to import API:', error);
+    throw error;
+  }
+};
 // END
 
 // Export all functions
@@ -3278,4 +3311,6 @@ export default {
   deletePengeluaranUmum,
   deleteBalancing,
   getTableUmum,
+  getAllByNominal,
+  importByNominal,
 };
