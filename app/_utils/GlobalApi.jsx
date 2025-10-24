@@ -3092,6 +3092,35 @@ const importByNominal = async (file, tagihanUntukBulan) => {
     throw error;
   }
 };
+
+const deleteByNominal = async (id) => {
+  try {
+    const response = await axiosClient.delete(`/api/by-nominal-new/${id}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message || "Terjadi kesalahan pada server"
+      );
+    } else {
+      throw new Error("Terjadi kesalahan pada jaringan");
+    }
+  }
+};
+
+const updateByNominal = async (id, data) => {
+  try {
+    const response = await axiosClient.put(`/api/by-nominal-new/${id}`, data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating data:", error);
+    throw error;
+  }
+};
 // END
 
 // Export all functions
@@ -3313,4 +3342,6 @@ export default {
   getTableUmum,
   getAllByNominal,
   importByNominal,
+  deleteByNominal,
+  updateByNominal,
 };
