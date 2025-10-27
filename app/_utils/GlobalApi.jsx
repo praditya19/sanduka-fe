@@ -3074,21 +3074,22 @@ const getAllByNominal = async () => {
 const importByNominal = async (file, tagihanUntukBulan) => {
   try {
     const formData = new FormData();
-    formData.append('file', file); 
-    formData.append('tagihanUntukBulan', tagihanUntukBulan);
+    formData.append("file", file);
+    formData.append("tagihanUntukBulan", tagihanUntukBulan); // format: YYYY-MM-DD
 
     const response = await axiosClient.post(
-      `/api/by-nominal/import`,
+      `/api/by-nominal-new/import`,
       formData,
       {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       }
     );
+
     return response.data;
   } catch (error) {
-    console.error('Error posting to import API:', error);
+    console.error("❌ Error posting to import API:", error.response?.data || error);
     throw error;
   }
 };
@@ -3115,6 +3116,24 @@ const updateByNominal = async (id, data) => {
         "Content-Type": "application/json",
       },
     });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating data:", error);
+    throw error;
+  }
+};
+
+const updateByNominalByBulan = async (nip, tagihanUntukBulan, payload) => {
+  try {
+    const response = await axiosClient.put(
+      `/api/by-nominal-new/update-by-bulan?nip=${nip}&tagihanUntukBulan=${tagihanUntukBulan}`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     console.error("Error updating data:", error);
@@ -3344,4 +3363,5 @@ export default {
   importByNominal,
   deleteByNominal,
   updateByNominal,
+  updateByNominalByBulan,
 };
