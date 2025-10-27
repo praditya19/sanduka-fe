@@ -69,146 +69,6 @@ const NotificationPopup = ({ type, message, onClose }) => {
   );
 };
 
-const UploadPopup = ({ onClose }) => {
-  const now = new Date();
-  const [bulan, setBulan] = useState(now.getMonth() + 1);
-  const [tahun, setTahun] = useState(now.getFullYear());
-  const [file, setFile] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const months = [
-    "Januari",
-    "Februari",
-    "Maret",
-    "April",
-    "Mei",
-    "Juni",
-    "Juli",
-    "Agustus",
-    "September",
-    "Oktober",
-    "November",
-    "Desember",
-  ];
-
-  const currentYear = now.getFullYear();
-  const years = Array.from({ length: 6 }, (_, i) => currentYear - 2 + i);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!file) {
-      alert("Silakan pilih file Excel terlebih dahulu");
-      return;
-    }
-
-    if (!file.name.endsWith(".xlsx")) {
-      alert("Hanya file dengan format .xlsx yang diizinkan");
-      return;
-    }
-
-    const tagihanUntukBulan = `${tahun}-${bulan.toString().padStart(2, "0")}`;
-    setIsLoading(true);
-
-    try {
-      const result = await GlobalApi.importByNominal(file, tagihanUntukBulan);
-      alert("File berhasil diupload!");
-      console.log("Upload success:", result);
-      onClose();
-    } catch (error) {
-      console.error("Upload failed:", error);
-      alert("Gagal mengupload file. Silakan coba lagi.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div
-        className="absolute inset-0 bg-black opacity-40"
-        onClick={onClose}
-      ></div>
-
-      <div className="relative bg-white rounded-lg shadow-xl p-6 w-[90%] max-w-md z-10">
-        <h2 className="text-xl font-semibold mb-4 text-gray-700 flex items-center gap-2">
-          <FaUpload /> Upload Data Excel
-        </h2>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Pilihan Bulan */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Bulan
-            </label>
-            <select
-              value={bulan}
-              onChange={(e) => setBulan(Number(e.target.value))}
-              className="w-full border rounded-md px-3 py-2 focus:ring-teal-400 focus:outline-none"
-            >
-              {months.map((m, i) => (
-                <option key={i} value={i + 1}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Pilihan Tahun */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tahun
-            </label>
-            <select
-              value={tahun}
-              onChange={(e) => setTahun(Number(e.target.value))}
-              className="w-full border rounded-md px-3 py-2 focus:ring-teal-400 focus:outline-none"
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* File Excel */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              File Excel (.xlsx)
-            </label>
-            <input
-              type="file"
-              accept=".xlsx"
-              onChange={(e) => setFile(e.target.files[0])}
-              className="w-full border rounded-md px-3 py-2 focus:ring-teal-400 focus:outline-none"
-            />
-          </div>
-
-          {/* Tombol Aksi */}
-          <div className="flex justify-end gap-2 pt-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isLoading}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md disabled:opacity-60"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md disabled:opacity-60"
-            >
-              {isLoading ? "Mengupload..." : "Upload"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
 function ByNominal() {
   const router = useRouter();
   const { token } = useAuth();
@@ -248,46 +108,187 @@ function ByNominal() {
   const [searchUpdateCabang, setSearchUpdateCabang] = useState("");
   const [searchUpdateUnit, setSearchUpdateUnit] = useState("");
   const [filteredUpdateUnit, setFilteredUpdateUnit] = useState([]);
-
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [loadingUpdate, setLoadingUpdate] = useState(false);
   const updateCabangRef = useRef(null);
   const updateUnitRef = useRef(null);
+
+  const UploadPopup = ({ onClose }) => {
+    const now = new Date();
+    const [bulan, setBulan] = useState(now.getMonth() + 1);
+    const [tahun, setTahun] = useState(now.getFullYear());
+    const [file, setFile] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const months = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
+
+    const currentYear = now.getFullYear();
+    const years = Array.from({ length: 6 }, (_, i) => currentYear - 2 + i);
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+
+      if (!file) {
+        alert("Silakan pilih file Excel terlebih dahulu.");
+        return;
+      }
+
+      // Bentuk tanggal jadi "YYYY-MM-01"
+      const tagihanUntukBulan = `${tahun}-${String(bulan).padStart(2, "0")}-01`;
+
+      try {
+        setIsLoading(true);
+
+        const res = await GlobalApi.importByNominal(file, tagihanUntukBulan);
+
+        setNotification({
+          type: "success",
+          message: res,
+        });
+
+        setShowUploadPopup(false);
+        await fetchAllData(); // refresh tabel otomatis
+      } catch (error) {
+        console.error("❌ Upload failed:", error.response?.data || error);
+        setNotification({
+          type: "error",
+          message:
+            "Gagal mengunggah file. Coba periksa format Excel atau hubungi admin.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    return (
+      <div className="fixed inset-0 flex items-center justify-center z-50">
+        <div
+          className="absolute inset-0 bg-black opacity-40"
+          onClick={onClose}
+        ></div>
+
+        <div className="relative bg-white rounded-lg shadow-xl p-6 w-[90%] max-w-md z-10">
+          <h2 className="text-xl font-semibold mb-4 text-gray-700 flex items-center gap-2">
+            <FaUpload /> Upload Data Excel
+          </h2>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Pilihan Bulan */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Bulan
+              </label>
+              <select
+                value={bulan}
+                onChange={(e) => setBulan(Number(e.target.value))}
+                className="w-full border rounded-md px-3 py-2 focus:ring-teal-400 focus:outline-none"
+              >
+                {months.map((m, i) => (
+                  <option key={i} value={i + 1}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Pilihan Tahun */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tahun
+              </label>
+              <select
+                value={tahun}
+                onChange={(e) => setTahun(Number(e.target.value))}
+                className="w-full border rounded-md px-3 py-2 focus:ring-teal-400 focus:outline-none"
+              >
+                {years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* File Excel */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                File Excel (.xlsx)
+              </label>
+              <input
+                type="file"
+                accept=".xlsx"
+                onChange={(e) => setFile(e.target.files[0])}
+                className="w-full border rounded-md px-3 py-2 focus:ring-teal-400 focus:outline-none"
+              />
+            </div>
+
+            {/* Tombol Aksi */}
+            <div className="flex justify-end gap-2 pt-3">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isLoading}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md disabled:opacity-60"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md disabled:opacity-60"
+              >
+                {isLoading ? "Mengupload..." : "Upload"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
 
   useEffect(() => {
     if (!token) router.push("/sign-in");
   }, [token, router]);
 
+  const fetchAllData = async () => {
+    try {
+      setLoading(true);
+
+      const [nominalRes, cabangRes, unitRes] = await Promise.all([
+        GlobalApi.getAllByNominal(),
+        GlobalApi.getCabang(),
+        GlobalApi.getUnitKerja(),
+      ]);
+
+      setDataNominal(nominalRes || []);
+      setOriginalCabangList(cabangRes.data);
+      setFilteredCabangList(cabangRes.data);
+      setUnitKerjaList(unitRes.data);
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      setNotification({
+        type: "error",
+        message: "Gagal mengambil data.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchAllData = async () => {
-      try {
-        setLoading(true);
-
-        const [nominalRes, cabangRes, unitRes] = await Promise.all([
-          GlobalApi.getAllByNominal(),
-          GlobalApi.getCabang(),
-          GlobalApi.getUnitKerja(),
-        ]);
-
-        setDataNominal(nominalRes || []);
-        setOriginalCabangList(cabangRes.data);
-        setFilteredCabangList(cabangRes.data);
-        setUnitKerjaList(unitRes.data);
-
-        console.log("📊 Data fetched successfully:", {
-          nominal: nominalRes,
-          cabang: cabangRes.data,
-          unit: unitRes.data,
-        });
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setNotification({
-          type: "error",
-          message: "Gagal mengambil data.",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchAllData();
   }, []);
 
@@ -383,8 +384,6 @@ function ByNominal() {
 
       const response = await GlobalApi.updateByNominal(id, updatedData);
 
-      console.log("✅ Update response:", response);
-
       setDataNominal((prevData) =>
         prevData.map((item) => (item.id === id ? updatedData : item))
       );
@@ -407,6 +406,73 @@ function ByNominal() {
       });
     } finally {
       setUpdateModal((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
+  const openUpdatePopup = (item) => {
+    setSelectedItem({
+      ...item,
+      tagihanUntukBulan: item.tagihanUntukBulan
+        ? formatDate(item.tagihanUntukBulan)
+        : "",
+    });
+    setShowUpdateModal(true);
+  };
+  const formatDate = (dateValue) => {
+    if (Array.isArray(dateValue)) {
+      const [year, month, day] = dateValue;
+      return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(
+        2,
+        "0"
+      )}`;
+    }
+    return dateValue;
+  };
+  const closeModal = () => {
+    setShowUpdateModal(false);
+    setSelectedItem(null);
+  };
+  const handleChange = (field, value) => {
+    setSelectedItem((prev) => ({ ...prev, [field]: value }));
+  };
+  const handleUpdate = async () => {
+    try {
+      setLoadingUpdate(true);
+      const nip = selectedItem?.nip || "";
+      const bulan = selectedItem?.tagihanUntukBulan || "";
+      const payload = {
+        namaAnggota: selectedItem.namaAnggota,
+        nip: selectedItem.nip,
+        nomorRekening: selectedItem.nomorRekening,
+        cabang: selectedItem.cabang,
+        unitKerja: selectedItem.unitKerja,
+        pgri: Number(selectedItem.pgri),
+        sanduka: Number(selectedItem.sanduka),
+        daspen: Number(selectedItem.daspen),
+        derap: Number(selectedItem.derap),
+        kalender: Number(selectedItem.kalender),
+        lainLain: Number(selectedItem.lainLain),
+      };
+
+      const res = await GlobalApi.updateByNominalByBulan(nip, bulan, payload);
+
+      setNotification({
+        type: "success",
+        message: "Data berhasil diperbarui.",
+      });
+
+      closeModal();
+
+      // 🔁 Refresh tabel otomatis
+      await fetchAllData();
+    } catch (error) {
+      console.error("❌ Gagal update:", error);
+      setNotification({
+        type: "error",
+        message: "Gagal memperbarui data.",
+      });
+    } finally {
+      setLoadingUpdate(false);
     }
   };
 
@@ -507,7 +573,6 @@ function ByNominal() {
   };
 
   const handleUploadSubmit = (data) => {
-    console.log("📦 Upload data:", data);
     setNotification({
       type: "success",
       message: `File ${
@@ -566,13 +631,6 @@ function ByNominal() {
     setUnitKerjaInput(unit.unitKerja);
     setShowUnitKerjaDropdown(false);
   }, []);
-
-  const handleSearchClick = () => {
-    setNotification({
-      type: "info",
-      message: `Cari anggota dengan nama: ${namaAnggotaInput}`,
-    });
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white">
@@ -769,24 +827,33 @@ function ByNominal() {
                         <td className="px-4 py-3 border text-right font-semibold">
                           {item.total.toLocaleString()}
                         </td>
-                        <td className="px-4 py-3 border text-center space-x-2 flex">
-                          <button
+                        <td className="border text-center">
+                          <div className="flex items-center justify-center space-x-3 py-2">
+                            {/* <button
                             className="text-blue-500 hover:text-blue-700"
                             onClick={() => openUpdateModal(item)}
-                            title="Update Data"
+                            title="Update Data by id"
                           >
                             <FaEdit />
-                          </button>
+                          </button> */}
+                            <button
+                              className="text-blue-500 hover:text-blue-700"
+                              onClick={() => openUpdatePopup(item)}
+                              title="Perbarui Data by Bulan"
+                            >
+                              <FaEdit />
+                            </button>
 
-                          <button
-                            className="text-red-500 hover:text-red-700"
-                            onClick={() =>
-                              openDeleteModal(item.id, item.namaAnggota)
-                            }
-                            title="Hapus Data"
-                          >
-                            <FaTrashAlt />
-                          </button>
+                            <button
+                              className="text-red-500 hover:text-red-700"
+                              onClick={() =>
+                                openDeleteModal(item.id, item.namaAnggota)
+                              }
+                              title="Hapus Data"
+                            >
+                              <FaTrashAlt />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -1201,6 +1268,75 @@ function ByNominal() {
           </div>
         </div>
       )}
+      {showUpdateModal && selectedItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-xl w-[480px] shadow-lg">
+            <h2 className="text-lg font-semibold text-teal-600 mb-4">
+              Update Data By Bulan
+            </h2>
+
+            <div className="space-y-3">
+              {/* Pilih tanggal */}
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">
+                  Tagihan Untuk Bulan
+                </label>
+                <input
+                  type="date"
+                  className="border rounded-lg p-2 w-full"
+                  value={selectedItem.tagihanUntukBulan || ""}
+                  onChange={(e) =>
+                    handleChange("tagihanUntukBulan", e.target.value)
+                  }
+                />
+              </div>
+
+              {/* Input nominal */}
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  "pgri",
+                  "sanduka",
+                  "daspen",
+                  "derap",
+                  "kalender",
+                  "lainLain",
+                ].map((field) => (
+                  <div key={field}>
+                    <label className="block text-sm text-gray-600 capitalize">
+                      {field}
+                    </label>
+                    <input
+                      type="number"
+                      className="w-full border rounded-lg p-2 text-sm"
+                      value={selectedItem[field] || 0}
+                      onChange={(e) =>
+                        handleChange(field, Number(e.target.value))
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleUpdate}
+                disabled={loadingUpdate}
+                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+              >
+                {loadingUpdate ? "Menyimpan..." : "Simpan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {deleteModal.isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
