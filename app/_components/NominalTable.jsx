@@ -65,19 +65,19 @@ const NominalTable = ({ data, onEdit, onDelete }) => {
                                 <td className="border text-center">
                                     <div className="flex items-center justify-center space-x-3 py-2">
                                         <button
-                                            className="text-blue-500 hover:text-blue-700"
+                                            className="text-blue-500 hover:text-blue-700 text-xl"
                                             onClick={() => onEdit(item)}
                                             title="Perbarui Data by Bulan"
                                         >
                                             <FaEdit />
                                         </button>
-                                        <button
+                                        {/* <button
                                             className="text-red-500 hover:text-red-700"
                                             onClick={() => onDelete(item.id, item.namaAnggota)}
                                             title="Hapus Data"
                                         >
                                             <FaTrashAlt />
-                                        </button>
+                                        </button> */}
                                     </div>
                                 </td>
                             </tr>

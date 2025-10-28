@@ -411,14 +411,8 @@ function ByNominal() {
           <div className="flex items-center justify-between mb-6 mt-14">
             <div className="flex items-center gap-2">
               <FaDatabase className="text-2xl text-gray-700" />
-              <h1 className="font-semibold text-2xl">New By Nominal</h1>
+              <h1 className="font-semibold text-2xl">Lain  - Lain</h1>
             </div>
-            <button
-              onClick={() => setShowUploadPopup(true)}
-              className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg shadow"
-            >
-              <FaUpload /> Upload Data
-            </button>
           </div>
 
           <FilterControls
