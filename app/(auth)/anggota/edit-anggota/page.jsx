@@ -143,6 +143,7 @@ const Page = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [npaPgri, setNpaPgri] = useState("");
+  const [nomorRekening, setNomorRekening] = useState("");
   const [nip, setNip] = useState("");
   const [nik, setNik] = useState("");
   const [namaLengkap, setNamaLengkap] = useState("");
@@ -272,6 +273,7 @@ const Page = () => {
         setEmail(response.email || "");
         setValue("email", response.email || "");
         setNpaPgri(response.npaPgri || "");
+        setNomorRekening(response.nomorRekening || "");
         setTempatLahir(response.tempatLahir || "");
         setTanggalLahir(response.tanggalLahir || "");
         setFormattedTanggalLahir(response.tanggalLahir || "");
@@ -616,6 +618,7 @@ const Page = () => {
     formData.append("email", email);
     formData.append("password", password);
     formData.append("npaPgri", npaPgri);
+    formData.append("nomorRekening", nomorRekening);
     formData.append("nip", nip);
     formData.append("nik", nik);
     formData.append("namaLengkap", namaLengkap);
@@ -1284,6 +1287,18 @@ const Page = () => {
                       className={`border-teal-500 ${
                         errorFields.npaPgri ? "border-red-500" : ""
                       }`}
+                    />
+                  </div>
+                  <div className="w-full">
+                    <Label className="block text-sm font-medium mb-3">
+                      Nomor Rekening
+                    </Label>
+                    <Input
+                      type="text"
+                      id="nomorRekening"
+                      placeholder="Tuliskan rekening"
+                      value={nomorRekening}
+                      onChange={(e) => setNomorRekening(e.target.value)}
                     />
                   </div>
 

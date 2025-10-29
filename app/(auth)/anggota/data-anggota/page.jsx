@@ -1860,6 +1860,9 @@ const DataTable = ({
                           <div className="text-xs font-semibold">
                             {item.statusKeanggotaan}
                           </div>
+                          <div className="text-xs font-semibold">
+                            {item.nomorRekening || "-"}
+                          </div>
 
                           <div
                             className={`text-sm mt-1 font-medium px-2 py-1 rounded-full inline-block ${filesByNip.find(
