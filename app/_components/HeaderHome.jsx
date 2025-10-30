@@ -302,7 +302,10 @@ const HeaderHome = () => {
                     notificationCount > 1 ? "animate-blink" : ""
                   }`}
                 >
-                  <button onClick={handleNotificationClick} className="relative">
+                  <button
+                    onClick={handleNotificationClick}
+                    className="relative"
+                  >
                     <FontAwesomeIcon
                       icon={faBell}
                       className="w-5 h-5 text-gray-700"
@@ -314,14 +317,16 @@ const HeaderHome = () => {
                     )}
                   </button>
                 </li>
-                <li>
-                  <button onClick={handleSearchClick}>
-                    <FontAwesomeIcon
-                      icon={faSearch}
-                      className="w-5 h-5 text-gray-700"
-                    />
-                  </button>
-                </li>
+                {sessionStorage.getItem("role") !== "USER" && (
+                  <li>
+                    <button onClick={handleSearchClick}>
+                      <FontAwesomeIcon
+                        icon={faSearch}
+                        className="w-5 h-5 text-gray-700"
+                      />
+                    </button>
+                  </li>
+                )}
                 <li
                   className="relative flex items-center space-x-4"
                   ref={profileMenuRef}
@@ -402,14 +407,16 @@ const HeaderHome = () => {
                   )}
                 </button>
               </li>
-              <li>
-                <button onClick={handleSearchClick}>
-                  <FontAwesomeIcon
-                    icon={faSearch}
-                    className="w-5 h-5 text-gray-700"
-                  />
-                </button>
-              </li>
+              {sessionStorage.getItem("role") !== "USER" && (
+                <li>
+                  <button onClick={handleSearchClick}>
+                    <FontAwesomeIcon
+                      icon={faSearch}
+                      className="w-5 h-5 text-gray-700"
+                    />
+                  </button>
+                </li>
+              )}
               <li className="relative flex justify-end">
                 <Link href="/update-profile" className="text-blue-500">
                   <Image
@@ -433,7 +440,10 @@ const HeaderHome = () => {
 
       {/* Search Modal */}
       {isSearchModalOpen && (
-        <PencarianAnggota isOpen={isSearchModalOpen} onClose={handleCloseSearchModal} />
+        <PencarianAnggota
+          isOpen={isSearchModalOpen}
+          onClose={handleCloseSearchModal}
+        />
       )}
     </>
   );
